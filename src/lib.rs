@@ -195,4 +195,4 @@ pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
 }
 
 
-/// https://github.com/bjorn3/rustc_codegen_cranelift/blob/1b8df386aa72bc3dacb803f7d4deb4eadd63b56f/src/base.rs
+// https://github.com/bjorn3/rustc_codegen_cranelift/blob/1b8df386aa72bc3dacb803f7d4deb4eadd63b56f/src/base.rs
