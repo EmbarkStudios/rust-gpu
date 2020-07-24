@@ -29,6 +29,8 @@ use std::any::Any;
 use std::path::Path;
 
 use rustc_middle::mir::mono::{Linkage as RLinkage, MonoItem, Visibility};
+use rustc_middle::mir::Rvalue;
+use rustc_middle::mir::StatementKind;
 
 pub struct NoLlvmMetadataLoader;
 
@@ -92,22 +94,57 @@ impl CodegenBackend for TheBackend {
 
             let cgu = tcx.codegen_unit(cgu.name());
             let mono_items = cgu.items_in_deterministic_order(tcx);
-        
+
             for (mono_item, (linkage, visibility)) in mono_items {
                 match mono_item {
-                    MonoItem::Fn(inst) => {
-                        let mut mir = ::std::io::Cursor::new(Vec::new());
+                    MonoItem::Fn(instance) => {
+                        {
+                            let mut mir = ::std::io::Cursor::new(Vec::new());
 
-                        crate::rustc_mir::util::write_mir_pretty(
-                            tcx,
-                            Some(inst.def_id()),
-                            &mut mir,
-                        ).unwrap();
-                        let s = String::from_utf8(mir.into_inner()).unwrap();
+                            crate::rustc_mir::util::write_mir_pretty(
+                                tcx,
+                                Some(instance.def_id()),
+                                &mut mir,
+                            )
+                            .unwrap();
 
-                        println!("{}", s);
+                            let s = String::from_utf8(mir.into_inner()).unwrap();
 
-                    },
+                            println!("{}", s);
+                        }
+
+                        let mir = tcx.instance_mir(instance.def);
+                        for (bb, bb_data) in mir.basic_blocks().iter_enumerated() {
+                            for stmt in &bb_data.statements {
+                                match &stmt.kind {
+                                    StatementKind::Assign(to_place_and_rval) => {
+                                        let place = to_place_and_rval.0; // jb-todo: iterate though place.projection & build OpAccessChain from it?
+
+                                        dbg!(&place);
+                                        for elem in place.projection {
+                                            match elem {
+                                                _ => {}
+                                            }
+                                        }
+
+                                        dbg!(&to_place_and_rval.1);
+                                        match &to_place_and_rval.1 {
+                                            Rvalue::Use(operand) => {
+                                                //let val = trans_operand(fx, operand);
+                                                //lval.write_cvalue(fx, val);
+                                                dbg!(operand);
+                                            }
+                                            _ => {}
+                                        }
+                                        //let lval = trans_place(fx, to_place_and_rval.0);
+                                        //dbg!(lval);
+                                        //println!("Assign");
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -136,8 +173,9 @@ impl CodegenBackend for TheBackend {
     ) -> Result<(), ErrorReported> {
         use rustc_session::{config::CrateType, output::out_filename};
         use std::io::Write;
-        let crate_name =
-            codegen_results.downcast::<Symbol>().expect("in link: codegen_results is not a Symbol");
+        let crate_name = codegen_results
+            .downcast::<Symbol>()
+            .expect("in link: codegen_results is not a Symbol");
         for &crate_type in sess.opts.crate_types.iter() {
             if crate_type != CrateType::Rlib {
                 sess.fatal(&format!("Crate type is {:?}", crate_type));

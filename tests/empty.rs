@@ -29,7 +29,6 @@ unsafe impl<'a, T: ?Sized> Copy for &'a T {}
 unsafe impl<T: ?Sized> Copy for *const T {}
 unsafe impl<T: ?Sized> Copy for *mut T {}
 
-
 pub fn jasper() {
-    let _ktest = 23;
+    let _ktest = 666666666;
 }
