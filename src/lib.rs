@@ -3,6 +3,7 @@
 extern crate rustc_codegen_ssa;
 extern crate rustc_errors;
 extern crate rustc_middle;
+extern crate rustc_mir;
 #[macro_use]
 extern crate rustc_data_structures;
 extern crate rustc_driver;
@@ -26,6 +27,8 @@ use rustc_span::symbol::Symbol;
 use rustc_target::spec::Target;
 use std::any::Any;
 use std::path::Path;
+
+use rustc_middle::mir::mono::{Linkage as RLinkage, MonoItem, Visibility};
 
 pub struct NoLlvmMetadataLoader;
 
@@ -52,9 +55,10 @@ impl CodegenBackend for TheBackend {
     fn provide(&self, providers: &mut Providers) {
         rustc_symbol_mangling::provide(providers);
 
-        // providers.supported_target_features = |tcx, _cnum| {
-        //     Default::default() // Just a dummy
-        // };
+        // jb-todo: target_features_whitelist is old name for supported_target_features
+        providers.target_features_whitelist = |tcx, _cnum| {
+            Default::default() // Just a dummy
+        };
         providers.is_reachable_non_generic = |_tcx, _defid| true;
         providers.exported_symbols = |_tcx, _crate| &[];
     }
@@ -72,6 +76,42 @@ impl CodegenBackend for TheBackend {
         use rustc_hir::def_id::LOCAL_CRATE;
 
         println!("In codegen_crate");
+
+        let cgus = if tcx.sess.opts.output_types.should_codegen() {
+            tcx.collect_and_partition_mono_items(LOCAL_CRATE).1
+        } else {
+            // If only `--emit metadata` is used, we shouldn't perform any codegen.
+            // Also `tcx.collect_and_partition_mono_items` may panic in that case.
+            &[]
+        };
+
+        dbg!(cgus.len());
+
+        cgus.iter().for_each(|cgu| {
+            dbg!(cgu.name());
+
+            let cgu = tcx.codegen_unit(cgu.name());
+            let mono_items = cgu.items_in_deterministic_order(tcx);
+        
+            for (mono_item, (linkage, visibility)) in mono_items {
+                match mono_item {
+                    MonoItem::Fn(inst) => {
+                        let mut mir = ::std::io::Cursor::new(Vec::new());
+
+                        crate::rustc_mir::util::write_mir_pretty(
+                            tcx,
+                            Some(inst.def_id()),
+                            &mut mir,
+                        ).unwrap();
+                        let s = String::from_utf8(mir.into_inner()).unwrap();
+
+                        println!("{}", s);
+
+                    },
+                    _ => {}
+                }
+            }
+        });
 
         Box::new(tcx.crate_name(LOCAL_CRATE) as Symbol)
     }
