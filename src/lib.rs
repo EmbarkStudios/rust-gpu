@@ -118,7 +118,7 @@ impl CodegenBackend for TheBackend {
                             for stmt in &bb_data.statements {
                                 match &stmt.kind {
                                     StatementKind::Assign(to_place_and_rval) => {
-                                        let place = to_place_and_rval.0; // jb-todo: iterate though place.projection & build OpAccessChain from it?
+                                        let place = to_place_and_rval.0; // jb-todo: iterate though place.projection & build OpAccessChain from it? see trans_place in cranelift
 
                                         dbg!(&place);
                                         for elem in place.projection {
@@ -193,3 +193,6 @@ impl CodegenBackend for TheBackend {
 pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
     Box::new(TheBackend)
 }
+
+
+/// https://github.com/bjorn3/rustc_codegen_cranelift/blob/1b8df386aa72bc3dacb803f7d4deb4eadd63b56f/src/base.rs
