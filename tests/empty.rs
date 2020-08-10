@@ -29,10 +29,29 @@ unsafe impl<'a, T: ?Sized> Copy for &'a T {}
 unsafe impl<T: ?Sized> Copy for *const T {}
 unsafe impl<T: ?Sized> Copy for *mut T {}
 
+#[lang = "bitor"]
+pub trait BitOr<RHS = Self> {
+    type Output;
+
+    fn bitor(self, rhs: RHS) -> Self::Output;
+}
+
+impl BitOr for u32 {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self {
+        self | rhs
+    }
+}
+
 struct Jasper {
     data: u32,
 }
 
 pub fn jasper() {
     let _ktest = Jasper { data: 666666 };
+}
+
+pub fn add_numbers(x: u32, y: u32) -> u32 {
+    x | y
 }

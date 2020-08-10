@@ -87,13 +87,9 @@ impl CodegenBackend for TheBackend {
             &[]
         };
 
-        dbg!(cgus.len());
-
         let mut translator = trans::Translator::new(tcx);
 
         cgus.iter().for_each(|cgu| {
-            dbg!(cgu.name());
-
             let cgu = tcx.codegen_unit(cgu.name());
             let mono_items = cgu.items_in_deterministic_order(tcx);
 
