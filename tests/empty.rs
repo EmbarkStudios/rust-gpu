@@ -34,7 +34,5 @@ struct Jasper {
 }
 
 pub fn jasper() {
-    let _ktest = Jasper {
-        data: 666666
-    };
+    let _ktest = Jasper { data: 666666 };
 }

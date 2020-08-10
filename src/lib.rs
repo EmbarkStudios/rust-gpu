@@ -1,4 +1,5 @@
 #![feature(rustc_private)]
+#![feature(or_insert_with_key)]
 
 extern crate rustc_codegen_ssa;
 extern crate rustc_errors;
@@ -19,18 +20,17 @@ use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::ErrorReported;
 use rustc_middle::dep_graph::DepGraph;
 use rustc_middle::middle::cstore::{EncodedMetadata, MetadataLoader, MetadataLoaderDyn};
+use rustc_middle::mir::mono::MonoItem;
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::TyCtxt;
 use rustc_session::config::OutputFilenames;
 use rustc_session::Session;
-use rustc_span::symbol::Symbol;
 use rustc_target::spec::Target;
 use std::any::Any;
 use std::path::Path;
 
-use rustc_middle::mir::mono::{Linkage as RLinkage, MonoItem, Visibility};
-use rustc_middle::mir::Rvalue;
-use rustc_middle::mir::StatementKind;
+mod spirv_ctx;
+mod trans;
 
 pub struct NoLlvmMetadataLoader;
 
@@ -58,7 +58,7 @@ impl CodegenBackend for TheBackend {
         rustc_symbol_mangling::provide(providers);
 
         // jb-todo: target_features_whitelist is old name for supported_target_features
-        providers.target_features_whitelist = |tcx, _cnum| {
+        providers.supported_target_features = |_tcx, _cnum| {
             Default::default() // Just a dummy
         };
         providers.is_reachable_non_generic = |_tcx, _defid| true;
@@ -89,68 +89,25 @@ impl CodegenBackend for TheBackend {
 
         dbg!(cgus.len());
 
+        let mut translator = trans::Translator::new(tcx);
+
         cgus.iter().for_each(|cgu| {
             dbg!(cgu.name());
 
             let cgu = tcx.codegen_unit(cgu.name());
             let mono_items = cgu.items_in_deterministic_order(tcx);
 
-            for (mono_item, (linkage, visibility)) in mono_items {
+            for (mono_item, (_linkage, _visibility)) in mono_items {
                 match mono_item {
-                    MonoItem::Fn(instance) => {
-                        {
-                            let mut mir = ::std::io::Cursor::new(Vec::new());
-
-                            crate::rustc_mir::util::write_mir_pretty(
-                                tcx,
-                                Some(instance.def_id()),
-                                &mut mir,
-                            )
-                            .unwrap();
-
-                            let s = String::from_utf8(mir.into_inner()).unwrap();
-
-                            println!("{}", s);
-                        }
-
-                        let mir = tcx.instance_mir(instance.def);
-                        for (bb, bb_data) in mir.basic_blocks().iter_enumerated() {
-                            for stmt in &bb_data.statements {
-                                match &stmt.kind {
-                                    StatementKind::Assign(to_place_and_rval) => {
-                                        let place = to_place_and_rval.0; // jb-todo: iterate though place.projection & build OpAccessChain from it? see trans_place in cranelift
-
-                                        dbg!(&place);
-                                        for elem in place.projection {
-                                            match elem {
-                                                _ => {}
-                                            }
-                                        }
-
-                                        dbg!(&to_place_and_rval.1);
-                                        match &to_place_and_rval.1 {
-                                            Rvalue::Use(operand) => {
-                                                //let val = trans_operand(fx, operand);
-                                                //lval.write_cvalue(fx, val);
-                                                dbg!(operand);
-                                            }
-                                            _ => {}
-                                        }
-                                        //let lval = trans_place(fx, to_place_and_rval.0);
-                                        //dbg!(lval);
-                                        //println!("Assign");
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        }
-                    }
-                    _ => {}
+                    MonoItem::Fn(instance) => translator.trans_fn(instance),
+                    thing => println!("Unknown MonoItem: {:?}", thing),
                 }
             }
         });
 
-        Box::new(tcx.crate_name(LOCAL_CRATE) as Symbol)
+        let module = translator.assemble();
+
+        Box::new(module)
     }
 
     fn join_codegen(
@@ -159,10 +116,11 @@ impl CodegenBackend for TheBackend {
         _sess: &Session,
         _dep_graph: &DepGraph,
     ) -> Result<Box<dyn Any>, ErrorReported> {
-        let crate_name = ongoing_codegen
-            .downcast::<Symbol>()
-            .expect("in join_codegen: ongoing_codegen is not a Symbol");
-        Ok(crate_name)
+        Ok(ongoing_codegen)
+        // let crate_name = ongoing_codegen
+        //     .downcast::<Symbol>()
+        //     .expect("in join_codegen: ongoing_codegen is not a Symbol");
+        // Ok(crate_name)
     }
 
     fn link(
@@ -171,18 +129,29 @@ impl CodegenBackend for TheBackend {
         codegen_results: Box<dyn Any>,
         outputs: &OutputFilenames,
     ) -> Result<(), ErrorReported> {
-        use rustc_session::{config::CrateType, output::out_filename};
+        use rustc_session::config::{CrateType, OutputType};
         use std::io::Write;
-        let crate_name = codegen_results
-            .downcast::<Symbol>()
-            .expect("in link: codegen_results is not a Symbol");
+        let codegen_bytes = codegen_results
+            .downcast::<Vec<u32>>()
+            .expect("in link: codegen_results is not a Vec<u32>");
         for &crate_type in sess.opts.crate_types.iter() {
             if crate_type != CrateType::Rlib {
                 sess.fatal(&format!("Crate type is {:?}", crate_type));
             }
-            let output_name = out_filename(sess, crate_type, &outputs, &*crate_name.as_str());
-            let mut out_file = ::std::fs::File::create(output_name).unwrap();
-            write!(out_file, "This has been \"compiled\" successfully.").unwrap();
+            let mut output_name = outputs.path(OutputType::Exe);
+            output_name.set_extension("spv");
+            let mut out_file =
+                ::std::fs::File::create(output_name).expect("Unable to create output file");
+            // Note: endianness doesn't matter, readers deduce endianness from magic header.
+            let bytes_u8: &[u8] = unsafe {
+                std::slice::from_raw_parts(
+                    codegen_bytes.as_ptr() as *const u8,
+                    codegen_bytes.len() * std::mem::size_of::<u32>(),
+                )
+            };
+            out_file
+                .write_all(bytes_u8)
+                .expect("Unable to write output file");
         }
         Ok(())
     }
@@ -193,6 +162,5 @@ impl CodegenBackend for TheBackend {
 pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
     Box::new(TheBackend)
 }
-
 
 // https://github.com/bjorn3/rustc_codegen_cranelift/blob/1b8df386aa72bc3dacb803f7d4deb4eadd63b56f/src/base.rs
