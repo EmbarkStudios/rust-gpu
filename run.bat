@@ -1,1 +1,1 @@
-rustc +nightly -Zcodegen-backend=target\debug\rustc_codegen_spirv.dll --crate-name=empty --crate-type lib tests\empty.rs
+rustc +nightly -Zcodegen-backend=target\debug\rustc_codegen_spirv.dll --crate-name=empty --crate-type lib test\empty.rs
