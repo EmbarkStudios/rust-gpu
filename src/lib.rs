@@ -29,6 +29,7 @@ use rustc_target::spec::Target;
 use std::any::Any;
 use std::path::Path;
 
+mod ctx;
 mod spirv_ctx;
 mod trans;
 
@@ -87,7 +88,7 @@ impl CodegenBackend for TheBackend {
             &[]
         };
 
-        let mut translator = trans::Translator::new(tcx);
+        let mut context = ctx::Context::new(tcx);
 
         cgus.iter().for_each(|cgu| {
             let cgu = tcx.codegen_unit(cgu.name());
@@ -95,13 +96,13 @@ impl CodegenBackend for TheBackend {
 
             for (mono_item, (_linkage, _visibility)) in mono_items {
                 match mono_item {
-                    MonoItem::Fn(instance) => translator.trans_fn(instance),
+                    MonoItem::Fn(instance) => trans::trans_fn(&mut context, instance),
                     thing => println!("Unknown MonoItem: {:?}", thing),
                 }
             }
         });
 
-        let module = translator.assemble();
+        let module = context.assemble();
 
         Box::new(module)
     }

@@ -1,5 +1,5 @@
 use rspirv::dr::Builder;
-use spirv_headers::{AddressingModel, MemoryModel, Word};
+use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Word};
 use std::collections::HashMap;
 
 macro_rules! impl_cache {
@@ -34,6 +34,9 @@ struct Cache {
 impl SpirvContext {
     pub fn new() -> Self {
         let mut builder = Builder::new();
+        builder.capability(Capability::Shader);
+        // Temp hack: Linkage allows us to get away with no OpEntryPoint
+        builder.capability(Capability::Linkage);
         builder.memory_model(AddressingModel::Logical, MemoryModel::GLSL450);
         SpirvContext {
             builder,

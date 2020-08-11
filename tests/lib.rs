@@ -102,10 +102,15 @@ fn go(code: &str, expected: &str) {
         .expect("failed to parse spirv")
         .disassemble();
 
+    assert_eq!(PrettyString(&output_disas), PrettyString(expected));
+
+    match Command::new("spirv-val").arg(&output).status() {
+        Ok(status) => assert!(status.success()),
+        Err(err) => eprint!("spirv-val tool not found, ignoring test: {}", err),
+    }
+
     remove_file(input).expect("Failed to delete input file");
     remove_file(output).expect("Failed to delete output file");
-
-    assert_eq!(PrettyString(&output_disas), PrettyString(expected));
 }
 
 #[test]
@@ -118,24 +123,25 @@ pub fn add_numbers(x: u32, y: u32) -> u32 {
         r"; SPIR-V
 ; Version: 1.5
 ; Generator: rspirv
-; Bound: 14
+; Bound: 13
+OpCapability Shader
+OpCapability Linkage
 OpMemoryModel Logical GLSL450
 %1 = OpTypeInt 32 0
 %2 = OpTypeFunction %1 %1 %1
-%7 = OpTypeInt 32 1
 %3 = OpFunction  %1  None %2
 %4 = OpFunctionParameter  %1
 %5 = OpFunctionParameter  %1
 %6 = OpLabel
-%8 = OpIAdd  %7  %4 %5
-OpReturn
+%7 = OpIAdd  %1  %4 %5
+OpReturnValue %7
 OpFunctionEnd
-%9 = OpFunction  %1  None %2
+%8 = OpFunction  %1  None %2
+%9 = OpFunctionParameter  %1
 %10 = OpFunctionParameter  %1
-%11 = OpFunctionParameter  %1
-%12 = OpLabel
-%13 = OpIAdd  %7  %10 %11
-OpReturn
+%11 = OpLabel
+%12 = OpIAdd  %1  %9 %10
+OpReturnValue %12
 OpFunctionEnd",
     );
 }
