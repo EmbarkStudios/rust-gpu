@@ -29,8 +29,4 @@ impl LocalTracker {
         // This probably needs to be fixed, forward-references might be a thing
         *self.locals.get(&local).expect("Undefined local")
     }
-
-    pub fn clear(&mut self) {
-        self.locals.clear();
-    }
 }

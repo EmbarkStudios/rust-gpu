@@ -32,6 +32,10 @@ use std::path::Path;
 mod ctx;
 mod trans;
 
+#[cfg(test)]
+#[path = "../test/lib.rs"]
+mod test;
+
 struct NoLlvmMetadataLoader;
 
 impl MetadataLoader for NoLlvmMetadataLoader {

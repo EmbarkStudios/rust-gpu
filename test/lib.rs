@@ -3,6 +3,7 @@ use rspirv::binary::Disassemble;
 use std::fs::{remove_file, File};
 use std::io::prelude::*;
 use std::process::Command;
+use tempfile::tempdir;
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
@@ -64,11 +65,9 @@ impl Add for u32 {
 "#;
 
 fn go(code: &str, expected: &str) {
-    let temp = std::env::temp_dir();
-    let mut input = temp.clone();
-    input.push("code.rs");
-    let mut output = temp.clone();
-    output.push("code.spv");
+    let temp = tempdir().expect("Unable to create temp dir");
+    let input = temp.path().join("code.rs");
+    let output = temp.path().join("code.spv");
 
     let mut input_data = PREFIX.to_string();
     input_data.push_str(code);
@@ -87,7 +86,7 @@ fn go(code: &str, expected: &str) {
             "-Zmir-opt-level=3",
             "--out-dir",
         ])
-        .arg(temp)
+        .arg(temp.path())
         .arg(&input)
         .status()
         .expect("failed to execute process");
@@ -112,6 +111,7 @@ fn go(code: &str, expected: &str) {
 
     remove_file(input).expect("Failed to delete input file");
     remove_file(output).expect("Failed to delete output file");
+    temp.close().expect("Failed to delete temp dir");
 }
 
 #[test]
@@ -144,5 +144,20 @@ OpFunctionEnd
 %12 = OpIAdd  %1  %9 %10
 OpReturnValue %12
 OpFunctionEnd",
+    );
+}
+
+#[test]
+pub fn fib() {
+    go(
+        r"
+pub fn fib(n: u32) -> u32 {
+    let mut x = (1, 1);
+    for _ in 1..n {
+        x = (x.1, x.0 + x.1)
+    }
+    x.1
+}",
+        r"",
     );
 }
