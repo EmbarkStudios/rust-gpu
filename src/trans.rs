@@ -1,14 +1,9 @@
 use crate::ctx::{Context, FnCtx};
 use rspirv::spirv::{FunctionControl, Word};
-use rustc_middle::mir::{
-    Body, Operand, Rvalue, Statement, StatementKind, Terminator, TerminatorKind,
-};
-use rustc_middle::ty::{Ty, TyKind};
+use rustc_middle::mir::{Operand, Rvalue, Statement, StatementKind, Terminator, TerminatorKind};
+use rustc_middle::ty::{Instance, ParamEnv, Ty, TyKind};
 
-pub fn trans_fn<'ctx, 'tcx>(
-    ctx: &'ctx mut Context<'tcx>,
-    instance: rustc_middle::ty::Instance<'tcx>,
-) {
+pub fn trans_fn<'ctx, 'tcx>(ctx: &'ctx mut Context<'tcx>, instance: Instance<'tcx>) {
     {
         let mut mir = ::std::io::Cursor::new(Vec::new());
 
@@ -20,13 +15,13 @@ pub fn trans_fn<'ctx, 'tcx>(
         println!("{}", s);
     }
 
-    let mir = ctx.tcx.optimized_mir(instance.def_id());
+    let body = ctx.tcx.optimized_mir(instance.def_id());
 
-    let mut fnctx = FnCtx::new(ctx, instance.substs);
+    let mut fnctx = FnCtx::new(ctx, instance, body);
 
-    trans_fn_header(&mut fnctx, mir);
+    trans_fn_header(&mut fnctx);
 
-    for (bb, bb_data) in mir.basic_blocks().iter_enumerated() {
+    for (bb, bb_data) in fnctx.body.basic_blocks().iter_enumerated() {
         let label_id = fnctx.get_basic_block(bb);
         fnctx.spirv().begin_block(Some(label_id)).unwrap();
 
@@ -38,17 +33,16 @@ pub fn trans_fn<'ctx, 'tcx>(
     fnctx.spirv().end_function().unwrap();
 }
 
-// return_type, fn_type
-fn trans_fn_header<'tcx>(ctx: &mut FnCtx, body: &Body<'tcx>) {
-    let mir_return_type = body.local_decls[0u32.into()].ty;
+fn trans_fn_header<'tcx>(ctx: &mut FnCtx<'_, 'tcx>) {
+    let mir_return_type = ctx.body.local_decls[0u32.into()].ty;
     let return_type = trans_type(ctx, mir_return_type);
     ctx.is_void = if let TyKind::Tuple(fields) = &mir_return_type.kind {
         fields.len() == 0
     } else {
         false
     };
-    let params = (0..body.arg_count)
-        .map(|i| trans_type(ctx, body.local_decls[(i + 1).into()].ty))
+    let params = (0..ctx.body.arg_count)
+        .map(|i| trans_type(ctx, ctx.body.local_decls[(i + 1).into()].ty))
         .collect::<Vec<_>>();
     let mut params_nonzero = params.clone();
     if params_nonzero.is_empty() {
@@ -56,12 +50,13 @@ fn trans_fn_header<'tcx>(ctx: &mut FnCtx, body: &Body<'tcx>) {
         params_nonzero.push(ctx.spirv().type_void());
     }
     let function_type = ctx.spirv().type_function(return_type, params_nonzero);
-    let function_id = None;
+    let function_id = ctx
+        .ctx
+        .get_func_def(ctx.instance.def_id(), ctx.instance.substs);
     let control = FunctionControl::NONE;
-    // TODO: keep track of function IDs
     let _ = ctx
         .spirv()
-        .begin_function(return_type, function_id, control, function_type)
+        .begin_function(return_type, Some(function_id), control, function_type)
         .unwrap();
 
     for (i, &param_type) in params.iter().enumerate() {
@@ -70,16 +65,18 @@ fn trans_fn_header<'tcx>(ctx: &mut FnCtx, body: &Body<'tcx>) {
     }
 }
 
-fn trans_type<'tcx>(ctx: &mut FnCtx, ty: Ty<'tcx>) -> Word {
-    match ty.kind {
+fn trans_type<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, ty: Ty<'tcx>) -> Word {
+    let mono = ctx.monomorphize(&ty);
+    match mono.kind {
+        TyKind::Param(param) => panic!("TyKind::Param after monomorphize: {:?}", param),
         TyKind::Bool => ctx.spirv().type_bool(),
         TyKind::Tuple(fields) if fields.len() == 0 => ctx.spirv().type_void(),
         TyKind::Int(ty) => {
-            let size = ty.bit_width().expect("isize not supported yet");
+            let size = ty.bit_width().unwrap_or_else(|| ctx.ctx.pointer_size.val());
             ctx.spirv().type_int(size as u32, 1)
         }
         TyKind::Uint(ty) => {
-            let size = ty.bit_width().expect("isize not supported yet");
+            let size = ty.bit_width().unwrap_or_else(|| ctx.ctx.pointer_size.val());
             ctx.spirv().type_int(size as u32, 0)
         }
         TyKind::Float(ty) => ctx.spirv().type_float(ty.bit_width() as u32),
@@ -116,7 +113,7 @@ fn trans_stmt<'tcx>(ctx: &mut FnCtx, stmt: &Statement<'tcx>) {
     }
 }
 
-fn trans_terminator<'tcx>(ctx: &mut FnCtx, term: &Terminator<'tcx>) {
+fn trans_terminator<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, term: &Terminator<'tcx>) {
     match term.kind {
         TerminatorKind::Return => {
             if ctx.is_void {
@@ -137,6 +134,47 @@ fn trans_terminator<'tcx>(ctx: &mut FnCtx, term: &Terminator<'tcx>) {
         TerminatorKind::Goto { target } => {
             let inst_id = ctx.get_basic_block(target);
             ctx.spirv().branch(inst_id).unwrap();
+        }
+        TerminatorKind::Call {
+            ref func,
+            ref args,
+            ref destination,
+            ..
+        } => {
+            let destination = destination.expect("Divergent function calls not supported yet");
+            let fn_ty = ctx.monomorphize(&func.ty(ctx.body, ctx.ctx.tcx));
+            let fn_sig = ctx.ctx.tcx.normalize_erasing_late_bound_regions(
+                ParamEnv::reveal_all(),
+                &fn_ty.fn_sig(ctx.ctx.tcx),
+            );
+            let fn_return_type = ParamEnv::reveal_all().and(fn_sig.output()).value;
+            let result_type = trans_type(ctx, fn_return_type);
+            let function = match func {
+                // TODO: Can constant.literal.val not be a ZST?
+                Operand::Constant(constant) => match constant.literal.ty.kind {
+                    TyKind::FnDef(id, substs) => ctx.ctx.get_func_def(id, substs),
+                    ref thing => panic!("Unknown type in fn call: {:?}", thing),
+                },
+                thing => panic!("Dynamic calls not supported yet: {:?}", thing),
+            };
+            let arguments = args
+                .iter()
+                .map(|arg| trans_operand(ctx, arg))
+                .collect::<Vec<_>>();
+            let dest_local = destination.0.local;
+            if destination.0.projection.len() != 0 {
+                panic!(
+                    "Place projections aren't supported yet (fn call): {:?}",
+                    destination.0.projection
+                );
+            }
+            let result = ctx
+                .spirv()
+                .function_call(result_type, None, function, arguments)
+                .unwrap();
+            ctx.locals.def(dest_local, result);
+            let destination_bb = ctx.get_basic_block(destination.1);
+            ctx.spirv().branch(destination_bb).unwrap();
         }
         ref thing => panic!("Unknown terminator: {:?}", thing),
     }

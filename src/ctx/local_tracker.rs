@@ -26,7 +26,8 @@ impl LocalTracker {
     }
 
     pub fn get(&self, local: Local) -> Word {
-        // This probably needs to be fixed, forward-references might be a thing
+        // This probably needs to be fixed, forward-references might be a thing.
+        // (MIR probably declares all locals up front, so use that?)
         *self.locals.get(&local).expect("Undefined local")
     }
 }

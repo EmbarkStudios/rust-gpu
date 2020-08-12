@@ -114,6 +114,7 @@ impl CodegenBackend for TheBackend {
         _sess: &Session,
         _dep_graph: &DepGraph,
     ) -> Result<Box<dyn Any>, ErrorReported> {
+        // I think this function is if `codegen_crate` spawns threads, this is supposed to join those threads?
         Ok(ongoing_codegen)
         // let crate_name = ongoing_codegen
         //     .downcast::<Symbol>()
