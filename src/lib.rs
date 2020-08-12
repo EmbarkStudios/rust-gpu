@@ -30,10 +30,9 @@ use std::any::Any;
 use std::path::Path;
 
 mod ctx;
-mod spirv_ctx;
 mod trans;
 
-pub struct NoLlvmMetadataLoader;
+struct NoLlvmMetadataLoader;
 
 impl MetadataLoader for NoLlvmMetadataLoader {
     fn get_rlib_metadata(&self, _: &Target, filename: &Path) -> Result<MetadataRef, String> {
@@ -78,8 +77,6 @@ impl CodegenBackend for TheBackend {
     ) -> Box<dyn Any> {
         use rustc_hir::def_id::LOCAL_CRATE;
 
-        println!("In codegen_crate");
-
         let cgus = if tcx.sess.opts.output_types.should_codegen() {
             tcx.collect_and_partition_mono_items(LOCAL_CRATE).1
         } else {
@@ -90,17 +87,17 @@ impl CodegenBackend for TheBackend {
 
         let mut context = ctx::Context::new(tcx);
 
-        cgus.iter().for_each(|cgu| {
+        for cgu in cgus {
             let cgu = tcx.codegen_unit(cgu.name());
             let mono_items = cgu.items_in_deterministic_order(tcx);
 
             for (mono_item, (_linkage, _visibility)) in mono_items {
                 match mono_item {
                     MonoItem::Fn(instance) => trans::trans_fn(&mut context, instance),
-                    thing => println!("Unknown MonoItem: {:?}", thing),
+                    thing => panic!("Unknown MonoItem: {:?}", thing),
                 }
             }
-        });
+        }
 
         let module = context.assemble();
 

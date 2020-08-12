@@ -6,6 +6,7 @@ use rustc_middle::mir::{
 use rustc_middle::ty::{Ty, TyKind};
 
 pub fn trans_fn<'tcx>(ctx: &mut Context<'tcx>, instance: rustc_middle::ty::Instance<'tcx>) {
+    /*
     {
         let mut mir = ::std::io::Cursor::new(Vec::new());
 
@@ -16,21 +17,22 @@ pub fn trans_fn<'tcx>(ctx: &mut Context<'tcx>, instance: rustc_middle::ty::Insta
 
         println!("{}", s);
     }
+    */
 
-    let mir = ctx.tcx.instance_mir(instance.def);
+    let mir = ctx.tcx.optimized_mir(instance.def_id());
 
     trans_fn_header(ctx, mir);
 
     for (bb, bb_data) in mir.basic_blocks().iter_enumerated() {
         let label_id = ctx.get_basic_block(bb);
-        ctx.spirv.builder.begin_block(Some(label_id)).unwrap();
+        ctx.spirv.begin_block(Some(label_id)).unwrap();
 
         for stmt in &bb_data.statements {
             trans_stmt(ctx, stmt);
         }
         trans_terminator(ctx, bb_data.terminator());
     }
-    ctx.spirv.builder.end_function().unwrap();
+    ctx.spirv.end_function().unwrap();
 
     ctx.clear_after_fn();
 }
@@ -58,12 +60,11 @@ fn trans_fn_header<'tcx>(ctx: &mut Context<'tcx>, body: &Body<'tcx>) {
     // TODO: keep track of function IDs
     let _ = ctx
         .spirv
-        .builder
         .begin_function(return_type, function_id, control, function_type)
         .unwrap();
 
     for (i, &param_type) in params.iter().enumerate() {
-        let param_value = ctx.spirv.builder.function_parameter(param_type).unwrap();
+        let param_value = ctx.spirv.function_parameter(param_type).unwrap();
         ctx.locals.def((i + 1).into(), param_value);
     }
 }
@@ -81,10 +82,7 @@ fn trans_type<'tcx>(ctx: &mut Context<'tcx>, ty: Ty<'tcx>) -> Word {
             ctx.spirv.type_int(size as u32, 0)
         }
         TyKind::Float(ty) => ctx.spirv.type_float(ty.bit_width() as u32),
-        ref thing => {
-            println!("Unknown type: {:?}", thing);
-            ctx.spirv.builder.id()
-        }
+        ref thing => panic!("Unknown type: {:?}", thing),
     }
 }
 
@@ -96,7 +94,7 @@ fn trans_stmt<'tcx>(ctx: &mut Context<'tcx>, stmt: &Statement<'tcx>) {
             let rvalue = &place_and_rval.1;
 
             if place.projection.len() != 0 {
-                println!(
+                panic!(
                     "Place projections aren't supported yet (assignment): {:?}",
                     place.projection
                 );
@@ -108,7 +106,7 @@ fn trans_stmt<'tcx>(ctx: &mut Context<'tcx>, stmt: &Statement<'tcx>) {
         // ignore StorageLive/Dead for now
         StatementKind::StorageLive(_local) => (),
         StatementKind::StorageDead(_local) => (),
-        thing => println!("Unknown statement: {:?}", thing),
+        thing => panic!("Unknown statement: {:?}", thing),
     }
 }
 
@@ -116,25 +114,22 @@ fn trans_terminator<'tcx>(ctx: &mut Context<'tcx>, term: &Terminator<'tcx>) {
     match term.kind {
         TerminatorKind::Return => {
             if ctx.current_function_is_void {
-                ctx.spirv.builder.ret().unwrap();
+                ctx.spirv.ret().unwrap();
             } else {
                 // local 0 is return value
-                ctx.spirv
-                    .builder
-                    .ret_value(ctx.locals.get(0u32.into()))
-                    .unwrap();
+                ctx.spirv.ret_value(ctx.locals.get(0u32.into())).unwrap();
             }
         }
         TerminatorKind::Assert { target, .. } => {
             // ignore asserts for now, just do direct goto
             let inst_id = ctx.get_basic_block(target);
-            ctx.spirv.builder.branch(inst_id).unwrap();
+            ctx.spirv.branch(inst_id).unwrap();
         }
         TerminatorKind::Goto { target } => {
             let inst_id = ctx.get_basic_block(target);
-            ctx.spirv.builder.branch(inst_id).unwrap();
+            ctx.spirv.branch(inst_id).unwrap();
         }
-        ref thing => println!("Unknown terminator: {:?}", thing),
+        ref thing => panic!("Unknown terminator: {:?}", thing),
     }
 }
 
@@ -146,15 +141,9 @@ fn trans_rvalue<'tcx>(ctx: &mut Context<'tcx>, expr: &Rvalue<'tcx>) -> Word {
             let left = trans_operand(ctx, left);
             let right = trans_operand(ctx, right);
             let result_type = ctx.spirv.type_int(32, 0);
-            ctx.spirv
-                .builder
-                .i_add(result_type, None, left, right)
-                .unwrap()
+            ctx.spirv.i_add(result_type, None, left, right).unwrap()
         }
-        thing => {
-            println!("Unknown rvalue: {:?}", thing);
-            ctx.spirv.builder.id()
-        }
+        thing => panic!("Unknown rvalue: {:?}", thing),
     }
 }
 
@@ -162,16 +151,13 @@ fn trans_operand<'tcx>(ctx: &mut Context<'tcx>, operand: &Operand<'tcx>) -> Word
     match operand {
         Operand::Copy(place) | Operand::Move(place) => {
             if place.projection.len() != 0 {
-                println!(
+                panic!(
                     "Place projections aren't supported yet (operand): {:?}",
                     place.projection
                 );
             }
             ctx.locals.get(place.local)
         }
-        Operand::Constant(constant) => {
-            println!("Unimplemented Operand::Constant: {:?}", constant);
-            ctx.spirv.builder.id()
-        }
+        Operand::Constant(constant) => panic!("Unimplemented Operand::Constant: {:?}", constant),
     }
 }

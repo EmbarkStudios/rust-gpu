@@ -84,6 +84,7 @@ fn go(code: &str, expected: &str) {
             "--crate-type",
             "lib",
             "-O",
+            "-Zmir-opt-level=3",
             "--out-dir",
         ])
         .arg(temp)

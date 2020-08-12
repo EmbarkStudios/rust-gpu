@@ -1,17 +1,16 @@
 mod local_tracker;
 
-use crate::spirv_ctx::SpirvContext;
 use local_tracker::LocalTracker;
 use rspirv::binary::Assemble;
 use rspirv::dr::Builder;
-use rspirv::spirv::Word;
+use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Word};
 use rustc_middle::mir::BasicBlock;
 use rustc_middle::ty::TyCtxt;
 use std::collections::HashMap;
 use std::hash::Hash;
 
 pub struct Context<'tcx> {
-    pub spirv: SpirvContext,
+    pub spirv: Builder,
     pub tcx: TyCtxt<'tcx>,
     pub current_function_is_void: bool,
     basic_blocks: ForwardReference<BasicBlock>,
@@ -20,7 +19,11 @@ pub struct Context<'tcx> {
 
 impl<'tcx> Context<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>) -> Self {
-        let spirv = SpirvContext::new();
+        let mut spirv = Builder::new();
+        spirv.capability(Capability::Shader);
+        // Temp hack: Linkage allows us to get away with no OpEntryPoint
+        spirv.capability(Capability::Linkage);
+        spirv.memory_model(AddressingModel::Logical, MemoryModel::GLSL450);
         Self {
             spirv,
             tcx,
@@ -31,11 +34,11 @@ impl<'tcx> Context<'tcx> {
     }
 
     pub fn assemble(self) -> Vec<u32> {
-        self.spirv.builder.module().assemble()
+        self.spirv.module().assemble()
     }
 
     pub fn get_basic_block(&mut self, bb: BasicBlock) -> Word {
-        self.basic_blocks.get(&mut self.spirv.builder, bb)
+        self.basic_blocks.get(&mut self.spirv, bb)
     }
 
     pub fn clear_after_fn(&mut self) {
