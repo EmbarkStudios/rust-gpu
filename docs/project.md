@@ -26,3 +26,13 @@ This project will involve a few things if we want to get the experience right an
 The rustc compiler backend support levels are indicated by tiers; macOS, Linux and desktop PC are all Tier 1. However "smaller" platforms such as Android and iOS are Tier 2 and even smaller projects are Tier 3.
 
 I think our initial goal should be to replace our own internal shaders with shaders written in Rust, and then to achieve Tier 3 support, which roughly means that it's possible to get up and running if you're willing to put in some effort into it. Usually this involves setting up a custom build environment, and getting it running in a custom environment. However, I think the ambition of the project ultimately should be Tier 1 support.
+
+## Process
+
+We use this repo as a small monorepo for everything related to the project: crates, tools, shaders, examples, tests, and design documents. This way we can use issues and PRs covering everything in the same place cross-reference stuff within the repo as well as with other GitHub repos (Cranelift/Rust/Ark).
+
+We meet weekly over vidcon to discuss design and triage issues, and will do weekly project updates.
+
+We have an internal Embark Slack channel for fast discussion (now while this is an internal Embark project): #ark-pod-rust-gpu.
+
+For discussions with [Bytecode Alliance](https://bytecodealliance.org/) and Cranelift developers, there is a public [Zulip chat thread](https://bytecodealliance.zulipchat.com/#narrow/stream/225524-cranelift-new-backend/topic/spir-v)
