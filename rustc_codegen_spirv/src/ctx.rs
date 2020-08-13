@@ -1,4 +1,5 @@
-mod local_tracker;
+pub mod local_tracker;
+pub mod type_tracker;
 
 use local_tracker::LocalTracker;
 use rspirv::binary::Assemble;
@@ -10,6 +11,7 @@ use rustc_middle::ty::{fold::TypeFoldable, Instance, ParamEnv, TyCtxt};
 use rustc_span::def_id::DefId;
 use std::collections::HashMap;
 use std::hash::Hash;
+use type_tracker::TypeTracker;
 
 #[derive(Copy, Clone)]
 pub enum PointerSize {
@@ -33,6 +35,7 @@ pub struct Context<'tcx> {
     spirv_helper: SpirvHelper,
     pub pointer_size: PointerSize,
     func_defs: ForwardReference<(DefId, SubstsRef<'tcx>)>,
+    pub type_tracker: TypeTracker,
 }
 
 impl<'tcx> Context<'tcx> {
@@ -49,6 +52,7 @@ impl<'tcx> Context<'tcx> {
             spirv_helper: SpirvHelper::new(),
             pointer_size: PointerSize::P64,
             func_defs: ForwardReference::new(),
+            type_tracker: TypeTracker::new(),
         }
     }
 
