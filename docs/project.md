@@ -16,13 +16,10 @@ This project will involve a few things if we want to get the experience right an
 
 - `rustc` compiler backend, either as a cranelift module, or as a seperate `rustc` backend (next to llvm and cranelift). We're currently evaluating both options, but it looks like a `rustc` native backend would be the most preferable.
 - This compiler backend is currently planned to only support SPIR-V (the open compiler target for Vulkan) but it's not unlikely that in future versions this will / should support DXIL (the target for DirectX) or WHLSL (the WebGPU shading language that's bijective with SPIR-V)
-
-  - We'll need language front-end features to be able to support GPU workloads better; this will include among other things
-
-    - Safe access to groupshared and constant memory
-    - Support for intrinsics
-    - Support for resource binding
-
+- We'll need language front-end features to be able to support GPU workloads better; this will include among other things
+  - Safe access to groupshared and constant memory
+  - Support for intrinsics
+  - Support for resource binding
 - [crates.io](https://crates.io) support to be able to publish SPIR-V crates
 - An Embark-provided rendering / framegraph abstraction to take advantage of this and to make it easy for users to re-use rendering effects.
 
