@@ -8,7 +8,7 @@ Our hope with this project is that we push the industry forward by bringing an e
 
 ## Why Embark?
 
-At Embark, we've been building our in-house engine from the ground up in Rust and we have some previous in-house experience developing RLSL (a first prototype of this idea) and we have some of the world's best rendering engineers that are familiar with the problems in current shading languages so we're in a unique place to solve this problem. To streamline our own internal development, facilitate code-sharing between GPU and CPU, but most importantly: to enable our users to very rapidly build great looking experiences. If we do this project right one wouldn't nessisarily need a team of rendering engineers to build a good looking game, instead one would simply use a few of the existing open-source crates that provide the graphical effects needed to create the experience you're after. Instead of sharing snippets of TAA code on forum posts one could simply add the right crate(s).
+At Embark, we've been building our in-house engine from the ground up in Rust and we have some previous in-house experience developing [RLSL](https://github.com/MaikKlein/rlsl) (a first prototype of this idea) and we have some of the world's best rendering engineers that are familiar with the problems in current shading languages so we're in a unique place to solve this problem. To streamline our own internal development, facilitate code-sharing between GPU and CPU, but most importantly: to enable our users to very rapidly build great looking experiences. If we do this project right one wouldn't nessisarily need a team of rendering engineers to build a good looking game, instead one would simply use a few of the existing open-source crates that provide the graphical effects needed to create the experience you're after. Instead of sharing snippets of TAA code on forum posts one could simply add the right crate(s).
 
 ## Project scope
 
@@ -23,7 +23,7 @@ This project will involve a few things if we want to get the experience right an
     - Support for intrinsics
     - Support for resource binding
 
-- crates.io support to be able to publish SPIR-V crates
+- [crates.io](https://crates.io) support to be able to publish SPIR-V crates
 - An Embark-provided rendering / framegraph abstraction to take advantage of this and to make it easy for users to re-use rendering effects.
 
 The rustc compiler backend support levels are indicated by tiers; macOS, Linux and desktop PC are all Tier 1. However "smaller" platforms such as Android and iOS are Tier 2 and even smaller projects are Tier 3.
