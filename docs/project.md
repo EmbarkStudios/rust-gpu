@@ -14,14 +14,17 @@ At Embark, we've been building our in-house engine from the ground up in Rust an
 
 This project will involve a few things if we want to get the experience right and it's quite broad. Initial stages will involve mostly just setting up the backend, however the project will be a bit broader then that.
 
- - `rustc` compiler backend, either as a cranelift module, or as a seperate `rustc` backend (next to llvm and cranelift). We're currently evaluating both options, but it looks like a `rustc` native backend would be the most preferable.
- - This compiler backend is currently planned to only support SPIR-V (the open compiler target for Vulkan) but it's not unlikely that in future versions this will / should support DXIL (the target for DirectX) or WHLSL (the WebGPU shading language that's bijective with SPIR-V)
+- `rustc` compiler backend, either as a cranelift module, or as a seperate `rustc` backend (next to llvm and cranelift). We're currently evaluating both options, but it looks like a `rustc` native backend would be the most preferable.
+- This compiler backend is currently planned to only support SPIR-V (the open compiler target for Vulkan) but it's not unlikely that in future versions this will / should support DXIL (the target for DirectX) or WHLSL (the WebGPU shading language that's bijective with SPIR-V)
+
   - We'll need language front-end features to be able to support GPU workloads better; this will include among other things
+
     - Safe access to groupshared and constant memory
     - Support for intrinsics
     - Support for resource binding
- - crates.io support to be able to publish SPIR-V crates
- - An Embark-provided rendering / framegraph abstraction to take advantage of this and to make it easy for users to re-use rendering effects.
+
+- crates.io support to be able to publish SPIR-V crates
+- An Embark-provided rendering / framegraph abstraction to take advantage of this and to make it easy for users to re-use rendering effects.
 
 The rustc compiler backend support levels are indicated by tiers; macOS, Linux and desktop PC are all Tier 1. However "smaller" platforms such as Android and iOS are Tier 2 and even smaller projects are Tier 3.
 
