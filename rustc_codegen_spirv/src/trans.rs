@@ -344,7 +344,15 @@ fn trans_place<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>) -> (Word, S
     let mut result_type = local.pointee_ty();
     for proj in place.projection {
         match proj {
-            ProjectionElem::Deref => panic!("Projection::Deref not supported yet"),
+            ProjectionElem::Deref => {
+                let int_ty = ctx.ctx.spirv.type_int(32, 1);
+                let indexer_value = ctx.ctx.spirv.constant_u32(int_ty, 0);
+                access_chain.push(indexer_value);
+                result_type = match result_type {
+                    SpirvType::Pointer { pointee, .. } => pointee,
+                    ty => panic!("Deref on non-pointer type: {:?}", ty),
+                };
+            }
             ProjectionElem::Field(field, _field_type) => {
                 let int_ty = ctx.ctx.spirv.type_int(32, 1);
                 let indexer_value = ctx.ctx.spirv.constant_u32(int_ty, field.as_u32());
