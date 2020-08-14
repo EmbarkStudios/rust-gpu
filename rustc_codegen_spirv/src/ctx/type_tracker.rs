@@ -15,6 +15,7 @@ impl SpirvType {
             SpirvType::Integer(def, _, _) => def,
             SpirvType::Float(def, _) => def,
             SpirvType::ZST(def) => def,
+            SpirvType::Slice(ref element) => element.def(),
             SpirvType::Adt { def, .. } => def,
             SpirvType::Pointer { def, .. } => def,
         }
@@ -29,6 +30,9 @@ pub enum SpirvType {
     // TODO: Do we fold this into Adt?
     /// Zero Sized Type
     ZST(Word),
+    /// This variant is kind of useless, but it lets us recognize Pointer(Slice(T)), etc.
+    // TODO: Actually recognize Pointer(Slice(T)) and generate a wide pointer.
+    Slice(Box<SpirvType>),
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
         def: Word,

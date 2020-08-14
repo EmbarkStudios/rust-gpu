@@ -128,6 +128,10 @@ fn trans_type<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, ty: Ty<'tcx>) -> SpirvType {
             ctx.spirv().type_float(ty.bit_width() as u32),
             ty.bit_width() as u32,
         ),
+        TyKind::Slice(ty) => {
+            let element = trans_type(ctx, ty);
+            SpirvType::Slice(Box::new(element))
+        }
         TyKind::RawPtr(type_and_mut) => {
             let pointee_type = trans_type(ctx, type_and_mut.ty);
             // note: use custom cache
