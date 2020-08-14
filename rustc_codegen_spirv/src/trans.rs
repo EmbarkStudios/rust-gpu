@@ -251,6 +251,34 @@ fn trans_terminator<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, term: &Terminator<'tcx>) {
             let destination_bb = ctx.get_basic_block(destination.1);
             ctx.spirv().branch(destination_bb).unwrap();
         }
+        TerminatorKind::SwitchInt {
+            ref discr,
+            switch_ty: _,
+            ref values,
+            ref targets,
+        } => {
+            // the last target is the default block
+            assert_eq!(values.len() + 1, targets.len());
+            let (selector, _selector_type) = trans_operand(ctx, discr);
+            let target = values
+                .iter()
+                .zip(targets.iter())
+                .map(|(&value, &target)| {
+                    if value > u32::max_value() as _ {
+                        // TODO: Fall back to if/else chain for these
+                        panic!(
+                            "Unimplemented: switch value too high for spir-v: {:?}",
+                            value
+                        );
+                    }
+                    let value_spirv = value as u32;
+                    let target_spirv = ctx.get_basic_block(target);
+                    (value_spirv, target_spirv)
+                })
+                .collect::<Vec<_>>();
+            let default = ctx.get_basic_block(*targets.last().unwrap());
+            ctx.spirv().switch(selector, default, target).unwrap();
+        }
         ref thing => panic!("Unknown terminator: {:?}", thing),
     }
 }
