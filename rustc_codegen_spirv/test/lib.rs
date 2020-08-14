@@ -1,4 +1,3 @@
-use pretty_assertions::assert_eq;
 use rspirv::binary::Disassemble;
 use std::fs::{remove_file, File};
 use std::io::prelude::*;
