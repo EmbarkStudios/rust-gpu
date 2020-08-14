@@ -11,6 +11,8 @@ extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_symbol_mangling;
 extern crate rustc_target;
+extern crate rustc_interface;
+extern crate rustc_driver;
 
 use rustc_codegen_ssa::traits::CodegenBackend;
 use rustc_data_structures::owning_ref::OwningRef;
