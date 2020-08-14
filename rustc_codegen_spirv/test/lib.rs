@@ -76,11 +76,8 @@ fn go(code: &str, expected: &str) {
         .write_all(&input_data.into_bytes())
         .unwrap();
 
-    let nightly = include_str!("../nightly");
-
     let cmd = Command::new("rustc")
         .args(&[
-            &format!("+{}", nightly),
             #[cfg(target_os = "unix")]
             "-Zcodegen-backend=target/debug/librustc_codegen_spirv.so",
             #[cfg(target_os = "windows")]

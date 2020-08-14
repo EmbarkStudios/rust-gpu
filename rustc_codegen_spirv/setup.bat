@@ -1,6 +1,6 @@
 setlocal
 
-(set /p nightly=)<nightly
+(set /p nightly=)<rust-toolchain
 
 echo %nightly%
 
