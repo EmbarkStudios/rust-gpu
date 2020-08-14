@@ -78,7 +78,7 @@ fn go(code: &str, expected: &str) {
 
     let cmd = Command::new("rustc")
         .args(&[
-            #[cfg(target_os = "unix")]
+            #[cfg(unix)]
             "-Zcodegen-backend=target/debug/librustc_codegen_spirv.so",
             #[cfg(target_os = "windows")]
             "-Zcodegen-backend=target/debug/rustc_codegen_spirv.dll",

@@ -80,6 +80,12 @@ impl<'tcx> Context<'tcx> {
             }
         }
     }
+
+    /// rspirv doesn't cache type_pointer, so cache it ourselves here.
+    pub fn type_pointer(&mut self, storage_class: StorageClass, pointee_type: Word) -> Word {
+        self.spirv_helper
+            .type_pointer(&mut self.spirv, storage_class, pointee_type)
+    }
 }
 
 /// FnCtx is the "bag of random variables" used for state when compiling a particular function - i.e. variables that are
@@ -128,10 +134,8 @@ impl<'ctx, 'tcx> FnCtx<'ctx, 'tcx> {
     }
 
     /// rspirv doesn't cache type_pointer, so cache it ourselves here.
-    pub fn type_pointer(&mut self, pointee_type: Word) -> Word {
-        self.ctx
-            .spirv_helper
-            .type_pointer(&mut self.ctx.spirv, pointee_type)
+    pub fn type_pointer(&mut self, storage_class: StorageClass, pointee_type: Word) -> Word {
+        self.ctx.type_pointer(storage_class, pointee_type)
     }
 
     // copied from rustc_codegen_cranelift
@@ -168,7 +172,7 @@ impl<T: Eq + Hash> ForwardReference<T> {
 }
 
 struct SpirvHelper {
-    pointer: HashMap<Word, Word>,
+    pointer: HashMap<(Word, StorageClass), Word>,
 }
 
 impl SpirvHelper {
@@ -178,11 +182,15 @@ impl SpirvHelper {
         }
     }
 
-    fn type_pointer(&mut self, spirv: &mut Builder, pointee_type: Word) -> Word {
-        // TODO: StorageClass
+    fn type_pointer(
+        &mut self,
+        spirv: &mut Builder,
+        storage_class: StorageClass,
+        pointee_type: Word,
+    ) -> Word {
         *self
             .pointer
-            .entry(pointee_type)
-            .or_insert_with(|| spirv.type_pointer(None, StorageClass::Generic, pointee_type))
+            .entry((pointee_type, storage_class))
+            .or_insert_with(|| spirv.type_pointer(None, storage_class, pointee_type))
     }
 }

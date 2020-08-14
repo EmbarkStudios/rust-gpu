@@ -85,9 +85,7 @@ pub fn trans_locals<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, parameters_spirv: Vec<Word>
     for (local, decl) in ctx.body.local_decls.iter_enumerated() {
         // TODO: ZSTs
         let local_type = trans_type(ctx, decl.ty);
-        let local_ptr_type_def =
-            ctx.spirv()
-                .type_pointer(None, StorageClass::Function, local_type.def());
+        let local_ptr_type_def = ctx.type_pointer(StorageClass::Function, local_type.def());
         let local_ptr_type = SpirvType::Pointer {
             def: local_ptr_type_def,
             pointee: Box::new(local_type),
@@ -136,7 +134,7 @@ fn trans_type<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, ty: Ty<'tcx>) -> SpirvType {
             let pointee_type = trans_type(ctx, type_and_mut.ty);
             // note: use custom cache
             SpirvType::Pointer {
-                def: ctx.type_pointer(pointee_type.def()),
+                def: ctx.type_pointer(StorageClass::Generic, pointee_type.def()),
                 pointee: Box::new(pointee_type),
             }
         }
@@ -144,7 +142,7 @@ fn trans_type<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, ty: Ty<'tcx>) -> SpirvType {
             let pointee_type = trans_type(ctx, pointee_ty);
             // note: use custom cache
             SpirvType::Pointer {
-                def: ctx.type_pointer(pointee_type.def()),
+                def: ctx.type_pointer(StorageClass::Generic, pointee_type.def()),
                 pointee: Box::new(pointee_type),
             }
         }
@@ -534,10 +532,9 @@ fn trans_place<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>) -> (Word, S
     let pointer = if access_chain.is_empty() {
         local.def
     } else {
-        let result_ptr_type =
-            ctx.ctx
-                .spirv
-                .type_pointer(None, StorageClass::Function, result_type.def());
+        let result_ptr_type = ctx
+            .ctx
+            .type_pointer(StorageClass::Function, result_type.def());
         ctx.ctx
             .spirv
             .access_chain(result_ptr_type, None, local.def, access_chain)
