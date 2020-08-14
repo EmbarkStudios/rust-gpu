@@ -324,23 +324,84 @@ fn trans_rvalue<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, expr: &Rvalue<'tcx>) -> Word {
     }
 }
 
+macro_rules! decode_match {
+    (
+        match: $mid:expr, with: $ctx:ident, $result_ty:ident, $left:ident, $right:ident
+        $(
+            (int, int) => $i:ident,
+        )?
+        $(
+            (sint, sint) => $s:ident,
+        )?
+        $(
+            (uint, uint) => $u:ident,
+        )?
+        $(
+            (float, float) => $f:ident,
+        )?
+    ) => (
+        match $mid {
+            $(
+                (Integer(_, _, _), Integer(_, _, _)) => { $ctx.spirv(). $i ($result_ty, None, $left, $right).unwrap() }
+            )?
+            $(
+                (Integer(_, _, true), Integer(_, _, true)) => { $ctx.spirv(). $s ($result_ty, None, $left, $right).unwrap() }
+            )?
+            $(
+                (Integer(_, _, false), Integer(_, _, false)) => { $ctx.spirv(). $u ($result_ty, None, $left, $right).unwrap() }
+            )?
+            $(
+                (Float(_, _), Float(_, _))  => { $ctx.spirv(). $f ($result_ty, None, $left, $right).unwrap() }
+            )?,
+            _ => {
+                panic!("Unknown op")
+            }
+        }
+    )
+}
+
 fn trans_binaryop<'tcx>(
     ctx: &mut FnCtx<'_, 'tcx>,
     op: &BinOp,
     left: &Operand<'tcx>,
     right: &Operand<'tcx>,
 ) -> Word {
+    use crate::trans::SpirvType::*;
+
     let (left, left_ty) = trans_operand(ctx, left);
     let (right, right_ty) = trans_operand(ctx, right);
-    assert_eq!(left_ty, right_ty);
     let result_type = left_ty.def();
-    // TODO: match on type to do correct operation (s_div vs. u_div, etc.)
+
+    assert_eq!(left_ty, right_ty);
+    
     match op {
-        BinOp::Add => ctx.spirv().i_add(result_type, None, left, right).unwrap(),
-        BinOp::Sub => ctx.spirv().i_sub(result_type, None, left, right).unwrap(),
-        BinOp::Mul => ctx.spirv().i_mul(result_type, None, left, right).unwrap(),
-        BinOp::Div => ctx.spirv().u_div(result_type, None, left, right).unwrap(),
-        BinOp::Rem => ctx.spirv().u_mod(result_type, None, left, right).unwrap(),
+        BinOp::Add => decode_match!(
+            match: (left_ty, right_ty), with: ctx, result_type, left, right
+            (int, int) => i_add,
+            (float, float) => f_add,
+        ),
+        BinOp::Sub => decode_match!(
+            match: (left_ty, right_ty), with: ctx, result_type, left, right
+            (int, int) => i_sub,
+            (float, float) => f_sub,
+        ),
+        BinOp::Mul => decode_match!(
+            match: (left_ty, right_ty), with: ctx, result_type, left, right
+            (int, int) => i_mul,
+            (float, float) => f_mul,
+        ),
+        BinOp::Div => decode_match!(
+            match: (left_ty, right_ty), with: ctx, result_type, left, right
+            (sint, sint) => s_div,
+            (uint, uint) => u_div,
+            (float, float) => f_div,
+        ),
+        BinOp::Rem => decode_match!(
+            match: (left_ty, right_ty), with: ctx, result_type, left, right
+            (sint, sint) => s_mod,
+            (uint, uint) => u_mod,
+            (float, float) => f_mod,
+        ),
         BinOp::BitXor => ctx
             .spirv()
             .bitwise_xor(result_type, None, left, right)
@@ -357,38 +418,65 @@ fn trans_binaryop<'tcx>(
             .spirv()
             .shift_left_logical(result_type, None, left, right)
             .unwrap(),
-        // TODO: Is this logical or arith?
-        BinOp::Shr => ctx
-            .spirv()
-            .shift_right_logical(result_type, None, left, right)
-            .unwrap(),
+        BinOp::Shr => 
+            // https://doc.rust-lang.org/reference/expressions/operator-expr.html#arithmetic-and-logical-binary-operators
+            //  ** Arithmetic right shift on signed integer types, logical right shift on unsigned integer types.
+            decode_match!(
+                match: (left_ty, right_ty), with: ctx, result_type, left, right
+                (sint, sint) => shift_right_arithmetic,
+                (uint, uint) => shift_right_logical,
+            ),
         BinOp::Eq => {
             let bool = ctx.spirv().type_bool();
-            ctx.spirv().i_equal(bool, None, left, right).unwrap()
+            decode_match!(
+                match: (left_ty, right_ty), with: ctx, bool, left, right
+                (int, int) => i_equal,
+                (float, float) => f_ord_equal, // jb-todo: which one does rust take? this impacts NaN handling
+            )
         }
         BinOp::Ne => {
             let bool = ctx.spirv().type_bool();
-            ctx.spirv().i_not_equal(bool, None, left, right).unwrap()
+            decode_match!(
+                match: (left_ty, right_ty), with: ctx, bool, left, right
+                (int, int) => i_not_equal,
+                (float, float) => f_ord_not_equal, // jb-todo: which one does rust take? this impacts NaN handling
+            )
         }
         BinOp::Lt => {
             let bool = ctx.spirv().type_bool();
-            ctx.spirv().u_less_than(bool, None, left, right).unwrap()
+            decode_match!(
+                match: (left_ty, right_ty), with: ctx, bool, left, right
+                (sint, sint) => s_less_than,
+                (uint, uint) => u_less_than,
+                (float, float) => f_ord_less_than, // jb-todo: which one does rust take? this impacts NaN handling
+            )
         }
         BinOp::Le => {
             let bool = ctx.spirv().type_bool();
-            ctx.spirv()
-                .s_less_than_equal(bool, None, left, right)
-                .unwrap()
+            decode_match!(
+                match: (left_ty, right_ty), with: ctx, bool, left, right
+                (sint, sint) => s_less_than_equal,
+                (uint, uint) => u_less_than_equal,
+                (float, float) => f_ord_less_than_equal, // jb-todo: which one does rust take? this impacts NaN handling
+            )
         }
         BinOp::Ge => {
             let bool = ctx.spirv().type_bool();
-            ctx.spirv()
-                .u_greater_than_equal(bool, None, left, right)
-                .unwrap()
+            decode_match!(
+                match: (left_ty, right_ty), with: ctx, bool, left, right
+                (sint, sint) => s_greater_than_equal,
+                (uint, uint) => u_greater_than_equal,
+                (float, float) => f_ord_greater_than_equal, // jb-todo: which one does rust take? this impacts NaN handling
+            )
         }
         BinOp::Gt => {
             let bool = ctx.spirv().type_bool();
-            ctx.spirv().u_greater_than(bool, None, left, right).unwrap()
+            decode_match!(
+                match: (left_ty, right_ty), with: ctx, bool, left, right
+                (sint, sint) => s_greater_than,
+                (uint, uint) => u_greater_than,
+                (float, float) => f_ord_greater_than, // jb-todo: which one does rust take? this impacts NaN handling
+            )
         }
         BinOp::Offset => {
             // TODO: Look up what result_type is supposed to be here
