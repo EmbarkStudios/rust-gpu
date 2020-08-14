@@ -1,7 +1,8 @@
 use crate::ctx::{local_tracker::SpirvLocal, type_tracker::SpirvType, Context, FnCtx};
 use rspirv::spirv::{FunctionControl, StorageClass, Word};
 use rustc_middle::mir::{
-    Operand, Place, ProjectionElem, Rvalue, Statement, StatementKind, Terminator, TerminatorKind,
+    BinOp, Operand, Place, ProjectionElem, Rvalue, Statement, StatementKind, Terminator,
+    TerminatorKind,
 };
 use rustc_middle::ty::{Instance, ParamEnv, Ty, TyKind};
 
@@ -126,6 +127,14 @@ fn trans_type<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, ty: Ty<'tcx>) -> SpirvType {
                 pointee: Box::new(pointee_type),
             }
         }
+        TyKind::Ref(_region, pointee_ty, _mutability) => {
+            let pointee_type = trans_type(ctx, pointee_ty);
+            // note: use custom cache
+            SpirvType::Pointer {
+                def: ctx.type_pointer(pointee_type.def()),
+                pointee: Box::new(pointee_type),
+            }
+        }
         TyKind::Adt(adt, substs) => {
             if adt.variants.len() != 1 {
                 panic!("Enums/unions aren't supported yet: {:?}", adt);
@@ -172,7 +181,7 @@ fn trans_terminator<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, term: &Terminator<'tcx>) {
             if ctx.is_void {
                 ctx.spirv().ret().unwrap();
             } else {
-                let return_value = trans_place_load(ctx, &Place::return_place());
+                let return_value = trans_place_load(ctx, &Place::return_place()).0;
                 ctx.ctx.spirv.ret_value(return_value).unwrap();
             }
         }
@@ -209,7 +218,7 @@ fn trans_terminator<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, term: &Terminator<'tcx>) {
             };
             let arguments = args
                 .iter()
-                .map(|arg| trans_operand(ctx, arg))
+                .map(|arg| trans_operand(ctx, arg).0)
                 .collect::<Vec<_>>();
             let result = ctx
                 .spirv()
@@ -225,30 +234,102 @@ fn trans_terminator<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, term: &Terminator<'tcx>) {
 
 fn trans_rvalue<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, expr: &Rvalue<'tcx>) -> Word {
     match expr {
-        Rvalue::Use(operand) => trans_operand(ctx, operand),
-        Rvalue::BinaryOp(_op, left, right) => {
-            // TODO: properly implement
-            let left = trans_operand(ctx, left);
-            let right = trans_operand(ctx, right);
-            let result_type = ctx.spirv().type_int(32, 0);
-            ctx.spirv().i_add(result_type, None, left, right).unwrap()
-        }
+        Rvalue::Use(operand) => trans_operand(ctx, operand).0,
+        Rvalue::BinaryOp(op, left, right) => trans_binaryop(ctx, op, left, right),
+        Rvalue::Ref(_region, _borrow_kind, place) => trans_place(ctx, place).0,
         thing => panic!("Unknown rvalue: {:?}", thing),
     }
 }
 
-fn trans_operand<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, operand: &Operand<'tcx>) -> Word {
+fn trans_binaryop<'tcx>(
+    ctx: &mut FnCtx<'_, 'tcx>,
+    op: &BinOp,
+    left: &Operand<'tcx>,
+    right: &Operand<'tcx>,
+) -> Word {
+    let (left, left_ty) = trans_operand(ctx, left);
+    let (right, right_ty) = trans_operand(ctx, right);
+    assert_eq!(left_ty, right_ty);
+    let result_type = left_ty.def();
+    // TODO: match on type to do correct operation (s_div vs. u_div, etc.)
+    match op {
+        BinOp::Add => ctx.spirv().i_add(result_type, None, left, right).unwrap(),
+        BinOp::Sub => ctx.spirv().i_sub(result_type, None, left, right).unwrap(),
+        BinOp::Mul => ctx.spirv().i_mul(result_type, None, left, right).unwrap(),
+        BinOp::Div => ctx.spirv().u_div(result_type, None, left, right).unwrap(),
+        BinOp::Rem => ctx.spirv().u_mod(result_type, None, left, right).unwrap(),
+        BinOp::BitXor => ctx
+            .spirv()
+            .bitwise_xor(result_type, None, left, right)
+            .unwrap(),
+        BinOp::BitAnd => ctx
+            .spirv()
+            .bitwise_and(result_type, None, left, right)
+            .unwrap(),
+        BinOp::BitOr => ctx
+            .spirv()
+            .bitwise_or(result_type, None, left, right)
+            .unwrap(),
+        BinOp::Shl => ctx
+            .spirv()
+            .shift_left_logical(result_type, None, left, right)
+            .unwrap(),
+        // TODO: Is this logical or arith?
+        BinOp::Shr => ctx
+            .spirv()
+            .shift_right_logical(result_type, None, left, right)
+            .unwrap(),
+        BinOp::Eq => {
+            let bool = ctx.spirv().type_bool();
+            ctx.spirv().i_equal(bool, None, left, right).unwrap()
+        }
+        BinOp::Ne => {
+            let bool = ctx.spirv().type_bool();
+            ctx.spirv().i_not_equal(bool, None, left, right).unwrap()
+        }
+        BinOp::Lt => {
+            let bool = ctx.spirv().type_bool();
+            ctx.spirv().u_less_than(bool, None, left, right).unwrap()
+        }
+        BinOp::Le => {
+            let bool = ctx.spirv().type_bool();
+            ctx.spirv()
+                .s_less_than_equal(bool, None, left, right)
+                .unwrap()
+        }
+        BinOp::Ge => {
+            let bool = ctx.spirv().type_bool();
+            ctx.spirv()
+                .u_greater_than_equal(bool, None, left, right)
+                .unwrap()
+        }
+        BinOp::Gt => {
+            let bool = ctx.spirv().type_bool();
+            ctx.spirv().u_greater_than(bool, None, left, right).unwrap()
+        }
+        BinOp::Offset => {
+            // TODO: Look up what result_type is supposed to be here
+            let ptr_size = ctx.ctx.pointer_size.val() as u32;
+            let int = ctx.spirv().type_int(ptr_size, 1);
+            ctx.spirv().ptr_diff(int, None, left, right).unwrap()
+        }
+    }
+}
+
+fn trans_operand<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, operand: &Operand<'tcx>) -> (Word, SpirvType) {
     match operand {
         Operand::Copy(place) | Operand::Move(place) => trans_place_load(ctx, place),
         Operand::Constant(constant) => panic!("Unimplemented Operand::Constant: {:?}", constant),
     }
 }
 
-fn trans_place_load<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>) -> Word {
+fn trans_place_load<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>) -> (Word, SpirvType) {
     let (pointer, deref_pointer_type) = trans_place(ctx, place);
-    ctx.spirv()
-        .load(deref_pointer_type, None, pointer, None, &[])
-        .unwrap()
+    let loaded = ctx
+        .spirv()
+        .load(deref_pointer_type.def(), None, pointer, None, &[])
+        .unwrap();
+    (loaded, deref_pointer_type)
 }
 
 fn trans_place_store<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>, expr: Word) {
@@ -257,7 +338,7 @@ fn trans_place_store<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>, expr:
 }
 
 // Returns (pointer, deref_pointer_type)
-fn trans_place<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>) -> (Word, Word) {
+fn trans_place<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>) -> (Word, SpirvType) {
     let local = ctx.locals.get(&place.local);
     let mut access_chain = Vec::new();
     let mut result_type = local.pointee_ty();
@@ -297,5 +378,5 @@ fn trans_place<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>) -> (Word, W
             .unwrap()
     };
 
-    (pointer, result_type.def())
+    (pointer, result_type.clone())
 }

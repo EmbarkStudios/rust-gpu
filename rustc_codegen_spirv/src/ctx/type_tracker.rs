@@ -18,7 +18,7 @@ impl SpirvType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SpirvType {
     /// A basic spir-v type with no interesting properties: an integer, bool, void, etc.
     Primitive(Word),
