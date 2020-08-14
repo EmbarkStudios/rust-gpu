@@ -268,10 +268,13 @@ fn trans_rvalue<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, expr: &Rvalue<'tcx>) -> Word {
         }
         Rvalue::AddressOf(_mutability, place) => trans_place(ctx, place).0,
         Rvalue::Len(place) => panic!("Rvalue::Len not implemented yet: {:?}", place),
-        Rvalue::Cast(cast_kind, operand, ty) => panic!(
-            "Rvalue::Cast not implemented yet: {:?} {:?} {:?}",
-            cast_kind, operand, ty
-        ),
+        Rvalue::Cast(_cast_kind, operand, ty) => {
+            let (loaded, _loaded_type) = trans_operand(ctx, operand);
+            let result_type = trans_type(ctx, ty);
+            ctx.spirv()
+                .bitcast(result_type.def(), None, loaded)
+                .unwrap()
+        }
         Rvalue::BinaryOp(op, left, right) => trans_binaryop(ctx, op, left, right),
         Rvalue::CheckedBinaryOp(op, left, right) => panic!(
             "Rvalue::CheckedBinaryOp not implemented yet: {:?} {:?} {:?}",
