@@ -254,9 +254,40 @@ fn trans_terminator<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, term: &Terminator<'tcx>) {
 fn trans_rvalue<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, expr: &Rvalue<'tcx>) -> Word {
     match expr {
         Rvalue::Use(operand) => trans_operand(ctx, operand).0,
-        Rvalue::BinaryOp(op, left, right) => trans_binaryop(ctx, op, left, right),
+        Rvalue::Repeat(operand, konst) => panic!(
+            "Rvalue::Repeat not implemented yet: {:?} {:?}",
+            operand, konst
+        ),
         Rvalue::Ref(_region, _borrow_kind, place) => trans_place(ctx, place).0,
-        thing => panic!("Unknown rvalue: {:?}", thing),
+        Rvalue::ThreadLocalRef(def_id) => {
+            panic!("Rvalue::ThreadLocalRef not implemented yet: {:?}", def_id)
+        }
+        Rvalue::AddressOf(_mutability, place) => trans_place(ctx, place).0,
+        Rvalue::Len(place) => panic!("Rvalue::Len not implemented yet: {:?}", place),
+        Rvalue::Cast(cast_kind, operand, ty) => panic!(
+            "Rvalue::Cast not implemented yet: {:?} {:?} {:?}",
+            cast_kind, operand, ty
+        ),
+        Rvalue::BinaryOp(op, left, right) => trans_binaryop(ctx, op, left, right),
+        Rvalue::CheckedBinaryOp(op, left, right) => panic!(
+            "Rvalue::CheckedBinaryOp not implemented yet: {:?} {:?} {:?}",
+            op, left, right
+        ),
+        Rvalue::NullaryOp(null_op, ty) => panic!(
+            "Rvalue::NullaryOp not implemented yet: {:?} {:?}",
+            null_op, ty
+        ),
+        Rvalue::UnaryOp(null_op, operand) => panic!(
+            "Rvalue::UnaryOp not implemented yet: {:?} {:?}",
+            null_op, operand
+        ),
+        Rvalue::Discriminant(place) => {
+            panic!("Rvalue::Discriminant not implemented yet: {:?}", place)
+        }
+        Rvalue::Aggregate(aggregate_kind, operands) => panic!(
+            "Rvalue::Aggregate not implemented yet: {:?} {:?}",
+            aggregate_kind, operands
+        ),
     }
 }
 
