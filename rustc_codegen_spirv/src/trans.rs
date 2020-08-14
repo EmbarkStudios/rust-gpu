@@ -1,10 +1,11 @@
 use crate::ctx::{local_tracker::SpirvLocal, type_tracker::SpirvType, Context, FnCtx};
 use rspirv::spirv::{FunctionControl, StorageClass, Word};
+use rustc_middle::mir::interpret::{ConstValue, Scalar};
 use rustc_middle::mir::{
     BinOp, Operand, Place, ProjectionElem, Rvalue, Statement, StatementKind, Terminator,
     TerminatorKind,
 };
-use rustc_middle::ty::{Instance, ParamEnv, Ty, TyKind};
+use rustc_middle::ty::{ConstKind, Instance, ParamEnv, Ty, TyKind};
 
 pub fn trans_fn<'ctx, 'tcx>(ctx: &'ctx mut Context<'tcx>, instance: Instance<'tcx>) {
     {
@@ -44,11 +45,15 @@ pub fn trans_fn<'ctx, 'tcx>(ctx: &'ctx mut Context<'tcx>, instance: Instance<'tc
 // returns list of spirv parameter values
 fn trans_fn_header<'tcx>(ctx: &mut FnCtx<'_, 'tcx>) -> Vec<Word> {
     let mir_return_type = ctx.body.local_decls[0u32.into()].ty;
-    let return_type = trans_type(ctx, mir_return_type).def();
     ctx.is_void = if let TyKind::Tuple(fields) = &mir_return_type.kind {
         fields.len() == 0
     } else {
         false
+    };
+    let return_type = if ctx.is_void {
+        ctx.spirv().type_void()
+    } else {
+        trans_type(ctx, mir_return_type).def()
     };
     let params = (0..ctx.body.arg_count)
         .map(|i| trans_type(ctx, ctx.body.local_decls[(i + 1).into()].ty).def())
@@ -105,20 +110,24 @@ pub fn trans_locals<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, parameters_spirv: Vec<Word>
 
 fn trans_type<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, ty: Ty<'tcx>) -> SpirvType {
     let mono = ctx.monomorphize(&ty);
+    // TODO: use Ty::is_zst (not sure what the did parameter is)
     // TODO: Cache the result SpirvType?
     match mono.kind {
         TyKind::Param(param) => panic!("TyKind::Param after monomorphize: {:?}", param),
-        TyKind::Bool => SpirvType::Primitive(ctx.spirv().type_bool()),
-        TyKind::Tuple(fields) if fields.len() == 0 => SpirvType::Primitive(ctx.spirv().type_void()),
+        TyKind::Bool => SpirvType::Bool(ctx.spirv().type_bool()),
+        TyKind::Tuple(fields) if fields.len() == 0 => SpirvType::ZST(ctx.ctx.zst_type()),
         TyKind::Int(ty) => {
-            let size = ty.bit_width().unwrap_or_else(|| ctx.ctx.pointer_size.val());
-            SpirvType::Primitive(ctx.spirv().type_int(size as u32, 1))
+            let size = ty.bit_width().unwrap_or_else(|| ctx.ctx.pointer_size.val()) as u32;
+            SpirvType::Integer(ctx.spirv().type_int(size, 1), size, true)
         }
         TyKind::Uint(ty) => {
-            let size = ty.bit_width().unwrap_or_else(|| ctx.ctx.pointer_size.val());
-            SpirvType::Primitive(ctx.spirv().type_int(size as u32, 0))
+            let size = ty.bit_width().unwrap_or_else(|| ctx.ctx.pointer_size.val()) as u32;
+            SpirvType::Integer(ctx.spirv().type_int(size, 0), size, false)
         }
-        TyKind::Float(ty) => SpirvType::Primitive(ctx.spirv().type_float(ty.bit_width() as u32)),
+        TyKind::Float(ty) => SpirvType::Float(
+            ctx.spirv().type_float(ty.bit_width() as u32),
+            ty.bit_width() as u32,
+        ),
         TyKind::RawPtr(type_and_mut) => {
             let pointee_type = trans_type(ctx, type_and_mut.ty);
             // note: use custom cache
@@ -207,7 +216,17 @@ fn trans_terminator<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, term: &Terminator<'tcx>) {
                 &fn_ty.fn_sig(ctx.ctx.tcx),
             );
             let fn_return_type = ParamEnv::reveal_all().and(fn_sig.output()).value;
-            let result_type = trans_type(ctx, fn_return_type);
+            // TODO: use is_zst
+            let is_void = if let TyKind::Tuple(fields) = &fn_return_type.kind {
+                fields.len() == 0
+            } else {
+                false
+            };
+            let result_type = if is_void {
+                ctx.spirv().type_void()
+            } else {
+                trans_type(ctx, fn_return_type).def()
+            };
             let function = match func {
                 // TODO: Can constant.literal.val not be a ZST?
                 Operand::Constant(constant) => match constant.literal.ty.kind {
@@ -222,7 +241,7 @@ fn trans_terminator<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, term: &Terminator<'tcx>) {
                 .collect::<Vec<_>>();
             let result = ctx
                 .spirv()
-                .function_call(result_type.def(), None, function, arguments)
+                .function_call(result_type, None, function, arguments)
                 .unwrap();
             trans_place_store(ctx, &destination.0, result);
             let destination_bb = ctx.get_basic_block(destination.1);
@@ -319,7 +338,77 @@ fn trans_binaryop<'tcx>(
 fn trans_operand<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, operand: &Operand<'tcx>) -> (Word, SpirvType) {
     match operand {
         Operand::Copy(place) | Operand::Move(place) => trans_place_load(ctx, place),
-        Operand::Constant(constant) => panic!("Unimplemented Operand::Constant: {:?}", constant),
+        Operand::Constant(constant) => match constant.literal.val {
+            ConstKind::Value(value) => match value {
+                ConstValue::Scalar(scalar) => match scalar {
+                    Scalar::Raw { data, size } => {
+                        let spirv_type = trans_type(ctx, constant.literal.ty);
+                        (
+                            match spirv_type {
+                                SpirvType::Float(def, flt_size) => {
+                                    assert_eq!(size as u32, flt_size);
+                                    match size {
+                                        32 => ctx
+                                            .ctx
+                                            .spirv
+                                            .constant_f32(def, f32::from_bits(data as u32)),
+                                        64 => ctx
+                                            .ctx
+                                            .spirv
+                                            .constant_f64(def, f64::from_bits(data as u64)),
+                                        _ => panic!("Unimplemented float size: {:?}", size),
+                                    }
+                                }
+                                SpirvType::Integer(def, int_size, _signed) => {
+                                    assert_eq!(size as u32, int_size);
+                                    match size {
+                                        32 => ctx.ctx.spirv.constant_u32(def, data as u32),
+                                        64 => ctx.ctx.spirv.constant_u64(def, data as u64),
+                                        _ => panic!("Unimplemented int size: {:?}", size),
+                                    }
+                                }
+                                SpirvType::Bool(def) => {
+                                    assert_eq!(size, 1);
+                                    if data == 0 {
+                                        ctx.ctx.spirv.constant_false(def)
+                                    } else {
+                                        ctx.ctx.spirv.constant_true(def)
+                                    }
+                                }
+                                SpirvType::ZST(def) => {
+                                    assert_eq!(size, 0);
+                                    ctx.ctx.spirv.constant_composite(def, &[])
+                                }
+                                thing => panic!("Unimplemented constant type: {:?}", thing),
+                            },
+                            spirv_type,
+                        )
+                    }
+                    Scalar::Ptr(pointer) => panic!("Scalar::Ptr not implemented: {:?}", pointer),
+                },
+                ConstValue::Slice { data, start, end } => panic!(
+                    "ConstValue::Slice not implemented: {:?} {:?} {:?}",
+                    data, start, end
+                ),
+                ConstValue::ByRef { alloc, offset } => panic!(
+                    "ConstValue::ByRef not implemented: {:?} {:?}",
+                    alloc, offset
+                ),
+            },
+            ConstKind::Param(param) => panic!("Const::Param not implemented: {:?}", param),
+            ConstKind::Infer(infer) => panic!("Const::Infer not implemented: {:?}", infer),
+            ConstKind::Bound(index, var) => {
+                panic!("Const::Bound not implemented: {:?} {:?}", index, var)
+            }
+            ConstKind::Placeholder(placeholder) => {
+                panic!("Const::Placeholder not implemented: {:?}", placeholder)
+            }
+            ConstKind::Unevaluated(thing, substs, promoted) => panic!(
+                "Const::Unevaluated not implemented: {:?} {:?} {:?}",
+                thing, substs, promoted
+            ),
+            ConstKind::Error(error) => panic!("Const::Error should be unreachable: {:?}", error),
+        },
     }
 }
 

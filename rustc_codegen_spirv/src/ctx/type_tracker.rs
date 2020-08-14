@@ -11,7 +11,10 @@ impl TypeTracker {
 impl SpirvType {
     pub fn def(&self) -> Word {
         match *self {
-            SpirvType::Primitive(def) => def,
+            SpirvType::Bool(def) => def,
+            SpirvType::Integer(def, _, _) => def,
+            SpirvType::Float(def, _) => def,
+            SpirvType::ZST(def) => def,
             SpirvType::Adt { def, .. } => def,
             SpirvType::Pointer { def, .. } => def,
         }
@@ -20,8 +23,12 @@ impl SpirvType {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SpirvType {
-    /// A basic spir-v type with no interesting properties: an integer, bool, void, etc.
-    Primitive(Word),
+    Bool(Word),
+    Integer(Word, u32, bool),
+    Float(Word, u32),
+    // TODO: Do we fold this into Adt?
+    /// Zero Sized Type
+    ZST(Word),
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
         def: Word,

@@ -36,6 +36,7 @@ pub struct Context<'tcx> {
     pub pointer_size: PointerSize,
     func_defs: ForwardReference<(DefId, SubstsRef<'tcx>)>,
     pub type_tracker: TypeTracker,
+    zst_type_def: Option<Word>,
 }
 
 impl<'tcx> Context<'tcx> {
@@ -53,6 +54,7 @@ impl<'tcx> Context<'tcx> {
             pointer_size: PointerSize::P64,
             func_defs: ForwardReference::new(),
             type_tracker: TypeTracker::new(),
+            zst_type_def: None,
         }
     }
 
@@ -62,6 +64,17 @@ impl<'tcx> Context<'tcx> {
 
     pub fn get_func_def(&mut self, id: DefId, substs: SubstsRef<'tcx>) -> Word {
         self.func_defs.get(&mut self.spirv, (id, substs))
+    }
+
+    pub fn zst_type(&mut self) -> Word {
+        match self.zst_type_def {
+            Some(zst) => zst,
+            None => {
+                let def = self.spirv.type_struct([]);
+                self.zst_type_def = Some(def);
+                def
+            }
+        }
     }
 }
 
