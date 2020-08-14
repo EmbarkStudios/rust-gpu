@@ -379,13 +379,16 @@ fn trans_operand<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, operand: &Operand<'tcx>) -> (W
         Operand::Constant(constant) => match constant.literal.val {
             ConstKind::Value(value) => match value {
                 ConstValue::Scalar(scalar) => match scalar {
-                    Scalar::Raw { data, size } => {
+                    Scalar::Raw {
+                        data,
+                        size: size_in_bytes,
+                    } => {
                         let spirv_type = trans_type(ctx, constant.literal.ty);
                         (
                             match spirv_type {
-                                SpirvType::Float(def, flt_size) => {
-                                    assert_eq!(size as u32, flt_size);
-                                    match size {
+                                SpirvType::Float(def, size_in_bits) => {
+                                    assert_eq!(size_in_bytes as u32 * 8, size_in_bits);
+                                    match size_in_bits {
                                         32 => ctx
                                             .ctx
                                             .spirv
@@ -394,19 +397,19 @@ fn trans_operand<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, operand: &Operand<'tcx>) -> (W
                                             .ctx
                                             .spirv
                                             .constant_f64(def, f64::from_bits(data as u64)),
-                                        _ => panic!("Unimplemented float size: {:?}", size),
+                                        _ => panic!("Unimplemented float size: {:?}", size_in_bits),
                                     }
                                 }
-                                SpirvType::Integer(def, int_size, _signed) => {
-                                    assert_eq!(size as u32, int_size);
-                                    match size {
+                                SpirvType::Integer(def, size_in_bits, _signed) => {
+                                    assert_eq!(size_in_bytes as u32 * 8, size_in_bits);
+                                    match size_in_bits {
                                         32 => ctx.ctx.spirv.constant_u32(def, data as u32),
                                         64 => ctx.ctx.spirv.constant_u64(def, data as u64),
-                                        _ => panic!("Unimplemented int size: {:?}", size),
+                                        _ => panic!("Unimplemented int size: {:?}", size_in_bits),
                                     }
                                 }
                                 SpirvType::Bool(def) => {
-                                    assert_eq!(size, 1);
+                                    assert_eq!(size_in_bytes, 1);
                                     if data == 0 {
                                         ctx.ctx.spirv.constant_false(def)
                                     } else {
@@ -414,7 +417,7 @@ fn trans_operand<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, operand: &Operand<'tcx>) -> (W
                                     }
                                 }
                                 SpirvType::ZST(def) => {
-                                    assert_eq!(size, 0);
+                                    assert_eq!(size_in_bytes, 0);
                                     ctx.ctx.spirv.constant_composite(def, &[])
                                 }
                                 thing => panic!("Unimplemented constant type: {:?}", thing),

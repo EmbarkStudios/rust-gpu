@@ -46,12 +46,16 @@ impl<'tcx> Context<'tcx> {
         // Temp hack: Linkage allows us to get away with no OpEntryPoint
         spirv.capability(Capability::Linkage);
         spirv.memory_model(AddressingModel::Logical, MemoryModel::GLSL450);
-        let _ = PointerSize::P32; // just mark as used
+        let pointer_size = match tcx.data_layout.pointer_size.bytes() {
+            4 => PointerSize::P32,
+            8 => PointerSize::P64,
+            size => panic!("Unsupported pointer size: {:?}", size),
+        };
         Self {
             tcx,
             spirv,
             spirv_helper: SpirvHelper::new(),
-            pointer_size: PointerSize::P64,
+            pointer_size,
             func_defs: ForwardReference::new(),
             type_tracker: TypeTracker::new(),
             zst_type_def: None,
