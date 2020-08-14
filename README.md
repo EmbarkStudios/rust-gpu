@@ -18,7 +18,7 @@ At Embark, we've been building our in-house engine from the ground up in Rust an
 
 This project will involve a few things if we want to get the experience right and it's quite broad. Initial stages will involve mostly just setting up the backend, however the project will be a bit broader then that.
 
-- `rustc` compiler backend, either as a cranelift module, or as a seperate `rustc` backend (next to llvm and cranelift). We're currently evaluating both options, but it looks like a `rustc` native backend would be the most preferable.
+- A `rustc` compiler backend, either as a cranelift module, or as a seperate `rustc` backend (next to llvm and cranelift). We're currently evaluating both options, but it looks like a `rustc` native backend would be the most preferable.
 - This compiler backend is currently planned to only support SPIR-V (the open compiler target for Vulkan) but it's not unlikely that in future versions this will / should support DXIL (the target for DirectX) or WHLSL (the WebGPU shading language that's bijective with SPIR-V)
 - We'll need language front-end features to be able to support GPU workloads better; this will include among other things
   - Safe access to groupshared and constant memory
@@ -37,6 +37,6 @@ We use this repo as a small monorepo for everything related to the project: crat
 
 We meet weekly over vidcon to discuss design and triage issues, and will do weekly project updates.
 
-We have an internal Embark Slack channel for fast discussion (now while this is an internal Embark project): #ark-pod-rust-gpu.
+We have an internal Embark Slack channel for fast discussion (now while this is an internal Embark project): [#ark-pod-rust-gpu](https://embark-studios.slack.com/archives/C017HE6TV7S)
 
 For discussions with [Bytecode Alliance](https://bytecodealliance.org/) and Cranelift developers, there is a public [Zulip chat thread](https://bytecodealliance.zulipchat.com/#narrow/stream/225524-cranelift-new-backend/topic/spir-v)
