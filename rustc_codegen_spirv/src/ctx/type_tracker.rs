@@ -1,22 +1,35 @@
 use rspirv::spirv::Word;
-use rustc_span::def_id::DefId;
-use std::collections::HashMap;
 
-pub struct TypeTracker {
-    pub adts: HashMap<DefId, SpirvAdt>,
-}
+pub struct TypeTracker {}
 
 impl TypeTracker {
     pub fn new() -> Self {
-        Self {
-            adts: HashMap::new(),
+        Self {}
+    }
+}
+
+impl SpirvType {
+    pub fn def(&self) -> Word {
+        match *self {
+            SpirvType::Primitive(def) => def,
+            SpirvType::Adt { def, .. } => def,
+            SpirvType::Pointer { def, .. } => def,
         }
     }
 }
 
-// This uses the rustc definition of "adt", i.e. a struct, enum, or union
-pub struct SpirvAdt {
-    pub spirv_id: Word,
-    // TODO: enums/unions
-    pub field_types: Vec<Word>,
+#[derive(Debug)]
+pub enum SpirvType {
+    /// A basic spir-v type with no interesting properties: an integer, bool, void, etc.
+    Primitive(Word),
+    /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
+    Adt {
+        def: Word,
+        // TODO: enums/unions
+        field_types: Vec<SpirvType>,
+    },
+    Pointer {
+        def: Word,
+        pointee: Box<SpirvType>,
+    },
 }

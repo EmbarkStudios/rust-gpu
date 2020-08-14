@@ -1,4 +1,4 @@
-use crate::ctx::{local_tracker::SpirvLocal, type_tracker::SpirvAdt, Context, FnCtx};
+use crate::ctx::{local_tracker::SpirvLocal, type_tracker::SpirvType, Context, FnCtx};
 use rspirv::spirv::{FunctionControl, StorageClass, Word};
 use rustc_middle::mir::{
     Operand, Place, ProjectionElem, Rvalue, Statement, StatementKind, Terminator, TerminatorKind,
@@ -43,14 +43,14 @@ pub fn trans_fn<'ctx, 'tcx>(ctx: &'ctx mut Context<'tcx>, instance: Instance<'tc
 // returns list of spirv parameter values
 fn trans_fn_header<'tcx>(ctx: &mut FnCtx<'_, 'tcx>) -> Vec<Word> {
     let mir_return_type = ctx.body.local_decls[0u32.into()].ty;
-    let return_type = trans_type(ctx, mir_return_type);
+    let return_type = trans_type(ctx, mir_return_type).def();
     ctx.is_void = if let TyKind::Tuple(fields) = &mir_return_type.kind {
         fields.len() == 0
     } else {
         false
     };
     let params = (0..ctx.body.arg_count)
-        .map(|i| trans_type(ctx, ctx.body.local_decls[(i + 1).into()].ty))
+        .map(|i| trans_type(ctx, ctx.body.local_decls[(i + 1).into()].ty).def())
         .collect::<Vec<_>>();
     let mut params_nonzero = params.clone();
     if params_nonzero.is_empty() {
@@ -79,70 +79,72 @@ pub fn trans_locals<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, parameters_spirv: Vec<Word>
     for (local, decl) in ctx.body.local_decls.iter_enumerated() {
         // TODO: ZSTs
         let local_type = trans_type(ctx, decl.ty);
-        let local_ptr_type = ctx
-            .spirv()
-            .type_pointer(None, StorageClass::Function, local_type);
+        let local_ptr_type_def =
+            ctx.spirv()
+                .type_pointer(None, StorageClass::Function, local_type.def());
+        let local_ptr_type = SpirvType::Pointer {
+            def: local_ptr_type_def,
+            pointee: Box::new(local_type),
+        };
         let initializer = if local != 0u32.into() && local < (ctx.body.arg_count + 1).into() {
             Some(parameters_spirv[local.index() - 1])
         } else {
             None
         };
-        let variable_decl =
-            ctx.spirv()
-                .variable(local_ptr_type, None, StorageClass::Function, initializer);
-        ctx.locals.def(
-            local,
-            SpirvLocal::new(local_type, local_ptr_type, variable_decl),
+        let variable_decl = ctx.spirv().variable(
+            local_ptr_type_def,
+            None,
+            StorageClass::Function,
+            initializer,
         );
+        ctx.locals
+            .def(local, SpirvLocal::new(local_ptr_type, variable_decl));
     }
 }
 
-fn trans_type<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, ty: Ty<'tcx>) -> Word {
+fn trans_type<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, ty: Ty<'tcx>) -> SpirvType {
     let mono = ctx.monomorphize(&ty);
+    // TODO: Cache the result SpirvType?
     match mono.kind {
         TyKind::Param(param) => panic!("TyKind::Param after monomorphize: {:?}", param),
-        TyKind::Bool => ctx.spirv().type_bool(),
-        TyKind::Tuple(fields) if fields.len() == 0 => ctx.spirv().type_void(),
+        TyKind::Bool => SpirvType::Primitive(ctx.spirv().type_bool()),
+        TyKind::Tuple(fields) if fields.len() == 0 => SpirvType::Primitive(ctx.spirv().type_void()),
         TyKind::Int(ty) => {
             let size = ty.bit_width().unwrap_or_else(|| ctx.ctx.pointer_size.val());
-            ctx.spirv().type_int(size as u32, 1)
+            SpirvType::Primitive(ctx.spirv().type_int(size as u32, 1))
         }
         TyKind::Uint(ty) => {
             let size = ty.bit_width().unwrap_or_else(|| ctx.ctx.pointer_size.val());
-            ctx.spirv().type_int(size as u32, 0)
+            SpirvType::Primitive(ctx.spirv().type_int(size as u32, 0))
         }
-        TyKind::Float(ty) => ctx.spirv().type_float(ty.bit_width() as u32),
+        TyKind::Float(ty) => SpirvType::Primitive(ctx.spirv().type_float(ty.bit_width() as u32)),
         TyKind::RawPtr(type_and_mut) => {
             let pointee_type = trans_type(ctx, type_and_mut.ty);
             // note: use custom cache
-            ctx.type_pointer(pointee_type)
+            SpirvType::Pointer {
+                def: ctx.type_pointer(pointee_type.def()),
+                pointee: Box::new(pointee_type),
+            }
         }
         TyKind::Adt(adt, substs) => {
-            if let Some(adt) = ctx.ctx.type_tracker.adts.get(&adt.did) {
-                adt.spirv_id
-            } else {
-                if adt.variants.len() != 1 {
-                    panic!("Enums/unions aren't supported yet: {:?}", adt);
-                }
-                let variant = &adt.variants[0u32.into()];
-                let field_types = variant
-                    .fields
-                    .iter()
-                    .map(|field| {
-                        let ty = field.ty(ctx.ctx.tcx, substs);
-                        trans_type(ctx, ty)
-                    })
-                    .collect::<Vec<_>>();
-                let spirv_id = ctx.ctx.spirv.type_struct(&field_types);
-                ctx.ctx.type_tracker.adts.insert(
-                    adt.did,
-                    SpirvAdt {
-                        spirv_id,
-                        field_types,
-                    },
-                );
-                spirv_id
+            if adt.variants.len() != 1 {
+                panic!("Enums/unions aren't supported yet: {:?}", adt);
             }
+            let variant = &adt.variants[0u32.into()];
+            let field_types = variant
+                .fields
+                .iter()
+                .map(|field| {
+                    let ty = field.ty(ctx.ctx.tcx, substs);
+                    trans_type(ctx, ty)
+                })
+                .collect::<Vec<_>>();
+            let spirv_field_types = field_types.iter().map(|f| f.def());
+            let def = ctx
+                .ctx
+                .spirv
+                .type_struct(spirv_field_types.collect::<Vec<_>>());
+            SpirvType::Adt { def, field_types }
         }
         ref thing => panic!("Unknown type: {:?}", thing),
     }
@@ -158,25 +160,8 @@ fn trans_stmt<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, stmt: &Statement<'tcx>) {
             let expr = trans_rvalue(ctx, rvalue);
             trans_place_store(ctx, &place, expr);
         }
-        // ignore StorageLive/Dead for now, rspirv is weird (they end the block?)
-        // OpLifetimeStart/End seems to also require kernel capability?
+        // Ignore StorageLive/Dead for now - might be useful for SSA conversion later.
         StatementKind::StorageLive(_) | StatementKind::StorageDead(_) => (),
-        /*
-        StatementKind::StorageLive(local) => {
-            let local = ctx.locals.get(local);
-            // Size is an unsigned 32-bit integer. Size must be 0 if Pointer is a pointer to a non-void type.
-            ctx.spirv()
-                .lifetime_start(local.op_variable_pointer, 0)
-                .unwrap();
-        }
-        StatementKind::StorageDead(local) => {
-            let local = ctx.locals.get(local);
-            // Size is an unsigned 32-bit integer. Size must be 0 if Pointer is a pointer to a non-void type.
-            ctx.spirv()
-                .lifetime_stop(local.op_variable_pointer, 0)
-                .unwrap();
-        }
-        */
         thing => panic!("Unknown statement: {:?}", thing),
     }
 }
@@ -228,7 +213,7 @@ fn trans_terminator<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, term: &Terminator<'tcx>) {
                 .collect::<Vec<_>>();
             let result = ctx
                 .spirv()
-                .function_call(result_type, None, function, arguments)
+                .function_call(result_type.def(), None, function, arguments)
                 .unwrap();
             trans_place_store(ctx, &destination.0, result);
             let destination_bb = ctx.get_basic_block(destination.1);
@@ -271,21 +256,22 @@ fn trans_place_store<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>, expr:
     ctx.spirv().store(pointer, expr, None, &[]).unwrap();
 }
 
-// (pointer, deref_pointer_type)
+// Returns (pointer, deref_pointer_type)
 fn trans_place<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>) -> (Word, Word) {
     let local = ctx.locals.get(&place.local);
     let mut access_chain = Vec::new();
-    let mut result_type = local.local_type;
+    let mut result_type = local.pointee_ty();
     for proj in place.projection {
         match proj {
             ProjectionElem::Deref => panic!("Projection::Deref not supported yet"),
-            ProjectionElem::Field(field, field_type) => {
+            ProjectionElem::Field(field, _field_type) => {
                 let int_ty = ctx.ctx.spirv.type_int(32, 1);
                 let indexer_value = ctx.ctx.spirv.constant_u32(int_ty, field.as_u32());
                 access_chain.push(indexer_value);
-                // TODO: We probably want to manually go through and figure out the result types (and for
-                // ProjectionElem::Deref, etc.), esp. when things get complicated when we have support for ZSTs, etc.
-                result_type = trans_type(ctx, field_type);
+                result_type = match result_type {
+                    SpirvType::Adt { field_types, .. } => &field_types[field.index()],
+                    ty => panic!("Field access on non-ADT type: {:?}", ty),
+                };
             }
             ProjectionElem::Index(local) => {
                 panic!("Projection::Index not supported yet: {:?}", local)
@@ -299,21 +285,17 @@ fn trans_place<'tcx>(ctx: &mut FnCtx<'_, 'tcx>, place: &Place<'tcx>) -> (Word, W
     }
 
     let pointer = if access_chain.is_empty() {
-        local.op_variable_pointer
+        local.def
     } else {
-        // TODO
-        let result_ptr_type = ctx
-            .spirv()
-            .type_pointer(None, StorageClass::Function, result_type);
-        ctx.spirv()
-            .access_chain(
-                result_ptr_type,
-                None,
-                local.op_variable_pointer,
-                access_chain,
-            )
+        let result_ptr_type =
+            ctx.ctx
+                .spirv
+                .type_pointer(None, StorageClass::Function, result_type.def());
+        ctx.ctx
+            .spirv
+            .access_chain(result_ptr_type, None, local.def, access_chain)
             .unwrap()
     };
 
-    (pointer, result_type)
+    (pointer, result_type.def())
 }

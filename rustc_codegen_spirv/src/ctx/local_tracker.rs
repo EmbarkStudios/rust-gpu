@@ -1,8 +1,8 @@
+use super::type_tracker::SpirvType;
 use rspirv::spirv::Word;
 use rustc_middle::mir::Local;
 use std::collections::HashMap;
 
-// TODO: Expand this to SSA-conversion
 pub struct LocalTracker {
     locals: HashMap<Local, SpirvLocal>,
 }
@@ -18,8 +18,8 @@ impl LocalTracker {
         self.locals.insert(local, spirv_local);
     }
 
-    pub fn get(&self, local: &Local) -> SpirvLocal {
-        self.locals[local]
+    pub fn get(&self, local: &Local) -> &SpirvLocal {
+        &self.locals[local]
     }
 }
 
@@ -31,19 +31,25 @@ pub enum SpirvLocalKind {
 }
 */
 
-#[derive(Copy, Clone)]
 pub struct SpirvLocal {
-    pub local_type: Word,
-    pub local_ptr_type: Word,
-    pub op_variable_pointer: Word,
+    pub ty: SpirvType,
+    pub def: Word,
 }
 
 impl SpirvLocal {
-    pub fn new(local_type: Word, local_ptr_type: Word, op_variable_pointer: Word) -> Self {
-        Self {
-            local_type,
-            local_ptr_type,
-            op_variable_pointer,
+    pub fn new(ty: SpirvType, def: Word) -> Self {
+        if let SpirvType::Pointer { .. } = ty {
+        } else {
+            panic!("Local type not a pointer: {:?}", ty);
+        }
+        Self { ty, def }
+    }
+
+    pub fn pointee_ty(&self) -> &SpirvType {
+        if let SpirvType::Pointer { pointee, .. } = &self.ty {
+            pointee
+        } else {
+            panic!("Local type not a pointer: {:?}", self.ty);
         }
     }
 }

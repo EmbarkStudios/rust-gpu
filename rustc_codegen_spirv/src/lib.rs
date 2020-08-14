@@ -2,13 +2,11 @@
 #![feature(or_insert_with_key)]
 
 extern crate rustc_codegen_ssa;
+extern crate rustc_data_structures;
 extern crate rustc_errors;
+extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_mir;
-#[macro_use]
-extern crate rustc_data_structures;
-extern crate rustc_driver;
-extern crate rustc_hir;
 extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_symbol_mangling;
@@ -16,6 +14,7 @@ extern crate rustc_target;
 
 use rustc_codegen_ssa::traits::CodegenBackend;
 use rustc_data_structures::owning_ref::OwningRef;
+use rustc_data_structures::rustc_erase_owner;
 use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::ErrorReported;
 use rustc_middle::dep_graph::DepGraph;
@@ -61,7 +60,6 @@ impl CodegenBackend for TheBackend {
     fn provide(&self, providers: &mut Providers) {
         rustc_symbol_mangling::provide(providers);
 
-        // jb-todo: target_features_whitelist is old name for supported_target_features
         providers.supported_target_features = |_tcx, _cnum| {
             Default::default() // Just a dummy
         };
