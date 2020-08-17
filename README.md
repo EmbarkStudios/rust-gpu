@@ -1,5 +1,8 @@
 # Rust on the GPU
 
+[![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
+[![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](http://embark.dev)
+
 This is a very early stage project to make Rust a first class langugage and ecosystem for building GPU code 🚀🚧
 
 ## Background
@@ -40,3 +43,22 @@ We meet weekly over vidcon to discuss design and triage issues, and will do week
 We have an internal Embark Slack channel for fast discussion (now while this is an internal Embark project): [#ark-pod-rust-gpu](https://embark-studios.slack.com/archives/C017HE6TV7S)
 
 For discussions with [Bytecode Alliance](https://bytecodealliance.org/) and Cranelift developers, there is a public [Zulip chat thread](https://bytecodealliance.zulipchat.com/#narrow/stream/225524-cranelift-new-backend/topic/spir-v)
+
+## Contributing
+
+We welcome community contributions to this project.
+
+Please read our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
