@@ -29,6 +29,7 @@ struct Inputs {
     flags: Flags,
 }
 
+#[pixel_shader]
 fn main(
     constants: Constants,
     inputs: Inputs,
@@ -52,4 +53,79 @@ fn main(
     } else {
         (input.diffuse_color.truncate() * input.diffuse_color.w()).extend(input.opacity)
     }
+}
+
+use std::spirv; //?
+
+#[vertex_shader]
+fn main() -> Vec4 {
+    let instance = instance_data[spirv::instance_index()]; // gl_InstanceIndex
+
+    let mut diffuse_color = if instance.flags.contains(VERTEX_COLOR_ENABLE) {
+        degamma(in_color)
+    } else {
+        Vec4::splat(1.0)
+    };
+
+    if instance.flags.contains(HSV_TRANSFORM_ENABLE) {
+        let rgb = diffuse_color.rgb;
+        let hsv = rgb_to_hsv(rgb);
+
+        let hsv = Vec3::new(
+            (hsv.x() + instance.hsv_transform_data.x()).fract(),
+            (hsv.y() + instance.hsv_transform_data.y()).clamp(0.0, 1.0),
+            (hsv.z() + instance.hsv_transform_data.z()).clamp(0.0, 1.0),
+        );
+
+        let rgb = hsv_to_rgb(hsv);
+
+        diffuse_color = rgb.extend(diffuse_color.w());
+    }
+
+    diffuse_color = diffuse_color * instance.diffuse_tint;
+
+    let mut object_to_world = instance.object_to_world;
+
+    if instance.flags.contains(BILLBOARD_ENABLE) {
+        let scale = extract_conservative_scale_from_transform(object_to_world);
+        object_to_world = Mat4::from_mat3(
+            if spirv::view_index() == 0 {
+                global_uniforms.view_to_world.to_mat3()
+            } else {
+                global_uniforms.view_to_world_stereo.to_mat3()
+            } * Mat3::from_scale(scale)
+        )
+
+        object_to_world.set_z_axis(instance.object_to_world.z_axis());
+    }
+
+    let world_pos = (object_to_world * in_pos.extend(1.0)).truncate();
+
+    let world_normal = if instance.flags.contains(NORMALS_ENABLE) {
+        object_to_world.to_mat3() * in_normal
+    } else {
+        Vec3::new(0.0, 1.0, 0.0)
+    };
+
+    if instance.flags.contains(ALPHA_BLENDING_ENABLE | PREMULTIPLIED_ALPHA_ENABLE) {
+        if instance.flags.contains(PREMULTIPLIED_ALPHA_ENABLE)  {
+            opacity = diffuse_color.a;
+            diffuse_color.a = 1.0;
+        } else {
+            opacity = diffuse_color.a;
+        }
+    } else {
+        opacity = 1.0;
+        diffuse_color.a = 1.0;
+    }
+
+    let position = if spirv::view_index() == 0 {
+        global_uniforms.world_to_clip * world_pos.truncate().extend(1.0)
+    } else {
+        global_uniforms.world_to_clip_stereo * world_pos.truncate().extend(1.0)
+    };
+
+    position.set_y(-position.y())
+
+    position
 }
