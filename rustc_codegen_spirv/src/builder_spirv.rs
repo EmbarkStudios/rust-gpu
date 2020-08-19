@@ -19,6 +19,22 @@ impl ModuleSpirv {
     }
 }
 
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub struct SpirvValue {
+    pub def: Word,
+    pub ty: Word,
+}
+
+pub trait SpirvValueExt {
+    fn with_type(self, ty: Word) -> SpirvValue;
+}
+
+impl SpirvValueExt for Word {
+    fn with_type(self, ty: Word) -> SpirvValue {
+        SpirvValue { def: self, ty }
+    }
+}
+
 #[derive(Default, Copy, Clone)]
 #[must_use = "BuilderCursor should usually be assigned to the Builder.cursor field"]
 pub struct BuilderCursor {

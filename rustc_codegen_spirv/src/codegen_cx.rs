@@ -1,4 +1,5 @@
-use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv};
+use crate::abi::SpirvType;
+use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv, SpirvValue, SpirvValueExt};
 use rspirv::spirv::{FunctionControl, Word};
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
@@ -21,10 +22,9 @@ use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::source_map::{Span, DUMMY_SP};
 use rustc_span::symbol::Symbol;
 use rustc_span::SourceFile;
-use rustc_target::abi;
-use rustc_target::abi::call::{CastTarget, FnAbi, Reg};
+use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg};
 use rustc_target::abi::{
-    Abi, AddressSpace, Align, HasDataLayout, LayoutOf, Primitive, Size, TargetDataLayout,
+    self, Abi, AddressSpace, Align, HasDataLayout, LayoutOf, Primitive, Size, TargetDataLayout,
 };
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::RefCell;
@@ -36,7 +36,8 @@ pub struct CodegenCx<'spv, 'tcx> {
     pub spirv_module: &'spv ModuleSpirv,
     pub builder: BuilderSpirv,
     pub function_defs: RefCell<HashMap<Instance<'tcx>, Word>>,
-    pub function_parameter_values: RefCell<HashMap<Word, Vec<Word>>>,
+    pub function_parameter_values: RefCell<HashMap<Word, Vec<SpirvValue>>>,
+    pub type_defs: RefCell<HashMap<Word, SpirvType>>,
 }
 
 impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
@@ -52,6 +53,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             builder: BuilderSpirv::new(),
             function_defs: RefCell::new(HashMap::new()),
             function_parameter_values: RefCell::new(HashMap::new()),
+            type_defs: RefCell::new(HashMap::new()),
         }
     }
 
@@ -74,6 +76,18 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
         trans_type(self, ty)
     }
 
+    pub fn def_type(&self, ty: Word, def: SpirvType) {
+        self.type_defs.borrow_mut().insert(ty, def);
+    }
+
+    pub fn lookup_type(&self, ty: Word) -> SpirvType {
+        self.type_defs
+            .borrow()
+            .get(&ty)
+            .expect("Tried to lookup value that wasn't a type, or has no definition")
+            .clone()
+    }
+
     pub fn finalize_module(self) {
         let result = self.builder.finalize();
         let mut output = self.spirv_module.module.lock().unwrap();
@@ -85,7 +99,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
 }
 
 impl<'spv, 'tcx> BackendTypes for CodegenCx<'spv, 'tcx> {
-    type Value = Word;
+    type Value = SpirvValue;
     type Function = Word;
 
     type BasicBlock = Word;
@@ -346,14 +360,30 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         _visibility: Visibility,
         _symbol_name: &str,
     ) {
-        let mut emit = self.emit_global();
+        fn assert_mode(mode: PassMode) {
+            if let PassMode::Direct(_) = mode {
+            } else {
+                panic!("PassMode not supported yet: {:?}", mode)
+            }
+        }
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
         let argument_types = fn_abi
             .args
             .iter()
-            .map(|arg| self.trans_type(arg.layout))
+            .map(|arg| {
+                assert_mode(arg.mode);
+                self.trans_type(arg.layout)
+            })
             .collect::<Vec<_>>();
-        let return_type = self.trans_type(fn_abi.ret.layout);
+        // TODO: Do we register types created here in the type tracker?
+        // TODO: Other modes
+        let return_type = if fn_abi.ret.mode == PassMode::Ignore {
+            self.emit_global().type_void()
+        } else {
+            assert_mode(fn_abi.ret.mode);
+            self.trans_type(fn_abi.ret.layout)
+        };
+        let mut emit = self.emit_global();
         let control = FunctionControl::NONE;
         let function_id = None;
         let function_type = emit.type_function(return_type, &argument_types);
@@ -363,7 +393,7 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             .unwrap();
         let parameter_values = argument_types
             .iter()
-            .map(|&ty| emit.function_parameter(ty).unwrap())
+            .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
             .collect::<Vec<_>>();
         emit.end_function().unwrap();
 
@@ -457,7 +487,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         todo!()
     }
     fn const_undef(&self, ty: Self::Type) -> Self::Value {
-        self.emit_global().undef(ty, None)
+        self.emit_global().undef(ty, None).with_type(ty)
     }
     fn const_int(&self, _t: Self::Type, _i: i64) -> Self::Value {
         todo!()
@@ -514,8 +544,14 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         match scalar {
             Scalar::Raw { data, size } => match layout.value {
                 Primitive::Int(_size, _signedness) => match size {
-                    4 => self.emit_global().constant_u32(ty, data as u32),
-                    8 => self.emit_global().constant_u64(ty, data as u64),
+                    4 => self
+                        .emit_global()
+                        .constant_u32(ty, data as u32)
+                        .with_type(ty),
+                    8 => self
+                        .emit_global()
+                        .constant_u64(ty, data as u64)
+                        .with_type(ty),
                     size => panic!(
                         "TODO: scalar_to_backend int size {} not implemented yet",
                         size
@@ -523,10 +559,12 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                 },
                 Primitive::F32 => self
                     .emit_global()
-                    .constant_f32(ty, f32::from_bits(data as u32)),
+                    .constant_f32(ty, f32::from_bits(data as u32))
+                    .with_type(ty),
                 Primitive::F64 => self
                     .emit_global()
-                    .constant_f64(ty, f64::from_bits(data as u64)),
+                    .constant_f64(ty, f64::from_bits(data as u64))
+                    .with_type(ty),
                 Primitive::Pointer => {
                     panic!("TODO: scalar_to_backend Primitive::Ptr not implemented yet")
                 }

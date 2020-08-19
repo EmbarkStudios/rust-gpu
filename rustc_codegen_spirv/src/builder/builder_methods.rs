@@ -1,4 +1,5 @@
 use super::Builder;
+use crate::builder_spirv::SpirvValueExt;
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -62,7 +63,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn ret(&mut self, value: Self::Value) {
-        self.emit().ret_value(value).unwrap();
+        self.emit().ret_value(value.def).unwrap();
     }
 
     fn br(&mut self, _dest: Self::BasicBlock) {
@@ -219,9 +220,12 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn or(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
-        // TODO: implement result_type
-        let result_type = Default::default();
-        self.emit().bitwise_or(result_type, None, lhs, rhs).unwrap()
+        assert_eq!(lhs.ty, rhs.ty);
+        let result_type = lhs.ty;
+        self.emit()
+            .bitwise_or(result_type, None, lhs.def, rhs.def)
+            .unwrap()
+            .with_type(result_type)
     }
 
     fn xor(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {

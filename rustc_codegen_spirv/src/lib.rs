@@ -1,5 +1,4 @@
 #![feature(rustc_private)]
-#![feature(or_insert_with_key)]
 
 extern crate rustc_ast;
 extern crate rustc_codegen_ssa;

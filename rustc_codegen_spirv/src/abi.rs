@@ -3,48 +3,35 @@ use rspirv::spirv::Word;
 use rustc_middle::ty::layout::TyAndLayout;
 use rustc_target::abi::{Abi, FieldsShape, Primitive, Scalar, Size};
 
-/*
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SpirvType {
-    Bool(Word),
-    Integer(Word, u32, bool),
-    Float(Word, u32),
+    Bool,
+    Integer(u32, bool),
+    Float(u32),
     // TODO: Do we fold this into Adt?
     /// Zero Sized Type
-    ZST(Word),
-    /// This variant is kind of useless, but it lets us recognize Pointer(Slice(T)), etc.
-    // TODO: Actually recognize Pointer(Slice(T)) and generate a wide pointer.
-    Slice(Box<SpirvType>),
+    ZST,
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
-        def: Word,
         // TODO: enums/unions
-        field_types: Vec<SpirvType>,
+        field_types: Vec<Word>,
     },
-    Pointer {
-        def: Word,
-        pointee: Box<SpirvType>,
+    Vector {
+        element: Word,
+        count: u32,
+    },
+    Array {
+        element: Word,
+        count: u32,
     },
 }
-
-impl SpirvType {
-    pub fn def(&self) -> Word {
-        match *self {
-            SpirvType::Bool(def) => def,
-            SpirvType::Integer(def, _, _) => def,
-            SpirvType::Float(def, _) => def,
-            SpirvType::ZST(def) => def,
-            SpirvType::Slice(ref element) => element.def(),
-            SpirvType::Adt { def, .. } => def,
-            SpirvType::Pointer { def, .. } => def,
-        }
-    }
-}
-*/
 
 pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     if ty.is_zst() {
-        return cx.emit_global().type_struct(&[]);
+        let def = SpirvType::ZST;
+        let result = cx.emit_global().type_struct(&[]);
+        cx.def_type(result, def);
+        return result;
     }
 
     // Note: ty.abi is orthogonal to ty.variants and ty.fields, e.g. `ManuallyDrop<Result<isize, isize>>`
@@ -58,30 +45,53 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
         Abi::ScalarPair(ref one, ref two) => {
             let one_spirv = trans_scalar(cx, one);
             let two_spirv = trans_scalar(cx, two);
-            cx.emit_global().type_struct([one_spirv, two_spirv])
+            let result = cx.emit_global().type_struct([one_spirv, two_spirv]);
+            let def = SpirvType::Adt {
+                field_types: vec![one_spirv, two_spirv],
+            };
+            cx.def_type(result, def);
+            result
         }
         Abi::Vector { ref element, count } => {
             let elem_spirv = trans_scalar(cx, element);
-            cx.emit_global().type_vector(elem_spirv, count as u32)
+            let result = cx.emit_global().type_vector(elem_spirv, count as u32);
+            let def = SpirvType::Vector {
+                element: elem_spirv,
+                count: count as u32,
+            };
+            cx.def_type(result, def);
+            result
         }
         Abi::Aggregate { sized: _ } => trans_aggregate(cx, ty),
     }
 }
 
 fn trans_scalar<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, scalar: &Scalar) -> Word {
-    match scalar.value {
-        Primitive::Int(width, signedness) => cx
-            .emit_global()
-            .type_int(width.size().bits() as u32, if signedness { 1 } else { 0 }),
-        Primitive::F32 => cx.emit_global().type_float(32),
-        Primitive::F64 => cx.emit_global().type_float(64),
+    let (ty, def) = match scalar.value {
+        Primitive::Int(width, signedness) => {
+            if scalar.valid_range == (0..=1) {
+                (cx.emit_global().type_bool(), SpirvType::Bool)
+            } else if scalar.valid_range != (0..=((1 << (width.size().bits() as u128)) - 1)) {
+                panic!("TODO: Unimplemented valid_range that's not the size of the int (width={:?}, range={:?}): {:?}", width, scalar.valid_range, scalar)
+            } else {
+                (
+                    cx.emit_global()
+                        .type_int(width.size().bits() as u32, if signedness { 1 } else { 0 }),
+                    SpirvType::Integer(width as u32, signedness),
+                )
+            }
+        }
+        Primitive::F32 => (cx.emit_global().type_float(32), SpirvType::Float(32)),
+        Primitive::F64 => (cx.emit_global().type_float(64), SpirvType::Float(64)),
         Primitive::Pointer => {
             panic!(
                 "TODO: Scalar(Pointer) not supported yet in trans_type: {:?}",
                 scalar
             );
         }
-    }
+    };
+    cx.def_type(ty, def);
+    ty
 }
 
 fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
@@ -97,7 +107,13 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
         FieldsShape::Array { stride: _, count } => {
             // TODO: Assert stride is same as spirv's stride?
             let element_type = trans_type(cx, ty.field(cx, 0));
-            cx.emit_global().type_array(element_type, count as u32)
+            let result = cx.emit_global().type_array(element_type, count as u32);
+            let def = SpirvType::Array {
+                element: element_type,
+                count: count as u32,
+            };
+            cx.def_type(result, def);
+            result
         }
         FieldsShape::Arbitrary {
             offsets: _,
@@ -134,5 +150,10 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -
         offset = target_offset + field.size;
         prev_effective_align = effective_field_align;
     }
-    cx.emit_global().type_struct(&result)
+    let result_ty = cx.emit_global().type_struct(&result);
+    let def = SpirvType::Adt {
+        field_types: result,
+    };
+    cx.def_type(result_ty, def);
+    result_ty
 }
