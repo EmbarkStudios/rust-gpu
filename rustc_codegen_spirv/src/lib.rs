@@ -17,6 +17,7 @@ extern crate rustc_target;
 
 mod abi;
 mod builder;
+mod builder_spirv;
 mod codegen_cx;
 mod things;
 
@@ -25,6 +26,7 @@ mod things;
 mod test;
 
 use builder::Builder;
+use builder_spirv::ModuleSpirv;
 use codegen_cx::CodegenCx;
 use rspirv::binary::Assemble;
 use rustc_ast::expand::allocator::AllocatorKind;
@@ -49,7 +51,7 @@ use rustc_target::spec::Target;
 use std::any::Any;
 use std::path::Path;
 use std::{fs::File, io::Write, sync::Arc};
-use things::{ModuleSpirv, SpirvModuleBuffer, SprivThinBuffer};
+use things::{SpirvModuleBuffer, SprivThinBuffer};
 
 struct NoLlvmMetadataLoader;
 

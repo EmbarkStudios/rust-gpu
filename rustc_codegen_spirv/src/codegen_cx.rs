@@ -1,5 +1,4 @@
-use crate::abi::trans_type;
-use crate::things::{BuilderCursor, BuilderSpirv, ModuleSpirv};
+use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv};
 use rspirv::spirv::{FunctionControl, Word};
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
@@ -68,6 +67,11 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
         cursor: BuilderCursor,
     ) -> std::cell::RefMut<rspirv::dr::Builder> {
         self.builder.builder(cursor)
+    }
+
+    pub fn trans_type(&self, ty: TyAndLayout<'tcx>) -> Word {
+        use crate::abi::trans_type;
+        trans_type(self, ty)
     }
 
     pub fn finalize_module(self) {
@@ -145,7 +149,7 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 
     fn immediate_backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
-        trans_type(self.tcx, &mut self.emit_global(), layout)
+        self.trans_type(layout)
     }
 
     fn is_backend_immediate(&self, layout: TyAndLayout<'tcx>) -> bool {
@@ -347,9 +351,9 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         let argument_types = fn_abi
             .args
             .iter()
-            .map(|arg| trans_type(self.tcx, &mut emit, arg.layout))
+            .map(|arg| self.trans_type(arg.layout))
             .collect::<Vec<_>>();
-        let return_type = trans_type(self.tcx, &mut emit, fn_abi.ret.layout);
+        let return_type = self.trans_type(fn_abi.ret.layout);
         let control = FunctionControl::NONE;
         let function_id = None;
         let function_type = emit.type_function(return_type, &argument_types);

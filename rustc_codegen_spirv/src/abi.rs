@@ -1,8 +1,7 @@
-use rspirv::dr::Builder;
+use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::Word;
 use rustc_middle::ty::layout::TyAndLayout;
-use rustc_middle::ty::TyCtxt;
-use rustc_target::abi::{Abi, Primitive};
+use rustc_target::abi::{Abi, FieldsShape, Primitive, Scalar, Size};
 
 /*
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -43,87 +42,97 @@ impl SpirvType {
 }
 */
 
-pub fn trans_type<'tcx>(
-    _tcx: TyCtxt<'tcx>,
-    builder: &mut Builder,
-    layout: TyAndLayout<'tcx>,
-) -> Word {
-    if let Abi::Scalar(ref scalar) = layout.abi {
-        match scalar.value {
-            Primitive::Int(width, signedness) => {
-                builder.type_int(width.size().bits() as u32, if signedness { 1 } else { 0 })
-            }
-            Primitive::F32 => builder.type_float(32),
-            Primitive::F64 => builder.type_float(64),
-            Primitive::Pointer => {
-                panic!(
-                    "TODO: Scalar(Pointer) not supported yet in immediate_backend_type: {:?}",
-                    layout
-                );
-            }
-        }
-    } else if layout.is_zst() {
-        builder.type_struct(&[])
-    } else {
-        panic!("Unknown type: {:?}", layout);
+pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+    if ty.is_zst() {
+        return cx.emit_global().type_struct(&[]);
     }
-    /*
-    match ty.kind {
-        TyKind::Param(param) => panic!("TyKind::Param in trans_type: {:?}", param),
-        TyKind::Bool => SpirvType::Bool(builder.type_bool()),
-        TyKind::Tuple(fields) if fields.len() == 0 => SpirvType::ZST(builder.type_struct(&[])),
-        TyKind::Int(ty) => {
-            let size =
-                ty.bit_width()
-                    .unwrap_or_else(|| tcx.data_layout.pointer_size.bits()) as u32;
-            SpirvType::Integer(builder.type_int(size, 1), size, true)
-        }
-        TyKind::Uint(ty) => {
-            let size =
-                ty.bit_width()
-                    .unwrap_or_else(|| tcx.data_layout.pointer_size.bits()) as u32;
-            SpirvType::Integer(builder.type_int(size, 0), size, false)
-        }
-        TyKind::Float(ty) => SpirvType::Float(
-            builder.type_float(ty.bit_width() as u32),
-            ty.bit_width() as u32,
+
+    // Note: ty.abi is orthogonal to ty.variants and ty.fields, e.g. `ManuallyDrop<Result<isize, isize>>`
+    // has abi `ScalarPair`.
+    match ty.abi {
+        Abi::Uninhabited => panic!(
+            "TODO: Abi::Uninhabited not supported yet in trans_type: {:?}",
+            ty
         ),
-        TyKind::Slice(ty) => {
-            let element = trans_type(tcx, builder, ty);
-            SpirvType::Slice(Box::new(element))
+        Abi::Scalar(ref scalar) => trans_scalar(cx, scalar),
+        Abi::ScalarPair(ref one, ref two) => {
+            let one_spirv = trans_scalar(cx, one);
+            let two_spirv = trans_scalar(cx, two);
+            cx.emit_global().type_struct([one_spirv, two_spirv])
         }
-        TyKind::RawPtr(type_and_mut) => {
-            let pointee_type = trans_type(tcx, builder, type_and_mut.ty);
-            SpirvType::Pointer {
-                def: builder.type_pointer(None, StorageClass::Generic, pointee_type.def()),
-                pointee: Box::new(pointee_type),
-            }
+        Abi::Vector { ref element, count } => {
+            let elem_spirv = trans_scalar(cx, element);
+            cx.emit_global().type_vector(elem_spirv, count as u32)
         }
-        TyKind::Ref(_region, pointee_ty, _mutability) => {
-            let pointee_type = trans_type(tcx, builder, pointee_ty);
-            SpirvType::Pointer {
-                def: builder.type_pointer(None, StorageClass::Generic, pointee_type.def()),
-                pointee: Box::new(pointee_type),
-            }
-        }
-        TyKind::Adt(adt, substs) => {
-            if adt.variants.len() != 1 {
-                panic!("Enums/unions aren't supported yet: {:?}", adt);
-            }
-            let variant = &adt.variants[0u32.into()];
-            let field_types = variant
-                .fields
-                .iter()
-                .map(|field| {
-                    let ty = field.ty(tcx, substs);
-                    trans_type(tcx, builder, ty)
-                })
-                .collect::<Vec<_>>();
-            let spirv_field_types = field_types.iter().map(|f| f.def());
-            let def = builder.type_struct(spirv_field_types.collect::<Vec<_>>());
-            SpirvType::Adt { def, field_types }
-        }
-        ref thing => panic!("Unknown type: {:?}", thing),
+        Abi::Aggregate { sized: _ } => trans_aggregate(cx, ty),
     }
-    */
+}
+
+fn trans_scalar<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, scalar: &Scalar) -> Word {
+    match scalar.value {
+        Primitive::Int(width, signedness) => cx
+            .emit_global()
+            .type_int(width.size().bits() as u32, if signedness { 1 } else { 0 }),
+        Primitive::F32 => cx.emit_global().type_float(32),
+        Primitive::F64 => cx.emit_global().type_float(64),
+        Primitive::Pointer => {
+            panic!(
+                "TODO: Scalar(Pointer) not supported yet in trans_type: {:?}",
+                scalar
+            );
+        }
+    }
+}
+
+fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+    match ty.fields {
+        FieldsShape::Primitive => panic!(
+            "FieldsShape::Primitive not supported yet in trans_type: {:?}",
+            ty
+        ),
+        FieldsShape::Union(_field_count) => panic!(
+            "FieldsShape::Union not supported yet in trans_type: {:?}",
+            ty
+        ),
+        FieldsShape::Array { stride: _, count } => {
+            // TODO: Assert stride is same as spirv's stride?
+            let element_type = trans_type(cx, ty.field(cx, 0));
+            cx.emit_global().type_array(element_type, count as u32)
+        }
+        FieldsShape::Arbitrary {
+            offsets: _,
+            memory_index: _,
+        } => trans_struct(cx, ty),
+    }
+}
+
+// see struct_llfields in librustc_codegen_llvm for implementation hints
+fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+    let mut offset = Size::ZERO;
+    let mut prev_effective_align = ty.align.abi;
+    let mut result: Vec<_> = Vec::new();
+    for i in ty.fields.index_by_increasing_offset() {
+        let target_offset = ty.fields.offset(i as usize);
+        let field = ty.field(cx, i);
+        let effective_field_align = ty
+            .align
+            .abi
+            .min(field.align.abi)
+            .restrict_for_offset(target_offset);
+
+        assert!(target_offset >= offset);
+        let padding = target_offset - offset;
+        let padding_align = prev_effective_align.min(effective_field_align);
+        assert_eq!(offset.align_to(padding_align) + padding, target_offset);
+        if padding != Size::ZERO {
+            // TODO: Use OpMemberDecorate to implement padding
+            panic!("Padded structs are not supported yet: {:?}", ty);
+        }
+        // result.push(cx.type_padding_filler(padding, padding_align));
+
+        result.push(trans_type(cx, field));
+        offset = target_offset + field.size;
+        prev_effective_align = effective_field_align;
+    }
+    cx.emit_global().type_struct(&result)
 }

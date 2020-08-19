@@ -1,6 +1,6 @@
 mod builder_methods;
 
-use crate::{codegen_cx::CodegenCx, things::BuilderCursor};
+use crate::{builder_spirv::BuilderCursor, codegen_cx::CodegenCx};
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::coverageinfo::CounterOp;
 use rustc_codegen_ssa::mir::operand::OperandRef;
