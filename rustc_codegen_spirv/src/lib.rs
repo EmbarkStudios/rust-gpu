@@ -52,6 +52,15 @@ use std::path::Path;
 use std::{fs::File, io::Write, sync::Arc};
 use things::{SpirvModuleBuffer, SprivThinBuffer};
 
+/*
+fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
+    let mut mir = ::std::io::Cursor::new(Vec::new());
+    rustc_mir::util::write_mir_pretty(tcx, Some(instance.def_id()), &mut mir).unwrap();
+    let s = String::from_utf8(mir.into_inner()).unwrap();
+    println!("{}", s);
+}
+*/
+
 struct NoLlvmMetadataLoader;
 
 impl MetadataLoader for NoLlvmMetadataLoader {
@@ -270,11 +279,19 @@ impl ExtraBackendMethods for SsaBackend {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
             for &(mono_item, (linkage, visibility)) in &mono_items {
+                // if let MonoItem::Fn(instance) = mono_item {
+                //     dump_mir(tcx, instance);
+                // }
                 mono_item.predefine::<Builder<'_, '_, '_>>(&cx, linkage, visibility);
             }
 
+            println!("Done predefining");
+
             // ... and now that we have everything pre-defined, fill out those definitions.
             for &(mono_item, _) in &mono_items {
+                // if let MonoItem::Fn(instance) = mono_item {
+                //     dump_mir(tcx, instance);
+                // }
                 mono_item.define::<Builder<'_, '_, '_>>(&cx);
             }
 

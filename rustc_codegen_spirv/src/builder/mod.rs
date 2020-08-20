@@ -13,8 +13,7 @@ use rustc_codegen_ssa::traits::{
 use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::mir::Operand;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt, TyAndLayout};
-use rustc_middle::ty::Instance;
-use rustc_middle::ty::{ParamEnv, Ty, TyCtxt};
+use rustc_middle::ty::{Instance, ParamEnv, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use rustc_span::source_map::Span;
 use rustc_span::symbol::Symbol;
@@ -160,19 +159,21 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         _args: &Vec<Operand<'tcx>>,
         _caller_instance: Instance<'tcx>,
     ) -> bool {
-        todo!()
+        // TODO
+        false
     }
 
     fn abort(&mut self) {
-        todo!()
+        self.emit().kill().unwrap();
     }
 
     fn assume(&mut self, _val: Self::Value) {
-        todo!()
+        // TODO: llvm.assume
     }
 
-    fn expect(&mut self, _cond: Self::Value, _expected: bool) -> Self::Value {
-        todo!()
+    fn expect(&mut self, cond: Self::Value, _expected: bool) -> Self::Value {
+        // TODO: llvm.expect
+        cond
     }
 
     fn sideeffect(&mut self) {

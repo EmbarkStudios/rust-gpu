@@ -1,6 +1,6 @@
 use crate::abi::SpirvType;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv, SpirvValue, SpirvValueExt};
-use rspirv::spirv::{FunctionControl, Word};
+use rspirv::spirv::{FunctionControl, StorageClass, Word};
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -159,7 +159,7 @@ impl<'spv, 'tcx> HasParamEnv<'tcx> for CodegenCx<'spv, 'tcx> {
 
 impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
-        panic!("TODO: Unknown backend_type: {:?}", layout);
+        self.trans_type(layout)
     }
 
     fn immediate_backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
@@ -209,51 +209,96 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 
 impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn type_i1(&self) -> Self::Type {
-        todo!()
+        let result = self.emit_global().type_bool();
+        self.def_type(result, SpirvType::Bool);
+        result
     }
     fn type_i8(&self) -> Self::Type {
-        todo!()
+        let result = self.emit_global().type_int(8, 1);
+        self.def_type(result, SpirvType::Integer(8, true));
+        result
     }
     fn type_i16(&self) -> Self::Type {
-        todo!()
+        let result = self.emit_global().type_int(16, 1);
+        self.def_type(result, SpirvType::Integer(16, true));
+        result
     }
     fn type_i32(&self) -> Self::Type {
-        todo!()
+        let result = self.emit_global().type_int(32, 1);
+        self.def_type(result, SpirvType::Integer(32, true));
+        result
     }
     fn type_i64(&self) -> Self::Type {
-        todo!()
+        let result = self.emit_global().type_int(64, 1);
+        self.def_type(result, SpirvType::Integer(64, true));
+        result
     }
     fn type_i128(&self) -> Self::Type {
-        todo!()
+        let result = self.emit_global().type_int(128, 1);
+        self.def_type(result, SpirvType::Integer(128, true));
+        result
     }
     fn type_isize(&self) -> Self::Type {
-        todo!()
+        let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
+        let result = self.emit_global().type_int(ptr_size, 1);
+        self.def_type(result, SpirvType::Integer(ptr_size, true));
+        result
     }
 
     fn type_f32(&self) -> Self::Type {
-        todo!()
+        let result = self.emit_global().type_float(32);
+        self.def_type(result, SpirvType::Float(32));
+        result
     }
     fn type_f64(&self) -> Self::Type {
-        todo!()
+        let result = self.emit_global().type_float(64);
+        self.def_type(result, SpirvType::Float(64));
+        result
     }
 
-    fn type_func(&self, _args: &[Self::Type], __ret: Self::Type) -> Self::Type {
-        todo!()
+    fn type_func(&self, args: &[Self::Type], ret: Self::Type) -> Self::Type {
+        let result = self.emit_global().type_function(ret, args);
+        let def = SpirvType::Function {
+            return_type: ret,
+            arguments: args.to_vec(),
+        };
+        self.def_type(result, def);
+        result
     }
-    fn type_struct(&self, _els: &[Self::Type], _packed: bool) -> Self::Type {
-        todo!()
+    fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
+        let result = self.emit_global().type_struct(els);
+        let def = SpirvType::Adt {
+            field_types: els.to_vec(),
+        };
+        self.def_type(result, def);
+        result
     }
     fn type_kind(&self, _ty: Self::Type) -> TypeKind {
         todo!()
     }
-    fn type_ptr_to(&self, _ty: Self::Type) -> Self::Type {
-        todo!()
+    fn type_ptr_to(&self, ty: Self::Type) -> Self::Type {
+        let result = self
+            .emit_global()
+            .type_pointer(None, StorageClass::Generic, ty);
+        self.def_type(result, SpirvType::Pointer { pointee: ty });
+        result
     }
-    fn type_ptr_to_ext(&self, _ty: Self::Type, _address_space: AddressSpace) -> Self::Type {
-        todo!()
+    fn type_ptr_to_ext(&self, ty: Self::Type, address_space: AddressSpace) -> Self::Type {
+        if address_space != AddressSpace::DATA {
+            panic!("TODO: Unimplemented AddressSpace {:?}", address_space)
+        }
+        let result = self
+            .emit_global()
+            .type_pointer(None, StorageClass::Generic, ty);
+        self.def_type(result, SpirvType::Pointer { pointee: ty });
+        result
     }
-    fn element_type(&self, _ty: Self::Type) -> Self::Type {
-        todo!()
+    fn element_type(&self, ty: Self::Type) -> Self::Type {
+        match self.lookup_type(ty) {
+            SpirvType::Pointer { pointee } => pointee,
+            SpirvType::Vector { element, .. } => element,
+            spirv_type => panic!("element_type called on invalid type: {:?}", spirv_type),
+        }
     }
 
     /// Returns the number of elements in `self` if it is a LLVM vector type.
@@ -350,7 +395,7 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         _visibility: Visibility,
         _symbol_name: &str,
     ) {
-        todo!()
+        // TODO: Implement statics
     }
 
     fn predefine_fn(
@@ -360,28 +405,46 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         _visibility: Visibility,
         _symbol_name: &str,
     ) {
-        fn assert_mode(mode: PassMode) {
-            if let PassMode::Direct(_) = mode {
-            } else {
-                panic!("PassMode not supported yet: {:?}", mode)
-            }
-        }
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
-        let argument_types = fn_abi
+        let mut argument_types = fn_abi
             .args
             .iter()
-            .map(|arg| {
-                assert_mode(arg.mode);
-                self.trans_type(arg.layout)
+            .map(|arg| match arg.mode {
+                PassMode::Ignore => panic!(
+                    "TODO: Argument PassMode::Ignore not supported yet: {:?}",
+                    arg
+                ),
+                PassMode::Direct(_arg_attributes) => self.trans_type(arg.layout),
+                PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => self.trans_type(arg.layout),
+                PassMode::Cast(_cast_target) => self.trans_type(arg.layout),
+                // TODO: Deal with wide ptr?
+                PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
+                    let pointee = self.trans_type(arg.layout);
+                    self.emit_global()
+                        .type_pointer(None, StorageClass::Generic, pointee)
+                }
             })
             .collect::<Vec<_>>();
         // TODO: Do we register types created here in the type tracker?
         // TODO: Other modes
-        let return_type = if fn_abi.ret.mode == PassMode::Ignore {
-            self.emit_global().type_void()
-        } else {
-            assert_mode(fn_abi.ret.mode);
-            self.trans_type(fn_abi.ret.layout)
+        let return_type = match fn_abi.ret.mode {
+            PassMode::Ignore => self.emit_global().type_void(),
+            PassMode::Direct(_arg_attributes) => self.trans_type(fn_abi.ret.layout),
+            PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
+                self.trans_type(fn_abi.ret.layout)
+            }
+            // TODO: Is this right?
+            PassMode::Cast(_cast_target) => self.trans_type(fn_abi.ret.layout),
+            // TODO: Deal with wide ptr?
+            PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
+                let pointee = self.trans_type(fn_abi.ret.layout);
+                argument_types.push(self.emit_global().type_pointer(
+                    None,
+                    StorageClass::Generic,
+                    pointee,
+                ));
+                self.emit_global().type_void()
+            }
         };
         let mut emit = self.emit_global();
         let control = FunctionControl::NONE;

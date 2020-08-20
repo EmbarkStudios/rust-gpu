@@ -1,5 +1,5 @@
 use super::Builder;
-use crate::builder_spirv::SpirvValueExt;
+use crate::builder_spirv::{BuilderCursor, SpirvValueExt};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -47,7 +47,21 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn build_sibling_block(&self, _name: &str) -> Self {
-        todo!()
+        let mut builder = self.emit_with_cursor(BuilderCursor {
+            function: self.cursor.function,
+            block: None,
+        });
+        let new_bb = builder.begin_block(None).unwrap();
+        let new_cursor = BuilderCursor {
+            function: self.cursor.function,
+            block: builder.selected_block(),
+        };
+        Self {
+            cx: self.cx,
+            cursor: new_cursor,
+            current_fn: self.current_fn,
+            basic_block: new_bb,
+        }
     }
 
     fn cx(&self) -> &Self::CodegenCx {

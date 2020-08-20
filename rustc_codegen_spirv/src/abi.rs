@@ -1,5 +1,5 @@
 use crate::codegen_cx::CodegenCx;
-use rspirv::spirv::Word;
+use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::ty::layout::TyAndLayout;
 use rustc_target::abi::{Abi, FieldsShape, Primitive, Scalar, Size};
 
@@ -24,6 +24,13 @@ pub enum SpirvType {
         element: Word,
         count: u32,
     },
+    Pointer {
+        pointee: Word,
+    },
+    Function {
+        return_type: Word,
+        arguments: Vec<Word>,
+    },
 }
 
 pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
@@ -41,10 +48,10 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
             "TODO: Abi::Uninhabited not supported yet in trans_type: {:?}",
             ty
         ),
-        Abi::Scalar(ref scalar) => trans_scalar(cx, scalar),
+        Abi::Scalar(ref scalar) => trans_scalar(cx, scalar, None),
         Abi::ScalarPair(ref one, ref two) => {
-            let one_spirv = trans_scalar(cx, one);
-            let two_spirv = trans_scalar(cx, two);
+            let one_spirv = trans_scalar(cx, one, Some(0));
+            let two_spirv = trans_scalar(cx, two, Some(1));
             let result = cx.emit_global().type_struct([one_spirv, two_spirv]);
             let def = SpirvType::Adt {
                 field_types: vec![one_spirv, two_spirv],
@@ -53,7 +60,7 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
             result
         }
         Abi::Vector { ref element, count } => {
-            let elem_spirv = trans_scalar(cx, element);
+            let elem_spirv = trans_scalar(cx, element, None);
             let result = cx.emit_global().type_vector(elem_spirv, count as u32);
             let def = SpirvType::Vector {
                 element: elem_spirv,
@@ -66,12 +73,22 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
     }
 }
 
-fn trans_scalar<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, scalar: &Scalar) -> Word {
+fn trans_scalar<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    scalar: &Scalar,
+    pair_index: Option<usize>,
+) -> Word {
     let (ty, def) = match scalar.value {
         Primitive::Int(width, signedness) => {
+            let width_bits = width.size().bits() as u128;
+            let width_max_val = if width_bits == 128 {
+                u128::MAX
+            } else {
+                (1 << width_bits) - 1
+            };
             if scalar.valid_range == (0..=1) {
                 (cx.emit_global().type_bool(), SpirvType::Bool)
-            } else if scalar.valid_range != (0..=((1 << (width.size().bits() as u128)) - 1)) {
+            } else if scalar.valid_range != (0..=width_max_val) {
                 panic!("TODO: Unimplemented valid_range that's not the size of the int (width={:?}, range={:?}): {:?}", width, scalar.valid_range, scalar)
             } else {
                 (
@@ -84,10 +101,54 @@ fn trans_scalar<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, scalar: &Scalar) -> Word
         Primitive::F32 => (cx.emit_global().type_float(32), SpirvType::Float(32)),
         Primitive::F64 => (cx.emit_global().type_float(64), SpirvType::Float(64)),
         Primitive::Pointer => {
-            panic!(
-                "TODO: Scalar(Pointer) not supported yet in trans_type: {:?}",
-                scalar
-            );
+            if pair_index == Some(1) {
+                let ptr_size = cx.tcx.data_layout.pointer_size.bits() as u32;
+                (
+                    cx.emit_global().type_int(ptr_size, 0),
+                    SpirvType::Integer(ptr_size, false),
+                )
+            } else {
+                // TODO: Implement this properly
+                let void = cx.emit_global().type_void();
+                (
+                    cx.emit_global()
+                        .type_pointer(None, StorageClass::Generic, void),
+                    SpirvType::Pointer { pointee: void },
+                )
+            }
+            /*
+            if pair_index == Some(1) {
+                return cx
+                    .emit_global()
+                    .type_int(cx.tcx.data_layout.pointer_size.bits() as u32, 0);
+            }
+            match ty.ty.kind {
+                TyKind::Ref(_region, ty, _mutability) => {
+                    let pointee_type = trans_type(cx, cx.layout_of(ty));
+                    (
+                        cx.emit_global()
+                            .type_pointer(None, StorageClass::Generic, pointee_type),
+                        SpirvType::Pointer {
+                            pointee: pointee_type,
+                        },
+                    )
+                }
+                TyKind::RawPtr(type_and_mut) => {
+                    let pointee_type = trans_type(cx, cx.layout_of(type_and_mut.ty));
+                    (
+                        cx.emit_global()
+                            .type_pointer(None, StorageClass::Generic, pointee_type),
+                        SpirvType::Pointer {
+                            pointee: pointee_type,
+                        },
+                    )
+                }
+                ref kind => panic!(
+                    "TODO: Unimplemented Primitive::Pointer TyKind ({:?}): {:?}",
+                    kind, ty
+                ),
+            }
+            */
         }
     };
     cx.def_type(ty, def);
@@ -100,10 +161,11 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
             "FieldsShape::Primitive not supported yet in trans_type: {:?}",
             ty
         ),
-        FieldsShape::Union(_field_count) => panic!(
-            "FieldsShape::Union not supported yet in trans_type: {:?}",
-            ty
-        ),
+        // TODO: Is this the right thing to do?
+        FieldsShape::Union(_field_count) => {
+            let byte = cx.emit_global().type_int(8, 0);
+            cx.emit_global().type_array(byte, ty.size.bytes() as u32)
+        }
         FieldsShape::Array { stride: _, count } => {
             // TODO: Assert stride is same as spirv's stride?
             let element_type = trans_type(cx, ty.field(cx, 0));
