@@ -5,6 +5,7 @@ use rustc_target::abi::{Abi, FieldsShape, Primitive, Scalar, Size};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SpirvType {
+    Void,
     Bool,
     Integer(u32, bool),
     Float(u32),
@@ -110,6 +111,7 @@ fn trans_scalar<'spv, 'tcx>(
             } else {
                 // TODO: Implement this properly
                 let void = cx.emit_global().type_void();
+                cx.def_type(void, SpirvType::Void);
                 (
                     cx.emit_global()
                         .type_pointer(None, StorageClass::Generic, void),
@@ -164,7 +166,16 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
         // TODO: Is this the right thing to do?
         FieldsShape::Union(_field_count) => {
             let byte = cx.emit_global().type_int(8, 0);
-            cx.emit_global().type_array(byte, ty.size.bytes() as u32)
+            cx.def_type(byte, SpirvType::Integer(8, false));
+            let result = cx.emit_global().type_array(byte, ty.size.bytes() as u32);
+            cx.def_type(
+                result,
+                SpirvType::Array {
+                    element: byte,
+                    count: ty.size.bytes() as u32,
+                },
+            );
+            result
         }
         FieldsShape::Array { stride: _, count } => {
             // TODO: Assert stride is same as spirv's stride?

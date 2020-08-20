@@ -125,14 +125,14 @@ impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         todo!()
     }
 
-    fn arg_memory_ty(&self, _arg_abi: &ArgAbi<'tcx, Ty<'tcx>>) -> Self::Type {
-        todo!()
+    fn arg_memory_ty(&self, arg_abi: &ArgAbi<'tcx, Ty<'tcx>>) -> Self::Type {
+        self.trans_type(arg_abi.layout)
     }
 }
 
 impl<'a, 'spv, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     fn apply_attrs_callsite(&mut self, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>, _callsite: Self::Value) {
-        todo!()
+        // TODO: Implement this?
     }
 
     fn get_param(&self, index: usize) -> Self::Value {
@@ -143,14 +143,14 @@ impl<'a, 'spv, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
 impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     fn codegen_intrinsic_call(
         &mut self,
-        _instance: Instance<'tcx>,
-        _fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
-        _args: &[OperandRef<'tcx, Self::Value>],
-        _llresult: Self::Value,
-        _span: Span,
-        _caller_instance: Instance<'tcx>,
+        instance: Instance<'tcx>,
+        fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
+        args: &[OperandRef<'tcx, Self::Value>],
+        llresult: Self::Value,
+        span: Span,
+        caller_instance: Instance<'tcx>,
     ) {
-        todo!()
+        println!("TODO: codegen_intrinsic_call unimplemented: instance={:?} fn_abi={:?} args={:?} llresult={:?} span={:?} caller_instance={:?}", instance, fn_abi, args, llresult, span, caller_instance);
     }
 
     fn is_codegen_intrinsic(
@@ -160,7 +160,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         _caller_instance: Instance<'tcx>,
     ) -> bool {
         // TODO
-        false
+        true
     }
 
     fn abort(&mut self) {

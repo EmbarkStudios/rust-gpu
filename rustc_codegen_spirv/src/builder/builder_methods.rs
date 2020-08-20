@@ -1,14 +1,18 @@
 use super::Builder;
+use crate::abi::SpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValueExt};
+use rspirv::spirv::StorageClass;
+use rustc_codegen_ssa::base::to_immediate;
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
-use rustc_codegen_ssa::mir::operand::OperandRef;
+use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
+use rustc_codegen_ssa::traits::LayoutTypeMethods;
 use rustc_codegen_ssa::traits::{BuilderMethods, OverflowOp};
 use rustc_codegen_ssa::MemFlags;
 use rustc_middle::ty::Ty;
-use rustc_target::abi::{Align, Size};
+use rustc_target::abi::{Abi, Align, Size};
 use std::ops::Range;
 
 impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
@@ -80,26 +84,37 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         self.emit().ret_value(value.def).unwrap();
     }
 
-    fn br(&mut self, _dest: Self::BasicBlock) {
-        todo!()
+    fn br(&mut self, dest: Self::BasicBlock) {
+        self.emit().branch(dest).unwrap()
     }
 
     fn cond_br(
         &mut self,
-        _cond: Self::Value,
-        _then_llbb: Self::BasicBlock,
-        _else_llbb: Self::BasicBlock,
+        cond: Self::Value,
+        then_llbb: Self::BasicBlock,
+        else_llbb: Self::BasicBlock,
     ) {
-        todo!()
+        self.emit()
+            .branch_conditional(cond.def, then_llbb, else_llbb, &[])
+            .unwrap()
     }
 
     fn switch(
         &mut self,
-        _v: Self::Value,
-        _else_llbb: Self::BasicBlock,
-        _cases: impl ExactSizeIterator<Item = (u128, Self::BasicBlock)>,
+        v: Self::Value,
+        else_llbb: Self::BasicBlock,
+        cases: impl ExactSizeIterator<Item = (u128, Self::BasicBlock)>,
     ) {
-        todo!()
+        let cases = cases
+            .map(|(i, b)| {
+                if i > u32::MAX as u128 {
+                    panic!("Switches to values above u32::MAX not supported: {:?}", i)
+                } else {
+                    (i as u32, b)
+                }
+            })
+            .collect::<Vec<_>>();
+        self.emit().switch(v.def, else_llbb, cases).unwrap()
     }
 
     fn invoke(
@@ -114,7 +129,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn unreachable(&mut self) {
-        todo!()
+        self.emit().unreachable().unwrap()
     }
 
     fn add(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
@@ -268,24 +283,36 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         todo!()
     }
 
-    fn alloca(&mut self, _ty: Self::Type, _align: Align) -> Self::Value {
-        todo!()
+    fn alloca(&mut self, ty: Self::Type, _align: Align) -> Self::Value {
+        let ptr_ty = self.emit().type_pointer(None, StorageClass::Function, ty);
+        self.def_type(ptr_ty, SpirvType::Pointer { pointee: ty });
+        self.emit()
+            .variable(ptr_ty, None, StorageClass::Function, None)
+            .with_type(ptr_ty)
     }
 
-    fn dynamic_alloca(&mut self, _ty: Self::Type, _align: Align) -> Self::Value {
-        todo!()
+    fn dynamic_alloca(&mut self, ty: Self::Type, align: Align) -> Self::Value {
+        self.alloca(ty, align)
     }
 
     fn array_alloca(&mut self, _ty: Self::Type, _len: Self::Value, _align: Align) -> Self::Value {
         todo!()
     }
 
-    fn load(&mut self, _ptr: Self::Value, _align: Align) -> Self::Value {
-        todo!()
+    fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
+        let ty = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => pointee,
+            ty => panic!("load called on variable that wasn't a pointer: {:?}", ty),
+        };
+        self.emit()
+            .load(ty, None, ptr.def, None, [])
+            .unwrap()
+            .with_type(ty)
     }
 
-    fn volatile_load(&mut self, _ptr: Self::Value) -> Self::Value {
-        todo!()
+    fn volatile_load(&mut self, ptr: Self::Value) -> Self::Value {
+        // TODO: Can we do something here?
+        self.load(ptr, Align::from_bytes(0).unwrap())
     }
 
     fn atomic_load(
@@ -299,9 +326,36 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn load_operand(
         &mut self,
-        _place: PlaceRef<'tcx, Self::Value>,
+        place: PlaceRef<'tcx, Self::Value>,
     ) -> OperandRef<'tcx, Self::Value> {
-        todo!()
+        if place.layout.is_zst() {
+            return OperandRef::new_zst(self, place.layout);
+        }
+
+        let val = if let Some(llextra) = place.llextra {
+            OperandValue::Ref(place.llval, Some(llextra), place.align)
+        } else if self.cx.is_backend_immediate(place.layout) {
+            let llval = self.load(place.llval, place.align);
+            OperandValue::Immediate(to_immediate(self, llval, place.layout))
+        } else if let Abi::ScalarPair(ref a, ref b) = place.layout.abi {
+            let b_offset = a.value.size(self).align_to(b.value.align(self).abi);
+
+            let mut load = |i, align| {
+                let llptr = self.struct_gep(place.llval, i as u64);
+                self.load(llptr, align)
+            };
+
+            OperandValue::Pair(
+                load(0, place.align),
+                load(1, place.align.restrict_for_offset(b_offset)),
+            )
+        } else {
+            OperandValue::Ref(place.llval, None, place.align)
+        };
+        OperandRef {
+            val,
+            layout: place.layout,
+        }
     }
 
     /// Called for Rvalue::Repeat when the elem is neither a ZST nor optimizable using memset.
@@ -322,18 +376,24 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         todo!()
     }
 
-    fn store(&mut self, _val: Self::Value, _ptr: Self::Value, _align: Align) -> Self::Value {
-        todo!()
+    fn store(&mut self, val: Self::Value, ptr: Self::Value, _align: Align) -> Self::Value {
+        let ptr_elem_ty = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => pointee,
+            ty => panic!("store called on variable that wasn't a pointer: {:?}", ty),
+        };
+        assert_eq!(ptr_elem_ty, val.ty);
+        self.emit().store(ptr.def, val.def, None, &[]).unwrap();
+        val
     }
 
     fn store_with_flags(
         &mut self,
-        _val: Self::Value,
-        _ptr: Self::Value,
-        _align: Align,
+        val: Self::Value,
+        ptr: Self::Value,
+        align: Align,
         _flags: MemFlags,
     ) -> Self::Value {
-        todo!()
+        self.store(val, ptr, align)
     }
 
     fn atomic_store(
@@ -398,29 +458,58 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         todo!()
     }
 
-    fn ptrtoint(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn ptrtoint(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        match self.lookup_type(val.ty) {
+            SpirvType::Pointer { .. } => (),
+            other => panic!("ptrtoint called on non-pointer source type: {:?}", other),
+        }
+        self.emit()
+            .bitcast(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
-    fn inttoptr(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn inttoptr(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        match self.lookup_type(dest_ty) {
+            SpirvType::Pointer { .. } => (),
+            other => panic!("inttoptr called on non-pointer dest type: {:?}", other),
+        }
+        self.emit()
+            .bitcast(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
-    fn bitcast(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn bitcast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .bitcast(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
-    fn intcast(
-        &mut self,
-        _val: Self::Value,
-        _dest_ty: Self::Type,
-        _is_signed: bool,
-    ) -> Self::Value {
-        todo!()
+    fn intcast(&mut self, val: Self::Value, dest_ty: Self::Type, is_signed: bool) -> Self::Value {
+        panic!(
+            "TODO: intcast not implemented yet: val={:?} val.ty={:?} dest_ty={:?} is_signed={}",
+            val,
+            self.lookup_type(val.ty),
+            self.lookup_type(dest_ty),
+            is_signed
+        );
     }
 
-    fn pointercast(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        match self.lookup_type(val.ty) {
+            SpirvType::Pointer { .. } => (),
+            other => panic!("pointercast called on non-pointer source type: {:?}", other),
+        }
+        match self.lookup_type(dest_ty) {
+            SpirvType::Pointer { .. } => (),
+            other => panic!("pointercast called on non-pointer dest type: {:?}", other),
+        }
+        self.emit()
+            .bitcast(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
     fn icmp(&mut self, _op: IntPredicate, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
@@ -581,12 +670,12 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     /// Called for `StorageLive`
     fn lifetime_start(&mut self, _ptr: Self::Value, _size: Size) {
-        todo!()
+        // ignore
     }
 
     /// Called for `StorageDead`
     fn lifetime_end(&mut self, _ptr: Self::Value, _size: Size) {
-        todo!()
+        // ignore
     }
 
     fn instrprof_increment(
@@ -601,11 +690,22 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn call(
         &mut self,
-        _llfn: Self::Value,
-        _args: &[Self::Value],
-        _funclet: Option<&Self::Funclet>,
+        llfn: Self::Value,
+        args: &[Self::Value],
+        funclet: Option<&Self::Funclet>,
     ) -> Self::Value {
-        todo!()
+        if funclet.is_some() {
+            panic!("TODO: Funclets are not supported");
+        }
+        let result_type = match self.lookup_type(llfn.ty) {
+            SpirvType::Function { return_type, .. } => return_type,
+            ty => panic!("Calling non-function type: {:?}", ty),
+        };
+        let args = args.iter().map(|arg| arg.def).collect::<Vec<_>>();
+        self.emit()
+            .function_call(result_type, None, llfn.def, args)
+            .unwrap()
+            .with_type(result_type)
     }
 
     fn zext(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {

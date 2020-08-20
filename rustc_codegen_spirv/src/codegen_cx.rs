@@ -35,7 +35,7 @@ pub struct CodegenCx<'spv, 'tcx> {
     pub codegen_unit: &'tcx CodegenUnit<'tcx>,
     pub spirv_module: &'spv ModuleSpirv,
     pub builder: BuilderSpirv,
-    pub function_defs: RefCell<HashMap<Instance<'tcx>, Word>>,
+    pub function_defs: RefCell<HashMap<Instance<'tcx>, SpirvValue>>,
     pub function_parameter_values: RefCell<HashMap<Word, Vec<SpirvValue>>>,
     pub type_defs: RefCell<HashMap<Word, SpirvType>>,
 }
@@ -302,21 +302,30 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 
     /// Returns the number of elements in `self` if it is a LLVM vector type.
-    fn vector_length(&self, _ty: Self::Type) -> usize {
-        todo!()
+    fn vector_length(&self, ty: Self::Type) -> usize {
+        match self.lookup_type(ty) {
+            SpirvType::Vector { count, .. } => count as usize,
+            ty => panic!("vector_length called on non-vector type: {:?}", ty),
+        }
     }
 
-    fn float_width(&self, _ty: Self::Type) -> usize {
-        todo!()
+    fn float_width(&self, ty: Self::Type) -> usize {
+        match self.lookup_type(ty) {
+            SpirvType::Float(width) => width as usize,
+            ty => panic!("float_width called on non-float type: {:?}", ty),
+        }
     }
 
     /// Retrieves the bit width of the integer type `self`.
-    fn int_width(&self, _ty: Self::Type) -> u64 {
-        todo!()
+    fn int_width(&self, ty: Self::Type) -> u64 {
+        match self.lookup_type(ty) {
+            SpirvType::Integer(width, _) => width as u64,
+            ty => panic!("int_width called on non-integer type: {:?}", ty),
+        }
     }
 
-    fn val_ty(&self, _v: Self::Value) -> Self::Type {
-        todo!()
+    fn val_ty(&self, v: Self::Value) -> Self::Type {
+        v.ty
     }
 }
 
@@ -351,11 +360,11 @@ impl<'spv, 'tcx> MiscMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 
     fn get_fn(&self, instance: Instance<'tcx>) -> Self::Function {
-        self.function_defs.borrow()[&instance]
+        self.function_defs.borrow()[&instance].def
     }
 
-    fn get_fn_addr(&self, _instance: Instance<'tcx>) -> Self::Value {
-        todo!()
+    fn get_fn_addr(&self, instance: Instance<'tcx>) -> Self::Value {
+        self.function_defs.borrow()[&instance]
     }
 
     fn eh_personality(&self) -> Self::Value {
@@ -406,29 +415,51 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         _symbol_name: &str,
     ) {
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
-        let mut argument_types = fn_abi
-            .args
-            .iter()
-            .map(|arg| match arg.mode {
+        let mut argument_types = Vec::new();
+        for arg in fn_abi.args {
+            let arg_type = match arg.mode {
                 PassMode::Ignore => panic!(
                     "TODO: Argument PassMode::Ignore not supported yet: {:?}",
                     arg
                 ),
                 PassMode::Direct(_arg_attributes) => self.trans_type(arg.layout),
-                PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => self.trans_type(arg.layout),
+                PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
+                    // TODO: Make this more efficient, don't generate struct
+                    let tuple = self.lookup_type(self.trans_type(arg.layout));
+                    let (left, right) = match tuple {
+                        SpirvType::Adt { ref field_types } => {
+                            if let [left, right] = *field_types.as_slice() {
+                                (left, right)
+                            } else {
+                                panic!("PassMode::Pair did not produce tuple: {:?}", tuple)
+                            }
+                        }
+                        _ => panic!("PassMode::Pair did not produce tuple: {:?}", tuple),
+                    };
+                    argument_types.push(left);
+                    argument_types.push(right);
+                    continue;
+                }
                 PassMode::Cast(_cast_target) => self.trans_type(arg.layout),
                 // TODO: Deal with wide ptr?
                 PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
                     let pointee = self.trans_type(arg.layout);
-                    self.emit_global()
-                        .type_pointer(None, StorageClass::Generic, pointee)
+                    let ptr_type =
+                        self.emit_global()
+                            .type_pointer(None, StorageClass::Generic, pointee);
+                    self.def_type(ptr_type, SpirvType::Pointer { pointee });
+                    ptr_type
                 }
-            })
-            .collect::<Vec<_>>();
-        // TODO: Do we register types created here in the type tracker?
+            };
+            argument_types.push(arg_type);
+        }
         // TODO: Other modes
         let return_type = match fn_abi.ret.mode {
-            PassMode::Ignore => self.emit_global().type_void(),
+            PassMode::Ignore => {
+                let void = self.emit_global().type_void();
+                self.def_type(void, SpirvType::Void);
+                void
+            }
             PassMode::Direct(_arg_attributes) => self.trans_type(fn_abi.ret.layout),
             PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
                 self.trans_type(fn_abi.ret.layout)
@@ -438,12 +469,14 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             // TODO: Deal with wide ptr?
             PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
                 let pointee = self.trans_type(fn_abi.ret.layout);
-                argument_types.push(self.emit_global().type_pointer(
-                    None,
-                    StorageClass::Generic,
-                    pointee,
-                ));
-                self.emit_global().type_void()
+                let pointer = self
+                    .emit_global()
+                    .type_pointer(None, StorageClass::Generic, pointee);
+                self.def_type(pointer, SpirvType::Pointer { pointee });
+                argument_types.push(pointer);
+                let void = self.emit_global().type_void();
+                self.def_type(void, SpirvType::Void);
+                void
             }
         };
         let mut emit = self.emit_global();
@@ -460,10 +493,19 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             .collect::<Vec<_>>();
         emit.end_function().unwrap();
 
-        self.function_defs.borrow_mut().insert(instance, fn_id);
+        self.function_defs
+            .borrow_mut()
+            .insert(instance, fn_id.with_type(function_type));
         self.function_parameter_values
             .borrow_mut()
             .insert(fn_id, parameter_values);
+        self.def_type(
+            function_type,
+            SpirvType::Function {
+                return_type,
+                arguments: argument_types,
+            },
+        );
     }
 }
 
