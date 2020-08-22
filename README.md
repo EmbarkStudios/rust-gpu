@@ -38,7 +38,7 @@ I think our initial goal should be to replace our own internal shaders with shad
 
 We use this repo as a small monorepo for everything related to the project: crates, tools, shaders, examples, tests, and design documents. This way we can use issues and PRs covering everything in the same place cross-reference stuff within the repo as well as with other GitHub repos (Cranelift/Rust/Ark).
 
-We meet weekly over vidcon to discuss design and triage issues, and will do weekly project updates.
+We meet weekly over vidcon to discuss design and triage issues. Each meeting has an [issue](https://github.com/EmbarkStudios/rust-gpu/issues?q=label%3Ameeting+) with agenda, links and minutes.
 
 We have an internal Embark Slack channel for fast discussion (now while this is an internal Embark project): [#ark-pod-rust-gpu](https://embark-studios.slack.com/archives/C017HE6TV7S)
 
