@@ -13,6 +13,7 @@ use rustc_codegen_ssa::traits::{BuilderMethods, OverflowOp};
 use rustc_codegen_ssa::MemFlags;
 use rustc_middle::ty::Ty;
 use rustc_target::abi::{Abi, Align, Size};
+use std::iter::empty;
 use std::ops::Range;
 
 impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
@@ -40,8 +41,9 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn new_block<'b>(cx: &'a Self::CodegenCx, llfn: Self::Function, _name: &'b str) -> Self {
-        let cursor = cx.builder.select_function_by_id(llfn);
-        let label = cx.emit_with_cursor(cursor).begin_block(None).unwrap();
+        let cursor_fn = cx.builder.select_function_by_id(llfn);
+        let label = cx.emit_with_cursor(cursor_fn).begin_block(None).unwrap();
+        let cursor = cx.builder.select_block_by_id(label);
         Self {
             cx,
             cursor,
@@ -95,7 +97,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         else_llbb: Self::BasicBlock,
     ) {
         self.emit()
-            .branch_conditional(cond.def, then_llbb, else_llbb, &[])
+            .branch_conditional(cond.def, then_llbb, else_llbb, empty())
             .unwrap()
     }
 
@@ -305,7 +307,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             ty => panic!("load called on variable that wasn't a pointer: {:?}", ty),
         };
         self.emit()
-            .load(ty, None, ptr.def, None, [])
+            .load(ty, None, ptr.def, None, empty())
             .unwrap()
             .with_type(ty)
     }
@@ -382,7 +384,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             ty => panic!("store called on variable that wasn't a pointer: {:?}", ty),
         };
         assert_eq!(ptr_elem_ty, val.ty);
-        self.emit().store(ptr.def, val.def, None, &[]).unwrap();
+        self.emit().store(ptr.def, val.def, None, empty()).unwrap();
         val
     }
 
@@ -406,16 +408,54 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         todo!()
     }
 
-    fn gep(&mut self, _ptr: Self::Value, _indices: &[Self::Value]) -> Self::Value {
-        todo!()
+    fn gep(&mut self, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
+        let mut result_indices = Vec::with_capacity(indices.len());
+        let mut result_type = ptr.ty;
+        for index in indices {
+            result_indices.push(index.def);
+            result_type = match self.lookup_type(result_type) {
+                SpirvType::Pointer { pointee } => pointee,
+                other_type => panic!("GEP not implemented for type {:?}", other_type),
+            }
+        }
+        self.emit()
+            .access_chain(result_type, None, ptr.def, result_indices)
+            .unwrap()
+            .with_type(result_type)
     }
 
-    fn inbounds_gep(&mut self, _ptr: Self::Value, _indices: &[Self::Value]) -> Self::Value {
-        todo!()
+    fn inbounds_gep(&mut self, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
+        let mut result_indices = Vec::with_capacity(indices.len());
+        let mut result_type = ptr.ty;
+        for index in indices {
+            result_indices.push(index.def);
+            result_type = match self.lookup_type(result_type) {
+                SpirvType::Pointer { pointee } => pointee,
+                other_type => panic!("GEP not implemented for type {:?}", other_type),
+            }
+        }
+        self.emit()
+            .in_bounds_access_chain(result_type, None, ptr.def, result_indices)
+            .unwrap()
+            .with_type(result_type)
     }
 
-    fn struct_gep(&mut self, _ptr: Self::Value, _idx: u64) -> Self::Value {
-        todo!()
+    fn struct_gep(&mut self, ptr: Self::Value, idx: u64) -> Self::Value {
+        let result_type = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => match self.lookup_type(pointee) {
+                SpirvType::Adt { field_types } => field_types[idx as usize],
+                other => panic!("struct_gep not on struct type: {:?}", other),
+            },
+            other => panic!("struct_gep not on struct pointer type: {:?}", other),
+        };
+        let mut emit = self.emit();
+        let u64 = emit.type_int(64, 0);
+        self.def_type(u64, SpirvType::Integer(64, false));
+        let index_const = self.emit().constant_u64(u64, idx);
+        self.emit()
+            .access_chain(result_type, None, ptr.def, [index_const].iter().cloned())
+            .unwrap()
+            .with_type(result_type)
     }
 
     fn trunc(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {

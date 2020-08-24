@@ -1,7 +1,10 @@
 use rspirv::dr::{Block, Builder, Module};
-use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Word};
+use rspirv::{
+    binary::Assemble,
+    spirv::{AddressingModel, Capability, MemoryModel, Word},
+};
 use std::cell::{RefCell, RefMut};
-use std::sync::Mutex;
+use std::{fs::File, io::Write, path::Path, sync::Mutex};
 
 /// This theoretically should contain the rspirv::Builder, but instead, we put that into the BuilderSpirv struct, and at
 /// the end of compilation, move the Builder over here. The reason is that the WriteBackendMethods trait requires the
@@ -35,7 +38,7 @@ impl SpirvValueExt for Word {
     }
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 #[must_use = "BuilderCursor should usually be assigned to the Builder.cursor field"]
 pub struct BuilderCursor {
     pub function: Option<usize>,
@@ -60,6 +63,26 @@ impl BuilderSpirv {
 
     pub fn finalize(self) -> Module {
         self.builder.into_inner().module()
+    }
+
+    /// Helper function useful to place right before a crash, to debug the module state.
+    #[allow(dead_code)]
+    pub fn dump_module(&self, path: impl AsRef<Path>) {
+        let mut module = self.builder.borrow().module_ref().clone();
+        let mut header = rspirv::dr::ModuleHeader::new(0);
+        header.set_version(0, 0);
+        module.header = Some(header);
+        let spirv_module = module.assemble();
+        let spirv_module_u8: &[u8] = unsafe {
+            std::slice::from_raw_parts(
+                spirv_module.as_ptr() as *const u8,
+                spirv_module.len() * std::mem::size_of::<u32>(),
+            )
+        };
+        File::create(path)
+            .unwrap()
+            .write_all(spirv_module_u8)
+            .unwrap();
     }
 
     /// Note: This Builder can be used by multiple things being built at the same time, so, we need to save and restore

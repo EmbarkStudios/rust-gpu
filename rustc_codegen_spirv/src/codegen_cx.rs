@@ -257,7 +257,7 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 
     fn type_func(&self, args: &[Self::Type], ret: Self::Type) -> Self::Type {
-        let result = self.emit_global().type_function(ret, args);
+        let result = self.emit_global().type_function(ret, args.iter().cloned());
         let def = SpirvType::Function {
             return_type: ret,
             arguments: args.to_vec(),
@@ -266,7 +266,7 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         result
     }
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
-        let result = self.emit_global().type_struct(els);
+        let result = self.emit_global().type_struct(els.iter().cloned());
         let def = SpirvType::Adt {
             field_types: els.to_vec(),
         };
@@ -482,7 +482,7 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         let mut emit = self.emit_global();
         let control = FunctionControl::NONE;
         let function_id = None;
-        let function_type = emit.type_function(return_type, &argument_types);
+        let function_type = emit.type_function(return_type, argument_types.iter().cloned());
 
         let fn_id = emit
             .begin_function(return_type, function_id, control, function_type)

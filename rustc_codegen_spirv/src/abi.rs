@@ -1,7 +1,8 @@
 use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::{StorageClass, Word};
-use rustc_middle::ty::layout::TyAndLayout;
-use rustc_target::abi::{Abi, FieldsShape, Primitive, Scalar, Size};
+use rustc_middle::ty::{layout::TyAndLayout, TyKind};
+use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Size};
+use std::iter::empty;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SpirvType {
@@ -37,7 +38,7 @@ pub enum SpirvType {
 pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     if ty.is_zst() {
         let def = SpirvType::ZST;
-        let result = cx.emit_global().type_struct(&[]);
+        let result = cx.emit_global().type_struct(empty());
         cx.def_type(result, def);
         return result;
     }
@@ -49,11 +50,13 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
             "TODO: Abi::Uninhabited not supported yet in trans_type: {:?}",
             ty
         ),
-        Abi::Scalar(ref scalar) => trans_scalar(cx, scalar, None),
+        Abi::Scalar(ref scalar) => trans_scalar(cx, ty, scalar, None),
         Abi::ScalarPair(ref one, ref two) => {
-            let one_spirv = trans_scalar(cx, one, Some(0));
-            let two_spirv = trans_scalar(cx, two, Some(1));
-            let result = cx.emit_global().type_struct([one_spirv, two_spirv]);
+            let one_spirv = trans_scalar(cx, ty, one, Some(0));
+            let two_spirv = trans_scalar(cx, ty, two, Some(1));
+            let result = cx
+                .emit_global()
+                .type_struct([one_spirv, two_spirv].iter().cloned());
             let def = SpirvType::Adt {
                 field_types: vec![one_spirv, two_spirv],
             };
@@ -61,7 +64,7 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
             result
         }
         Abi::Vector { ref element, count } => {
-            let elem_spirv = trans_scalar(cx, element, None);
+            let elem_spirv = trans_scalar(cx, ty, element, None);
             let result = cx.emit_global().type_vector(elem_spirv, count as u32);
             let def = SpirvType::Vector {
                 element: elem_spirv,
@@ -76,6 +79,7 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
 
 fn trans_scalar<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
+    ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
     pair_index: Option<usize>,
 ) -> Word {
@@ -109,48 +113,27 @@ fn trans_scalar<'spv, 'tcx>(
                     SpirvType::Integer(ptr_size, false),
                 )
             } else {
-                // TODO: Implement this properly
-                let void = cx.emit_global().type_void();
-                cx.def_type(void, SpirvType::Void);
-                (
-                    cx.emit_global()
-                        .type_pointer(None, StorageClass::Generic, void),
-                    SpirvType::Pointer { pointee: void },
-                )
-            }
-            /*
-            if pair_index == Some(1) {
-                return cx
+                let pointee = match ty.ty.kind {
+                    TyKind::Ref(_region, ty, _mutability) => {
+                        let pointee_type = trans_type(cx, cx.layout_of(ty));
+                        cx.emit_global()
+                            .type_pointer(None, StorageClass::Generic, pointee_type)
+                    }
+                    TyKind::RawPtr(type_and_mut) => {
+                        let pointee_type = trans_type(cx, cx.layout_of(type_and_mut.ty));
+                        cx.emit_global()
+                            .type_pointer(None, StorageClass::Generic, pointee_type)
+                    }
+                    ref kind => panic!(
+                        "TODO: Unimplemented Primitive::Pointer TyKind ({:?}): {:?}",
+                        kind, ty
+                    ),
+                };
+                let pointer = cx
                     .emit_global()
-                    .type_int(cx.tcx.data_layout.pointer_size.bits() as u32, 0);
+                    .type_pointer(None, StorageClass::Generic, pointee);
+                (pointer, SpirvType::Pointer { pointee })
             }
-            match ty.ty.kind {
-                TyKind::Ref(_region, ty, _mutability) => {
-                    let pointee_type = trans_type(cx, cx.layout_of(ty));
-                    (
-                        cx.emit_global()
-                            .type_pointer(None, StorageClass::Generic, pointee_type),
-                        SpirvType::Pointer {
-                            pointee: pointee_type,
-                        },
-                    )
-                }
-                TyKind::RawPtr(type_and_mut) => {
-                    let pointee_type = trans_type(cx, cx.layout_of(type_and_mut.ty));
-                    (
-                        cx.emit_global()
-                            .type_pointer(None, StorageClass::Generic, pointee_type),
-                        SpirvType::Pointer {
-                            pointee: pointee_type,
-                        },
-                    )
-                }
-                ref kind => panic!(
-                    "TODO: Unimplemented Primitive::Pointer TyKind ({:?}): {:?}",
-                    kind, ty
-                ),
-            }
-            */
         }
     };
     cx.def_type(ty, def);
@@ -223,7 +206,7 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -
         offset = target_offset + field.size;
         prev_effective_align = effective_field_align;
     }
-    let result_ty = cx.emit_global().type_struct(&result);
+    let result_ty = cx.emit_global().type_struct(result.iter().cloned());
     let def = SpirvType::Adt {
         field_types: result,
     };

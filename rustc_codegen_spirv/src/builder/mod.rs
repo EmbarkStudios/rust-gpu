@@ -1,23 +1,28 @@
 mod builder_methods;
 
-use crate::{builder_spirv::BuilderCursor, codegen_cx::CodegenCx};
+use crate::builder_spirv::SpirvValueExt;
+use crate::{
+    builder_spirv::{BuilderCursor, SpirvValue},
+    codegen_cx::CodegenCx,
+};
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::coverageinfo::CounterOp;
-use rustc_codegen_ssa::mir::operand::OperandRef;
+use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
-use rustc_codegen_ssa::traits::InlineAsmOperandRef;
 use rustc_codegen_ssa::traits::{
-    AbiBuilderMethods, ArgAbiMethods, AsmBuilderMethods, BackendTypes, CoverageInfoBuilderMethods,
-    DebugInfoBuilderMethods, HasCodegen, IntrinsicCallMethods, StaticBuilderMethods,
+    AbiBuilderMethods, ArgAbiMethods, AsmBuilderMethods, BackendTypes, BuilderMethods,
+    CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen, InlineAsmOperandRef,
+    IntrinsicCallMethods, StaticBuilderMethods,
 };
 use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::mir::Operand;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt, TyAndLayout};
-use rustc_middle::ty::{Instance, ParamEnv, Ty, TyCtxt};
+use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use rustc_span::source_map::Span;
+use rustc_span::sym;
 use rustc_span::symbol::Symbol;
-use rustc_target::abi::call::{ArgAbi, FnAbi};
+use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, LayoutOf, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::ops::Deref;
@@ -109,11 +114,34 @@ impl<'a, 'spv, 'tcx> DebugInfoBuilderMethods for Builder<'a, 'spv, 'tcx> {
 impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     fn store_fn_arg(
         &mut self,
-        _arg_abi: &ArgAbi<'tcx, Ty<'tcx>>,
-        _idx: &mut usize,
-        _dst: PlaceRef<'tcx, Self::Value>,
+        arg_abi: &ArgAbi<'tcx, Ty<'tcx>>,
+        idx: &mut usize,
+        dst: PlaceRef<'tcx, Self::Value>,
     ) {
-        todo!()
+        fn next<'a, 'spv, 'tcx>(bx: &mut Builder<'a, 'spv, 'tcx>, idx: &mut usize) -> SpirvValue {
+            let val = bx.function_parameter_values.borrow()[&bx.current_fn][*idx];
+            *idx += 1;
+            val
+        }
+        match arg_abi.mode {
+            PassMode::Ignore => (),
+            PassMode::Direct(_) => OperandValue::Immediate(next(self, idx)).store(self, dst),
+            PassMode::Pair(..) => {
+                OperandValue::Pair(next(self, idx), next(self, idx)).store(self, dst)
+            }
+            PassMode::Indirect(_, Some(_)) => OperandValue::Ref(
+                next(self, idx),
+                Some(next(self, idx)),
+                arg_abi.layout.align.abi,
+            )
+            .store(self, dst),
+            PassMode::Indirect(_, None) => {
+                OperandValue::Ref(next(self, idx), None, arg_abi.layout.align.abi).store(self, dst)
+            }
+            PassMode::Cast(_) => {
+                panic!("TODO: store_fn_arg PassMode::Cast not implemented yet");
+            }
+        }
     }
 
     fn store_arg(
@@ -147,10 +175,74 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
         args: &[OperandRef<'tcx, Self::Value>],
         llresult: Self::Value,
-        span: Span,
-        caller_instance: Instance<'tcx>,
+        _span: Span,
+        _caller_instance: Instance<'tcx>,
     ) {
-        println!("TODO: codegen_intrinsic_call unimplemented: instance={:?} fn_abi={:?} args={:?} llresult={:?} span={:?} caller_instance={:?}", instance, fn_abi, args, llresult, span, caller_instance);
+        let callee_ty = instance.ty(self.tcx, ParamEnv::reveal_all());
+
+        let (def_id, _substs) = match callee_ty.kind {
+            FnDef(def_id, substs) => (def_id, substs),
+            _ => panic!("expected fn item type, found {}", callee_ty),
+        };
+
+        let sig = callee_ty.fn_sig(self.tcx);
+        let sig = self
+            .tcx
+            .normalize_erasing_late_bound_regions(ParamEnv::reveal_all(), &sig);
+        // let arg_tys = sig.inputs();
+        let ret_ty = sig.output();
+        let name = self.tcx.item_name(def_id);
+        // let name_str = &*name.as_str();
+
+        // let spirv_ret_ty = self.trans_type(self.layout_of(ret_ty));
+        let result = PlaceRef::new_sized(llresult, fn_abi.ret.layout);
+
+        let value = match name {
+            sym::size_of
+            | sym::pref_align_of
+            | sym::min_align_of
+            | sym::needs_drop
+            | sym::type_id
+            | sym::type_name
+            | sym::variant_count => {
+                let value = self
+                    .tcx
+                    .const_eval_instance(ParamEnv::reveal_all(), instance, None)
+                    .unwrap();
+                OperandRef::from_const(self, value, ret_ty).immediate_or_packed_pair(self)
+            }
+            sym::copy_nonoverlapping
+            | sym::copy
+            | sym::volatile_copy_nonoverlapping_memory
+            | sym::volatile_copy_memory => {
+                // let ty = substs.type_at(0);
+                // let dst = args[0].immediate();
+                // let src = args[1].immediate();
+                // let count = args[2].immediate();
+                // TODO: rspirv doesn't have copy_memory_sized yet
+                let mut emit = self.emit();
+                let bool = emit.type_bool();
+                emit.undef(bool, None).with_type(bool)
+                //self.emit().copy_memory(asdf)
+            }
+            sym::offset => {
+                let ptr = args[0].immediate();
+                let offset = args[1].immediate();
+                self.inbounds_gep(ptr, &[offset])
+            }
+
+            _ => panic!("TODO: Unknown intrinsic '{}'", name),
+        };
+
+        if !fn_abi.ret.is_ignore() {
+            if let PassMode::Cast(_ty) = fn_abi.ret.mode {
+                panic!("TODO: PassMode::Cast not implemented yet in intrinsics");
+            } else {
+                OperandRef::from_immediate_or_packed_pair(self, value, result.layout)
+                    .val
+                    .store(self, result);
+            }
+        }
     }
 
     fn is_codegen_intrinsic(
