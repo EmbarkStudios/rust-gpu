@@ -286,8 +286,11 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn alloca(&mut self, ty: Self::Type, _align: Align) -> Self::Value {
-        let ptr_ty = self.emit().type_pointer(None, StorageClass::Function, ty);
-        self.def_type(ptr_ty, SpirvType::Pointer { pointee: ty });
+        let ptr_ty = SpirvType::Pointer {
+            storage_class: StorageClass::Function,
+            pointee: ty,
+        }
+        .def(self);
         self.emit()
             .variable(ptr_ty, None, StorageClass::Function, None)
             .with_type(ptr_ty)
@@ -303,7 +306,10 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
         let ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
+            SpirvType::Pointer {
+                storage_class: _,
+                pointee,
+            } => pointee,
             ty => panic!("load called on variable that wasn't a pointer: {:?}", ty),
         };
         self.emit()
@@ -380,7 +386,10 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn store(&mut self, val: Self::Value, ptr: Self::Value, _align: Align) -> Self::Value {
         let ptr_elem_ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
+            SpirvType::Pointer {
+                storage_class: _,
+                pointee,
+            } => pointee,
             ty => panic!("store called on variable that wasn't a pointer: {:?}", ty),
         };
         assert_eq!(ptr_elem_ty, val.ty);
@@ -418,15 +427,16 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn struct_gep(&mut self, ptr: Self::Value, idx: u64) -> Self::Value {
         let result_type = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => match self.lookup_type(pointee) {
+            SpirvType::Pointer {
+                storage_class: _,
+                pointee,
+            } => match self.lookup_type(pointee) {
                 SpirvType::Adt { field_types } => field_types[idx as usize],
                 other => panic!("struct_gep not on struct type: {:?}", other),
             },
             other => panic!("struct_gep not on struct pointer type: {:?}", other),
         };
-        let mut emit = self.emit();
-        let u64 = emit.type_int(64, 0);
-        self.def_type(u64, SpirvType::Integer(64, false));
+        let u64 = SpirvType::Integer(64, false).def(self);
         let index_const = self.emit().constant_u64(u64, idx);
         self.emit()
             .access_chain(result_type, None, ptr.def, [index_const].iter().cloned())

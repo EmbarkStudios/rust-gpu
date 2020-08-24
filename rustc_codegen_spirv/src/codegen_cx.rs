@@ -76,10 +76,6 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
         trans_type(self, ty)
     }
 
-    pub fn def_type(&self, ty: Word, def: SpirvType) {
-        self.type_defs.borrow_mut().insert(ty, def);
-    }
-
     pub fn lookup_type(&self, ty: Word) -> SpirvType {
         self.type_defs
             .borrow()
@@ -209,93 +205,74 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 
 impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn type_i1(&self) -> Self::Type {
-        let result = self.emit_global().type_bool();
-        self.def_type(result, SpirvType::Bool);
-        result
+        SpirvType::Bool.def(self)
     }
     fn type_i8(&self) -> Self::Type {
-        let result = self.emit_global().type_int(8, 1);
-        self.def_type(result, SpirvType::Integer(8, true));
-        result
+        SpirvType::Integer(8, true).def(self)
     }
     fn type_i16(&self) -> Self::Type {
-        let result = self.emit_global().type_int(16, 1);
-        self.def_type(result, SpirvType::Integer(16, true));
-        result
+        SpirvType::Integer(16, true).def(self)
     }
     fn type_i32(&self) -> Self::Type {
-        let result = self.emit_global().type_int(32, 1);
-        self.def_type(result, SpirvType::Integer(32, true));
-        result
+        SpirvType::Integer(32, true).def(self)
     }
     fn type_i64(&self) -> Self::Type {
-        let result = self.emit_global().type_int(64, 1);
-        self.def_type(result, SpirvType::Integer(64, true));
-        result
+        SpirvType::Integer(64, true).def(self)
     }
     fn type_i128(&self) -> Self::Type {
-        let result = self.emit_global().type_int(128, 1);
-        self.def_type(result, SpirvType::Integer(128, true));
-        result
+        SpirvType::Integer(128, true).def(self)
     }
     fn type_isize(&self) -> Self::Type {
         let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
-        let result = self.emit_global().type_int(ptr_size, 1);
-        self.def_type(result, SpirvType::Integer(ptr_size, true));
-        result
+        SpirvType::Integer(ptr_size, true).def(self)
     }
 
     fn type_f32(&self) -> Self::Type {
-        let result = self.emit_global().type_float(32);
-        self.def_type(result, SpirvType::Float(32));
-        result
+        SpirvType::Float(32).def(self)
     }
     fn type_f64(&self) -> Self::Type {
-        let result = self.emit_global().type_float(64);
-        self.def_type(result, SpirvType::Float(64));
-        result
+        SpirvType::Float(64).def(self)
     }
 
     fn type_func(&self, args: &[Self::Type], ret: Self::Type) -> Self::Type {
-        let result = self.emit_global().type_function(ret, args.iter().cloned());
-        let def = SpirvType::Function {
+        SpirvType::Function {
             return_type: ret,
             arguments: args.to_vec(),
-        };
-        self.def_type(result, def);
-        result
+        }
+        .def(self)
     }
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
-        let result = self.emit_global().type_struct(els.iter().cloned());
-        let def = SpirvType::Adt {
+        SpirvType::Adt {
             field_types: els.to_vec(),
-        };
-        self.def_type(result, def);
-        result
+        }
+        .def(self)
     }
     fn type_kind(&self, _ty: Self::Type) -> TypeKind {
         todo!()
     }
     fn type_ptr_to(&self, ty: Self::Type) -> Self::Type {
-        let result = self
-            .emit_global()
-            .type_pointer(None, StorageClass::Generic, ty);
-        self.def_type(result, SpirvType::Pointer { pointee: ty });
-        result
+        SpirvType::Pointer {
+            storage_class: StorageClass::Generic,
+            pointee: ty,
+        }
+        .def(self)
     }
     fn type_ptr_to_ext(&self, ty: Self::Type, address_space: AddressSpace) -> Self::Type {
         if address_space != AddressSpace::DATA {
             panic!("TODO: Unimplemented AddressSpace {:?}", address_space)
         }
-        let result = self
-            .emit_global()
-            .type_pointer(None, StorageClass::Generic, ty);
-        self.def_type(result, SpirvType::Pointer { pointee: ty });
-        result
+        SpirvType::Pointer {
+            storage_class: StorageClass::Generic,
+            pointee: ty,
+        }
+        .def(self)
     }
     fn element_type(&self, ty: Self::Type) -> Self::Type {
         match self.lookup_type(ty) {
-            SpirvType::Pointer { pointee } => pointee,
+            SpirvType::Pointer {
+                storage_class: _,
+                pointee,
+            } => pointee,
             SpirvType::Vector { element, .. } => element,
             spirv_type => panic!("element_type called on invalid type: {:?}", spirv_type),
         }
@@ -444,22 +421,18 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                 // TODO: Deal with wide ptr?
                 PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
                     let pointee = self.trans_type(arg.layout);
-                    let ptr_type =
-                        self.emit_global()
-                            .type_pointer(None, StorageClass::Generic, pointee);
-                    self.def_type(ptr_type, SpirvType::Pointer { pointee });
-                    ptr_type
+                    SpirvType::Pointer {
+                        storage_class: StorageClass::Generic,
+                        pointee,
+                    }
+                    .def(self)
                 }
             };
             argument_types.push(arg_type);
         }
         // TODO: Other modes
         let return_type = match fn_abi.ret.mode {
-            PassMode::Ignore => {
-                let void = self.emit_global().type_void();
-                self.def_type(void, SpirvType::Void);
-                void
-            }
+            PassMode::Ignore => SpirvType::Void.def(self),
             PassMode::Direct(_arg_attributes) => self.trans_type(fn_abi.ret.layout),
             PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
                 self.trans_type(fn_abi.ret.layout)
@@ -469,20 +442,24 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             // TODO: Deal with wide ptr?
             PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
                 let pointee = self.trans_type(fn_abi.ret.layout);
-                let pointer = self
-                    .emit_global()
-                    .type_pointer(None, StorageClass::Generic, pointee);
-                self.def_type(pointer, SpirvType::Pointer { pointee });
+                let pointer = SpirvType::Pointer {
+                    storage_class: StorageClass::Generic,
+                    pointee,
+                }
+                .def(self);
                 argument_types.push(pointer);
-                let void = self.emit_global().type_void();
-                self.def_type(void, SpirvType::Void);
-                void
+                SpirvType::Void.def(self)
             }
         };
         let mut emit = self.emit_global();
         let control = FunctionControl::NONE;
         let function_id = None;
-        let function_type = emit.type_function(return_type, argument_types.iter().cloned());
+
+        let function_type = SpirvType::Function {
+            return_type,
+            arguments: argument_types.clone(),
+        }
+        .def(self);
 
         let fn_id = emit
             .begin_function(return_type, function_id, control, function_type)
@@ -499,13 +476,6 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         self.function_parameter_values
             .borrow_mut()
             .insert(fn_id, parameter_values);
-        self.def_type(
-            function_type,
-            SpirvType::Function {
-                return_type,
-                arguments: argument_types,
-            },
-        );
     }
 }
 

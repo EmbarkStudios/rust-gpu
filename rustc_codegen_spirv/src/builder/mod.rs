@@ -3,7 +3,6 @@ mod builder_methods;
 use crate::abi::SpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
-use rspirv::spirv::StorageClass;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::coverageinfo::CounterOp;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
@@ -49,8 +48,8 @@ impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
         // "An OpAccessChain instruction is the equivalent of an LLVM getelementptr instruction where the first index element is zero."
         // https://github.com/gpuweb/gpuweb/issues/33
         let mut result_indices = Vec::with_capacity(indices.len() - 1);
-        let /*mut*/ result_pointee_type = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
+        let /*mut*/ (storage_class, result_pointee_type) = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { storage_class, pointee } => (storage_class, pointee),
             other_type => panic!("GEP first deref not implemented for type {:?}", other_type),
         };
         for index in indices.iter().cloned().skip(1) {
@@ -60,15 +59,11 @@ impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
                 self.lookup_type(result_pointee_type)
             );
         }
-        let result_type =
-            self.emit()
-                .type_pointer(None, StorageClass::Generic, result_pointee_type);
-        self.def_type(
-            result_type,
-            SpirvType::Pointer {
-                pointee: result_pointee_type,
-            },
-        );
+        let result_type = SpirvType::Pointer {
+            storage_class,
+            pointee: result_pointee_type,
+        }
+        .def(self);
         if self.builder.lookup_const(indices[0].def) == Some(0) {
             if is_inbounds {
                 self.emit()
