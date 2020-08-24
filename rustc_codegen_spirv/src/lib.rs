@@ -277,12 +277,34 @@ impl ExtraBackendMethods for SsaBackend {
             let cx = CodegenCx::new(tcx, cgu, &spirv_module);
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
-            for &(mono_item, (linkage, visibility)) in &mono_items {
+            for (index, &(mono_item, (linkage, visibility))) in mono_items.iter().enumerate() {
+                let percent = (index as f64 / mono_items.len() as f64 * 100.0) as usize;
+                // Print some progress bars so we know how far we are through fully implementing a crate.
+                println!(
+                    "predefining {} out of {} - {}%",
+                    index,
+                    mono_items.len(),
+                    percent
+                );
+                if option_env!("DUMP_MIR").is_some() {
+                    if let MonoItem::Fn(instance) = mono_item {
+                        dump_mir(tcx, instance);
+                    }
+                }
                 mono_item.predefine::<Builder<'_, '_, '_>>(&cx, linkage, visibility);
             }
 
+            println!("Done predefining");
+
             // ... and now that we have everything pre-defined, fill out those definitions.
-            for &(mono_item, _) in &mono_items {
+            for (index, &(mono_item, _)) in mono_items.iter().enumerate() {
+                let percent = (index as f64 / mono_items.len() as f64 * 100.0) as usize;
+                println!(
+                    "defining {} out of {} - {}%",
+                    index,
+                    mono_items.len(),
+                    percent
+                );
                 if option_env!("DUMP_MIR").is_some() {
                     if let MonoItem::Fn(instance) = mono_item {
                         dump_mir(tcx, instance);

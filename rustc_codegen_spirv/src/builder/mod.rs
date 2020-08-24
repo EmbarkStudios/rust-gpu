@@ -1,10 +1,9 @@
 mod builder_methods;
 
-use crate::builder_spirv::SpirvValueExt;
-use crate::{
-    builder_spirv::{BuilderCursor, SpirvValue},
-    codegen_cx::CodegenCx,
-};
+use crate::abi::SpirvType;
+use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
+use crate::codegen_cx::CodegenCx;
+use rspirv::spirv::StorageClass;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::coverageinfo::CounterOp;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
@@ -25,7 +24,7 @@ use rustc_span::symbol::Symbol;
 use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, LayoutOf, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
-use std::ops::Deref;
+use std::{iter::empty, ops::Deref};
 
 pub struct Builder<'a, 'spv, 'tcx> {
     cx: &'a CodegenCx<'spv, 'tcx>,
@@ -37,6 +36,68 @@ pub struct Builder<'a, 'spv, 'tcx> {
 impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
     pub fn emit(&self) -> std::cell::RefMut<rspirv::dr::Builder> {
         self.emit_with_cursor(self.cursor)
+    }
+
+    pub fn gep_help(
+        &self,
+        ptr: SpirvValue,
+        indices: &[SpirvValue],
+        is_inbounds: bool,
+    ) -> SpirvValue {
+        // The first index is an offset to the pointer, the rest are actual members.
+        // https://llvm.org/docs/GetElementPtr.html
+        // "An OpAccessChain instruction is the equivalent of an LLVM getelementptr instruction where the first index element is zero."
+        // https://github.com/gpuweb/gpuweb/issues/33
+        let mut result_indices = Vec::with_capacity(indices.len() - 1);
+        let /*mut*/ result_pointee_type = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => pointee,
+            other_type => panic!("GEP first deref not implemented for type {:?}", other_type),
+        };
+        for index in indices.iter().cloned().skip(1) {
+            result_indices.push(index.def);
+            panic!(
+                "GEP not implemented for type {:?}",
+                self.lookup_type(result_pointee_type)
+            );
+        }
+        let result_type =
+            self.emit()
+                .type_pointer(None, StorageClass::Generic, result_pointee_type);
+        self.def_type(
+            result_type,
+            SpirvType::Pointer {
+                pointee: result_pointee_type,
+            },
+        );
+        if self.builder.lookup_const(indices[0].def) == Some(0) {
+            if is_inbounds {
+                self.emit()
+                    .in_bounds_access_chain(result_type, None, ptr.def, result_indices)
+                    .unwrap()
+                    .with_type(result_type)
+            } else {
+                self.emit()
+                    .access_chain(result_type, None, ptr.def, result_indices)
+                    .unwrap()
+                    .with_type(result_type)
+            }
+        } else if is_inbounds {
+            self.emit()
+                .in_bounds_ptr_access_chain(
+                    result_type,
+                    None,
+                    ptr.def,
+                    indices[0].def,
+                    result_indices,
+                )
+                .unwrap()
+                .with_type(result_type)
+        } else {
+            self.emit()
+                .ptr_access_chain(result_type, None, ptr.def, indices[0].def, result_indices)
+                .unwrap()
+                .with_type(result_type)
+        }
     }
 }
 
@@ -216,14 +277,15 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
             | sym::volatile_copy_nonoverlapping_memory
             | sym::volatile_copy_memory => {
                 // let ty = substs.type_at(0);
-                // let dst = args[0].immediate();
-                // let src = args[1].immediate();
-                // let count = args[2].immediate();
+                let dst = args[0].immediate();
+                let src = args[1].immediate();
+                let count = args[2].immediate();
                 // TODO: rspirv doesn't have copy_memory_sized yet
-                let mut emit = self.emit();
-                let bool = emit.type_bool();
-                emit.undef(bool, None).with_type(bool)
-                //self.emit().copy_memory(asdf)
+                self.emit()
+                    .copy_memory_sized(dst.def, src.def, count.def, None, None, empty())
+                    .unwrap();
+                assert!(fn_abi.ret.is_ignore());
+                return;
             }
             sym::offset => {
                 let ptr = args[0].immediate();

@@ -409,35 +409,11 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn gep(&mut self, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
-        let mut result_indices = Vec::with_capacity(indices.len());
-        let mut result_type = ptr.ty;
-        for index in indices {
-            result_indices.push(index.def);
-            result_type = match self.lookup_type(result_type) {
-                SpirvType::Pointer { pointee } => pointee,
-                other_type => panic!("GEP not implemented for type {:?}", other_type),
-            }
-        }
-        self.emit()
-            .access_chain(result_type, None, ptr.def, result_indices)
-            .unwrap()
-            .with_type(result_type)
+        self.gep_help(ptr, indices, false)
     }
 
     fn inbounds_gep(&mut self, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
-        let mut result_indices = Vec::with_capacity(indices.len());
-        let mut result_type = ptr.ty;
-        for index in indices {
-            result_indices.push(index.def);
-            result_type = match self.lookup_type(result_type) {
-                SpirvType::Pointer { pointee } => pointee,
-                other_type => panic!("GEP not implemented for type {:?}", other_type),
-            }
-        }
-        self.emit()
-            .in_bounds_access_chain(result_type, None, ptr.def, result_indices)
-            .unwrap()
-            .with_type(result_type)
+        self.gep_help(ptr, indices, true)
     }
 
     fn struct_gep(&mut self, ptr: Self::Value, idx: u64) -> Self::Value {

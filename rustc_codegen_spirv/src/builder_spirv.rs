@@ -1,8 +1,6 @@
-use rspirv::dr::{Block, Builder, Module};
-use rspirv::{
-    binary::Assemble,
-    spirv::{AddressingModel, Capability, MemoryModel, Word},
-};
+use rspirv::dr::{Block, Builder, Module, Operand};
+use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, Word};
+use rspirv::{binary::Assemble, binary::Disassemble};
 use std::cell::{RefCell, RefMut};
 use std::{fs::File, io::Write, path::Path, sync::Mutex};
 
@@ -72,6 +70,8 @@ impl BuilderSpirv {
         let mut header = rspirv::dr::ModuleHeader::new(0);
         header.set_version(0, 0);
         module.header = Some(header);
+        let disas = module.disassemble();
+        println!("{}", disas);
         let spirv_module = module.assemble();
         let spirv_module_u8: &[u8] = unsafe {
             std::slice::from_raw_parts(
@@ -113,6 +113,24 @@ impl BuilderSpirv {
         }
 
         panic!("Function not found: {}", id);
+    }
+
+    pub fn lookup_const(&self, def: Word) -> Option<u64> {
+        let builder = self.builder.borrow();
+        for inst in &builder.module_ref().types_global_values {
+            if inst.result_id == Some(def) {
+                return if inst.class.opcode == Op::Constant {
+                    None
+                } else {
+                    match inst.operands[0] {
+                        Operand::LiteralInt32(v) => Some(v as u64),
+                        Operand::LiteralInt64(v) => Some(v),
+                        _ => None,
+                    }
+                };
+            }
+        }
+        None
     }
 
     pub fn select_block_by_id(&self, id: Word) -> BuilderCursor {

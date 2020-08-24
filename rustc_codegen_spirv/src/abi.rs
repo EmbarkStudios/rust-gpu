@@ -85,16 +85,16 @@ fn trans_scalar<'spv, 'tcx>(
 ) -> Word {
     let (ty, def) = match scalar.value {
         Primitive::Int(width, signedness) => {
-            let width_bits = width.size().bits() as u128;
-            let width_max_val = if width_bits == 128 {
-                u128::MAX
-            } else {
-                (1 << width_bits) - 1
-            };
+            // let width_bits = width.size().bits() as u128;
+            // let width_max_val = if width_bits == 128 {
+            //     u128::MAX
+            // } else {
+            //     (1 << width_bits) - 1
+            // };
             if scalar.valid_range == (0..=1) {
                 (cx.emit_global().type_bool(), SpirvType::Bool)
-            } else if scalar.valid_range != (0..=width_max_val) {
-                panic!("TODO: Unimplemented valid_range that's not the size of the int (width={:?}, range={:?}): {:?}", width, scalar.valid_range, scalar)
+            // } else if scalar.valid_range != (0..=width_max_val) {
+            // TODO: Do we handle this specially?
             } else {
                 (
                     cx.emit_global()
@@ -106,6 +106,27 @@ fn trans_scalar<'spv, 'tcx>(
         Primitive::F32 => (cx.emit_global().type_float(32), SpirvType::Float(32)),
         Primitive::F64 => (cx.emit_global().type_float(64), SpirvType::Float(64)),
         Primitive::Pointer => {
+            fn do_normal_ptr<'spv, 'tcx>(
+                cx: &CodegenCx<'spv, 'tcx>,
+                pair_index: Option<usize>,
+                get_pointee_type: impl Fn() -> TyAndLayout<'tcx>,
+            ) -> Word {
+                if pair_index == Some(1) {
+                    let ptr_size = cx.tcx.data_layout.pointer_size.bits() as u32;
+                    let result = cx.emit_global().type_int(ptr_size, 0);
+                    let def = SpirvType::Integer(ptr_size, false);
+                    cx.def_type(result, def);
+                    result
+                } else {
+                    let pointee = trans_type(cx, get_pointee_type());
+                    let result =
+                        cx.emit_global()
+                            .type_pointer(None, StorageClass::Generic, pointee);
+                    let def = SpirvType::Pointer { pointee };
+                    cx.def_type(result, def);
+                    result
+                }
+            }
             if pair_index == Some(1) {
                 let ptr_size = cx.tcx.data_layout.pointer_size.bits() as u32;
                 (
@@ -113,26 +134,29 @@ fn trans_scalar<'spv, 'tcx>(
                     SpirvType::Integer(ptr_size, false),
                 )
             } else {
-                let pointee = match ty.ty.kind {
+                match ty.ty.kind {
                     TyKind::Ref(_region, ty, _mutability) => {
-                        let pointee_type = trans_type(cx, cx.layout_of(ty));
-                        cx.emit_global()
-                            .type_pointer(None, StorageClass::Generic, pointee_type)
+                        return do_normal_ptr(cx, pair_index, || cx.layout_of(ty))
                     }
                     TyKind::RawPtr(type_and_mut) => {
-                        let pointee_type = trans_type(cx, cx.layout_of(type_and_mut.ty));
-                        cx.emit_global()
-                            .type_pointer(None, StorageClass::Generic, pointee_type)
+                        return do_normal_ptr(cx, pair_index, || cx.layout_of(type_and_mut.ty))
+                    }
+                    TyKind::Adt(_adt_def, _substs)
+                        // if adt_def.is_struct()
+                        //     && adt_def.variants[0u32.into()].fields.len()
+                        //         == if pair_index.is_some() { 2 } else { 1 } =>
+                        =>
+                    {
+                        // TODO: This is probably wrong
+                        let field_index = pair_index.unwrap_or(0);
+                        // skip through to the field
+                        return trans_type(cx, ty.field(cx, field_index));
                     }
                     ref kind => panic!(
-                        "TODO: Unimplemented Primitive::Pointer TyKind ({:?}): {:?}",
+                        "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
                         kind, ty
                     ),
                 };
-                let pointer = cx
-                    .emit_global()
-                    .type_pointer(None, StorageClass::Generic, pointee);
-                (pointer, SpirvType::Pointer { pointee })
             }
         }
     };
@@ -148,9 +172,13 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
         ),
         // TODO: Is this the right thing to do?
         FieldsShape::Union(_field_count) => {
+            assert_ne!(ty.size.bytes(), 0);
             let byte = cx.emit_global().type_int(8, 0);
             cx.def_type(byte, SpirvType::Integer(8, false));
-            let result = cx.emit_global().type_array(byte, ty.size.bytes() as u32);
+            let int = cx.emit_global().type_int(8, 0);
+            cx.def_type(int, SpirvType::Integer(32, false));
+            let length = cx.emit_global().constant_u32(int, ty.size.bytes() as u32);
+            let result = cx.emit_global().type_array(byte, length);
             cx.def_type(
                 result,
                 SpirvType::Array {
@@ -161,12 +189,18 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
             result
         }
         FieldsShape::Array { stride: _, count } => {
+            // spir-v doesn't support zero-sized arrays
+            // note that zero-sized arrays don't report as .is_zst() for some reason? TODO: investigate why
+            let nonzero_count = if count == 0 { 1 } else { count };
             // TODO: Assert stride is same as spirv's stride?
             let element_type = trans_type(cx, ty.field(cx, 0));
-            let result = cx.emit_global().type_array(element_type, count as u32);
+            let int = cx.emit_global().type_int(8, 0);
+            cx.def_type(int, SpirvType::Integer(32, false));
+            let length = cx.emit_global().constant_u32(int, nonzero_count as u32);
+            let result = cx.emit_global().type_array(element_type, length);
             let def = SpirvType::Array {
                 element: element_type,
-                count: count as u32,
+                count: nonzero_count as u32,
             };
             cx.def_type(result, def);
             result
