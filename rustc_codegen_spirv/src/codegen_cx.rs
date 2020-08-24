@@ -451,7 +451,6 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                 SpirvType::Void.def(self)
             }
         };
-        let mut emit = self.emit_global();
         let control = FunctionControl::NONE;
         let function_id = None;
 
@@ -461,6 +460,7 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         }
         .def(self);
 
+        let mut emit = self.emit_global();
         let fn_id = emit
             .begin_function(return_type, function_id, control, function_type)
             .unwrap();
