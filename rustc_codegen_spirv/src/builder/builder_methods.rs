@@ -16,6 +16,30 @@ use rustc_target::abi::{Abi, Align, Size};
 use std::iter::empty;
 use std::ops::Range;
 
+macro_rules! simple_op {
+    ($func_name:ident, $inst_name:ident) => {
+        fn $func_name(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
+            assert_eq!(lhs.ty, rhs.ty);
+            let result_type = lhs.ty;
+            self.emit()
+                .$inst_name(result_type, None, lhs.def, rhs.def)
+                .unwrap()
+                .with_type(result_type)
+        }
+    };
+}
+
+macro_rules! simple_uni_op {
+    ($func_name:ident, $inst_name:ident) => {
+        fn $func_name(&mut self, val: Self::Value) -> Self::Value {
+            self.emit()
+                .$inst_name(val.ty, None, val.def)
+                .unwrap()
+                .with_type(val.ty)
+        }
+    };
+}
+
 impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     fn with_cx(cx: &'a Self::CodegenCx) -> Self {
         // Note: all defaults here *must* be filled out by position_at_end
@@ -121,159 +145,56 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn invoke(
         &mut self,
-        _llfn: Self::Value,
-        _args: &[Self::Value],
-        _then: Self::BasicBlock,
+        llfn: Self::Value,
+        args: &[Self::Value],
+        then: Self::BasicBlock,
         _catch: Self::BasicBlock,
-        _funclet: Option<&Self::Funclet>,
+        funclet: Option<&Self::Funclet>,
     ) -> Self::Value {
-        todo!()
+        // Exceptions don't exist, jump directly to then block
+        let result = self.call(llfn, args, funclet);
+        self.emit().branch(then).unwrap();
+        result
     }
 
     fn unreachable(&mut self) {
         self.emit().unreachable().unwrap()
     }
 
-    fn add(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn fadd(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn fadd_fast(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn sub(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn fsub(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn fsub_fast(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn mul(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn fmul(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn fmul_fast(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn udiv(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn exactudiv(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn sdiv(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn exactsdiv(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn fdiv(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn fdiv_fast(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn urem(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn srem(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn frem(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn frem_fast(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn shl(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn lshr(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn ashr(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn unchecked_sadd(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn unchecked_uadd(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn unchecked_ssub(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn unchecked_usub(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn unchecked_smul(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn unchecked_umul(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn and(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn or(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
-        assert_eq!(lhs.ty, rhs.ty);
-        let result_type = lhs.ty;
-        self.emit()
-            .bitwise_or(result_type, None, lhs.def, rhs.def)
-            .unwrap()
-            .with_type(result_type)
-    }
-
-    fn xor(&mut self, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn neg(&mut self, _v: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn fneg(&mut self, _v: Self::Value) -> Self::Value {
-        todo!()
-    }
-
-    fn not(&mut self, _v: Self::Value) -> Self::Value {
-        todo!()
-    }
+    simple_op! {add, i_add}
+    simple_op! {fadd, f_add}
+    simple_op! {fadd_fast, f_add} // fast=normal
+    simple_op! {sub, i_sub}
+    simple_op! {fsub, f_sub}
+    simple_op! {fsub_fast, f_sub} // fast=normal
+    simple_op! {mul, i_mul}
+    simple_op! {fmul, f_mul}
+    simple_op! {fmul_fast, f_mul} // fast=normal
+    simple_op! {udiv, u_div}
+    simple_op! {exactudiv, u_div} // ignore
+    simple_op! {sdiv, s_div}
+    simple_op! {exactsdiv, s_div} // ignore
+    simple_op! {fdiv, f_div}
+    simple_op! {fdiv_fast, f_div} // fast=normal
+    simple_op! {urem, u_mod}
+    simple_op! {srem, s_rem}
+    simple_op! {frem, f_rem}
+    simple_op! {frem_fast, f_rem} // fast=normal
+    simple_op! {shl, shift_left_logical}
+    simple_op! {lshr, shift_right_logical}
+    simple_op! {ashr, shift_right_arithmetic}
+    simple_op! {unchecked_sadd, i_add} // already unchecked by default
+    simple_op! {unchecked_uadd, i_add} // already unchecked by default
+    simple_op! {unchecked_ssub, i_sub} // already unchecked by default
+    simple_op! {unchecked_usub, i_sub} // already unchecked by default
+    simple_op! {unchecked_smul, i_mul} // already unchecked by default
+    simple_op! {unchecked_umul, i_mul} // already unchecked by default
+    simple_op! {and, bitwise_and}
+    simple_op! {or, bitwise_or}
+    simple_op! {xor, bitwise_xor}
+    simple_uni_op! {neg, s_negate}
+    simple_uni_op! {fneg, f_negate}
+    simple_uni_op! {not, not}
 
     fn checked_binop(
         &mut self,
@@ -282,7 +203,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         _lhs: Self::Value,
         _rhs: Self::Value,
     ) -> (Self::Value, Self::Value) {
-        todo!()
+        panic!("TODO: Checked binary operations are not supported yet");
     }
 
     fn alloca(&mut self, ty: Self::Type, _align: Align) -> Self::Value {
@@ -301,7 +222,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn array_alloca(&mut self, _ty: Self::Type, _len: Self::Value, _align: Align) -> Self::Value {
-        todo!()
+        panic!("TODO: array_alloca not supported yet")
     }
 
     fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
@@ -329,7 +250,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         _order: AtomicOrdering,
         _size: Size,
     ) -> Self::Value {
-        todo!()
+        panic!("TODO: atomic_load not supported yet")
     }
 
     fn load_operand(
@@ -414,7 +335,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         _order: AtomicOrdering,
         _size: Size,
     ) {
-        todo!()
+        panic!("TODO: atomic_store not supported yet")
     }
 
     fn gep(&mut self, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
@@ -449,44 +370,75 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             .with_type(result_type)
     }
 
-    fn trunc(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn trunc(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .u_convert(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
-    fn sext(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn zext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .u_convert(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
+    }
+
+    fn sext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .s_convert(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
     fn fptoui_sat(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Option<Self::Value> {
-        todo!()
+        None
     }
 
     fn fptosi_sat(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Option<Self::Value> {
-        todo!()
+        None
     }
 
-    fn fptoui(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn fptoui(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .convert_f_to_u(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
-    fn fptosi(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn fptosi(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .convert_f_to_s(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
-    fn uitofp(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn uitofp(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .convert_u_to_f(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
-    fn sitofp(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn sitofp(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .convert_s_to_f(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
-    fn fptrunc(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn fptrunc(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .f_convert(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
-    fn fpext(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
+    fn fpext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.emit()
+            .f_convert(dest_ty, None, val.def)
+            .unwrap()
+            .with_type(dest_ty)
     }
 
     fn ptrtoint(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
@@ -551,12 +503,54 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             .with_type(dest_ty)
     }
 
-    fn icmp(&mut self, _op: IntPredicate, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
+    fn icmp(&mut self, op: IntPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
+        // TODO: Do we want to assert signedness matches the opcode? Is it possible to have one that doesn't match? Does
+        // spir-v allow nonmatching instructions?
+        use IntPredicate::*;
+        assert_eq!(lhs.ty, rhs.ty);
+        let b = SpirvType::Bool.def(self);
+        let mut e = self.emit();
+        match op {
+            IntEQ => e.i_equal(b, None, lhs.def, rhs.def),
+            IntNE => e.i_not_equal(b, None, lhs.def, rhs.def),
+            IntUGT => e.u_greater_than(b, None, lhs.def, rhs.def),
+            IntUGE => e.u_greater_than_equal(b, None, lhs.def, rhs.def),
+            IntULT => e.u_less_than(b, None, lhs.def, rhs.def),
+            IntULE => e.u_less_than_equal(b, None, lhs.def, rhs.def),
+            IntSGT => e.s_greater_than(b, None, lhs.def, rhs.def),
+            IntSGE => e.s_greater_than_equal(b, None, lhs.def, rhs.def),
+            IntSLT => e.s_less_than(b, None, lhs.def, rhs.def),
+            IntSLE => e.s_less_than_equal(b, None, lhs.def, rhs.def),
+        }
+        .unwrap()
+        .with_type(b)
     }
 
-    fn fcmp(&mut self, _op: RealPredicate, _lhs: Self::Value, _rhs: Self::Value) -> Self::Value {
-        todo!()
+    fn fcmp(&mut self, op: RealPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
+        use RealPredicate::*;
+        assert_eq!(lhs.ty, rhs.ty);
+        let b = SpirvType::Bool.def(self);
+        let mut e = self.emit();
+        match op {
+            RealPredicateFalse => return e.constant_false(b).with_type(b),
+            RealPredicateTrue => return e.constant_true(b).with_type(b),
+            RealOEQ => e.f_ord_equal(b, None, lhs.def, rhs.def),
+            RealOGT => e.f_ord_greater_than(b, None, lhs.def, rhs.def),
+            RealOGE => e.f_ord_greater_than_equal(b, None, lhs.def, rhs.def),
+            RealOLT => e.f_ord_less_than(b, None, lhs.def, rhs.def),
+            RealOLE => e.f_ord_less_than_equal(b, None, lhs.def, rhs.def),
+            RealONE => e.f_ord_not_equal(b, None, lhs.def, rhs.def),
+            RealORD => e.ordered(b, None, lhs.def, rhs.def),
+            RealUNO => e.unordered(b, None, lhs.def, rhs.def),
+            RealUEQ => e.f_unord_equal(b, None, lhs.def, rhs.def),
+            RealUGT => e.f_unord_greater_than(b, None, lhs.def, rhs.def),
+            RealUGE => e.f_unord_greater_than_equal(b, None, lhs.def, rhs.def),
+            RealULT => e.f_unord_less_than(b, None, lhs.def, rhs.def),
+            RealULE => e.f_unord_less_than_equal(b, None, lhs.def, rhs.def),
+            RealUNE => e.f_unord_not_equal(b, None, lhs.def, rhs.def),
+        }
+        .unwrap()
+        .with_type(b)
     }
 
     fn memcpy(
@@ -596,31 +590,88 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn select(
         &mut self,
-        _cond: Self::Value,
-        _then_val: Self::Value,
-        _else_val: Self::Value,
+        cond: Self::Value,
+        then_val: Self::Value,
+        else_val: Self::Value,
     ) -> Self::Value {
-        todo!()
+        assert_eq!(then_val.ty, else_val.ty);
+        let result_type = then_val.ty;
+        self.emit()
+            .select(result_type, None, cond.def, then_val.def, else_val.def)
+            .unwrap()
+            .with_type(result_type)
     }
 
     fn va_arg(&mut self, _list: Self::Value, _ty: Self::Type) -> Self::Value {
         todo!()
     }
 
-    fn extract_element(&mut self, _vec: Self::Value, _idx: Self::Value) -> Self::Value {
-        todo!()
+    fn extract_element(&mut self, vec: Self::Value, idx: Self::Value) -> Self::Value {
+        let result_type = match self.lookup_type(vec.ty) {
+            SpirvType::Vector { element, .. } => element,
+            other => panic!("extract_element not implemented on type {:?}", other),
+        };
+        match self.builder.lookup_const_u64(idx.def) {
+            Ok(const_index) => self.emit().composite_extract(
+                result_type,
+                None,
+                vec.def,
+                [const_index as u32].iter().cloned(),
+            ),
+            Err(_) => self
+                .emit()
+                .vector_extract_dynamic(result_type, None, vec.def, idx.def),
+        }
+        .unwrap()
+        .with_type(result_type)
     }
 
-    fn vector_splat(&mut self, _num_elts: usize, _elt: Self::Value) -> Self::Value {
-        todo!()
+    fn vector_splat(&mut self, num_elts: usize, elt: Self::Value) -> Self::Value {
+        let u32 = SpirvType::Integer(32, false).def(self);
+        let count = self.builder.constant_u32(u32, num_elts as u32);
+        let result_type = SpirvType::Vector {
+            element: elt.ty,
+            count,
+        }
+        .def(self);
+        if self.builder.lookup_const(elt.def).is_ok() {
+            // TODO: Cache this?
+            self.emit()
+                .constant_composite(result_type, std::iter::repeat(elt.def).take(num_elts))
+        } else {
+            self.emit()
+                .composite_construct(result_type, None, std::iter::repeat(elt.def).take(num_elts))
+                .unwrap()
+        }
+        .with_type(result_type)
     }
 
-    fn extract_value(&mut self, _agg_val: Self::Value, _idx: u64) -> Self::Value {
-        todo!()
+    fn extract_value(&mut self, agg_val: Self::Value, idx: u64) -> Self::Value {
+        let result_type = match self.lookup_type(agg_val.ty) {
+            SpirvType::Adt { field_types } => field_types[idx as usize],
+            other => panic!("extract_value not implemented on type {:?}", other),
+        };
+        self.emit()
+            .composite_extract(result_type, None, agg_val.def, [idx as u32].iter().cloned())
+            .unwrap()
+            .with_type(result_type)
     }
 
-    fn insert_value(&mut self, _agg_val: Self::Value, _elt: Self::Value, _idx: u64) -> Self::Value {
-        todo!()
+    fn insert_value(&mut self, agg_val: Self::Value, elt: Self::Value, idx: u64) -> Self::Value {
+        match self.lookup_type(agg_val.ty) {
+            SpirvType::Adt { field_types } => assert_eq!(field_types[idx as usize], elt.ty),
+            other => panic!("insert_value not implemented on type {:?}", other),
+        };
+        self.emit()
+            .composite_insert(
+                agg_val.ty,
+                None,
+                elt.def,
+                agg_val.def,
+                [idx as u32].iter().cloned(),
+            )
+            .unwrap()
+            .with_type(agg_val.ty)
     }
 
     fn landing_pad(
@@ -745,10 +796,6 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             .function_call(result_type, None, llfn.def, args)
             .unwrap()
             .with_type(result_type)
-    }
-
-    fn zext(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Self::Value {
-        todo!()
     }
 
     unsafe fn delete_basic_block(&mut self, _bb: Self::BasicBlock) {

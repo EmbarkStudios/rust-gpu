@@ -271,11 +271,9 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
             | sym::copy
             | sym::volatile_copy_nonoverlapping_memory
             | sym::volatile_copy_memory => {
-                // let ty = substs.type_at(0);
                 let dst = args[0].immediate();
                 let src = args[1].immediate();
                 let count = args[2].immediate();
-                // TODO: rspirv doesn't have copy_memory_sized yet
                 self.emit()
                     .copy_memory_sized(dst.def, src.def, count.def, None, None, empty())
                     .unwrap();
@@ -286,6 +284,11 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 let ptr = args[0].immediate();
                 let offset = args[1].immediate();
                 self.inbounds_gep(ptr, &[offset])
+            }
+            sym::arith_offset => {
+                let ptr = args[0].immediate();
+                let offset = args[1].immediate();
+                self.gep(ptr, &[offset])
             }
 
             _ => panic!("TODO: Unknown intrinsic '{}'", name),
