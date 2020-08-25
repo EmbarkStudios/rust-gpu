@@ -64,7 +64,7 @@ impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
             pointee: result_pointee_type,
         }
         .def(self);
-        if self.builder.lookup_const(indices[0].def) == Some(0) {
+        if self.builder.lookup_const_u64(indices[0].def) == Ok(0) {
             if is_inbounds {
                 self.emit()
                     .in_bounds_access_chain(result_type, None, ptr.def, result_indices)

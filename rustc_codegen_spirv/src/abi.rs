@@ -2,6 +2,7 @@ use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::ty::{layout::TyAndLayout, TyKind};
 use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Size};
+use std::fmt;
 use std::iter::empty;
 
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
@@ -70,6 +71,86 @@ impl SpirvType {
             .or_insert_with(|| self.clone());
         result
     }
+
+    pub fn debug<'cx, 'spv, 'tcx>(
+        self,
+        cx: &'cx CodegenCx<'spv, 'tcx>,
+    ) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
+        SpirvTypePrinter { ty: self, cx }
+    }
+}
+
+pub struct SpirvTypePrinter<'cx, 'spv, 'tcx> {
+    ty: SpirvType,
+    cx: &'cx CodegenCx<'spv, 'tcx>,
+}
+
+impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.ty {
+            SpirvType::Void => f.debug_struct("Void").finish(),
+            SpirvType::Bool => f.debug_struct("Bool").finish(),
+            SpirvType::Integer(width, signedness) => f
+                .debug_struct("Integer")
+                .field("width", &width)
+                .field("signedness", &signedness)
+                .finish(),
+            SpirvType::Float(width) => f.debug_struct("Float").field("width", &width).finish(),
+            SpirvType::ZST => f.debug_struct("ZST").finish(),
+            SpirvType::Adt { ref field_types } => {
+                let fields = field_types
+                    .iter()
+                    .map(|&f| self.cx.lookup_type(f).debug(self.cx))
+                    .collect::<Vec<_>>();
+                f.debug_struct("Adt").field("field_types", &fields).finish()
+            }
+            SpirvType::Vector { element, count } => f
+                .debug_struct("Vector")
+                .field("element", &self.cx.lookup_type(element).debug(self.cx))
+                .field(
+                    "count",
+                    &self
+                        .cx
+                        .builder
+                        .lookup_const_u64(count)
+                        .expect("Vector type has invalid count value"),
+                )
+                .finish(),
+            SpirvType::Array { element, count } => f
+                .debug_struct("Array")
+                .field("element", &self.cx.lookup_type(element).debug(self.cx))
+                .field(
+                    "count",
+                    &self
+                        .cx
+                        .builder
+                        .lookup_const_u64(count)
+                        .expect("Array type has invalid count value"),
+                )
+                .finish(),
+            SpirvType::Pointer {
+                storage_class,
+                pointee,
+            } => f
+                .debug_struct("Pointer")
+                .field("storage_class", &storage_class)
+                .field("pointee", &self.cx.lookup_type(pointee).debug(self.cx))
+                .finish(),
+            SpirvType::Function {
+                return_type,
+                ref arguments,
+            } => {
+                let args = arguments
+                    .iter()
+                    .map(|&a| self.cx.lookup_type(a).debug(self.cx))
+                    .collect::<Vec<_>>();
+                f.debug_struct("Function")
+                    .field("return_type", &self.cx.lookup_type(return_type))
+                    .field("arguments", &args)
+                    .finish()
+            }
+        }
+    }
 }
 
 pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
@@ -124,7 +205,7 @@ fn trans_scalar<'spv, 'tcx>(
             // } else if scalar.valid_range != (0..=width_max_val) {
             // TODO: Do we handle this specially?
             } else {
-                SpirvType::Integer(width as u32, signedness).def(cx)
+                SpirvType::Integer(width.size().bits() as u32, signedness).def(cx)
             }
         }
         Primitive::F32 => SpirvType::Float(32).def(cx),
@@ -188,7 +269,7 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
             assert_ne!(ty.size.bytes(), 0);
             let byte = SpirvType::Integer(8, false).def(cx);
             let int = SpirvType::Integer(32, false).def(cx);
-            let count = cx.emit_global().constant_u32(int, ty.size.bytes() as u32);
+            let count = cx.builder.constant_u32(int, ty.size.bytes() as u32);
             SpirvType::Array {
                 element: byte,
                 count,
@@ -202,7 +283,7 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
             // TODO: Assert stride is same as spirv's stride?
             let element_type = trans_type(cx, ty.field(cx, 0));
             let int = SpirvType::Integer(32, false).def(cx);
-            let count_const = cx.emit_global().constant_u32(int, nonzero_count as u32);
+            let count_const = cx.builder.constant_u32(int, nonzero_count as u32);
             SpirvType::Array {
                 element: element_type,
                 count: count_const,

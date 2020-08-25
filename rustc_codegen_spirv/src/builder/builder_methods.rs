@@ -426,18 +426,23 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn struct_gep(&mut self, ptr: Self::Value, idx: u64) -> Self::Value {
-        let result_type = match self.lookup_type(ptr.ty) {
+        let (storage_class, result_pointee_type) = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer {
-                storage_class: _,
+                storage_class,
                 pointee,
             } => match self.lookup_type(pointee) {
-                SpirvType::Adt { field_types } => field_types[idx as usize],
+                SpirvType::Adt { field_types } => (storage_class, field_types[idx as usize]),
                 other => panic!("struct_gep not on struct type: {:?}", other),
             },
             other => panic!("struct_gep not on struct pointer type: {:?}", other),
         };
+        let result_type = SpirvType::Pointer {
+            storage_class,
+            pointee: result_pointee_type,
+        }
+        .def(self);
         let u64 = SpirvType::Integer(64, false).def(self);
-        let index_const = self.emit().constant_u64(u64, idx);
+        let index_const = self.builder.constant_u64(u64, idx);
         self.emit()
             .access_chain(result_type, None, ptr.def, [index_const].iter().cloned())
             .unwrap()
@@ -514,13 +519,21 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn intcast(&mut self, val: Self::Value, dest_ty: Self::Type, is_signed: bool) -> Self::Value {
-        panic!(
-            "TODO: intcast not implemented yet: val={:?} val.ty={:?} dest_ty={:?} is_signed={}",
-            val,
-            self.lookup_type(val.ty),
-            self.lookup_type(dest_ty),
-            is_signed
-        );
+        match (self.lookup_type(val.ty), self.lookup_type(dest_ty)) {
+            // sign change
+            (
+                SpirvType::Integer(val_width, val_signedness),
+                SpirvType::Integer(dest_width, dest_signedness),
+            ) if val_width == dest_width && val_signedness != dest_signedness => self
+                .emit()
+                .bitcast(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty),
+            (val_ty, dest_ty_spv) => panic!(
+                "TODO: intcast not implemented yet: val={:?} val.ty={:?} dest_ty={:?} is_signed={}",
+                val, val_ty, dest_ty_spv, is_signed
+            ),
+        }
     }
 
     fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {

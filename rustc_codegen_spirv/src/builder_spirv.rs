@@ -115,22 +115,61 @@ impl BuilderSpirv {
         panic!("Function not found: {}", id);
     }
 
-    pub fn lookup_const(&self, def: Word) -> Option<u64> {
+    pub fn constant_u32(&self, ty: Word, val: u32) -> Word {
+        self.def_constant(ty, Operand::LiteralInt32(val))
+    }
+
+    pub fn constant_u64(&self, ty: Word, val: u64) -> Word {
+        self.def_constant(ty, Operand::LiteralInt64(val))
+    }
+
+    pub fn constant_f32(&self, ty: Word, val: f32) -> Word {
+        self.def_constant(ty, Operand::LiteralFloat32(val))
+    }
+
+    pub fn constant_f64(&self, ty: Word, val: f64) -> Word {
+        self.def_constant(ty, Operand::LiteralFloat64(val))
+    }
+
+    fn def_constant(&self, ty: Word, val: Operand) -> Word {
+        let mut builder = self.builder.borrow_mut();
+        for inst in &builder.module_ref().types_global_values {
+            if inst.class.opcode == Op::Constant
+                && inst.result_type == Some(ty)
+                && inst.operands[0] == val
+            {
+                return inst.result_id.unwrap();
+            }
+        }
+        match val {
+            Operand::LiteralInt32(v) => builder.constant_u32(ty, v),
+            Operand::LiteralInt64(v) => builder.constant_u64(ty, v),
+            Operand::LiteralFloat32(v) => builder.constant_f32(ty, v),
+            Operand::LiteralFloat64(v) => builder.constant_f64(ty, v),
+            unknown => panic!("def_constant doesn't support constant type {}", unknown),
+        }
+    }
+
+    pub fn lookup_const_u64(&self, def: Word) -> Result<u64, &'static str> {
+        match self.lookup_const(def)? {
+            Operand::LiteralInt32(v) => Ok(v as u64),
+            Operand::LiteralInt64(v) => Ok(v),
+            _ => Err("Literal value not Int32/64"),
+        }
+    }
+
+    pub fn lookup_const(&self, def: Word) -> Result<Operand, &'static str> {
         let builder = self.builder.borrow();
         for inst in &builder.module_ref().types_global_values {
             if inst.result_id == Some(def) {
                 return if inst.class.opcode == Op::Constant {
-                    None
+                    Ok(inst.operands[0].clone())
                 } else {
-                    match inst.operands[0] {
-                        Operand::LiteralInt32(v) => Some(v as u64),
-                        Operand::LiteralInt64(v) => Some(v),
-                        _ => None,
-                    }
+                    Err("Instruction not OpConstant")
                 };
             }
         }
-        None
+        Err("Definition not found")
     }
 
     pub fn select_block_by_id(&self, id: Word) -> BuilderCursor {

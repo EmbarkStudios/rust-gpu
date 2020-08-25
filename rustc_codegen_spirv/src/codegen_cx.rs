@@ -1,4 +1,4 @@
-use crate::abi::SpirvType;
+use crate::abi::{SpirvType, SpirvTypePrinter};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv, SpirvValue, SpirvValueExt};
 use rspirv::spirv::{FunctionControl, StorageClass, Word};
 use rustc_codegen_ssa::common::TypeKind;
@@ -82,6 +82,12 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             .get(&ty)
             .expect("Tried to lookup value that wasn't a type, or has no definition")
             .clone()
+    }
+
+    // Useful for printing out types when debugging
+    #[allow(dead_code)]
+    pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
+        self.lookup_type(ty).debug(self)
     }
 
     pub fn finalize_module(self) {
@@ -619,25 +625,19 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         match scalar {
             Scalar::Raw { data, size } => match layout.value {
                 Primitive::Int(_size, _signedness) => match size {
-                    4 => self
-                        .emit_global()
-                        .constant_u32(ty, data as u32)
-                        .with_type(ty),
-                    8 => self
-                        .emit_global()
-                        .constant_u64(ty, data as u64)
-                        .with_type(ty),
+                    4 => self.builder.constant_u32(ty, data as u32).with_type(ty),
+                    8 => self.builder.constant_u64(ty, data as u64).with_type(ty),
                     size => panic!(
                         "TODO: scalar_to_backend int size {} not implemented yet",
                         size
                     ),
                 },
                 Primitive::F32 => self
-                    .emit_global()
+                    .builder
                     .constant_f32(ty, f32::from_bits(data as u32))
                     .with_type(ty),
                 Primitive::F64 => self
-                    .emit_global()
+                    .builder
                     .constant_f64(ty, f64::from_bits(data as u64))
                     .with_type(ty),
                 Primitive::Pointer => {
