@@ -1,7 +1,8 @@
 use crate::codegen_cx::CodegenCx;
-use rspirv::spirv::{StorageClass, Word};
+use rspirv::dr::Operand;
+use rspirv::spirv::{Decoration, StorageClass, Word};
 use rustc_middle::ty::{layout::TyAndLayout, TyKind};
-use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Size};
+use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar};
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
@@ -14,6 +15,8 @@ pub enum SpirvType {
     Adt {
         // TODO: enums/unions
         field_types: Vec<Word>,
+        /// *byte* offsets
+        field_offsets: Option<Vec<u32>>,
     },
     Vector {
         element: Word,
@@ -48,8 +51,25 @@ impl SpirvType {
                 .emit_global()
                 .type_int(width, if signedness { 1 } else { 0 }),
             SpirvType::Float(width) => cx.emit_global().type_float(width),
-            SpirvType::Adt { ref field_types } => {
-                cx.emit_global().type_struct(field_types.iter().cloned())
+            SpirvType::Adt {
+                ref field_types,
+                ref field_offsets,
+            } => {
+                let mut emit = cx.emit_global();
+                // Ensure a unique struct is emitted each time, due to possibly having different OpMemberDecorates
+                let id = emit.id();
+                let result = emit.type_struct_id(Some(id), field_types.iter().cloned());
+                if let Some(field_offsets) = field_offsets {
+                    for (index, offset) in field_offsets.iter().copied().enumerate() {
+                        emit.member_decorate(
+                            result,
+                            index as u32,
+                            Decoration::Offset,
+                            [Operand::LiteralInt32(offset)].iter().cloned(),
+                        );
+                    }
+                }
+                result
             }
             SpirvType::Vector { element, count } => cx.emit_global().type_vector(element, count),
             SpirvType::Array { element, count } => cx.emit_global().type_array(element, count),
@@ -108,12 +128,18 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                 .field("signedness", &signedness)
                 .finish(),
             SpirvType::Float(width) => f.debug_struct("Float").field("width", &width).finish(),
-            SpirvType::Adt { ref field_types } => {
+            SpirvType::Adt {
+                ref field_types,
+                ref field_offsets,
+            } => {
                 let fields = field_types
                     .iter()
                     .map(|&f| self.cx.lookup_type(f).debug(self.cx))
                     .collect::<Vec<_>>();
-                f.debug_struct("Adt").field("field_types", &fields).finish()
+                f.debug_struct("Adt")
+                    .field("field_types", &fields)
+                    .field("field_offsets", field_offsets)
+                    .finish()
             }
             SpirvType::Vector { element, count } => f
                 .debug_struct("Vector")
@@ -169,6 +195,7 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
         // An empty struct is zero-sized
         return SpirvType::Adt {
             field_types: Vec::new(),
+            field_offsets: None,
         }
         .def(cx);
     }
@@ -186,6 +213,7 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
             let two_spirv = trans_scalar(cx, ty, two, Some(1));
             SpirvType::Adt {
                 field_types: vec![one_spirv, two_spirv],
+                field_offsets: None,
             }
             .def(cx)
         }
@@ -314,34 +342,17 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
 fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
-    let mut offset = Size::ZERO;
-    let mut prev_effective_align = ty.align.abi;
-    let mut result: Vec<_> = Vec::new();
+    let mut field_types: Vec<_> = Vec::new();
+    let mut field_offsets: Vec<_> = Vec::new();
     for i in ty.fields.index_by_increasing_offset() {
-        let target_offset = ty.fields.offset(i as usize);
         let field = ty.field(cx, i);
-        let effective_field_align = ty
-            .align
-            .abi
-            .min(field.align.abi)
-            .restrict_for_offset(target_offset);
-
-        assert!(target_offset >= offset);
-        let padding = target_offset - offset;
-        let padding_align = prev_effective_align.min(effective_field_align);
-        assert_eq!(offset.align_to(padding_align) + padding, target_offset);
-        if padding != Size::ZERO {
-            // TODO: Use OpMemberDecorate to implement padding
-            panic!("Padded structs are not supported yet: {:?}", ty);
-        }
-        // result.push(cx.type_padding_filler(padding, padding_align));
-
-        result.push(trans_type(cx, field));
-        offset = target_offset + field.size;
-        prev_effective_align = effective_field_align;
+        field_types.push(trans_type(cx, field));
+        let offset = ty.fields.offset(i).bytes();
+        field_offsets.push(offset as u32);
     }
     SpirvType::Adt {
-        field_types: result,
+        field_types,
+        field_offsets: Some(field_offsets),
     }
     .def(cx)
 }

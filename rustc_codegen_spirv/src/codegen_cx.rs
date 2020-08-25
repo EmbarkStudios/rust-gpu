@@ -191,8 +191,9 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         }
     }
 
-    fn backend_field_index(&self, _layout: TyAndLayout<'tcx>, _index: usize) -> u64 {
-        todo!()
+    fn backend_field_index(&self, _layout: TyAndLayout<'tcx>, index: usize) -> u64 {
+        // TODO: Probably need to update this when enums are supported?
+        index as u64
     }
 
     fn scalar_pair_element_backend_type(
@@ -258,6 +259,7 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
         SpirvType::Adt {
             field_types: els.to_vec(),
+            field_offsets: None,
         }
         .def(self)
     }
@@ -418,7 +420,10 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                     // TODO: Make this more efficient, don't generate struct
                     let tuple = self.lookup_type(self.trans_type(arg.layout));
                     let (left, right) = match tuple {
-                        SpirvType::Adt { ref field_types } => {
+                        SpirvType::Adt {
+                            ref field_types,
+                            field_offsets: _,
+                        } => {
                             if let [left, right] = *field_types.as_slice() {
                                 (left, right)
                             } else {
