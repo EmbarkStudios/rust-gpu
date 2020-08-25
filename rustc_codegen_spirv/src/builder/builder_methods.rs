@@ -16,10 +16,22 @@ use rustc_target::abi::{Abi, Align, Size};
 use std::iter::empty;
 use std::ops::Range;
 
+macro_rules! assert_ty_eq {
+    ($codegen_cx:expr, $left:expr, $right:expr) => {
+        assert_eq!(
+            $left,
+            $right,
+            "Expected types to be equal:\n{:#?}\n==\n{:#?}",
+            $codegen_cx.debug_type($left),
+            $codegen_cx.debug_type($right)
+        )
+    };
+}
+
 macro_rules! simple_op {
     ($func_name:ident, $inst_name:ident) => {
         fn $func_name(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
-            assert_eq!(lhs.ty, rhs.ty);
+            assert_ty_eq!(self, lhs.ty, rhs.ty);
             let result_type = lhs.ty;
             self.emit()
                 .$inst_name(result_type, None, lhs.def, rhs.def)
@@ -313,7 +325,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             } => pointee,
             ty => panic!("store called on variable that wasn't a pointer: {:?}", ty),
         };
-        assert_eq!(ptr_elem_ty, val.ty);
+        assert_ty_eq!(self, ptr_elem_ty, val.ty);
         self.emit().store(ptr.def, val.def, None, empty()).unwrap();
         val
     }
@@ -507,7 +519,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         // TODO: Do we want to assert signedness matches the opcode? Is it possible to have one that doesn't match? Does
         // spir-v allow nonmatching instructions?
         use IntPredicate::*;
-        assert_eq!(lhs.ty, rhs.ty);
+        assert_ty_eq!(self, lhs.ty, rhs.ty);
         let b = SpirvType::Bool.def(self);
         let mut e = self.emit();
         match op {
@@ -528,7 +540,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn fcmp(&mut self, op: RealPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
         use RealPredicate::*;
-        assert_eq!(lhs.ty, rhs.ty);
+        assert_ty_eq!(self, lhs.ty, rhs.ty);
         let b = SpirvType::Bool.def(self);
         let mut e = self.emit();
         match op {
@@ -594,7 +606,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         then_val: Self::Value,
         else_val: Self::Value,
     ) -> Self::Value {
-        assert_eq!(then_val.ty, else_val.ty);
+        assert_ty_eq!(self, then_val.ty, else_val.ty);
         let result_type = then_val.ty;
         self.emit()
             .select(result_type, None, cond.def, then_val.def, else_val.def)
@@ -659,7 +671,9 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn insert_value(&mut self, agg_val: Self::Value, elt: Self::Value, idx: u64) -> Self::Value {
         match self.lookup_type(agg_val.ty) {
-            SpirvType::Adt { field_types } => assert_eq!(field_types[idx as usize], elt.ty),
+            SpirvType::Adt { field_types } => {
+                assert_ty_eq!(self, field_types[idx as usize], elt.ty)
+            }
             other => panic!("insert_value not implemented on type {:?}", other),
         };
         self.emit()

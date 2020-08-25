@@ -3,7 +3,6 @@ use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::ty::{layout::TyAndLayout, TyKind};
 use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Size};
 use std::fmt;
-use std::iter::empty;
 
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum SpirvType {
@@ -11,9 +10,6 @@ pub enum SpirvType {
     Bool,
     Integer(u32, bool),
     Float(u32),
-    // TODO: Do we fold this into Adt?
-    /// Zero Sized Type
-    ZST,
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
         // TODO: enums/unions
@@ -40,6 +36,10 @@ pub enum SpirvType {
 impl SpirvType {
     /// Note: Builder::type_* should be called *nowhere else* but here, to ensure CodegenCx::type_defs stays up-to-date
     pub fn def<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+        if let Some(&cached) = cx.type_cache.borrow().get(self) {
+            return cached;
+        }
+        //let cached = cx.type_cache.borrow_mut().entry(self);
         // TODO: rspirv does a linear search to dedupe, probably want to cache here.
         let result = match *self {
             SpirvType::Void => cx.emit_global().type_void(),
@@ -48,7 +48,6 @@ impl SpirvType {
                 .emit_global()
                 .type_int(width, if signedness { 1 } else { 0 }),
             SpirvType::Float(width) => cx.emit_global().type_float(width),
-            SpirvType::ZST => cx.emit_global().type_struct(empty()),
             SpirvType::Adt { ref field_types } => {
                 cx.emit_global().type_struct(field_types.iter().cloned())
             }
@@ -65,10 +64,23 @@ impl SpirvType {
                 .emit_global()
                 .type_function(return_type, arguments.iter().cloned()),
         };
-        cx.type_defs
-            .borrow_mut()
-            .entry(result)
-            .or_insert_with(|| self.clone());
+        // Change to expect_none if/when stabilized
+        assert!(
+            cx.type_defs
+                .borrow_mut()
+                .insert(result, self.clone())
+                .is_none(),
+            "type_defs already had entry, caching failed? {:#?}",
+            self.clone().debug(cx)
+        );
+        assert!(
+            cx.type_cache
+                .borrow_mut()
+                .insert(self.clone(), result)
+                .is_none(),
+            "type_cache already had entry, caching failed? {:#?}",
+            self.clone().debug(cx)
+        );
         result
     }
 
@@ -96,7 +108,6 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                 .field("signedness", &signedness)
                 .finish(),
             SpirvType::Float(width) => f.debug_struct("Float").field("width", &width).finish(),
-            SpirvType::ZST => f.debug_struct("ZST").finish(),
             SpirvType::Adt { ref field_types } => {
                 let fields = field_types
                     .iter()
@@ -155,7 +166,11 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
 
 pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     if ty.is_zst() {
-        return SpirvType::ZST.def(cx);
+        // An empty struct is zero-sized
+        return SpirvType::Adt {
+            field_types: Vec::new(),
+        }
+        .def(cx);
     }
 
     // Note: ty.abi is orthogonal to ty.variants and ty.fields, e.g. `ManuallyDrop<Result<isize, isize>>`

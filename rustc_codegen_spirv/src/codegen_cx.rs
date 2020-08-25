@@ -33,11 +33,18 @@ use std::collections::HashMap;
 pub struct CodegenCx<'spv, 'tcx> {
     pub tcx: TyCtxt<'tcx>,
     pub codegen_unit: &'tcx CodegenUnit<'tcx>,
+    /// Not actually used much, builder is probably what you want (see comment on ModuleSpirv type)
     pub spirv_module: &'spv ModuleSpirv,
+    /// Spir-v module builder
     pub builder: BuilderSpirv,
+    /// Map from MIR function to spir-v function ID
     pub function_defs: RefCell<HashMap<Instance<'tcx>, SpirvValue>>,
+    /// Map from function ID to parameter list
     pub function_parameter_values: RefCell<HashMap<Word, Vec<SpirvValue>>>,
+    /// Map from ID to structure
     pub type_defs: RefCell<HashMap<Word, SpirvType>>,
+    /// Inverse of type_defs (used to cache generating types)
+    pub type_cache: RefCell<HashMap<SpirvType, Word>>,
 }
 
 impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
@@ -54,6 +61,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             function_defs: RefCell::new(HashMap::new()),
             function_parameter_values: RefCell::new(HashMap::new()),
             type_defs: RefCell::new(HashMap::new()),
+            type_cache: RefCell::new(HashMap::new()),
         }
     }
 

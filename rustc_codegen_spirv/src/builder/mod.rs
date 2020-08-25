@@ -202,11 +202,25 @@ impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn store_arg(
         &mut self,
-        _arg_abi: &ArgAbi<'tcx, Ty<'tcx>>,
-        _val: Self::Value,
-        _dst: PlaceRef<'tcx, Self::Value>,
+        arg_abi: &ArgAbi<'tcx, Ty<'tcx>>,
+        val: Self::Value,
+        dst: PlaceRef<'tcx, Self::Value>,
     ) {
-        todo!()
+        if arg_abi.is_ignore() {
+            return;
+        }
+        if arg_abi.is_sized_indirect() {
+            OperandValue::Ref(val, None, arg_abi.layout.align.abi).store(self, dst)
+        } else if arg_abi.is_unsized_indirect() {
+            panic!("unsized `ArgAbi` must be handled through `store_fn_arg`");
+        } else if let PassMode::Cast(cast) = arg_abi.mode {
+            panic!(
+                "TODO: PassMode::Cast not implemented yet for store_arg: {:?}",
+                cast
+            );
+        } else {
+            OperandValue::Immediate(val).store(self, dst);
+        }
     }
 
     fn arg_memory_ty(&self, arg_abi: &ArgAbi<'tcx, Ty<'tcx>>) -> Self::Type {

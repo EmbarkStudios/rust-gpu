@@ -133,6 +133,7 @@ impl BuilderSpirv {
 
     fn def_constant(&self, ty: Word, val: Operand) -> Word {
         let mut builder = self.builder.borrow_mut();
+        // TODO: Cache these instead of doing a search.
         for inst in &builder.module_ref().types_global_values {
             if inst.class.opcode == Op::Constant
                 && inst.result_type == Some(ty)
