@@ -4,6 +4,7 @@ use crate::abi::SpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
+use rustc_codegen_ssa::common::IntPredicate;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
@@ -299,6 +300,16 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 let ptr = args[0].immediate();
                 let offset = args[1].immediate();
                 self.gep(ptr, &[offset])
+            }
+
+            sym::ptr_guaranteed_eq | sym::ptr_guaranteed_ne => {
+                let a = args[0].immediate();
+                let b = args[1].immediate();
+                if name == sym::ptr_guaranteed_eq {
+                    self.icmp(IntPredicate::IntEQ, a, b)
+                } else {
+                    self.icmp(IntPredicate::IntNE, a, b)
+                }
             }
 
             _ => panic!("TODO: Unknown intrinsic '{}'", name),
