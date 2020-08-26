@@ -87,7 +87,8 @@ impl CodegenBackend for SsaBackend {
         rustc_symbol_mangling::provide(providers);
 
         providers.supported_target_features = |_tcx, _cnum| {
-            Default::default() // Just a dummy
+            // Temp hack to make wasm target work
+            [("simd128".to_string(), None)].iter().cloned().collect()
         };
         providers.is_reachable_non_generic = |_tcx, _defid| true;
         providers.exported_symbols = |_tcx, _crate| &[];

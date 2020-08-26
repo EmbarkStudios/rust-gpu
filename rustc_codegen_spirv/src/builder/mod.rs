@@ -4,7 +4,6 @@ use crate::abi::SpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
-use rustc_codegen_ssa::coverageinfo::CounterOp;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
@@ -13,13 +12,14 @@ use rustc_codegen_ssa::traits::{
     IntrinsicCallMethods, StaticBuilderMethods,
 };
 use rustc_hir::LlvmInlineAsmInner;
-use rustc_middle::mir::Operand;
+use rustc_middle::mir::coverage::{
+    CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionIndex, Op,
+};
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt, TyAndLayout};
 use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use rustc_span::source_map::Span;
 use rustc_span::sym;
-use rustc_span::symbol::Symbol;
 use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, LayoutOf, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
@@ -106,13 +106,16 @@ impl<'a, 'spv, 'tcx> Deref for Builder<'a, 'spv, 'tcx> {
 }
 
 impl<'a, 'spv, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
+    fn create_pgo_func_name_var(&self, _instance: Instance<'tcx>) -> Self::Value {
+        todo!()
+    }
+
     fn add_counter_region(
         &mut self,
         _instance: Instance<'tcx>,
         _function_source_hash: u64,
-        _index: u32,
-        _start_byte_pos: u32,
-        _end_byte_pos: u32,
+        _id: CounterValueReference,
+        _region: CodeRegion,
     ) {
         todo!()
     }
@@ -120,22 +123,16 @@ impl<'a, 'spv, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx
     fn add_counter_expression_region(
         &mut self,
         _instance: Instance<'tcx>,
-        _index: u32,
-        _lhs: u32,
-        _op: CounterOp,
-        _rhs: u32,
-        _start_byte_pos: u32,
-        _end_byte_pos: u32,
+        _id: InjectedExpressionIndex,
+        _lhs: ExpressionOperandId,
+        _op: Op,
+        _rhs: ExpressionOperandId,
+        _region: CodeRegion,
     ) {
         todo!()
     }
 
-    fn add_unreachable_region(
-        &mut self,
-        _instance: Instance<'tcx>,
-        _start_byte_pos: u32,
-        _end_byte_pos: u32,
-    ) {
+    fn add_unreachable_region(&mut self, _instance: Instance<'tcx>, _region: CodeRegion) {
         todo!()
     }
 }
@@ -246,7 +243,6 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         args: &[OperandRef<'tcx, Self::Value>],
         llresult: Self::Value,
         _span: Span,
-        _caller_instance: Instance<'tcx>,
     ) {
         let callee_ty = instance.ty(self.tcx, ParamEnv::reveal_all());
 
@@ -317,16 +313,6 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                     .store(self, result);
             }
         }
-    }
-
-    fn is_codegen_intrinsic(
-        &mut self,
-        _intrinsic: Symbol,
-        _args: &Vec<Operand<'tcx>>,
-        _caller_instance: Instance<'tcx>,
-    ) -> bool {
-        // TODO
-        true
     }
 
     fn abort(&mut self) {

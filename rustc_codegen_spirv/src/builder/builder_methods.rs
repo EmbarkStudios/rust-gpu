@@ -406,6 +406,10 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             .with_type(dest_ty)
     }
 
+    fn fptosui_may_trap(&self, _val: Self::Value, _dest_ty: Self::Type) -> bool {
+        false
+    }
+
     fn fptoui_sat(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Option<Self::Value> {
         None
     }
@@ -795,7 +799,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         _hash: Self::Value,
         _num_counters: Self::Value,
         _index: Self::Value,
-    ) -> Self::Value {
+    ) {
         todo!()
     }
 
