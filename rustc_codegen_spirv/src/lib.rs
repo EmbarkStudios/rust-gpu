@@ -273,8 +273,8 @@ impl ExtraBackendMethods for SsaBackend {
 
         let spirv_module = ModuleSpirv::new();
 
-        {
-            let cx = CodegenCx::new(tcx, cgu, &spirv_module);
+        let cx = CodegenCx::new(tcx, cgu, &spirv_module);
+        let do_codegen = || {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
             for (index, &(mono_item, (linkage, visibility))) in mono_items.iter().enumerate() {
@@ -316,9 +316,15 @@ impl ExtraBackendMethods for SsaBackend {
             if let Some(_entry) = maybe_create_entry_wrapper::<Builder<'_, '_, '_>>(&cx) {
                 // attributes::sanitize(&cx, SanitizerSet::empty(), entry);
             }
-
-            cx.finalize_module();
+        };
+        if option_env!("DUMP_MODULE_ON_PANIC").is_some() {
+            let module_dumper = DumpModuleOnPanic { cx: &cx };
+            do_codegen();
+            drop(module_dumper)
+        } else {
+            do_codegen();
         }
+        cx.finalize_module();
 
         (
             ModuleCodegen {
@@ -340,6 +346,19 @@ impl ExtraBackendMethods for SsaBackend {
 
     fn target_cpu<'b>(&self, _: &'b Session) -> &'b str {
         todo!()
+    }
+}
+
+struct DumpModuleOnPanic<'cx, 'spv, 'tcx> {
+    cx: &'cx CodegenCx<'spv, 'tcx>,
+}
+
+impl<'cx, 'spv, 'tcx> Drop for DumpModuleOnPanic<'cx, 'spv, 'tcx> {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            // can also use dump_module with a path here to write it to disk
+            println!("{}", self.cx.builder.dump_module_str());
+        }
     }
 }
 

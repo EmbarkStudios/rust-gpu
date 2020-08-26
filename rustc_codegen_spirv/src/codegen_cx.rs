@@ -194,6 +194,10 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn backend_field_index(&self, _layout: TyAndLayout<'tcx>, index: usize) -> u64 {
         // TODO: Probably need to update this when enums are supported?
         index as u64
+        // This is only used as a direct argument to struct_gep. codegen_llvm implements this as:
+        // FieldsShape::Array { .. } => index as u64,
+        // FieldsShape::Arbitrary { .. } => 1 + (layout.fields.memory_index(index) as u64) * 2,
+        // (I'm guessing the *2 is due to llvm padding fields?)
     }
 
     fn scalar_pair_element_backend_type(
@@ -577,41 +581,97 @@ impl<'spv, 'tcx> CoverageInfoMethods for CodegenCx<'spv, 'tcx> {
 }
 
 impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
-    fn const_null(&self, _t: Self::Type) -> Self::Value {
-        todo!()
+    fn const_null(&self, t: Self::Type) -> Self::Value {
+        self.emit_global().constant_null(t).with_type(t)
     }
     fn const_undef(&self, ty: Self::Type) -> Self::Value {
         self.emit_global().undef(ty, None).with_type(ty)
     }
-    fn const_int(&self, _t: Self::Type, _i: i64) -> Self::Value {
-        todo!()
+    fn const_int(&self, t: Self::Type, i: i64) -> Self::Value {
+        match self.lookup_type(t) {
+            SpirvType::Integer(width, _signedness) => {
+                if width > 32 {
+                    self.builder.constant_u64(t, i as u64).with_type(t)
+                } else {
+                    self.builder.constant_u32(t, i as u32).with_type(t)
+                }
+            }
+            other => panic!(
+                "const_int not implemented for type: {:#?}",
+                other.debug(self)
+            ),
+        }
     }
-    fn const_uint(&self, _t: Self::Type, _i: u64) -> Self::Value {
-        todo!()
+    fn const_uint(&self, t: Self::Type, i: u64) -> Self::Value {
+        match self.lookup_type(t) {
+            SpirvType::Integer(width, _signedness) => {
+                if width > 32 {
+                    self.builder.constant_u64(t, i as u64).with_type(t)
+                } else {
+                    self.builder.constant_u32(t, i as u32).with_type(t)
+                }
+            }
+            other => panic!(
+                "const_uint not implemented for type: {:#?}",
+                other.debug(self)
+            ),
+        }
     }
-    fn const_uint_big(&self, _t: Self::Type, _u: u128) -> Self::Value {
-        todo!()
+    fn const_uint_big(&self, t: Self::Type, u: u128) -> Self::Value {
+        if u > u64::MAX as u128 {
+            panic!("u128 literals not supported yet: {}", u);
+        }
+        self.builder.constant_u64(t, u as u64).with_type(t)
     }
-    fn const_bool(&self, _val: bool) -> Self::Value {
-        todo!()
+    fn const_bool(&self, val: bool) -> Self::Value {
+        let bool = SpirvType::Bool.def(self);
+        if val {
+            self.emit_global().constant_true(bool)
+        } else {
+            self.emit_global().constant_false(bool)
+        }
+        .with_type(bool)
     }
-    fn const_i32(&self, _i: i32) -> Self::Value {
-        todo!()
+    fn const_i32(&self, i: i32) -> Self::Value {
+        let t = SpirvType::Integer(32, true).def(self);
+        self.builder.constant_u32(t, i as u32).with_type(t)
     }
-    fn const_u32(&self, _i: u32) -> Self::Value {
-        todo!()
+    fn const_u32(&self, i: u32) -> Self::Value {
+        let t = SpirvType::Integer(32, false).def(self);
+        self.builder.constant_u32(t, i).with_type(t)
     }
-    fn const_u64(&self, _i: u64) -> Self::Value {
-        todo!()
+    fn const_u64(&self, i: u64) -> Self::Value {
+        let t = SpirvType::Integer(64, false).def(self);
+        self.builder.constant_u64(t, i).with_type(t)
     }
-    fn const_usize(&self, _i: u64) -> Self::Value {
-        todo!()
+    fn const_usize(&self, i: u64) -> Self::Value {
+        let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
+        let t = SpirvType::Integer(ptr_size, false).def(self);
+        if ptr_size > 32 {
+            self.builder.constant_u64(t, i as u64)
+        } else {
+            self.builder.constant_u32(t, i as u32)
+        }
+        .with_type(t)
     }
-    fn const_u8(&self, _i: u8) -> Self::Value {
-        todo!()
+    fn const_u8(&self, i: u8) -> Self::Value {
+        let t = SpirvType::Integer(8, false).def(self);
+        self.builder.constant_u32(t, i as u32).with_type(t)
     }
-    fn const_real(&self, _t: Self::Type, _val: f64) -> Self::Value {
-        todo!()
+    fn const_real(&self, t: Self::Type, val: f64) -> Self::Value {
+        match self.lookup_type(t) {
+            SpirvType::Float(width) => {
+                if width > 32 {
+                    self.builder.constant_f64(t, val).with_type(t)
+                } else {
+                    self.builder.constant_f32(t, val as f32).with_type(t)
+                }
+            }
+            other => panic!(
+                "const_real not implemented for type: {:#?}",
+                other.debug(self)
+            ),
+        }
     }
 
     fn const_str(&self, _s: Symbol) -> (Self::Value, Self::Value) {
@@ -621,11 +681,17 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         todo!()
     }
 
-    fn const_to_opt_uint(&self, _v: Self::Value) -> Option<u64> {
-        todo!()
+    fn const_to_opt_uint(&self, v: Self::Value) -> Option<u64> {
+        self.builder.lookup_const_u64(v.def).ok()
     }
-    fn const_to_opt_u128(&self, _v: Self::Value, _sign_ext: bool) -> Option<u128> {
-        todo!()
+    fn const_to_opt_u128(&self, v: Self::Value, sign_ext: bool) -> Option<u128> {
+        self.builder.lookup_const_u64(v.def).ok().map(|v| {
+            if sign_ext {
+                v as i64 as i128 as u128
+            } else {
+                v as u128
+            }
+        })
     }
 
     fn scalar_to_backend(
