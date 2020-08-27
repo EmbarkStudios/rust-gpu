@@ -20,7 +20,7 @@ impl ModuleSpirv {
     }
 }
 
-#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct SpirvValue {
     pub def: Word,
     pub ty: Word,

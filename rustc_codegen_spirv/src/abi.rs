@@ -1,7 +1,8 @@
 use crate::codegen_cx::CodegenCx;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
-use rustc_middle::ty::{layout::TyAndLayout, TyKind};
+use rustc_middle::ty::{layout::TyAndLayout, Ty, TyKind};
+use rustc_target::abi::call::{FnAbi, PassMode};
 use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar};
 use std::fmt;
 
@@ -42,8 +43,6 @@ impl SpirvType {
         if let Some(&cached) = cx.type_cache.borrow().get(self) {
             return cached;
         }
-        //let cached = cx.type_cache.borrow_mut().entry(self);
-        // TODO: rspirv does a linear search to dedupe, probably want to cache here.
         let result = match *self {
             SpirvType::Void => cx.emit_global().type_void(),
             SpirvType::Bool => cx.emit_global().type_bool(),
@@ -190,6 +189,89 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
     }
 }
 
+// returns (function_type, return_type, argument_types)
+pub fn trans_fnabi<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
+) -> (Word, Word, Vec<Word>) {
+    let mut argument_types = Vec::new();
+    for arg in &fn_abi.args {
+        let arg_type = match arg.mode {
+            PassMode::Ignore => panic!(
+                "TODO: Argument PassMode::Ignore not supported yet: {:?}",
+                arg
+            ),
+            PassMode::Direct(_arg_attributes) => trans_type_immediate(cx, arg.layout),
+            PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
+                // TODO: Make this more efficient, don't generate struct
+                let tuple = cx.lookup_type(trans_type(cx, arg.layout));
+                let (left, right) = match tuple {
+                    SpirvType::Adt {
+                        ref field_types,
+                        field_offsets: _,
+                    } => {
+                        if let [left, right] = *field_types.as_slice() {
+                            (left, right)
+                        } else {
+                            panic!("PassMode::Pair did not produce tuple: {:?}", tuple)
+                        }
+                    }
+                    _ => panic!("PassMode::Pair did not produce tuple: {:?}", tuple),
+                };
+                argument_types.push(left);
+                argument_types.push(right);
+                continue;
+            }
+            PassMode::Cast(_cast_target) => trans_type(cx, arg.layout),
+            // TODO: Deal with wide ptr?
+            PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
+                let pointee = trans_type(cx, arg.layout);
+                SpirvType::Pointer {
+                    storage_class: StorageClass::Generic,
+                    pointee,
+                }
+                .def(cx)
+            }
+        };
+        argument_types.push(arg_type);
+    }
+    // TODO: Other modes
+    let return_type = match fn_abi.ret.mode {
+        PassMode::Ignore => SpirvType::Void.def(cx),
+        PassMode::Direct(_arg_attributes) => trans_type_immediate(cx, fn_abi.ret.layout),
+        PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => trans_type(cx, fn_abi.ret.layout),
+        // TODO: Is this right?
+        PassMode::Cast(_cast_target) => trans_type(cx, fn_abi.ret.layout),
+        // TODO: Deal with wide ptr?
+        PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
+            let pointee = trans_type(cx, fn_abi.ret.layout);
+            let pointer = SpirvType::Pointer {
+                storage_class: StorageClass::Generic,
+                pointee,
+            }
+            .def(cx);
+            argument_types.push(pointer);
+            SpirvType::Void.def(cx)
+        }
+    };
+
+    let function_type = SpirvType::Function {
+        return_type,
+        arguments: argument_types.clone(),
+    }
+    .def(cx);
+    (function_type, return_type, argument_types)
+}
+
+pub fn trans_type_immediate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+    if let Abi::Scalar(ref scalar) = ty.abi {
+        if scalar.is_bool() {
+            return SpirvType::Bool.def(cx);
+        }
+    }
+    trans_type(cx, ty)
+}
+
 pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     if ty.is_zst() {
         // An empty struct is zero-sized
@@ -236,20 +318,9 @@ fn trans_scalar<'spv, 'tcx>(
     pair_index: Option<usize>,
 ) -> Word {
     match scalar.value {
+        // TODO: Do we use scalar.valid_range?
         Primitive::Int(width, signedness) => {
-            // let width_bits = width.size().bits() as u128;
-            // let width_max_val = if width_bits == 128 {
-            //     u128::MAX
-            // } else {
-            //     (1 << width_bits) - 1
-            // };
-            if scalar.valid_range == (0..=1) {
-                SpirvType::Bool.def(cx)
-            // } else if scalar.valid_range != (0..=width_max_val) {
-            // TODO: Do we handle this specially?
-            } else {
-                SpirvType::Integer(width.size().bits() as u32, signedness).def(cx)
-            }
+            SpirvType::Integer(width.size().bits() as u32, signedness).def(cx)
         }
         Primitive::F32 => SpirvType::Float(32).def(cx),
         Primitive::F64 => SpirvType::Float(64).def(cx),

@@ -14,15 +14,14 @@ use rustc_middle::mir::interpret::Allocation;
 use rustc_middle::mir::mono::{CodegenUnit, Linkage, Visibility};
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{FnAbiExt, HasParamEnv, HasTyCtxt, LayoutError, TyAndLayout};
-use rustc_middle::ty::{Instance, PolyExistentialTraitRef};
-use rustc_middle::ty::{ParamEnv, Ty, TyCtxt};
+use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TypeFoldable};
 use rustc_mir::interpret::Scalar;
 use rustc_session::Session;
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::source_map::{Span, DUMMY_SP};
 use rustc_span::symbol::Symbol;
 use rustc_span::SourceFile;
-use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg};
+use rustc_target::abi::call::{CastTarget, FnAbi, Reg};
 use rustc_target::abi::{
     self, Abi, AddressSpace, Align, HasDataLayout, LayoutOf, Primitive, Size, TargetDataLayout,
 };
@@ -37,6 +36,8 @@ pub struct CodegenCx<'spv, 'tcx> {
     pub spirv_module: &'spv ModuleSpirv,
     /// Spir-v module builder
     pub builder: BuilderSpirv,
+    /// Used for the DeclareMethods API (not sure what it is yet)
+    pub declared_values: RefCell<HashMap<String, SpirvValue>>,
     /// Map from MIR function to spir-v function ID
     pub function_defs: RefCell<HashMap<Instance<'tcx>, SpirvValue>>,
     /// Map from function ID to parameter list
@@ -58,6 +59,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             codegen_unit,
             spirv_module,
             builder: BuilderSpirv::new(),
+            declared_values: RefCell::new(HashMap::new()),
             function_defs: RefCell::new(HashMap::new()),
             function_parameter_values: RefCell::new(HashMap::new()),
             type_defs: RefCell::new(HashMap::new()),
@@ -79,9 +81,20 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
         self.builder.builder(cursor)
     }
 
+    // returns (function_type, return_type, argument_types)
+    pub fn trans_fnabi(&self, ty: &FnAbi<'tcx, Ty<'tcx>>) -> (Word, Word, Vec<Word>) {
+        use crate::abi::trans_fnabi;
+        trans_fnabi(self, ty)
+    }
+
     pub fn trans_type(&self, ty: TyAndLayout<'tcx>) -> Word {
         use crate::abi::trans_type;
         trans_type(self, ty)
+    }
+
+    pub fn trans_type_immediate(&self, ty: TyAndLayout<'tcx>) -> Word {
+        use crate::abi::trans_type_immediate;
+        trans_type_immediate(self, ty)
     }
 
     pub fn lookup_type(&self, ty: Word) -> SpirvType {
@@ -110,7 +123,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
 
 impl<'spv, 'tcx> BackendTypes for CodegenCx<'spv, 'tcx> {
     type Value = SpirvValue;
-    type Function = Word;
+    type Function = SpirvValue;
 
     type BasicBlock = Word;
     type Type = Word;
@@ -173,7 +186,7 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 
     fn immediate_backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
-        self.trans_type(layout)
+        self.trans_type_immediate(layout)
     }
 
     fn is_backend_immediate(&self, layout: TyAndLayout<'tcx>) -> bool {
@@ -223,27 +236,30 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 }
 
 impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
+    // TODO: llvm types are signless, as in neither signed nor unsigned (I think?), so these are expected to be
+    // signless. Do we want a SpirvType::Integer(_, Signless) to indicate the sign is unknown, and to do conversions at
+    // appropriate places?
     fn type_i1(&self) -> Self::Type {
         SpirvType::Bool.def(self)
     }
     fn type_i8(&self) -> Self::Type {
-        SpirvType::Integer(8, true).def(self)
+        SpirvType::Integer(8, false).def(self)
     }
     fn type_i16(&self) -> Self::Type {
-        SpirvType::Integer(16, true).def(self)
+        SpirvType::Integer(16, false).def(self)
     }
     fn type_i32(&self) -> Self::Type {
-        SpirvType::Integer(32, true).def(self)
+        SpirvType::Integer(32, false).def(self)
     }
     fn type_i64(&self) -> Self::Type {
-        SpirvType::Integer(64, true).def(self)
+        SpirvType::Integer(64, false).def(self)
     }
     fn type_i128(&self) -> Self::Type {
-        SpirvType::Integer(128, true).def(self)
+        SpirvType::Integer(128, false).def(self)
     }
     fn type_isize(&self) -> Self::Type {
         let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
-        SpirvType::Integer(ptr_size, true).def(self)
+        SpirvType::Integer(ptr_size, false).def(self)
     }
 
     fn type_f32(&self) -> Self::Type {
@@ -344,6 +360,29 @@ impl<'spv, 'tcx> StaticMethods for CodegenCx<'spv, 'tcx> {
     }
 }
 
+pub fn get_fn<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, instance: Instance<'tcx>) -> SpirvValue {
+    assert!(!instance.substs.needs_infer());
+    assert!(!instance.substs.has_escaping_bound_vars());
+
+    if let Some(&func) = cx.function_defs.borrow().get(&instance) {
+        return func;
+    }
+
+    let sym = cx.tcx.symbol_name(instance).name;
+
+    let fn_abi = FnAbi::of_instance(cx, instance, &[]);
+
+    let llfn = if let Some(llfn) = cx.get_declared_value(&sym) {
+        llfn
+    } else {
+        cx.declare_fn(&sym, &fn_abi)
+    };
+
+    cx.function_defs.borrow_mut().insert(instance, llfn);
+
+    llfn
+}
+
 impl<'spv, 'tcx> MiscMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     #[allow(clippy::type_complexity)]
     fn vtables(
@@ -357,11 +396,11 @@ impl<'spv, 'tcx> MiscMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 
     fn get_fn(&self, instance: Instance<'tcx>) -> Self::Function {
-        self.function_defs.borrow()[&instance].def
+        get_fn(self, instance)
     }
 
     fn get_fn_addr(&self, instance: Instance<'tcx>) -> Self::Value {
-        self.function_defs.borrow()[&instance]
+        get_fn(self, instance)
     }
 
     fn eh_personality(&self) -> Self::Value {
@@ -409,96 +448,11 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         instance: Instance<'tcx>,
         _linkage: Linkage,
         _visibility: Visibility,
-        _symbol_name: &str,
+        symbol_name: &str,
     ) {
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
-        let mut argument_types = Vec::new();
-        for arg in fn_abi.args {
-            let arg_type = match arg.mode {
-                PassMode::Ignore => panic!(
-                    "TODO: Argument PassMode::Ignore not supported yet: {:?}",
-                    arg
-                ),
-                PassMode::Direct(_arg_attributes) => self.trans_type(arg.layout),
-                PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
-                    // TODO: Make this more efficient, don't generate struct
-                    let tuple = self.lookup_type(self.trans_type(arg.layout));
-                    let (left, right) = match tuple {
-                        SpirvType::Adt {
-                            ref field_types,
-                            field_offsets: _,
-                        } => {
-                            if let [left, right] = *field_types.as_slice() {
-                                (left, right)
-                            } else {
-                                panic!("PassMode::Pair did not produce tuple: {:?}", tuple)
-                            }
-                        }
-                        _ => panic!("PassMode::Pair did not produce tuple: {:?}", tuple),
-                    };
-                    argument_types.push(left);
-                    argument_types.push(right);
-                    continue;
-                }
-                PassMode::Cast(_cast_target) => self.trans_type(arg.layout),
-                // TODO: Deal with wide ptr?
-                PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
-                    let pointee = self.trans_type(arg.layout);
-                    SpirvType::Pointer {
-                        storage_class: StorageClass::Generic,
-                        pointee,
-                    }
-                    .def(self)
-                }
-            };
-            argument_types.push(arg_type);
-        }
-        // TODO: Other modes
-        let return_type = match fn_abi.ret.mode {
-            PassMode::Ignore => SpirvType::Void.def(self),
-            PassMode::Direct(_arg_attributes) => self.trans_type(fn_abi.ret.layout),
-            PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
-                self.trans_type(fn_abi.ret.layout)
-            }
-            // TODO: Is this right?
-            PassMode::Cast(_cast_target) => self.trans_type(fn_abi.ret.layout),
-            // TODO: Deal with wide ptr?
-            PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
-                let pointee = self.trans_type(fn_abi.ret.layout);
-                let pointer = SpirvType::Pointer {
-                    storage_class: StorageClass::Generic,
-                    pointee,
-                }
-                .def(self);
-                argument_types.push(pointer);
-                SpirvType::Void.def(self)
-            }
-        };
-        let control = FunctionControl::NONE;
-        let function_id = None;
-
-        let function_type = SpirvType::Function {
-            return_type,
-            arguments: argument_types.clone(),
-        }
-        .def(self);
-
-        let mut emit = self.emit_global();
-        let fn_id = emit
-            .begin_function(return_type, function_id, control, function_type)
-            .unwrap();
-        let parameter_values = argument_types
-            .iter()
-            .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
-            .collect::<Vec<_>>();
-        emit.end_function().unwrap();
-
-        self.function_defs
-            .borrow_mut()
-            .insert(instance, fn_id.with_type(function_type));
-        self.function_parameter_values
-            .borrow_mut()
-            .insert(fn_id, parameter_values);
+        let declared = self.declare_fn(symbol_name, &fn_abi);
+        self.function_defs.borrow_mut().insert(instance, declared);
     }
 }
 
@@ -511,8 +465,30 @@ impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         todo!()
     }
 
-    fn declare_fn(&self, _name: &str, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Function {
-        todo!()
+    fn declare_fn(&self, name: &str, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Function {
+        let control = FunctionControl::NONE;
+        let function_id = None;
+
+        let (function_type, return_type, argument_types) = self.trans_fnabi(fn_abi);
+
+        let mut emit = self.emit_global();
+        let fn_id = emit
+            .begin_function(return_type, function_id, control, function_type)
+            .unwrap();
+        let parameter_values = argument_types
+            .iter()
+            .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
+            .collect::<Vec<_>>();
+        emit.end_function().unwrap();
+
+        self.function_parameter_values
+            .borrow_mut()
+            .insert(fn_id, parameter_values);
+        let result = fn_id.with_type(function_type);
+        self.declared_values
+            .borrow_mut()
+            .insert(name.to_string(), result);
+        result
     }
 
     fn define_global(&self, _name: &str, _ty: Self::Type) -> Option<Self::Value> {
@@ -523,8 +499,8 @@ impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         todo!()
     }
 
-    fn get_declared_value(&self, _name: &str) -> Option<Self::Value> {
-        todo!()
+    fn get_declared_value(&self, name: &str) -> Option<Self::Value> {
+        self.declared_values.borrow().get(name).copied()
     }
 
     fn get_defined_value(&self, _name: &str) -> Option<Self::Value> {

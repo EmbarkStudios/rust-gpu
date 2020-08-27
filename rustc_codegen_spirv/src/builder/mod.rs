@@ -49,16 +49,22 @@ impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
         // "An OpAccessChain instruction is the equivalent of an LLVM getelementptr instruction where the first index element is zero."
         // https://github.com/gpuweb/gpuweb/issues/33
         let mut result_indices = Vec::with_capacity(indices.len() - 1);
-        let /*mut*/ (storage_class, result_pointee_type) = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { storage_class, pointee } => (storage_class, pointee),
+        let (storage_class, mut result_pointee_type) = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer {
+                storage_class,
+                pointee,
+            } => (storage_class, pointee),
             other_type => panic!("GEP first deref not implemented for type {:?}", other_type),
         };
         for index in indices.iter().cloned().skip(1) {
             result_indices.push(index.def);
-            panic!(
-                "GEP not implemented for type {:?}",
-                self.lookup_type(result_pointee_type)
-            );
+            result_pointee_type = match self.lookup_type(result_pointee_type) {
+                SpirvType::Array { element, count: _ } => element,
+                _ => panic!(
+                    "GEP not implemented for type {:?}",
+                    self.debug_type(result_pointee_type)
+                ),
+            };
         }
         let result_type = SpirvType::Pointer {
             storage_class,
@@ -173,7 +179,7 @@ impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         dst: PlaceRef<'tcx, Self::Value>,
     ) {
         fn next<'a, 'spv, 'tcx>(bx: &mut Builder<'a, 'spv, 'tcx>, idx: &mut usize) -> SpirvValue {
-            let val = bx.function_parameter_values.borrow()[&bx.current_fn][*idx];
+            let val = bx.function_parameter_values.borrow()[&bx.current_fn.def][*idx];
             *idx += 1;
             val
         }
@@ -232,7 +238,7 @@ impl<'a, 'spv, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn get_param(&self, index: usize) -> Self::Value {
-        self.function_parameter_values.borrow()[&self.current_fn][index]
+        self.function_parameter_values.borrow()[&self.current_fn.def][index]
     }
 }
 

@@ -1,6 +1,7 @@
 use super::Builder;
 use crate::abi::SpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValueExt};
+use rspirv::dr::Operand;
 use rspirv::spirv::StorageClass;
 use rustc_codegen_ssa::base::to_immediate;
 use rustc_codegen_ssa::common::{
@@ -69,7 +70,13 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             let emit = self.emit_with_cursor(cursor);
             let selected_function = emit.selected_function().unwrap();
             let selected_function = &emit.module_ref().functions[selected_function];
-            selected_function.def.as_ref().unwrap().result_id.unwrap()
+            let def_inst = selected_function.def.as_ref().unwrap();
+            let def = def_inst.result_id.unwrap();
+            let ty = match def_inst.operands[1] {
+                Operand::IdRef(ty) => ty,
+                ref other => panic!("Invalid operand to function inst: {}", other),
+            };
+            def.with_type(ty)
         };
         self.cursor = cursor;
         self.current_fn = current_fn;
@@ -77,7 +84,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn new_block<'b>(cx: &'a Self::CodegenCx, llfn: Self::Function, _name: &'b str) -> Self {
-        let cursor_fn = cx.builder.select_function_by_id(llfn);
+        let cursor_fn = cx.builder.select_function_by_id(llfn.def);
         let label = cx.emit_with_cursor(cursor_fn).begin_block(None).unwrap();
         let cursor = cx.builder.select_block_by_id(label);
         Self {
@@ -220,12 +227,12 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn alloca(&mut self, ty: Self::Type, _align: Align) -> Self::Value {
         let ptr_ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
+            storage_class: StorageClass::Generic,
             pointee: ty,
         }
         .def(self);
         self.emit()
-            .variable(ptr_ty, None, StorageClass::Function, None)
+            .variable(ptr_ty, None, StorageClass::Generic, None)
             .with_type(ptr_ty)
     }
 
@@ -490,6 +497,10 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn intcast(&mut self, val: Self::Value, dest_ty: Self::Type, is_signed: bool) -> Self::Value {
+        if val.ty == dest_ty {
+            // I guess?
+            return val;
+        }
         match (self.lookup_type(val.ty), self.lookup_type(dest_ty)) {
             // sign change
             (
@@ -812,10 +823,16 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         if funclet.is_some() {
             panic!("TODO: Funclets are not supported");
         }
-        let result_type = match self.lookup_type(llfn.ty) {
-            SpirvType::Function { return_type, .. } => return_type,
+        let (result_type, argument_types) = match self.lookup_type(llfn.ty) {
+            SpirvType::Function {
+                return_type,
+                arguments,
+            } => (return_type, arguments),
             ty => panic!("Calling non-function type: {:?}", ty),
         };
+        for (argument, argument_type) in args.iter().zip(argument_types) {
+            assert_ty_eq!(self, argument.ty, argument_type);
+        }
         let args = args.iter().map(|arg| arg.def).collect::<Vec<_>>();
         self.emit()
             .function_call(result_type, None, llfn.def, args)
