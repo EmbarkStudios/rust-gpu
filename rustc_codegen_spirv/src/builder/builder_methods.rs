@@ -585,37 +585,103 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn memcpy(
         &mut self,
-        _dst: Self::Value,
+        dst: Self::Value,
         _dst_align: Align,
-        _src: Self::Value,
+        src: Self::Value,
         _src_align: Align,
-        _size: Self::Value,
+        size: Self::Value,
         _flags: MemFlags,
     ) {
-        todo!()
+        self.emit()
+            .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
+            .unwrap();
     }
 
     fn memmove(
         &mut self,
-        _dst: Self::Value,
+        dst: Self::Value,
         _dst_align: Align,
-        _src: Self::Value,
+        src: Self::Value,
         _src_align: Align,
-        _size: Self::Value,
+        size: Self::Value,
         _flags: MemFlags,
     ) {
-        todo!()
+        self.emit()
+            .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
+            .unwrap();
     }
 
     fn memset(
         &mut self,
-        _ptr: Self::Value,
-        _fill_byte: Self::Value,
-        _size: Self::Value,
+        ptr: Self::Value,
+        fill_byte: Self::Value,
+        size: Self::Value,
         _align: Align,
         _flags: MemFlags,
     ) {
-        todo!()
+        let elem_ty = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee, .. } => pointee,
+            _ => panic!(
+                "memset called on non-pointer type: {:?}",
+                self.debug_type(ptr.ty)
+            ),
+        };
+        let elem_ty_spv = self.lookup_type(elem_ty);
+        match (
+            self.builder.lookup_const(fill_byte.def),
+            self.builder.lookup_const(size.def),
+        ) {
+            (Ok(fill_byte), Ok(size)) => {
+                let fill_byte = match fill_byte {
+                    Operand::LiteralInt32(v) => v as u8,
+                    other => panic!("memset fill_byte constant value not supported: {}", other),
+                };
+                let size = match size {
+                    Operand::LiteralInt32(v) => v as usize,
+                    other => panic!("memset size constant value not supported: {}", other),
+                };
+                let pat = elem_ty_spv
+                    .memset_const_pattern(self, fill_byte)
+                    .with_type(elem_ty);
+                let count = size / (elem_ty_spv.sizeof_in_bits(self) / 8);
+                if count == 1 {
+                    self.store(pat, ptr, Align::from_bytes(0).unwrap());
+                } else {
+                    for index in 0..size {
+                        let u32 = SpirvType::Integer(32, false).def(self);
+                        let const_index =
+                            self.builder.constant_u32(u32, index as u32).with_type(u32);
+                        let gep_ptr = self.gep(ptr, &[const_index]);
+                        self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
+                    }
+                }
+            }
+            (Ok(_fill_byte), Err(_)) => {
+                panic!("memset constant fill_byte dynamic size not implemented yet")
+            }
+            (Err(_), Ok(size)) => {
+                let size = match size {
+                    Operand::LiteralInt32(v) => v as usize,
+                    other => panic!("memset size constant value not supported: {}", other),
+                };
+                let pat = elem_ty_spv
+                    .memset_dynamic_pattern(self, fill_byte.def)
+                    .with_type(elem_ty);
+                let count = size / (elem_ty_spv.sizeof_in_bits(self) / 8);
+                if count == 1 {
+                    self.store(pat, ptr, Align::from_bytes(0).unwrap());
+                } else {
+                    for index in 0..size {
+                        let u32 = SpirvType::Integer(32, false).def(self);
+                        let const_index =
+                            self.builder.constant_u32(u32, index as u32).with_type(u32);
+                        let gep_ptr = self.gep(ptr, &[const_index]);
+                        self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
+                    }
+                }
+            }
+            (Err(_), Err(_)) => panic!("memset dynamic fill_byte dynamic size not implemented yet"),
+        }
     }
 
     fn select(

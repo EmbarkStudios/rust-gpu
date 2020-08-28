@@ -680,6 +680,8 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         match scalar {
             Scalar::Raw { data, size } => match layout.value {
                 Primitive::Int(_size, _signedness) => match size {
+                    1 => self.builder.constant_u32(ty, data as u32).with_type(ty),
+                    2 => self.builder.constant_u32(ty, data as u32).with_type(ty),
                     4 => self.builder.constant_u32(ty, data as u32).with_type(ty),
                     8 => self.builder.constant_u64(ty, data as u64).with_type(ty),
                     size => panic!(

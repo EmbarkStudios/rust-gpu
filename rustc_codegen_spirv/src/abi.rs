@@ -1,3 +1,4 @@
+use crate::builder::Builder;
 use crate::codegen_cx::CodegenCx;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
@@ -35,6 +36,58 @@ pub enum SpirvType {
         return_type: Word,
         arguments: Vec<Word>,
     },
+}
+
+fn memset_fill_u16(b: u8) -> u16 {
+    b as u16 | ((b as u16) << 8)
+}
+
+fn memset_fill_u32(b: u8) -> u32 {
+    b as u32 | ((b as u32) << 8) | ((b as u32) << 16) | ((b as u32) << 24)
+}
+
+fn memset_fill_u64(b: u8) -> u64 {
+    b as u64
+        | ((b as u64) << 8)
+        | ((b as u64) << 16)
+        | ((b as u64) << 24)
+        | ((b as u64) << 32)
+        | ((b as u64) << 40)
+        | ((b as u64) << 48)
+        | ((b as u64) << 56)
+}
+
+fn memset_dynamic_scalar<'a, 'spv, 'tcx>(
+    builder: &Builder<'a, 'spv, 'tcx>,
+    fill_var: Word,
+    byte_width: usize,
+    is_float: bool,
+) -> Word {
+    let composite_type = SpirvType::Vector {
+        element: SpirvType::Integer(8, false).def(builder),
+        count: builder.builder.constant_u32(
+            SpirvType::Integer(32, false).def(builder),
+            byte_width as u32,
+        ),
+    }
+    .def(builder);
+    let composite = builder
+        .emit()
+        .composite_construct(
+            composite_type,
+            None,
+            std::iter::repeat(fill_var).take(byte_width),
+        )
+        .unwrap();
+    let result_type = if is_float {
+        SpirvType::Float(byte_width as u32 * 8)
+    } else {
+        SpirvType::Integer(byte_width as u32 * 8, false)
+    };
+    builder
+        .emit()
+        .bitcast(result_type.def(builder), None, composite)
+        .unwrap()
 }
 
 impl SpirvType {
@@ -108,6 +161,119 @@ impl SpirvType {
         cx: &'cx CodegenCx<'spv, 'tcx>,
     ) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
         SpirvTypePrinter { ty: self, cx }
+    }
+
+    pub fn sizeof_in_bits<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> usize {
+        match *self {
+            SpirvType::Void => 0,
+            SpirvType::Bool => 1,
+            SpirvType::Integer(width, _) => width as usize,
+            SpirvType::Float(width) => width as usize,
+            SpirvType::Adt {
+                ref field_types, ..
+            } => field_types
+                .iter()
+                .map(|&ty| cx.lookup_type(ty).sizeof_in_bits(cx))
+                .sum(),
+            SpirvType::Vector { element, count } => {
+                cx.lookup_type(element).sizeof_in_bits(cx)
+                    * cx.builder.lookup_const_u64(count).unwrap() as usize
+            }
+            SpirvType::Array { element, count } => {
+                cx.lookup_type(element).sizeof_in_bits(cx)
+                    * cx.builder.lookup_const_u64(count).unwrap() as usize
+            }
+            SpirvType::Pointer { .. } => cx.tcx.data_layout.pointer_size.bits() as usize,
+            SpirvType::Function { .. } => cx.tcx.data_layout.pointer_size.bits() as usize,
+        }
+    }
+
+    pub fn memset_const_pattern<'spv, 'tcx>(
+        &self,
+        cx: &CodegenCx<'spv, 'tcx>,
+        fill_byte: u8,
+    ) -> Word {
+        match *self {
+            SpirvType::Void => panic!("TODO: void memset not implemented yet"),
+            SpirvType::Bool => panic!("TODO: bool memset not implemented yet"),
+            SpirvType::Integer(width, _signedness) => match width {
+                8 => cx.builder.constant_u32(self.def(cx), fill_byte as u32),
+                16 => cx
+                    .builder
+                    .constant_u32(self.def(cx), memset_fill_u16(fill_byte) as u32),
+                32 => cx
+                    .builder
+                    .constant_u32(self.def(cx), memset_fill_u32(fill_byte)),
+                64 => cx
+                    .builder
+                    .constant_u64(self.def(cx), memset_fill_u64(fill_byte)),
+                _ => panic!("memset on integer width {} not implemented yet", width),
+            },
+            SpirvType::Float(width) => match width {
+                32 => cx
+                    .builder
+                    .constant_f32(self.def(cx), f32::from_bits(memset_fill_u32(fill_byte))),
+                64 => cx
+                    .builder
+                    .constant_f64(self.def(cx), f64::from_bits(memset_fill_u64(fill_byte))),
+                _ => panic!("memset on float width {} not implemented yet", width),
+            },
+            SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
+            SpirvType::Vector { element, count } => {
+                let elem_pat = cx.lookup_type(element).memset_const_pattern(cx, fill_byte);
+                let count = cx.builder.lookup_const_u64(count).unwrap() as usize;
+                cx.emit_global()
+                    .constant_composite(self.def(cx), vec![elem_pat; count])
+            }
+            SpirvType::Array { element, count } => {
+                let elem_pat = cx.lookup_type(element).memset_const_pattern(cx, fill_byte);
+                let count = cx.builder.lookup_const_u64(count).unwrap() as usize;
+                cx.emit_global()
+                    .constant_composite(self.def(cx), vec![elem_pat; count])
+            }
+            SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
+            SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
+        }
+    }
+
+    pub fn memset_dynamic_pattern<'a, 'spv, 'tcx>(
+        &self,
+        builder: &Builder<'a, 'spv, 'tcx>,
+        fill_var: Word,
+    ) -> Word {
+        match *self {
+            SpirvType::Void => panic!("TODO: void memset not implemented yet"),
+            SpirvType::Bool => panic!("TODO: bool memset not implemented yet"),
+            SpirvType::Integer(width, _signedness) => match width {
+                8 => fill_var,
+                16 => memset_dynamic_scalar(builder, fill_var, 2, false),
+                32 => memset_dynamic_scalar(builder, fill_var, 4, false),
+                64 => memset_dynamic_scalar(builder, fill_var, 8, false),
+                _ => panic!("memset on integer width {} not implemented yet", width),
+            },
+            SpirvType::Float(width) => match width {
+                32 => memset_dynamic_scalar(builder, fill_var, 4, true),
+                64 => memset_dynamic_scalar(builder, fill_var, 8, true),
+                _ => panic!("memset on float width {} not implemented yet", width),
+            },
+            SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
+            SpirvType::Array { element, count } | SpirvType::Vector { element, count } => {
+                let elem_pat = builder
+                    .lookup_type(element)
+                    .memset_dynamic_pattern(builder, fill_var);
+                let count = builder.builder.lookup_const_u64(count).unwrap() as usize;
+                builder
+                    .emit()
+                    .composite_construct(
+                        self.def(builder),
+                        None,
+                        std::iter::repeat(elem_pat).take(count),
+                    )
+                    .unwrap()
+            }
+            SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
+            SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
+        }
     }
 }
 
