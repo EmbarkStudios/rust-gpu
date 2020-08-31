@@ -6,11 +6,12 @@ use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, BaseTypeMethods, ConstMethods, CoverageInfoMethods, DebugInfoMethods,
-    DeclareMethods, LayoutTypeMethods, MiscMethods, PreDefineMethods, StaticMethods,
+    DeclareMethods, DerivedTypeMethods, LayoutTypeMethods, MiscMethods, PreDefineMethods,
+    StaticMethods,
 };
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir::GlobalAsm;
-use rustc_middle::mir::interpret::{Allocation, GlobalAlloc};
+use rustc_middle::mir::interpret::{read_target_uint, Allocation, GlobalAlloc, Pointer};
 use rustc_middle::mir::mono::{CodegenUnit, Linkage, Visibility};
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{FnAbiExt, HasParamEnv, HasTyCtxt, LayoutError, TyAndLayout};
@@ -137,16 +138,15 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
     }
 
     // Presumably these methods will get used eventually, so allow(dead_code) to not have to rewrite when needed.
-    #[allow(dead_code)]
-    pub fn constant_u8(&self, val: u32) -> SpirvValue {
+    pub fn constant_u8(&self, val: u8) -> SpirvValue {
         let ty = SpirvType::Integer(8, false).def(self);
-        self.builder.constant_u32(ty, val).with_type(ty)
+        self.builder.constant_u32(ty, val as u32).with_type(ty)
     }
 
     #[allow(dead_code)]
-    pub fn constant_u16(&self, val: u32) -> SpirvValue {
+    pub fn constant_u16(&self, val: u16) -> SpirvValue {
         let ty = SpirvType::Integer(16, false).def(self);
-        self.builder.constant_u32(ty, val).with_type(ty)
+        self.builder.constant_u32(ty, val as u32).with_type(ty)
     }
 
     pub fn constant_u32(&self, val: u32) -> SpirvValue {
@@ -396,8 +396,18 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 }
 
 impl<'spv, 'tcx> StaticMethods for CodegenCx<'spv, 'tcx> {
-    fn static_addr_of(&self, _cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
-        todo!()
+    fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
+        if let Some(already_defined) = self.builder.find_cached_global(cv.def) {
+            return already_defined;
+        }
+        let ty = SpirvType::Pointer {
+            storage_class: StorageClass::Generic,
+            pointee: cv.ty,
+        }
+        .def(self);
+        self.emit_global()
+            .variable(ty, None, StorageClass::Generic, Some(cv.def))
+            .with_type(ty)
     }
     fn codegen_static(&self, _def_id: DefId, _is_mutable: bool) {
         todo!()
@@ -714,11 +724,37 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         }
     }
 
-    fn const_str(&self, _s: Symbol) -> (Self::Value, Self::Value) {
-        todo!()
+    fn const_str(&self, s: Symbol) -> (Self::Value, Self::Value) {
+        let len = s.as_str().len();
+        let raw_bytes = const_bytes(self, s.as_str().as_bytes());
+        let ptr = self
+            .builder
+            .find_cached_global(raw_bytes.def)
+            .unwrap_or_else(|| {
+                let ty = self.type_ptr_to(self.trans_type(self.layout_of(self.tcx.types.str_)));
+                self.emit_global()
+                    .variable(ty, None, StorageClass::Generic, Some(raw_bytes.def))
+                    .with_type(ty)
+            });
+        // let cs = consts::ptrcast(
+        //     self.const_cstr(s, false),
+        //     self.type_ptr_to(self.layout_of(self.tcx.types.str_).llvm_type(self)),
+        // );
+        (ptr, self.const_usize(len as u64))
     }
-    fn const_struct(&self, _elts: &[Self::Value], _packed: bool) -> Self::Value {
-        todo!()
+    fn const_struct(&self, elts: &[Self::Value], _packed: bool) -> Self::Value {
+        // Presumably this will get bitcasted to the right type?
+        let field_types = elts.iter().map(|f| f.ty).collect();
+        let struct_ty = SpirvType::Adt {
+            name: None,
+            field_types,
+            field_offsets: None,
+            field_names: None,
+        }
+        .def(self);
+        self.emit_global()
+            .constant_composite(struct_ty, elts.iter().map(|f| f.def))
+            .with_type(struct_ty)
     }
 
     fn const_to_opt_uint(&self, v: Self::Value) -> Option<u64> {
@@ -747,6 +783,8 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                     2 => self.builder.constant_u32(ty, data as u32).with_type(ty),
                     4 => self.builder.constant_u32(ty, data as u32).with_type(ty),
                     8 => self.builder.constant_u64(ty, data as u64).with_type(ty),
+                    // TODO: Probably remove this eventually?
+                    16 => self.builder.constant_u64(ty, data as u64).with_type(ty),
                     size => panic!(
                         "TODO: scalar_to_backend int size {} not implemented yet",
                         size
@@ -766,11 +804,17 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             },
             Scalar::Ptr(ptr) => {
                 let (base_addr, _base_addr_space) = match self.tcx.global_alloc(ptr.alloc_id) {
-                    GlobalAlloc::Memory(_alloc) => {
-                        panic!("TODO: scalar_to_backend GlobalAlloc::Memory not supported yet")
-                        // let init = const_alloc_to_llvm(self, alloc);
-                        // let value = self.static_addr_of(init, alloc.align, None);
-                        // (value, AddressSpace::DATA)
+                    GlobalAlloc::Memory(alloc) => {
+                        let pointee = match self.lookup_type(ty) {
+                            SpirvType::Pointer { pointee, .. } => pointee,
+                            other => panic!(
+                                "GlobalAlloc::Memory type not implemented: {}",
+                                other.debug(self)
+                            ),
+                        };
+                        let init = create_const_alloc(self, alloc, pointee);
+                        let value = self.static_addr_of(init, alloc.align, None);
+                        (value, AddressSpace::DATA)
                     }
                     GlobalAlloc::Function(fn_instance) => (
                         self.get_fn_addr(fn_instance.polymorphize(self.tcx)),
@@ -811,6 +855,84 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn const_ptrcast(&self, _val: Self::Value, _ty: Self::Type) -> Self::Value {
         todo!()
     }
+}
+
+// Directly copied from rustc_codegen_llvm consts.rs const_alloc_to_llvm
+fn create_const_alloc(cx: &CodegenCx<'_, '_>, alloc: &Allocation, ty: Word) -> SpirvValue {
+    let mut llvals = Vec::with_capacity(alloc.relocations().len() + 1);
+    let dl = cx.data_layout();
+    let pointer_size = dl.pointer_size.bytes() as usize;
+
+    let mut next_offset = 0;
+    for &(offset, ((), alloc_id)) in alloc.relocations().iter() {
+        let offset = offset.bytes();
+        assert_eq!(offset as usize as u64, offset);
+        let offset = offset as usize;
+        if offset > next_offset {
+            // This `inspect` is okay since we have checked that it is not within a relocation, it
+            // is within the bounds of the allocation, and it doesn't affect interpreter execution
+            // (we inspect the result after interpreter execution). Any undef byte is replaced with
+            // some arbitrary byte value.
+            //
+            // FIXME: relay undef bytes to codegen as undef const bytes
+            let bytes = alloc.inspect_with_uninit_and_ptr_outside_interpreter(next_offset..offset);
+            llvals.push(const_bytes(cx, bytes));
+        }
+        let ptr_offset = read_target_uint(
+            dl.endian,
+            // This `inspect` is okay since it is within the bounds of the allocation, it doesn't
+            // affect interpreter execution (we inspect the result after interpreter execution),
+            // and we properly interpret the relocation as a relocation pointer offset.
+            alloc.inspect_with_uninit_and_ptr_outside_interpreter(offset..(offset + pointer_size)),
+        )
+        .expect("const_alloc_to_llvm: could not read relocation pointer")
+            as u64;
+
+        let address_space = match cx.tcx.global_alloc(alloc_id) {
+            GlobalAlloc::Function(..) => cx.data_layout().instruction_address_space,
+            GlobalAlloc::Static(..) | GlobalAlloc::Memory(..) => AddressSpace::DATA,
+        };
+
+        llvals.push(cx.scalar_to_backend(
+            Pointer::new(alloc_id, Size::from_bytes(ptr_offset)).into(),
+            &abi::Scalar {
+                value: Primitive::Pointer,
+                valid_range: 0..=!0,
+            },
+            cx.type_i8p_ext(address_space),
+        ));
+        next_offset = offset + pointer_size;
+    }
+    if alloc.len() >= next_offset {
+        let range = next_offset..alloc.len();
+        // This `inspect` is okay since we have check that it is after all relocations, it is
+        // within the bounds of the allocation, and it doesn't affect interpreter execution (we
+        // inspect the result after interpreter execution). Any undef byte is replaced with some
+        // arbitrary byte value.
+        //
+        // FIXME: relay undef bytes to codegen as undef const bytes
+        let bytes = alloc.inspect_with_uninit_and_ptr_outside_interpreter(range);
+        llvals.push(const_bytes(cx, bytes));
+    }
+
+    let result = cx.const_struct(&llvals, true);
+    // TODO: hack to get things working, this *will* fail spirv-val
+    result.def.with_type(ty)
+}
+
+fn const_bytes(cx: &CodegenCx<'_, '_>, bytes: &[u8]) -> SpirvValue {
+    let ty = SpirvType::Array {
+        element: SpirvType::Integer(8, false).def(cx),
+        count: cx.constant_u32(bytes.len() as u32).def,
+    }
+    .def(cx);
+    let values = bytes
+        .iter()
+        .map(|&b| cx.constant_u8(b).def)
+        .collect::<Vec<_>>();
+    cx.emit_global()
+        .constant_composite(ty, values)
+        .with_type(ty)
 }
 
 impl<'spv, 'tcx> AsmMethods for CodegenCx<'spv, 'tcx> {

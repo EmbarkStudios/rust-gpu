@@ -180,6 +180,20 @@ impl BuilderSpirv {
         Err("Definition not found")
     }
 
+    pub fn find_cached_global(&self, value: Word) -> Option<SpirvValue> {
+        let builder = self.builder.borrow();
+        for inst in &builder.module_ref().types_global_values {
+            if inst.class.opcode == Op::Variable {
+                if let Some(&Operand::IdRef(id_ref)) = inst.operands.get(1) {
+                    if id_ref == value {
+                        return Some(inst.result_id.unwrap().with_type(inst.result_type.unwrap()));
+                    }
+                }
+            }
+        }
+        None
+    }
+
     pub fn select_block_by_id(&self, id: Word) -> BuilderCursor {
         fn block_matches(block: &Block, id: Word) -> bool {
             block.label.as_ref().and_then(|b| b.result_id) == Some(id)
