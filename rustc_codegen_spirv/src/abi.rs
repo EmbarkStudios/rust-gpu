@@ -451,11 +451,17 @@ pub fn trans_fnabi<'spv, 'tcx>(
     let return_type = match fn_abi.ret.mode {
         PassMode::Ignore => SpirvType::Void.def(cx),
         PassMode::Direct(_arg_attributes) => trans_type_immediate(cx, fn_abi.ret.layout),
-        PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => trans_type(cx, fn_abi.ret.layout),
-        // TODO: Is this right?
-        PassMode::Cast(_cast_target) => trans_type(cx, fn_abi.ret.layout),
+        PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
+            panic!("PassMode::Pair not supported for return type")
+        }
+        PassMode::Cast(_cast_target) => {
+            panic!("TODO: PassMode::Cast not supported for return type")
+        }
         // TODO: Deal with wide ptr?
-        PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
+        PassMode::Indirect(_arg_attributes, wide_ptr_attrs) => {
+            if wide_ptr_attrs.is_some() {
+                panic!("TODO: PassMode::Indirect wide ptr not supported for return type");
+            }
             let pointee = trans_type(cx, fn_abi.ret.layout);
             let pointer = SpirvType::Pointer {
                 storage_class: StorageClass::Generic,

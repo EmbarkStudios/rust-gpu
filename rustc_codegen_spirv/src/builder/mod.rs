@@ -17,7 +17,7 @@ use rustc_middle::mir::coverage::{
     CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionIndex, Op,
 };
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt, TyAndLayout};
-use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyCtxt};
+use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyCtxt, TyKind};
 use rustc_span::def_id::DefId;
 use rustc_span::source_map::Span;
 use rustc_span::sym;
@@ -25,6 +25,28 @@ use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, LayoutOf, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::{iter::empty, ops::Deref};
+
+macro_rules! math_intrinsic {
+    ($self:ident, $arg_tys:ident, $args:ident, $int:ident, $uint:ident, $float:ident) => {{
+        assert_eq!($arg_tys[0], $arg_tys[1]);
+        match &$arg_tys[0].kind {
+            TyKind::Int(_) => $self.$int($args[0].immediate(), $args[1].immediate()),
+            TyKind::Uint(_) => $self.$uint($args[0].immediate(), $args[1].immediate()),
+            TyKind::Float(_) => $self.$float($args[0].immediate(), $args[1].immediate()),
+            other => panic!("Unimplemented intrinsic type: {:#?}", other),
+        }
+    }};
+}
+macro_rules! math_intrinsic_int {
+    ($self:ident, $arg_tys:ident, $args:ident, $int:ident, $uint:ident) => {{
+        assert_eq!($arg_tys[0], $arg_tys[1]);
+        match &$arg_tys[0].kind {
+            TyKind::Int(_) => $self.$int($args[0].immediate(), $args[1].immediate()),
+            TyKind::Uint(_) => $self.$uint($args[0].immediate(), $args[1].immediate()),
+            other => panic!("Unimplemented intrinsic type: {:#?}", other),
+        }
+    }};
+}
 
 pub struct Builder<'a, 'spv, 'tcx> {
     cx: &'a CodegenCx<'spv, 'tcx>,
@@ -262,7 +284,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         let sig = self
             .tcx
             .normalize_erasing_late_bound_regions(ParamEnv::reveal_all(), &sig);
-        // let arg_tys = sig.inputs();
+        let arg_tys = sig.inputs();
         let ret_ty = sig.output();
         let name = self.tcx.item_name(def_id);
         // let name_str = &*name.as_str();
@@ -317,6 +339,25 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                     self.icmp(IntPredicate::IntNE, a, b)
                 }
             }
+
+            sym::assume => {
+                // Drop @llvm.assume(i1 %cond). TODO: Is there a spir-v equivalent?
+                return;
+            }
+
+            sym::wrapping_add => math_intrinsic! {self, arg_tys, args, add, add, fadd},
+            sym::wrapping_sub => math_intrinsic! {self, arg_tys, args, sub, sub, fsub},
+            sym::wrapping_mul => math_intrinsic! {self, arg_tys, args, mul, mul, fmul},
+            sym::saturating_add => math_intrinsic! {self, arg_tys, args, add, add, fadd},
+            sym::saturating_sub => math_intrinsic! {self, arg_tys, args, sub, sub, fsub},
+            sym::unchecked_add => math_intrinsic! {self, arg_tys, args, add, add, fadd},
+            sym::unchecked_sub => math_intrinsic! {self, arg_tys, args, sub, sub, fsub},
+            sym::unchecked_mul => math_intrinsic! {self, arg_tys, args, mul, mul, fmul},
+            sym::unchecked_div => math_intrinsic! {self, arg_tys, args, sdiv, udiv, fdiv},
+            sym::unchecked_rem => math_intrinsic! {self, arg_tys, args, srem, urem, frem},
+            sym::unchecked_shl => math_intrinsic_int! {self, arg_tys, args, shl, shl},
+            sym::unchecked_shr => math_intrinsic_int! {self, arg_tys, args, ashr, lshr},
+            sym::exact_div => math_intrinsic! {self, arg_tys, args, sdiv, udiv, fdiv},
 
             _ => panic!("TODO: Unknown intrinsic '{}'", name),
         };

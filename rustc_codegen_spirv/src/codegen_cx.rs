@@ -445,7 +445,7 @@ impl<'spv, 'tcx> MiscMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 
     fn check_overflow(&self) -> bool {
-        todo!()
+        self.tcx.sess.overflow_checks()
     }
 
     fn get_fn(&self, instance: Instance<'tcx>) -> Self::Function {
