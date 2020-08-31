@@ -65,7 +65,7 @@ fn memset_dynamic_scalar<'a, 'spv, 'tcx>(
 ) -> Word {
     let composite_type = SpirvType::Vector {
         element: SpirvType::Integer(8, false).def(builder),
-        count: builder.constant_u32(byte_width as u32),
+        count: builder.constant_u32(byte_width as u32).def,
     }
     .def(builder);
     let composite = builder
@@ -296,7 +296,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
             } => {
                 let fields = field_types
                     .iter()
-                    .map(|&f| self.cx.lookup_type(f).debug(self.cx))
+                    .map(|&f| self.cx.debug_type(f))
                     .collect::<Vec<_>>();
                 f.debug_struct("Adt")
                     .field("field_types", &fields)
@@ -305,7 +305,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
             }
             SpirvType::Vector { element, count } => f
                 .debug_struct("Vector")
-                .field("element", &self.cx.lookup_type(element).debug(self.cx))
+                .field("element", &self.cx.debug_type(element))
                 .field(
                     "count",
                     &self
@@ -317,7 +317,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                 .finish(),
             SpirvType::Array { element, count } => f
                 .debug_struct("Array")
-                .field("element", &self.cx.lookup_type(element).debug(self.cx))
+                .field("element", &self.cx.debug_type(element))
                 .field(
                     "count",
                     &self
@@ -333,7 +333,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
             } => f
                 .debug_struct("Pointer")
                 .field("storage_class", &storage_class)
-                .field("pointee", &self.cx.lookup_type(pointee).debug(self.cx))
+                .field("pointee", &self.cx.debug_type(pointee))
                 .finish(),
             SpirvType::Function {
                 return_type,
@@ -341,12 +341,76 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
             } => {
                 let args = arguments
                     .iter()
-                    .map(|&a| self.cx.lookup_type(a).debug(self.cx))
+                    .map(|&a| self.cx.debug_type(a))
                     .collect::<Vec<_>>();
                 f.debug_struct("Function")
                     .field("return_type", &self.cx.lookup_type(return_type))
                     .field("arguments", &args)
                     .finish()
+            }
+        }
+    }
+}
+
+impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.ty {
+            SpirvType::Void => f.write_str("void"),
+            SpirvType::Bool => f.write_str("bool"),
+            SpirvType::Integer(width, signedness) => {
+                let prefix = if signedness { "i" } else { "u" };
+                write!(f, "{}{}", prefix, width)
+            }
+            SpirvType::Float(width) => write!(f, "f{}", width),
+            SpirvType::Adt {
+                ref field_types,
+                field_offsets: _,
+            } => {
+                f.write_str("struct { ")?;
+                for (index, &field) in field_types.iter().enumerate() {
+                    let suffix = if index + 1 == field_types.len() {
+                        ""
+                    } else {
+                        ", "
+                    };
+                    write!(f, "{}{}", self.cx.debug_type(field), suffix)?;
+                }
+                f.write_str(" }")
+            }
+            SpirvType::Vector { element, count } => {
+                let elem = self.cx.debug_type(element);
+                let len = self.cx.builder.lookup_const_u64(count);
+                let len = len.expect("Vector type has invalid count value");
+                write!(f, "vec<{}, {}>", elem, len)
+            }
+            SpirvType::Array { element, count } => {
+                let elem = self.cx.debug_type(element);
+                let len = self.cx.builder.lookup_const_u64(count);
+                let len = len.expect("Array type has invalid count value");
+                write!(f, "[{}; {}]", elem, len)
+            }
+            SpirvType::Pointer {
+                storage_class,
+                pointee,
+            } => {
+                let pointee = self.cx.debug_type(pointee);
+                write!(f, "*{{{:?}}} {}", storage_class, pointee)
+            }
+            SpirvType::Function {
+                return_type,
+                ref arguments,
+            } => {
+                f.write_str("fn(")?;
+                for (index, &arg) in arguments.iter().enumerate() {
+                    let suffix = if index + 1 == arguments.len() {
+                        ""
+                    } else {
+                        ", "
+                    };
+                    write!(f, "{}{}", self.cx.debug_type(arg), suffix)?;
+                }
+                let ret_type = self.cx.debug_type(return_type);
+                write!(f, ") -> {}", ret_type)
             }
         }
     }
@@ -545,7 +609,7 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
         FieldsShape::Union(_field_count) => {
             assert_ne!(ty.size.bytes(), 0);
             let byte = SpirvType::Integer(8, false).def(cx);
-            let count = cx.constant_u32(ty.size.bytes() as u32);
+            let count = cx.constant_u32(ty.size.bytes() as u32).def;
             SpirvType::Array {
                 element: byte,
                 count,
@@ -558,7 +622,7 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
             let nonzero_count = if count == 0 { 1 } else { count };
             // TODO: Assert stride is same as spirv's stride?
             let element_type = trans_type(cx, ty.field(cx, 0));
-            let count_const = cx.constant_u32(nonzero_count as u32);
+            let count_const = cx.constant_u32(nonzero_count as u32).def;
             SpirvType::Array {
                 element: element_type,
                 count: count_const,

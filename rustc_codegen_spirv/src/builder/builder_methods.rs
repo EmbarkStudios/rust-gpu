@@ -22,7 +22,7 @@ macro_rules! assert_ty_eq {
         assert_eq!(
             $left,
             $right,
-            "Expected types to be equal:\n{:#?}\n==\n{:#?}",
+            "Expected types to be equal:\n{}\n==\n{}",
             $codegen_cx.debug_type($left),
             $codegen_cx.debug_type($right)
         )
@@ -332,6 +332,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             } => pointee,
             ty => panic!("store called on variable that wasn't a pointer: {:?}", ty),
         };
+        println!("ptr={} val={}", ptr.def, val.def);
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
         self.emit().store(ptr.def, val.def, None, empty()).unwrap();
         val
@@ -384,8 +385,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             pointee: result_pointee_type,
         }
         .def(self);
-        let u64 = SpirvType::Integer(64, false).def(self);
-        let index_const = self.builder.constant_u64(u64, idx);
+        let index_const = self.constant_u64(idx).def;
         self.emit()
             .access_chain(result_type, None, ptr.def, [index_const].iter().cloned())
             .unwrap()
@@ -622,7 +622,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         let elem_ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee, .. } => pointee,
             _ => panic!(
-                "memset called on non-pointer type: {:?}",
+                "memset called on non-pointer type: {}",
                 self.debug_type(ptr.ty)
             ),
         };
@@ -648,9 +648,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                     self.store(pat, ptr, Align::from_bytes(0).unwrap());
                 } else {
                     for index in 0..size {
-                        let u32 = SpirvType::Integer(32, false).def(self);
-                        let const_index =
-                            self.builder.constant_u32(u32, index as u32).with_type(u32);
+                        let const_index = self.constant_u32(index as u32);
                         let gep_ptr = self.gep(ptr, &[const_index]);
                         self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
                     }
@@ -672,9 +670,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                     self.store(pat, ptr, Align::from_bytes(0).unwrap());
                 } else {
                     for index in 0..size {
-                        let u32 = SpirvType::Integer(32, false).def(self);
-                        let const_index =
-                            self.builder.constant_u32(u32, index as u32).with_type(u32);
+                        let const_index = self.constant_u32(index as u32);
                         let gep_ptr = self.gep(ptr, &[const_index]);
                         self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
                     }
@@ -723,8 +719,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn vector_splat(&mut self, num_elts: usize, elt: Self::Value) -> Self::Value {
-        let u32 = SpirvType::Integer(32, false).def(self);
-        let count = self.builder.constant_u32(u32, num_elts as u32);
+        let count = self.constant_u32(num_elts as u32).def;
         let result_type = SpirvType::Vector {
             element: elt.ty,
             count,

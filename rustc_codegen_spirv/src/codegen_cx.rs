@@ -35,7 +35,7 @@ macro_rules! assert_ty_eq {
         assert_eq!(
             $left,
             $right,
-            "Expected types to be equal:\n{:#?}\n==\n{:#?}",
+            "Expected types to be equal:\n{}\n==\n{}",
             $codegen_cx.debug_type($left),
             $codegen_cx.debug_type($right)
         )
@@ -123,7 +123,6 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
     }
 
     // Useful for printing out types when debugging
-    #[allow(dead_code)]
     pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
         self.lookup_type(ty).debug(self)
     }
@@ -139,38 +138,37 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
 
     // Presumably these methods will get used eventually, so allow(dead_code) to not have to rewrite when needed.
     #[allow(dead_code)]
-    pub fn constant_u8(&self, val: u32) -> Word {
+    pub fn constant_u8(&self, val: u32) -> SpirvValue {
         let ty = SpirvType::Integer(8, false).def(self);
-        self.builder.constant_u32(ty, val)
+        self.builder.constant_u32(ty, val).with_type(ty)
     }
 
     #[allow(dead_code)]
-    pub fn constant_u16(&self, val: u32) -> Word {
+    pub fn constant_u16(&self, val: u32) -> SpirvValue {
         let ty = SpirvType::Integer(16, false).def(self);
-        self.builder.constant_u32(ty, val)
+        self.builder.constant_u32(ty, val).with_type(ty)
     }
 
-    pub fn constant_u32(&self, val: u32) -> Word {
+    pub fn constant_u32(&self, val: u32) -> SpirvValue {
         let ty = SpirvType::Integer(32, false).def(self);
-        self.builder.constant_u32(ty, val)
+        self.builder.constant_u32(ty, val).with_type(ty)
     }
 
-    #[allow(dead_code)]
-    pub fn constant_u64(&self, val: u64) -> Word {
+    pub fn constant_u64(&self, val: u64) -> SpirvValue {
         let ty = SpirvType::Integer(64, false).def(self);
-        self.builder.constant_u64(ty, val)
+        self.builder.constant_u64(ty, val).with_type(ty)
     }
 
     #[allow(dead_code)]
-    pub fn constant_f32(&self, val: f32) -> Word {
+    pub fn constant_f32(&self, val: f32) -> SpirvValue {
         let ty = SpirvType::Float(32).def(self);
-        self.builder.constant_f32(ty, val)
+        self.builder.constant_f32(ty, val).with_type(ty)
     }
 
     #[allow(dead_code)]
-    pub fn constant_f64(&self, val: f64) -> Word {
+    pub fn constant_f64(&self, val: f64) -> SpirvValue {
         let ty = SpirvType::Float(64).def(self);
-        self.builder.constant_f64(ty, val)
+        self.builder.constant_f64(ty, val).with_type(ty)
     }
 }
 
@@ -651,7 +649,17 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         if u > u64::MAX as u128 {
             panic!("u128 literals not supported yet: {}", u);
         }
-        self.builder.constant_u64(t, u as u64).with_type(t)
+        match self.lookup_type(t) {
+            SpirvType::Integer(width, _) => {
+                if width > 32 {
+                    self.builder.constant_u64(t, u as u64).with_type(t)
+                } else {
+                    assert!(u <= u32::MAX as u128);
+                    self.builder.constant_u32(t, u as u32).with_type(t)
+                }
+            }
+            other => panic!("const_uint_big invalid on type {}", other.debug(self)),
+        }
     }
     fn const_bool(&self, val: bool) -> Self::Value {
         let bool = SpirvType::Bool.def(self);

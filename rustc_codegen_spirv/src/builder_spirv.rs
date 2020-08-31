@@ -72,7 +72,6 @@ impl BuilderSpirv {
     }
 
     /// Helper function useful to place right before a crash, to debug the module state.
-    #[allow(dead_code)]
     pub fn dump_module(&self, path: impl AsRef<Path>) {
         let mut module = self.builder.borrow().module_ref().clone();
         let mut header = rspirv::dr::ModuleHeader::new(0);

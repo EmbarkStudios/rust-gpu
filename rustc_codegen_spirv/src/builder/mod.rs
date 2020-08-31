@@ -61,7 +61,7 @@ impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
             result_pointee_type = match self.lookup_type(result_pointee_type) {
                 SpirvType::Array { element, count: _ } => element,
                 _ => panic!(
-                    "GEP not implemented for type {:?}",
+                    "GEP not implemented for type {}",
                     self.debug_type(result_pointee_type)
                 ),
             };

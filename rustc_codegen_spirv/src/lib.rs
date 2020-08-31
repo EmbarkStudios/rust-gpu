@@ -339,8 +339,8 @@ impl ExtraBackendMethods for SsaBackend {
                 // attributes::sanitize(&cx, SanitizerSet::empty(), entry);
             }
         };
-        if option_env!("DUMP_MODULE_ON_PANIC").is_some() {
-            let module_dumper = DumpModuleOnPanic { cx: &cx };
+        if let Some(path) = option_env!("DUMP_MODULE_ON_PANIC") {
+            let module_dumper = DumpModuleOnPanic { cx: &cx, path };
             do_codegen();
             drop(module_dumper)
         } else {
@@ -371,15 +371,20 @@ impl ExtraBackendMethods for SsaBackend {
     }
 }
 
-struct DumpModuleOnPanic<'cx, 'spv, 'tcx> {
+struct DumpModuleOnPanic<'a, 'cx, 'spv, 'tcx> {
     cx: &'cx CodegenCx<'spv, 'tcx>,
+    path: &'a str,
 }
 
-impl<'cx, 'spv, 'tcx> Drop for DumpModuleOnPanic<'cx, 'spv, 'tcx> {
+impl Drop for DumpModuleOnPanic<'_, '_, '_, '_> {
     fn drop(&mut self) {
         if std::thread::panicking() {
-            // can also use dump_module with a path here to write it to disk
-            println!("{}", self.cx.builder.dump_module_str());
+            let path: &std::path::Path = self.path.as_ref();
+            if path.has_root() {
+                self.cx.builder.dump_module(path);
+            } else {
+                println!("{}", self.cx.builder.dump_module_str());
+            }
         }
     }
 }
