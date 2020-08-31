@@ -507,6 +507,18 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                 .bitcast(dest_ty, None, val.def)
                 .unwrap()
                 .with_type(dest_ty),
+            // width change, and optional sign change
+            (SpirvType::Integer(_, _), SpirvType::Integer(_, dest_signedness)) => {
+                // spir-v spec doesn't seem to say that signedness needs to match the operands, only that the signedness
+                // of the destination type must match the instruction's signedness.
+                if dest_signedness {
+                    self.emit().s_convert(dest_ty, None, val.def)
+                } else {
+                    self.emit().u_convert(dest_ty, None, val.def)
+                }
+                .unwrap()
+                .with_type(dest_ty)
+            }
             (val_ty, dest_ty_spv) => panic!(
                 "TODO: intcast not implemented yet: val={:?} val.ty={:?} dest_ty={:?} is_signed={}",
                 val, val_ty, dest_ty_spv, is_signed
