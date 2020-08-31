@@ -381,8 +381,8 @@ impl<'a, 'spv, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 }
 impl<'a, 'spv, 'tcx> StaticBuilderMethods for Builder<'a, 'spv, 'tcx> {
-    fn get_static(&mut self, _def_id: DefId) -> Self::Value {
-        todo!()
+    fn get_static(&mut self, def_id: DefId) -> Self::Value {
+        self.cx.get_static(def_id)
     }
 }
 

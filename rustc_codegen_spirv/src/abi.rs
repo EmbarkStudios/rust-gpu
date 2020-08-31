@@ -65,10 +65,7 @@ fn memset_dynamic_scalar<'a, 'spv, 'tcx>(
 ) -> Word {
     let composite_type = SpirvType::Vector {
         element: SpirvType::Integer(8, false).def(builder),
-        count: builder.builder.constant_u32(
-            SpirvType::Integer(32, false).def(builder),
-            byte_width as u32,
-        ),
+        count: builder.constant_u32(byte_width as u32),
     }
     .def(builder);
     let composite = builder
@@ -548,8 +545,7 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
         FieldsShape::Union(_field_count) => {
             assert_ne!(ty.size.bytes(), 0);
             let byte = SpirvType::Integer(8, false).def(cx);
-            let int = SpirvType::Integer(32, false).def(cx);
-            let count = cx.builder.constant_u32(int, ty.size.bytes() as u32);
+            let count = cx.constant_u32(ty.size.bytes() as u32);
             SpirvType::Array {
                 element: byte,
                 count,
@@ -562,8 +558,7 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
             let nonzero_count = if count == 0 { 1 } else { count };
             // TODO: Assert stride is same as spirv's stride?
             let element_type = trans_type(cx, ty.field(cx, 0));
-            let int = SpirvType::Integer(32, false).def(cx);
-            let count_const = cx.builder.constant_u32(int, nonzero_count as u32);
+            let count_const = cx.constant_u32(nonzero_count as u32);
             SpirvType::Array {
                 element: element_type,
                 count: count_const,

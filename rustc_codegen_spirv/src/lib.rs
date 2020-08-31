@@ -60,6 +60,15 @@ fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
     println!("{}", s);
 }
 
+fn is_blocklisted_fn(symbol_name: &str) -> bool {
+    let prefixes = [
+        "_ZN4core3fmt3num12GenericRadix7fmt_int17h",
+        "_ZN4core3fmt3num14DEC_DIGITS_LUT17hb50fbd1cd113e773E",
+        "_ZN4core3fmt9Arguments6new_v117hde2a099eb54409bdE",
+    ];
+    prefixes.iter().any(|s| symbol_name.starts_with(s))
+}
+
 struct NoLlvmMetadataLoader;
 
 impl MetadataLoader for NoLlvmMetadataLoader {
@@ -279,18 +288,24 @@ impl ExtraBackendMethods for SsaBackend {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
             for (index, &(mono_item, (linkage, visibility))) in mono_items.iter().enumerate() {
+                let name = mono_item.symbol_name(cx.tcx).name;
                 let percent = (index as f64 / mono_items.len() as f64 * 100.0) as usize;
                 // Print some progress bars so we know how far we are through fully implementing a crate.
                 println!(
-                    "predefining {} out of {} - {}%",
+                    "predefining {} out of {} - {}%: {}",
                     index,
                     mono_items.len(),
-                    percent
+                    percent,
+                    name
                 );
                 if option_env!("DUMP_MIR").is_some() {
                     if let MonoItem::Fn(instance) = mono_item {
                         dump_mir(tcx, instance);
                     }
+                }
+                if is_blocklisted_fn(name) {
+                    println!("Item is blocklisted");
+                    continue;
                 }
                 mono_item.predefine::<Builder<'_, '_, '_>>(&cx, linkage, visibility);
             }
@@ -299,17 +314,23 @@ impl ExtraBackendMethods for SsaBackend {
 
             // ... and now that we have everything pre-defined, fill out those definitions.
             for (index, &(mono_item, _)) in mono_items.iter().enumerate() {
+                let name = mono_item.symbol_name(cx.tcx).name;
                 let percent = (index as f64 / mono_items.len() as f64 * 100.0) as usize;
                 println!(
-                    "defining {} out of {} - {}%",
+                    "defining {} out of {} - {}%: {}",
                     index,
                     mono_items.len(),
-                    percent
+                    percent,
+                    name
                 );
                 if option_env!("DUMP_MIR").is_some() {
                     if let MonoItem::Fn(instance) = mono_item {
                         dump_mir(tcx, instance);
                     }
+                }
+                if is_blocklisted_fn(name) {
+                    println!("Item is blocklisted");
+                    continue;
                 }
                 mono_item.define::<Builder<'_, '_, '_>>(&cx);
             }

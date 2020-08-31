@@ -10,7 +10,7 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir::GlobalAsm;
-use rustc_middle::mir::interpret::Allocation;
+use rustc_middle::mir::interpret::{Allocation, GlobalAlloc};
 use rustc_middle::mir::mono::{CodegenUnit, Linkage, Visibility};
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{FnAbiExt, HasParamEnv, HasTyCtxt, LayoutError, TyAndLayout};
@@ -28,6 +28,19 @@ use rustc_target::abi::{
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::RefCell;
 use std::collections::HashMap;
+
+// TODO: How do you merge this macro with the one in builder::builder_methods::assert_ty_eq? idk how macros work.
+macro_rules! assert_ty_eq {
+    ($codegen_cx:expr, $left:expr, $right:expr) => {
+        assert_eq!(
+            $left,
+            $right,
+            "Expected types to be equal:\n{:#?}\n==\n{:#?}",
+            $codegen_cx.debug_type($left),
+            $codegen_cx.debug_type($right)
+        )
+    };
+}
 
 pub struct CodegenCx<'spv, 'tcx> {
     pub tcx: TyCtxt<'tcx>,
@@ -105,6 +118,10 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             .clone()
     }
 
+    pub fn get_static(&self, _def_id: DefId) -> SpirvValue {
+        todo!()
+    }
+
     // Useful for printing out types when debugging
     #[allow(dead_code)]
     pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
@@ -118,6 +135,42 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             panic!("finalize_module was called twice");
         }
         *output = Some(result);
+    }
+
+    // Presumably these methods will get used eventually, so allow(dead_code) to not have to rewrite when needed.
+    #[allow(dead_code)]
+    pub fn constant_u8(&self, val: u32) -> Word {
+        let ty = SpirvType::Integer(8, false).def(self);
+        self.builder.constant_u32(ty, val)
+    }
+
+    #[allow(dead_code)]
+    pub fn constant_u16(&self, val: u32) -> Word {
+        let ty = SpirvType::Integer(16, false).def(self);
+        self.builder.constant_u32(ty, val)
+    }
+
+    pub fn constant_u32(&self, val: u32) -> Word {
+        let ty = SpirvType::Integer(32, false).def(self);
+        self.builder.constant_u32(ty, val)
+    }
+
+    #[allow(dead_code)]
+    pub fn constant_u64(&self, val: u64) -> Word {
+        let ty = SpirvType::Integer(64, false).def(self);
+        self.builder.constant_u64(ty, val)
+    }
+
+    #[allow(dead_code)]
+    pub fn constant_f32(&self, val: f32) -> Word {
+        let ty = SpirvType::Float(32).def(self);
+        self.builder.constant_f32(ty, val)
+    }
+
+    #[allow(dead_code)]
+    pub fn constant_f64(&self, val: f64) -> Word {
+        let ty = SpirvType::Float(64).def(self);
+        self.builder.constant_f64(ty, val)
     }
 }
 
@@ -480,6 +533,7 @@ impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
             .collect::<Vec<_>>();
         emit.end_function().unwrap();
+        emit.name(fn_id, name);
 
         self.function_parameter_values
             .borrow_mut()
@@ -676,7 +730,6 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         layout: &abi::Scalar,
         ty: Self::Type,
     ) -> Self::Value {
-        // TODO: Is it better to go through trans_type here?
         match scalar {
             Scalar::Raw { data, size } => match layout.value {
                 Primitive::Int(_size, _signedness) => match size {
@@ -701,10 +754,39 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                     panic!("TODO: scalar_to_backend Primitive::Ptr not implemented yet")
                 }
             },
-            Scalar::Ptr(ptr) => panic!(
-                "TODO: scalar_to_backend Scalar::Ptr not implemented yet: {:?}",
-                ptr
-            ),
+            Scalar::Ptr(ptr) => {
+                let (base_addr, _base_addr_space) = match self.tcx.global_alloc(ptr.alloc_id) {
+                    GlobalAlloc::Memory(_alloc) => {
+                        panic!("TODO: scalar_to_backend GlobalAlloc::Memory not supported yet")
+                        // let init = const_alloc_to_llvm(self, alloc);
+                        // let value = self.static_addr_of(init, alloc.align, None);
+                        // (value, AddressSpace::DATA)
+                    }
+                    GlobalAlloc::Function(fn_instance) => (
+                        self.get_fn_addr(fn_instance.polymorphize(self.tcx)),
+                        self.data_layout().instruction_address_space,
+                    ),
+                    GlobalAlloc::Static(def_id) => {
+                        assert!(self.tcx.is_static(def_id));
+                        assert!(!self.tcx.is_thread_local_static(def_id));
+                        (self.get_static(def_id), AddressSpace::DATA)
+                    }
+                };
+                let value = if ptr.offset.bytes() == 0 {
+                    base_addr
+                } else {
+                    panic!("Non-constant scalar_to_backend ptr.offset not supported")
+                    // let offset = self.constant_u64(ptr.offset.bytes());
+                    // self.gep(base_addr, once(offset))
+                };
+                if layout.value != Primitive::Pointer {
+                    panic!("Non-pointer-typed scalar_to_backend Scalar::Ptr not supported");
+                // unsafe { llvm::LLVMConstPtrToInt(llval, llty) }
+                } else {
+                    assert_ty_eq!(self, value.ty, ty);
+                    value
+                }
+            }
         }
     }
     fn from_const_alloc(
