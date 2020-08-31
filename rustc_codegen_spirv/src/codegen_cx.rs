@@ -845,11 +845,15 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
     fn from_const_alloc(
         &self,
-        _layout: TyAndLayout<'tcx>,
-        _alloc: &Allocation,
-        _offset: Size,
+        layout: TyAndLayout<'tcx>,
+        alloc: &Allocation,
+        offset: Size,
     ) -> PlaceRef<'tcx, Self::Value> {
-        todo!()
+        assert_eq!(offset, Size::ZERO);
+        let ty = self.trans_type(layout);
+        let init = create_const_alloc(self, alloc, ty);
+        let result = self.static_addr_of(init, alloc.align, None);
+        PlaceRef::new_sized(result, layout)
     }
 
     fn const_ptrcast(&self, _val: Self::Value, _ty: Self::Type) -> Self::Value {

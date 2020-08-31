@@ -476,10 +476,7 @@ pub fn trans_fnabi<'spv, 'tcx>(
 
     for arg in &fn_abi.args {
         let arg_type = match arg.mode {
-            PassMode::Ignore => panic!(
-                "TODO: Argument PassMode::Ignore not supported yet: {:?}",
-                arg
-            ),
+            PassMode::Ignore => continue,
             PassMode::Direct(_arg_attributes) => trans_type_immediate(cx, arg.layout),
             PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
                 // TODO: Make this more efficient, don't generate struct
@@ -633,6 +630,9 @@ fn trans_scalar_pair<'spv, 'tcx>(
         TyKind::Adt(def, _) if def.is_box() => {
             let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
             return trans_scalar_pair(cx, ptr_ty, scalar, index, is_immediate);
+        }
+        TyKind::Tuple(elements) if elements.len() == 2 => {
+            return trans_type(cx, cx.layout_of(ty.ty.tuple_fields().nth(index).unwrap()));
         }
         TyKind::Adt(_adt, _substs) => {}
         // TODO: Do we fall back on trans_scalar on every weird TyKind?

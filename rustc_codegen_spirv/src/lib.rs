@@ -65,7 +65,9 @@ fn is_blocklisted_fn(symbol_name: &str) -> bool {
         "_ZN4core3fmt3num",
         "_ZN4core3fmt9Arguments6new_v117hde2a099eb54409bdE",
     ];
+    let contains = ["core..fmt..num", "core..fmt..Display", "from_str_radix"];
     prefixes.iter().any(|s| symbol_name.starts_with(s))
+        || contains.iter().any(|s| symbol_name.contains(s))
 }
 
 struct NoLlvmMetadataLoader;
@@ -184,7 +186,7 @@ impl WriteBackendMethods for SsaBackend {
     }
 
     fn print_pass_timings(&self) {
-        todo!()
+        println!("TODO: Implement print_pass_timings");
     }
 
     unsafe fn optimize(
@@ -236,12 +238,12 @@ impl WriteBackendMethods for SsaBackend {
         })
     }
 
-    fn prepare_thin(_: ModuleCodegen<Self::Module>) -> (String, Self::ThinBuffer) {
-        todo!()
+    fn prepare_thin(module: ModuleCodegen<Self::Module>) -> (String, Self::ThinBuffer) {
+        (module.name, SprivThinBuffer)
     }
 
-    fn serialize_module(_: ModuleCodegen<Self::Module>) -> (String, Self::ModuleBuffer) {
-        todo!()
+    fn serialize_module(module: ModuleCodegen<Self::Module>) -> (String, Self::ModuleBuffer) {
+        (module.name, SpirvModuleBuffer)
     }
 
     fn run_lto_pass_manager(
@@ -290,12 +292,18 @@ impl ExtraBackendMethods for SsaBackend {
                 let name = mono_item.symbol_name(cx.tcx).name;
                 let percent = (index as f64 / mono_items.len() as f64 * 100.0) as usize;
                 // Print some progress bars so we know how far we are through fully implementing a crate.
+                let instance = if let MonoItem::Fn(instance) = mono_item {
+                    format!(" -> {}", instance)
+                } else {
+                    "".to_string()
+                };
                 println!(
-                    "predefining {} out of {} - {}%: {}",
+                    "predefining {} out of {} - {}%: {}{}",
                     index,
                     mono_items.len(),
                     percent,
-                    name
+                    name,
+                    instance,
                 );
                 if option_env!("DUMP_MIR").is_some() {
                     if let MonoItem::Fn(instance) = mono_item {
@@ -315,12 +323,18 @@ impl ExtraBackendMethods for SsaBackend {
             for (index, &(mono_item, _)) in mono_items.iter().enumerate() {
                 let name = mono_item.symbol_name(cx.tcx).name;
                 let percent = (index as f64 / mono_items.len() as f64 * 100.0) as usize;
+                let instance = if let MonoItem::Fn(instance) = mono_item {
+                    format!(" -> {}", instance)
+                } else {
+                    "".to_string()
+                };
                 println!(
-                    "defining {} out of {} - {}%: {}",
+                    "defining {} out of {} - {}%: {}{}",
                     index,
                     mono_items.len(),
                     percent,
-                    name
+                    name,
+                    instance,
                 );
                 if option_env!("DUMP_MIR").is_some() {
                     if let MonoItem::Fn(instance) = mono_item {
