@@ -62,8 +62,7 @@ fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
 
 fn is_blocklisted_fn(symbol_name: &str) -> bool {
     let prefixes = [
-        "_ZN4core3fmt3num12GenericRadix7fmt_int17h",
-        "_ZN4core3fmt3num14DEC_DIGITS_LUT17hb50fbd1cd113e773E",
+        "_ZN4core3fmt3num",
         "_ZN4core3fmt9Arguments6new_v117hde2a099eb54409bdE",
     ];
     prefixes.iter().any(|s| symbol_name.starts_with(s))

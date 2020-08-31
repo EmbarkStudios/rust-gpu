@@ -4,7 +4,7 @@ use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
 use rustc_middle::ty::{layout::TyAndLayout, Ty, TyKind};
 use rustc_target::abi::call::{FnAbi, PassMode};
-use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar};
+use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Variants};
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
@@ -15,10 +15,12 @@ pub enum SpirvType {
     Float(u32),
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
+        name: Option<String>,
         // TODO: enums/unions
         field_types: Vec<Word>,
         /// *byte* offsets
         field_offsets: Option<Vec<u32>>,
+        field_names: Option<Vec<String>>,
     },
     Vector {
         element: Word,
@@ -101,13 +103,18 @@ impl SpirvType {
                 .type_int(width, if signedness { 1 } else { 0 }),
             SpirvType::Float(width) => cx.emit_global().type_float(width),
             SpirvType::Adt {
+                ref name,
                 ref field_types,
                 ref field_offsets,
+                ref field_names,
             } => {
                 let mut emit = cx.emit_global();
                 // Ensure a unique struct is emitted each time, due to possibly having different OpMemberDecorates
                 let id = emit.id();
                 let result = emit.type_struct_id(Some(id), field_types.iter().cloned());
+                if let Some(name) = name {
+                    emit.name(result, name);
+                }
                 if let Some(field_offsets) = field_offsets {
                     for (index, offset) in field_offsets.iter().copied().enumerate() {
                         emit.member_decorate(
@@ -116,6 +123,11 @@ impl SpirvType {
                             Decoration::Offset,
                             [Operand::LiteralInt32(offset)].iter().cloned(),
                         );
+                    }
+                }
+                if let Some(field_names) = field_names {
+                    for (index, field_name) in field_names.iter().enumerate() {
+                        emit.member_name(result, index as u32, field_name);
                     }
                 }
                 result
@@ -291,16 +303,20 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                 .finish(),
             SpirvType::Float(width) => f.debug_struct("Float").field("width", &width).finish(),
             SpirvType::Adt {
+                ref name,
                 ref field_types,
                 ref field_offsets,
+                ref field_names,
             } => {
                 let fields = field_types
                     .iter()
                     .map(|&f| self.cx.debug_type(f))
                     .collect::<Vec<_>>();
                 f.debug_struct("Adt")
+                    .field("name", &name)
                     .field("field_types", &fields)
                     .field("field_offsets", field_offsets)
+                    .field("field_names", field_names)
                     .finish()
             }
             SpirvType::Vector { element, count } => f
@@ -363,16 +379,25 @@ impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
             }
             SpirvType::Float(width) => write!(f, "f{}", width),
             SpirvType::Adt {
+                ref name,
                 ref field_types,
                 field_offsets: _,
+                ref field_names,
             } => {
-                f.write_str("struct { ")?;
+                if let Some(name) = name {
+                    write!(f, "struct {} {{ ", name)?;
+                } else {
+                    f.write_str("struct { ")?;
+                }
                 for (index, &field) in field_types.iter().enumerate() {
                     let suffix = if index + 1 == field_types.len() {
                         ""
                     } else {
                         ", "
                     };
+                    if let Some(field_names) = field_names {
+                        write!(f, "{}: ", field_names[index])?;
+                    }
                     write!(f, "{}{}", self.cx.debug_type(field), suffix)?;
                 }
                 f.write_str(" }")
@@ -434,8 +459,7 @@ pub fn trans_fnabi<'spv, 'tcx>(
                 let tuple = cx.lookup_type(trans_type(cx, arg.layout));
                 let (left, right) = match tuple {
                     SpirvType::Adt {
-                        ref field_types,
-                        field_offsets: _,
+                        ref field_types, ..
                     } => {
                         if let [left, right] = *field_types.as_slice() {
                             (left, right)
@@ -503,8 +527,10 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
     if ty.is_zst() {
         // An empty struct is zero-sized
         return SpirvType::Adt {
+            name: None,
             field_types: Vec::new(),
             field_offsets: None,
+            field_names: None,
         }
         .def(cx);
     }
@@ -521,8 +547,10 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
             let one_spirv = trans_scalar(cx, ty, one, Some(0));
             let two_spirv = trans_scalar(cx, ty, two, Some(1));
             SpirvType::Adt {
+                name: None,
                 field_types: vec![one_spirv, two_spirv],
                 field_offsets: None,
+                field_names: None,
             }
             .def(cx)
         }
@@ -638,17 +666,34 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
 fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
-    let mut field_types: Vec<_> = Vec::new();
-    let mut field_offsets: Vec<_> = Vec::new();
+    // TODO: enums
+    let (adt, substs) = match &ty.ty.kind {
+        TyKind::Adt(adt, substs) => (adt, substs),
+        // "An unsized FFI type that is opaque to Rust"
+        TyKind::Foreign(_def_id) => return SpirvType::Void.def(cx),
+        other => panic!("TODO: Unimplemented TyKind in trans_struct: {:?}", other),
+    };
+    let variant = match ty.variants {
+        Variants::Single { index } => &adt.variants[index],
+        Variants::Multiple { .. } => panic!("Variants::Multiple not supported in trans_struct yet"),
+    };
+    let name = variant.ident.name;
+    let mut field_types = Vec::new();
+    let mut field_offsets = Vec::new();
+    let mut field_names = Vec::new();
     for i in ty.fields.index_by_increasing_offset() {
-        let field = ty.field(cx, i);
-        field_types.push(trans_type(cx, field));
+        let field = &variant.fields[i];
+        let field_ty = cx.layout_of(field.ty(cx.tcx, substs));
+        field_types.push(trans_type(cx, field_ty));
         let offset = ty.fields.offset(i).bytes();
         field_offsets.push(offset as u32);
+        field_names.push(field.ident.name.to_ident_string());
     }
     SpirvType::Adt {
+        name: Some(name.to_ident_string()),
         field_types,
         field_offsets: Some(field_offsets),
+        field_names: None,
     }
     .def(cx)
 }

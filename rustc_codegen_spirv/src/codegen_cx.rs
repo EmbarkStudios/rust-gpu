@@ -329,8 +329,10 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
         SpirvType::Adt {
+            name: None,
             field_types: els.to_vec(),
             field_offsets: None,
+            field_names: None,
         }
         .def(self)
     }

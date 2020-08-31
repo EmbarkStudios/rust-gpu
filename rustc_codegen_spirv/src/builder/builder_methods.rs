@@ -372,10 +372,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                 storage_class,
                 pointee,
             } => match self.lookup_type(pointee) {
-                SpirvType::Adt {
-                    field_types,
-                    field_offsets: _,
-                } => (storage_class, field_types[idx as usize]),
+                SpirvType::Adt { field_types, .. } => (storage_class, field_types[idx as usize]),
                 other => panic!("struct_gep not on struct type: {:?}", other),
             },
             other => panic!("struct_gep not on struct pointer type: {:?}", other),
@@ -739,10 +736,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn extract_value(&mut self, agg_val: Self::Value, idx: u64) -> Self::Value {
         let result_type = match self.lookup_type(agg_val.ty) {
-            SpirvType::Adt {
-                field_types,
-                field_offsets: _,
-            } => field_types[idx as usize],
+            SpirvType::Adt { field_types, .. } => field_types[idx as usize],
             other => panic!("extract_value not implemented on type {:?}", other),
         };
         self.emit()
@@ -753,10 +747,9 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn insert_value(&mut self, agg_val: Self::Value, elt: Self::Value, idx: u64) -> Self::Value {
         match self.lookup_type(agg_val.ty) {
-            SpirvType::Adt {
-                field_types,
-                field_offsets: _,
-            } => assert_ty_eq!(self, field_types[idx as usize], elt.ty),
+            SpirvType::Adt { field_types, .. } => {
+                assert_ty_eq!(self, field_types[idx as usize], elt.ty)
+            }
             other => panic!("insert_value not implemented on type {:?}", other),
         };
         self.emit()
