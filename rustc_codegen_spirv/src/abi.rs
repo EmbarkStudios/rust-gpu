@@ -447,6 +447,27 @@ pub fn trans_fnabi<'spv, 'tcx>(
     fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
 ) -> (Word, Word, Vec<Word>) {
     let mut argument_types = Vec::new();
+
+    let return_type = match fn_abi.ret.mode {
+        PassMode::Ignore => SpirvType::Void.def(cx),
+        PassMode::Direct(_arg_attributes) => trans_type_immediate(cx, fn_abi.ret.layout),
+        PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => trans_type(cx, fn_abi.ret.layout),
+        // TODO: Is this right?
+        PassMode::Cast(_cast_target) => trans_type(cx, fn_abi.ret.layout),
+        // TODO: Deal with wide ptr?
+        PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
+            let pointee = trans_type(cx, fn_abi.ret.layout);
+            let pointer = SpirvType::Pointer {
+                storage_class: StorageClass::Generic,
+                pointee,
+            }
+            .def(cx);
+            // Important: the return pointer comes *first*, not last.
+            argument_types.push(pointer);
+            SpirvType::Void.def(cx)
+        }
+    };
+
     for arg in &fn_abi.args {
         let arg_type = match arg.mode {
             PassMode::Ignore => panic!(
@@ -486,25 +507,6 @@ pub fn trans_fnabi<'spv, 'tcx>(
         };
         argument_types.push(arg_type);
     }
-    // TODO: Other modes
-    let return_type = match fn_abi.ret.mode {
-        PassMode::Ignore => SpirvType::Void.def(cx),
-        PassMode::Direct(_arg_attributes) => trans_type_immediate(cx, fn_abi.ret.layout),
-        PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => trans_type(cx, fn_abi.ret.layout),
-        // TODO: Is this right?
-        PassMode::Cast(_cast_target) => trans_type(cx, fn_abi.ret.layout),
-        // TODO: Deal with wide ptr?
-        PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
-            let pointee = trans_type(cx, fn_abi.ret.layout);
-            let pointer = SpirvType::Pointer {
-                storage_class: StorageClass::Generic,
-                pointee,
-            }
-            .def(cx);
-            argument_types.push(pointer);
-            SpirvType::Void.def(cx)
-        }
-    };
 
     let function_type = SpirvType::Function {
         return_type,

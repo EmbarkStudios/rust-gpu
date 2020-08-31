@@ -332,7 +332,6 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             } => pointee,
             ty => panic!("store called on variable that wasn't a pointer: {:?}", ty),
         };
-        println!("ptr={} val={}", ptr.def, val.def);
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
         self.emit().store(ptr.def, val.def, None, empty()).unwrap();
         val
