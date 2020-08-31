@@ -515,15 +515,18 @@ pub fn trans_fnabi<'spv, 'tcx>(
 }
 
 pub fn trans_type_immediate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
-    if let Abi::Scalar(ref scalar) = ty.abi {
-        if scalar.is_bool() {
-            return SpirvType::Bool.def(cx);
-        }
-    }
-    trans_type(cx, ty)
+    trans_type_impl(cx, ty, true)
 }
 
 pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+    trans_type_impl(cx, ty, false)
+}
+
+fn trans_type_impl<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    ty: TyAndLayout<'tcx>,
+    is_immediate: bool,
+) -> Word {
     if ty.is_zst() {
         // An empty struct is zero-sized
         return SpirvType::Adt {
@@ -542,12 +545,12 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
             "TODO: Abi::Uninhabited not supported yet in trans_type: {:?}",
             ty
         ),
-        Abi::Scalar(ref scalar) => trans_scalar(cx, ty, scalar, None),
+        Abi::Scalar(ref scalar) => trans_scalar_known_ty(cx, ty, scalar, is_immediate),
         Abi::ScalarPair(ref one, ref two) => {
-            let one_spirv = trans_scalar(cx, ty, one, Some(0));
-            let two_spirv = trans_scalar(cx, ty, two, Some(1));
+            let one_spirv = trans_scalar_pair(cx, ty, one, 0, is_immediate);
+            let two_spirv = trans_scalar_pair(cx, ty, two, 1, is_immediate);
             SpirvType::Adt {
-                name: None,
+                name: Some(format!("{}", ty.ty)),
                 field_types: vec![one_spirv, two_spirv],
                 field_offsets: None,
                 field_names: None,
@@ -555,7 +558,7 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
             .def(cx)
         }
         Abi::Vector { ref element, count } => {
-            let elem_spirv = trans_scalar(cx, ty, element, None);
+            let elem_spirv = trans_scalar_known_ty(cx, ty, element, is_immediate);
             SpirvType::Vector {
                 element: elem_spirv,
                 count: count as u32,
@@ -566,12 +569,82 @@ pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>)
     }
 }
 
-fn trans_scalar<'spv, 'tcx>(
+fn trans_scalar_known_ty<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
     ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
-    pair_index: Option<usize>,
+    is_immediate: bool,
 ) -> Word {
+    // When we know the ty, try to fill in the pointer type in case we have it, instead of defaulting to pointer to u8.
+    if scalar.value == Primitive::Pointer {
+        match ty.ty.kind {
+            TyKind::Ref(_region, ty, _mutability) => {
+                let pointee = trans_type(cx, cx.layout_of(ty));
+                return SpirvType::Pointer {
+                    storage_class: StorageClass::Generic,
+                    pointee,
+                }
+                .def(cx);
+            }
+            TyKind::RawPtr(type_and_mut) => {
+                let pointee = trans_type(cx, cx.layout_of(type_and_mut.ty));
+                return SpirvType::Pointer {
+                    storage_class: StorageClass::Generic,
+                    pointee,
+                }
+                .def(cx);
+            }
+            TyKind::Adt(def, _) if def.is_box() => {
+                let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
+                return trans_type(cx, ptr_ty);
+            }
+            TyKind::Adt(_adt, _substs) => {}
+            // TODO: Do we fall back on trans_scalar on every weird TyKind?
+            ref kind => panic!(
+                "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
+                kind, ty
+            ),
+        }
+    }
+
+    // fall back
+    trans_scalar_generic(cx, scalar, is_immediate)
+}
+
+fn trans_scalar_pair<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    ty: TyAndLayout<'tcx>,
+    scalar: &Scalar,
+    index: usize,
+    is_immediate: bool,
+) -> Word {
+    match ty.ty.kind {
+        TyKind::Ref(..) | TyKind::RawPtr(_) => {
+            return trans_type(cx, ty.field(cx, index));
+        }
+        TyKind::Adt(def, _) if def.is_box() => {
+            let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
+            return trans_scalar_pair(cx, ptr_ty, scalar, index, is_immediate);
+        }
+        TyKind::Adt(_adt, _substs) => {}
+        // TODO: Do we fall back on trans_scalar on every weird TyKind?
+        ref kind => panic!(
+            "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
+            kind, ty
+        ),
+    }
+    trans_scalar_generic(cx, scalar, is_immediate)
+}
+
+fn trans_scalar_generic<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    scalar: &Scalar,
+    is_immediate: bool,
+) -> Word {
+    if is_immediate && scalar.is_bool() {
+        return SpirvType::Bool.def(cx);
+    }
+
     match scalar.value {
         // TODO: Do we use scalar.valid_range?
         Primitive::Int(width, signedness) => {
@@ -580,49 +653,15 @@ fn trans_scalar<'spv, 'tcx>(
         Primitive::F32 => SpirvType::Float(32).def(cx),
         Primitive::F64 => SpirvType::Float(64).def(cx),
         Primitive::Pointer => {
-            fn do_normal_ptr<'spv, 'tcx>(
-                cx: &CodegenCx<'spv, 'tcx>,
-                pair_index: Option<usize>,
-                get_pointee_type: impl Fn() -> TyAndLayout<'tcx>,
-            ) -> Word {
-                if pair_index == Some(1) {
-                    let ptr_size = cx.tcx.data_layout.pointer_size.bits() as u32;
-                    SpirvType::Integer(ptr_size, false).def(cx)
-                } else {
-                    let pointee = trans_type(cx, get_pointee_type());
-                    SpirvType::Pointer {
-                        storage_class: StorageClass::Generic,
-                        pointee,
-                    }
-                    .def(cx)
-                }
+            // It is extremely difficult for us to figure out the underlying scalar type here - rustc is not
+            // designed for this. For example, codegen_llvm emits a pointer to i8 here, in the method
+            // scalar_llvm_type_at, called from scalar_pair_element_llvm_type. The pointer is then bitcasted to
+            // the right type at the use site.
+            SpirvType::Pointer {
+                storage_class: StorageClass::Generic,
+                pointee: SpirvType::Integer(8, false).def(cx),
             }
-            if pair_index == Some(1) {
-                let ptr_size = cx.tcx.data_layout.pointer_size.bits() as u32;
-                SpirvType::Integer(ptr_size, false).def(cx)
-            } else {
-                match ty.ty.kind {
-                    TyKind::Ref(_region, ty, _mutability) => {
-                        do_normal_ptr(cx, pair_index, || cx.layout_of(ty))
-                    }
-                    TyKind::RawPtr(type_and_mut) => {
-                        do_normal_ptr(cx, pair_index, || cx.layout_of(type_and_mut.ty))
-                    }
-                    TyKind::Adt(_adt_def, _substs) => {
-                        // if adt_def.is_struct()
-                        //     && adt_def.variants[0u32.into()].fields.len()
-                        //         == if pair_index.is_some() { 2 } else { 1 } =>
-                        // TODO: This is probably wrong
-                        let field_index = pair_index.unwrap_or(0);
-                        // skip through to the field
-                        trans_type(cx, ty.field(cx, field_index))
-                    }
-                    ref kind => panic!(
-                        "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
-                        kind, ty
-                    ),
-                }
-            }
+            .def(cx)
         }
     }
 }
@@ -693,7 +732,7 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -
         name: Some(name.to_ident_string()),
         field_types,
         field_offsets: Some(field_offsets),
-        field_names: None,
+        field_names: Some(field_names),
     }
     .def(cx)
 }
