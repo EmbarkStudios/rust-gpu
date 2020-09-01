@@ -2,7 +2,8 @@ use crate::builder::Builder;
 use crate::codegen_cx::CodegenCx;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
-use rustc_middle::ty::{layout::TyAndLayout, Ty, TyKind};
+use rustc_middle::ty::layout::TyAndLayout;
+use rustc_middle::ty::{Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Variants};
 use std::fmt;
@@ -801,33 +802,43 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx
 // see struct_llfields in librustc_codegen_llvm for implementation hints
 fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) -> Word {
     // TODO: enums
-    let (adt, substs) = match &ty.ty.kind {
-        TyKind::Adt(adt, substs) => (adt, substs),
+    let adt = match &ty.ty.kind {
+        TyKind::Adt(adt, _substs) => adt,
         // "An unsized FFI type that is opaque to Rust"
         TyKind::Foreign(_def_id) => return SpirvType::Void.def(cx),
         other => panic!("TODO: Unimplemented TyKind in trans_struct: {:?}", other),
     };
-    let variant = match ty.variants {
-        Variants::Single { index } => &adt.variants[index],
-        Variants::Multiple { .. } => panic!("Variants::Multiple not supported in trans_struct yet"),
+    let name = match ty.variants {
+        Variants::Single { index } => Some(adt.variants[index].ident.name.to_ident_string()),
+        Variants::Multiple { .. } => None,
     };
-    let name = variant.ident.name;
     let mut field_types = Vec::new();
     let mut field_offsets = Vec::new();
-    let mut field_names = Vec::new();
+    let mut field_names = None;
     for i in ty.fields.index_by_increasing_offset() {
-        let field = &variant.fields[i];
-        let field_ty = cx.layout_of(field.ty(cx.tcx, substs));
+        let field_ty = ty.field(cx, i);
         field_types.push(field_ty.spirv_type(cx));
         let offset = ty.fields.offset(i).bytes();
         field_offsets.push(offset as u32);
-        field_names.push(field.ident.name.to_ident_string());
+        if let Variants::Single { index } = ty.variants {
+            let field = &adt.variants[index].fields[i];
+            if field_names.is_none() {
+                field_names = Some(Vec::new())
+            }
+            field_names
+                .as_mut()
+                .unwrap()
+                .push(field.ident.name.to_ident_string());
+        };
+    }
+    if let Some(ref field_names) = field_names {
+        assert_eq!(field_names.len(), field_types.len());
     }
     SpirvType::Adt {
-        name: Some(name.to_ident_string()),
+        name,
         field_types,
         field_offsets: Some(field_offsets),
-        field_names: Some(field_names),
+        field_names,
     }
     .def(cx)
 }

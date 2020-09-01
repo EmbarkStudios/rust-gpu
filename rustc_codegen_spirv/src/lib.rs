@@ -65,7 +65,12 @@ fn is_blocklisted_fn(symbol_name: &str) -> bool {
         "_ZN4core3fmt3num",
         "_ZN4core3fmt9Arguments6new_v117hde2a099eb54409bdE",
     ];
-    let contains = ["core..fmt..num", "core..fmt..Display", "from_str_radix"];
+    let contains = [
+        "core..fmt..num",
+        "core..fmt..Debug",
+        "core..fmt..Display",
+        "from_str_radix",
+    ];
     prefixes.iter().any(|s| symbol_name.starts_with(s))
         || contains.iter().any(|s| symbol_name.contains(s))
 }
