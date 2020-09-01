@@ -11,7 +11,7 @@ use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, AsmBuilderMethods, BackendTypes, BuilderMethods,
     CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen, InlineAsmOperandRef,
-    IntrinsicCallMethods, StaticBuilderMethods,
+    IntrinsicCallMethods, OverflowOp, StaticBuilderMethods,
 };
 use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::mir::coverage::{
@@ -344,9 +344,38 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
 
             sym::assume => {
                 // Drop @llvm.assume(i1 %cond). TODO: Is there a spir-v equivalent?
+                assert!(fn_abi.ret.is_ignore());
+                return;
+            }
+            sym::likely | sym::unlikely => {
+                // Ignore these for now.
+                args[0].immediate()
+            }
+
+            sym::abort | sym::breakpoint => {
+                self.abort();
+                assert!(fn_abi.ret.is_ignore());
                 return;
             }
 
+            sym::add_with_overflow | sym::sub_with_overflow | sym::mul_with_overflow => {
+                let op = match name {
+                    sym::add_with_overflow => OverflowOp::Add,
+                    sym::sub_with_overflow => OverflowOp::Sub,
+                    sym::mul_with_overflow => OverflowOp::Mul,
+                    _ => panic!(),
+                };
+                let (val, overflow) =
+                    self.checked_binop(op, arg_tys[0], args[0].immediate(), args[1].immediate());
+                // Ret type is (int, u8), not (int, bool), due to not-immediate type rules.
+                let u8 = SpirvType::Integer(8, false).def(self);
+                let overflow = self.zext(overflow, u8);
+                let dest = result.project_field(self, 0);
+                self.store(val, dest.llval, dest.align);
+                let dest = result.project_field(self, 1);
+                self.store(overflow, dest.llval, dest.align);
+                return;
+            }
             sym::wrapping_add => math_intrinsic! {self, arg_tys, args, add, add, fadd},
             sym::wrapping_sub => math_intrinsic! {self, arg_tys, args, sub, sub, fsub},
             sym::wrapping_mul => math_intrinsic! {self, arg_tys, args, mul, mul, fmul},
@@ -360,6 +389,18 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
             sym::unchecked_shl => math_intrinsic_int! {self, arg_tys, args, shl, shl},
             sym::unchecked_shr => math_intrinsic_int! {self, arg_tys, args, ashr, lshr},
             sym::exact_div => math_intrinsic! {self, arg_tys, args, sdiv, udiv, fdiv},
+
+            // TODO: Do we want to manually implement these instead of using intel instructions?
+            sym::ctlz | sym::ctlz_nonzero => self
+                .emit()
+                .u_count_leading_zeros_intel(args[0].immediate().ty, None, args[0].immediate().def)
+                .unwrap()
+                .with_type(args[0].immediate().ty),
+            sym::cttz | sym::cttz_nonzero => self
+                .emit()
+                .u_count_trailing_zeros_intel(args[0].immediate().ty, None, args[0].immediate().def)
+                .unwrap()
+                .with_type(args[0].immediate().ty),
 
             _ => panic!("TODO: Unknown intrinsic '{}'", name),
         };

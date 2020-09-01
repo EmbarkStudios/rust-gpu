@@ -320,8 +320,23 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         }
         .def(self)
     }
-    fn type_kind(&self, _ty: Self::Type) -> TypeKind {
-        todo!()
+    fn type_kind(&self, ty: Self::Type) -> TypeKind {
+        match self.lookup_type(ty) {
+            SpirvType::Void => TypeKind::Void,
+            SpirvType::Bool => TypeKind::Integer, // thanks llvm
+            SpirvType::Integer(_, _) => TypeKind::Integer,
+            SpirvType::Float(width) => match width {
+                16 => TypeKind::Half,
+                32 => TypeKind::Float,
+                64 => TypeKind::Double,
+                other => panic!("Invalid float width in type_kind: {}", other),
+            },
+            SpirvType::Adt { .. } => TypeKind::Struct,
+            SpirvType::Vector { .. } => TypeKind::Vector,
+            SpirvType::Array { .. } => TypeKind::Array,
+            SpirvType::Pointer { .. } => TypeKind::Pointer,
+            SpirvType::Function { .. } => TypeKind::Function,
+        }
     }
     fn type_ptr_to(&self, ty: Self::Type) -> Self::Type {
         SpirvType::Pointer {

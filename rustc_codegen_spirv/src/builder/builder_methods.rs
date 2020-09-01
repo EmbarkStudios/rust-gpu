@@ -217,12 +217,18 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn checked_binop(
         &mut self,
-        _oop: OverflowOp,
+        oop: OverflowOp,
         _ty: Ty<'_>,
-        _lhs: Self::Value,
-        _rhs: Self::Value,
+        lhs: Self::Value,
+        rhs: Self::Value,
     ) -> (Self::Value, Self::Value) {
-        panic!("TODO: Checked binary operations are not supported yet");
+        let bool = SpirvType::Bool.def(self);
+        let fals = self.emit_global().constant_false(bool).with_type(bool);
+        match oop {
+            OverflowOp::Add => (self.add(lhs, rhs), fals),
+            OverflowOp::Sub => (self.sub(lhs, rhs), fals),
+            OverflowOp::Mul => (self.mul(lhs, rhs), fals),
+        }
     }
 
     fn alloca(&mut self, ty: Self::Type, _align: Align) -> Self::Value {
@@ -388,25 +394,15 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             .with_type(result_type)
     }
 
+    // intcast has the logic for dealing with bools, so use that
     fn trunc(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .u_convert(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        self.intcast(val, dest_ty, false)
     }
-
     fn zext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .u_convert(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        self.intcast(val, dest_ty, false)
     }
-
     fn sext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .s_convert(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        self.intcast(val, dest_ty, true)
     }
 
     fn fptosui_may_trap(&self, _val: Self::Value, _dest_ty: Self::Type) -> bool {
