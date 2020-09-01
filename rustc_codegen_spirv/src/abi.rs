@@ -2,7 +2,7 @@ use crate::builder::Builder;
 use crate::codegen_cx::CodegenCx;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
-use rustc_middle::ty::layout::TyAndLayout;
+use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Variants};
@@ -661,12 +661,19 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
                 }
                 .def(cx);
             }
+            TyKind::FnPtr(sig) => {
+                let function = FnAbi::of_fn_ptr(cx, sig, &[]).spirv_type(cx);
+                return SpirvType::Pointer {
+                    storage_class: StorageClass::Generic,
+                    pointee: function,
+                }
+                .def(cx);
+            }
             TyKind::Adt(def, _) if def.is_box() => {
                 let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
                 return ptr_ty.spirv_type(cx);
             }
             TyKind::Adt(_adt, _substs) => {}
-            // TODO: Do we fall back on trans_scalar on every weird TyKind?
             ref kind => panic!(
                 "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
                 kind, ty
@@ -714,7 +721,6 @@ fn trans_scalar_pair_impl<'spv, 'tcx>(
                 .spirv_type(cx);
         }
         TyKind::Adt(_adt, _substs) => {}
-        // TODO: Do we fall back on trans_scalar on every weird TyKind?
         ref kind => panic!(
             "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
             kind, ty
@@ -794,14 +800,18 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx
 fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) -> Word {
     // TODO: enums
     let adt = match &ty.ty.kind {
-        TyKind::Adt(adt, _substs) => adt,
+        TyKind::Adt(adt, _substs) => Some(adt),
+        TyKind::Tuple(_) => None,
         // "An unsized FFI type that is opaque to Rust"
         TyKind::Foreign(_def_id) => return SpirvType::Void.def(cx),
         other => panic!("TODO: Unimplemented TyKind in trans_struct: {:?}", other),
     };
-    let name = match ty.variants {
-        Variants::Single { index } => adt.variants[index].ident.name.to_ident_string(),
-        Variants::Multiple { .. } => "<enum>".to_string(),
+    let name = match (adt, &ty.variants) {
+        (Some(adt), &Variants::Single { index }) => {
+            adt.variants[index].ident.name.to_ident_string()
+        }
+        (Some(_), Variants::Multiple { .. }) => "<enum>".to_string(),
+        (None, _) => "<tuple>".to_string(),
     };
     let mut field_types = Vec::new();
     let mut field_offsets = Vec::new();
@@ -812,12 +822,19 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
         let offset = ty.fields.offset(i).bytes();
         field_offsets.push(offset as u32);
         if let Variants::Single { index } = ty.variants {
-            let field = &adt.variants[index].fields[i];
-            field_names.push(field.ident.name.to_ident_string());
-        } else if i == 0 {
-            field_names.push("discriminant".to_string());
+            if let Some(adt) = adt {
+                let field = &adt.variants[index].fields[i];
+                field_names.push(field.ident.name.to_ident_string());
+            } else {
+                field_names.push(format!("{}", i));
+            }
         } else {
-            panic!("Variants::Multiple has multiple fields")
+            assert!(adt.is_some());
+            if i == 0 {
+                field_names.push("discriminant".to_string());
+            } else {
+                panic!("Variants::Multiple has multiple fields")
+            }
         };
     }
     SpirvType::Adt {
