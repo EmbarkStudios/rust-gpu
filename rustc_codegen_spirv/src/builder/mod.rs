@@ -1,6 +1,6 @@
 mod builder_methods;
 
-use crate::abi::SpirvType;
+use crate::abi::{ConvSpirvType, SpirvType};
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
@@ -250,7 +250,7 @@ impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn arg_memory_ty(&self, arg_abi: &ArgAbi<'tcx, Ty<'tcx>>) -> Self::Type {
-        self.trans_type(arg_abi.layout)
+        arg_abi.layout.spirv_type(self)
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::abi::{SpirvType, SpirvTypePrinter};
+use crate::abi::{ConvSpirvType, SpirvType, SpirvTypePrinter};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv, SpirvValue, SpirvValueExt};
 use rspirv::spirv::{FunctionControl, StorageClass, Word};
 use rustc_codegen_ssa::common::TypeKind;
@@ -93,22 +93,6 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
         cursor: BuilderCursor,
     ) -> std::cell::RefMut<rspirv::dr::Builder> {
         self.builder.builder(cursor)
-    }
-
-    // returns (function_type, return_type, argument_types)
-    pub fn trans_fnabi(&self, ty: &FnAbi<'tcx, Ty<'tcx>>) -> (Word, Word, Vec<Word>) {
-        use crate::abi::trans_fnabi;
-        trans_fnabi(self, ty)
-    }
-
-    pub fn trans_type(&self, ty: TyAndLayout<'tcx>) -> Word {
-        use crate::abi::trans_type;
-        trans_type(self, ty)
-    }
-
-    pub fn trans_type_immediate(&self, ty: TyAndLayout<'tcx>) -> Word {
-        use crate::abi::trans_type_immediate;
-        trans_type_immediate(self, ty)
     }
 
     pub fn lookup_type(&self, ty: Word) -> SpirvType {
@@ -233,11 +217,11 @@ impl<'spv, 'tcx> HasParamEnv<'tcx> for CodegenCx<'spv, 'tcx> {
 
 impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
-        self.trans_type(layout)
+        layout.spirv_type(self)
     }
 
     fn immediate_backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
-        self.trans_type_immediate(layout)
+        layout.spirv_type_immediate(self)
     }
 
     fn is_backend_immediate(&self, layout: TyAndLayout<'tcx>) -> bool {
@@ -266,23 +250,31 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 
     fn scalar_pair_element_backend_type(
         &self,
-        _layout: TyAndLayout<'tcx>,
-        _index: usize,
-        _immediate: bool,
+        layout: TyAndLayout<'tcx>,
+        index: usize,
+        immediate: bool,
     ) -> Self::Type {
-        todo!()
+        let (a, b) = match &layout.abi {
+            Abi::ScalarPair(a, b) => (a, b),
+            other => panic!(
+                "Invalid ABI in scalar_pair_element_backend_type: {:?}",
+                other
+            ),
+        };
+        let scalar = [a, b][index];
+        crate::abi::trans_scalar_pair(self, &layout, scalar, index, immediate)
     }
 
-    fn cast_backend_type(&self, _ty: &CastTarget) -> Self::Type {
-        todo!()
+    fn cast_backend_type(&self, ty: &CastTarget) -> Self::Type {
+        ty.spirv_type(self)
     }
 
-    fn fn_ptr_backend_type(&self, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Type {
-        todo!()
+    fn fn_ptr_backend_type(&self, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Type {
+        fn_abi.spirv_type(self)
     }
 
-    fn reg_backend_type(&self, _ty: &Reg) -> Self::Type {
-        todo!()
+    fn reg_backend_type(&self, ty: &Reg) -> Self::Type {
+        ty.spirv_type(self)
     }
 }
 
@@ -532,7 +524,14 @@ impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         let control = FunctionControl::NONE;
         let function_id = None;
 
-        let (function_type, return_type, argument_types) = self.trans_fnabi(fn_abi);
+        let function_type = fn_abi.spirv_type(self);
+        let (return_type, argument_types) = match self.lookup_type(function_type) {
+            SpirvType::Function {
+                return_type,
+                arguments,
+            } => (return_type, arguments),
+            other => panic!("fn_abi type {}", other.debug(self)),
+        };
 
         let mut emit = self.emit_global();
         let fn_id = emit
@@ -731,7 +730,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             .builder
             .find_cached_global(raw_bytes.def)
             .unwrap_or_else(|| {
-                let ty = self.type_ptr_to(self.trans_type(self.layout_of(self.tcx.types.str_)));
+                let ty = self.type_ptr_to(self.layout_of(self.tcx.types.str_).spirv_type(self));
                 self.emit_global()
                     .variable(ty, None, StorageClass::Generic, Some(raw_bytes.def))
                     .with_type(ty)
@@ -850,7 +849,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         offset: Size,
     ) -> PlaceRef<'tcx, Self::Value> {
         assert_eq!(offset, Size::ZERO);
-        let ty = self.trans_type(layout);
+        let ty = layout.spirv_type(self);
         let init = create_const_alloc(self, alloc, ty);
         let result = self.static_addr_of(init, alloc.align, None);
         PlaceRef::new_sized(result, layout)

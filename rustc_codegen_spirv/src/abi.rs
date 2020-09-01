@@ -3,7 +3,7 @@ use crate::codegen_cx::CodegenCx;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
 use rustc_middle::ty::{layout::TyAndLayout, Ty, TyKind};
-use rustc_target::abi::call::{FnAbi, PassMode};
+use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Variants};
 use std::fmt;
 
@@ -441,95 +441,174 @@ impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
     }
 }
 
-// returns (function_type, return_type, argument_types)
-pub fn trans_fnabi<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
-    fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
-) -> (Word, Word, Vec<Word>) {
-    let mut argument_types = Vec::new();
+pub trait ConvSpirvType<'spv, 'tcx> {
+    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word;
+    fn spirv_type_immediate(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+        self.spirv_type(cx)
+    }
+}
 
-    let return_type = match fn_abi.ret.mode {
-        PassMode::Ignore => SpirvType::Void.def(cx),
-        PassMode::Direct(_arg_attributes) => trans_type_immediate(cx, fn_abi.ret.layout),
-        PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
-            panic!("PassMode::Pair not supported for return type")
-        }
-        PassMode::Cast(_cast_target) => {
-            panic!("TODO: PassMode::Cast not supported for return type")
-        }
-        // TODO: Deal with wide ptr?
-        PassMode::Indirect(_arg_attributes, wide_ptr_attrs) => {
-            if wide_ptr_attrs.is_some() {
-                panic!("TODO: PassMode::Indirect wide ptr not supported for return type");
+impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for Reg {
+    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+        match self.kind {
+            RegKind::Integer => SpirvType::Integer(self.size.bits() as u32, false).def(cx),
+            RegKind::Float => SpirvType::Float(self.size.bits() as u32).def(cx),
+            RegKind::Vector => SpirvType::Vector {
+                element: SpirvType::Integer(8, false).def(cx),
+                count: cx.constant_u32(self.size.bytes() as u32).def,
             }
-            let pointee = trans_type(cx, fn_abi.ret.layout);
-            let pointer = SpirvType::Pointer {
-                storage_class: StorageClass::Generic,
-                pointee,
-            }
-            .def(cx);
-            // Important: the return pointer comes *first*, not last.
-            argument_types.push(pointer);
-            SpirvType::Void.def(cx)
+            .def(cx),
         }
-    };
+    }
+}
 
-    for arg in &fn_abi.args {
-        let arg_type = match arg.mode {
-            PassMode::Ignore => continue,
-            PassMode::Direct(_arg_attributes) => trans_type_immediate(cx, arg.layout),
+impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for CastTarget {
+    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+        let rest_ll_unit = self.rest.unit.spirv_type(cx);
+        let (rest_count, rem_bytes) = if self.rest.unit.size.bytes() == 0 {
+            (0, 0)
+        } else {
+            (
+                self.rest.total.bytes() / self.rest.unit.size.bytes(),
+                self.rest.total.bytes() % self.rest.unit.size.bytes(),
+            )
+        };
+
+        if self.prefix.iter().all(|x| x.is_none()) {
+            // Simplify to a single unit when there is no prefix and size <= unit size
+            if self.rest.total <= self.rest.unit.size {
+                return rest_ll_unit;
+            }
+
+            // Simplify to array when all chunks are the same size and type
+            if rem_bytes == 0 {
+                return SpirvType::Array {
+                    element: rest_ll_unit,
+                    count: cx.constant_u32(rest_count as u32).def,
+                }
+                .def(cx);
+            }
+        }
+
+        // Create list of fields in the main structure
+        let mut args: Vec<_> = self
+            .prefix
+            .iter()
+            .flatten()
+            .map(|&kind| {
+                Reg {
+                    kind,
+                    size: self.prefix_chunk,
+                }
+                .spirv_type(cx)
+            })
+            .chain((0..rest_count).map(|_| rest_ll_unit))
+            .collect();
+
+        // Append final integer
+        if rem_bytes != 0 {
+            // Only integers can be really split further.
+            assert_eq!(self.rest.unit.kind, RegKind::Integer);
+            args.push(SpirvType::Integer(rem_bytes as u32 * 8, false).def(cx));
+        }
+
+        SpirvType::Adt {
+            name: None,
+            field_types: args,
+            field_offsets: None,
+            field_names: None,
+        }
+        .def(cx)
+    }
+}
+
+impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
+    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+        let mut argument_types = Vec::new();
+
+        let return_type = match self.ret.mode {
+            PassMode::Ignore => SpirvType::Void.def(cx),
+            PassMode::Direct(_arg_attributes) => self.ret.layout.spirv_type_immediate(cx),
             PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
-                // TODO: Make this more efficient, don't generate struct
-                let tuple = cx.lookup_type(trans_type(cx, arg.layout));
-                let (left, right) = match tuple {
-                    SpirvType::Adt {
-                        ref field_types, ..
-                    } => {
-                        if let [left, right] = *field_types.as_slice() {
-                            (left, right)
-                        } else {
-                            panic!("PassMode::Pair did not produce tuple: {:?}", tuple)
-                        }
-                    }
-                    _ => panic!("PassMode::Pair did not produce tuple: {:?}", tuple),
-                };
-                argument_types.push(left);
-                argument_types.push(right);
-                continue;
+                panic!("PassMode::Pair not supported for return type")
             }
-            PassMode::Cast(_cast_target) => trans_type(cx, arg.layout),
+            PassMode::Cast(_cast_target) => {
+                panic!("TODO: PassMode::Cast not supported for return type")
+            }
             // TODO: Deal with wide ptr?
-            PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
-                let pointee = trans_type(cx, arg.layout);
-                SpirvType::Pointer {
+            PassMode::Indirect(_arg_attributes, wide_ptr_attrs) => {
+                if wide_ptr_attrs.is_some() {
+                    panic!("TODO: PassMode::Indirect wide ptr not supported for return type");
+                }
+                let pointee = self.ret.layout.spirv_type(cx);
+                let pointer = SpirvType::Pointer {
                     storage_class: StorageClass::Generic,
                     pointee,
                 }
-                .def(cx)
+                .def(cx);
+                // Important: the return pointer comes *first*, not last.
+                argument_types.push(pointer);
+                SpirvType::Void.def(cx)
             }
         };
-        argument_types.push(arg_type);
-    }
 
-    let function_type = SpirvType::Function {
-        return_type,
-        arguments: argument_types.clone(),
+        for arg in &self.args {
+            let arg_type = match arg.mode {
+                PassMode::Ignore => continue,
+                PassMode::Direct(_arg_attributes) => arg.layout.spirv_type_immediate(cx),
+                PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
+                    // TODO: Make this more efficient, don't generate struct
+                    let tuple = cx.lookup_type(arg.layout.spirv_type(cx));
+                    let (left, right) = match tuple {
+                        SpirvType::Adt {
+                            ref field_types, ..
+                        } => {
+                            if let [left, right] = *field_types.as_slice() {
+                                (left, right)
+                            } else {
+                                panic!("PassMode::Pair did not produce tuple: {:?}", tuple)
+                            }
+                        }
+                        _ => panic!("PassMode::Pair did not produce tuple: {:?}", tuple),
+                    };
+                    argument_types.push(left);
+                    argument_types.push(right);
+                    continue;
+                }
+                PassMode::Cast(_cast_target) => arg.layout.spirv_type(cx),
+                // TODO: Deal with wide ptr?
+                PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
+                    let pointee = arg.layout.spirv_type(cx);
+                    SpirvType::Pointer {
+                        storage_class: StorageClass::Generic,
+                        pointee,
+                    }
+                    .def(cx)
+                }
+            };
+            argument_types.push(arg_type);
+        }
+
+        SpirvType::Function {
+            return_type,
+            arguments: argument_types,
+        }
+        .def(cx)
     }
-    .def(cx);
-    (function_type, return_type, argument_types)
 }
 
-pub fn trans_type_immediate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
-    trans_type_impl(cx, ty, true)
-}
-
-pub fn trans_type<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
-    trans_type_impl(cx, ty, false)
+impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for TyAndLayout<'tcx> {
+    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+        trans_type_impl(cx, self, false)
+    }
+    fn spirv_type_immediate(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+        trans_type_impl(cx, self, true)
+    }
 }
 
 fn trans_type_impl<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
-    ty: TyAndLayout<'tcx>,
+    ty: &TyAndLayout<'tcx>,
     is_immediate: bool,
 ) -> Word {
     if ty.is_zst() {
@@ -576,7 +655,7 @@ fn trans_type_impl<'spv, 'tcx>(
 
 fn trans_scalar_known_ty<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
-    ty: TyAndLayout<'tcx>,
+    ty: &TyAndLayout<'tcx>,
     scalar: &Scalar,
     is_immediate: bool,
 ) -> Word {
@@ -584,7 +663,7 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
     if scalar.value == Primitive::Pointer {
         match ty.ty.kind {
             TyKind::Ref(_region, ty, _mutability) => {
-                let pointee = trans_type(cx, cx.layout_of(ty));
+                let pointee = cx.layout_of(ty).spirv_type(cx);
                 return SpirvType::Pointer {
                     storage_class: StorageClass::Generic,
                     pointee,
@@ -592,7 +671,7 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
                 .def(cx);
             }
             TyKind::RawPtr(type_and_mut) => {
-                let pointee = trans_type(cx, cx.layout_of(type_and_mut.ty));
+                let pointee = cx.layout_of(type_and_mut.ty).spirv_type(cx);
                 return SpirvType::Pointer {
                     storage_class: StorageClass::Generic,
                     pointee,
@@ -601,7 +680,7 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
             }
             TyKind::Adt(def, _) if def.is_box() => {
                 let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-                return trans_type(cx, ptr_ty);
+                return ptr_ty.spirv_type(cx);
             }
             TyKind::Adt(_adt, _substs) => {}
             // TODO: Do we fall back on trans_scalar on every weird TyKind?
@@ -616,23 +695,26 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
     trans_scalar_generic(cx, scalar, is_immediate)
 }
 
-fn trans_scalar_pair<'spv, 'tcx>(
+// only pub for LayoutTypeMethods::scalar_pair_element_backend_type
+pub fn trans_scalar_pair<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
-    ty: TyAndLayout<'tcx>,
+    ty: &TyAndLayout<'tcx>,
     scalar: &Scalar,
     index: usize,
     is_immediate: bool,
 ) -> Word {
     match ty.ty.kind {
         TyKind::Ref(..) | TyKind::RawPtr(_) => {
-            return trans_type(cx, ty.field(cx, index));
+            return ty.field(cx, index).spirv_type(cx);
         }
         TyKind::Adt(def, _) if def.is_box() => {
             let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-            return trans_scalar_pair(cx, ptr_ty, scalar, index, is_immediate);
+            return trans_scalar_pair(cx, &ptr_ty, scalar, index, is_immediate);
         }
         TyKind::Tuple(elements) if elements.len() == 2 => {
-            return trans_type(cx, cx.layout_of(ty.ty.tuple_fields().nth(index).unwrap()));
+            return cx
+                .layout_of(ty.ty.tuple_fields().nth(index).unwrap())
+                .spirv_type(cx);
         }
         TyKind::Adt(_adt, _substs) => {}
         // TODO: Do we fall back on trans_scalar on every weird TyKind?
@@ -674,7 +756,7 @@ fn trans_scalar_generic<'spv, 'tcx>(
     }
 }
 
-fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) -> Word {
     match ty.fields {
         FieldsShape::Primitive => panic!(
             "FieldsShape::Primitive not supported yet in trans_type: {:?}",
@@ -696,7 +778,7 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
             // note that zero-sized arrays don't report as .is_zst() for some reason? TODO: investigate why
             let nonzero_count = if count == 0 { 1 } else { count };
             // TODO: Assert stride is same as spirv's stride?
-            let element_type = trans_type(cx, ty.field(cx, 0));
+            let element_type = ty.field(cx, 0).spirv_type(cx);
             let count_const = cx.constant_u32(nonzero_count as u32).def;
             SpirvType::Array {
                 element: element_type,
@@ -712,7 +794,7 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
 }
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
-fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) -> Word {
     // TODO: enums
     let (adt, substs) = match &ty.ty.kind {
         TyKind::Adt(adt, substs) => (adt, substs),
@@ -731,7 +813,7 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -
     for i in ty.fields.index_by_increasing_offset() {
         let field = &variant.fields[i];
         let field_ty = cx.layout_of(field.ty(cx.tcx, substs));
-        field_types.push(trans_type(cx, field_ty));
+        field_types.push(field_ty.spirv_type(cx));
         let offset = ty.fields.offset(i).bytes();
         field_offsets.push(offset as u32);
         field_names.push(field.ident.name.to_ident_string());
