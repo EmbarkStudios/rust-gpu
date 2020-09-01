@@ -519,6 +519,37 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                 .unwrap()
                 .with_type(dest_ty)
             }
+            // bools are ints in llvm, so we have to implement this here
+            (SpirvType::Bool, SpirvType::Integer(dest_width, _)) => {
+                // spir-v doesn't have a direct conversion instruction
+                let (if_true, if_false) = if dest_width > 32 {
+                    (
+                        self.builder.constant_u64(dest_ty, 1),
+                        self.builder.constant_u64(dest_ty, 0),
+                    )
+                } else {
+                    (
+                        self.builder.constant_u32(dest_ty, 1),
+                        self.builder.constant_u32(dest_ty, 0),
+                    )
+                };
+                self.emit()
+                    .select(dest_ty, None, val.def, if_true, if_false)
+                    .unwrap()
+                    .with_type(dest_ty)
+            }
+            (SpirvType::Integer(src_width, _), SpirvType::Bool) => {
+                // spir-v doesn't have a direct conversion instruction, glslang emits OpINotEqual
+                let zero = if src_width > 32 {
+                    self.builder.constant_u64(val.ty, 0)
+                } else {
+                    self.builder.constant_u32(val.ty, 0)
+                };
+                self.emit()
+                    .i_not_equal(dest_ty, None, val.def, zero)
+                    .unwrap()
+                    .with_type(dest_ty)
+            }
             (val_ty, dest_ty_spv) => panic!(
                 "TODO: intcast not implemented yet: val={:?} val.ty={:?} dest_ty={:?} is_signed={}",
                 val, val_ty, dest_ty_spv, is_signed
