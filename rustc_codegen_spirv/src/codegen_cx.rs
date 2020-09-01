@@ -313,7 +313,7 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
         SpirvType::Adt {
-            name: None,
+            name: "<generated_struct>".to_string(),
             field_types: els.to_vec(),
             field_offsets: None,
             field_names: None,
@@ -737,7 +737,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         // Presumably this will get bitcasted to the right type?
         let field_types = elts.iter().map(|f| f.ty).collect();
         let struct_ty = SpirvType::Adt {
-            name: None,
+            name: "<const_struct>".to_string(),
             field_types,
             field_offsets: None,
             field_names: None,

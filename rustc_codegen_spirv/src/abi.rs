@@ -16,7 +16,7 @@ pub enum SpirvType {
     Float(u32),
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
-        name: Option<String>,
+        name: String,
         // TODO: enums/unions
         field_types: Vec<Word>,
         /// *byte* offsets
@@ -113,9 +113,7 @@ impl SpirvType {
                 // Ensure a unique struct is emitted each time, due to possibly having different OpMemberDecorates
                 let id = emit.id();
                 let result = emit.type_struct_id(Some(id), field_types.iter().cloned());
-                if let Some(name) = name {
-                    emit.name(result, name);
-                }
+                emit.name(result, name);
                 if let Some(field_offsets) = field_offsets {
                     for (index, offset) in field_offsets.iter().copied().enumerate() {
                         emit.member_decorate(
@@ -385,11 +383,7 @@ impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
                 field_offsets: _,
                 ref field_names,
             } => {
-                if let Some(name) = name {
-                    write!(f, "struct {} {{ ", name)?;
-                } else {
-                    f.write_str("struct { ")?;
-                }
+                write!(f, "struct {} {{ ", name)?;
                 for (index, &field) in field_types.iter().enumerate() {
                     let suffix = if index + 1 == field_types.len() {
                         ""
@@ -514,7 +508,7 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for CastTarget {
         }
 
         SpirvType::Adt {
-            name: None,
+            name: "<cast_target>".to_string(),
             field_types: args,
             field_offsets: None,
             field_names: None,
@@ -602,7 +596,7 @@ fn trans_type_impl<'spv, 'tcx>(
     if ty.is_zst() {
         // An empty struct is zero-sized
         return SpirvType::Adt {
-            name: None,
+            name: "<zst>".to_string(),
             field_types: Vec::new(),
             field_offsets: None,
             field_names: None,
@@ -619,10 +613,11 @@ fn trans_type_impl<'spv, 'tcx>(
         ),
         Abi::Scalar(ref scalar) => trans_scalar_known_ty(cx, ty, scalar, is_immediate),
         Abi::ScalarPair(ref one, ref two) => {
-            let one_spirv = trans_scalar_pair_impl(cx, ty, one, 0, is_immediate);
-            let two_spirv = trans_scalar_pair_impl(cx, ty, two, 1, is_immediate);
+            // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
+            let one_spirv = trans_scalar_pair_impl(cx, ty, one, 0, false);
+            let two_spirv = trans_scalar_pair_impl(cx, ty, two, 1, false);
             SpirvType::Adt {
-                name: Some(format!("{}", ty.ty)),
+                name: format!("{}", ty.ty),
                 field_types: vec![one_spirv, two_spirv],
                 field_offsets: None,
                 field_names: None,
@@ -805,12 +800,12 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
         other => panic!("TODO: Unimplemented TyKind in trans_struct: {:?}", other),
     };
     let name = match ty.variants {
-        Variants::Single { index } => Some(adt.variants[index].ident.name.to_ident_string()),
-        Variants::Multiple { .. } => None,
+        Variants::Single { index } => adt.variants[index].ident.name.to_ident_string(),
+        Variants::Multiple { .. } => "<enum>".to_string(),
     };
     let mut field_types = Vec::new();
     let mut field_offsets = Vec::new();
-    let mut field_names = None;
+    let mut field_names = Vec::new();
     for i in ty.fields.index_by_increasing_offset() {
         let field_ty = ty.field(cx, i);
         field_types.push(field_ty.spirv_type(cx));
@@ -818,23 +813,18 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
         field_offsets.push(offset as u32);
         if let Variants::Single { index } = ty.variants {
             let field = &adt.variants[index].fields[i];
-            if field_names.is_none() {
-                field_names = Some(Vec::new())
-            }
-            field_names
-                .as_mut()
-                .unwrap()
-                .push(field.ident.name.to_ident_string());
+            field_names.push(field.ident.name.to_ident_string());
+        } else if i == 0 {
+            field_names.push("discriminant".to_string());
+        } else {
+            panic!("Variants::Multiple has multiple fields")
         };
-    }
-    if let Some(ref field_names) = field_names {
-        assert_eq!(field_names.len(), field_types.len());
     }
     SpirvType::Adt {
         name,
         field_types,
         field_offsets: Some(field_offsets),
-        field_names,
+        field_names: Some(field_names),
     }
     .def(cx)
 }
