@@ -673,7 +673,12 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
                 let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
                 return ptr_ty.spirv_type(cx);
             }
+            TyKind::Tuple(substs) if substs.len() == 1 => {
+                let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
+                return trans_scalar_known_ty(cx, &item, scalar, is_immediate);
+            }
             TyKind::Adt(_adt, _substs) => {}
+            TyKind::Closure(_def_id, _substs) => {}
             ref kind => panic!(
                 "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
                 kind, ty
@@ -707,24 +712,34 @@ fn trans_scalar_pair_impl<'spv, 'tcx>(
     index: usize,
     is_immediate: bool,
 ) -> Word {
-    match ty.ty.kind {
-        TyKind::Ref(..) | TyKind::RawPtr(_) => {
-            return ty.field(cx, index).spirv_type(cx);
+    // When we know the ty, try to fill in the pointer type in case we have it, instead of defaulting to pointer to u8.
+    if scalar.value == Primitive::Pointer {
+        match ty.ty.kind {
+            TyKind::Ref(..) | TyKind::RawPtr(_) => {
+                return ty.field(cx, index).spirv_type(cx);
+            }
+            TyKind::Adt(def, _) if def.is_box() => {
+                let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
+                return trans_scalar_pair_impl(cx, &ptr_ty, scalar, index, is_immediate);
+            }
+            TyKind::Tuple(elements) if elements.len() == 1 => {
+                // The tuple is merely a wrapper, index into the tuple and retry.
+                // This happens in cases like (&[u8],)
+                let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
+                return trans_scalar_pair_impl(cx, &item, scalar, index, is_immediate);
+            }
+            TyKind::Tuple(elements) if elements.len() == 2 => {
+                return cx
+                    .layout_of(ty.ty.tuple_fields().nth(index).unwrap())
+                    .spirv_type(cx);
+            }
+            TyKind::Adt(_adt, _substs) => {}
+            TyKind::Closure(_def_id, _substs) => {}
+            ref kind => panic!(
+                "TODO: Unimplemented Primitive::Pointer TyKind in scalar pair ({:#?}):\n{:#?}",
+                kind, ty
+            ),
         }
-        TyKind::Adt(def, _) if def.is_box() => {
-            let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-            return trans_scalar_pair_impl(cx, &ptr_ty, scalar, index, is_immediate);
-        }
-        TyKind::Tuple(elements) if elements.len() == 2 => {
-            return cx
-                .layout_of(ty.ty.tuple_fields().nth(index).unwrap())
-                .spirv_type(cx);
-        }
-        TyKind::Adt(_adt, _substs) => {}
-        ref kind => panic!(
-            "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
-            kind, ty
-        ),
     }
     trans_scalar_generic(cx, scalar, is_immediate)
 }
@@ -799,19 +814,16 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx
 // see struct_llfields in librustc_codegen_llvm for implementation hints
 fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) -> Word {
     // TODO: enums
-    let adt = match &ty.ty.kind {
-        TyKind::Adt(adt, _substs) => Some(adt),
-        TyKind::Tuple(_) => None,
+    let name = match &ty.ty.kind {
+        TyKind::Adt(adt, _) => match ty.variants {
+            Variants::Single { index } => adt.variants[index].ident.name.to_ident_string(),
+            Variants::Multiple { .. } => "<enum>".to_string(),
+        },
+        TyKind::Dynamic(_, _) => "<dynamic>".to_string(),
+        TyKind::Tuple(_) => "<tuple>".to_string(),
         // "An unsized FFI type that is opaque to Rust"
         TyKind::Foreign(_def_id) => return SpirvType::Void.def(cx),
         other => panic!("TODO: Unimplemented TyKind in trans_struct: {:?}", other),
-    };
-    let name = match (adt, &ty.variants) {
-        (Some(adt), &Variants::Single { index }) => {
-            adt.variants[index].ident.name.to_ident_string()
-        }
-        (Some(_), Variants::Multiple { .. }) => "<enum>".to_string(),
-        (None, _) => "<tuple>".to_string(),
     };
     let mut field_types = Vec::new();
     let mut field_offsets = Vec::new();
@@ -822,14 +834,17 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
         let offset = ty.fields.offset(i).bytes();
         field_offsets.push(offset as u32);
         if let Variants::Single { index } = ty.variants {
-            if let Some(adt) = adt {
+            if let TyKind::Adt(adt, _) = ty.ty.kind {
                 let field = &adt.variants[index].fields[i];
                 field_names.push(field.ident.name.to_ident_string());
             } else {
                 field_names.push(format!("{}", i));
             }
         } else {
-            assert!(adt.is_some());
+            if let TyKind::Adt(_, _) = ty.ty.kind {
+            } else {
+                panic!("Variants::Multiple not supported for non-TyKind::Adt");
+            }
             if i == 0 {
                 field_names.push("discriminant".to_string());
             } else {

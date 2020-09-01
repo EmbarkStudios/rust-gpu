@@ -676,6 +676,11 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                     self.builder.constant_u32(t, u as u32).with_type(t)
                 }
             }
+            SpirvType::Bool => match u {
+                0 => self.emit_global().constant_false(t).with_type(t),
+                1 => self.emit_global().constant_true(t).with_type(t),
+                _ => panic!("Invalid constant value for bool: {}", u),
+            },
             other => panic!("const_uint_big invalid on type {}", other.debug(self)),
         }
     }

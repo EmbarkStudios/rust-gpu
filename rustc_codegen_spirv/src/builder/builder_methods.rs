@@ -13,7 +13,7 @@ use rustc_codegen_ssa::traits::LayoutTypeMethods;
 use rustc_codegen_ssa::traits::{BuilderMethods, OverflowOp};
 use rustc_codegen_ssa::MemFlags;
 use rustc_middle::ty::Ty;
-use rustc_target::abi::{Abi, Align, Size};
+use rustc_target::abi::{Abi, Align, Scalar, Size};
 use std::iter::empty;
 use std::ops::Range;
 
@@ -294,14 +294,21 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         } else if let Abi::ScalarPair(ref a, ref b) = place.layout.abi {
             let b_offset = a.value.size(self).align_to(b.value.align(self).abi);
 
-            let mut load = |i, align| {
+            let mut load = |i, scalar: &Scalar, align| {
                 let llptr = self.struct_gep(place.llval, i as u64);
-                self.load(llptr, align)
+                let load = self.load(llptr, align);
+                // WARN! This does not go through to_immediate due to only having a Scalar, not a Ty, but it still does
+                // whatever to_immediate does!
+                if scalar.is_bool() {
+                    self.trunc(load, SpirvType::Bool.def(self))
+                } else {
+                    load
+                }
             };
 
             OperandValue::Pair(
-                load(0, place.align),
-                load(1, place.align.restrict_for_offset(b_offset)),
+                load(0, a, place.align),
+                load(1, b, place.align.restrict_for_offset(b_offset)),
             )
         } else {
             OperandValue::Ref(place.llval, None, place.align)
@@ -393,6 +400,8 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             .unwrap()
             .with_type(result_type)
     }
+
+    // TODO: If any of these conversions below are identity, don't emit an instruction.
 
     // intcast has the logic for dealing with bools, so use that
     fn trunc(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {

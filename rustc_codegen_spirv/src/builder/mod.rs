@@ -247,6 +247,7 @@ impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
             let cast_dst = self.pointercast(dst.llval, cast_ptr_ty);
             self.store(val, cast_dst, arg_abi.layout.align.abi);
         } else {
+            // TODO: Does this need a from_immediate? The LLVM backend doesn't have one here.
             OperandValue::Immediate(val).store(self, dst);
         }
     }
@@ -354,6 +355,12 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
 
             sym::abort | sym::breakpoint => {
                 self.abort();
+                assert!(fn_abi.ret.is_ignore());
+                return;
+            }
+
+            sym::unreachable => {
+                self.unreachable();
                 assert!(fn_abi.ret.is_ignore());
                 return;
             }

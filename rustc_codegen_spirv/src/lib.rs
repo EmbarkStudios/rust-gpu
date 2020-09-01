@@ -43,7 +43,7 @@ use rustc_middle::dep_graph::{DepGraph, WorkProduct};
 use rustc_middle::middle::cstore::{EncodedMetadata, MetadataLoader, MetadataLoaderDyn};
 use rustc_middle::mir::mono::MonoItem;
 use rustc_middle::ty::query::Providers;
-use rustc_middle::ty::{Instance, TyCtxt};
+use rustc_middle::ty::{Instance, InstanceDef, TyCtxt};
 use rustc_session::config::{OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::Symbol;
@@ -54,17 +54,25 @@ use std::{fs::File, io::Write, sync::Arc};
 use things::{SpirvModuleBuffer, SprivThinBuffer};
 
 fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
-    let mut mir = ::std::io::Cursor::new(Vec::new());
-    rustc_mir::util::write_mir_pretty(tcx, Some(instance.def_id()), &mut mir).unwrap();
-    let s = String::from_utf8(mir.into_inner()).unwrap();
-    println!("{}", s);
+    match instance.def {
+        InstanceDef::Item(_) => {
+            let mut mir = ::std::io::Cursor::new(Vec::new());
+            match rustc_mir::util::write_mir_pretty(tcx, Some(instance.def_id()), &mut mir) {
+                Ok(()) => println!("{}", String::from_utf8(mir.into_inner()).unwrap()),
+                Err(err) => println!("Couldn't dump MIR for {}: {}", instance, err),
+            }
+        }
+        _ => println!(
+            "Couldn't dump MIR for {}, not InstanceDef::Item: {:?}",
+            instance, instance.def
+        ),
+    }
 }
 
 fn is_blocklisted_fn(symbol_name: &str) -> bool {
     let prefixes = [
         "_ZN4core3fmt3num",
         "_ZN4core3fmt9Arguments6new_v117hde2a099eb54409bdE",
-        "_ZN4core3ptr13drop_in_place17h2264c0dd79232339E",
     ];
     let contains = [
         "core..any..Any",
