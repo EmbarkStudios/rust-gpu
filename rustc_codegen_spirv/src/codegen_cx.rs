@@ -254,15 +254,7 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         index: usize,
         immediate: bool,
     ) -> Self::Type {
-        let (a, b) = match &layout.abi {
-            Abi::ScalarPair(a, b) => (a, b),
-            other => panic!(
-                "Invalid ABI in scalar_pair_element_backend_type: {:?}",
-                other
-            ),
-        };
-        let scalar = [a, b][index];
-        crate::abi::trans_scalar_pair(self, &layout, scalar, index, immediate)
+        crate::abi::trans_scalar_pair(self, &layout, index, immediate)
     }
 
     fn cast_backend_type(&self, ty: &CastTarget) -> Self::Type {

@@ -551,36 +551,18 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
         for arg in &self.args {
             let arg_type = match arg.mode {
                 PassMode::Ignore => continue,
-                PassMode::Direct(_arg_attributes) => arg.layout.spirv_type_immediate(cx),
-                PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
-                    // TODO: Make this more efficient, don't generate struct
-                    let tuple = cx.lookup_type(arg.layout.spirv_type(cx));
-                    let (left, right) = match tuple {
-                        SpirvType::Adt {
-                            ref field_types, ..
-                        } => {
-                            if let [left, right] = *field_types.as_slice() {
-                                (left, right)
-                            } else {
-                                panic!("PassMode::Pair did not produce tuple: {:?}", tuple)
-                            }
-                        }
-                        _ => panic!("PassMode::Pair did not produce tuple: {:?}", tuple),
-                    };
-                    argument_types.push(left);
-                    argument_types.push(right);
+                PassMode::Direct(_) => arg.layout.spirv_type_immediate(cx),
+                PassMode::Pair(_, _) => {
+                    argument_types.push(trans_scalar_pair(cx, &arg.layout, 0, true));
+                    argument_types.push(trans_scalar_pair(cx, &arg.layout, 1, true));
                     continue;
                 }
                 PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
                 PassMode::Indirect(_, Some(_)) => {
                     let ptr_ty = cx.tcx.mk_mut_ptr(arg.layout.ty);
                     let ptr_layout = cx.layout_of(ptr_ty);
-                    let (a, b) = match &arg.layout.abi {
-                        Abi::ScalarPair(a, b) => (a, b),
-                        other => panic!("PassMode::Indirect invalid abi: {:?}", other),
-                    };
-                    argument_types.push(trans_scalar_pair(cx, &ptr_layout, a, 0, true));
-                    argument_types.push(trans_scalar_pair(cx, &ptr_layout, b, 0, true));
+                    argument_types.push(trans_scalar_pair(cx, &ptr_layout, 0, true));
+                    argument_types.push(trans_scalar_pair(cx, &ptr_layout, 1, true));
                     continue;
                 }
                 PassMode::Indirect(_, None) => {
@@ -637,8 +619,8 @@ fn trans_type_impl<'spv, 'tcx>(
         ),
         Abi::Scalar(ref scalar) => trans_scalar_known_ty(cx, ty, scalar, is_immediate),
         Abi::ScalarPair(ref one, ref two) => {
-            let one_spirv = trans_scalar_pair(cx, ty, one, 0, is_immediate);
-            let two_spirv = trans_scalar_pair(cx, ty, two, 1, is_immediate);
+            let one_spirv = trans_scalar_pair_impl(cx, ty, one, 0, is_immediate);
+            let two_spirv = trans_scalar_pair_impl(cx, ty, two, 1, is_immediate);
             SpirvType::Adt {
                 name: Some(format!("{}", ty.ty)),
                 field_types: vec![one_spirv, two_spirv],
@@ -705,6 +687,20 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
 pub fn trans_scalar_pair<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
     ty: &TyAndLayout<'tcx>,
+    index: usize,
+    is_immediate: bool,
+) -> Word {
+    let (a, b) = match &ty.layout.abi {
+        Abi::ScalarPair(a, b) => (a, b),
+        other => panic!("trans_scalar_pair invalid abi: {:?}", other),
+    };
+    let scalar = [a, b][index];
+    trans_scalar_pair_impl(cx, ty, scalar, index, is_immediate)
+}
+
+fn trans_scalar_pair_impl<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    ty: &TyAndLayout<'tcx>,
     scalar: &Scalar,
     index: usize,
     is_immediate: bool,
@@ -715,7 +711,7 @@ pub fn trans_scalar_pair<'spv, 'tcx>(
         }
         TyKind::Adt(def, _) if def.is_box() => {
             let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-            return trans_scalar_pair(cx, &ptr_ty, scalar, index, is_immediate);
+            return trans_scalar_pair_impl(cx, &ptr_ty, scalar, index, is_immediate);
         }
         TyKind::Tuple(elements) if elements.len() == 2 => {
             return cx
