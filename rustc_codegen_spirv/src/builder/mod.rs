@@ -3,6 +3,7 @@ mod builder_methods;
 use crate::abi::{ConvSpirvType, SpirvType};
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
+use rspirv::spirv::StorageClass;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::common::IntPredicate;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
@@ -207,7 +208,6 @@ impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         }
         match arg_abi.mode {
             PassMode::Ignore => (),
-            PassMode::Direct(_) => OperandValue::Immediate(next(self, idx)).store(self, dst),
             PassMode::Pair(..) => {
                 OperandValue::Pair(next(self, idx), next(self, idx)).store(self, dst)
             }
@@ -217,11 +217,9 @@ impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 arg_abi.layout.align.abi,
             )
             .store(self, dst),
-            PassMode::Indirect(_, None) => {
-                OperandValue::Ref(next(self, idx), None, arg_abi.layout.align.abi).store(self, dst)
-            }
-            PassMode::Cast(_) => {
-                panic!("TODO: store_fn_arg PassMode::Cast not implemented yet");
+            PassMode::Direct(_) | PassMode::Indirect(_, None) | PassMode::Cast(_) => {
+                let next_arg = next(self, idx);
+                self.store_arg(arg_abi, next_arg, dst)
             }
         }
     }
@@ -236,14 +234,18 @@ impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
             return;
         }
         if arg_abi.is_sized_indirect() {
-            OperandValue::Ref(val, None, arg_abi.layout.align.abi).store(self, dst)
+            OperandValue::Ref(val, None, arg_abi.layout.align.abi).store(self, dst);
         } else if arg_abi.is_unsized_indirect() {
             panic!("unsized `ArgAbi` must be handled through `store_fn_arg`");
         } else if let PassMode::Cast(cast) = arg_abi.mode {
-            panic!(
-                "TODO: PassMode::Cast not implemented yet for store_arg: {:?}",
-                cast
-            );
+            let cast_ty = cast.spirv_type(self);
+            let cast_ptr_ty = SpirvType::Pointer {
+                storage_class: StorageClass::Generic,
+                pointee: cast_ty,
+            }
+            .def(self);
+            let cast_dst = self.pointercast(dst.llval, cast_ptr_ty);
+            self.store(val, cast_dst, arg_abi.layout.align.abi);
         } else {
             OperandValue::Immediate(val).store(self, dst);
         }

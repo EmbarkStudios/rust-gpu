@@ -528,13 +528,8 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
 
         let return_type = match self.ret.mode {
             PassMode::Ignore => SpirvType::Void.def(cx),
-            PassMode::Direct(_arg_attributes) => self.ret.layout.spirv_type_immediate(cx),
-            PassMode::Pair(_arg_attributes_1, _arg_attributes_2) => {
-                panic!("PassMode::Pair not supported for return type")
-            }
-            PassMode::Cast(_cast_target) => {
-                panic!("TODO: PassMode::Cast not supported for return type")
-            }
+            PassMode::Direct(_) | PassMode::Pair(..) => self.ret.layout.spirv_type_immediate(cx),
+            PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
             // TODO: Deal with wide ptr?
             PassMode::Indirect(_arg_attributes, wide_ptr_attrs) => {
                 if wide_ptr_attrs.is_some() {
@@ -575,9 +570,19 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
                     argument_types.push(right);
                     continue;
                 }
-                PassMode::Cast(_cast_target) => arg.layout.spirv_type(cx),
-                // TODO: Deal with wide ptr?
-                PassMode::Indirect(_arg_attributes, _wide_ptr_attrs) => {
+                PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
+                PassMode::Indirect(_, Some(_)) => {
+                    let ptr_ty = cx.tcx.mk_mut_ptr(arg.layout.ty);
+                    let ptr_layout = cx.layout_of(ptr_ty);
+                    let (a, b) = match &arg.layout.abi {
+                        Abi::ScalarPair(a, b) => (a, b),
+                        other => panic!("PassMode::Indirect invalid abi: {:?}", other),
+                    };
+                    argument_types.push(trans_scalar_pair(cx, &ptr_layout, a, 0, true));
+                    argument_types.push(trans_scalar_pair(cx, &ptr_layout, b, 0, true));
+                    continue;
+                }
+                PassMode::Indirect(_, None) => {
                     let pointee = arg.layout.spirv_type(cx);
                     SpirvType::Pointer {
                         storage_class: StorageClass::Generic,
