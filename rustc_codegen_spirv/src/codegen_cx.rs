@@ -67,6 +67,8 @@ pub struct CodegenCx<'spv, 'tcx> {
     pub type_defs: RefCell<HashMap<Word, SpirvType>>,
     /// Inverse of type_defs (used to cache generating types)
     pub type_cache: RefCell<HashMap<SpirvType, Word>>,
+    /// Cache generated vtables
+    pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
 }
 
 impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
@@ -85,6 +87,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             function_parameter_values: RefCell::new(HashMap::new()),
             type_defs: RefCell::new(HashMap::new()),
             type_cache: RefCell::new(HashMap::new()),
+            vtables: RefCell::new(Default::default()),
         }
     }
 
@@ -531,7 +534,7 @@ impl<'spv, 'tcx> MiscMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn vtables(
         &self,
     ) -> &RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), Self::Value>> {
-        todo!()
+        &self.vtables
     }
 
     fn check_overflow(&self) -> bool {
@@ -702,7 +705,7 @@ impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 
 impl<'spv, 'tcx> DebugInfoMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn create_vtable_metadata(&self, _ty: Ty<'tcx>, _vtable: Self::Value) {
-        todo!()
+        // Ignore.
     }
 
     fn create_function_debug_context(
@@ -989,8 +992,9 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         PlaceRef::new_sized(result, layout)
     }
 
-    fn const_ptrcast(&self, _val: Self::Value, _ty: Self::Type) -> Self::Value {
-        todo!()
+    fn const_ptrcast(&self, val: Self::Value, ty: Self::Type) -> Self::Value {
+        // TODO: hack to get things working, this *will* fail spirv-val
+        val.def.with_type(ty)
     }
 }
 

@@ -117,6 +117,8 @@ impl CodegenBackend for SsaBackend {
         };
         providers.is_reachable_non_generic = |_tcx, _defid| true;
         providers.exported_symbols = |_tcx, _crate| &[];
+        // Temp hack to make wasm target work
+        providers.wasm_import_module_map = |_tcx, _crate| Default::default();
     }
 
     fn provide_extern(&self, providers: &mut Providers) {

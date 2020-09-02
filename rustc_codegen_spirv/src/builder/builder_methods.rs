@@ -162,14 +162,58 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         else_llbb: Self::BasicBlock,
         cases: impl ExactSizeIterator<Item = (u128, Self::BasicBlock)>,
     ) {
+        // pass in signed into the closure to be able to unify closure types
+        let (signed, construct_case) = match self.lookup_type(v.ty) {
+            SpirvType::Integer(width, signed) => {
+                let construct_case = match width {
+                    // TODO: How are negative values represented? sign-extended? if so, they'll be >MAX
+                    8 => |signed, v| {
+                        if v > u8::MAX as u128 {
+                            panic!("Switches to values above u8::MAX not supported: {:?}", v)
+                        } else if signed {
+                            // this cast chain can probably be collapsed, but, whatever, be safe
+                            Operand::LiteralInt32(v as u8 as i8 as i32 as u32)
+                        } else {
+                            Operand::LiteralInt32(v as u8 as u32)
+                        }
+                    },
+                    16 => |signed, v| {
+                        if v > u16::MAX as u128 {
+                            panic!("Switches to values above u16::MAX not supported: {:?}", v)
+                        } else if signed {
+                            Operand::LiteralInt32(v as u16 as i16 as i32 as u32)
+                        } else {
+                            Operand::LiteralInt32(v as u16 as u32)
+                        }
+                    },
+                    32 => |_signed, v| {
+                        if v > u32::MAX as u128 {
+                            panic!("Switches to values above u32::MAX not supported: {:?}", v)
+                        } else {
+                            Operand::LiteralInt32(v as u32)
+                        }
+                    },
+                    64 => |_signed, v| {
+                        if v > u64::MAX as u128 {
+                            panic!("Switches to values above u64::MAX not supported: {:?}", v)
+                        } else {
+                            Operand::LiteralInt64(v as u64)
+                        }
+                    },
+                    other => panic!(
+                        "switch selector cannot have width {} (only 32 and 64 bits allowed)",
+                        other
+                    ),
+                };
+                (signed, construct_case)
+            }
+            other => panic!(
+                "switch selector cannot have non-integer type {}",
+                other.debug(self)
+            ),
+        };
         let cases = cases
-            .map(|(i, b)| {
-                if i > u32::MAX as u128 {
-                    panic!("Switches to values above u32::MAX not supported: {:?}", i)
-                } else {
-                    (i as u32, b)
-                }
-            })
+            .map(|(i, b)| (construct_case(signed, i), b))
             .collect::<Vec<_>>();
         self.emit().switch(v.def, else_llbb, cases).unwrap()
     }

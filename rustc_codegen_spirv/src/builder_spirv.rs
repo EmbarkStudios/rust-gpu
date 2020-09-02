@@ -216,20 +216,22 @@ impl BuilderSpirv {
     pub fn set_global_initializer(&self, global: Word, initialiezr: Word) {
         let mut builder = self.builder.borrow_mut();
         for inst in &mut builder.module_mut().types_global_values {
-            if inst.class.opcode == Op::Variable {
-                if let Some(&Operand::IdRef(id_ref)) = inst.operands.get(1) {
-                    if id_ref == global {
-                        assert_eq!(
-                            inst.operands.len(),
-                            1,
-                            "global already has initializer defined: {}",
-                            global
-                        );
-                        inst.operands.push(Operand::IdRef(initialiezr));
-                    }
-                }
+            if inst.result_id == Some(global) {
+                assert_eq!(inst.class.opcode, Op::Variable);
+                assert_eq!(
+                    inst.operands.len(),
+                    1,
+                    "global already has initializer defined: {}",
+                    global
+                );
+                inst.operands.push(Operand::IdRef(initialiezr));
+                return;
             }
         }
+        panic!(
+            "set_global_initializer global not found: {} with init {}",
+            global, initialiezr
+        );
     }
 
     pub fn select_block_by_id(&self, id: Word) -> BuilderCursor {
