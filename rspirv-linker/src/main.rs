@@ -169,9 +169,16 @@ struct LinkSymbol {
 }
 
 #[derive(Debug)]
+struct ImportExportPair {
+    import: LinkSymbol,
+    export: LinkSymbol,
+}
+
+#[derive(Debug)]
 struct LinkInfo {
     imports: Vec<LinkSymbol>,
     exports: HashMap<String, Vec<LinkSymbol>>,
+    potential_pairs: Vec<ImportExportPair>,
 }
 
 fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> LinkInfo {
@@ -241,7 +248,50 @@ fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> 
         }
     }
 
-    LinkInfo { imports, exports }
+    LinkInfo {
+        imports,
+        exports,
+        potential_pairs: vec![],
+    }
+    .find_potential_pairs()
+}
+
+impl LinkInfo {
+    fn find_potential_pairs(mut self) -> Self {
+        for import in &self.imports {
+            let potential_matching_exports = self.exports.get(&import.name);
+            if let Some(potential_matching_exports) = potential_matching_exports {
+                self.potential_pairs.push(ImportExportPair {
+                    import: import.clone(),
+                    export: potential_matching_exports.first().unwrap().clone(),
+                });
+            } else {
+                panic!("Can't find matching export for {}", import.name);
+            }
+        }
+
+        self
+    }
+
+    /// returns the list of matching import / export pairs after validation the list of potential pairs
+    fn ensure_matching_import_export_pairs(&self, defs: &DefAnalyzer) -> &Vec<ImportExportPair> {
+        for pair in &self.potential_pairs {
+            for (import_param, export_param) in pair
+                .import
+                .parameters
+                .iter()
+                .zip(pair.export.parameters.iter())
+            {
+                if !import_param.is_type_identical(export_param) {
+                    panic!("Type error in signatures")
+                }
+
+                // jb-todo: validate that OpDecoration is identical too
+            }
+        }
+
+        &self.potential_pairs
+    }
 }
 
 struct DefAnalyzer {
@@ -271,22 +321,11 @@ impl DefAnalyzer {
     }
 }
 
-fn ensure_matching_import_export_pairs(info: &LinkInfo, defs: &DefAnalyzer) {
+fn import_kill_annotations_and_debug(info: &LinkInfo, module: &mut rspirv::dr::Module) {
     for import in &info.imports {
-        let potential_matching_exports = info.exports.get(&import.name);
-        if let Some(potential_matching_exports) = potential_matching_exports {
-            for potential_export in potential_matching_exports {
-                for (import_param, export_param) in import.parameters.iter().zip(potential_export.parameters.iter()) {
-                    if !import_param.is_type_identical(export_param) {
-                        panic!("Type error in signatures")
-                    }
-
-                    // jb-todo: validate that OpDecoration is identical too
-                }
-            }
-
-        } else {
-            panic!("Can't find matching export for {}", import.name);
+        kill_annotations_and_debug(module, import.id);
+        for param in &import.parameters {
+            kill_annotations_and_debug(module, param.result_id.unwrap())
         }
     }
 }
@@ -318,12 +357,19 @@ fn link(inputs: &mut [&mut rspirv::dr::Module]) -> () {
     let defs = DefAnalyzer::new(&output);
     let info = find_import_export_pairs(&output, &defs);
     // 5. ensure import / export pairs have matching types and defintions
-    ensure_matching_import_export_pairs(&info, &defs);
+    let matching_pairs = info.ensure_matching_import_export_pairs(&defs);
+
     // 6. remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     remove_duplicates(&mut output);
 
     // 7. remove names and decorations of import variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L404
+    import_kill_annotations_and_debug(&info, &mut output);
+
     // 8. rematch import variables and functions to export variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L255
+    for pair in matching_pairs {
+        replace_all_uses_with(&mut output, pair.import.id, pair.export.id);
+    }
+
     // 9. remove linkage specific instructions
     // 10. compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
     // 11. output the module
