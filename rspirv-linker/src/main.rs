@@ -460,7 +460,9 @@ fn link(inputs: &mut [&mut rspirv::dr::Module]) -> rspirv::dr::Module {
     kill_linkage_instructions(&matching_pairs, &mut output);
 
     // 10. compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
-    let max_id = compact_ids(&mut output);
+    let bound = compact_ids(&mut output);
+
+    output.header = Some(rspirv::dr::ModuleHeader::new(bound));
 
     // 11. output the module
     output
