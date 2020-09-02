@@ -42,6 +42,18 @@ macro_rules! simple_op {
     };
 }
 
+// shl and shr allow different types as their operands
+macro_rules! simple_op_unchecked_type {
+    ($func_name:ident, $inst_name:ident) => {
+        fn $func_name(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
+            self.emit()
+                .$inst_name(lhs.ty, None, lhs.def, rhs.def)
+                .unwrap()
+                .with_type(lhs.ty)
+        }
+    };
+}
+
 macro_rules! simple_uni_op {
     ($func_name:ident, $inst_name:ident) => {
         fn $func_name(&mut self, val: Self::Value) -> Self::Value {
@@ -199,9 +211,9 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     simple_op! {srem, s_rem}
     simple_op! {frem, f_rem}
     simple_op! {frem_fast, f_rem} // fast=normal
-    simple_op! {shl, shift_left_logical}
-    simple_op! {lshr, shift_right_logical}
-    simple_op! {ashr, shift_right_arithmetic}
+    simple_op_unchecked_type! {shl, shift_left_logical}
+    simple_op_unchecked_type! {lshr, shift_right_logical}
+    simple_op_unchecked_type! {ashr, shift_right_arithmetic}
     simple_op! {unchecked_sadd, i_add} // already unchecked by default
     simple_op! {unchecked_uadd, i_add} // already unchecked by default
     simple_op! {unchecked_ssub, i_sub} // already unchecked by default
@@ -385,9 +397,13 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                 pointee,
             } => match self.lookup_type(pointee) {
                 SpirvType::Adt { field_types, .. } => (storage_class, field_types[idx as usize]),
-                other => panic!("struct_gep not on struct type: {:?}", other),
+                SpirvType::Array { element, .. } => (storage_class, element),
+                other => panic!(
+                    "struct_gep not on struct or array type: {:?}, index {}",
+                    other, idx
+                ),
             },
-            other => panic!("struct_gep not on struct pointer type: {:?}", other),
+            other => panic!("struct_gep not on pointer type: {:?}, index {}", other, idx),
         };
         let result_type = SpirvType::Pointer {
             storage_class,
@@ -917,19 +933,34 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn call(
         &mut self,
-        llfn: Self::Value,
+        mut llfn: Self::Value,
         args: &[Self::Value],
         funclet: Option<&Self::Funclet>,
     ) -> Self::Value {
         if funclet.is_some() {
             panic!("TODO: Funclets are not supported");
         }
-        let (result_type, argument_types) = match self.lookup_type(llfn.ty) {
-            SpirvType::Function {
-                return_type,
-                arguments,
-            } => (return_type, arguments),
-            ty => panic!("Calling non-function type: {:?}", ty),
+        // dereference pointers
+        let (result_type, argument_types) = loop {
+            match self.lookup_type(llfn.ty) {
+                SpirvType::Pointer { pointee, .. } => {
+                    llfn = match self.builder.lookup_global_constant_variable(llfn.def) {
+                        // constant, known deref
+                        Ok(v) => v.with_type(pointee),
+                        // dynamic deref
+                        Err(_) => self
+                            .emit()
+                            .load(pointee, None, llfn.def, None, empty())
+                            .unwrap()
+                            .with_type(pointee),
+                    }
+                }
+                SpirvType::Function {
+                    return_type,
+                    arguments,
+                } => break (return_type, arguments),
+                ty => panic!("Calling non-function type: {:?}", ty),
+            }
         };
         for (argument, argument_type) in args.iter().zip(argument_types) {
             assert_ty_eq!(self, argument.ty, argument_type);

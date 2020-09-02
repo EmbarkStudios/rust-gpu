@@ -1,6 +1,9 @@
 use crate::abi::{ConvSpirvType, SpirvType, SpirvTypePrinter};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv, SpirvValue, SpirvValueExt};
-use rspirv::spirv::{FunctionControl, StorageClass, Word};
+use rspirv::{
+    dr::Operand,
+    spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word},
+};
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -11,8 +14,10 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir::GlobalAsm;
-use rustc_middle::mir::interpret::{read_target_uint, Allocation, GlobalAlloc, Pointer};
-use rustc_middle::mir::mono::{CodegenUnit, Linkage, Visibility};
+use rustc_middle::mir::interpret::{
+    read_target_uint, Allocation, ConstValue, GlobalAlloc, Pointer,
+};
+use rustc_middle::mir::mono::{CodegenUnit, Linkage, MonoItem, Visibility};
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{FnAbiExt, HasParamEnv, HasTyCtxt, LayoutError, TyAndLayout};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TypeFoldable};
@@ -24,11 +29,13 @@ use rustc_span::symbol::Symbol;
 use rustc_span::SourceFile;
 use rustc_target::abi::call::{CastTarget, FnAbi, Reg};
 use rustc_target::abi::{
-    self, Abi, AddressSpace, Align, HasDataLayout, LayoutOf, Primitive, Size, TargetDataLayout,
+    self, Abi, AddressSpace, Align, FieldsShape, HasDataLayout, LayoutOf, Primitive, Size,
+    TargetDataLayout,
 };
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::iter::once;
 
 // TODO: How do you merge this macro with the one in builder::builder_methods::assert_ty_eq? idk how macros work.
 macro_rules! assert_ty_eq {
@@ -53,7 +60,7 @@ pub struct CodegenCx<'spv, 'tcx> {
     /// Used for the DeclareMethods API (not sure what it is yet)
     pub declared_values: RefCell<HashMap<String, SpirvValue>>,
     /// Map from MIR function to spir-v function ID
-    pub function_defs: RefCell<HashMap<Instance<'tcx>, SpirvValue>>,
+    pub instances: RefCell<HashMap<Instance<'tcx>, SpirvValue>>,
     /// Map from function ID to parameter list
     pub function_parameter_values: RefCell<HashMap<Word, Vec<SpirvValue>>>,
     /// Map from ID to structure
@@ -74,7 +81,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             spirv_module,
             builder: BuilderSpirv::new(),
             declared_values: RefCell::new(HashMap::new()),
-            function_defs: RefCell::new(HashMap::new()),
+            instances: RefCell::new(HashMap::new()),
             function_parameter_values: RefCell::new(HashMap::new()),
             type_defs: RefCell::new(HashMap::new()),
             type_cache: RefCell::new(HashMap::new()),
@@ -103,8 +110,23 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             .clone()
     }
 
-    pub fn get_static(&self, _def_id: DefId) -> SpirvValue {
-        todo!()
+    pub fn get_static(&self, def_id: DefId) -> SpirvValue {
+        let instance = Instance::mono(self.tcx, def_id);
+        if let Some(&g) = self.instances.borrow().get(&instance) {
+            return g;
+        }
+
+        let defined_in_current_codegen_unit = self
+            .codegen_unit
+            .items()
+            .contains_key(&MonoItem::Static(def_id));
+        assert!(
+            !defined_in_current_codegen_unit,
+            "get_static() should always hit the cache for statics defined in the same CGU, but did not for `{:?}`",
+            def_id
+        );
+
+        panic!("get_static not implemented for variables in other CGUs");
     }
 
     // Useful for printing out types when debugging
@@ -153,6 +175,26 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
     pub fn constant_f64(&self, val: f64) -> SpirvValue {
         let ty = SpirvType::Float(64).def(self);
         self.builder.constant_f64(ty, val).with_type(ty)
+    }
+
+    #[allow(dead_code)]
+    pub fn set_linkage_export(&self, target: Word, name: String) {
+        self.emit_global().decorate(
+            target,
+            Decoration::LinkageAttributes,
+            once(Operand::LiteralString(name))
+                .chain(once(Operand::LinkageType(LinkageType::Export))),
+        )
+    }
+
+    #[allow(dead_code)]
+    pub fn set_linkage_import(&self, target: Word, name: String) {
+        self.emit_global().decorate(
+            target,
+            Decoration::LinkageAttributes,
+            once(Operand::LiteralString(name))
+                .chain(once(Operand::LinkageType(LinkageType::Import))),
+        )
     }
 }
 
@@ -239,13 +281,21 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         }
     }
 
-    fn backend_field_index(&self, _layout: TyAndLayout<'tcx>, index: usize) -> u64 {
-        // TODO: Probably need to update this when enums are supported?
-        index as u64
-        // This is only used as a direct argument to struct_gep. codegen_llvm implements this as:
-        // FieldsShape::Array { .. } => index as u64,
-        // FieldsShape::Arbitrary { .. } => 1 + (layout.fields.memory_index(index) as u64) * 2,
-        // (I'm guessing the *2 is due to llvm padding fields?)
+    fn backend_field_index(&self, layout: TyAndLayout<'tcx>, index: usize) -> u64 {
+        match layout.abi {
+            Abi::Scalar(_) | Abi::ScalarPair(..) => {
+                panic!("backend_field_index({:?}): not applicable", layout)
+            }
+            _ => {}
+        }
+        match layout.fields {
+            FieldsShape::Primitive | FieldsShape::Union(_) => {
+                panic!("backend_field_index({:?}): not applicable", layout)
+            }
+            FieldsShape::Array { .. } => index as u64,
+            // note: codegen_llvm implements this as 1+index*2 due to padding fields
+            FieldsShape::Arbitrary { .. } => layout.fields.memory_index(index) as u64,
+        }
     }
 
     fn scalar_pair_element_backend_type(
@@ -332,6 +382,7 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                 other => panic!("Invalid float width in type_kind: {}", other),
             },
             SpirvType::Adt { .. } => TypeKind::Struct,
+            SpirvType::Opaque { .. } => TypeKind::Struct,
             SpirvType::Vector { .. } => TypeKind::Vector,
             SpirvType::Array { .. } => TypeKind::Array,
             SpirvType::Pointer { .. } => TypeKind::Pointer,
@@ -396,7 +447,8 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 
 impl<'spv, 'tcx> StaticMethods for CodegenCx<'spv, 'tcx> {
     fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
-        if let Some(already_defined) = self.builder.find_cached_global(cv.def) {
+        // TODO: Integrate this into define_static and whatnot?
+        if let Some(already_defined) = self.builder.find_global_constant_variable(cv.def) {
             return already_defined;
         }
         let ty = SpirvType::Pointer {
@@ -408,8 +460,37 @@ impl<'spv, 'tcx> StaticMethods for CodegenCx<'spv, 'tcx> {
             .variable(ty, None, StorageClass::Generic, Some(cv.def))
             .with_type(ty)
     }
-    fn codegen_static(&self, _def_id: DefId, _is_mutable: bool) {
-        todo!()
+
+    fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
+        let g = self.get_static(def_id);
+
+        let alloc = match self.tcx.const_eval_poly(def_id) {
+            Ok(ConstValue::ByRef { alloc, offset }) if offset.bytes() == 0 => alloc,
+            Ok(val) => panic!("static const eval returned {:#?}", val),
+            // Error has already been reported
+            Err(_) => return,
+        };
+        let value_ty = match self.lookup_type(g.ty) {
+            SpirvType::Pointer { pointee, .. } => pointee,
+            other => panic!("global had non-pointer type {}", other.debug(self)),
+        };
+        let v = create_const_alloc(self, alloc, value_ty);
+
+        if self.lookup_type(v.ty) == SpirvType::Bool {
+            // convert bool -> i8
+            todo!();
+        }
+
+        // let instance = Instance::mono(self.tcx, def_id);
+        // let ty = instance.ty(self.tcx, ParamEnv::reveal_all());
+        // let llty = self.layout_of(ty).llvm_type(self);
+
+        assert_ty_eq!(self, value_ty, v.ty);
+        self.builder.set_global_initializer(g.def, v.def);
+
+        // if attrs.flags.contains(CodegenFnAttrFlags::USED) {
+        //     self.add_used_global(g);
+        // }
     }
 
     /// Mark the given global value as "used", to prevent a backend from potentially removing a
@@ -426,7 +507,7 @@ pub fn get_fn<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, instance: Instance<'tcx>) 
     assert!(!instance.substs.needs_infer());
     assert!(!instance.substs.has_escaping_bound_vars());
 
-    if let Some(&func) = cx.function_defs.borrow().get(&instance) {
+    if let Some(&func) = cx.instances.borrow().get(&instance) {
         return func;
     }
 
@@ -440,7 +521,7 @@ pub fn get_fn<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, instance: Instance<'tcx>) 
         cx.declare_fn(&sym, &fn_abi)
     };
 
-    cx.function_defs.borrow_mut().insert(instance, llfn);
+    cx.instances.borrow_mut().insert(instance, llfn);
 
     llfn
 }
@@ -462,7 +543,8 @@ impl<'spv, 'tcx> MiscMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 
     fn get_fn_addr(&self, instance: Instance<'tcx>) -> Self::Value {
-        get_fn(self, instance)
+        let function = get_fn(self, instance);
+        self.static_addr_of(function, Align::from_bytes(0).unwrap(), None)
     }
 
     fn eh_personality(&self) -> Self::Value {
@@ -497,12 +579,28 @@ impl<'spv, 'tcx> MiscMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn predefine_static(
         &self,
-        _def_id: DefId,
+        def_id: DefId,
         _linkage: Linkage,
         _visibility: Visibility,
-        _symbol_name: &str,
+        symbol_name: &str,
     ) {
-        // TODO: Implement statics
+        let instance = Instance::mono(self.tcx, def_id);
+        let ty = instance.ty(self.tcx, ParamEnv::reveal_all());
+        let spvty = self.layout_of(ty).spirv_type(self);
+
+        let g = self.define_global(symbol_name, spvty).unwrap_or_else(|| {
+            self.sess().span_fatal(
+                self.tcx.def_span(def_id),
+                &format!("symbol `{}` is already defined", symbol_name),
+            )
+        });
+
+        // unsafe {
+        //     llvm::LLVMRustSetLinkage(g, base::linkage_to_llvm(linkage));
+        //     llvm::LLVMRustSetVisibility(g, base::visibility_to_llvm(visibility));
+        // }
+
+        self.instances.borrow_mut().insert(instance, g);
     }
 
     fn predefine_fn(
@@ -514,13 +612,25 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     ) {
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
         let declared = self.declare_fn(symbol_name, &fn_abi);
-        self.function_defs.borrow_mut().insert(instance, declared);
+        self.instances.borrow_mut().insert(instance, declared);
     }
 }
 
 impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
-    fn declare_global(&self, _name: &str, _ty: Self::Type) -> Self::Value {
-        todo!()
+    fn declare_global(&self, name: &str, ty: Self::Type) -> Self::Value {
+        let ptr_ty = SpirvType::Pointer {
+            storage_class: StorageClass::Generic,
+            pointee: ty,
+        }
+        .def(self);
+        let result = self
+            .emit_global()
+            .variable(ptr_ty, None, StorageClass::Generic, None)
+            .with_type(ptr_ty);
+        self.declared_values
+            .borrow_mut()
+            .insert(name.to_string(), result);
+        result
     }
 
     fn declare_cfn(&self, _name: &str, _fn_type: Self::Type) -> Self::Function {
@@ -561,8 +671,12 @@ impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         result
     }
 
-    fn define_global(&self, _name: &str, _ty: Self::Type) -> Option<Self::Value> {
-        todo!()
+    fn define_global(&self, name: &str, ty: Self::Type) -> Option<Self::Value> {
+        if self.get_defined_value(name).is_some() {
+            None
+        } else {
+            Some(self.declare_global(name, ty))
+        }
     }
 
     fn define_private_global(&self, _ty: Self::Type) -> Self::Value {
@@ -573,8 +687,16 @@ impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         self.declared_values.borrow().get(name).copied()
     }
 
-    fn get_defined_value(&self, _name: &str) -> Option<Self::Value> {
-        todo!()
+    fn get_defined_value(&self, name: &str) -> Option<Self::Value> {
+        self.get_declared_value(name)
+        // self.get_declared_value(name).and_then(|val| {
+        //     let declaration = unsafe { llvm::LLVMIsDeclaration(val) != 0 };
+        //     if !declaration {
+        //         Some(val)
+        //     } else {
+        //         None
+        //     }
+        // })
     }
 }
 
@@ -740,7 +862,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         let raw_bytes = const_bytes(self, s.as_str().as_bytes());
         let ptr = self
             .builder
-            .find_cached_global(raw_bytes.def)
+            .find_global_constant_variable(raw_bytes.def)
             .unwrap_or_else(|| {
                 let ty = self.type_ptr_to(self.layout_of(self.tcx.types.str_).spirv_type(self));
                 self.emit_global()

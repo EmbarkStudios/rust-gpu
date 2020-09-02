@@ -23,6 +23,9 @@ pub enum SpirvType {
         field_offsets: Option<Vec<u32>>,
         field_names: Option<Vec<String>>,
     },
+    Opaque {
+        name: String,
+    },
     Vector {
         element: Word,
         count: Word,
@@ -131,6 +134,7 @@ impl SpirvType {
                 }
                 result
             }
+            SpirvType::Opaque { ref name } => cx.emit_global().type_opaque(name),
             SpirvType::Vector { element, count } => cx.emit_global().type_vector(element, count),
             SpirvType::Array { element, count } => cx.emit_global().type_array(element, count),
             SpirvType::Pointer {
@@ -183,6 +187,7 @@ impl SpirvType {
                 .iter()
                 .map(|&ty| cx.lookup_type(ty).sizeof_in_bits(cx))
                 .sum(),
+            SpirvType::Opaque { .. } => 0,
             SpirvType::Vector { element, count } => {
                 cx.lookup_type(element).sizeof_in_bits(cx)
                     * cx.builder.lookup_const_u64(count).unwrap() as usize
@@ -227,6 +232,7 @@ impl SpirvType {
                 _ => panic!("memset on float width {} not implemented yet", width),
             },
             SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
+            SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
             SpirvType::Vector { element, count } => {
                 let elem_pat = cx.lookup_type(element).memset_const_pattern(cx, fill_byte);
                 let count = cx.builder.lookup_const_u64(count).unwrap() as usize;
@@ -265,6 +271,7 @@ impl SpirvType {
                 _ => panic!("memset on float width {} not implemented yet", width),
             },
             SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
+            SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
             SpirvType::Array { element, count } | SpirvType::Vector { element, count } => {
                 let elem_pat = builder
                     .lookup_type(element)
@@ -317,6 +324,9 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                     .field("field_offsets", field_offsets)
                     .field("field_names", field_names)
                     .finish()
+            }
+            SpirvType::Opaque { ref name } => {
+                f.debug_struct("Opaque").field("name", &name).finish()
             }
             SpirvType::Vector { element, count } => f
                 .debug_struct("Vector")
@@ -397,6 +407,7 @@ impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
                 }
                 f.write_str(" }")
             }
+            SpirvType::Opaque { ref name } => write!(f, "struct {}", name),
             SpirvType::Vector { element, count } => {
                 let elem = self.cx.debug_type(element);
                 let len = self.cx.builder.lookup_const_u64(count);
@@ -822,7 +833,12 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
         TyKind::Dynamic(_, _) => "<dynamic>".to_string(),
         TyKind::Tuple(_) => "<tuple>".to_string(),
         // "An unsized FFI type that is opaque to Rust"
-        TyKind::Foreign(_def_id) => return SpirvType::Void.def(cx),
+        &TyKind::Foreign(def_id) => {
+            return SpirvType::Opaque {
+                name: cx.tcx.def_path_str(def_id),
+            }
+            .def(cx)
+        }
         other => panic!("TODO: Unimplemented TyKind in trans_struct: {:?}", other),
     };
     let mut field_types = Vec::new();

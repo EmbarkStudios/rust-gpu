@@ -6,12 +6,13 @@ use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::StorageClass;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::common::IntPredicate;
+use rustc_codegen_ssa::glue;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, AsmBuilderMethods, BackendTypes, BuilderMethods,
-    CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen, InlineAsmOperandRef,
-    IntrinsicCallMethods, OverflowOp, StaticBuilderMethods,
+    ConstMethods, CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen,
+    InlineAsmOperandRef, IntrinsicCallMethods, OverflowOp, StaticBuilderMethods,
 };
 use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::mir::coverage::{
@@ -278,7 +279,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     ) {
         let callee_ty = instance.ty(self.tcx, ParamEnv::reveal_all());
 
-        let (def_id, _substs) = match callee_ty.kind {
+        let (def_id, substs) = match callee_ty.kind {
             FnDef(def_id, substs) => (def_id, substs),
             _ => panic!("expected fn item type, found {}", callee_ty),
         };
@@ -296,6 +297,24 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         let result = PlaceRef::new_sized(llresult, fn_abi.ret.layout);
 
         let value = match name {
+            sym::size_of_val => {
+                let tp_ty = substs.type_at(0);
+                if let OperandValue::Pair(_, meta) = args[0].val {
+                    let (llsize, _) = glue::size_and_align_of_dst(self, tp_ty, Some(meta));
+                    llsize
+                } else {
+                    self.const_usize(self.layout_of(tp_ty).size.bytes())
+                }
+            }
+            sym::min_align_of_val => {
+                let tp_ty = substs.type_at(0);
+                if let OperandValue::Pair(_, meta) = args[0].val {
+                    let (_, llalign) = glue::size_and_align_of_dst(self, tp_ty, Some(meta));
+                    llalign
+                } else {
+                    self.const_usize(self.layout_of(tp_ty).align.abi.bytes())
+                }
+            }
             sym::size_of
             | sym::pref_align_of
             | sym::min_align_of
@@ -309,6 +328,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                     .unwrap();
                 OperandRef::from_const(self, value, ret_ty).immediate_or_packed_pair(self)
             }
+
             sym::copy_nonoverlapping
             | sym::copy
             | sym::volatile_copy_nonoverlapping_memory
@@ -341,6 +361,12 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 } else {
                     self.icmp(IntPredicate::IntNE, a, b)
                 }
+            }
+
+            sym::forget => {
+                // Effectively no-op
+                assert!(fn_abi.ret.is_ignore());
+                return;
             }
 
             sym::assume => {

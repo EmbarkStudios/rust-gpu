@@ -180,7 +180,26 @@ impl BuilderSpirv {
         Err("Definition not found")
     }
 
-    pub fn find_cached_global(&self, value: Word) -> Option<SpirvValue> {
+    pub fn lookup_global_constant_variable(&self, def: Word) -> Result<Word, &'static str> {
+        // TODO: Maybe assert that this indeed a constant?
+        let builder = self.builder.borrow();
+        for inst in &builder.module_ref().types_global_values {
+            if inst.result_id == Some(def) {
+                return if inst.class.opcode == Op::Variable {
+                    if let Some(&Operand::IdRef(id_ref)) = inst.operands.get(1) {
+                        Ok(id_ref)
+                    } else {
+                        Err("Instruction had no initializer")
+                    }
+                } else {
+                    Err("Instruction not OpVariable")
+                };
+            }
+        }
+        Err("Definition not found")
+    }
+
+    pub fn find_global_constant_variable(&self, value: Word) -> Option<SpirvValue> {
         let builder = self.builder.borrow();
         for inst in &builder.module_ref().types_global_values {
             if inst.class.opcode == Op::Variable {
@@ -192,6 +211,25 @@ impl BuilderSpirv {
             }
         }
         None
+    }
+
+    pub fn set_global_initializer(&self, global: Word, initialiezr: Word) {
+        let mut builder = self.builder.borrow_mut();
+        for inst in &mut builder.module_mut().types_global_values {
+            if inst.class.opcode == Op::Variable {
+                if let Some(&Operand::IdRef(id_ref)) = inst.operands.get(1) {
+                    if id_ref == global {
+                        assert_eq!(
+                            inst.operands.len(),
+                            1,
+                            "global already has initializer defined: {}",
+                            global
+                        );
+                        inst.operands.push(Operand::IdRef(initialiezr));
+                    }
+                }
+            }
+        }
     }
 
     pub fn select_block_by_id(&self, id: Word) -> BuilderCursor {
