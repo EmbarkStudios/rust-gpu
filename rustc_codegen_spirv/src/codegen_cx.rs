@@ -199,6 +199,20 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
                 .chain(once(Operand::LinkageType(LinkageType::Import))),
         )
     }
+
+    pub fn align_of(&self, ty: Ty<'tcx>) -> Align {
+        self.layout_of(ty).align.abi
+    }
+
+    pub fn size_of(&self, ty: Ty<'tcx>) -> Size {
+        self.layout_of(ty).size
+    }
+
+    #[allow(dead_code)]
+    pub fn size_and_align_of(&self, ty: Ty<'tcx>) -> (Size, Align) {
+        let layout = self.layout_of(ty);
+        (layout.size, layout.align.abi)
+    }
 }
 
 impl<'spv, 'tcx> BackendTypes for CodegenCx<'spv, 'tcx> {

@@ -5,15 +5,17 @@ use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::StorageClass;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
+use rustc_codegen_ssa::base::to_immediate;
 use rustc_codegen_ssa::common::IntPredicate;
 use rustc_codegen_ssa::glue;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
-    AbiBuilderMethods, ArgAbiMethods, AsmBuilderMethods, BackendTypes, BuilderMethods,
-    ConstMethods, CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen,
+    AbiBuilderMethods, ArgAbiMethods, AsmBuilderMethods, BackendTypes, BaseTypeMethods,
+    BuilderMethods, ConstMethods, CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen,
     InlineAsmOperandRef, IntrinsicCallMethods, OverflowOp, StaticBuilderMethods,
 };
+use rustc_codegen_ssa::MemFlags;
 use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::mir::coverage::{
     CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionIndex, Op,
@@ -26,7 +28,7 @@ use rustc_span::sym;
 use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, LayoutOf, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
-use std::{iter::empty, ops::Deref};
+use std::ops::Deref;
 
 macro_rules! math_intrinsic {
     ($self:ident, $arg_tys:ident, $args:ident, $int:ident, $uint:ident, $float:ident) => {{
@@ -124,6 +126,54 @@ impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
                 .unwrap()
                 .with_type(result_type)
         }
+    }
+
+    // TODO: Definitely add tests to make sure this impl is right.
+    fn rotate(&mut self, value: SpirvValue, shift: SpirvValue, is_left: bool) -> SpirvValue {
+        let (int_size, mask, zero) = match self.lookup_type(shift.ty) {
+            SpirvType::Integer(width, _) => {
+                if width > 32 {
+                    (
+                        self.builder
+                            .constant_u64(shift.ty, width as u64)
+                            .with_type(shift.ty),
+                        self.builder
+                            .constant_u64(shift.ty, (width - 1) as u64)
+                            .with_type(shift.ty),
+                        self.builder.constant_u64(shift.ty, 0).with_type(shift.ty),
+                    )
+                } else {
+                    (
+                        self.builder
+                            .constant_u32(shift.ty, width as u32)
+                            .with_type(shift.ty),
+                        self.builder
+                            .constant_u32(shift.ty, (width - 1) as u32)
+                            .with_type(shift.ty),
+                        self.builder.constant_u32(shift.ty, 0).with_type(shift.ty),
+                    )
+                }
+            }
+            other => panic!("Cannot rotate non-integer type: {}", other.debug(self)),
+        };
+        let bool = SpirvType::Bool.def(self);
+        // https://stackoverflow.com/a/10134877
+        let mask_shift = self.and(shift, mask);
+        let sub = self.sub(int_size, mask_shift);
+        let (lhs, rhs) = if is_left {
+            (self.shl(value, mask_shift), self.lshr(value, sub))
+        } else {
+            (self.lshr(value, mask_shift), self.shl(value, sub))
+        };
+        let or = self.or(lhs, rhs);
+        // "The result is undefined if Shift is greater than or equal to the bit width of the components of Base."
+        // So we need to check for zero shift, and don't use the shift result if it is.
+        let mask_is_zero = self
+            .emit()
+            .i_not_equal(bool, None, mask_shift.def, zero.def)
+            .unwrap()
+            .with_type(bool);
+        self.select(mask_is_zero, value, or)
     }
 }
 
@@ -303,7 +353,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                     let (llsize, _) = glue::size_and_align_of_dst(self, tp_ty, Some(meta));
                     llsize
                 } else {
-                    self.const_usize(self.layout_of(tp_ty).size.bytes())
+                    self.const_usize(self.size_of(tp_ty).bytes())
                 }
             }
             sym::min_align_of_val => {
@@ -312,7 +362,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                     let (_, llalign) = glue::size_and_align_of_dst(self, tp_ty, Some(meta));
                     llalign
                 } else {
-                    self.const_usize(self.layout_of(tp_ty).align.abi.bytes())
+                    self.const_usize(self.align_of(tp_ty).bytes())
                 }
             }
             sym::size_of
@@ -336,12 +386,48 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 let dst = args[0].immediate();
                 let src = args[1].immediate();
                 let count = args[2].immediate();
-                self.emit()
-                    .copy_memory_sized(dst.def, src.def, count.def, None, None, empty())
-                    .unwrap();
+                self.memcpy(
+                    dst,
+                    self.align_of(arg_tys[0]),
+                    src,
+                    self.align_of(arg_tys[1]),
+                    count,
+                    MemFlags::empty(),
+                );
                 assert!(fn_abi.ret.is_ignore());
                 return;
             }
+            sym::volatile_set_memory => {
+                let ty = substs.type_at(0);
+                let dst = args[0].immediate();
+                let val = args[1].immediate();
+                let count = args[2].immediate();
+                self.memset(dst, val, count, self.align_of(ty), MemFlags::empty());
+                assert!(fn_abi.ret.is_ignore());
+                return;
+            }
+            sym::volatile_load | sym::unaligned_volatile_load => {
+                let tp_ty = substs.type_at(0);
+                let mut ptr = args[0].immediate();
+                if let PassMode::Cast(ty) = fn_abi.ret.mode {
+                    ptr = self.pointercast(ptr, self.type_ptr_to(ty.spirv_type(self)));
+                }
+                let load = self.volatile_load(ptr);
+                to_immediate(self, load, self.layout_of(tp_ty))
+            }
+            sym::volatile_store => {
+                // rust-analyzer gets sad if you call args[0].deref()
+                let dst = OperandRef::deref(args[0], self.cx());
+                args[1].val.volatile_store(self, dst);
+                return;
+            }
+            sym::unaligned_volatile_store => {
+                // rust-analyzer gets sad if you call args[0].deref()
+                let dst = OperandRef::deref(args[0], self.cx());
+                args[1].val.unaligned_volatile_store(self, dst);
+                return;
+            }
+
             sym::offset => {
                 let ptr = args[0].immediate();
                 let offset = args[1].immediate();
@@ -351,6 +437,15 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 let ptr = args[0].immediate();
                 let offset = args[1].immediate();
                 self.gep(ptr, &[offset])
+            }
+
+            sym::discriminant_value => {
+                if ret_ty.is_integral() {
+                    // rust-analyzer gets sad if you call args[0].deref()
+                    OperandRef::deref(args[0], self.cx).codegen_get_discr(self, ret_ty)
+                } else {
+                    panic!("Invalid discriminant type for `{:?}`", arg_tys[0])
+                }
             }
 
             sym::ptr_guaranteed_eq | sym::ptr_guaranteed_ne => {
@@ -422,6 +517,13 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
             sym::unchecked_shl => math_intrinsic_int! {self, arg_tys, args, shl, shl},
             sym::unchecked_shr => math_intrinsic_int! {self, arg_tys, args, ashr, lshr},
             sym::exact_div => math_intrinsic! {self, arg_tys, args, sdiv, udiv, fdiv},
+
+            sym::rotate_left | sym::rotate_right => {
+                let is_left = name == sym::rotate_left;
+                let val = args[0].immediate();
+                let shift = args[1].immediate();
+                self.rotate(val, shift, is_left)
+            }
 
             // TODO: Do we want to manually implement these instead of using intel instructions?
             sym::ctlz | sym::ctlz_nonzero => self
