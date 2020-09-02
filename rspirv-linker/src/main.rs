@@ -333,7 +333,7 @@ impl DefAnalyzer {
     }
 }
 
-fn import_kill_annotations_and_debug(info: &LinkInfo, module: &mut rspirv::dr::Module) {
+fn import_kill_annotations_and_debug(module: &mut rspirv::dr::Module, info: &LinkInfo) {
     for import in &info.imports {
         kill_annotations_and_debug(module, import.id);
         for param in &import.parameters {
@@ -377,7 +377,42 @@ fn kill_linkage_instructions(pairs: &Vec<ImportExportPair>, module: &mut rspirv:
     })
 }
 
-fn link(inputs: &mut [&mut rspirv::dr::Module]) -> () {
+fn compact_ids(module: &mut rspirv::dr::Module) -> u32 {
+    let mut remap = HashMap::new();
+
+    let mut insert = |current_id: u32| -> u32 {
+        if remap.contains_key(&current_id) {
+            remap[&current_id]
+        } else {
+            let new_id = remap.len() as u32 + 1;
+            remap.insert(current_id, new_id);
+            new_id
+        }
+    };
+
+    module.all_inst_iter_mut().for_each(|inst| {
+        if let Some(ref mut result_id) = &mut inst.result_id {
+            *result_id = insert(*result_id);
+        }
+
+        if let Some(ref mut result_type) = &mut inst.result_type {
+            *result_type = insert(*result_type);
+        }
+
+        inst.operands.iter_mut().for_each(|op| match op {
+            rspirv::dr::Operand::IdMemorySemantics(w)
+            | rspirv::dr::Operand::IdScope(w)
+            | rspirv::dr::Operand::IdRef(w) => {
+                *w = insert(*w);
+            }
+            _ => {}
+        })
+    });
+
+    remap.len() as u32 + 1
+}
+
+fn link(inputs: &mut [&mut rspirv::dr::Module]) -> rspirv::dr::Module {
     // 1. shift all the ids
     let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
 
@@ -400,9 +435,11 @@ fn link(inputs: &mut [&mut rspirv::dr::Module]) -> () {
     }
 
     let mut output = loader.module();
+
     // 4. find import / export pairs
     let defs = DefAnalyzer::new(&output);
     let info = find_import_export_pairs(&output, &defs);
+
     // 5. ensure import / export pairs have matching types and defintions
     let matching_pairs = info.ensure_matching_import_export_pairs(&defs);
 
@@ -410,7 +447,7 @@ fn link(inputs: &mut [&mut rspirv::dr::Module]) -> () {
     remove_duplicates(&mut output);
 
     // 7. remove names and decorations of import variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L404
-    import_kill_annotations_and_debug(&info, &mut output);
+    import_kill_annotations_and_debug(&mut output, &info);
 
     // 8. rematch import variables and functions to export variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L255
     for pair in matching_pairs {
@@ -421,8 +458,10 @@ fn link(inputs: &mut [&mut rspirv::dr::Module]) -> () {
     kill_linkage_instructions(&matching_pairs, &mut output);
 
     // 10. compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
+    let max_id = compact_ids(&mut output);
+    
     // 11. output the module
-    println!("{}\n\n", output.disassemble());
+    output
 }
 
 fn main() {
@@ -432,5 +471,6 @@ fn main() {
     let mut body1 = load(&body1[..]);
     let mut body2 = load(&body2[..]);
 
-    link(&mut [&mut body1, &mut body2]);
+    let output = link(&mut [&mut body1, &mut body2]);
+    println!("{}\n\n", output.disassemble());
 }
