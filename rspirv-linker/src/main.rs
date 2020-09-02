@@ -164,14 +164,17 @@ fn remove_duplicates(module: &mut rspirv::dr::Module) {
 struct LinkSymbol {
     name: String,
     id: u32,
+    type_id: u32,
+    parameters: Vec<rspirv::dr::Instruction>,
 }
 
+#[derive(Debug)]
 struct LinkInfo {
     imports: Vec<LinkSymbol>,
     exports: HashMap<String, Vec<LinkSymbol>>,
 }
 
-fn find_import_export_pairs(module: &rspirv::dr::Module) -> LinkInfo {
+fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> LinkInfo {
     let mut imports = vec![];
     let mut exports: HashMap<String, Vec<LinkSymbol>> = HashMap::new();
 
@@ -182,15 +185,49 @@ fn find_import_export_pairs(module: &rspirv::dr::Module) -> LinkInfo {
         {
             let id = match annotation.operands[0] {
                 rspirv::dr::Operand::IdRef(i) => i,
-                _ => panic!("Expected IdRef")
+                _ => panic!("Expected IdRef"),
             };
             let name = &annotation.operands[2];
             let ty = &annotation.operands[3];
 
+            let def_inst = defs
+                .def(id)
+                .expect(&format!("Need a matching op for ID {}", id));
+
+            let (type_id, parameters) = match def_inst.class.opcode {
+                spirv::Op::Variable => (def_inst.result_type.unwrap(), vec![]),
+                spirv::Op::Function => {
+                    let type_id = if let rspirv::dr::Operand::IdRef(id) = &def_inst.operands[1] {
+                        *id
+                    } else {
+                        panic!("Expected IdRef");
+                    };
+
+                    let def_fn = module
+                        .functions
+                        .iter()
+                        .find(|f| {
+                            let a = f.def.as_ref().unwrap();
+
+                            // both function instructions need to be 100% identical so check all members
+                            // jb-todo: derive(PartialEq) on Instruction?
+                            a.result_id == def_inst.result_id
+                                && a.class == def_inst.class
+                                && a.result_type == def_inst.result_type
+                                && a.operands == def_inst.operands
+                        })
+                        .unwrap();
+
+                    (type_id, def_fn.parameters.clone())
+                }
+                _ => panic!("Unexpected op"),
+            };
+
             let symbol = LinkSymbol {
                 name: name.to_string(),
                 id,
-                validate the type of the function parameters and scan for OpVariable
+                type_id,
+                parameters,
             };
 
             if ty == &rspirv::dr::Operand::LinkageType(spirv::LinkageType::Import) {
@@ -204,9 +241,53 @@ fn find_import_export_pairs(module: &rspirv::dr::Module) -> LinkInfo {
         }
     }
 
-    LinkInfo {
-        imports,
-        exports
+    LinkInfo { imports, exports }
+}
+
+struct DefAnalyzer {
+    def_ids: HashMap<u32, rspirv::dr::Instruction>,
+}
+
+impl DefAnalyzer {
+    fn new(module: &rspirv::dr::Module) -> Self {
+        let mut def_ids = HashMap::new();
+
+        module.all_inst_iter().for_each(|inst| {
+            if let Some(def_id) = inst.result_id {
+                def_ids
+                    .entry(def_id)
+                    .and_modify(|stored_inst| {
+                        *stored_inst = inst.clone();
+                    })
+                    .or_insert(inst.clone());
+            }
+        });
+
+        Self { def_ids }
+    }
+
+    fn def(&self, id: u32) -> Option<&rspirv::dr::Instruction> {
+        self.def_ids.get(&id)
+    }
+}
+
+fn ensure_matching_import_export_pairs(info: &LinkInfo, defs: &DefAnalyzer) {
+    for import in &info.imports {
+        let potential_matching_exports = info.exports.get(&import.name);
+        if let Some(potential_matching_exports) = potential_matching_exports {
+            for potential_export in potential_matching_exports {
+                for (import_param, export_param) in import.parameters.iter().zip(potential_export.parameters.iter()) {
+                    if !import_param.is_type_identical(export_param) {
+                        panic!("Type error in signatures")
+                    }
+
+                    // jb-todo: validate that OpDecoration is identical too
+                }
+            }
+
+        } else {
+            panic!("Can't find matching export for {}", import.name);
+        }
     }
 }
 
@@ -234,11 +315,12 @@ fn link(inputs: &mut [&mut rspirv::dr::Module]) -> () {
 
     let mut output = loader.module();
     // 4. find import / export pairs
-    find_import_export_pairs(&output);
+    let defs = DefAnalyzer::new(&output);
+    let info = find_import_export_pairs(&output, &defs);
     // 5. ensure import / export pairs have matching types and defintions
+    ensure_matching_import_export_pairs(&info, &defs);
     // 6. remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     remove_duplicates(&mut output);
-
 
     // 7. remove names and decorations of import variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L404
     // 8. rematch import variables and functions to export variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L255
