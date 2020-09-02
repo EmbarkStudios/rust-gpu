@@ -88,18 +88,26 @@ fn remove_duplicate_ext_inst_imports(module: &mut rspirv::dr::Module) {
 }
 
 fn kill_with_id(insts: &mut Vec<rspirv::dr::Instruction>, id: u32) {
+    kill_with(insts, |inst| {
+        match inst.operands[0] {
+            rspirv::dr::Operand::IdMemorySemantics(w)
+            | rspirv::dr::Operand::IdScope(w)
+            | rspirv::dr::Operand::IdRef(w) if w == id => {
+                true
+            }
+            _ => false
+        }
+    })
+}
+
+fn kill_with<F> (insts: &mut Vec<rspirv::dr::Instruction>, f: F) 
+where F: Fn(&rspirv::dr::Instruction) -> bool
+{
     let mut idx = insts.len() - 1;
     // odd backwards loop so we can swap_remove
     loop {
-        match insts[idx].operands[0] {
-            rspirv::dr::Operand::IdMemorySemantics(w)
-            | rspirv::dr::Operand::IdScope(w)
-            | rspirv::dr::Operand::IdRef(w) => {
-                if w == id {
-                    insts.swap_remove(idx);
-                }
-            }
-            _ => {}
+        if f(&insts[idx]) {
+            insts.swap_remove(idx);
         }
 
         if idx == 0 {
@@ -181,6 +189,15 @@ struct LinkInfo {
     potential_pairs: Vec<ImportExportPair>,
 }
 
+fn inst_fully_eq(a: &rspirv::dr::Instruction, b: &rspirv::dr::Instruction) -> bool {
+    // both function instructions need to be 100% identical so check all members
+    // jb-todo: derive(PartialEq) on Instruction?
+    a.result_id == b.result_id
+        && a.class == b.class
+        && a.result_type == b.result_type
+        && a.operands == b.operands
+}
+
 fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> LinkInfo {
     let mut imports = vec![];
     let mut exports: HashMap<String, Vec<LinkSymbol>> = HashMap::new();
@@ -216,12 +233,7 @@ fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> 
                         .find(|f| {
                             let a = f.def.as_ref().unwrap();
 
-                            // both function instructions need to be 100% identical so check all members
-                            // jb-todo: derive(PartialEq) on Instruction?
-                            a.result_id == def_inst.result_id
-                                && a.class == def_inst.class
-                                && a.result_type == def_inst.result_type
-                                && a.operands == def_inst.operands
+                            inst_fully_eq(a, def_inst)
                         })
                         .unwrap();
 
@@ -330,6 +342,41 @@ fn import_kill_annotations_and_debug(info: &LinkInfo, module: &mut rspirv::dr::M
     }
 }
 
+fn kill_linkage_instructions(pairs: &Vec<ImportExportPair>, module: &mut rspirv::dr::Module) {
+    // drop imported functions
+    for pair in pairs.iter() {
+        module.functions.retain(|f| {
+            pair.import.id != f.def.as_ref().unwrap().result_id.unwrap()
+        });
+    }
+
+    // drop imported variables
+    for pair in pairs.iter() {
+        module.types_global_values.retain(|v| {
+            pair.import.id != v.result_id.unwrap()
+        });
+    }
+
+    // drop linkage attributes (both import and export)
+    kill_with(&mut module.annotations,  |inst| {
+        let eq = pairs.iter().find(|p| {
+            if let rspirv::dr::Operand::IdRef(id) = inst.operands[0] {
+                id == p.import.id || id == p.export.id
+            } else {
+                false
+            }
+        }).is_some();
+
+        eq && inst.class.opcode == spirv::Op::Decorate && inst.operands[1] == rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
+    });
+
+    // drop OpCapability Linkage
+    kill_with(&mut module.capabilities, |inst| {
+        inst.class.opcode == spirv::Op::Capability && inst.operands[0] == rspirv::dr::Operand::Capability(spirv::Capability::Linkage)
+
+    })
+}
+
 fn link(inputs: &mut [&mut rspirv::dr::Module]) -> () {
     // 1. shift all the ids
     let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
@@ -371,6 +418,8 @@ fn link(inputs: &mut [&mut rspirv::dr::Module]) -> () {
     }
 
     // 9. remove linkage specific instructions
+    kill_linkage_instructions(&matching_pairs, &mut output);
+
     // 10. compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
     // 11. output the module
     println!("{}\n\n", output.disassemble());
