@@ -391,9 +391,10 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         .def(self)
     }
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
-        let (field_offsets, size) = crate::abi::auto_struct_layout(self, &els);
+        let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, &els);
         SpirvType::Adt {
             name: "<generated_struct>".to_string(),
+            align,
             size,
             field_types: els.to_vec(),
             field_offsets,
@@ -910,10 +911,11 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     fn const_struct(&self, elts: &[Self::Value], _packed: bool) -> Self::Value {
         // Presumably this will get bitcasted to the right type?
         let field_types = elts.iter().map(|f| f.ty).collect::<Vec<_>>();
-        let (field_offsets, size) = crate::abi::auto_struct_layout(self, &field_types);
+        let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, &field_types);
         let struct_ty = SpirvType::Adt {
             name: "<const_struct>".to_string(),
             size,
+            align,
             field_types,
             field_offsets,
             field_names: None,
@@ -1031,10 +1033,10 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 
 fn create_const_alloc(cx: &CodegenCx<'_, '_>, alloc: &Allocation, ty: Word) -> SpirvValue {
     println!("Creating const alloc of type {}", cx.debug_type(ty));
-    let mut offset = 0;
+    let mut offset = Size::ZERO;
     let result = create_const_alloc2(cx, alloc, &mut offset, ty);
     assert_eq!(
-        offset,
+        offset.bytes_usize(),
         alloc.len(),
         "create_const_alloc must consume all bytes of an Allocation"
     );
@@ -1045,11 +1047,13 @@ fn create_const_alloc(cx: &CodegenCx<'_, '_>, alloc: &Allocation, ty: Word) -> S
 fn create_const_alloc2(
     cx: &CodegenCx<'_, '_>,
     alloc: &Allocation,
-    offset: &mut usize,
+    offset: &mut Size,
     ty: Word,
 ) -> SpirvValue {
-    println!("const at {}: {}", *offset, cx.debug_type(ty));
-    match cx.lookup_type(ty) {
+    let ty_concrete = cx.lookup_type(ty);
+    *offset = offset.align_to(ty_concrete.alignof(cx));
+    println!("const at {}: {}", offset.bytes(), cx.debug_type(ty));
+    match ty_concrete {
         SpirvType::Void => panic!("Cannot create const alloc of type void"),
         SpirvType::Bool => match read_alloc_val(cx, alloc, offset, 1) != 0 {
             true => cx.emit_global().constant_true(ty),
@@ -1079,14 +1083,14 @@ fn create_const_alloc2(
                 .iter()
                 .zip(field_offsets.iter())
                 .map(|(&ty, &field_offset)| {
-                    create_const_alloc2(cx, alloc, &mut (base + field_offset as usize), ty).def
+                    create_const_alloc2(cx, alloc, &mut (base + field_offset), ty).def
                 })
                 .collect::<Vec<_>>();
             if let Some(size) = size {
-                *offset += size as usize;
+                *offset += size;
             } else {
                 assert_eq!(
-                    *offset,
+                    offset.bytes_usize(),
                     alloc.len(),
                     "create_const_alloc must consume all bytes of an Allocation after an unsized struct"
                 );
@@ -1107,7 +1111,7 @@ fn create_const_alloc2(
         }
         SpirvType::RuntimeArray { element } => {
             let mut values = Vec::new();
-            while *offset != alloc.len() {
+            while offset.bytes_usize() != alloc.len() {
                 values.push(create_const_alloc2(cx, alloc, offset, element).def);
             }
             cx.emit_global()
@@ -1135,34 +1139,32 @@ fn create_const_alloc2(
 fn read_alloc_val<'a>(
     cx: &CodegenCx<'_, '_>,
     alloc: &'a Allocation,
-    offset: &mut usize,
+    offset: &mut Size,
     len: usize,
 ) -> u128 {
-    let bytes = alloc.inspect_with_uninit_and_ptr_outside_interpreter(*offset..(*offset + len));
+    let off = offset.bytes_usize();
+    let bytes = alloc.inspect_with_uninit_and_ptr_outside_interpreter(off..(off + len));
     // check relocations (pointer values)
     assert!({
-        let start = offset.saturating_sub(cx.data_layout().pointer_size.bytes() as usize - 1);
-        let end = *offset + len;
+        let start = off.saturating_sub(cx.data_layout().pointer_size.bytes_usize() - 1);
+        let end = off + len;
         alloc
             .relocations()
             .range(Size::from_bytes(start)..Size::from_bytes(end))
             .is_empty()
     });
-    *offset += len;
+    *offset += Size::from_bytes(len);
     read_target_uint(cx.data_layout().endian, bytes).unwrap()
 }
 
 // Advances offset by ptr size
-fn read_alloc_ptr<'a>(
-    cx: &CodegenCx<'_, '_>,
-    alloc: &'a Allocation,
-    offset: &mut usize,
-) -> Pointer {
-    let len = cx.data_layout().pointer_size.bytes() as usize;
-    let bytes = alloc.inspect_with_uninit_and_ptr_outside_interpreter(*offset..(*offset + len));
+fn read_alloc_ptr<'a>(cx: &CodegenCx<'_, '_>, alloc: &'a Allocation, offset: &mut Size) -> Pointer {
+    let off = offset.bytes_usize();
+    let len = cx.data_layout().pointer_size.bytes_usize();
+    let bytes = alloc.inspect_with_uninit_and_ptr_outside_interpreter(off..(off + len));
     let inner_offset = read_target_uint(cx.data_layout().endian, bytes).unwrap();
-    let &((), alloc_id) = alloc.relocations().get(&Size::from_bytes(*offset)).unwrap();
-    *offset += len;
+    let &((), alloc_id) = alloc.relocations().get(&Size::from_bytes(off)).unwrap();
+    *offset += Size::from_bytes(len);
     Pointer::new_with_tag(alloc_id, Size::from_bytes(inner_offset), ())
 }
 

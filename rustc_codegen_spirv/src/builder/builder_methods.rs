@@ -749,11 +749,10 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                 let pat = elem_ty_spv
                     .memset_const_pattern(self, fill_byte)
                     .with_type(elem_ty);
-                let count = size
-                    / (elem_ty_spv
-                        .sizeof_in_bits(self)
-                        .expect("Memset on unsized values not supported")
-                        / 8);
+                let elem_ty_sizeof = elem_ty_spv
+                    .sizeof(self)
+                    .expect("Memset on unsized values not supported");
+                let count = size / elem_ty_sizeof.bytes_usize();
                 if count == 1 {
                     self.store(pat, ptr, Align::from_bytes(0).unwrap());
                 } else {
@@ -775,11 +774,10 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                 let pat = elem_ty_spv
                     .memset_dynamic_pattern(self, fill_byte.def)
                     .with_type(elem_ty);
-                let count = size
-                    / (elem_ty_spv
-                        .sizeof_in_bits(self)
-                        .expect("Memset on unsized values not supported")
-                        / 8);
+                let elem_ty_sizeof = elem_ty_spv
+                    .sizeof(self)
+                    .expect("Memset on unsized values not supported");
+                let count = size / elem_ty_sizeof.bytes_usize();
                 if count == 1 {
                     self.store(pat, ptr, Align::from_bytes(0).unwrap());
                 } else {

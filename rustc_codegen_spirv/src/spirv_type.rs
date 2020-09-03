@@ -2,6 +2,7 @@ use crate::builder::Builder;
 use crate::codegen_cx::CodegenCx;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
+use rustc_target::abi::{Align, Size};
 use std::fmt;
 use std::iter::once;
 
@@ -14,11 +15,10 @@ pub enum SpirvType {
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
         name: String,
-        /// sizeof struct in *bytes*
-        size: Option<u32>,
+        align: Align,
+        size: Option<Size>,
         field_types: Vec<Word>,
-        /// *byte* offsets
-        field_offsets: Vec<u32>,
+        field_offsets: Vec<Size>,
         field_names: Option<Vec<String>>,
     },
     Opaque {
@@ -109,6 +109,7 @@ impl SpirvType {
             SpirvType::Float(width) => cx.emit_global().type_float(width),
             SpirvType::Adt {
                 ref name,
+                align: _,
                 size: _,
                 ref field_types,
                 ref field_offsets,
@@ -125,7 +126,9 @@ impl SpirvType {
                         result,
                         index as u32,
                         Decoration::Offset,
-                        [Operand::LiteralInt32(offset)].iter().cloned(),
+                        [Operand::LiteralInt32(offset.bytes() as u32)]
+                            .iter()
+                            .cloned(),
                     );
                 }
                 if let Some(field_names) = field_names {
@@ -141,9 +144,9 @@ impl SpirvType {
                 // ArrayStride decoration wants in *bytes*
                 let element_size = cx
                     .lookup_type(element)
-                    .sizeof_in_bits(cx)
+                    .sizeof(cx)
                     .expect("Element of sized array must be sized")
-                    / 8;
+                    .bytes();
                 let result = cx.emit_global().type_array(element, count);
                 cx.emit_global().decorate(
                     result,
@@ -191,27 +194,42 @@ impl SpirvType {
         SpirvTypePrinter { ty: self, cx }
     }
 
-    pub fn sizeof_in_bits<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Option<usize> {
+    pub fn sizeof<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Option<Size> {
         let result = match *self {
-            SpirvType::Void => 0,
-            SpirvType::Bool => 1,
-            SpirvType::Integer(width, _) => width as usize,
-            SpirvType::Float(width) => width as usize,
-            SpirvType::Adt { size, .. } => (size? * 8) as usize,
-            SpirvType::Opaque { .. } => 0,
+            SpirvType::Void => Size::ZERO,
+            SpirvType::Bool => Size::from_bytes(1),
+            SpirvType::Integer(width, _) => Size::from_bits(width),
+            SpirvType::Float(width) => Size::from_bits(width),
+            SpirvType::Adt { size, .. } => size?,
+            SpirvType::Opaque { .. } => Size::ZERO,
             SpirvType::Vector { element, count } => {
-                cx.lookup_type(element).sizeof_in_bits(cx)?
-                    * cx.builder.lookup_const_u64(count).unwrap() as usize
+                cx.lookup_type(element).sizeof(cx)? * cx.builder.lookup_const_u64(count).unwrap()
             }
             SpirvType::Array { element, count } => {
-                cx.lookup_type(element).sizeof_in_bits(cx)?
-                    * cx.builder.lookup_const_u64(count).unwrap() as usize
+                cx.lookup_type(element).sizeof(cx)? * cx.builder.lookup_const_u64(count).unwrap()
             }
             SpirvType::RuntimeArray { .. } => return None,
-            SpirvType::Pointer { .. } => cx.tcx.data_layout.pointer_size.bits() as usize,
-            SpirvType::Function { .. } => cx.tcx.data_layout.pointer_size.bits() as usize,
+            SpirvType::Pointer { .. } => cx.tcx.data_layout.pointer_size,
+            SpirvType::Function { .. } => cx.tcx.data_layout.pointer_size,
         };
         Some(result)
+    }
+
+    pub fn alignof<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Align {
+        match *self {
+            SpirvType::Void => Align::from_bytes(0).unwrap(),
+            SpirvType::Bool => Align::from_bytes(1).unwrap(),
+            SpirvType::Integer(width, _) => Align::from_bits(width as u64).unwrap(),
+            SpirvType::Float(width) => Align::from_bits(width as u64).unwrap(),
+            SpirvType::Adt { align, .. } => align,
+            SpirvType::Opaque { .. } => Align::from_bytes(0).unwrap(),
+            // TODO: Is this right? (must match rustc's understanding)
+            SpirvType::Vector { element, .. } => cx.lookup_type(element).alignof(cx),
+            SpirvType::Array { element, .. } => cx.lookup_type(element).alignof(cx),
+            SpirvType::RuntimeArray { element } => cx.lookup_type(element).alignof(cx),
+            SpirvType::Pointer { .. } => cx.tcx.data_layout.pointer_align.abi,
+            SpirvType::Function { .. } => cx.tcx.data_layout.pointer_align.abi,
+        }
     }
 
     pub fn memset_const_pattern<'spv, 'tcx>(
@@ -329,6 +347,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
             SpirvType::Float(width) => f.debug_struct("Float").field("width", &width).finish(),
             SpirvType::Adt {
                 ref name,
+                align,
                 size,
                 ref field_types,
                 ref field_offsets,
@@ -340,6 +359,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                     .collect::<Vec<_>>();
                 f.debug_struct("Adt")
                     .field("name", &name)
+                    .field("align", &align)
                     .field("size", &size)
                     .field("field_types", &fields)
                     .field("field_offsets", field_offsets)
@@ -414,6 +434,7 @@ impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
             SpirvType::Float(width) => write!(f, "f{}", width),
             SpirvType::Adt {
                 ref name,
+                align: _,
                 size: _,
                 ref field_types,
                 field_offsets: _,

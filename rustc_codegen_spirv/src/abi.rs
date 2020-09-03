@@ -4,7 +4,7 @@ use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
-use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Variants};
+use rustc_target::abi::{Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, Variants};
 
 pub trait ConvSpirvType<'spv, 'tcx> {
     fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word;
@@ -77,10 +77,11 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for CastTarget {
             args.push(SpirvType::Integer(rem_bytes as u32 * 8, false).def(cx));
         }
 
-        let (field_offsets, size) = auto_struct_layout(cx, &args);
+        let (field_offsets, _, _) = auto_struct_layout(cx, &args);
         SpirvType::Adt {
             name: "<cast_target>".to_string(),
-            size,
+            size: Some(self.size(cx)),
+            align: self.align(cx),
             field_types: args,
             field_offsets,
             field_names: None,
@@ -169,7 +170,8 @@ fn trans_type_impl<'spv, 'tcx>(
         // An empty struct is zero-sized
         return SpirvType::Adt {
             name: "<zst>".to_string(),
-            size: Some(0),
+            size: Some(Size::ZERO),
+            align: Align::from_bytes(0).unwrap(),
             field_types: Vec::new(),
             field_offsets: Vec::new(),
             field_names: None,
@@ -189,10 +191,12 @@ fn trans_type_impl<'spv, 'tcx>(
             // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
             let one_spirv = trans_scalar_pair_impl(cx, ty, one, 0, false);
             let two_spirv = trans_scalar_pair_impl(cx, ty, two, 1, false);
-            let (field_offsets, size) = auto_struct_layout(cx, &[one_spirv, two_spirv]);
+            let (field_offsets, _, _) = auto_struct_layout(cx, &[one_spirv, two_spirv]);
+            let size = if ty.is_unsized() { None } else { Some(ty.size) };
             SpirvType::Adt {
                 name: format!("{}", ty.ty),
                 size,
+                align: ty.align.abi,
                 field_types: vec![one_spirv, two_spirv],
                 field_offsets,
                 field_names: None,
@@ -403,20 +407,29 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx
     }
 }
 
-// returns (field_offsets, size)
+// returns (field_offsets, size, align)
 pub fn auto_struct_layout<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
     field_types: &[Word],
-) -> (Vec<u32>, Option<u32>) {
+) -> (Vec<Size>, Option<Size>, Align) {
     let mut field_offsets = Vec::with_capacity(field_types.len());
-    let mut offset = Some(0);
+    let mut offset = Some(Size::ZERO);
+    let mut max_align = Align::from_bytes(0).unwrap();
     for &field_type in field_types {
-        let this_offset = offset.expect("Unsized values can only be the last field in a struct");
+        let spirv_type = cx.lookup_type(field_type);
+        let field_size = spirv_type.sizeof(cx);
+        let field_align = spirv_type.alignof(cx);
+        let this_offset = offset
+            .expect("Unsized values can only be the last field in a struct")
+            .align_to(field_align);
+
         field_offsets.push(this_offset);
-        let field_size_bits = cx.lookup_type(field_type).sizeof_in_bits(cx);
-        offset = field_size_bits.map(|size| this_offset + (size / 8) as u32);
+        if field_align > max_align {
+            max_align = field_align;
+        }
+        offset = field_size.map(|size| this_offset + size);
     }
-    (field_offsets, offset)
+    (field_offsets, offset, max_align)
 }
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
@@ -438,19 +451,16 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
         }
         other => panic!("TODO: Unimplemented TyKind in trans_struct: {:?}", other),
     };
-    let size = if ty.is_unsized() {
-        None
-    } else {
-        Some(ty.size.bytes() as u32)
-    };
+    let size = if ty.is_unsized() { None } else { Some(ty.size) };
+    let align = ty.align.abi;
     let mut field_types = Vec::new();
     let mut field_offsets = Vec::new();
     let mut field_names = Vec::new();
     for i in ty.fields.index_by_increasing_offset() {
         let field_ty = ty.field(cx, i);
         field_types.push(field_ty.spirv_type(cx));
-        let offset = ty.fields.offset(i).bytes();
-        field_offsets.push(offset as u32);
+        let offset = ty.fields.offset(i);
+        field_offsets.push(offset);
         if let Variants::Single { index } = ty.variants {
             if let TyKind::Adt(adt, _) = ty.ty.kind {
                 let field = &adt.variants[index].fields[i];
@@ -473,6 +483,7 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
     SpirvType::Adt {
         name,
         size,
+        align,
         field_types,
         field_offsets,
         field_names: Some(field_names),
