@@ -222,52 +222,51 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
     scalar: &Scalar,
     is_immediate: bool,
 ) -> Word {
-    // When we know the ty, try to fill in the pointer type in case we have it, instead of defaulting to pointer to u8.
     if scalar.value == Primitive::Pointer {
         match ty.ty.kind {
-            TyKind::Ref(_region, ty, _mutability) => {
-                let pointee = cx.layout_of(ty).spirv_type(cx);
-                return SpirvType::Pointer {
+            TyKind::Ref(_region, elem, _mutability) => {
+                let pointee = cx.layout_of(elem).spirv_type(cx);
+                SpirvType::Pointer {
                     storage_class: StorageClass::Generic,
                     pointee,
                 }
-                .def(cx);
+                .def(cx)
             }
             TyKind::RawPtr(type_and_mut) => {
                 let pointee = cx.layout_of(type_and_mut.ty).spirv_type(cx);
-                return SpirvType::Pointer {
+                SpirvType::Pointer {
                     storage_class: StorageClass::Generic,
                     pointee,
                 }
-                .def(cx);
+                .def(cx)
             }
             TyKind::FnPtr(sig) => {
                 let function = FnAbi::of_fn_ptr(cx, sig, &[]).spirv_type(cx);
-                return SpirvType::Pointer {
+                SpirvType::Pointer {
                     storage_class: StorageClass::Generic,
                     pointee: function,
                 }
-                .def(cx);
+                .def(cx)
             }
             TyKind::Adt(def, _) if def.is_box() => {
                 let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-                return ptr_ty.spirv_type(cx);
+                ptr_ty.spirv_type(cx)
             }
             TyKind::Tuple(substs) if substs.len() == 1 => {
                 let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
-                return trans_scalar_known_ty(cx, &item, scalar, is_immediate);
+                trans_scalar_known_ty(cx, &item, scalar, is_immediate)
             }
-            TyKind::Adt(_adt, _substs) => {}
-            TyKind::Closure(_def_id, _substs) => {}
+            TyKind::Adt(..) | TyKind::Closure(..) => {
+                trans_scalar_pointer_struct(cx, ty, scalar, None, is_immediate)
+            }
             ref kind => panic!(
                 "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
                 kind, ty
             ),
         }
+    } else {
+        trans_scalar_generic(cx, scalar, is_immediate)
     }
-
-    // fall back
-    trans_scalar_generic(cx, scalar, is_immediate)
 }
 
 // only pub for LayoutTypeMethods::scalar_pair_element_backend_type
@@ -295,33 +294,89 @@ fn trans_scalar_pair_impl<'spv, 'tcx>(
     // When we know the ty, try to fill in the pointer type in case we have it, instead of defaulting to pointer to u8.
     if scalar.value == Primitive::Pointer {
         match ty.ty.kind {
-            TyKind::Ref(..) | TyKind::RawPtr(_) => {
-                return ty.field(cx, index).spirv_type(cx);
+            TyKind::Ref(_, elem, _) => {
+                if cx.layout_of(elem).is_unsized() {
+                    trans_scalar_known_ty(cx, &ty.field(cx, index), scalar, is_immediate)
+                } else {
+                    // TODO: This is some old code when I was trying to get this to work. This might actually not be
+                    // needed, and the type is always unsized?
+                    SpirvType::Pointer {
+                        storage_class: StorageClass::Generic,
+                        pointee: cx.layout_of(elem).spirv_type(cx),
+                    }
+                    .def(cx)
+                }
+            }
+            TyKind::RawPtr(ty_and_mut) => {
+                let elem = ty_and_mut.ty;
+                if cx.layout_of(elem).is_unsized() {
+                    trans_scalar_known_ty(cx, &ty.field(cx, index), scalar, is_immediate)
+                } else {
+                    // Same comment as TyKind::Ref
+                    SpirvType::Pointer {
+                        storage_class: StorageClass::Generic,
+                        pointee: cx.layout_of(elem).spirv_type(cx),
+                    }
+                    .def(cx)
+                }
             }
             TyKind::Adt(def, _) if def.is_box() => {
                 let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-                return trans_scalar_pair_impl(cx, &ptr_ty, scalar, index, is_immediate);
+                trans_scalar_pair_impl(cx, &ptr_ty, scalar, index, is_immediate)
             }
             TyKind::Tuple(elements) if elements.len() == 1 => {
                 // The tuple is merely a wrapper, index into the tuple and retry.
                 // This happens in cases like (&[u8],)
                 let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
-                return trans_scalar_pair_impl(cx, &item, scalar, index, is_immediate);
+                trans_scalar_pair_impl(cx, &item, scalar, index, is_immediate)
             }
             TyKind::Tuple(elements) if elements.len() == 2 => {
-                return cx
-                    .layout_of(ty.ty.tuple_fields().nth(index).unwrap())
-                    .spirv_type(cx);
+                let sub_ty = cx.layout_of(ty.ty.tuple_fields().nth(index).unwrap());
+                trans_scalar_known_ty(cx, &sub_ty, scalar, is_immediate)
             }
-            TyKind::Adt(_adt, _substs) => {}
-            TyKind::Closure(_def_id, _substs) => {}
+            TyKind::Adt(..) | TyKind::Closure(..) => {
+                trans_scalar_pointer_struct(cx, ty, scalar, Some(index), is_immediate)
+            }
             ref kind => panic!(
                 "TODO: Unimplemented Primitive::Pointer TyKind in scalar pair ({:#?}):\n{:#?}",
                 kind, ty
             ),
         }
+    } else {
+        trans_scalar_generic(cx, scalar, is_immediate)
     }
-    trans_scalar_generic(cx, scalar, is_immediate)
+}
+
+// This is pretty weird. I have no idea how to explain what's going on here in a doc comment and not a full
+// conversation, so poke Ashley and I'll try to explain it.
+fn trans_scalar_pointer_struct<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    ty: &TyAndLayout<'tcx>,
+    scalar: &Scalar,
+    index: Option<usize>,
+    is_immediate: bool,
+) -> Word {
+    let fields = ty
+        .fields
+        .index_by_increasing_offset()
+        .map(|f| ty.field(cx, f))
+        .filter(|f| !f.is_zst())
+        .collect::<Vec<_>>();
+    assert!(fields.iter().all(|f| f != ty));
+    match index {
+        Some(index) => match fields.len() {
+            1 => trans_scalar_pair_impl(cx, &fields[0], scalar, index, is_immediate),
+            2 => trans_scalar_known_ty(cx, &fields[index], scalar, is_immediate),
+            other => panic!(
+                "Unable to dig scalar pair pointer type: fields length {}",
+                other
+            ),
+        },
+        None => match fields.len() {
+            1 => trans_scalar_known_ty(cx, &fields[0], scalar, is_immediate),
+            other => panic!("Unable to dig scalar pointer type: fields length {}", other),
+        },
+    }
 }
 
 fn trans_scalar_generic<'spv, 'tcx>(
@@ -341,18 +396,7 @@ fn trans_scalar_generic<'spv, 'tcx>(
         Primitive::F32 => SpirvType::Float(32).def(cx),
         Primitive::F64 => SpirvType::Float(64).def(cx),
         Primitive::Pointer => {
-            // It is extremely difficult for us to figure out the underlying scalar type here - rustc is not
-            // designed for this. For example, codegen_llvm emits a pointer to i8 here, in the method
-            // scalar_llvm_type_at, called from scalar_pair_element_llvm_type. The pointer is then bitcasted to
-            // the right type at the use site.
-            SpirvType::Pointer {
-                storage_class: StorageClass::Generic,
-                pointee: SpirvType::Opaque {
-                    name: "<unknown_ptr>".to_string(),
-                }
-                .def(cx),
-            }
-            .def(cx)
+            panic!("trans_scalar_generic Primitive::Pointer should be handled by caller")
         }
     }
 }
