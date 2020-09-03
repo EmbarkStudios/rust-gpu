@@ -334,6 +334,8 @@ impl LinkInfo {
             let import_result_type = defs.def(pair.import.type_id).unwrap();
             let export_result_type = defs.def(pair.export.type_id).unwrap();
 
+            // jb-todo: this  should recursively check type instead of doing a simple `is_type_identical`
+            // so skip for now when we're trying to match up OpTypeFunction's
             if import_result_type.class.opcode != spirv::Op::TypeFunction {
                 if !import_result_type.is_type_identical(export_result_type) {
                     return Err(LinkerError::TypeMismatch {
@@ -534,15 +536,15 @@ fn sort_globals(module: &mut rspirv::dr::Module) {
     let mut new_types_global_values = vec![];
 
     loop {
+        if ts.is_empty() {
+            break;
+        }
+
         let mut v = ts.pop_all();
         v.sort();
 
         for result_id in v {
             new_types_global_values.push(defs.def(result_id).unwrap().clone());
-        }
-
-        if ts.is_empty() {
-            break;
         }
     }
 

@@ -312,9 +312,9 @@ mod test {
         );
         Ok(())
     }
-
-    /*
-    jb-todo: this isn't validated yet in the linker (see ensure_matching_import_export_pairs)
+/*
+    
+    //jb-todo: this isn't validated yet in the linker (see ensure_matching_import_export_pairs)
     #[test]
     fn decoration_mismatch() -> Result<()> {
         let a = assemble_spirv(
@@ -339,8 +339,6 @@ mod test {
         Ok(())
     }*/
 
-    /*
-    jb-todo: disabled because `ensure_matching_import_export_pairs` is broken - it should recursively check type instead of doing a simple `is_type_identical`
     #[test]
     fn func_ctrl() -> Result<()> {
         let a = assemble_spirv(
@@ -368,18 +366,18 @@ mod test {
         let result = assemble_and_link(&[&a, &b], &Options::default())?;
 
         let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
-            %1 = OpTypeVoid
-            %2 = OpTypeFunction %1
-            %3 = OpTypeFloat 32
-            %4 = OpVariable %3 Uniform
-            %5 = OpFunction %1 Inline %2
+            %1 = OpTypeFloat 32
+            %2 = OpTypeVoid
+            %3 = OpTypeFunction %2
+            %4 = OpVariable %1 Uniform
+            %5 = OpFunction %2 Inline %3
             %6 = OpLabel
             OpReturn
             OpFunctionEnd"#;
 
         without_header_eq(result, expect);
         Ok(())
-    }*/
+    }
 /*
     #[test]
     fn func_ctrl() -> Result<()> {
