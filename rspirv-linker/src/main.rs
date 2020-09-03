@@ -4,7 +4,26 @@ use rspirv::binary::Consumer;
 use rspirv::binary::Disassemble;
 use rspirv::spirv;
 use std::collections::{HashMap, HashSet};
+use thiserror::Error;
 use topological_sort::TopologicalSort;
+
+#[derive(Error, Debug, PartialEq)]
+pub enum LinkerError {
+    #[error("Unresolved symbol {:?}", .0)]
+    UnresolvedSymbol(String),
+    #[error("Multiple exports found for {:?}", .0)]
+    MultipleExports(String),
+    #[error("Types mismatch for {:?}, imported with type {:?}, exported with type {:?}", .name, .import_type, .export_type)]
+    TypeMismatch {
+        name: String,
+        import_type: String,
+        export_type: String,
+    },
+    #[error("unknown data store error")]
+    Unknown,
+}
+
+type Result<T> = std::result::Result<T, LinkerError>;
 
 fn load(bytes: &[u8]) -> rspirv::dr::Module {
     let mut loader = rspirv::dr::Loader::new();
@@ -90,15 +109,21 @@ fn remove_duplicate_ext_inst_imports(module: &mut rspirv::dr::Module) {
 }
 
 fn kill_with_id(insts: &mut Vec<rspirv::dr::Instruction>, id: u32) {
-    kill_with(insts, |inst| match inst.operands[0] {
-        rspirv::dr::Operand::IdMemorySemantics(w)
-        | rspirv::dr::Operand::IdScope(w)
-        | rspirv::dr::Operand::IdRef(w)
-            if w == id =>
-        {
-            true
+    kill_with(insts, |inst| {
+        if inst.operands.is_empty() {
+            return false;
         }
-        _ => false,
+
+        match inst.operands[0] {
+            rspirv::dr::Operand::IdMemorySemantics(w)
+            | rspirv::dr::Operand::IdScope(w)
+            | rspirv::dr::Operand::IdRef(w)
+                if w == id =>
+            {
+                true
+            }
+            _ => false,
+        }
     })
 }
 
@@ -117,7 +142,7 @@ where
             insts.swap_remove(idx);
         }
 
-        if idx == 0 {
+        if idx == 0 || insts.is_empty() {
             break;
         }
 
@@ -133,14 +158,13 @@ fn kill_annotations_and_debug(module: &mut rspirv::dr::Module, id: u32) {
 fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
     // jb-todo: spirv-tools's linker has special case handling for SpvOpTypeForwardPointer,
     // not sure if we need that; see https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp for reference
-    let mut start = 0;
 
     // need to do this process iteratively because types can reference each other
     loop {
         let mut replace = None;
 
         // start with `nth` so we can restart this loop quickly after killing the op
-        for (i_idx, i) in module.types_global_values.iter().enumerate().nth(start) {
+        for (i_idx, i) in module.types_global_values.iter().enumerate() {
             let mut identical = None;
             for j in module.types_global_values.iter().skip(i_idx + 1) {
                 if i.is_type_identical(j) {
@@ -161,7 +185,6 @@ fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
             kill_annotations_and_debug(module, remove);
             replace_all_uses_with(module, remove, keep);
             module.types_global_values.swap_remove(kill_idx);
-            start = kill_idx; // jb-todo: is it correct to restart this loop here?
         } else {
             break;
         }
@@ -205,7 +228,7 @@ fn inst_fully_eq(a: &rspirv::dr::Instruction, b: &rspirv::dr::Instruction) -> bo
         && a.operands == b.operands
 }
 
-fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> LinkInfo {
+fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> Result<LinkInfo> {
     let mut imports = vec![];
     let mut exports: HashMap<String, Vec<LinkSymbol>> = HashMap::new();
 
@@ -218,7 +241,12 @@ fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> 
                 rspirv::dr::Operand::IdRef(i) => i,
                 _ => panic!("Expected IdRef"),
             };
-            let name = &annotation.operands[2];
+
+            let name = match &annotation.operands[2] {
+                rspirv::dr::Operand::LiteralString(s) => s,
+                _ => panic!("Expected LiteralString"),
+            };
+
             let ty = &annotation.operands[3];
 
             let def_inst = defs
@@ -271,26 +299,51 @@ fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> 
     .find_potential_pairs()
 }
 
+fn cleanup_type(mut ty: rspirv::dr::Instruction) -> String {
+    ty.result_id = None;
+    ty.disassemble()
+}
+
 impl LinkInfo {
-    fn find_potential_pairs(mut self) -> Self {
+    fn find_potential_pairs(mut self) -> Result<Self> {
         for import in &self.imports {
             let potential_matching_exports = self.exports.get(&import.name);
             if let Some(potential_matching_exports) = potential_matching_exports {
+                if potential_matching_exports.len() > 1 {
+                    return Err(LinkerError::MultipleExports(import.name.clone()));
+                }
+
                 self.potential_pairs.push(ImportExportPair {
                     import: import.clone(),
                     export: potential_matching_exports.first().unwrap().clone(),
                 });
             } else {
-                panic!("Can't find matching export for {}", import.name);
+                return Err(LinkerError::UnresolvedSymbol(import.name.clone()));
             }
         }
 
-        self
+        Ok(self)
     }
 
     /// returns the list of matching import / export pairs after validation the list of potential pairs
-    fn ensure_matching_import_export_pairs(&self) -> &Vec<ImportExportPair> {
+    fn ensure_matching_import_export_pairs(
+        &self,
+        defs: &DefAnalyzer,
+    ) -> Result<&Vec<ImportExportPair>> {
         for pair in &self.potential_pairs {
+            let import_result_type = defs.def(pair.import.type_id).unwrap();
+            let export_result_type = defs.def(pair.export.type_id).unwrap();
+
+            if import_result_type.class.opcode != spirv::Op::TypeFunction {
+                if !import_result_type.is_type_identical(export_result_type) {
+                    return Err(LinkerError::TypeMismatch {
+                        name: pair.import.name.clone(),
+                        import_type: cleanup_type(import_result_type.clone()),
+                        export_type: cleanup_type(export_result_type.clone()),
+                    });
+                }
+            }
+
             for (import_param, export_param) in pair
                 .import
                 .parameters
@@ -305,7 +358,7 @@ impl LinkInfo {
             }
         }
 
-        &self.potential_pairs
+        Ok(&self.potential_pairs)
     }
 }
 
@@ -386,6 +439,10 @@ fn kill_linkage_instructions(
         let eq = pairs
             .iter()
             .find(|p| {
+                if inst.operands.is_empty() {
+                    return false;
+                }
+
                 if let rspirv::dr::Operand::IdRef(id) = inst.operands[0] {
                     id == p.import.id || id == p.export.id
                 } else {
@@ -454,19 +511,19 @@ fn sort_globals(module: &mut rspirv::dr::Module) {
     let mut ts = TopologicalSort::<u32>::new();
 
     for t in module.types_global_values.iter() {
-        if let Some(result_type) = t.result_type {
-            if let Some(result_id) = t.result_id {
+        if let Some(result_id) = t.result_id {
+            if let Some(result_type) = t.result_type {
                 ts.add_dependency(result_type, result_id);
+            }
 
-                for op in &t.operands {
-                    match op {
-                        rspirv::dr::Operand::IdMemorySemantics(w)
-                        | rspirv::dr::Operand::IdScope(w)
-                        | rspirv::dr::Operand::IdRef(w) => {
-                            ts.add_dependency(*w, result_id); // the op defining the IdRef should come before our op / result_id
-                        }
-                        _ => {}
+            for op in &t.operands {
+                match op {
+                    rspirv::dr::Operand::IdMemorySemantics(w)
+                    | rspirv::dr::Operand::IdScope(w)
+                    | rspirv::dr::Operand::IdRef(w) => {
+                        ts.add_dependency(*w, result_id); // the op defining the IdRef should come before our op / result_id
                     }
+                    _ => {}
                 }
             }
         }
@@ -494,7 +551,7 @@ fn sort_globals(module: &mut rspirv::dr::Module) {
     module.types_global_values = new_types_global_values;
 }
 
-fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> rspirv::dr::Module {
+fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rspirv::dr::Module> {
     // shift all the ids
     let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
 
@@ -520,10 +577,10 @@ fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> rspirv::dr::M
 
     // find import / export pairs
     let defs = DefAnalyzer::new(&output);
-    let info = find_import_export_pairs(&output, &defs);
+    let info = find_import_export_pairs(&output, &defs)?;
 
     // ensure import / export pairs have matching types and defintions
-    let matching_pairs = info.ensure_matching_import_export_pairs();
+    let matching_pairs = info.ensure_matching_import_export_pairs(&defs)?;
 
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     remove_duplicates(&mut output);
@@ -557,10 +614,10 @@ fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> rspirv::dr::M
     println!("{}\n\n", output.disassemble());
 
     // output the module
-    output
+    Ok(output)
 }
 
-fn main() {
+fn main() -> Result<()> {
     let body1 = include_bytes!("../test/1/body_1.spv");
     let body2 = include_bytes!("../test/1/body_2.spv");
 
@@ -572,6 +629,8 @@ fn main() {
         partial: false,
     };
 
-    let output = link(&mut [&mut body1, &mut body2], &opts);
+    let output = link(&mut [&mut body1, &mut body2], &opts)?;
     println!("{}\n\n", output.disassemble());
+
+    Ok(())
 }
