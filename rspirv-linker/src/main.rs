@@ -1,8 +1,10 @@
-use rspirv::binary::Assemble;
+mod test;
+
 use rspirv::binary::Consumer;
 use rspirv::binary::Disassemble;
 use rspirv::spirv;
 use std::collections::{HashMap, HashSet};
+use topological_sort::TopologicalSort;
 
 fn load(bytes: &[u8]) -> rspirv::dr::Module {
     let mut loader = rspirv::dr::Loader::new();
@@ -104,6 +106,10 @@ fn kill_with<F>(insts: &mut Vec<rspirv::dr::Instruction>, f: F)
 where
     F: Fn(&rspirv::dr::Instruction) -> bool,
 {
+    if insts.is_empty() {
+        return;
+    }
+
     let mut idx = insts.len() - 1;
     // odd backwards loop so we can swap_remove
     loop {
@@ -283,7 +289,7 @@ impl LinkInfo {
     }
 
     /// returns the list of matching import / export pairs after validation the list of potential pairs
-    fn ensure_matching_import_export_pairs(&self, defs: &DefAnalyzer) -> &Vec<ImportExportPair> {
+    fn ensure_matching_import_export_pairs(&self) -> &Vec<ImportExportPair> {
         for pair in &self.potential_pairs {
             for (import_param, export_param) in pair
                 .import
@@ -339,7 +345,28 @@ fn import_kill_annotations_and_debug(module: &mut rspirv::dr::Module, info: &Lin
     }
 }
 
-fn kill_linkage_instructions(pairs: &Vec<ImportExportPair>, module: &mut rspirv::dr::Module) {
+struct Options {
+    /// `true` if we're creating a library
+    lib: bool,
+
+    /// `true` if partial linking is allowed
+    partial: bool,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Self {
+            lib: false,
+            partial: false,
+        }
+    }
+}
+
+fn kill_linkage_instructions(
+    pairs: &Vec<ImportExportPair>,
+    module: &mut rspirv::dr::Module,
+    opts: &Options,
+) {
     // drop imported functions
     for pair in pairs.iter() {
         module
@@ -371,6 +398,15 @@ fn kill_linkage_instructions(pairs: &Vec<ImportExportPair>, module: &mut rspirv:
             && inst.operands[1]
                 == rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
     });
+
+    if !opts.lib {
+        kill_with(&mut module.annotations, |inst| {
+            inst.class.opcode == spirv::Op::Decorate
+                && inst.operands[1]
+                    == rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
+                && inst.operands[3] == rspirv::dr::Operand::LinkageType(spirv::LinkageType::Export)
+        });
+    }
 
     // drop OpCapability Linkage
     kill_with(&mut module.capabilities, |inst| {
@@ -414,8 +450,52 @@ fn compact_ids(module: &mut rspirv::dr::Module) -> u32 {
     remap.len() as u32 + 1
 }
 
-fn link(inputs: &mut [&mut rspirv::dr::Module]) -> rspirv::dr::Module {
-    // 1. shift all the ids
+fn sort_globals(module: &mut rspirv::dr::Module) {
+    let mut ts = TopologicalSort::<u32>::new();
+
+    for t in module.types_global_values.iter() {
+        if let Some(result_type) = t.result_type {
+            if let Some(result_id) = t.result_id {
+                ts.add_dependency(result_type, result_id);
+
+                for op in &t.operands {
+                    match op {
+                        rspirv::dr::Operand::IdMemorySemantics(w)
+                        | rspirv::dr::Operand::IdScope(w)
+                        | rspirv::dr::Operand::IdRef(w) => {
+                            ts.add_dependency(*w, result_id); // the op defining the IdRef should come before our op / result_id
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+
+    let defs = DefAnalyzer::new(&module);
+
+    let mut new_types_global_values = vec![];
+
+    loop {
+        let mut v = ts.pop_all();
+        v.sort();
+
+        for result_id in v {
+            new_types_global_values.push(defs.def(result_id).unwrap().clone());
+        }
+
+        if ts.is_empty() {
+            break;
+        }
+    }
+
+    assert!(module.types_global_values.len() == new_types_global_values.len());
+
+    module.types_global_values = new_types_global_values;
+}
+
+fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> rspirv::dr::Module {
+    // shift all the ids
     let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
 
     for mut module in inputs.iter_mut().skip(1) {
@@ -423,11 +503,11 @@ fn link(inputs: &mut [&mut rspirv::dr::Module]) -> rspirv::dr::Module {
         bound += module.header.as_ref().unwrap().bound - 1;
     }
 
-    println!("{}\n\n", inputs[0].disassemble());
-    println!("{}\n\n", inputs[1].disassemble());
+    for i in inputs.iter() {
+        println!("{}\n\n", i.disassemble());
+    }
 
-    // 2. generate the header (todo)
-    // 3. merge the binaries
+    // merge the binaries
     let mut loader = rspirv::dr::Loader::new();
 
     for module in inputs.iter() {
@@ -438,33 +518,45 @@ fn link(inputs: &mut [&mut rspirv::dr::Module]) -> rspirv::dr::Module {
 
     let mut output = loader.module();
 
-    // 4. find import / export pairs
+    // find import / export pairs
     let defs = DefAnalyzer::new(&output);
     let info = find_import_export_pairs(&output, &defs);
 
-    // 5. ensure import / export pairs have matching types and defintions
-    let matching_pairs = info.ensure_matching_import_export_pairs(&defs);
+    // ensure import / export pairs have matching types and defintions
+    let matching_pairs = info.ensure_matching_import_export_pairs();
 
-    // 6. remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
+    // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     remove_duplicates(&mut output);
 
-    // 7. remove names and decorations of import variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L404
+    // remove names and decorations of import variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L404
     import_kill_annotations_and_debug(&mut output, &info);
 
-    // 8. rematch import variables and functions to export variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L255
+    // rematch import variables and functions to export variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L255
     for pair in matching_pairs {
         replace_all_uses_with(&mut output, pair.import.id, pair.export.id);
     }
 
-    // 9. remove linkage specific instructions
-    kill_linkage_instructions(&matching_pairs, &mut output);
+    // remove linkage specific instructions
+    kill_linkage_instructions(&matching_pairs, &mut output, &opts);
 
-    // 10. compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
+    sort_globals(&mut output);
+
+    // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
     let bound = compact_ids(&mut output);
-
     output.header = Some(rspirv::dr::ModuleHeader::new(bound));
 
-    // 11. output the module
+    output.debugs.push(rspirv::dr::Instruction::new(
+        spirv::Op::ModuleProcessed,
+        None,
+        None,
+        vec![rspirv::dr::Operand::LiteralString(
+            "Linked by rspirv-linker".to_string(),
+        )],
+    ));
+
+    println!("{}\n\n", output.disassemble());
+
+    // output the module
     output
 }
 
@@ -475,6 +567,11 @@ fn main() {
     let mut body1 = load(&body1[..]);
     let mut body2 = load(&body2[..]);
 
-    let output = link(&mut [&mut body1, &mut body2]);
+    let opts = Options {
+        lib: false,
+        partial: false,
+    };
+
+    let output = link(&mut [&mut body1, &mut body2], &opts);
     println!("{}\n\n", output.disassemble());
 }
