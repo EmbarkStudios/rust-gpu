@@ -459,5 +459,78 @@ mod test {
 
         without_header_eq(result, expect);
         Ok(())
+    }
+
+    #[test]
+    fn names_and_decorations() -> Result<()> {
+        let a = assemble_spirv(
+            r#"OpCapability Kernel
+            OpCapability Linkage
+            OpName %1 "foo"
+            OpName %3 "param"
+            OpDecorate %1 LinkageAttributes "foo" Import
+            OpDecorate %2 Restrict
+            OpDecorate %4 NonWritable
+            %2 = OpDecorationGroup
+            OpGroupDecorate %2 %3 %4
+            %5 = OpTypeVoid
+            %6 = OpTypeInt 32 0
+            %9 = OpTypePointer Function %6
+            %7 = OpTypeFunction %5 %9
+            %1 = OpFunction %5 None %7
+            %3 = OpFunctionParameter %9
+            OpFunctionEnd
+            %8 = OpFunction %5 None %7
+            %4 = OpFunctionParameter %9
+            OpFunctionEnd
+            "#,
+        );
+
+        let b = assemble_spirv(
+            r#"OpCapability Kernel
+            OpCapability Linkage
+            OpName %1 "foo"
+            OpName %2 "param"
+            OpDecorate %1 LinkageAttributes "foo" Export
+            OpDecorate %2 Restrict
+            %3 = OpTypeVoid
+            %4 = OpTypeInt 32 0
+            %7 = OpTypePointer Function %4
+            %5 = OpTypeFunction %3 %7
+            %1 = OpFunction %3 None %5
+            %2 = OpFunctionParameter %7
+            %6 = OpLabel
+            OpReturn
+            OpFunctionEnd
+            "#,
+        );
+
+        let result = assemble_and_link(&[&a, &b], &Options::default())?;
+
+        let expect = r#"OpCapability Kernel
+        OpName %1 "foo"
+        OpName %2 "param"
+        OpModuleProcessed "Linked by rspirv-linker"
+        OpDecorate %3 Restrict
+        OpDecorate %4 NonWritable
+        %3 = OpDecorationGroup
+        OpGroupDecorate %3 %4
+        OpDecorate %2 Restrict
+        %5 = OpTypeVoid
+        %6 = OpTypeInt 32 0
+        %7 = OpTypePointer Function %6
+        %8 = OpTypeFunction %5 %7
+        %9 = OpFunction %5 None %8
+        %4 = OpFunctionParameter %7
+        OpFunctionEnd
+        %1 = OpFunction %5 None %8
+        %2 = OpFunctionParameter %7
+        %10 = OpLabel
+        OpReturn
+        OpFunctionEnd
+        "#;
+
+        without_header_eq(result, expect);
+        Ok(())
     }*/
 }
