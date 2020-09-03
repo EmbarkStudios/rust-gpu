@@ -441,7 +441,9 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                 pointee,
             } => match self.lookup_type(pointee) {
                 SpirvType::Adt { field_types, .. } => (storage_class, field_types[idx as usize]),
-                SpirvType::Array { element, .. } => (storage_class, element),
+                SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element, .. } => {
+                    (storage_class, element)
+                }
                 other => panic!(
                     "struct_gep not on struct or array type: {:?}, index {}",
                     other, idx
@@ -747,7 +749,11 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                 let pat = elem_ty_spv
                     .memset_const_pattern(self, fill_byte)
                     .with_type(elem_ty);
-                let count = size / (elem_ty_spv.sizeof_in_bits(self) / 8);
+                let count = size
+                    / (elem_ty_spv
+                        .sizeof_in_bits(self)
+                        .expect("Memset on unsized values not supported")
+                        / 8);
                 if count == 1 {
                     self.store(pat, ptr, Align::from_bytes(0).unwrap());
                 } else {
@@ -769,7 +775,11 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
                 let pat = elem_ty_spv
                     .memset_dynamic_pattern(self, fill_byte.def)
                     .with_type(elem_ty);
-                let count = size / (elem_ty_spv.sizeof_in_bits(self) / 8);
+                let count = size
+                    / (elem_ty_spv
+                        .sizeof_in_bits(self)
+                        .expect("Memset on unsized values not supported")
+                        / 8);
                 if count == 1 {
                     self.store(pat, ptr, Align::from_bytes(0).unwrap());
                 } else {

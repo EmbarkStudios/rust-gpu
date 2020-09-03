@@ -7,6 +7,7 @@ use rustc_middle::ty::{Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{Abi, FieldsShape, LayoutOf, Primitive, Scalar, Variants};
 use std::fmt;
+use std::iter::once;
 
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum SpirvType {
@@ -17,10 +18,11 @@ pub enum SpirvType {
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
         name: String,
-        // TODO: enums/unions
+        /// sizeof struct in *bytes*
+        size: Option<u32>,
         field_types: Vec<Word>,
         /// *byte* offsets
-        field_offsets: Option<Vec<u32>>,
+        field_offsets: Vec<u32>,
         field_names: Option<Vec<String>>,
     },
     Opaque {
@@ -33,6 +35,9 @@ pub enum SpirvType {
     Array {
         element: Word,
         count: Word,
+    },
+    RuntimeArray {
+        element: Word,
     },
     Pointer {
         storage_class: StorageClass,
@@ -108,6 +113,7 @@ impl SpirvType {
             SpirvType::Float(width) => cx.emit_global().type_float(width),
             SpirvType::Adt {
                 ref name,
+                size: _,
                 ref field_types,
                 ref field_offsets,
                 ref field_names,
@@ -117,15 +123,14 @@ impl SpirvType {
                 let id = emit.id();
                 let result = emit.type_struct_id(Some(id), field_types.iter().cloned());
                 emit.name(result, name);
-                if let Some(field_offsets) = field_offsets {
-                    for (index, offset) in field_offsets.iter().copied().enumerate() {
-                        emit.member_decorate(
-                            result,
-                            index as u32,
-                            Decoration::Offset,
-                            [Operand::LiteralInt32(offset)].iter().cloned(),
-                        );
-                    }
+                // The struct size is only used in our own sizeof_in_bits() (used in e.g. ArrayStride decoration)
+                for (index, offset) in field_offsets.iter().copied().enumerate() {
+                    emit.member_decorate(
+                        result,
+                        index as u32,
+                        Decoration::Offset,
+                        [Operand::LiteralInt32(offset)].iter().cloned(),
+                    );
                 }
                 if let Some(field_names) = field_names {
                     for (index, field_name) in field_names.iter().enumerate() {
@@ -136,7 +141,22 @@ impl SpirvType {
             }
             SpirvType::Opaque { ref name } => cx.emit_global().type_opaque(name),
             SpirvType::Vector { element, count } => cx.emit_global().type_vector(element, count),
-            SpirvType::Array { element, count } => cx.emit_global().type_array(element, count),
+            SpirvType::Array { element, count } => {
+                // ArrayStride decoration wants in *bytes*
+                let element_size = cx
+                    .lookup_type(element)
+                    .sizeof_in_bits(cx)
+                    .expect("Element of sized array must be sized")
+                    / 8;
+                let result = cx.emit_global().type_array(element, count);
+                cx.emit_global().decorate(
+                    result,
+                    Decoration::ArrayStride,
+                    once(Operand::LiteralInt32(element_size as u32)),
+                );
+                result
+            }
+            SpirvType::RuntimeArray { element } => cx.emit_global().type_runtime_array(element),
             SpirvType::Pointer {
                 storage_class,
                 pointee,
@@ -175,30 +195,27 @@ impl SpirvType {
         SpirvTypePrinter { ty: self, cx }
     }
 
-    pub fn sizeof_in_bits<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> usize {
-        match *self {
+    pub fn sizeof_in_bits<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Option<usize> {
+        let result = match *self {
             SpirvType::Void => 0,
             SpirvType::Bool => 1,
             SpirvType::Integer(width, _) => width as usize,
             SpirvType::Float(width) => width as usize,
-            SpirvType::Adt {
-                ref field_types, ..
-            } => field_types
-                .iter()
-                .map(|&ty| cx.lookup_type(ty).sizeof_in_bits(cx))
-                .sum(),
+            SpirvType::Adt { size, .. } => (size? * 8) as usize,
             SpirvType::Opaque { .. } => 0,
             SpirvType::Vector { element, count } => {
-                cx.lookup_type(element).sizeof_in_bits(cx)
+                cx.lookup_type(element).sizeof_in_bits(cx)?
                     * cx.builder.lookup_const_u64(count).unwrap() as usize
             }
             SpirvType::Array { element, count } => {
-                cx.lookup_type(element).sizeof_in_bits(cx)
+                cx.lookup_type(element).sizeof_in_bits(cx)?
                     * cx.builder.lookup_const_u64(count).unwrap() as usize
             }
+            SpirvType::RuntimeArray { .. } => return None,
             SpirvType::Pointer { .. } => cx.tcx.data_layout.pointer_size.bits() as usize,
             SpirvType::Function { .. } => cx.tcx.data_layout.pointer_size.bits() as usize,
-        }
+        };
+        Some(result)
     }
 
     pub fn memset_const_pattern<'spv, 'tcx>(
@@ -245,6 +262,9 @@ impl SpirvType {
                 cx.emit_global()
                     .constant_composite(self.def(cx), vec![elem_pat; count])
             }
+            SpirvType::RuntimeArray { .. } => {
+                panic!("memset on runtime arrays not implemented yet")
+            }
             SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
             SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
         }
@@ -286,6 +306,9 @@ impl SpirvType {
                     )
                     .unwrap()
             }
+            SpirvType::RuntimeArray { .. } => {
+                panic!("memset on runtime arrays not implemented yet")
+            }
             SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
             SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
         }
@@ -310,6 +333,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
             SpirvType::Float(width) => f.debug_struct("Float").field("width", &width).finish(),
             SpirvType::Adt {
                 ref name,
+                size,
                 ref field_types,
                 ref field_offsets,
                 ref field_names,
@@ -320,6 +344,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                     .collect::<Vec<_>>();
                 f.debug_struct("Adt")
                     .field("name", &name)
+                    .field("size", &size)
                     .field("field_types", &fields)
                     .field("field_offsets", field_offsets)
                     .field("field_names", field_names)
@@ -351,6 +376,10 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                         .lookup_const_u64(count)
                         .expect("Array type has invalid count value"),
                 )
+                .finish(),
+            SpirvType::RuntimeArray { element } => f
+                .debug_struct("RuntimeArray")
+                .field("element", &self.cx.debug_type(element))
                 .finish(),
             SpirvType::Pointer {
                 storage_class,
@@ -389,6 +418,7 @@ impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
             SpirvType::Float(width) => write!(f, "f{}", width),
             SpirvType::Adt {
                 ref name,
+                size: _,
                 ref field_types,
                 field_offsets: _,
                 ref field_names,
@@ -419,6 +449,10 @@ impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
                 let len = self.cx.builder.lookup_const_u64(count);
                 let len = len.expect("Array type has invalid count value");
                 write!(f, "[{}; {}]", elem, len)
+            }
+            SpirvType::RuntimeArray { element } => {
+                let elem = self.cx.debug_type(element);
+                write!(f, "[{}]", elem)
             }
             SpirvType::Pointer {
                 storage_class,
@@ -518,10 +552,12 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for CastTarget {
             args.push(SpirvType::Integer(rem_bytes as u32 * 8, false).def(cx));
         }
 
+        let (field_offsets, size) = auto_struct_layout(cx, &args);
         SpirvType::Adt {
             name: "<cast_target>".to_string(),
+            size,
             field_types: args,
-            field_offsets: None,
+            field_offsets,
             field_names: None,
         }
         .def(cx)
@@ -608,8 +644,9 @@ fn trans_type_impl<'spv, 'tcx>(
         // An empty struct is zero-sized
         return SpirvType::Adt {
             name: "<zst>".to_string(),
+            size: Some(0),
             field_types: Vec::new(),
-            field_offsets: None,
+            field_offsets: Vec::new(),
             field_names: None,
         }
         .def(cx);
@@ -627,10 +664,12 @@ fn trans_type_impl<'spv, 'tcx>(
             // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
             let one_spirv = trans_scalar_pair_impl(cx, ty, one, 0, false);
             let two_spirv = trans_scalar_pair_impl(cx, ty, two, 1, false);
+            let (field_offsets, size) = auto_struct_layout(cx, &[one_spirv, two_spirv]);
             SpirvType::Adt {
                 name: format!("{}", ty.ty),
+                size,
                 field_types: vec![one_spirv, two_spirv],
-                field_offsets: None,
+                field_offsets,
                 field_names: None,
             }
             .def(cx)
@@ -778,7 +817,10 @@ fn trans_scalar_generic<'spv, 'tcx>(
             // the right type at the use site.
             SpirvType::Pointer {
                 storage_class: StorageClass::Generic,
-                pointee: SpirvType::Integer(8, false).def(cx),
+                pointee: SpirvType::Opaque {
+                    name: "<unknown_ptr>".to_string(),
+                }
+                .def(cx),
             }
             .def(cx)
         }
@@ -793,7 +835,8 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx
         ),
         // TODO: Is this the right thing to do?
         FieldsShape::Union(_field_count) => {
-            assert_ne!(ty.size.bytes(), 0);
+            assert_ne!(ty.size.bytes(), 0, "{:#?}", ty);
+            assert!(!ty.is_unsized(), "{:#?}", ty);
             let byte = SpirvType::Integer(8, false).def(cx);
             let count = cx.constant_u32(ty.size.bytes() as u32).def;
             SpirvType::Array {
@@ -803,23 +846,52 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx
             .def(cx)
         }
         FieldsShape::Array { stride: _, count } => {
-            // spir-v doesn't support zero-sized arrays
-            // note that zero-sized arrays don't report as .is_zst() for some reason? TODO: investigate why
-            let nonzero_count = if count == 0 { 1 } else { count };
-            // TODO: Assert stride is same as spirv's stride?
             let element_type = ty.field(cx, 0).spirv_type(cx);
-            let count_const = cx.constant_u32(nonzero_count as u32).def;
-            SpirvType::Array {
-                element: element_type,
-                count: count_const,
+            if ty.is_unsized() {
+                // There's a potential for this array to be sized, but the element to be unsized, e.g. `[[u8]; 5]`.
+                // However, I think rust disallows all these cases, so assert this here.
+                assert_eq!(count, 0);
+                SpirvType::RuntimeArray {
+                    element: element_type,
+                }
+                .def(cx)
+            } else {
+                // note that zero-sized arrays don't report as .is_zst() for some reason? TODO: investigate why
+                assert_ne!(
+                    count, 0,
+                    "spir-v doesn't support zero-sized arrays: {:#?}",
+                    ty
+                );
+                // TODO: Assert stride is same as spirv's stride?
+                let count_const = cx.constant_u32(count as u32).def;
+                SpirvType::Array {
+                    element: element_type,
+                    count: count_const,
+                }
+                .def(cx)
             }
-            .def(cx)
         }
         FieldsShape::Arbitrary {
             offsets: _,
             memory_index: _,
         } => trans_struct(cx, ty),
     }
+}
+
+// returns (field_offsets, size)
+pub fn auto_struct_layout<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    field_types: &[Word],
+) -> (Vec<u32>, Option<u32>) {
+    let mut field_offsets = Vec::with_capacity(field_types.len());
+    let mut offset = Some(0);
+    for &field_type in field_types {
+        let this_offset = offset.expect("Unsized values can only be the last field in a struct");
+        field_offsets.push(this_offset);
+        let field_size_bits = cx.lookup_type(field_type).sizeof_in_bits(cx);
+        offset = field_size_bits.map(|size| this_offset + (size / 8) as u32);
+    }
+    (field_offsets, offset)
 }
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
@@ -840,6 +912,11 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
             .def(cx)
         }
         other => panic!("TODO: Unimplemented TyKind in trans_struct: {:?}", other),
+    };
+    let size = if ty.is_unsized() {
+        None
+    } else {
+        Some(ty.size.bytes() as u32)
     };
     let mut field_types = Vec::new();
     let mut field_offsets = Vec::new();
@@ -870,8 +947,9 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
     }
     SpirvType::Adt {
         name,
+        size,
         field_types,
-        field_offsets: Some(field_offsets),
+        field_offsets,
         field_names: Some(field_names),
     }
     .def(cx)
