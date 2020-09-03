@@ -312,8 +312,8 @@ mod test {
         );
         Ok(())
     }
-/*
-    
+    /*
+
     //jb-todo: this isn't validated yet in the linker (see ensure_matching_import_export_pairs)
     #[test]
     fn decoration_mismatch() -> Result<()> {
@@ -378,9 +378,9 @@ mod test {
         without_header_eq(result, expect);
         Ok(())
     }
-/*
+
     #[test]
-    fn func_ctrl() -> Result<()> {
+    fn use_exported_func_param_attr() -> Result<()> {
         let a = assemble_spirv(
             r#"OpCapability Kernel
             OpCapability Linkage
@@ -417,48 +417,30 @@ mod test {
         );
 
         let result = assemble_and_link(&[&a, &b], &Options::default())?;
-        /*
-        OpCapability Kernel
-        OpModuleProcessed "Linked by rspirv-linker"
-        OpDecorate %1 FuncParamAttr Sext
-        OpDecorate %2 FuncParamAttr Zext
-        %2 = OpDecorationGroup
-        OpGroupDecorate %2 %3 %4
-        %5 = OpTypeVoid
-        %6 = OpTypeInt 32 0
-        %7 = OpTypeFunction %5 %6
-        %8 = OpFunction %5 None %7
-        %4 = OpFunctionParameter %6
-        OpFunctionEnd
-        %9 = OpFunction %5 None %7
-        %1 = OpFunctionParameter %6
-        %10 = OpLabel
-        OpReturn
-        OpFunctionEnd
-        */
+
         let expect = r#"OpCapability Kernel
-        OpModuleProcessed "Linked by rspirv-linker"
-        OpDecorate %1 FuncParamAttr Zext
-        OpDecorate %3 FuncParamAttr Sext
-        %1 = OpDecorationGroup
-        OpGroupDecorate %1 %2
-        %4 = OpTypeVoid
-        %5 = OpTypeInt 32 0
-        %6 = OpTypeFunction %4 %5
-        %7 = OpFunction %4 None %6
-        %2 = OpFunctionParameter %5
-        OpFunctionEnd
-        %8 = OpFunction %4 None %6
-        %3 = OpFunctionParameter %5
-        %9 = OpLabel
-        OpReturn
-        OpFunctionEnd
+            OpModuleProcessed "Linked by rspirv-linker"
+            OpDecorate %1 FuncParamAttr Zext
+            OpDecorate %3 FuncParamAttr Sext
+            %1 = OpDecorationGroup
+            OpGroupDecorate %1 %2
+            %4 = OpTypeVoid
+            %5 = OpTypeInt 32 0
+            %6 = OpTypeFunction %4 %5
+            %7 = OpFunction %4 None %6
+            %2 = OpFunctionParameter %5
+            OpFunctionEnd
+            %8 = OpFunction %4 None %6
+            %3 = OpFunctionParameter %5
+            %9 = OpLabel
+            OpReturn
+            OpFunctionEnd
         "#;
 
         without_header_eq(result, expect);
         Ok(())
     }
-
+    /*
     #[test]
     fn names_and_decorations() -> Result<()> {
         let a = assemble_spirv(

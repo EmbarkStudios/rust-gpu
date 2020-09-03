@@ -152,6 +152,17 @@ where
 
 fn kill_annotations_and_debug(module: &mut rspirv::dr::Module, id: u32) {
     kill_with_id(&mut module.annotations, id);
+
+    // need to remove OpGroupDecorate members that mention this id
+    module.annotations.iter_mut().for_each(|inst| {
+        if inst.class.opcode == spirv::Op::GroupDecorate {
+            inst.operands.retain(|op| match op {
+                rspirv::dr::Operand::IdRef(w) if *w != id => return true,
+                _ => return false,
+            });
+        }
+    });
+
     kill_with_id(&mut module.debugs, id);
 }
 
@@ -576,6 +587,7 @@ fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rspirv
     }
 
     let mut output = loader.module();
+    println!("{}\n\n", output.disassemble());
 
     // find import / export pairs
     let defs = DefAnalyzer::new(&output);
@@ -586,6 +598,8 @@ fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rspirv
 
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     remove_duplicates(&mut output);
+
+    println!("{}\n\n", output.disassemble());
 
     // remove names and decorations of import variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L404
     import_kill_annotations_and_debug(&mut output, &info);
