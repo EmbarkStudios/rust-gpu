@@ -2,9 +2,10 @@ use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
-use rustc_middle::ty::{Ty, TyKind};
+use rustc_middle::ty::{GeneratorSubsts, Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, Variants};
+use std::fmt::Write;
 
 pub trait ConvSpirvType<'spv, 'tcx> {
     fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word;
@@ -434,22 +435,10 @@ pub fn auto_struct_layout<'spv, 'tcx>(
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
 fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) -> Word {
-    // TODO: enums
-    let name = match &ty.ty.kind {
-        TyKind::Adt(adt, _) => match ty.variants {
-            Variants::Single { index } => adt.variants[index].ident.name.to_ident_string(),
-            Variants::Multiple { .. } => "<enum>".to_string(),
-        },
-        TyKind::Dynamic(_, _) => "<dynamic>".to_string(),
-        TyKind::Tuple(_) => "<tuple>".to_string(),
+    let name = name_of_struct(ty);
+    if let TyKind::Foreign(_) = ty.ty.kind {
         // "An unsized FFI type that is opaque to Rust"
-        &TyKind::Foreign(def_id) => {
-            return SpirvType::Opaque {
-                name: cx.tcx.def_path_str(def_id),
-            }
-            .def(cx)
-        }
-        other => panic!("TODO: Unimplemented TyKind in trans_struct: {:?}", other),
+        return SpirvType::Opaque { name }.def(cx);
     };
     let size = if ty.is_unsized() { None } else { Some(ty.size) };
     let align = ty.align.abi;
@@ -489,4 +478,18 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
         field_names: Some(field_names),
     }
     .def(cx)
+}
+
+fn name_of_struct(ty: &TyAndLayout<'_>) -> String {
+    let mut name = ty.ty.to_string();
+    if let (&TyKind::Adt(def, _), &Variants::Single { index }) = (&ty.ty.kind, &ty.variants) {
+        if def.is_enum() && !def.variants.is_empty() {
+            write!(&mut name, "::{}", def.variants[index].ident).unwrap();
+        }
+    }
+    if let (&TyKind::Generator(_, _, _), &Variants::Single { index }) = (&ty.ty.kind, &ty.variants)
+    {
+        write!(&mut name, "::{}", GeneratorSubsts::variant_name(index)).unwrap();
+    }
+    name
 }

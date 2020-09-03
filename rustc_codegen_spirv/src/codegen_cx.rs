@@ -1032,7 +1032,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 }
 
 fn create_const_alloc(cx: &CodegenCx<'_, '_>, alloc: &Allocation, ty: Word) -> SpirvValue {
-    println!("Creating const alloc of type {}", cx.debug_type(ty));
+    // println!("Creating const alloc of type {}", cx.debug_type(ty));
     let mut offset = Size::ZERO;
     let result = create_const_alloc2(cx, alloc, &mut offset, ty);
     assert_eq!(
@@ -1040,7 +1040,7 @@ fn create_const_alloc(cx: &CodegenCx<'_, '_>, alloc: &Allocation, ty: Word) -> S
         alloc.len(),
         "create_const_alloc must consume all bytes of an Allocation"
     );
-    println!("Done creating alloc of type {}", cx.debug_type(ty));
+    // println!("Done creating alloc of type {}", cx.debug_type(ty));
     result
 }
 
@@ -1052,7 +1052,8 @@ fn create_const_alloc2(
 ) -> SpirvValue {
     let ty_concrete = cx.lookup_type(ty);
     *offset = offset.align_to(ty_concrete.alignof(cx));
-    println!("const at {}: {}", offset.bytes(), cx.debug_type(ty));
+    // these print statements are really useful for debugging, so leave them easily available
+    // println!("const at {}: {}", offset.bytes(), cx.debug_type(ty));
     match ty_concrete {
         SpirvType::Void => panic!("Cannot create const alloc of type void"),
         SpirvType::Bool => match read_alloc_val(cx, alloc, offset, 1) != 0 {

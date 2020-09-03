@@ -386,11 +386,11 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn range_metadata(&mut self, _load: Self::Value, _range: Range<u128>) {
-        todo!()
+        // ignore
     }
 
     fn nonnull_metadata(&mut self, _load: Self::Value) {
-        todo!()
+        // ignore
     }
 
     fn store(&mut self, val: Self::Value, ptr: Self::Value, _align: Align) -> Self::Value {
@@ -960,7 +960,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 
     fn set_invariant_load(&mut self, _load: Self::Value) {
-        todo!()
+        // ignore
     }
 
     /// Called for `StorageLive`
