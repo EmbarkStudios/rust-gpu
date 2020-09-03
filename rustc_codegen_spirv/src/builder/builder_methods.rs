@@ -1,6 +1,6 @@
 use super::Builder;
-use crate::abi::SpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValueExt};
+use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
 use rspirv::spirv::StorageClass;
 use rustc_codegen_ssa::base::to_immediate;

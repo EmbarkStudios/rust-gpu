@@ -1,5 +1,6 @@
-use crate::abi::{ConvSpirvType, SpirvType, SpirvTypePrinter};
+use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv, SpirvValue, SpirvValueExt};
+use crate::spirv_type::{SpirvType, SpirvTypePrinter};
 use rspirv::{
     dr::Operand,
     spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word},

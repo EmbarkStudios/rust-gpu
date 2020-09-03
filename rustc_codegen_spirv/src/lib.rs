@@ -18,6 +18,7 @@ mod abi;
 mod builder;
 mod builder_spirv;
 mod codegen_cx;
+mod spirv_type;
 mod things;
 
 #[cfg(test)]

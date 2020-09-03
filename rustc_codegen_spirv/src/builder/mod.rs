@@ -1,8 +1,9 @@
 mod builder_methods;
 
-use crate::abi::{ConvSpirvType, SpirvType};
+use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
+use crate::spirv_type::SpirvType;
 use rspirv::spirv::StorageClass;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::base::to_immediate;
