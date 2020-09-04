@@ -345,16 +345,15 @@ impl LinkInfo {
             let import_result_type = defs.def(pair.import.type_id).unwrap();
             let export_result_type = defs.def(pair.export.type_id).unwrap();
 
-            // jb-todo: this  should recursively check type instead of doing a simple `is_type_identical`
-            // so skip for now when we're trying to match up OpTypeFunction's
-            if import_result_type.class.opcode != spirv::Op::TypeFunction {
-                if !import_result_type.is_type_identical(export_result_type) {
-                    return Err(LinkerError::TypeMismatch {
-                        name: pair.import.name.clone(),
-                        import_type: cleanup_type(import_result_type.clone()),
-                        export_type: cleanup_type(export_result_type.clone()),
-                    });
-                }
+            let imp = trans_aggregate_type(defs, import_result_type);
+            let exp = trans_aggregate_type(defs, export_result_type);
+
+            if imp != exp {
+                return Err(LinkerError::TypeMismatch {
+                    name: pair.import.name.clone(),
+                    import_type: cleanup_type(import_result_type.clone()),
+                    export_type: cleanup_type(export_result_type.clone()),
+                });
             }
 
             for (import_param, export_param) in pair
@@ -562,6 +561,212 @@ fn sort_globals(module: &mut rspirv::dr::Module) {
     assert!(module.types_global_values.len() == new_types_global_values.len());
 
     module.types_global_values = new_types_global_values;
+}
+
+#[derive(PartialEq, Debug)]
+enum ScalarType {
+    Void,
+    Bool,
+    Int { width: u32, signed: bool },
+    Float { width: u32 },
+    Opaque { name: String },
+    Event,
+    DeviceEvent,
+    ReserveId,
+    Queue,
+    Pipe,
+    ForwardPointer { storage_class: spirv::StorageClass },
+    PipeStorage,
+    NamedBarrier,
+    Sampler,
+}
+
+fn trans_scalar_type(inst: &rspirv::dr::Instruction) -> Option<ScalarType> {
+    Some(match inst.class.opcode {
+        spirv::Op::TypeVoid => ScalarType::Void,
+        spirv::Op::TypeBool => ScalarType::Bool,
+        spirv::Op::TypeEvent => ScalarType::Event,
+        spirv::Op::TypeDeviceEvent => ScalarType::DeviceEvent,
+        spirv::Op::TypeReserveId => ScalarType::ReserveId,
+        spirv::Op::TypeQueue => ScalarType::Queue,
+        spirv::Op::TypePipe => ScalarType::Pipe,
+        spirv::Op::TypePipeStorage => ScalarType::PipeStorage,
+        spirv::Op::TypeNamedBarrier => ScalarType::NamedBarrier,
+        spirv::Op::TypeSampler => ScalarType::Sampler,
+        spirv::Op::TypeForwardPointer => ScalarType::ForwardPointer {
+            storage_class: match inst.operands[0] {
+                rspirv::dr::Operand::StorageClass(s) => s,
+                _ => panic!("Unexpected operand while parsing type"),
+            },
+        },
+        spirv::Op::TypeInt => ScalarType::Int {
+            width: match inst.operands[0] {
+                rspirv::dr::Operand::LiteralInt32(w) => w,
+                _ => panic!("Unexpected operand while parsing type"),
+            },
+            signed: match inst.operands[1] {
+                rspirv::dr::Operand::LiteralInt32(s) => {
+                    if s == 0 {
+                        false
+                    } else {
+                        true
+                    }
+                }
+                _ => panic!("Unexpected operand while parsing type"),
+            },
+        },
+        spirv::Op::TypeFloat => ScalarType::Float {
+            width: match inst.operands[0] {
+                rspirv::dr::Operand::LiteralInt32(w) => w,
+                _ => panic!("Unexpected operand while parsing type"),
+            },
+        },
+        spirv::Op::TypeOpaque => ScalarType::Opaque {
+            name: match &inst.operands[0] {
+                rspirv::dr::Operand::LiteralString(s) => s.clone(),
+                _ => panic!("Unexpected operand while parsing type"),
+            },
+        },
+        _ => return None,
+    })
+}
+
+#[derive(PartialEq, Debug)]
+enum AggregateType {
+    Scalar(ScalarType),
+    Array {
+        ty: Box<AggregateType>,
+        len: u64,
+    },
+    Pointer {
+        ty: Box<AggregateType>,
+        storage_class: spirv::StorageClass,
+    },
+    Image {
+        ty: Box<AggregateType>,
+        dim: spirv::Dim,
+        depth: u32,
+        arrayed: u32,
+        multi_sampled: u32,
+        sampled: u32,
+        format: spirv::ImageFormat,
+        access: Option<spirv::AccessQualifier>,
+    },
+    SampledImage {
+        ty: Box<AggregateType>,
+    },
+    Aggregate(Vec<AggregateType>),
+}
+
+fn op_def(def: &DefAnalyzer, operand: &rspirv::dr::Operand) -> rspirv::dr::Instruction {
+    def.def(match operand {
+        rspirv::dr::Operand::IdMemorySemantics(w)
+        | rspirv::dr::Operand::IdScope(w)
+        | rspirv::dr::Operand::IdRef(w) => *w,
+        _ => panic!("Expected ID"),
+    })
+    .unwrap()
+    .clone()
+}
+
+fn extract_literal_int_as_u64(op: &rspirv::dr::Operand) -> u64 {
+    match op {
+        rspirv::dr::Operand::LiteralInt32(v) => (*v).into(),
+        rspirv::dr::Operand::LiteralInt64(v) => *v,
+        _ => panic!("Unexpected literal int"),
+    }
+}
+
+fn extract_literal_u32(op: &rspirv::dr::Operand) -> u32 {
+    match op {
+        rspirv::dr::Operand::LiteralInt32(v) => *v,
+        _ => panic!("Unexpected literal u32"),
+    }
+}
+
+fn trans_aggregate_type(
+    def: &DefAnalyzer,
+    inst: &rspirv::dr::Instruction,
+) -> Option<AggregateType> {
+    Some(match inst.class.opcode {
+        spirv::Op::TypeArray => {
+            let len_def = op_def(def, &inst.operands[1]);
+            assert!(len_def.class.opcode == spirv::Op::Constant); // don't support spec constants yet
+
+            let len_value = extract_literal_int_as_u64(&len_def.operands[1]);
+
+            AggregateType::Array {
+                ty: Box::new(
+                    trans_aggregate_type(def, &op_def(def, &inst.operands[0]))
+                        .expect("Expect base type for OpTypeArray"),
+                ),
+                len: len_value,
+            }
+        }
+        spirv::Op::TypePointer => AggregateType::Pointer {
+            storage_class: match inst.operands[0] {
+                rspirv::dr::Operand::StorageClass(s) => s,
+                _ => panic!("Unexpected operand while parsing type"),
+            },
+            ty: Box::new(
+                trans_aggregate_type(def, &op_def(def, &inst.operands[1]))
+                    .expect("Expect base type for OpTypePointer"),
+            ),
+        },
+        spirv::Op::TypeRuntimeArray
+        | spirv::Op::TypeVector
+        | spirv::Op::TypeMatrix
+        | spirv::Op::TypeSampledImage => AggregateType::Aggregate(
+            trans_aggregate_type(def, &op_def(def, &inst.operands[0]))
+                .map_or_else(|| vec![], |v| vec![v]),
+        ),
+        spirv::Op::TypeStruct | spirv::Op::TypeFunction => {
+            let mut types = vec![];
+            for operand in inst.operands.iter() {
+                let op_def = op_def(def, operand);
+
+                match trans_aggregate_type(def, &op_def) {
+                    Some(ty) => types.push(ty),
+                    None => panic!("Expected type"),
+                }
+            }
+
+            AggregateType::Aggregate(types)
+        }
+        spirv::Op::TypeImage => AggregateType::Image {
+            ty: Box::new(
+                trans_aggregate_type(def, &op_def(def, &inst.operands[0]))
+                    .expect("Expect base type for OpTypeImage"),
+            ),
+            dim: match inst.operands[1] {
+                rspirv::dr::Operand::Dim(d) => d,
+                _ => panic!("Invalid dim"),
+            },
+            depth: extract_literal_u32(&inst.operands[2]),
+            arrayed: extract_literal_u32(&inst.operands[3]),
+            multi_sampled: extract_literal_u32(&inst.operands[4]),
+            sampled: extract_literal_u32(&inst.operands[5]),
+            format: match inst.operands[6] {
+                rspirv::dr::Operand::ImageFormat(f) => f,
+                _ => panic!("Invalid image format"),
+            },
+            access: inst
+                .operands
+                .get(7)
+                .map(|op| match op {
+                    rspirv::dr::Operand::AccessQualifier(a) => Some(a.clone()),
+                    _ => None,
+                })
+                .flatten(),
+        },
+        _ => {
+            if let Some(ty) = trans_scalar_type(inst) {
+                AggregateType::Scalar(ty)
+            } else {
+                return None;
+            }
+        }
+    })
 }
 
 fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rspirv::dr::Module> {
