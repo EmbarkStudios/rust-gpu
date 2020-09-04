@@ -1,5 +1,5 @@
 use rspirv::dr::{Block, Builder, Module, Operand};
-use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, Word};
+use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, StorageClass, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
 use std::cell::{RefCell, RefMut};
 use std::{fs::File, io::Write, path::Path, sync::Mutex};
@@ -232,6 +232,19 @@ impl BuilderSpirv {
             "set_global_initializer global not found: {} with init {}",
             global, initialiezr
         );
+    }
+
+    pub fn fix_up_pointer_forward(&self, id: Word, storage_class: StorageClass) {
+        for inst in &mut self.builder.borrow_mut().module_mut().types_global_values {
+            if inst.class.opcode == Op::TypeForwardPointer && inst.operands[0] == Operand::IdRef(id)
+            {
+                if let Operand::StorageClass(storage) = &mut inst.operands[1] {
+                    *storage = storage_class;
+                } else {
+                    panic!()
+                }
+            }
+        }
     }
 
     pub fn select_block_by_id(&self, id: Word) -> BuilderCursor {

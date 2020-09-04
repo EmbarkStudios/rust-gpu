@@ -78,11 +78,15 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for CastTarget {
             args.push(SpirvType::Integer(rem_bytes as u32 * 8, false).def(cx));
         }
 
-        let (field_offsets, _, _) = auto_struct_layout(cx, &args);
+        let size = Some(self.size(cx));
+        let align = self.align(cx);
+        let (field_offsets, computed_size, computed_align) = auto_struct_layout(cx, &args);
+        assert_eq!(size, computed_size, "{:#?}", self);
+        assert_eq!(align, computed_align, "{:#?}", self);
         SpirvType::Adt {
             name: "<cast_target>".to_string(),
-            size: Some(self.size(cx)),
-            align: self.align(cx),
+            size,
+            align,
             field_types: args,
             field_offsets,
             field_names: None,
@@ -119,18 +123,18 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
         for arg in &self.args {
             let arg_type = match arg.mode {
                 PassMode::Ignore => continue,
-                PassMode::Direct(_) => arg.layout.spirv_type_immediate(cx),
+                PassMode::Direct(_) => trans_type_impl(cx, arg.layout, true),
                 PassMode::Pair(_, _) => {
-                    argument_types.push(trans_scalar_pair(cx, &arg.layout, 0, true));
-                    argument_types.push(trans_scalar_pair(cx, &arg.layout, 1, true));
+                    argument_types.push(trans_scalar_pair(cx, arg.layout, 0, true));
+                    argument_types.push(trans_scalar_pair(cx, arg.layout, 1, true));
                     continue;
                 }
                 PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
                 PassMode::Indirect(_, Some(_)) => {
                     let ptr_ty = cx.tcx.mk_mut_ptr(arg.layout.ty);
                     let ptr_layout = cx.layout_of(ptr_ty);
-                    argument_types.push(trans_scalar_pair(cx, &ptr_layout, 0, true));
-                    argument_types.push(trans_scalar_pair(cx, &ptr_layout, 1, true));
+                    argument_types.push(trans_scalar_pair(cx, ptr_layout, 0, true));
+                    argument_types.push(trans_scalar_pair(cx, ptr_layout, 1, true));
                     continue;
                 }
                 PassMode::Indirect(_, None) => {
@@ -155,34 +159,33 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
 
 impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for TyAndLayout<'tcx> {
     fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
-        trans_type_impl(cx, self, false)
+        trans_type_impl(cx, *self, false)
     }
     fn spirv_type_immediate(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
-        trans_type_impl(cx, self, true)
+        trans_type_impl(cx, *self, true)
     }
 }
 
 fn trans_type_impl<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
-    ty: &TyAndLayout<'tcx>,
+    ty: TyAndLayout<'tcx>,
     is_immediate: bool,
 ) -> Word {
-    if ty.is_zst() {
-        // An empty struct is zero-sized
-        return SpirvType::Adt {
-            name: "<zst>".to_string(),
-            size: Some(Size::ZERO),
-            align: Align::from_bytes(0).unwrap(),
-            field_types: Vec::new(),
-            field_offsets: Vec::new(),
-            field_names: None,
-        }
-        .def(cx);
-    }
-
-    // Note: ty.abi is orthogonal to ty.variants and ty.fields, e.g. `ManuallyDrop<Result<isize, isize>>`
-    // has abi `ScalarPair`.
+    // Note: ty.abi is orthogonal to ty.variants and ty.fields, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
+    // `ScalarPair`.
     match ty.abi {
+        _ if ty.is_zst() => {
+            // An empty struct is zero-sized
+            SpirvType::Adt {
+                name: "<zst>".to_string(),
+                size: Some(Size::ZERO),
+                align: Align::from_bytes(0).unwrap(),
+                field_types: Vec::new(),
+                field_offsets: Vec::new(),
+                field_names: None,
+            }
+            .def(cx)
+        }
         Abi::Uninhabited => panic!(
             "TODO: Abi::Uninhabited not supported yet in trans_type: {:?}",
             ty
@@ -192,14 +195,16 @@ fn trans_type_impl<'spv, 'tcx>(
             // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
             let one_spirv = trans_scalar_pair_impl(cx, ty, one, 0, false);
             let two_spirv = trans_scalar_pair_impl(cx, ty, two, 1, false);
-            let (field_offsets, _, _) = auto_struct_layout(cx, &[one_spirv, two_spirv]);
+            // TODO: Note: We can't use auto_struct_layout here because the spirv types here might be undefined.
+            let one_offset = Size::ZERO;
+            let two_offset = one.value.size(cx).align_to(two.value.align(cx).abi);
             let size = if ty.is_unsized() { None } else { Some(ty.size) };
             SpirvType::Adt {
                 name: format!("{}", ty.ty),
                 size,
                 align: ty.align.abi,
                 field_types: vec![one_spirv, two_spirv],
-                field_offsets,
+                field_offsets: vec![one_offset, two_offset],
                 field_names: None,
             }
             .def(cx)
@@ -218,7 +223,7 @@ fn trans_type_impl<'spv, 'tcx>(
 
 fn trans_scalar_known_ty<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
-    ty: &TyAndLayout<'tcx>,
+    ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
     is_immediate: bool,
 ) -> Word {
@@ -250,11 +255,12 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
             }
             TyKind::Adt(def, _) if def.is_box() => {
                 let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
+                // this conceptually should pass on is_immediate, but it doesn't matter
                 ptr_ty.spirv_type(cx)
             }
             TyKind::Tuple(substs) if substs.len() == 1 => {
                 let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
-                trans_scalar_known_ty(cx, &item, scalar, is_immediate)
+                trans_scalar_known_ty(cx, item, scalar, is_immediate)
             }
             TyKind::Adt(..) | TyKind::Closure(..) => {
                 trans_scalar_pointer_struct(cx, ty, scalar, None, is_immediate)
@@ -272,7 +278,7 @@ fn trans_scalar_known_ty<'spv, 'tcx>(
 // only pub for LayoutTypeMethods::scalar_pair_element_backend_type
 pub fn trans_scalar_pair<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
-    ty: &TyAndLayout<'tcx>,
+    ty: TyAndLayout<'tcx>,
     index: usize,
     is_immediate: bool,
 ) -> Word {
@@ -286,7 +292,7 @@ pub fn trans_scalar_pair<'spv, 'tcx>(
 
 fn trans_scalar_pair_impl<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
-    ty: &TyAndLayout<'tcx>,
+    ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
     index: usize,
     is_immediate: bool,
@@ -294,45 +300,48 @@ fn trans_scalar_pair_impl<'spv, 'tcx>(
     // When we know the ty, try to fill in the pointer type in case we have it, instead of defaulting to pointer to u8.
     if scalar.value == Primitive::Pointer {
         match ty.ty.kind {
-            TyKind::Ref(_, elem, _) => {
-                if cx.layout_of(elem).is_unsized() {
-                    trans_scalar_known_ty(cx, &ty.field(cx, index), scalar, is_immediate)
+            TyKind::Ref(_, elem_ty, _) => {
+                let elem = cx.layout_of(elem_ty);
+                if elem.is_unsized() {
+                    trans_scalar_known_ty(cx, ty.field(cx, index), scalar, is_immediate)
                 } else {
-                    // TODO: This is some old code when I was trying to get this to work. This might actually not be
-                    // needed, and the type is always unsized?
+                    // This can sometimes happen in weird cases when going through trans_scalar_pointer_struct - an ABI
+                    // of ScalarPair could be deduced, but it's actually e.g. a sized pointer followed by some other
+                    // completely unrelated type, not a wide pointer. So, translate this as a single scalar, one
+                    // component of that ScalarPair.
                     SpirvType::Pointer {
                         storage_class: StorageClass::Generic,
-                        pointee: cx.layout_of(elem).spirv_type(cx),
+                        pointee: elem.spirv_type(cx),
                     }
                     .def(cx)
                 }
             }
             TyKind::RawPtr(ty_and_mut) => {
-                let elem = ty_and_mut.ty;
-                if cx.layout_of(elem).is_unsized() {
-                    trans_scalar_known_ty(cx, &ty.field(cx, index), scalar, is_immediate)
+                let elem = cx.layout_of(ty_and_mut.ty);
+                if elem.is_unsized() {
+                    trans_scalar_known_ty(cx, ty.field(cx, index), scalar, is_immediate)
                 } else {
                     // Same comment as TyKind::Ref
                     SpirvType::Pointer {
                         storage_class: StorageClass::Generic,
-                        pointee: cx.layout_of(elem).spirv_type(cx),
+                        pointee: elem.spirv_type(cx),
                     }
                     .def(cx)
                 }
             }
             TyKind::Adt(def, _) if def.is_box() => {
                 let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-                trans_scalar_pair_impl(cx, &ptr_ty, scalar, index, is_immediate)
+                trans_scalar_pair_impl(cx, ptr_ty, scalar, index, is_immediate)
             }
             TyKind::Tuple(elements) if elements.len() == 1 => {
                 // The tuple is merely a wrapper, index into the tuple and retry.
                 // This happens in cases like (&[u8],)
                 let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
-                trans_scalar_pair_impl(cx, &item, scalar, index, is_immediate)
+                trans_scalar_pair_impl(cx, item, scalar, index, is_immediate)
             }
             TyKind::Tuple(elements) if elements.len() == 2 => {
                 let sub_ty = cx.layout_of(ty.ty.tuple_fields().nth(index).unwrap());
-                trans_scalar_known_ty(cx, &sub_ty, scalar, is_immediate)
+                trans_scalar_known_ty(cx, sub_ty, scalar, is_immediate)
             }
             TyKind::Adt(..) | TyKind::Closure(..) => {
                 trans_scalar_pointer_struct(cx, ty, scalar, Some(index), is_immediate)
@@ -347,11 +356,19 @@ fn trans_scalar_pair_impl<'spv, 'tcx>(
     }
 }
 
-// This is pretty weird. I have no idea how to explain what's going on here in a doc comment and not a full
-// conversation, so poke Ashley and I'll try to explain it.
+// This is a really weird function, strap in...
+// So, rustc_codegen_ssa is designed around scalar pointers being opaque, you shouldn't know the type behind the
+// pointer. Unfortunately, that's impossible for us, we need to know the underlying pointee type for various reasons. In
+// some cases, this is pretty easy - if it's a TyKind::Ref, then the pointee will be the pointee of the ref (with
+// handling for wide pointers, etc.). Unfortunately, there's some pretty advanced processing going on in cx.layout_of:
+// for example, `ManuallyDrop<Result<ptr, ptr>>` has abi `ScalarPair`. This means that to figure out the pointee type,
+// we have to replicate the logic of cx.layout_of. Part of that is digging into types that are aggregates: for example,
+// ManuallyDrop<T> has a single field of type T. We "dig into" that field, and recurse, trying to find a base case that
+// we can handle, like TyKind::Ref.
+// If the above didn't make sense, please poke Ashley, it's probably easier to explain via conversation.
 fn trans_scalar_pointer_struct<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
-    ty: &TyAndLayout<'tcx>,
+    ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
     index: Option<usize>,
     is_immediate: bool,
@@ -362,18 +379,18 @@ fn trans_scalar_pointer_struct<'spv, 'tcx>(
         .map(|f| ty.field(cx, f))
         .filter(|f| !f.is_zst())
         .collect::<Vec<_>>();
-    assert!(fields.iter().all(|f| f != ty));
     match index {
         Some(index) => match fields.len() {
-            1 => trans_scalar_pair_impl(cx, &fields[0], scalar, index, is_immediate),
-            2 => trans_scalar_known_ty(cx, &fields[index], scalar, is_immediate),
+            1 => trans_scalar_pair_impl(cx, fields[0], scalar, index, is_immediate),
+            // This case right here is the cause of the comment handling TyKind::Ref in trans_scalar_pair_impl.
+            2 => trans_scalar_known_ty(cx, fields[index], scalar, is_immediate),
             other => panic!(
                 "Unable to dig scalar pair pointer type: fields length {}",
                 other
             ),
         },
         None => match fields.len() {
-            1 => trans_scalar_known_ty(cx, &fields[0], scalar, is_immediate),
+            1 => trans_scalar_known_ty(cx, fields[0], scalar, is_immediate),
             other => panic!("Unable to dig scalar pointer type: fields length {}", other),
         },
     }
@@ -401,7 +418,7 @@ fn trans_scalar_generic<'spv, 'tcx>(
     }
 }
 
-fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) -> Word {
+fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     match ty.fields {
         FieldsShape::Primitive => panic!(
             "FieldsShape::Primitive not supported yet in trans_type: {:?}",
@@ -420,7 +437,7 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx
             .def(cx)
         }
         FieldsShape::Array { stride: _, count } => {
-            let element_type = ty.field(cx, 0).spirv_type(cx);
+            let element_type = trans_type_impl(cx, ty.field(cx, 0), false);
             if ty.is_unsized() {
                 // There's a potential for this array to be sized, but the element to be unsized, e.g. `[[u8]; 5]`.
                 // However, I think rust disallows all these cases, so assert this here.
@@ -478,7 +495,7 @@ pub fn auto_struct_layout<'spv, 'tcx>(
 }
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
-fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) -> Word {
+fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     let name = name_of_struct(ty);
     if let TyKind::Foreign(_) = ty.ty.kind {
         // "An unsized FFI type that is opaque to Rust"
@@ -491,7 +508,7 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
     let mut field_names = Vec::new();
     for i in ty.fields.index_by_increasing_offset() {
         let field_ty = ty.field(cx, i);
-        field_types.push(field_ty.spirv_type(cx));
+        field_types.push(trans_type_impl(cx, field_ty, false));
         let offset = ty.fields.offset(i);
         field_offsets.push(offset);
         if let Variants::Single { index } = ty.variants {
@@ -524,7 +541,7 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: &TyAndLayout<'tcx>) 
     .def(cx)
 }
 
-fn name_of_struct(ty: &TyAndLayout<'_>) -> String {
+fn name_of_struct(ty: TyAndLayout<'_>) -> String {
     let mut name = ty.ty.to_string();
     if let (&TyKind::Adt(def, _), &Variants::Single { index }) = (&ty.ty.kind, &ty.variants) {
         if def.is_enum() && !def.variants.is_empty() {

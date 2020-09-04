@@ -209,7 +209,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             }
             other => panic!(
                 "switch selector cannot have non-integer type {}",
-                other.debug(self)
+                other.debug(v.ty, self)
             ),
         };
         let cases = cases

@@ -1,4 +1,5 @@
 #![feature(rustc_private)]
+#![feature(once_cell)]
 
 extern crate rustc_ast;
 extern crate rustc_codegen_ssa;

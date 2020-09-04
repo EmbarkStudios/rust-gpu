@@ -5,6 +5,8 @@ use rspirv::spirv::{Decoration, StorageClass, Word};
 use rustc_target::abi::{Align, Size};
 use std::fmt;
 use std::iter::once;
+use std::lazy::SyncLazy;
+use std::sync::Mutex;
 
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum SpirvType {
@@ -174,7 +176,7 @@ impl SpirvType {
                 .insert(result, self.clone())
                 .is_none(),
             "type_defs already had entry, caching failed? {:#?}",
-            self.clone().debug(cx)
+            self.clone().debug_noid(cx)
         );
         assert!(
             cx.type_cache
@@ -182,16 +184,64 @@ impl SpirvType {
                 .insert(self.clone(), result)
                 .is_none(),
             "type_cache already had entry, caching failed? {:#?}",
-            self.clone().debug(cx)
+            self.clone().debug_noid(cx)
+        );
+        result
+    }
+
+    pub fn def_with_id<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>, id: Option<Word>) -> Word {
+        if let Some(&cached) = cx.type_cache.borrow().get(self) {
+            assert!(id.is_none() || Some(cached) == id);
+            return cached;
+        }
+        let result = match *self {
+            SpirvType::Pointer {
+                storage_class,
+                pointee,
+            } => cx.emit_global().type_pointer(id, storage_class, pointee),
+            ref other => panic!("def_with_id invalid for type {:?}", other),
+        };
+        // Change to expect_none if/when stabilized
+        assert!(
+            cx.type_defs
+                .borrow_mut()
+                .insert(result, self.clone())
+                .is_none(),
+            "type_defs already had entry, caching failed? {:#?}",
+            self.clone().debug_noid(cx)
+        );
+        assert!(
+            cx.type_cache
+                .borrow_mut()
+                .insert(self.clone(), result)
+                .is_none(),
+            "type_cache already had entry, caching failed? {:#?}",
+            self.clone().debug_noid(cx)
         );
         result
     }
 
     pub fn debug<'cx, 'spv, 'tcx>(
         self,
+        id: Word,
         cx: &'cx CodegenCx<'spv, 'tcx>,
     ) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
-        SpirvTypePrinter { ty: self, cx }
+        SpirvTypePrinter {
+            ty: self,
+            id: Some(id),
+            cx,
+        }
+    }
+
+    pub fn debug_noid<'cx, 'spv, 'tcx>(
+        self,
+        cx: &'cx CodegenCx<'spv, 'tcx>,
+    ) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
+        SpirvTypePrinter {
+            ty: self,
+            id: None,
+            cx,
+        }
     }
 
     pub fn sizeof<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Option<Size> {
@@ -330,21 +380,36 @@ impl SpirvType {
 }
 
 pub struct SpirvTypePrinter<'cx, 'spv, 'tcx> {
+    id: Option<Word>,
     ty: SpirvType,
     cx: &'cx CodegenCx<'spv, 'tcx>,
 }
 
+static DEBUG_STACK: SyncLazy<Mutex<Vec<Word>>> = SyncLazy::new(|| Mutex::new(Vec::new()));
+
 impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.ty {
-            SpirvType::Void => f.debug_struct("Void").finish(),
-            SpirvType::Bool => f.debug_struct("Bool").finish(),
+        if let Some(id) = self.id {
+            let mut debug_stack = DEBUG_STACK.lock().unwrap();
+            if debug_stack.contains(&id) {
+                return write!(f, "<recursive type id={}>", id);
+            }
+            debug_stack.push(id);
+        }
+        let res = match self.ty {
+            SpirvType::Void => f.debug_struct("Void").field("id", &self.id).finish(),
+            SpirvType::Bool => f.debug_struct("Bool").field("id", &self.id).finish(),
             SpirvType::Integer(width, signedness) => f
                 .debug_struct("Integer")
+                .field("id", &self.id)
                 .field("width", &width)
                 .field("signedness", &signedness)
                 .finish(),
-            SpirvType::Float(width) => f.debug_struct("Float").field("width", &width).finish(),
+            SpirvType::Float(width) => f
+                .debug_struct("Float")
+                .field("id", &self.id)
+                .field("width", &width)
+                .finish(),
             SpirvType::Adt {
                 ref name,
                 align,
@@ -358,6 +423,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                     .map(|&f| self.cx.debug_type(f))
                     .collect::<Vec<_>>();
                 f.debug_struct("Adt")
+                    .field("id", &self.id)
                     .field("name", &name)
                     .field("align", &align)
                     .field("size", &size)
@@ -366,11 +432,14 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                     .field("field_names", field_names)
                     .finish()
             }
-            SpirvType::Opaque { ref name } => {
-                f.debug_struct("Opaque").field("name", &name).finish()
-            }
+            SpirvType::Opaque { ref name } => f
+                .debug_struct("Opaque")
+                .field("id", &self.id)
+                .field("name", &name)
+                .finish(),
             SpirvType::Vector { element, count } => f
                 .debug_struct("Vector")
+                .field("id", &self.id)
                 .field("element", &self.cx.debug_type(element))
                 .field(
                     "count",
@@ -383,6 +452,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                 .finish(),
             SpirvType::Array { element, count } => f
                 .debug_struct("Array")
+                .field("id", &self.id)
                 .field("element", &self.cx.debug_type(element))
                 .field(
                     "count",
@@ -395,6 +465,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                 .finish(),
             SpirvType::RuntimeArray { element } => f
                 .debug_struct("RuntimeArray")
+                .field("id", &self.id)
                 .field("element", &self.cx.debug_type(element))
                 .finish(),
             SpirvType::Pointer {
@@ -402,6 +473,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                 pointee,
             } => f
                 .debug_struct("Pointer")
+                .field("id", &self.id)
                 .field("storage_class", &storage_class)
                 .field("pointee", &self.cx.debug_type(pointee))
                 .finish(),
@@ -414,16 +486,43 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                     .map(|&a| self.cx.debug_type(a))
                     .collect::<Vec<_>>();
                 f.debug_struct("Function")
+                    .field("id", &self.id)
                     .field("return_type", &self.cx.lookup_type(return_type))
                     .field("arguments", &args)
                     .finish()
             }
+        };
+        if self.id.is_some() {
+            let mut debug_stack = DEBUG_STACK.lock().unwrap();
+            debug_stack.pop();
         }
+        res
     }
 }
 
 impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.display(&mut Vec::new(), f)
+    }
+}
+
+impl SpirvTypePrinter<'_, '_, '_> {
+    fn display(&self, stack: &mut Vec<Word>, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn ty<'spv, 'tcx>(
+            cx: &CodegenCx<'spv, 'tcx>,
+            stack: &mut Vec<Word>,
+            f: &mut fmt::Formatter<'_>,
+            ty: Word,
+        ) -> fmt::Result {
+            if stack.contains(&ty) {
+                f.write_str("<recursive type>")
+            } else {
+                stack.push(ty);
+                let result = cx.debug_type(ty).display(stack, f);
+                assert_eq!(ty, stack.pop().unwrap());
+                result
+            }
+        }
         match self.ty {
             SpirvType::Void => f.write_str("void"),
             SpirvType::Bool => f.write_str("bool"),
@@ -450,33 +549,37 @@ impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
                     if let Some(field_names) = field_names {
                         write!(f, "{}: ", field_names[index])?;
                     }
-                    write!(f, "{}{}", self.cx.debug_type(field), suffix)?;
+                    ty(self.cx, stack, f, field)?;
+                    write!(f, "{}", suffix)?;
                 }
                 f.write_str(" }")
             }
             SpirvType::Opaque { ref name } => write!(f, "struct {}", name),
             SpirvType::Vector { element, count } => {
-                let elem = self.cx.debug_type(element);
                 let len = self.cx.builder.lookup_const_u64(count);
                 let len = len.expect("Vector type has invalid count value");
-                write!(f, "vec<{}, {}>", elem, len)
+                f.write_str("vec<")?;
+                ty(self.cx, stack, f, element)?;
+                write!(f, ", {}>", len)
             }
             SpirvType::Array { element, count } => {
-                let elem = self.cx.debug_type(element);
                 let len = self.cx.builder.lookup_const_u64(count);
                 let len = len.expect("Array type has invalid count value");
-                write!(f, "[{}; {}]", elem, len)
+                f.write_str("[")?;
+                ty(self.cx, stack, f, element)?;
+                write!(f, "; {}]", len)
             }
             SpirvType::RuntimeArray { element } => {
-                let elem = self.cx.debug_type(element);
-                write!(f, "[{}]", elem)
+                f.write_str("[")?;
+                ty(self.cx, stack, f, element)?;
+                f.write_str("]")
             }
             SpirvType::Pointer {
                 storage_class,
                 pointee,
             } => {
-                let pointee = self.cx.debug_type(pointee);
-                write!(f, "*{{{:?}}} {}", storage_class, pointee)
+                write!(f, "*{{{:?}}} ", storage_class)?;
+                ty(self.cx, stack, f, pointee)
             }
             SpirvType::Function {
                 return_type,
@@ -489,10 +592,11 @@ impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
                     } else {
                         ", "
                     };
-                    write!(f, "{}{}", self.cx.debug_type(arg), suffix)?;
+                    ty(self.cx, stack, f, arg)?;
+                    write!(f, "{}", suffix)?;
                 }
-                let ret_type = self.cx.debug_type(return_type);
-                write!(f, ") -> {}", ret_type)
+                f.write_str(") -> ")?;
+                ty(self.cx, stack, f, return_type)
             }
         }
     }

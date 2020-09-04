@@ -155,7 +155,10 @@ impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
                     )
                 }
             }
-            other => panic!("Cannot rotate non-integer type: {}", other.debug(self)),
+            other => panic!(
+                "Cannot rotate non-integer type: {}",
+                other.debug(shift.ty, self)
+            ),
         };
         let bool = SpirvType::Bool.def(self);
         // https://stackoverflow.com/a/10134877

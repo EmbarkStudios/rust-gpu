@@ -134,7 +134,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
 
     // Useful for printing out types when debugging
     pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
-        self.lookup_type(ty).debug(self)
+        self.lookup_type(ty).debug(ty, self)
     }
 
     pub fn finalize_module(self) {
@@ -178,7 +178,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
                     self.builder.constant_u32(ty, val as u32).with_type(ty)
                 }
             }
-            other => panic!("Cannot constant_int on type {}", other.debug(self)),
+            other => panic!("Cannot constant_int on type {}", other.debug(ty, self)),
         }
     }
 
@@ -333,7 +333,7 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         index: usize,
         immediate: bool,
     ) -> Self::Type {
-        crate::abi::trans_scalar_pair(self, &layout, index, immediate)
+        crate::abi::trans_scalar_pair(self, layout, index, immediate)
     }
 
     fn cast_backend_type(&self, ty: &CastTarget) -> Self::Type {
@@ -505,7 +505,7 @@ impl<'spv, 'tcx> StaticMethods for CodegenCx<'spv, 'tcx> {
         };
         let value_ty = match self.lookup_type(g.ty) {
             SpirvType::Pointer { pointee, .. } => pointee,
-            other => panic!("global had non-pointer type {}", other.debug(self)),
+            other => panic!("global had non-pointer type {}", other.debug(g.ty, self)),
         };
         let v = create_const_alloc(self, alloc, value_ty);
 
@@ -680,7 +680,7 @@ impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                 return_type,
                 arguments,
             } => (return_type, arguments),
-            other => panic!("fn_abi type {}", other.debug(self)),
+            other => panic!("fn_abi type {}", other.debug(function_type, self)),
         };
 
         let mut emit = self.emit_global();
@@ -799,7 +799,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             }
             other => panic!(
                 "const_int not implemented for type: {:#?}",
-                other.debug(self)
+                other.debug(t, self)
             ),
         }
     }
@@ -814,7 +814,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             }
             other => panic!(
                 "const_uint not implemented for type: {:#?}",
-                other.debug(self)
+                other.debug(t, self)
             ),
         }
     }
@@ -836,7 +836,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                 1 => self.emit_global().constant_true(t).with_type(t),
                 _ => panic!("Invalid constant value for bool: {}", u),
             },
-            other => panic!("const_uint_big invalid on type {}", other.debug(self)),
+            other => panic!("const_uint_big invalid on type {}", other.debug(t, self)),
         }
     }
     fn const_bool(&self, val: bool) -> Self::Value {
@@ -885,7 +885,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
             }
             other => panic!(
                 "const_real not implemented for type: {:#?}",
-                other.debug(self)
+                other.debug(t, self)
             ),
         }
     }
@@ -978,7 +978,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
                             SpirvType::Pointer { pointee, .. } => pointee,
                             other => panic!(
                                 "GlobalAlloc::Memory type not implemented: {}",
-                                other.debug(self)
+                                other.debug(ty, self)
                             ),
                         };
                         let init = create_const_alloc(self, alloc, pointee);
