@@ -4,10 +4,13 @@ use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
-use rustc_target::abi::{Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, Variants};
+use rustc_target::abi::{
+    Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, TagEncoding, Variants,
+};
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::fmt;
 use std::fmt::Write;
 
 #[derive(Default)]
@@ -85,10 +88,19 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
     }
 }
 
-#[derive(Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Eq, PartialEq, Hash, Copy, Clone, Debug)]
 enum PointeeTy<'tcx> {
     Ty(TyAndLayout<'tcx>),
     Fn(PolyFnSig<'tcx>),
+}
+
+impl fmt::Display for PointeeTy<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PointeeTy::Ty(ty) => write!(f, "{}", ty.ty),
+            PointeeTy::Fn(ty) => write!(f, "{}", ty),
+        }
+    }
 }
 
 enum PointeeDefState {
@@ -278,22 +290,15 @@ fn trans_type_impl<'spv, 'tcx>(
     // Note: ty.abi is orthogonal to ty.variants and ty.fields, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
     // `ScalarPair`.
     match ty.abi {
-        _ if ty.is_zst() => {
-            // An empty struct is zero-sized
-            SpirvType::Adt {
-                name: "<zst>".to_string(),
-                size: Some(Size::ZERO),
-                align: Align::from_bytes(0).unwrap(),
-                field_types: Vec::new(),
-                field_offsets: Vec::new(),
-                field_names: None,
-            }
-            .def(cx)
+        Abi::Uninhabited => SpirvType::Adt {
+            name: format!("<uninhabited={}>", ty.ty),
+            size: Some(Size::ZERO),
+            align: Align::from_bytes(0).unwrap(),
+            field_types: Vec::new(),
+            field_offsets: Vec::new(),
+            field_names: None,
         }
-        Abi::Uninhabited => panic!(
-            "TODO: Abi::Uninhabited not supported yet in trans_type: {:?}",
-            ty
-        ),
+        .def(cx),
         Abi::Scalar(ref scalar) => trans_scalar(cx, ty, scalar, None, is_immediate),
         Abi::ScalarPair(ref one, ref two) => {
             // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
@@ -436,6 +441,49 @@ fn dig_scalar_pointee<'spv, 'tcx>(
         //     trans_scalar_known_ty(cx, item, scalar, is_immediate)
         // }
         TyKind::Tuple(_) | TyKind::Adt(..) | TyKind::Closure(..) => {
+            dig_scalar_pointee_adt(cx, ty, index)
+        }
+        ref kind => panic!(
+            "TODO: Unimplemented Primitive::Pointer TyKind index={:?} ({:#?}):\n{:#?}",
+            index, kind, ty
+        ),
+    }
+}
+
+fn dig_scalar_pointee_adt<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    ty: TyAndLayout<'tcx>,
+    index: Option<usize>,
+) -> PointeeTy<'tcx> {
+    match &ty.variants {
+        Variants::Multiple {
+            tag_encoding,
+            tag_field,
+            variants,
+            ..
+        } => {
+            match *tag_encoding {
+                TagEncoding::Direct => panic!(
+                    "dig_scalar_pointee_adt Variants::Multiple TagEncoding::Direct makes no sense: {:#?}",
+                    ty
+                ),
+                TagEncoding::Niche { dataful_variant, .. } => {
+                    // This *should* be something like Option<&T>: a very simple enum.
+                    // TODO: This might not be, if it's a scalar pair?
+                    assert_eq!(1, ty.fields.count());
+                    assert_eq!(1, variants[dataful_variant].fields.count());
+                    if let TyKind::Adt(adt, substs) = ty.ty.kind() {
+                        assert_eq!(1, adt.variants[dataful_variant].fields.len());
+                        assert_eq!(0, *tag_field);
+                        let field_ty = adt.variants[dataful_variant].fields[0].ty(cx.tcx, substs);
+                        dig_scalar_pointee(cx, cx.layout_of(field_ty), index)
+                    } else {
+                        panic!("Variants::Multiple not TyKind::Adt: {:#?}", ty)
+                    }
+                },
+            }
+        }
+        Variants::Single { .. } => {
             let fields = ty
                 .fields
                 .index_by_increasing_offset()
@@ -458,10 +506,6 @@ fn dig_scalar_pointee<'spv, 'tcx>(
                 },
             }
         }
-        ref kind => panic!(
-            "TODO: Unimplemented Primitive::Pointer TyKind index={:?} ({:#?}):\n{:#?}",
-            index, kind, ty
-        ),
     }
 }
 
@@ -493,13 +537,18 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
                     element: element_type,
                 }
                 .def(cx)
+            } else if count == 0 {
+                // spir-v doesn't support zero-sized arrays
+                SpirvType::Adt {
+                    name: format!("<zero-sized-array={}>", ty.ty),
+                    size: Some(Size::ZERO),
+                    align: Align::from_bytes(0).unwrap(),
+                    field_types: Vec::new(),
+                    field_offsets: Vec::new(),
+                    field_names: None,
+                }
+                .def(cx)
             } else {
-                // note that zero-sized arrays don't report as .is_zst() for some reason? TODO: investigate why
-                assert_ne!(
-                    count, 0,
-                    "spir-v doesn't support zero-sized arrays: {:#?}",
-                    ty
-                );
                 // TODO: Assert stride is same as spirv's stride?
                 let count_const = cx.constant_u32(count as u32).def;
                 SpirvType::Array {

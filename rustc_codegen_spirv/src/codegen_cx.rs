@@ -36,6 +36,7 @@ use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::iter::once;
+use std::ops::Range;
 
 // TODO: How do you merge this macro with the one in builder::builder_methods::assert_ty_eq? idk how macros work.
 macro_rules! assert_ty_eq {
@@ -1023,7 +1024,11 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
 }
 
 fn create_const_alloc(cx: &CodegenCx<'_, '_>, alloc: &Allocation, ty: Word) -> SpirvValue {
-    // println!("Creating const alloc of type {}", cx.debug_type(ty));
+    // println!(
+    //     "Creating const alloc of type {} with {} bytes",
+    //     cx.debug_type(ty),
+    //     alloc.len()
+    // );
     let mut offset = Size::ZERO;
     let result = create_const_alloc2(cx, alloc, &mut offset, ty);
     assert_eq!(
@@ -1071,13 +1076,14 @@ fn create_const_alloc2(
             ..
         } => {
             let base = *offset;
-            let values = field_types
-                .iter()
-                .zip(field_offsets.iter())
-                .map(|(&ty, &field_offset)| {
-                    create_const_alloc2(cx, alloc, &mut (base + field_offset), ty).def
-                })
-                .collect::<Vec<_>>();
+            let mut values = Vec::with_capacity(field_types.len());
+            let mut occupied_spaces = Vec::with_capacity(field_types.len());
+            for (&ty, &field_offset) in field_types.iter().zip(field_offsets.iter()) {
+                let total_offset_start = base + field_offset;
+                let mut total_offset_end = total_offset_start;
+                values.push(create_const_alloc2(cx, alloc, &mut total_offset_end, ty).def);
+                occupied_spaces.push(total_offset_start..total_offset_end);
+            }
             if let Some(size) = size {
                 *offset += size;
             } else {
@@ -1087,6 +1093,7 @@ fn create_const_alloc2(
                     "create_const_alloc must consume all bytes of an Allocation after an unsized struct"
                 );
             }
+            assert_uninit(alloc, base, *offset, occupied_spaces);
             cx.emit_global()
                 .constant_composite(ty, values)
                 .with_type(ty)
@@ -1145,6 +1152,11 @@ fn read_alloc_val<'a>(
             .range(Size::from_bytes(start)..Size::from_bytes(end))
             .is_empty()
     });
+    // check init
+    alloc
+        .init_mask()
+        .is_range_initialized(*offset, *offset + Size::from_bytes(len))
+        .unwrap();
     *offset += Size::from_bytes(len);
     read_target_uint(cx.data_layout().endian, bytes).unwrap()
 }
@@ -1153,11 +1165,28 @@ fn read_alloc_val<'a>(
 fn read_alloc_ptr<'a>(cx: &CodegenCx<'_, '_>, alloc: &'a Allocation, offset: &mut Size) -> Pointer {
     let off = offset.bytes_usize();
     let len = cx.data_layout().pointer_size.bytes_usize();
+    // check init
+    alloc
+        .init_mask()
+        .is_range_initialized(*offset, *offset + Size::from_bytes(len))
+        .unwrap();
     let bytes = alloc.inspect_with_uninit_and_ptr_outside_interpreter(off..(off + len));
     let inner_offset = read_target_uint(cx.data_layout().endian, bytes).unwrap();
     let &((), alloc_id) = alloc.relocations().get(&Size::from_bytes(off)).unwrap();
     *offset += Size::from_bytes(len);
     Pointer::new_with_tag(alloc_id, Size::from_bytes(inner_offset), ())
+}
+
+fn assert_uninit(alloc: &Allocation, start: Size, end: Size, occupied_ranges: Vec<Range<Size>>) {
+    // Range<Size> doesn't impl Iterator, so manually do it.
+    let mut index = start;
+    while index < end {
+        assert_eq!(
+            occupied_ranges.iter().any(|range| range.contains(&index)),
+            alloc.init_mask().get(index)
+        );
+        index += Size::from_bytes(1);
+    }
 }
 
 fn const_bytes(cx: &CodegenCx<'_, '_>, bytes: &[u8]) -> SpirvValue {
