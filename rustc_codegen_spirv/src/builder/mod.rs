@@ -105,35 +105,16 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
     // TODO: Definitely add tests to make sure this impl is right.
     fn rotate(&mut self, value: SpirvValue, shift: SpirvValue, is_left: bool) -> SpirvValue {
-        let (int_size, mask, zero) = match self.lookup_type(shift.ty) {
-            SpirvType::Integer(width, _) => {
-                if width > 32 {
-                    (
-                        self.builder
-                            .constant_u64(shift.ty, width as u64)
-                            .with_type(shift.ty),
-                        self.builder
-                            .constant_u64(shift.ty, (width - 1) as u64)
-                            .with_type(shift.ty),
-                        self.builder.constant_u64(shift.ty, 0).with_type(shift.ty),
-                    )
-                } else {
-                    (
-                        self.builder
-                            .constant_u32(shift.ty, width as u32)
-                            .with_type(shift.ty),
-                        self.builder
-                            .constant_u32(shift.ty, (width - 1) as u32)
-                            .with_type(shift.ty),
-                        self.builder.constant_u32(shift.ty, 0).with_type(shift.ty),
-                    )
-                }
-            }
+        let width = match self.lookup_type(shift.ty) {
+            SpirvType::Integer(width, _) => width,
             other => panic!(
                 "Cannot rotate non-integer type: {}",
                 other.debug(shift.ty, self)
             ),
         };
+        let int_size = self.constant_int(shift.ty, width as u64);
+        let mask = self.constant_int(shift.ty, (width - 1) as u64);
+        let zero = self.constant_int(shift.ty, 0);
         let bool = SpirvType::Bool.def(self);
         // https://stackoverflow.com/a/10134877
         let mask_shift = self.and(shift, mask);

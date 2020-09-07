@@ -152,16 +152,26 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn constant_int(&self, ty: Word, val: u64) -> SpirvValue {
         match self.lookup_type(ty) {
-            SpirvType::Integer(width, _) => {
-                if width > 32 {
-                    self.builder.constant_u64(ty, val).with_type(ty)
-                } else {
-                    assert!(val <= u32::MAX as u64);
-                    self.builder.constant_u32(ty, val as u32).with_type(ty)
-                }
-            }
-            other => panic!("Cannot constant_int on type {}", other.debug(ty, self)),
+            SpirvType::Integer(8, false) => self.builder.constant_u32(ty, val as u8 as u32),
+            SpirvType::Integer(16, false) => self.builder.constant_u32(ty, val as u16 as u32),
+            SpirvType::Integer(32, false) => self.builder.constant_u32(ty, val as u32),
+            SpirvType::Integer(64, false) => self.builder.constant_u64(ty, val as u64),
+            // TODO: remove
+            SpirvType::Integer(128, false) => self.builder.constant_u64(ty, val as u64),
+            SpirvType::Integer(8, true) => self.builder.constant_u32(ty, val as i64 as i8 as u32),
+            SpirvType::Integer(16, true) => self.builder.constant_u32(ty, val as i64 as i16 as u32),
+            SpirvType::Integer(32, true) => self.builder.constant_u32(ty, val as i64 as i32 as u32),
+            SpirvType::Integer(64, true) => self.builder.constant_u64(ty, val),
+            // TODO: remove
+            SpirvType::Integer(128, true) => self.builder.constant_u64(ty, val),
+            SpirvType::Bool => match val {
+                0 => self.emit_global().constant_false(ty),
+                1 => self.emit_global().constant_true(ty),
+                _ => panic!("Invalid constant value for bool: {}", val),
+            },
+            other => panic!("constant_int invalid on type {}", other.debug(ty, self)),
         }
+        .with_type(ty)
     }
 
     pub fn constant_f32(&self, val: f32) -> SpirvValue {
@@ -771,55 +781,33 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         self.emit_global().undef(ty, None).with_type(ty)
     }
     fn const_int(&self, t: Self::Type, i: i64) -> Self::Value {
-        match self.lookup_type(t) {
-            SpirvType::Integer(width, _signedness) => {
-                if width > 32 {
-                    self.builder.constant_u64(t, i as u64).with_type(t)
-                } else {
-                    self.builder.constant_u32(t, i as u32).with_type(t)
-                }
-            }
-            other => panic!(
-                "const_int not implemented for type: {:#?}",
-                other.debug(t, self)
-            ),
-        }
+        self.constant_int(t, i as u64)
     }
     fn const_uint(&self, t: Self::Type, i: u64) -> Self::Value {
-        match self.lookup_type(t) {
-            SpirvType::Integer(width, _signedness) => {
-                if width > 32 {
-                    self.builder.constant_u64(t, i as u64).with_type(t)
-                } else {
-                    self.builder.constant_u32(t, i as u32).with_type(t)
-                }
-            }
-            other => panic!(
-                "const_uint not implemented for type: {:#?}",
-                other.debug(t, self)
-            ),
-        }
+        self.constant_int(t, i)
     }
     fn const_uint_big(&self, t: Self::Type, u: u128) -> Self::Value {
-        if u > u64::MAX as u128 {
-            panic!("u128 literals not supported yet: {}", u);
-        }
         match self.lookup_type(t) {
-            SpirvType::Integer(width, _) => {
-                if width > 32 {
-                    self.builder.constant_u64(t, u as u64).with_type(t)
-                } else {
-                    assert!(u <= u32::MAX as u128);
-                    self.builder.constant_u32(t, u as u32).with_type(t)
-                }
-            }
+            SpirvType::Integer(8, false) => self.builder.constant_u32(t, u as u8 as u32),
+            SpirvType::Integer(16, false) => self.builder.constant_u32(t, u as u16 as u32),
+            SpirvType::Integer(32, false) => self.builder.constant_u32(t, u as u32),
+            SpirvType::Integer(64, false) => self.builder.constant_u64(t, u as u64),
+            // TODO: remove
+            SpirvType::Integer(128, false) => self.builder.constant_u64(t, u as u64),
+            SpirvType::Integer(8, true) => self.builder.constant_u32(t, u as i128 as i8 as u32),
+            SpirvType::Integer(16, true) => self.builder.constant_u32(t, u as i128 as i16 as u32),
+            SpirvType::Integer(32, true) => self.builder.constant_u32(t, u as i128 as i32 as u32),
+            SpirvType::Integer(64, true) => self.builder.constant_u64(t, u as i128 as i64 as u64),
+            // TODO: remove
+            SpirvType::Integer(128, true) => self.builder.constant_u64(t, u as i128 as i64 as u64),
             SpirvType::Bool => match u {
-                0 => self.emit_global().constant_false(t).with_type(t),
-                1 => self.emit_global().constant_true(t).with_type(t),
+                0 => self.emit_global().constant_false(t),
+                1 => self.emit_global().constant_true(t),
                 _ => panic!("Invalid constant value for bool: {}", u),
             },
             other => panic!("const_uint_big invalid on type {}", other.debug(t, self)),
         }
+        .with_type(t)
     }
     fn const_bool(&self, val: bool) -> Self::Value {
         let bool = SpirvType::Bool.def(self);
@@ -845,12 +833,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     fn const_usize(&self, i: u64) -> Self::Value {
         let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
         let t = SpirvType::Integer(ptr_size, false).def(self);
-        if ptr_size > 32 {
-            self.builder.constant_u64(t, i as u64)
-        } else {
-            self.builder.constant_u32(t, i as u32)
-        }
-        .with_type(t)
+        self.constant_int(t, i)
     }
     fn const_u8(&self, i: u8) -> Self::Value {
         let t = SpirvType::Integer(8, false).def(self);
@@ -858,13 +841,8 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     }
     fn const_real(&self, t: Self::Type, val: f64) -> Self::Value {
         match self.lookup_type(t) {
-            SpirvType::Float(width) => {
-                if width > 32 {
-                    self.builder.constant_f64(t, val).with_type(t)
-                } else {
-                    self.builder.constant_f32(t, val as f32).with_type(t)
-                }
-            }
+            SpirvType::Float(32) => self.constant_f32(val as f32),
+            SpirvType::Float(64) => self.constant_f64(val),
             other => panic!(
                 "const_real not implemented for type: {:#?}",
                 other.debug(t, self)

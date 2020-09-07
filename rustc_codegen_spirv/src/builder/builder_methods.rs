@@ -8,8 +8,7 @@ use rustc_codegen_ssa::common::{
 };
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
-use rustc_codegen_ssa::traits::LayoutTypeMethods;
-use rustc_codegen_ssa::traits::{BuilderMethods, OverflowOp};
+use rustc_codegen_ssa::traits::{BuilderMethods, ConstMethods, LayoutTypeMethods, OverflowOp};
 use rustc_codegen_ssa::MemFlags;
 use rustc_middle::ty::Ty;
 use rustc_target::abi::{Abi, Align, Scalar, Size};
@@ -418,12 +417,57 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     /// Called for Rvalue::Repeat when the elem is neither a ZST nor optimizable using memset.
     fn write_operand_repeatedly(
-        self,
-        _elem: OperandRef<'tcx, Self::Value>,
-        _count: u64,
-        _dest: PlaceRef<'tcx, Self::Value>,
+        mut self,
+        cg_elem: OperandRef<'tcx, Self::Value>,
+        count: u64,
+        dest: PlaceRef<'tcx, Self::Value>,
     ) -> Self {
-        todo!()
+        let zero = self.const_usize(0);
+        let start = dest.project_index(&mut self, zero).llval;
+
+        let align = dest
+            .align
+            .restrict_for_offset(dest.layout.field(self.cx(), 0).size);
+
+        for i in 0..count {
+            let current = self.inbounds_gep(start, &[self.const_usize(i)]);
+            cg_elem.val.store(
+                &mut self,
+                PlaceRef::new_sized_aligned(current, cg_elem.layout, align),
+            );
+        }
+
+        self
+        /*
+        let zero = self.const_usize(0);
+        let count = self.const_usize(count);
+        let start = dest.project_index(&mut self, zero).llval;
+        let end = dest.project_index(&mut self, count).llval;
+
+        let mut header_bx = self.build_sibling_block("repeat_loop_header");
+        let mut body_bx = self.build_sibling_block("repeat_loop_body");
+        let next_bx = self.build_sibling_block("repeat_loop_next");
+
+        self.br(header_bx.llbb());
+        let current = header_bx.phi(start.ty, &[start], &[self.llbb()]);
+
+        let keep_going = header_bx.icmp(IntPredicate::IntNE, current, end);
+        header_bx.cond_br(keep_going, body_bx.llbb(), next_bx.llbb());
+
+        let align = dest
+            .align
+            .restrict_for_offset(dest.layout.field(self.cx(), 0).size);
+        cg_elem.val.store(
+            &mut body_bx,
+            PlaceRef::new_sized_aligned(current, cg_elem.layout, align),
+        );
+
+        let next = body_bx.inbounds_gep(current, &[self.const_usize(1)]);
+        body_bx.br(header_bx.llbb());
+        header_bx.add_incoming_to_phi(current, next, body_bx.llbb());
+
+        next_bx
+        */
     }
 
     fn range_metadata(&mut self, _load: Self::Value, _range: Range<u128>) {
@@ -644,33 +688,20 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .with_type(dest_ty)
             }
             // bools are ints in llvm, so we have to implement this here
-            (SpirvType::Bool, SpirvType::Integer(dest_width, _)) => {
+            (SpirvType::Bool, SpirvType::Integer(_, _)) => {
                 // spir-v doesn't have a direct conversion instruction
-                let (if_true, if_false) = if dest_width > 32 {
-                    (
-                        self.builder.constant_u64(dest_ty, 1),
-                        self.builder.constant_u64(dest_ty, 0),
-                    )
-                } else {
-                    (
-                        self.builder.constant_u32(dest_ty, 1),
-                        self.builder.constant_u32(dest_ty, 0),
-                    )
-                };
+                let if_true = self.constant_int(dest_ty, 1);
+                let if_false = self.constant_int(dest_ty, 0);
                 self.emit()
-                    .select(dest_ty, None, val.def, if_true, if_false)
+                    .select(dest_ty, None, val.def, if_true.def, if_false.def)
                     .unwrap()
                     .with_type(dest_ty)
             }
-            (SpirvType::Integer(src_width, _), SpirvType::Bool) => {
+            (SpirvType::Integer(_, _), SpirvType::Bool) => {
                 // spir-v doesn't have a direct conversion instruction, glslang emits OpINotEqual
-                let zero = if src_width > 32 {
-                    self.builder.constant_u64(val.ty, 0)
-                } else {
-                    self.builder.constant_u32(val.ty, 0)
-                };
+                let zero = self.constant_int(val.ty, 0);
                 self.emit()
-                    .i_not_equal(dest_ty, None, val.def, zero)
+                    .i_not_equal(dest_ty, None, val.def, zero.def)
                     .unwrap()
                     .with_type(dest_ty)
             }
