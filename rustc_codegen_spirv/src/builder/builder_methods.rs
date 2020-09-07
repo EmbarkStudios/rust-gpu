@@ -78,7 +78,7 @@ fn ordering_to_semantics(ordering: AtomicOrdering) -> MemorySemantics {
     }
 }
 
-impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn with_cx(cx: &'a Self::CodegenCx) -> Self {
         // Note: all defaults here *must* be filled out by position_at_end
         Self {

@@ -27,7 +27,6 @@ mod things;
 mod test;
 
 use builder::Builder;
-use builder_spirv::ModuleSpirv;
 use codegen_cx::CodegenCx;
 use rspirv::binary::Assemble;
 use rustc_ast::expand::allocator::AllocatorKind;
@@ -181,7 +180,7 @@ impl CodegenBackend for SsaBackend {
 }
 
 impl WriteBackendMethods for SsaBackend {
-    type Module = ModuleSpirv;
+    type Module = rspirv::dr::Module;
     type TargetMachine = ();
     type ModuleBuffer = SpirvModuleBuffer;
     type Context = ();
@@ -234,12 +233,7 @@ impl WriteBackendMethods for SsaBackend {
         let path = cgcx
             .output_filenames
             .temp_path(OutputType::Object, Some(&module.name));
-        let spirv_module = {
-            // rust-analyzer gets sad without the annotation
-            let thing: &mut Option<rspirv::dr::Module> =
-                &mut *module.module_llvm.module.lock().unwrap();
-            thing.take().unwrap().assemble()
-        };
+        let spirv_module = module.module_llvm.assemble();
         // Note: endianness doesn't matter, readers deduce endianness from magic header.
         let spirv_module_u8: &[u8] = std::slice::from_raw_parts(
             spirv_module.as_ptr() as *const u8,
@@ -301,9 +295,7 @@ impl ExtraBackendMethods for SsaBackend {
         // TODO: Do dep_graph stuff
         let cgu = tcx.codegen_unit(cgu_name);
 
-        let spirv_module = ModuleSpirv::new();
-
-        let cx = CodegenCx::new(tcx, cgu, &spirv_module);
+        let cx = CodegenCx::new(tcx, cgu);
         let do_codegen = || {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
@@ -333,7 +325,7 @@ impl ExtraBackendMethods for SsaBackend {
                     println!("Item is blocklisted");
                     continue;
                 }
-                mono_item.predefine::<Builder<'_, '_, '_>>(&cx, linkage, visibility);
+                mono_item.predefine::<Builder<'_, '_>>(&cx, linkage, visibility);
             }
 
             println!("Done predefining");
@@ -364,10 +356,10 @@ impl ExtraBackendMethods for SsaBackend {
                     println!("Item is blocklisted");
                     continue;
                 }
-                mono_item.define::<Builder<'_, '_, '_>>(&cx);
+                mono_item.define::<Builder<'_, '_>>(&cx);
             }
 
-            if let Some(_entry) = maybe_create_entry_wrapper::<Builder<'_, '_, '_>>(&cx) {
+            if let Some(_entry) = maybe_create_entry_wrapper::<Builder<'_, '_>>(&cx) {
                 // attributes::sanitize(&cx, SanitizerSet::empty(), entry);
             }
         };
@@ -378,7 +370,7 @@ impl ExtraBackendMethods for SsaBackend {
         } else {
             do_codegen();
         }
-        cx.finalize_module();
+        let spirv_module = cx.finalize_module();
 
         (
             ModuleCodegen {
@@ -403,12 +395,12 @@ impl ExtraBackendMethods for SsaBackend {
     }
 }
 
-struct DumpModuleOnPanic<'a, 'cx, 'spv, 'tcx> {
-    cx: &'cx CodegenCx<'spv, 'tcx>,
+struct DumpModuleOnPanic<'a, 'cx, 'tcx> {
+    cx: &'cx CodegenCx<'tcx>,
     path: &'a str,
 }
 
-impl Drop for DumpModuleOnPanic<'_, '_, '_, '_> {
+impl Drop for DumpModuleOnPanic<'_, '_, '_> {
     fn drop(&mut self) {
         if std::thread::panicking() {
             let path: &std::path::Path = self.path.as_ref();

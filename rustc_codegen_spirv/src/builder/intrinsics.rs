@@ -41,7 +41,7 @@ macro_rules! math_intrinsic_int {
     }};
 }
 
-fn int_type_width_signed(ty: Ty<'_>, cx: &CodegenCx<'_, '_>) -> Option<(u64, bool)> {
+fn int_type_width_signed(ty: Ty<'_>, cx: &CodegenCx<'_>) -> Option<(u64, bool)> {
     match ty.kind() {
         TyKind::Int(t) => Some((
             t.bit_width().unwrap_or(cx.tcx.sess.target.ptr_width as u64),
@@ -62,7 +62,7 @@ fn float_type_width(ty: Ty<'_>) -> Option<u64> {
     }
 }
 
-impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     fn codegen_intrinsic_call(
         &mut self,
         instance: Instance<'tcx>,

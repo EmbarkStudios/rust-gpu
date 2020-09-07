@@ -19,7 +19,7 @@ pub struct RecursivePointeeCache<'tcx> {
 }
 
 impl<'tcx> RecursivePointeeCache<'tcx> {
-    fn begin<'spv>(&self, cx: &CodegenCx<'spv, 'tcx>, pointee: PointeeTy<'tcx>) -> Option<Word> {
+    fn begin(&self, cx: &CodegenCx<'tcx>, pointee: PointeeTy<'tcx>) -> Option<Word> {
         match self.map.borrow_mut().entry(pointee) {
             // State: This is the first time we've seen this type. Record that we're beginning to translate this type,
             // and start doing the translation.
@@ -47,9 +47,9 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
         }
     }
 
-    fn end<'spv>(
+    fn end(
         &self,
-        cx: &CodegenCx<'spv, 'tcx>,
+        cx: &CodegenCx<'tcx>,
         pointee: PointeeTy<'tcx>,
         storage_class: StorageClass,
         pointee_spv: Word,
@@ -109,21 +109,21 @@ enum PointeeDefState {
     Defined(Word),
 }
 
-pub trait ConvSpirvType<'spv, 'tcx> {
-    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word;
-    fn spirv_type_immediate(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+pub trait ConvSpirvType<'tcx> {
+    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word;
+    fn spirv_type_immediate(&self, cx: &CodegenCx<'tcx>) -> Word {
         self.spirv_type(cx)
     }
 }
 
-impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for PointeeTy<'tcx> {
-    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
+    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         match *self {
             PointeeTy::Ty(ty) => ty.spirv_type(cx),
             PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type(cx),
         }
     }
-    fn spirv_type_immediate(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+    fn spirv_type_immediate(&self, cx: &CodegenCx<'tcx>) -> Word {
         match *self {
             PointeeTy::Ty(ty) => ty.spirv_type_immediate(cx),
             PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type_immediate(cx),
@@ -131,8 +131,8 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for PointeeTy<'tcx> {
     }
 }
 
-impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for Reg {
-    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+impl<'tcx> ConvSpirvType<'tcx> for Reg {
+    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         match self.kind {
             RegKind::Integer => SpirvType::Integer(self.size.bits() as u32, false).def(cx),
             RegKind::Float => SpirvType::Float(self.size.bits() as u32).def(cx),
@@ -145,8 +145,8 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for Reg {
     }
 }
 
-impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for CastTarget {
-    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
+    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         let rest_ll_unit = self.rest.unit.spirv_type(cx);
         let (rest_count, rem_bytes) = if self.rest.unit.size.bytes() == 0 {
             (0, 0)
@@ -212,8 +212,8 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for CastTarget {
     }
 }
 
-impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
-    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
+    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         let mut argument_types = Vec::new();
 
         let return_type = match self.ret.mode {
@@ -273,20 +273,16 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
     }
 }
 
-impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for TyAndLayout<'tcx> {
-    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
+    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         trans_type_impl(cx, *self, false)
     }
-    fn spirv_type_immediate(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+    fn spirv_type_immediate(&self, cx: &CodegenCx<'tcx>) -> Word {
         trans_type_impl(cx, *self, true)
     }
 }
 
-fn trans_type_impl<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
-    ty: TyAndLayout<'tcx>,
-    is_immediate: bool,
-) -> Word {
+fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immediate: bool) -> Word {
     // Note: ty.abi is orthogonal to ty.variants and ty.fields, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
     // `ScalarPair`.
     match ty.abi {
@@ -332,8 +328,8 @@ fn trans_type_impl<'spv, 'tcx>(
 }
 
 // only pub for LayoutTypeMethods::scalar_pair_element_backend_type
-pub fn scalar_pair_element_backend_type<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
+pub fn scalar_pair_element_backend_type<'tcx>(
+    cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     index: usize,
     is_immediate: bool,
@@ -345,8 +341,8 @@ pub fn scalar_pair_element_backend_type<'spv, 'tcx>(
     trans_scalar(cx, ty, scalar, Some(index), is_immediate)
 }
 
-fn trans_scalar<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
+fn trans_scalar<'tcx>(
+    cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
     index: Option<usize>,
@@ -394,8 +390,8 @@ fn trans_scalar<'spv, 'tcx>(
 // ManuallyDrop<T> has a single field of type T. We "dig into" that field, and recurse, trying to find a base case that
 // we can handle, like TyKind::Ref.
 // If the above didn't make sense, please poke Ashley, it's probably easier to explain via conversation.
-fn dig_scalar_pointee<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
+fn dig_scalar_pointee<'tcx>(
+    cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     index: Option<usize>,
 ) -> PointeeTy<'tcx> {
@@ -450,8 +446,8 @@ fn dig_scalar_pointee<'spv, 'tcx>(
     }
 }
 
-fn dig_scalar_pointee_adt<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
+fn dig_scalar_pointee_adt<'tcx>(
+    cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     index: Option<usize>,
 ) -> PointeeTy<'tcx> {
@@ -509,7 +505,7 @@ fn dig_scalar_pointee_adt<'spv, 'tcx>(
     }
 }
 
-fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     match ty.fields {
         FieldsShape::Primitive => panic!(
             "FieldsShape::Primitive not supported yet in trans_type: {:?}",
@@ -566,8 +562,8 @@ fn trans_aggregate<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>
 }
 
 // returns (field_offsets, size, align)
-pub fn auto_struct_layout<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
+pub fn auto_struct_layout<'tcx>(
+    cx: &CodegenCx<'tcx>,
     field_types: &[Word],
 ) -> (Vec<Size>, Option<Size>, Align) {
     let mut field_offsets = Vec::with_capacity(field_types.len());
@@ -591,7 +587,7 @@ pub fn auto_struct_layout<'spv, 'tcx>(
 }
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
-fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     let name = name_of_struct(ty);
     if let TyKind::Foreign(_) = ty.ty.kind() {
         // "An unsized FFI type that is opaque to Rust"

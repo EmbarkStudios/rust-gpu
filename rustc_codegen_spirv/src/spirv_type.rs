@@ -69,8 +69,8 @@ fn memset_fill_u64(b: u8) -> u64 {
         | ((b as u64) << 56)
 }
 
-fn memset_dynamic_scalar<'a, 'spv, 'tcx>(
-    builder: &Builder<'a, 'spv, 'tcx>,
+fn memset_dynamic_scalar<'a, 'tcx>(
+    builder: &Builder<'a, 'tcx>,
     fill_var: Word,
     byte_width: usize,
     is_float: bool,
@@ -101,7 +101,7 @@ fn memset_dynamic_scalar<'a, 'spv, 'tcx>(
 
 impl SpirvType {
     /// Note: Builder::type_* should be called *nowhere else* but here, to ensure CodegenCx::type_defs stays up-to-date
-    pub fn def<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+    pub fn def<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Word {
         if let Some(cached) = cx.type_cache.get(self) {
             return cached;
         }
@@ -176,7 +176,7 @@ impl SpirvType {
         result
     }
 
-    pub fn def_with_id<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>, id: Word) -> Word {
+    pub fn def_with_id<'tcx>(&self, cx: &CodegenCx<'tcx>, id: Word) -> Word {
         if let Some(cached) = cx.type_cache.get(self) {
             assert_eq!(cached, id);
             return cached;
@@ -194,15 +194,15 @@ impl SpirvType {
         result
     }
 
-    pub fn debug<'cx, 'spv, 'tcx>(
+    pub fn debug<'cx, 'tcx>(
         self,
         id: Word,
-        cx: &'cx CodegenCx<'spv, 'tcx>,
-    ) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
+        cx: &'cx CodegenCx<'tcx>,
+    ) -> SpirvTypePrinter<'cx, 'tcx> {
         SpirvTypePrinter { ty: self, id, cx }
     }
 
-    pub fn sizeof<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Option<Size> {
+    pub fn sizeof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Option<Size> {
         let result = match *self {
             SpirvType::Void => Size::ZERO,
             SpirvType::Bool => Size::from_bytes(1),
@@ -223,7 +223,7 @@ impl SpirvType {
         Some(result)
     }
 
-    pub fn alignof<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Align {
+    pub fn alignof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Align {
         match *self {
             SpirvType::Void => Align::from_bytes(0).unwrap(),
             SpirvType::Bool => Align::from_bytes(1).unwrap(),
@@ -240,11 +240,7 @@ impl SpirvType {
         }
     }
 
-    pub fn memset_const_pattern<'spv, 'tcx>(
-        &self,
-        cx: &CodegenCx<'spv, 'tcx>,
-        fill_byte: u8,
-    ) -> Word {
+    pub fn memset_const_pattern<'tcx>(&self, cx: &CodegenCx<'tcx>, fill_byte: u8) -> Word {
         match *self {
             SpirvType::Void => panic!("TODO: void memset not implemented yet"),
             SpirvType::Bool => panic!("TODO: bool memset not implemented yet"),
@@ -292,9 +288,9 @@ impl SpirvType {
         }
     }
 
-    pub fn memset_dynamic_pattern<'a, 'spv, 'tcx>(
+    pub fn memset_dynamic_pattern<'a, 'tcx>(
         &self,
-        builder: &Builder<'a, 'spv, 'tcx>,
+        builder: &Builder<'a, 'tcx>,
         fill_var: Word,
     ) -> Word {
         match *self {
@@ -337,15 +333,15 @@ impl SpirvType {
     }
 }
 
-pub struct SpirvTypePrinter<'cx, 'spv, 'tcx> {
+pub struct SpirvTypePrinter<'cx, 'tcx> {
     id: Word,
     ty: SpirvType,
-    cx: &'cx CodegenCx<'spv, 'tcx>,
+    cx: &'cx CodegenCx<'tcx>,
 }
 
 static DEBUG_STACK: SyncLazy<Mutex<Vec<Word>>> = SyncLazy::new(|| Mutex::new(Vec::new()));
 
-impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
+impl fmt::Debug for SpirvTypePrinter<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         {
             let mut debug_stack = DEBUG_STACK.lock().unwrap();
@@ -458,16 +454,16 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
     }
 }
 
-impl fmt::Display for SpirvTypePrinter<'_, '_, '_> {
+impl fmt::Display for SpirvTypePrinter<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.display(&mut Vec::new(), f)
     }
 }
 
-impl SpirvTypePrinter<'_, '_, '_> {
+impl SpirvTypePrinter<'_, '_> {
     fn display(&self, stack: &mut Vec<Word>, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fn ty<'spv, 'tcx>(
-            cx: &CodegenCx<'spv, 'tcx>,
+        fn ty<'tcx>(
+            cx: &CodegenCx<'tcx>,
             stack: &mut Vec<Word>,
             f: &mut fmt::Formatter<'_>,
             ty: Word,

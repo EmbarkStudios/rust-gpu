@@ -27,14 +27,14 @@ use rustc_target::abi::{HasDataLayout, LayoutOf, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::ops::Deref;
 
-pub struct Builder<'a, 'spv, 'tcx> {
-    cx: &'a CodegenCx<'spv, 'tcx>,
+pub struct Builder<'a, 'tcx> {
+    cx: &'a CodegenCx<'tcx>,
     cursor: BuilderCursor,
     current_fn: <Self as BackendTypes>::Function,
     basic_block: <Self as BackendTypes>::BasicBlock,
 }
 
-impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> Builder<'a, 'tcx> {
     pub fn emit(&self) -> std::cell::RefMut<rspirv::dr::Builder> {
         self.emit_with_cursor(self.cursor)
     }
@@ -156,15 +156,15 @@ impl<'a, 'spv, 'tcx> Builder<'a, 'spv, 'tcx> {
 }
 
 // Important: This lets us use CodegenCx methods on Builder
-impl<'a, 'spv, 'tcx> Deref for Builder<'a, 'spv, 'tcx> {
-    type Target = CodegenCx<'spv, 'tcx>;
+impl<'a, 'tcx> Deref for Builder<'a, 'tcx> {
+    type Target = CodegenCx<'tcx>;
 
     fn deref(&self) -> &Self::Target {
         self.cx
     }
 }
 
-impl<'a, 'spv, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'tcx> {
     fn create_pgo_func_name_var(&self, _instance: Instance<'tcx>) -> Self::Value {
         todo!()
     }
@@ -196,7 +196,7 @@ impl<'a, 'spv, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx
     }
 }
 
-impl<'a, 'spv, 'tcx> DebugInfoBuilderMethods for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> DebugInfoBuilderMethods for Builder<'a, 'tcx> {
     fn dbg_var_addr(
         &mut self,
         _dbg_var: Self::DIVariable,
@@ -223,14 +223,14 @@ impl<'a, 'spv, 'tcx> DebugInfoBuilderMethods for Builder<'a, 'spv, 'tcx> {
     }
 }
 
-impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
     fn store_fn_arg(
         &mut self,
         arg_abi: &ArgAbi<'tcx, Ty<'tcx>>,
         idx: &mut usize,
         dst: PlaceRef<'tcx, Self::Value>,
     ) {
-        fn next<'a, 'spv, 'tcx>(bx: &mut Builder<'a, 'spv, 'tcx>, idx: &mut usize) -> SpirvValue {
+        fn next<'a, 'tcx>(bx: &mut Builder<'a, 'tcx>, idx: &mut usize) -> SpirvValue {
             let val = bx.function_parameter_values.borrow()[&bx.current_fn.def][*idx];
             *idx += 1;
             val
@@ -286,7 +286,7 @@ impl<'a, 'spv, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 }
 
-impl<'a, 'spv, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'tcx> {
     fn apply_attrs_callsite(&mut self, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>, _callsite: Self::Value) {
         // TODO: Implement this?
     }
@@ -296,7 +296,7 @@ impl<'a, 'spv, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 }
 
-impl<'a, 'spv, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
     fn codegen_llvm_inline_asm(
         &mut self,
         _ia: &LlvmInlineAsmInner,
@@ -317,52 +317,52 @@ impl<'a, 'spv, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         todo!()
     }
 }
-impl<'a, 'spv, 'tcx> StaticBuilderMethods for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> StaticBuilderMethods for Builder<'a, 'tcx> {
     fn get_static(&mut self, def_id: DefId) -> Self::Value {
         self.cx.get_static(def_id)
     }
 }
 
-impl<'a, 'spv, 'tcx> BackendTypes for Builder<'a, 'spv, 'tcx> {
-    type Value = <CodegenCx<'spv, 'tcx> as BackendTypes>::Value;
-    type Function = <CodegenCx<'spv, 'tcx> as BackendTypes>::Function;
-    type BasicBlock = <CodegenCx<'spv, 'tcx> as BackendTypes>::BasicBlock;
-    type Type = <CodegenCx<'spv, 'tcx> as BackendTypes>::Type;
-    type Funclet = <CodegenCx<'spv, 'tcx> as BackendTypes>::Funclet;
+impl<'a, 'tcx> BackendTypes for Builder<'a, 'tcx> {
+    type Value = <CodegenCx<'tcx> as BackendTypes>::Value;
+    type Function = <CodegenCx<'tcx> as BackendTypes>::Function;
+    type BasicBlock = <CodegenCx<'tcx> as BackendTypes>::BasicBlock;
+    type Type = <CodegenCx<'tcx> as BackendTypes>::Type;
+    type Funclet = <CodegenCx<'tcx> as BackendTypes>::Funclet;
 
-    type DIScope = <CodegenCx<'spv, 'tcx> as BackendTypes>::DIScope;
-    type DIVariable = <CodegenCx<'spv, 'tcx> as BackendTypes>::DIVariable;
+    type DIScope = <CodegenCx<'tcx> as BackendTypes>::DIScope;
+    type DIVariable = <CodegenCx<'tcx> as BackendTypes>::DIVariable;
 }
 
-impl<'a, 'spv, 'tcx> HasCodegen<'tcx> for Builder<'a, 'spv, 'tcx> {
-    type CodegenCx = CodegenCx<'spv, 'tcx>;
+impl<'a, 'tcx> HasCodegen<'tcx> for Builder<'a, 'tcx> {
+    type CodegenCx = CodegenCx<'tcx>;
 }
 
-impl<'a, 'spv, 'tcx> HasParamEnv<'tcx> for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> HasParamEnv<'tcx> for Builder<'a, 'tcx> {
     fn param_env(&self) -> ParamEnv<'tcx> {
         self.cx.param_env()
     }
 }
 
-impl<'a, 'spv, 'tcx> HasTargetSpec for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> HasTargetSpec for Builder<'a, 'tcx> {
     fn target_spec(&self) -> &Target {
         &self.cx.target_spec()
     }
 }
 
-impl<'a, 'spv, 'tcx> HasTyCtxt<'tcx> for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> HasTyCtxt<'tcx> for Builder<'a, 'tcx> {
     fn tcx(&self) -> TyCtxt<'tcx> {
         self.cx.tcx
     }
 }
 
-impl<'a, 'spv, 'tcx> HasDataLayout for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> HasDataLayout for Builder<'a, 'tcx> {
     fn data_layout(&self) -> &TargetDataLayout {
         self.cx.data_layout()
     }
 }
 
-impl<'a, 'spv, 'tcx> LayoutOf for Builder<'a, 'spv, 'tcx> {
+impl<'a, 'tcx> LayoutOf for Builder<'a, 'tcx> {
     type Ty = Ty<'tcx>;
     type TyAndLayout = TyAndLayout<'tcx>;
 

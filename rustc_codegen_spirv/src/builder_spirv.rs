@@ -2,23 +2,7 @@ use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, StorageClass, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
 use std::cell::{RefCell, RefMut};
-use std::{fs::File, io::Write, path::Path, sync::Mutex};
-
-/// This theoretically should contain the rspirv::Builder, but instead, we put that into the BuilderSpirv struct, and at
-/// the end of compilation, move the Builder over here. The reason is that the WriteBackendMethods trait requires the
-/// Module type to be Send+Sync, which necessitates a Mutex over a RefCell. So, we've split it up to not have the perf
-/// cost of a Mutex, as accessing the builder is a rather hot path.
-pub struct ModuleSpirv {
-    pub module: Mutex<Option<Module>>,
-}
-
-impl ModuleSpirv {
-    pub fn new() -> Self {
-        Self {
-            module: Mutex::new(None),
-        }
-    }
-}
+use std::{fs::File, io::Write, path::Path};
 
 #[derive(Copy, Clone, Debug, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct SpirvValue {

@@ -1,10 +1,8 @@
 use crate::abi::ConvSpirvType;
-use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv, SpirvValue, SpirvValueExt};
+use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
-use rspirv::{
-    dr::Operand,
-    spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word},
-};
+use rspirv::dr::{Module, Operand};
+use rspirv::spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word};
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -51,11 +49,9 @@ macro_rules! assert_ty_eq {
     };
 }
 
-pub struct CodegenCx<'spv, 'tcx> {
+pub struct CodegenCx<'tcx> {
     pub tcx: TyCtxt<'tcx>,
     pub codegen_unit: &'tcx CodegenUnit<'tcx>,
-    /// Not actually used much, builder is probably what you want (see comment on ModuleSpirv type)
-    pub spirv_module: &'spv ModuleSpirv,
     /// Spir-v module builder
     pub builder: BuilderSpirv,
     /// Used for the DeclareMethods API (not sure what it is yet)
@@ -69,16 +65,11 @@ pub struct CodegenCx<'spv, 'tcx> {
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
 }
 
-impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
-    pub fn new(
-        tcx: TyCtxt<'tcx>,
-        codegen_unit: &'tcx CodegenUnit<'tcx>,
-        spirv_module: &'spv ModuleSpirv,
-    ) -> Self {
+impl<'tcx> CodegenCx<'tcx> {
+    pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         Self {
             tcx,
             codegen_unit,
-            spirv_module,
             builder: BuilderSpirv::new(),
             declared_values: RefCell::new(HashMap::new()),
             instances: RefCell::new(HashMap::new()),
@@ -126,17 +117,12 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
     }
 
     // Useful for printing out types when debugging
-    pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
+    pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'tcx> {
         self.lookup_type(ty).debug(ty, self)
     }
 
-    pub fn finalize_module(self) {
-        let result = self.builder.finalize();
-        let mut output = self.spirv_module.module.lock().unwrap();
-        if output.is_some() {
-            panic!("finalize_module was called twice");
-        }
-        *output = Some(result);
+    pub fn finalize_module(self) -> Module {
+        self.builder.finalize()
     }
 
     // Presumably these methods will get used eventually, so allow(dead_code) to not have to rewrite when needed.
@@ -219,7 +205,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
     }
 }
 
-impl<'spv, 'tcx> BackendTypes for CodegenCx<'spv, 'tcx> {
+impl<'tcx> BackendTypes for CodegenCx<'tcx> {
     type Value = SpirvValue;
     type Function = SpirvValue;
 
@@ -233,7 +219,7 @@ impl<'spv, 'tcx> BackendTypes for CodegenCx<'spv, 'tcx> {
     type DIVariable = ();
 }
 
-impl<'spv, 'tcx> LayoutOf for CodegenCx<'spv, 'tcx> {
+impl<'tcx> LayoutOf for CodegenCx<'tcx> {
     type Ty = Ty<'tcx>;
     type TyAndLayout = TyAndLayout<'tcx>;
 
@@ -254,31 +240,31 @@ impl<'spv, 'tcx> LayoutOf for CodegenCx<'spv, 'tcx> {
     }
 }
 
-impl<'spv, 'tcx> HasTyCtxt<'tcx> for CodegenCx<'spv, 'tcx> {
+impl<'tcx> HasTyCtxt<'tcx> for CodegenCx<'tcx> {
     fn tcx(&self) -> TyCtxt<'tcx> {
         self.tcx
     }
 }
 
-impl<'spv, 'tcx> HasDataLayout for CodegenCx<'spv, 'tcx> {
+impl<'tcx> HasDataLayout for CodegenCx<'tcx> {
     fn data_layout(&self) -> &TargetDataLayout {
         &self.tcx.data_layout
     }
 }
 
-impl<'spv, 'tcx> HasTargetSpec for CodegenCx<'spv, 'tcx> {
+impl<'tcx> HasTargetSpec for CodegenCx<'tcx> {
     fn target_spec(&self) -> &Target {
         &self.tcx.sess.target.target
     }
 }
 
-impl<'spv, 'tcx> HasParamEnv<'tcx> for CodegenCx<'spv, 'tcx> {
+impl<'tcx> HasParamEnv<'tcx> for CodegenCx<'tcx> {
     fn param_env(&self) -> ParamEnv<'tcx> {
         ParamEnv::reveal_all()
     }
 }
 
-impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
+impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
         layout.spirv_type(self)
     }
@@ -341,7 +327,7 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 }
 
-impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
+impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     // TODO: llvm types are signless, as in neither signed nor unsigned (I think?), so these are expected to be
     // signless. Do we want a SpirvType::Integer(_, Signless) to indicate the sign is unknown, and to do conversions at
     // appropriate places?
@@ -470,7 +456,7 @@ impl<'spv, 'tcx> BaseTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 }
 
-impl<'spv, 'tcx> StaticMethods for CodegenCx<'spv, 'tcx> {
+impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
         // TODO: Integrate this into define_static and whatnot?
         if let Some(already_defined) = self.builder.find_global_constant_variable(cv.def) {
@@ -528,7 +514,7 @@ impl<'spv, 'tcx> StaticMethods for CodegenCx<'spv, 'tcx> {
     }
 }
 
-pub fn get_fn<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, instance: Instance<'tcx>) -> SpirvValue {
+pub fn get_fn<'tcx>(cx: &CodegenCx<'tcx>, instance: Instance<'tcx>) -> SpirvValue {
     assert!(!instance.substs.needs_infer());
     assert!(!instance.substs.has_escaping_bound_vars());
 
@@ -551,7 +537,7 @@ pub fn get_fn<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, instance: Instance<'tcx>) 
     llfn
 }
 
-impl<'spv, 'tcx> MiscMethods<'tcx> for CodegenCx<'spv, 'tcx> {
+impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
     #[allow(clippy::type_complexity)]
     fn vtables(
         &self,
@@ -601,7 +587,7 @@ impl<'spv, 'tcx> MiscMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 }
 
-impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
+impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
     fn predefine_static(
         &self,
         def_id: DefId,
@@ -641,7 +627,7 @@ impl<'spv, 'tcx> PreDefineMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 }
 
-impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
+impl<'tcx> DeclareMethods<'tcx> for CodegenCx<'tcx> {
     fn declare_global(&self, name: &str, ty: Self::Type) -> Self::Value {
         let ptr_ty = SpirvType::Pointer {
             storage_class: StorageClass::Generic,
@@ -725,7 +711,7 @@ impl<'spv, 'tcx> DeclareMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 }
 
-impl<'spv, 'tcx> DebugInfoMethods<'tcx> for CodegenCx<'spv, 'tcx> {
+impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
     fn create_vtable_metadata(&self, _ty: Ty<'tcx>, _vtable: Self::Value) {
         // Ignore.
     }
@@ -767,13 +753,13 @@ impl<'spv, 'tcx> DebugInfoMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 }
 
-impl<'spv, 'tcx> CoverageInfoMethods for CodegenCx<'spv, 'tcx> {
+impl<'tcx> CoverageInfoMethods for CodegenCx<'tcx> {
     fn coverageinfo_finalize(&self) {
         todo!()
     }
 }
 
-impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
+impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     fn const_null(&self, t: Self::Type) -> Self::Value {
         self.emit_global().constant_null(t).with_type(t)
     }
@@ -1023,7 +1009,7 @@ impl<'spv, 'tcx> ConstMethods<'tcx> for CodegenCx<'spv, 'tcx> {
     }
 }
 
-fn create_const_alloc(cx: &CodegenCx<'_, '_>, alloc: &Allocation, ty: Word) -> SpirvValue {
+fn create_const_alloc(cx: &CodegenCx<'_>, alloc: &Allocation, ty: Word) -> SpirvValue {
     // println!(
     //     "Creating const alloc of type {} with {} bytes",
     //     cx.debug_type(ty),
@@ -1041,7 +1027,7 @@ fn create_const_alloc(cx: &CodegenCx<'_, '_>, alloc: &Allocation, ty: Word) -> S
 }
 
 fn create_const_alloc2(
-    cx: &CodegenCx<'_, '_>,
+    cx: &CodegenCx<'_>,
     alloc: &Allocation,
     offset: &mut Size,
     ty: Word,
@@ -1136,7 +1122,7 @@ fn create_const_alloc2(
 
 // Advances offset by len
 fn read_alloc_val<'a>(
-    cx: &CodegenCx<'_, '_>,
+    cx: &CodegenCx<'_>,
     alloc: &'a Allocation,
     offset: &mut Size,
     len: usize,
@@ -1162,7 +1148,7 @@ fn read_alloc_val<'a>(
 }
 
 // Advances offset by ptr size
-fn read_alloc_ptr<'a>(cx: &CodegenCx<'_, '_>, alloc: &'a Allocation, offset: &mut Size) -> Pointer {
+fn read_alloc_ptr<'a>(cx: &CodegenCx<'_>, alloc: &'a Allocation, offset: &mut Size) -> Pointer {
     let off = offset.bytes_usize();
     let len = cx.data_layout().pointer_size.bytes_usize();
     // check init
@@ -1189,7 +1175,7 @@ fn assert_uninit(alloc: &Allocation, start: Size, end: Size, occupied_ranges: Ve
     }
 }
 
-fn const_bytes(cx: &CodegenCx<'_, '_>, bytes: &[u8]) -> SpirvValue {
+fn const_bytes(cx: &CodegenCx<'_>, bytes: &[u8]) -> SpirvValue {
     let ty = SpirvType::Array {
         element: SpirvType::Integer(8, false).def(cx),
         count: cx.constant_u32(bytes.len() as u32).def,
@@ -1204,7 +1190,7 @@ fn const_bytes(cx: &CodegenCx<'_, '_>, bytes: &[u8]) -> SpirvValue {
         .with_type(ty)
 }
 
-impl<'spv, 'tcx> AsmMethods for CodegenCx<'spv, 'tcx> {
+impl<'tcx> AsmMethods for CodegenCx<'tcx> {
     fn codegen_global_asm(&self, _ga: &GlobalAsm) {
         todo!()
     }
