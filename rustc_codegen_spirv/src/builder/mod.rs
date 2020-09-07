@@ -14,7 +14,7 @@ use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, AsmBuilderMethods, BackendTypes, BaseTypeMethods,
     BuilderMethods, ConstMethods, CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen,
-    InlineAsmOperandRef, IntrinsicCallMethods, OverflowOp, StaticBuilderMethods,
+    InlineAsmOperandRef, IntrinsicCallMethods, MiscMethods, OverflowOp, StaticBuilderMethods,
 };
 use rustc_codegen_ssa::MemFlags;
 use rustc_hir::LlvmInlineAsmInner;
@@ -367,9 +367,8 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         let arg_tys = sig.inputs();
         let ret_ty = sig.output();
         let name = self.tcx.item_name(def_id);
-        // let name_str = &*name.as_str();
+        let name_str = &*name.as_str();
 
-        // let spirv_ret_ty = self.trans_type(self.layout_of(ret_ty));
         let result = PlaceRef::new_sized(llresult, fn_abi.ret.layout);
 
         let value = match name {
@@ -453,6 +452,143 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 args[1].val.unaligned_volatile_store(self, dst);
                 return;
             }
+
+            // This requires that atomic intrinsics follow a specific naming pattern:
+            // "atomic_<operation>[_<ordering>]", and no ordering means SeqCst
+            name if name_str.starts_with("atomic_") => {
+                use rustc_codegen_ssa::common::AtomicOrdering::*;
+                use rustc_codegen_ssa::common::{AtomicRmwBinOp, SynchronizationScope};
+
+                let split: Vec<&str> = name_str.split('_').collect();
+
+                let is_cxchg = split[1] == "cxchg" || split[1] == "cxchgweak";
+                let (order, failorder) = match split.len() {
+                    2 => (SequentiallyConsistent, SequentiallyConsistent),
+                    3 => match split[2] {
+                        "unordered" => (Unordered, Unordered),
+                        "relaxed" => (Monotonic, Monotonic),
+                        "acq" => (Acquire, Acquire),
+                        "rel" => (Release, Monotonic),
+                        "acqrel" => (AcquireRelease, Acquire),
+                        "failrelaxed" if is_cxchg => (SequentiallyConsistent, Monotonic),
+                        "failacq" if is_cxchg => (SequentiallyConsistent, Acquire),
+                        _ => self.sess().fatal("unknown ordering in atomic intrinsic"),
+                    },
+                    4 => match (split[2], split[3]) {
+                        ("acq", "failrelaxed") if is_cxchg => (Acquire, Monotonic),
+                        ("acqrel", "failrelaxed") if is_cxchg => (AcquireRelease, Monotonic),
+                        _ => self.sess().fatal("unknown ordering in atomic intrinsic"),
+                    },
+                    _ => self.sess().fatal("Atomic intrinsic not in correct format"),
+                };
+
+                let invalid_monomorphization = |ty| {
+                    span_invalid_monomorphization_error(
+                        self.tcx.sess,
+                        span,
+                        &format!(
+                            "invalid monomorphization of `{}` intrinsic: \
+                                  expected basic integer type, found `{}`",
+                            name, ty
+                        ),
+                    );
+                };
+
+                match split[1] {
+                    "cxchg" | "cxchgweak" => {
+                        let ty = substs.type_at(0);
+                        if int_type_width_signed(ty, self).is_some() {
+                            let weak = split[1] == "cxchgweak";
+                            let pair = self.atomic_cmpxchg(
+                                args[0].immediate(),
+                                args[1].immediate(),
+                                args[2].immediate(),
+                                order,
+                                failorder,
+                                weak,
+                            );
+                            let val = self.extract_value(pair, 0);
+                            let success = self.extract_value(pair, 1);
+                            let success = self.zext(success, SpirvType::Bool.def(self));
+
+                            let dest = result.project_field(self, 0);
+                            self.store(val, dest.llval, dest.align);
+                            let dest = result.project_field(self, 1);
+                            self.store(success, dest.llval, dest.align);
+                            return;
+                        } else {
+                            return invalid_monomorphization(ty);
+                        }
+                    }
+
+                    "load" => {
+                        let ty = substs.type_at(0);
+                        if int_type_width_signed(ty, self).is_some() {
+                            let size = self.size_of(ty);
+                            self.atomic_load(args[0].immediate(), order, size)
+                        } else {
+                            return invalid_monomorphization(ty);
+                        }
+                    }
+
+                    "store" => {
+                        let ty = substs.type_at(0);
+                        if int_type_width_signed(ty, self).is_some() {
+                            let size = self.size_of(ty);
+                            self.atomic_store(
+                                args[1].immediate(),
+                                args[0].immediate(),
+                                order,
+                                size,
+                            );
+                            return;
+                        } else {
+                            return invalid_monomorphization(ty);
+                        }
+                    }
+
+                    "fence" => {
+                        self.atomic_fence(order, SynchronizationScope::CrossThread);
+                        return;
+                    }
+
+                    "singlethreadfence" => {
+                        self.atomic_fence(order, SynchronizationScope::SingleThread);
+                        return;
+                    }
+
+                    // These are all AtomicRMW ops
+                    op => {
+                        let atom_op = match op {
+                            "xchg" => AtomicRmwBinOp::AtomicXchg,
+                            "xadd" => AtomicRmwBinOp::AtomicAdd,
+                            "xsub" => AtomicRmwBinOp::AtomicSub,
+                            "and" => AtomicRmwBinOp::AtomicAnd,
+                            "nand" => AtomicRmwBinOp::AtomicNand,
+                            "or" => AtomicRmwBinOp::AtomicOr,
+                            "xor" => AtomicRmwBinOp::AtomicXor,
+                            "max" => AtomicRmwBinOp::AtomicMax,
+                            "min" => AtomicRmwBinOp::AtomicMin,
+                            "umax" => AtomicRmwBinOp::AtomicUMax,
+                            "umin" => AtomicRmwBinOp::AtomicUMin,
+                            _ => self.sess().fatal("unknown atomic operation"),
+                        };
+
+                        let ty = substs.type_at(0);
+                        if int_type_width_signed(ty, self).is_some() {
+                            self.atomic_rmw(
+                                atom_op,
+                                args[0].immediate(),
+                                args[1].immediate(),
+                                order,
+                            )
+                        } else {
+                            return invalid_monomorphization(ty);
+                        }
+                    }
+                }
+            }
+
             sym::prefetch_read_data
             | sym::prefetch_write_data
             | sym::prefetch_read_instruction

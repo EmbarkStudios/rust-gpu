@@ -2,7 +2,7 @@ use super::Builder;
 use crate::builder_spirv::{BuilderCursor, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
-use rspirv::spirv::StorageClass;
+use rspirv::spirv::{MemorySemantics, Scope, StorageClass};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -62,6 +62,20 @@ macro_rules! simple_uni_op {
                 .with_type(val.ty)
         }
     };
+}
+
+fn ordering_to_semantics(ordering: AtomicOrdering) -> MemorySemantics {
+    use AtomicOrdering::*;
+    // TODO: Someone verify/fix this, I don't know atomics well
+    match ordering {
+        NotAtomic => MemorySemantics::NONE,
+        Unordered => MemorySemantics::NONE,
+        Monotonic => MemorySemantics::NONE,
+        Acquire => MemorySemantics::ACQUIRE,
+        Release => MemorySemantics::RELEASE,
+        AcquireRelease => MemorySemantics::ACQUIRE_RELEASE,
+        SequentiallyConsistent => MemorySemantics::SEQUENTIALLY_CONSISTENT,
+    }
 }
 
 impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
@@ -341,13 +355,24 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         self.load(ptr, Align::from_bytes(0).unwrap())
     }
 
-    fn atomic_load(
-        &mut self,
-        _ptr: Self::Value,
-        _order: AtomicOrdering,
-        _size: Size,
-    ) -> Self::Value {
-        panic!("TODO: atomic_load not supported yet")
+    fn atomic_load(&mut self, ptr: Self::Value, order: AtomicOrdering, _size: Size) -> Self::Value {
+        let ty = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer {
+                storage_class: _,
+                pointee,
+            } => pointee,
+            ty => panic!(
+                "atomic_load called on variable that wasn't a pointer: {:?}",
+                ty
+            ),
+        };
+        // TODO: Default to device scope
+        let memory = self.constant_u32(Scope::Device as u32);
+        let semantics = self.constant_u32(ordering_to_semantics(order).bits());
+        self.emit()
+            .atomic_load(ty, None, ptr.def, memory.def, semantics.def)
+            .unwrap()
+            .with_type(ty)
     }
 
     fn load_operand(
@@ -434,12 +459,28 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn atomic_store(
         &mut self,
-        _val: Self::Value,
-        _ptr: Self::Value,
-        _order: AtomicOrdering,
+        val: Self::Value,
+        ptr: Self::Value,
+        order: AtomicOrdering,
         _size: Size,
     ) {
-        panic!("TODO: atomic_store not supported yet")
+        let ptr_elem_ty = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer {
+                storage_class: _,
+                pointee,
+            } => pointee,
+            ty => panic!(
+                "atomic_store called on variable that wasn't a pointer: {:?}",
+                ty
+            ),
+        };
+        assert_ty_eq!(self, ptr_elem_ty, val.ty);
+        // TODO: Default to device scope
+        let memory = self.constant_u32(Scope::Device as u32);
+        let semantics = self.constant_u32(ordering_to_semantics(order).bits());
+        self.emit()
+            .atomic_store(ptr.def, memory.def, semantics.def, val.def)
+            .unwrap()
     }
 
     fn gep(&mut self, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
@@ -951,28 +992,91 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
 
     fn atomic_cmpxchg(
         &mut self,
-        _dst: Self::Value,
-        _cmp: Self::Value,
-        _src: Self::Value,
-        _order: AtomicOrdering,
-        _failure_order: AtomicOrdering,
+        dst: Self::Value,
+        cmp: Self::Value,
+        src: Self::Value,
+        order: AtomicOrdering,
+        failure_order: AtomicOrdering,
         _weak: bool,
     ) -> Self::Value {
-        todo!()
+        let dst_pointee_ty = match self.lookup_type(dst.ty) {
+            SpirvType::Pointer {
+                storage_class: _,
+                pointee,
+            } => pointee,
+            ty => panic!(
+                "atomic_cmpxchg called on variable that wasn't a pointer: {:?}",
+                ty
+            ),
+        };
+        assert_ty_eq!(self, dst_pointee_ty, cmp.ty);
+        assert_ty_eq!(self, dst_pointee_ty, src.ty);
+        // TODO: Default to device scope
+        let memory = self.constant_u32(Scope::Device as u32);
+        let semantics_equal = self.constant_u32(ordering_to_semantics(order).bits());
+        let semantics_unequal = self.constant_u32(ordering_to_semantics(failure_order).bits());
+        // Note: OpAtomicCompareExchangeWeak is deprecated, and has the same semantics
+        self.emit()
+            .atomic_compare_exchange(
+                src.ty,
+                None,
+                dst.def,
+                memory.def,
+                semantics_equal.def,
+                semantics_unequal.def,
+                src.def,
+                cmp.def,
+            )
+            .unwrap()
+            .with_type(src.ty)
     }
 
     fn atomic_rmw(
         &mut self,
-        _op: AtomicRmwBinOp,
-        _dst: Self::Value,
-        _src: Self::Value,
-        _order: AtomicOrdering,
+        op: AtomicRmwBinOp,
+        dst: Self::Value,
+        src: Self::Value,
+        order: AtomicOrdering,
     ) -> Self::Value {
-        todo!()
+        let dst_pointee_ty = match self.lookup_type(dst.ty) {
+            SpirvType::Pointer {
+                storage_class: _,
+                pointee,
+            } => pointee,
+            ty => panic!(
+                "atomic_rmw called on variable that wasn't a pointer: {:?}",
+                ty
+            ),
+        };
+        assert_ty_eq!(self, dst_pointee_ty, src.ty);
+        // TODO: Default to device scope
+        let memory = self.constant_u32(Scope::Device as u32).def;
+        let semantics = self.constant_u32(ordering_to_semantics(order).bits()).def;
+        let mut emit = self.emit();
+        use AtomicRmwBinOp::*;
+        match op {
+            AtomicXchg => emit.atomic_exchange(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicAdd => emit.atomic_i_add(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicSub => emit.atomic_i_sub(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicAnd => emit.atomic_and(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicNand => panic!("atomic nand is not supported"),
+            AtomicOr => emit.atomic_or(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicXor => emit.atomic_xor(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicMax => emit.atomic_s_max(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicMin => emit.atomic_s_min(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicUMax => emit.atomic_u_max(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicUMin => emit.atomic_u_min(src.ty, None, dst.def, memory, semantics, src.def),
+        }
+        .unwrap()
+        .with_type(src.ty)
     }
 
-    fn atomic_fence(&mut self, _order: AtomicOrdering, _scope: SynchronizationScope) {
-        todo!()
+    fn atomic_fence(&mut self, order: AtomicOrdering, _scope: SynchronizationScope) {
+        // Ignore sync scope (it only has "single thread" and "cross thread")
+        // TODO: Default to device scope
+        let memory = self.constant_u32(Scope::Device as u32).def;
+        let semantics = self.constant_u32(ordering_to_semantics(order).bits()).def;
+        self.emit().memory_barrier(memory, semantics).unwrap();
     }
 
     fn set_invariant_load(&mut self, _load: Self::Value) {
