@@ -6,6 +6,7 @@ use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::StorageClass;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
+use rustc_codegen_ssa::common::span_invalid_monomorphization_error;
 use rustc_codegen_ssa::common::IntPredicate;
 use rustc_codegen_ssa::glue;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
@@ -17,6 +18,7 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_codegen_ssa::MemFlags;
 use rustc_hir::LlvmInlineAsmInner;
+use rustc_middle::bug;
 use rustc_middle::mir::coverage::{
     CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionIndex, Op,
 };
@@ -321,6 +323,27 @@ impl<'a, 'spv, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     }
 }
 
+fn int_type_width_signed(ty: Ty<'_>, cx: &CodegenCx<'_, '_>) -> Option<(u64, bool)> {
+    match ty.kind() {
+        TyKind::Int(t) => Some((
+            t.bit_width().unwrap_or(cx.tcx.sess.target.ptr_width as u64),
+            true,
+        )),
+        TyKind::Uint(t) => Some((
+            t.bit_width().unwrap_or(cx.tcx.sess.target.ptr_width as u64),
+            false,
+        )),
+        _ => None,
+    }
+}
+
+fn float_type_width(ty: Ty<'_>) -> Option<u64> {
+    match ty.kind() {
+        TyKind::Float(t) => Some(t.bit_width()),
+        _ => None,
+    }
+}
+
 impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     fn codegen_intrinsic_call(
         &mut self,
@@ -328,7 +351,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
         fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
         args: &[OperandRef<'tcx, Self::Value>],
         llresult: Self::Value,
-        _span: Span,
+        span: Span,
     ) {
         let callee_ty = instance.ty(self.tcx, ParamEnv::reveal_all());
 
@@ -400,7 +423,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 assert!(fn_abi.ret.is_ignore());
                 return;
             }
-            sym::volatile_set_memory => {
+            sym::write_bytes | sym::volatile_set_memory => {
                 let ty = substs.type_at(0);
                 let dst = args[0].immediate();
                 let val = args[1].immediate();
@@ -430,6 +453,14 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 args[1].val.unaligned_volatile_store(self, dst);
                 return;
             }
+            sym::prefetch_read_data
+            | sym::prefetch_write_data
+            | sym::prefetch_read_instruction
+            | sym::prefetch_write_instruction => {
+                // ignore
+                assert!(fn_abi.ret.is_ignore());
+                return;
+            }
 
             sym::offset => {
                 let ptr = args[0].immediate();
@@ -451,6 +482,13 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 }
             }
 
+            sym::nontemporal_store => {
+                // rust-analyzer gets sad if you call args[0].deref()
+                let dst = OperandRef::deref(args[0], self.cx);
+                args[1].val.nontemporal_store(self, dst);
+                return;
+            }
+
             sym::ptr_guaranteed_eq | sym::ptr_guaranteed_ne => {
                 let a = args[0].immediate();
                 let b = args[1].immediate();
@@ -459,6 +497,23 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 } else {
                     self.icmp(IntPredicate::IntNE, a, b)
                 }
+            }
+
+            sym::ptr_offset_from => {
+                let ty = substs.type_at(0);
+                let pointee_size = self.size_of(ty);
+
+                // This is the same sequence that Clang emits for pointer subtraction.
+                // It can be neither `nsw` nor `nuw` because the input is treated as
+                // unsigned but then the output is treated as signed, so neither works.
+                let a = args[0].immediate();
+                let b = args[1].immediate();
+                let a = self.ptrtoint(a, self.type_isize());
+                let b = self.ptrtoint(b, self.type_isize());
+                let d = self.sub(a, b);
+                let pointee_size = self.const_usize(pointee_size.bytes());
+                // this is where the signed magic happens (notice the `s` in `exactsdiv`)
+                self.exactsdiv(d, pointee_size)
             }
 
             sym::forget => {
@@ -521,6 +576,70 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
             sym::unchecked_shr => math_intrinsic_int! {self, arg_tys, args, ashr, lshr},
             sym::exact_div => math_intrinsic! {self, arg_tys, args, sdiv, udiv, fdiv},
 
+            sym::fadd_fast | sym::fsub_fast | sym::fmul_fast | sym::fdiv_fast | sym::frem_fast => {
+                match float_type_width(arg_tys[0]) {
+                    Some(_width) => match name {
+                        sym::fadd_fast => self.fadd_fast(args[0].immediate(), args[1].immediate()),
+                        sym::fsub_fast => self.fsub_fast(args[0].immediate(), args[1].immediate()),
+                        sym::fmul_fast => self.fmul_fast(args[0].immediate(), args[1].immediate()),
+                        sym::fdiv_fast => self.fdiv_fast(args[0].immediate(), args[1].immediate()),
+                        sym::frem_fast => self.frem_fast(args[0].immediate(), args[1].immediate()),
+                        _ => bug!(),
+                    },
+                    None => {
+                        span_invalid_monomorphization_error(
+                            self.tcx.sess,
+                            span,
+                            &format!(
+                                "invalid monomorphization of `{}` intrinsic: \
+                                      expected basic float type, found `{}`",
+                                name, arg_tys[0]
+                            ),
+                        );
+                        return;
+                    }
+                }
+            }
+
+            sym::float_to_int_unchecked => {
+                if float_type_width(arg_tys[0]).is_none() {
+                    span_invalid_monomorphization_error(
+                        self.tcx.sess,
+                        span,
+                        &format!(
+                            "invalid monomorphization of `float_to_int_unchecked` \
+                                  intrinsic: expected basic float type, \
+                                  found `{}`",
+                            arg_tys[0]
+                        ),
+                    );
+                    return;
+                }
+                let (width, signed) = match int_type_width_signed(ret_ty, self.cx) {
+                    Some(pair) => pair,
+                    None => {
+                        span_invalid_monomorphization_error(
+                            self.tcx.sess,
+                            span,
+                            &format!(
+                                "invalid monomorphization of `float_to_int_unchecked` \
+                                      intrinsic:  expected basic integer type, \
+                                      found `{}`",
+                                ret_ty
+                            ),
+                        );
+                        return;
+                    }
+                };
+                if signed {
+                    let ty = SpirvType::Integer(width as u32, true).def(self);
+                    self.fptosi(args[0].immediate(), ty)
+                } else {
+                    let ty = SpirvType::Integer(width as u32, false).def(self);
+                    self.fptoui(args[0].immediate(), ty)
+                }
+            }
+
             sym::rotate_left | sym::rotate_right => {
                 let is_left = name == sym::rotate_left;
                 let val = args[0].immediate();
@@ -539,6 +658,84 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                 .u_count_trailing_zeros_intel(args[0].immediate().ty, None, args[0].immediate().def)
                 .unwrap()
                 .with_type(args[0].immediate().ty),
+
+            sym::ctpop => self
+                .emit()
+                .bit_count(args[0].immediate().ty, None, args[0].immediate().def)
+                .unwrap()
+                .with_type(args[0].immediate().ty),
+            sym::bitreverse => self
+                .emit()
+                .bit_reverse(args[0].immediate().ty, None, args[0].immediate().def)
+                .unwrap()
+                .with_type(args[0].immediate().ty),
+
+            sym::bswap => {
+                // https://github.com/KhronosGroup/SPIRV-LLVM/pull/221/files
+                // TODO: Definitely add tests to make sure this impl is right.
+                let arg = args[0].immediate();
+                match int_type_width_signed(arg_tys[0], self)
+                    .expect("bswap must have integer argument")
+                    .0
+                {
+                    8 => arg,
+                    16 => {
+                        let offset8 = self.constant_u16(8);
+                        let tmp1 = self.shl(arg, offset8);
+                        let tmp2 = self.lshr(arg, offset8);
+                        self.or(tmp1, tmp2)
+                    }
+                    32 => {
+                        let offset8 = self.constant_u32(8);
+                        let offset24 = self.constant_u32(24);
+                        let mask16 = self.constant_u32(0xFF00);
+                        let mask24 = self.constant_u32(0xFF0000);
+                        let tmp4 = self.shl(arg, offset24);
+                        let tmp3 = self.shl(arg, offset8);
+                        let tmp2 = self.lshr(arg, offset8);
+                        let tmp1 = self.lshr(arg, offset24);
+                        let tmp3 = self.and(tmp3, mask24);
+                        let tmp2 = self.and(tmp2, mask16);
+                        let res1 = self.or(tmp1, tmp2);
+                        let res2 = self.or(tmp3, tmp4);
+                        self.or(res1, res2)
+                    }
+                    64 => {
+                        let offset8 = self.constant_u64(8);
+                        let offset24 = self.constant_u64(24);
+                        let offset40 = self.constant_u64(40);
+                        let offset56 = self.constant_u64(56);
+                        let mask16 = self.constant_u64(0xff00);
+                        let mask24 = self.constant_u64(0xff0000);
+                        let mask32 = self.constant_u64(0xff000000);
+                        let mask40 = self.constant_u64(0xff00000000);
+                        let mask48 = self.constant_u64(0xff0000000000);
+                        let mask56 = self.constant_u64(0xff000000000000);
+                        let tmp8 = self.shl(arg, offset56);
+                        let tmp7 = self.shl(arg, offset40);
+                        let tmp6 = self.shl(arg, offset24);
+                        let tmp5 = self.shl(arg, offset8);
+                        let tmp4 = self.lshr(arg, offset8);
+                        let tmp3 = self.lshr(arg, offset24);
+                        let tmp2 = self.lshr(arg, offset40);
+                        let tmp1 = self.lshr(arg, offset56);
+                        let tmp7 = self.and(tmp7, mask56);
+                        let tmp6 = self.and(tmp6, mask48);
+                        let tmp5 = self.and(tmp5, mask40);
+                        let tmp4 = self.and(tmp4, mask32);
+                        let tmp3 = self.and(tmp3, mask24);
+                        let tmp2 = self.and(tmp2, mask16);
+                        let res1 = self.or(tmp8, tmp7);
+                        let res2 = self.or(tmp6, tmp5);
+                        let res3 = self.or(tmp4, tmp3);
+                        let res4 = self.or(tmp2, tmp1);
+                        let res1 = self.or(res1, res2);
+                        let res3 = self.or(res3, res4);
+                        self.or(res1, res3)
+                    }
+                    other => panic!("bswap not implemented for int width {}", other),
+                }
+            }
 
             _ => panic!("TODO: Unknown intrinsic '{}'", name),
         };

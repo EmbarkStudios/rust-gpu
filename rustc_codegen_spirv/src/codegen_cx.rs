@@ -144,7 +144,6 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
         self.builder.constant_u32(ty, val as u32).with_type(ty)
     }
 
-    #[allow(dead_code)]
     pub fn constant_u16(&self, val: u16) -> SpirvValue {
         let ty = SpirvType::Integer(16, false).def(self);
         self.builder.constant_u32(ty, val as u32).with_type(ty)
