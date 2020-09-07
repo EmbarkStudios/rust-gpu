@@ -113,7 +113,11 @@ impl<'tcx> CodegenCx<'tcx> {
             def_id
         );
 
-        panic!("get_static not implemented for variables in other CGUs");
+        let ty = instance.ty(self.tcx, ParamEnv::reveal_all());
+        let sym = self.tcx.symbol_name(instance).name;
+        let g = self.declare_global(sym, self.layout_of(ty).spirv_type(self));
+        self.instances.borrow_mut().insert(instance, g);
+        g
     }
 
     // Useful for printing out types when debugging

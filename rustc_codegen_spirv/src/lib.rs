@@ -19,6 +19,7 @@ mod abi;
 mod builder;
 mod builder_spirv;
 mod codegen_cx;
+mod link;
 mod spirv_type;
 mod things;
 
@@ -43,6 +44,7 @@ use rustc_errors::{ErrorReported, FatalError, Handler};
 use rustc_middle::dep_graph::{DepGraph, WorkProduct};
 use rustc_middle::middle::cstore::{EncodedMetadata, MetadataLoader, MetadataLoaderDyn};
 use rustc_middle::mir::mono::MonoItem;
+use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::{Instance, InstanceDef, TyCtxt};
 use rustc_session::config::{OptLevel, OutputFilenames, OutputType};
@@ -52,7 +54,7 @@ use rustc_target::spec::Target;
 use std::any::Any;
 use std::path::Path;
 use std::{fs::File, io::Write, sync::Arc};
-use things::{SpirvModuleBuffer, SprivThinBuffer};
+use things::{SpirvModuleBuffer, SpirvThinBuffer};
 
 fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
     match instance.def {
@@ -179,13 +181,32 @@ impl CodegenBackend for SsaBackend {
     }
 }
 
+// Note: endianness doesn't matter, readers deduce endianness from magic header.
+fn slice_u32_to_u8(slice: &[u32]) -> &[u8] {
+    unsafe {
+        std::slice::from_raw_parts(
+            slice.as_ptr() as *const u8,
+            slice.len() * std::mem::size_of::<u32>(),
+        )
+    }
+}
+
+fn slice_u8_to_u32(slice: &[u8]) -> &[u32] {
+    unsafe {
+        std::slice::from_raw_parts(
+            slice.as_ptr() as *const u32,
+            slice.len() / std::mem::size_of::<u32>(),
+        )
+    }
+}
+
 impl WriteBackendMethods for SsaBackend {
-    type Module = rspirv::dr::Module;
+    type Module = Vec<u32>;
     type TargetMachine = ();
     type ModuleBuffer = SpirvModuleBuffer;
     type Context = ();
     type ThinData = ();
-    type ThinBuffer = SprivThinBuffer;
+    type ThinBuffer = SpirvThinBuffer;
 
     fn run_fat_lto(
         _: &CodegenContext<Self>,
@@ -196,11 +217,11 @@ impl WriteBackendMethods for SsaBackend {
     }
 
     fn run_thin_lto(
-        _: &CodegenContext<Self>,
-        _: Vec<(String, Self::ThinBuffer)>,
-        _: Vec<(SerializedModule<Self::ModuleBuffer>, WorkProduct)>,
+        cgcx: &CodegenContext<Self>,
+        modules: Vec<(String, Self::ThinBuffer)>,
+        cached_modules: Vec<(SerializedModule<Self::ModuleBuffer>, WorkProduct)>,
     ) -> Result<(Vec<LtoModuleCodegen<Self>>, Vec<WorkProduct>), FatalError> {
-        todo!()
+        link::run_thin(cgcx, modules, cached_modules)
     }
 
     fn print_pass_timings(&self) {
@@ -218,10 +239,15 @@ impl WriteBackendMethods for SsaBackend {
     }
 
     unsafe fn optimize_thin(
-        _: &CodegenContext<Self>,
-        _: &mut ThinModule<Self>,
+        _cgcx: &CodegenContext<Self>,
+        thin_module: &mut ThinModule<Self>,
     ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
-        todo!()
+        let module = ModuleCodegen {
+            module_llvm: slice_u8_to_u32(thin_module.data()).to_vec(),
+            name: thin_module.name().to_string(),
+            kind: ModuleKind::Regular,
+        };
+        Ok(module)
     }
 
     unsafe fn codegen(
@@ -233,15 +259,12 @@ impl WriteBackendMethods for SsaBackend {
         let path = cgcx
             .output_filenames
             .temp_path(OutputType::Object, Some(&module.name));
-        let spirv_module = module.module_llvm.assemble();
         // Note: endianness doesn't matter, readers deduce endianness from magic header.
-        let spirv_module_u8: &[u8] = std::slice::from_raw_parts(
-            spirv_module.as_ptr() as *const u8,
-            spirv_module.len() * std::mem::size_of::<u32>(),
-        );
+        let spirv_module = slice_u32_to_u8(&module.module_llvm);
+        println!("Writing output file: {:?}", path);
         File::create(&path)
             .unwrap()
-            .write_all(spirv_module_u8)
+            .write_all(spirv_module)
             .unwrap();
         Ok(CompiledModule {
             name: module.name,
@@ -252,11 +275,11 @@ impl WriteBackendMethods for SsaBackend {
     }
 
     fn prepare_thin(module: ModuleCodegen<Self::Module>) -> (String, Self::ThinBuffer) {
-        (module.name, SprivThinBuffer)
+        (module.name, SpirvThinBuffer(module.module_llvm))
     }
 
     fn serialize_module(module: ModuleCodegen<Self::Module>) -> (String, Self::ModuleBuffer) {
-        (module.name, SpirvModuleBuffer)
+        (module.name, SpirvModuleBuffer(module.module_llvm))
     }
 
     fn run_lto_pass_manager(
@@ -365,12 +388,12 @@ impl ExtraBackendMethods for SsaBackend {
         };
         if let Some(path) = option_env!("DUMP_MODULE_ON_PANIC") {
             let module_dumper = DumpModuleOnPanic { cx: &cx, path };
-            do_codegen();
+            with_no_trimmed_paths(do_codegen);
             drop(module_dumper)
         } else {
-            do_codegen();
+            with_no_trimmed_paths(do_codegen);
         }
-        let spirv_module = cx.finalize_module();
+        let spirv_module = cx.finalize_module().assemble();
 
         (
             ModuleCodegen {
