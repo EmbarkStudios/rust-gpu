@@ -5,11 +5,96 @@ use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, Variants};
+use std::cell::RefCell;
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::fmt::Write;
 
+#[derive(Default)]
+pub struct RecursivePointeeCache<'tcx> {
+    map: RefCell<HashMap<PointeeTy<'tcx>, PointeeDefState>>,
+}
+
+impl<'tcx> RecursivePointeeCache<'tcx> {
+    fn begin<'spv>(&self, cx: &CodegenCx<'spv, 'tcx>, pointee: PointeeTy<'tcx>) -> Option<Word> {
+        match self.map.borrow_mut().entry(pointee) {
+            // State: This is the first time we've seen this type. Record that we're beginning to translate this type,
+            // and start doing the translation.
+            Entry::Vacant(entry) => {
+                entry.insert(PointeeDefState::Defining);
+                None
+            }
+            Entry::Occupied(mut entry) => match *entry.get() {
+                // State: This is the second time we've seen this type, and we're already translating this type. If we
+                // were to try to translate the type now, we'd get a stack overflow, due to continually recursing. So,
+                // emit an OpTypeForwardPointer, and use that ID. (This is the juicy part of this algorithm)
+                PointeeDefState::Defining => {
+                    let new_id = cx.emit_global().id();
+                    // StorageClass will be fixed up later
+                    cx.emit_global()
+                        .type_forward_pointer(new_id, StorageClass::Generic);
+                    entry.insert(PointeeDefState::DefiningWithForward(new_id));
+                    Some(new_id)
+                }
+                // State: This is the third or more time we've seen this type, and we've already emitted an
+                // OpTypeForwardPointer. Just use the ID we've already emitted. (Alternatively, we already defined this
+                // type, so just use that.)
+                PointeeDefState::DefiningWithForward(id) | PointeeDefState::Defined(id) => Some(id),
+            },
+        }
+    }
+
+    fn end<'spv>(
+        &self,
+        cx: &CodegenCx<'spv, 'tcx>,
+        pointee: PointeeTy<'tcx>,
+        storage_class: StorageClass,
+        pointee_spv: Word,
+    ) -> Word {
+        match self.map.borrow_mut().entry(pointee) {
+            // We should have hit begin() on this type already, which always inserts an entry.
+            Entry::Vacant(_) => panic!("RecursivePointeeCache::end should always have entry"),
+            Entry::Occupied(mut entry) => match *entry.get() {
+                // State: There have been no recursive references to this type while defining it, and so no
+                // OpTypeForwardPointer has been emitted. This is the most common case.
+                PointeeDefState::Defining => {
+                    let id = SpirvType::Pointer {
+                        storage_class,
+                        pointee: pointee_spv,
+                    }
+                    .def(cx);
+                    entry.insert(PointeeDefState::Defined(id));
+                    id
+                }
+                // State: There was a recursive reference to this type, and so an OpTypeForwardPointer has been emitted.
+                // Make sure to use the same ID.
+                PointeeDefState::DefiningWithForward(id) => {
+                    entry.insert(PointeeDefState::Defined(id));
+                    cx.builder.fix_up_pointer_forward(id, storage_class);
+                    SpirvType::Pointer {
+                        storage_class,
+                        pointee: pointee_spv,
+                    }
+                    .def_with_id(cx, id)
+                }
+                PointeeDefState::Defined(_) => {
+                    panic!("RecursivePointeeCache::end defined pointer twice")
+                }
+            },
+        }
+    }
+}
+
+#[derive(Eq, PartialEq, Hash, Copy, Clone)]
 enum PointeeTy<'tcx> {
     Ty(TyAndLayout<'tcx>),
     Fn(PolyFnSig<'tcx>),
+}
+
+enum PointeeDefState {
+    Defining,
+    DefiningWithForward(Word),
+    Defined(Word),
 }
 
 pub trait ConvSpirvType<'spv, 'tcx> {
@@ -274,14 +359,22 @@ fn trans_scalar<'spv, 'tcx>(
         Primitive::F32 => SpirvType::Float(32).def(cx),
         Primitive::F64 => SpirvType::Float(64).def(cx),
         Primitive::Pointer => {
-            // TODO: Recursive pointer breaking
             let pointee_ty = dig_scalar_pointee(cx, ty, index);
-            let pointee = pointee_ty.spirv_type(cx);
-            SpirvType::Pointer {
-                storage_class: StorageClass::Generic,
-                pointee,
+            // Pointers can be recursive. So, record what we're currently translating, and if we're already translating
+            // the same type, emit an OpTypeForwardPointer and use that ID.
+            if let Some(predefined_result) =
+                cx.type_cache.recursive_pointee_cache.begin(cx, pointee_ty)
+            {
+                predefined_result
+            } else {
+                let pointee = pointee_ty.spirv_type(cx);
+                cx.type_cache.recursive_pointee_cache.end(
+                    cx,
+                    pointee_ty,
+                    StorageClass::Generic,
+                    pointee,
+                )
             }
-            .def(cx)
         }
     }
 }

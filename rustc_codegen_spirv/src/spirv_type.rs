@@ -1,8 +1,11 @@
+use crate::abi::RecursivePointeeCache;
 use crate::builder::Builder;
 use crate::codegen_cx::CodegenCx;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
 use rustc_target::abi::{Align, Size};
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt;
 use std::iter::once;
 use std::lazy::SyncLazy;
@@ -99,7 +102,7 @@ fn memset_dynamic_scalar<'a, 'spv, 'tcx>(
 impl SpirvType {
     /// Note: Builder::type_* should be called *nowhere else* but here, to ensure CodegenCx::type_defs stays up-to-date
     pub fn def<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
-        if let Some(&cached) = cx.type_cache.borrow().get(self) {
+        if let Some(cached) = cx.type_cache.get(self) {
             return cached;
         }
         let result = match *self {
@@ -169,55 +172,25 @@ impl SpirvType {
                 .emit_global()
                 .type_function(return_type, arguments.iter().cloned()),
         };
-        // Change to expect_none if/when stabilized
-        assert!(
-            cx.type_defs
-                .borrow_mut()
-                .insert(result, self.clone())
-                .is_none(),
-            "type_defs already had entry, caching failed? {:#?}",
-            self.clone().debug_noid(cx)
-        );
-        assert!(
-            cx.type_cache
-                .borrow_mut()
-                .insert(self.clone(), result)
-                .is_none(),
-            "type_cache already had entry, caching failed? {:#?}",
-            self.clone().debug_noid(cx)
-        );
+        cx.type_cache.def(result, self);
         result
     }
 
-    pub fn def_with_id<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>, id: Option<Word>) -> Word {
-        if let Some(&cached) = cx.type_cache.borrow().get(self) {
-            assert!(id.is_none() || Some(cached) == id);
+    pub fn def_with_id<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>, id: Word) -> Word {
+        if let Some(cached) = cx.type_cache.get(self) {
+            assert_eq!(cached, id);
             return cached;
         }
         let result = match *self {
             SpirvType::Pointer {
                 storage_class,
                 pointee,
-            } => cx.emit_global().type_pointer(id, storage_class, pointee),
+            } => cx
+                .emit_global()
+                .type_pointer(Some(id), storage_class, pointee),
             ref other => panic!("def_with_id invalid for type {:?}", other),
         };
-        // Change to expect_none if/when stabilized
-        assert!(
-            cx.type_defs
-                .borrow_mut()
-                .insert(result, self.clone())
-                .is_none(),
-            "type_defs already had entry, caching failed? {:#?}",
-            self.clone().debug_noid(cx)
-        );
-        assert!(
-            cx.type_cache
-                .borrow_mut()
-                .insert(self.clone(), result)
-                .is_none(),
-            "type_cache already had entry, caching failed? {:#?}",
-            self.clone().debug_noid(cx)
-        );
+        cx.type_cache.def(result, self);
         result
     }
 
@@ -226,22 +199,7 @@ impl SpirvType {
         id: Word,
         cx: &'cx CodegenCx<'spv, 'tcx>,
     ) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
-        SpirvTypePrinter {
-            ty: self,
-            id: Some(id),
-            cx,
-        }
-    }
-
-    pub fn debug_noid<'cx, 'spv, 'tcx>(
-        self,
-        cx: &'cx CodegenCx<'spv, 'tcx>,
-    ) -> SpirvTypePrinter<'cx, 'spv, 'tcx> {
-        SpirvTypePrinter {
-            ty: self,
-            id: None,
-            cx,
-        }
+        SpirvTypePrinter { ty: self, id, cx }
     }
 
     pub fn sizeof<'spv, 'tcx>(&self, cx: &CodegenCx<'spv, 'tcx>) -> Option<Size> {
@@ -380,7 +338,7 @@ impl SpirvType {
 }
 
 pub struct SpirvTypePrinter<'cx, 'spv, 'tcx> {
-    id: Option<Word>,
+    id: Word,
     ty: SpirvType,
     cx: &'cx CodegenCx<'spv, 'tcx>,
 }
@@ -389,12 +347,12 @@ static DEBUG_STACK: SyncLazy<Mutex<Vec<Word>>> = SyncLazy::new(|| Mutex::new(Vec
 
 impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(id) = self.id {
+        {
             let mut debug_stack = DEBUG_STACK.lock().unwrap();
-            if debug_stack.contains(&id) {
-                return write!(f, "<recursive type id={}>", id);
+            if debug_stack.contains(&self.id) {
+                return write!(f, "<recursive type id={}>", self.id);
             }
-            debug_stack.push(id);
+            debug_stack.push(self.id);
         }
         let res = match self.ty {
             SpirvType::Void => f.debug_struct("Void").field("id", &self.id).finish(),
@@ -492,7 +450,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_, '_> {
                     .finish()
             }
         };
-        if self.id.is_some() {
+        {
             let mut debug_stack = DEBUG_STACK.lock().unwrap();
             debug_stack.pop();
         }
@@ -599,5 +557,49 @@ impl SpirvTypePrinter<'_, '_, '_> {
                 ty(self.cx, stack, f, return_type)
             }
         }
+    }
+}
+
+#[derive(Default)]
+pub struct TypeCache<'tcx> {
+    /// Map from ID to structure
+    pub type_defs: RefCell<HashMap<Word, SpirvType>>,
+    /// Inverse of type_defs (used to cache generating types)
+    pub type_cache: RefCell<HashMap<SpirvType, Word>>,
+    /// Recursive pointer breaking
+    pub recursive_pointee_cache: RecursivePointeeCache<'tcx>,
+}
+
+impl TypeCache<'_> {
+    fn get(&self, ty: &SpirvType) -> Option<Word> {
+        self.type_cache.borrow().get(ty).copied()
+    }
+
+    pub fn lookup(&self, word: Word) -> SpirvType {
+        self.type_defs
+            .borrow()
+            .get(&word)
+            .expect("Tried to lookup value that wasn't a type, or has no definition")
+            .clone()
+    }
+
+    fn def(&self, word: Word, ty: &SpirvType) {
+        // Change to expect_none if/when stabilized
+        assert!(
+            self.type_defs
+                .borrow_mut()
+                .insert(word, ty.clone())
+                .is_none(),
+            "type_defs already had entry, caching failed? {:#?}",
+            ty
+        );
+        assert!(
+            self.type_cache
+                .borrow_mut()
+                .insert(ty.clone(), word)
+                .is_none(),
+            "type_cache already had entry, caching failed? {:#?}",
+            ty
+        );
     }
 }

@@ -1,6 +1,6 @@
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, ModuleSpirv, SpirvValue, SpirvValueExt};
-use crate::spirv_type::{SpirvType, SpirvTypePrinter};
+use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use rspirv::{
     dr::Operand,
     spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word},
@@ -63,10 +63,7 @@ pub struct CodegenCx<'spv, 'tcx> {
     pub instances: RefCell<HashMap<Instance<'tcx>, SpirvValue>>,
     /// Map from function ID to parameter list
     pub function_parameter_values: RefCell<HashMap<Word, Vec<SpirvValue>>>,
-    /// Map from ID to structure
-    pub type_defs: RefCell<HashMap<Word, SpirvType>>,
-    /// Inverse of type_defs (used to cache generating types)
-    pub type_cache: RefCell<HashMap<SpirvType, Word>>,
+    pub type_cache: TypeCache<'tcx>,
     /// Cache generated vtables
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
 }
@@ -85,8 +82,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
             declared_values: RefCell::new(HashMap::new()),
             instances: RefCell::new(HashMap::new()),
             function_parameter_values: RefCell::new(HashMap::new()),
-            type_defs: RefCell::new(HashMap::new()),
-            type_cache: RefCell::new(HashMap::new()),
+            type_cache: Default::default(),
             vtables: RefCell::new(Default::default()),
         }
     }
@@ -106,11 +102,7 @@ impl<'spv, 'tcx> CodegenCx<'spv, 'tcx> {
     }
 
     pub fn lookup_type(&self, ty: Word) -> SpirvType {
-        self.type_defs
-            .borrow()
-            .get(&ty)
-            .expect("Tried to lookup value that wasn't a type, or has no definition")
-            .clone()
+        self.type_cache.lookup(ty)
     }
 
     pub fn get_static(&self, def_id: DefId) -> SpirvValue {
