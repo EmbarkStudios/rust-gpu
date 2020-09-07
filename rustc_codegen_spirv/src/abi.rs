@@ -2,15 +2,35 @@ use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
-use rustc_middle::ty::{GeneratorSubsts, Ty, TyKind};
+use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, Variants};
 use std::fmt::Write;
+
+enum PointeeTy<'tcx> {
+    Ty(TyAndLayout<'tcx>),
+    Fn(PolyFnSig<'tcx>),
+}
 
 pub trait ConvSpirvType<'spv, 'tcx> {
     fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word;
     fn spirv_type_immediate(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
         self.spirv_type(cx)
+    }
+}
+
+impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for PointeeTy<'tcx> {
+    fn spirv_type(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+        match *self {
+            PointeeTy::Ty(ty) => ty.spirv_type(cx),
+            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type(cx),
+        }
+    }
+    fn spirv_type_immediate(&self, cx: &CodegenCx<'spv, 'tcx>) -> Word {
+        match *self {
+            PointeeTy::Ty(ty) => ty.spirv_type_immediate(cx),
+            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type_immediate(cx),
+        }
     }
 }
 
@@ -103,7 +123,6 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
             PassMode::Ignore => SpirvType::Void.def(cx),
             PassMode::Direct(_) | PassMode::Pair(..) => self.ret.layout.spirv_type_immediate(cx),
             PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
-            // TODO: Deal with wide ptr?
             PassMode::Indirect(_arg_attributes, wide_ptr_attrs) => {
                 if wide_ptr_attrs.is_some() {
                     panic!("TODO: PassMode::Indirect wide ptr not supported for return type");
@@ -125,16 +144,16 @@ impl<'spv, 'tcx> ConvSpirvType<'spv, 'tcx> for FnAbi<'tcx, Ty<'tcx>> {
                 PassMode::Ignore => continue,
                 PassMode::Direct(_) => trans_type_impl(cx, arg.layout, true),
                 PassMode::Pair(_, _) => {
-                    argument_types.push(trans_scalar_pair(cx, arg.layout, 0, true));
-                    argument_types.push(trans_scalar_pair(cx, arg.layout, 1, true));
+                    argument_types.push(scalar_pair_element_backend_type(cx, arg.layout, 0, true));
+                    argument_types.push(scalar_pair_element_backend_type(cx, arg.layout, 1, true));
                     continue;
                 }
                 PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
                 PassMode::Indirect(_, Some(_)) => {
                     let ptr_ty = cx.tcx.mk_mut_ptr(arg.layout.ty);
                     let ptr_layout = cx.layout_of(ptr_ty);
-                    argument_types.push(trans_scalar_pair(cx, ptr_layout, 0, true));
-                    argument_types.push(trans_scalar_pair(cx, ptr_layout, 1, true));
+                    argument_types.push(scalar_pair_element_backend_type(cx, ptr_layout, 0, true));
+                    argument_types.push(scalar_pair_element_backend_type(cx, ptr_layout, 1, true));
                     continue;
                 }
                 PassMode::Indirect(_, None) => {
@@ -190,11 +209,11 @@ fn trans_type_impl<'spv, 'tcx>(
             "TODO: Abi::Uninhabited not supported yet in trans_type: {:?}",
             ty
         ),
-        Abi::Scalar(ref scalar) => trans_scalar_known_ty(cx, ty, scalar, is_immediate),
+        Abi::Scalar(ref scalar) => trans_scalar(cx, ty, scalar, None, is_immediate),
         Abi::ScalarPair(ref one, ref two) => {
             // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
-            let one_spirv = trans_scalar_pair_impl(cx, ty, one, 0, false);
-            let two_spirv = trans_scalar_pair_impl(cx, ty, two, 1, false);
+            let one_spirv = trans_scalar(cx, ty, one, Some(0), false);
+            let two_spirv = trans_scalar(cx, ty, two, Some(1), false);
             // TODO: Note: We can't use auto_struct_layout here because the spirv types here might be undefined.
             let one_offset = Size::ZERO;
             let two_offset = one.value.size(cx).align_to(two.value.align(cx).abi);
@@ -210,10 +229,11 @@ fn trans_type_impl<'spv, 'tcx>(
             .def(cx)
         }
         Abi::Vector { ref element, count } => {
-            let elem_spirv = trans_scalar_known_ty(cx, ty, element, is_immediate);
+            let elem_spirv = trans_scalar(cx, ty, element, None, is_immediate);
+            let count_spv = cx.constant_u32(count as u32);
             SpirvType::Vector {
                 element: elem_spirv,
-                count: count as u32,
+                count: count_spv.def,
             }
             .def(cx)
         }
@@ -221,184 +241,25 @@ fn trans_type_impl<'spv, 'tcx>(
     }
 }
 
-fn trans_scalar_known_ty<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
-    ty: TyAndLayout<'tcx>,
-    scalar: &Scalar,
-    is_immediate: bool,
-) -> Word {
-    if scalar.value == Primitive::Pointer {
-        match ty.ty.kind {
-            TyKind::Ref(_region, elem, _mutability) => {
-                let pointee = cx.layout_of(elem).spirv_type(cx);
-                SpirvType::Pointer {
-                    storage_class: StorageClass::Generic,
-                    pointee,
-                }
-                .def(cx)
-            }
-            TyKind::RawPtr(type_and_mut) => {
-                let pointee = cx.layout_of(type_and_mut.ty).spirv_type(cx);
-                SpirvType::Pointer {
-                    storage_class: StorageClass::Generic,
-                    pointee,
-                }
-                .def(cx)
-            }
-            TyKind::FnPtr(sig) => {
-                let function = FnAbi::of_fn_ptr(cx, sig, &[]).spirv_type(cx);
-                SpirvType::Pointer {
-                    storage_class: StorageClass::Generic,
-                    pointee: function,
-                }
-                .def(cx)
-            }
-            TyKind::Adt(def, _) if def.is_box() => {
-                let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-                // this conceptually should pass on is_immediate, but it doesn't matter
-                ptr_ty.spirv_type(cx)
-            }
-            TyKind::Tuple(substs) if substs.len() == 1 => {
-                let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
-                trans_scalar_known_ty(cx, item, scalar, is_immediate)
-            }
-            TyKind::Adt(..) | TyKind::Closure(..) => {
-                trans_scalar_pointer_struct(cx, ty, scalar, None, is_immediate)
-            }
-            ref kind => panic!(
-                "TODO: Unimplemented Primitive::Pointer TyKind ({:#?}):\n{:#?}",
-                kind, ty
-            ),
-        }
-    } else {
-        trans_scalar_generic(cx, scalar, is_immediate)
-    }
-}
-
 // only pub for LayoutTypeMethods::scalar_pair_element_backend_type
-pub fn trans_scalar_pair<'spv, 'tcx>(
+pub fn scalar_pair_element_backend_type<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
     ty: TyAndLayout<'tcx>,
     index: usize,
     is_immediate: bool,
 ) -> Word {
-    let (a, b) = match &ty.layout.abi {
-        Abi::ScalarPair(a, b) => (a, b),
-        other => panic!("trans_scalar_pair invalid abi: {:?}", other),
+    let scalar = match &ty.layout.abi {
+        Abi::ScalarPair(a, b) => [a, b][index],
+        other => panic!("scalar_pair_element_backend_type invalid abi: {:?}", other),
     };
-    let scalar = [a, b][index];
-    trans_scalar_pair_impl(cx, ty, scalar, index, is_immediate)
+    trans_scalar(cx, ty, scalar, Some(index), is_immediate)
 }
 
-fn trans_scalar_pair_impl<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
-    ty: TyAndLayout<'tcx>,
-    scalar: &Scalar,
-    index: usize,
-    is_immediate: bool,
-) -> Word {
-    // When we know the ty, try to fill in the pointer type in case we have it, instead of defaulting to pointer to u8.
-    if scalar.value == Primitive::Pointer {
-        match ty.ty.kind {
-            TyKind::Ref(_, elem_ty, _) => {
-                let elem = cx.layout_of(elem_ty);
-                if elem.is_unsized() {
-                    trans_scalar_known_ty(cx, ty.field(cx, index), scalar, is_immediate)
-                } else {
-                    // This can sometimes happen in weird cases when going through trans_scalar_pointer_struct - an ABI
-                    // of ScalarPair could be deduced, but it's actually e.g. a sized pointer followed by some other
-                    // completely unrelated type, not a wide pointer. So, translate this as a single scalar, one
-                    // component of that ScalarPair.
-                    SpirvType::Pointer {
-                        storage_class: StorageClass::Generic,
-                        pointee: elem.spirv_type(cx),
-                    }
-                    .def(cx)
-                }
-            }
-            TyKind::RawPtr(ty_and_mut) => {
-                let elem = cx.layout_of(ty_and_mut.ty);
-                if elem.is_unsized() {
-                    trans_scalar_known_ty(cx, ty.field(cx, index), scalar, is_immediate)
-                } else {
-                    // Same comment as TyKind::Ref
-                    SpirvType::Pointer {
-                        storage_class: StorageClass::Generic,
-                        pointee: elem.spirv_type(cx),
-                    }
-                    .def(cx)
-                }
-            }
-            TyKind::Adt(def, _) if def.is_box() => {
-                let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-                trans_scalar_pair_impl(cx, ptr_ty, scalar, index, is_immediate)
-            }
-            TyKind::Tuple(elements) if elements.len() == 1 => {
-                // The tuple is merely a wrapper, index into the tuple and retry.
-                // This happens in cases like (&[u8],)
-                let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
-                trans_scalar_pair_impl(cx, item, scalar, index, is_immediate)
-            }
-            TyKind::Tuple(elements) if elements.len() == 2 => {
-                let sub_ty = cx.layout_of(ty.ty.tuple_fields().nth(index).unwrap());
-                trans_scalar_known_ty(cx, sub_ty, scalar, is_immediate)
-            }
-            TyKind::Adt(..) | TyKind::Closure(..) => {
-                trans_scalar_pointer_struct(cx, ty, scalar, Some(index), is_immediate)
-            }
-            ref kind => panic!(
-                "TODO: Unimplemented Primitive::Pointer TyKind in scalar pair ({:#?}):\n{:#?}",
-                kind, ty
-            ),
-        }
-    } else {
-        trans_scalar_generic(cx, scalar, is_immediate)
-    }
-}
-
-// This is a really weird function, strap in...
-// So, rustc_codegen_ssa is designed around scalar pointers being opaque, you shouldn't know the type behind the
-// pointer. Unfortunately, that's impossible for us, we need to know the underlying pointee type for various reasons. In
-// some cases, this is pretty easy - if it's a TyKind::Ref, then the pointee will be the pointee of the ref (with
-// handling for wide pointers, etc.). Unfortunately, there's some pretty advanced processing going on in cx.layout_of:
-// for example, `ManuallyDrop<Result<ptr, ptr>>` has abi `ScalarPair`. This means that to figure out the pointee type,
-// we have to replicate the logic of cx.layout_of. Part of that is digging into types that are aggregates: for example,
-// ManuallyDrop<T> has a single field of type T. We "dig into" that field, and recurse, trying to find a base case that
-// we can handle, like TyKind::Ref.
-// If the above didn't make sense, please poke Ashley, it's probably easier to explain via conversation.
-fn trans_scalar_pointer_struct<'spv, 'tcx>(
+fn trans_scalar<'spv, 'tcx>(
     cx: &CodegenCx<'spv, 'tcx>,
     ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
     index: Option<usize>,
-    is_immediate: bool,
-) -> Word {
-    let fields = ty
-        .fields
-        .index_by_increasing_offset()
-        .map(|f| ty.field(cx, f))
-        .filter(|f| !f.is_zst())
-        .collect::<Vec<_>>();
-    match index {
-        Some(index) => match fields.len() {
-            1 => trans_scalar_pair_impl(cx, fields[0], scalar, index, is_immediate),
-            // This case right here is the cause of the comment handling TyKind::Ref in trans_scalar_pair_impl.
-            2 => trans_scalar_known_ty(cx, fields[index], scalar, is_immediate),
-            other => panic!(
-                "Unable to dig scalar pair pointer type: fields length {}",
-                other
-            ),
-        },
-        None => match fields.len() {
-            1 => trans_scalar_known_ty(cx, fields[0], scalar, is_immediate),
-            other => panic!("Unable to dig scalar pointer type: fields length {}", other),
-        },
-    }
-}
-
-fn trans_scalar_generic<'spv, 'tcx>(
-    cx: &CodegenCx<'spv, 'tcx>,
-    scalar: &Scalar,
     is_immediate: bool,
 ) -> Word {
     if is_immediate && scalar.is_bool() {
@@ -413,8 +274,101 @@ fn trans_scalar_generic<'spv, 'tcx>(
         Primitive::F32 => SpirvType::Float(32).def(cx),
         Primitive::F64 => SpirvType::Float(64).def(cx),
         Primitive::Pointer => {
-            panic!("trans_scalar_generic Primitive::Pointer should be handled by caller")
+            // TODO: Recursive pointer breaking
+            let pointee_ty = dig_scalar_pointee(cx, ty, index);
+            let pointee = pointee_ty.spirv_type(cx);
+            SpirvType::Pointer {
+                storage_class: StorageClass::Generic,
+                pointee,
+            }
+            .def(cx)
         }
+    }
+}
+
+// This is a really weird function, strap in...
+// So, rustc_codegen_ssa is designed around scalar pointers being opaque, you shouldn't know the type behind the
+// pointer. Unfortunately, that's impossible for us, we need to know the underlying pointee type for various reasons. In
+// some cases, this is pretty easy - if it's a TyKind::Ref, then the pointee will be the pointee of the ref (with
+// handling for wide pointers, etc.). Unfortunately, there's some pretty advanced processing going on in cx.layout_of:
+// for example, `ManuallyDrop<Result<ptr, ptr>>` has abi `ScalarPair`. This means that to figure out the pointee type,
+// we have to replicate the logic of cx.layout_of. Part of that is digging into types that are aggregates: for example,
+// ManuallyDrop<T> has a single field of type T. We "dig into" that field, and recurse, trying to find a base case that
+// we can handle, like TyKind::Ref.
+// If the above didn't make sense, please poke Ashley, it's probably easier to explain via conversation.
+fn dig_scalar_pointee<'spv, 'tcx>(
+    cx: &CodegenCx<'spv, 'tcx>,
+    ty: TyAndLayout<'tcx>,
+    index: Option<usize>,
+) -> PointeeTy<'tcx> {
+    match ty.ty.kind {
+        TyKind::Ref(_region, elem_ty, _mutability) => {
+            let elem = cx.layout_of(elem_ty);
+            match index {
+                None => PointeeTy::Ty(elem),
+                Some(index) => {
+                    if elem.is_unsized() {
+                        dig_scalar_pointee(cx, ty.field(cx, index), None)
+                    } else {
+                        // This can sometimes happen in weird cases when going through the Adt case below - an ABI
+                        // of ScalarPair could be deduced, but it's actually e.g. a sized pointer followed by some other
+                        // completely unrelated type, not a wide pointer. So, translate this as a single scalar, one
+                        // component of that ScalarPair.
+                        PointeeTy::Ty(elem)
+                    }
+                }
+            }
+        }
+        TyKind::RawPtr(type_and_mut) => {
+            let elem = cx.layout_of(type_and_mut.ty);
+            match index {
+                None => PointeeTy::Ty(elem),
+                Some(index) => {
+                    if elem.is_unsized() {
+                        dig_scalar_pointee(cx, ty.field(cx, index), None)
+                    } else {
+                        // Same comment as TyKind::Ref
+                        PointeeTy::Ty(elem)
+                    }
+                }
+            }
+        }
+        TyKind::FnPtr(sig) if index.is_none() => PointeeTy::Fn(sig),
+        TyKind::Adt(def, _) if def.is_box() => {
+            let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
+            dig_scalar_pointee(cx, ptr_ty, index)
+        }
+        // TyKind::Tuple(substs) if substs.len() == 1 => {
+        //     let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
+        //     trans_scalar_known_ty(cx, item, scalar, is_immediate)
+        // }
+        TyKind::Tuple(_) | TyKind::Adt(..) | TyKind::Closure(..) => {
+            let fields = ty
+                .fields
+                .index_by_increasing_offset()
+                .map(|f| ty.field(cx, f))
+                .filter(|f| !f.is_zst())
+                .collect::<Vec<_>>();
+            match index {
+                Some(index) => match fields.len() {
+                    1 => dig_scalar_pointee(cx, fields[0], Some(index)),
+                    // This case right here is the cause of the comment handling TyKind::Ref.
+                    2 => dig_scalar_pointee(cx, fields[index], None),
+                    other => panic!(
+                        "Unable to dig scalar pair pointer type: fields length {}",
+                        other
+                    ),
+                },
+                None => match fields.len() {
+                    1 => dig_scalar_pointee(cx, fields[0], None),
+                    other => panic!("Unable to dig scalar pointer type: fields length {}", other),
+                },
+            }
+        }
+        ref kind => panic!(
+            "TODO: Unimplemented Primitive::Pointer TyKind index={:?} ({:#?}):\n{:#?}",
+            index, kind, ty
+        ),
     }
 }
 

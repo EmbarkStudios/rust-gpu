@@ -333,7 +333,7 @@ impl<'spv, 'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'spv, 'tcx> {
         index: usize,
         immediate: bool,
     ) -> Self::Type {
-        crate::abi::trans_scalar_pair(self, layout, index, immediate)
+        crate::abi::scalar_pair_element_backend_type(self, layout, index, immediate)
     }
 
     fn cast_backend_type(&self, ty: &CastTarget) -> Self::Type {
