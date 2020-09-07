@@ -6,7 +6,6 @@ use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::StorageClass;
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
-use rustc_codegen_ssa::base::to_immediate;
 use rustc_codegen_ssa::common::IntPredicate;
 use rustc_codegen_ssa::glue;
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
@@ -34,7 +33,7 @@ use std::ops::Deref;
 macro_rules! math_intrinsic {
     ($self:ident, $arg_tys:ident, $args:ident, $int:ident, $uint:ident, $float:ident) => {{
         assert_eq!($arg_tys[0], $arg_tys[1]);
-        match &$arg_tys[0].kind {
+        match &$arg_tys[0].kind() {
             TyKind::Int(_) => $self.$int($args[0].immediate(), $args[1].immediate()),
             TyKind::Uint(_) => $self.$uint($args[0].immediate(), $args[1].immediate()),
             TyKind::Float(_) => $self.$float($args[0].immediate(), $args[1].immediate()),
@@ -45,7 +44,7 @@ macro_rules! math_intrinsic {
 macro_rules! math_intrinsic_int {
     ($self:ident, $arg_tys:ident, $args:ident, $int:ident, $uint:ident) => {{
         assert_eq!($arg_tys[0], $arg_tys[1]);
-        match &$arg_tys[0].kind {
+        match &$arg_tys[0].kind() {
             TyKind::Int(_) => $self.$int($args[0].immediate(), $args[1].immediate()),
             TyKind::Uint(_) => $self.$uint($args[0].immediate(), $args[1].immediate()),
             other => panic!("Unimplemented intrinsic type: {:#?}", other),
@@ -333,7 +332,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
     ) {
         let callee_ty = instance.ty(self.tcx, ParamEnv::reveal_all());
 
-        let (def_id, substs) = match callee_ty.kind {
+        let (def_id, substs) = match *callee_ty.kind() {
             FnDef(def_id, substs) => (def_id, substs),
             _ => panic!("expected fn item type, found {}", callee_ty),
         };
@@ -417,7 +416,7 @@ impl<'a, 'spv, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'spv, 'tcx> {
                     ptr = self.pointercast(ptr, self.type_ptr_to(ty.spirv_type(self)));
                 }
                 let load = self.volatile_load(ptr);
-                to_immediate(self, load, self.layout_of(tp_ty))
+                self.to_immediate(load, self.layout_of(tp_ty))
             }
             sym::volatile_store => {
                 // rust-analyzer gets sad if you call args[0].deref()

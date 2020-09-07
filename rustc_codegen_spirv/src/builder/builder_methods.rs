@@ -3,7 +3,6 @@ use crate::builder_spirv::{BuilderCursor, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
 use rspirv::spirv::StorageClass;
-use rustc_codegen_ssa::base::to_immediate;
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -287,6 +286,23 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
         }
     }
 
+    fn from_immediate(&mut self, val: Self::Value) -> Self::Value {
+        if self.lookup_type(val.ty) == SpirvType::Bool {
+            let i8 = SpirvType::Integer(8, false).def(self);
+            self.zext(val, i8)
+        } else {
+            val
+        }
+    }
+
+    fn to_immediate_scalar(&mut self, val: Self::Value, scalar: &Scalar) -> Self::Value {
+        if scalar.is_bool() {
+            let bool = SpirvType::Bool.def(self);
+            return self.trunc(val, bool);
+        }
+        val
+    }
+
     fn alloca(&mut self, ty: Self::Type, _align: Align) -> Self::Value {
         let ptr_ty = SpirvType::Pointer {
             storage_class: StorageClass::Generic,
@@ -346,7 +362,7 @@ impl<'a, 'spv, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'spv, 'tcx> {
             OperandValue::Ref(place.llval, Some(llextra), place.align)
         } else if self.cx.is_backend_immediate(place.layout) {
             let llval = self.load(place.llval, place.align);
-            OperandValue::Immediate(to_immediate(self, llval, place.layout))
+            OperandValue::Immediate(self.to_immediate(llval, place.layout))
         } else if let Abi::ScalarPair(ref a, ref b) = place.layout.abi {
             let b_offset = a.value.size(self).align_to(b.value.align(self).abi);
 

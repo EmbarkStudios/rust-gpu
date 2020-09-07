@@ -394,7 +394,7 @@ fn dig_scalar_pointee<'spv, 'tcx>(
     ty: TyAndLayout<'tcx>,
     index: Option<usize>,
 ) -> PointeeTy<'tcx> {
-    match ty.ty.kind {
+    match *ty.ty.kind() {
         TyKind::Ref(_region, elem_ty, _mutability) => {
             let elem = cx.layout_of(elem_ty);
             match index {
@@ -544,7 +544,7 @@ pub fn auto_struct_layout<'spv, 'tcx>(
 // see struct_llfields in librustc_codegen_llvm for implementation hints
 fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     let name = name_of_struct(ty);
-    if let TyKind::Foreign(_) = ty.ty.kind {
+    if let TyKind::Foreign(_) = ty.ty.kind() {
         // "An unsized FFI type that is opaque to Rust"
         return SpirvType::Opaque { name }.def(cx);
     };
@@ -559,14 +559,14 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -
         let offset = ty.fields.offset(i);
         field_offsets.push(offset);
         if let Variants::Single { index } = ty.variants {
-            if let TyKind::Adt(adt, _) = ty.ty.kind {
+            if let TyKind::Adt(adt, _) = ty.ty.kind() {
                 let field = &adt.variants[index].fields[i];
                 field_names.push(field.ident.name.to_ident_string());
             } else {
                 field_names.push(format!("{}", i));
             }
         } else {
-            if let TyKind::Adt(_, _) = ty.ty.kind {
+            if let TyKind::Adt(_, _) = ty.ty.kind() {
             } else {
                 panic!("Variants::Multiple not supported for non-TyKind::Adt");
             }
@@ -590,12 +590,12 @@ fn trans_struct<'spv, 'tcx>(cx: &CodegenCx<'spv, 'tcx>, ty: TyAndLayout<'tcx>) -
 
 fn name_of_struct(ty: TyAndLayout<'_>) -> String {
     let mut name = ty.ty.to_string();
-    if let (&TyKind::Adt(def, _), &Variants::Single { index }) = (&ty.ty.kind, &ty.variants) {
+    if let (&TyKind::Adt(def, _), &Variants::Single { index }) = (ty.ty.kind(), &ty.variants) {
         if def.is_enum() && !def.variants.is_empty() {
             write!(&mut name, "::{}", def.variants[index].ident).unwrap();
         }
     }
-    if let (&TyKind::Generator(_, _, _), &Variants::Single { index }) = (&ty.ty.kind, &ty.variants)
+    if let (&TyKind::Generator(_, _, _), &Variants::Single { index }) = (ty.ty.kind(), &ty.variants)
     {
         write!(&mut name, "::{}", GeneratorSubsts::variant_name(index)).unwrap();
     }
