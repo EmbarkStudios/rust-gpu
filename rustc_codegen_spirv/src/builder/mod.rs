@@ -1,5 +1,8 @@
 mod builder_methods;
+mod ext_inst;
 mod intrinsics;
+
+pub use ext_inst::ExtInst;
 
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};

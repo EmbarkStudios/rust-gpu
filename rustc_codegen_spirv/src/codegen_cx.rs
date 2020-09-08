@@ -1,4 +1,5 @@
 use crate::abi::ConvSpirvType;
+use crate::builder::ExtInst;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use rspirv::dr::{Module, Operand};
@@ -63,6 +64,7 @@ pub struct CodegenCx<'tcx> {
     pub type_cache: TypeCache<'tcx>,
     /// Cache generated vtables
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
+    pub ext_inst: RefCell<ExtInst>,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -76,6 +78,7 @@ impl<'tcx> CodegenCx<'tcx> {
             function_parameter_values: RefCell::new(HashMap::new()),
             type_cache: Default::default(),
             vtables: RefCell::new(Default::default()),
+            ext_inst: Default::default(),
         }
     }
 
@@ -182,6 +185,14 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn constant_f64(&self, val: f64) -> SpirvValue {
         let ty = SpirvType::Float(64).def(self);
         self.builder.constant_f64(ty, val).with_type(ty)
+    }
+
+    pub fn constant_float(&self, ty: Word, val: f64) -> SpirvValue {
+        match self.lookup_type(ty) {
+            SpirvType::Float(32) => self.builder.constant_f32(ty, val as f32).with_type(ty),
+            SpirvType::Float(64) => self.builder.constant_f64(ty, val).with_type(ty),
+            other => panic!("constant_float invalid on type {}", other.debug(ty, self)),
+        }
     }
 
     #[allow(dead_code)]
