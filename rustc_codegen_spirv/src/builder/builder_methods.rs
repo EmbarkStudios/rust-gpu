@@ -542,11 +542,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 pointee,
             } => match self.lookup_type(pointee) {
                 SpirvType::Adt { field_types, .. } => (storage_class, field_types[idx as usize]),
-                SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element, .. } => {
-                    (storage_class, element)
-                }
+                SpirvType::Array { element, .. }
+                | SpirvType::RuntimeArray { element, .. }
+                | SpirvType::Vector { element, .. } => (storage_class, element),
                 other => panic!(
-                    "struct_gep not on struct or array type: {:?}, index {}",
+                    "struct_gep not on struct, array, or vector type: {:?}, index {}",
                     other, idx
                 ),
             },

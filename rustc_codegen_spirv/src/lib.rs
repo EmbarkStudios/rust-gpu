@@ -73,19 +73,8 @@ fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
 }
 
 fn is_blocklisted_fn(symbol_name: &str) -> bool {
-    let prefixes = [
-        "_ZN4core3fmt3num",
-        "_ZN4core3fmt9Arguments6new_v117hde2a099eb54409bdE",
-    ];
-    let contains = [
-        "core..any..Any",
-        "core..fmt..Debug",
-        "core..fmt..Display",
-        "core..fmt..num",
-        "from_str_radix",
-    ];
-    prefixes.iter().any(|s| symbol_name.starts_with(s))
-        || contains.iter().any(|s| symbol_name.contains(s))
+    // TODO: These sometimes have a constant value of an enum variant with a hole
+    symbol_name.contains("core..fmt..Debug")
 }
 
 struct NoLlvmMetadataLoader;
@@ -261,7 +250,6 @@ impl WriteBackendMethods for SsaBackend {
             .temp_path(OutputType::Object, Some(&module.name));
         // Note: endianness doesn't matter, readers deduce endianness from magic header.
         let spirv_module = slice_u32_to_u8(&module.module_llvm);
-        println!("Writing output file: {:?}", path);
         File::create(&path)
             .unwrap()
             .write_all(spirv_module)
@@ -322,61 +310,28 @@ impl ExtraBackendMethods for SsaBackend {
         let do_codegen = || {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
-            for (index, &(mono_item, (linkage, visibility))) in mono_items.iter().enumerate() {
+            for &(mono_item, (linkage, visibility)) in mono_items.iter() {
                 let name = mono_item.symbol_name(cx.tcx).name;
-                let percent = (index as f64 / mono_items.len() as f64 * 100.0) as usize;
-                // Print some progress bars so we know how far we are through fully implementing a crate.
-                let instance = if let MonoItem::Fn(instance) = mono_item {
-                    format!(" -> {}", instance)
-                } else {
-                    "".to_string()
-                };
-                println!(
-                    "predefining {} out of {} - {}%: {}{}",
-                    index,
-                    mono_items.len(),
-                    percent,
-                    name,
-                    instance,
-                );
                 if option_env!("DUMP_MIR").is_some() {
                     if let MonoItem::Fn(instance) = mono_item {
                         dump_mir(tcx, instance);
                     }
                 }
                 if is_blocklisted_fn(name) {
-                    println!("Item is blocklisted");
                     continue;
                 }
                 mono_item.predefine::<Builder<'_, '_>>(&cx, linkage, visibility);
             }
 
-            println!("Done predefining");
-
             // ... and now that we have everything pre-defined, fill out those definitions.
-            for (index, &(mono_item, _)) in mono_items.iter().enumerate() {
+            for &(mono_item, _) in mono_items.iter() {
                 let name = mono_item.symbol_name(cx.tcx).name;
-                let percent = (index as f64 / mono_items.len() as f64 * 100.0) as usize;
-                let instance = if let MonoItem::Fn(instance) = mono_item {
-                    format!(" -> {}", instance)
-                } else {
-                    "".to_string()
-                };
-                println!(
-                    "defining {} out of {} - {}%: {}{}",
-                    index,
-                    mono_items.len(),
-                    percent,
-                    name,
-                    instance,
-                );
                 if option_env!("DUMP_MIR").is_some() {
                     if let MonoItem::Fn(instance) = mono_item {
                         dump_mir(tcx, instance);
                     }
                 }
                 if is_blocklisted_fn(name) {
-                    println!("Item is blocklisted");
                     continue;
                 }
                 mono_item.define::<Builder<'_, '_>>(&cx);
