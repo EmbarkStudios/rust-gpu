@@ -110,7 +110,6 @@ enum PointeeDefState {
 }
 
 pub trait ConvSpirvType<'tcx> {
-    fn is_valid_spirv_type(&self, cx: &CodegenCx<'tcx>) -> bool;
     fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word;
     fn spirv_type_immediate(&self, cx: &CodegenCx<'tcx>) -> Word {
         self.spirv_type(cx)
@@ -118,12 +117,6 @@ pub trait ConvSpirvType<'tcx> {
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
-    fn is_valid_spirv_type(&self, cx: &CodegenCx<'tcx>) -> bool {
-        match *self {
-            PointeeTy::Ty(ty) => ty.is_valid_spirv_type(cx),
-            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).is_valid_spirv_type(cx),
-        }
-    }
     fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         match *self {
             PointeeTy::Ty(ty) => ty.spirv_type(cx),
@@ -139,13 +132,6 @@ impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for Reg {
-    fn is_valid_spirv_type(&self, _: &CodegenCx<'tcx>) -> bool {
-        match self.kind {
-            RegKind::Integer => self.size.bits() <= 64,
-            RegKind::Float => true,
-            RegKind::Vector => true,
-        }
-    }
     fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         match self.kind {
             RegKind::Integer => SpirvType::Integer(self.size.bits() as u32, false).def(cx),
@@ -160,16 +146,6 @@ impl<'tcx> ConvSpirvType<'tcx> for Reg {
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
-    fn is_valid_spirv_type(&self, cx: &CodegenCx<'tcx>) -> bool {
-        self.rest.unit.is_valid_spirv_type(cx)
-            && self.prefix.iter().flatten().all(|&kind| {
-                Reg {
-                    kind,
-                    size: self.prefix_chunk,
-                }
-                .is_valid_spirv_type(cx)
-            })
-    }
     fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         let rest_ll_unit = self.rest.unit.spirv_type(cx);
         let (rest_count, rem_bytes) = if self.rest.unit.size.bytes() == 0 {
@@ -237,13 +213,6 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
-    fn is_valid_spirv_type(&self, cx: &CodegenCx<'tcx>) -> bool {
-        self.ret.layout.is_valid_spirv_type(cx)
-            && self
-                .args
-                .iter()
-                .all(|arg| arg.layout.is_valid_spirv_type(cx))
-    }
     fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         let mut argument_types = Vec::new();
 
@@ -305,23 +274,6 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
-    fn is_valid_spirv_type(&self, cx: &CodegenCx<'tcx>) -> bool {
-        match self.abi {
-            Abi::Uninhabited => true,
-            Abi::Scalar(ref a) => is_valid_scalar(a),
-            Abi::ScalarPair(ref a, ref b) => is_valid_scalar(a) && is_valid_scalar(b),
-            Abi::Vector { ref element, .. } => is_valid_scalar(element),
-            Abi::Aggregate { .. } => match self.fields {
-                FieldsShape::Primitive => panic!(),
-                FieldsShape::Union(_field_count) => true,
-                FieldsShape::Array { .. } => self.field(cx, 0).is_valid_spirv_type(cx),
-                FieldsShape::Arbitrary {
-                    offsets: _,
-                    memory_index: _,
-                } => (0..self.fields.count()).all(|i| self.field(cx, i).is_valid_spirv_type(cx)),
-            },
-        }
-    }
     fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
         trans_type_impl(cx, *self, false)
     }
@@ -387,13 +339,6 @@ pub fn scalar_pair_element_backend_type<'tcx>(
         other => panic!("scalar_pair_element_backend_type invalid abi: {:?}", other),
     };
     trans_scalar(cx, ty, scalar, Some(index), is_immediate)
-}
-
-fn is_valid_scalar(scalar: &Scalar) -> bool {
-    match scalar.value {
-        Primitive::Int(width, _) => width.size().bits() <= 64,
-        _ => true,
-    }
 }
 
 fn trans_scalar<'tcx>(
@@ -646,7 +591,8 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     let name = name_of_struct(ty);
     if let TyKind::Foreign(_) = ty.ty.kind() {
         // "An unsized FFI type that is opaque to Rust"
-        return SpirvType::Opaque { name }.def(cx);
+        // TODO: OpTypeOpaque requires kernel capability. Detect if we're in kernel mode and do that.
+        // return SpirvType::Opaque { name }.def(cx);
     };
     let size = if ty.is_unsized() { None } else { Some(ty.size) };
     let align = ty.align.abi;

@@ -1,6 +1,7 @@
 use crate::abi::ConvSpirvType;
 use crate::builder::ExtInst;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
+use crate::poison_pass::poison_pass;
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word};
@@ -34,6 +35,7 @@ use rustc_target::abi::{
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::iter::once;
 use std::ops::Range;
 
@@ -65,6 +67,8 @@ pub struct CodegenCx<'tcx> {
     /// Cache generated vtables
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
     pub ext_inst: RefCell<ExtInst>,
+    /// Invalid spir-v IDs that should be stripped from the final binary
+    poisoned_values: RefCell<HashSet<Word>>,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -73,12 +77,13 @@ impl<'tcx> CodegenCx<'tcx> {
             tcx,
             codegen_unit,
             builder: BuilderSpirv::new(),
-            declared_values: RefCell::new(HashMap::new()),
-            instances: RefCell::new(HashMap::new()),
-            function_parameter_values: RefCell::new(HashMap::new()),
+            declared_values: Default::default(),
+            instances: Default::default(),
+            function_parameter_values: Default::default(),
             type_cache: Default::default(),
-            vtables: RefCell::new(Default::default()),
+            vtables: Default::default(),
             ext_inst: Default::default(),
+            poisoned_values: Default::default(),
         }
     }
 
@@ -128,8 +133,14 @@ impl<'tcx> CodegenCx<'tcx> {
         self.lookup_type(ty).debug(ty, self)
     }
 
+    pub fn poison(&self, word: Word) {
+        self.poisoned_values.borrow_mut().insert(word);
+    }
+
     pub fn finalize_module(self) -> Module {
-        self.builder.finalize()
+        let mut result = self.builder.finalize();
+        poison_pass(&mut result, &mut self.poisoned_values.borrow_mut());
+        result
     }
 
     // Presumably these methods will get used eventually, so allow(dead_code) to not have to rewrite when needed.
@@ -193,6 +204,11 @@ impl<'tcx> CodegenCx<'tcx> {
                 _ => panic!("Invalid constant value for bool: {}", val),
             }
             .with_type(ty),
+            SpirvType::Integer(128, _) => {
+                let result = self.emit_global().undef(ty, None);
+                self.poison(result);
+                result.with_type(ty)
+            }
             other => panic!("constant_int invalid on type {}", other.debug(ty, self)),
         }
     }

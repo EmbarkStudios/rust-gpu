@@ -26,6 +26,8 @@ pub enum SpirvType {
         field_offsets: Vec<Size>,
         field_names: Option<Vec<String>>,
     },
+    // see comment where Opaque is constructed
+    #[allow(dead_code)]
     Opaque {
         name: String,
     },
@@ -109,12 +111,15 @@ impl SpirvType {
             SpirvType::Void => cx.emit_global().type_void(),
             SpirvType::Bool => cx.emit_global().type_bool(),
             SpirvType::Integer(width, signedness) => {
+                let result = cx
+                    .emit_global()
+                    .type_int(width, if signedness { 1 } else { 0 });
                 match width {
                     8 | 16 | 32 | 64 => (),
+                    128 => cx.poison(result),
                     other => panic!("Integer width {} invalid for spir-v", other),
                 };
-                cx.emit_global()
-                    .type_int(width, if signedness { 1 } else { 0 })
+                result
             }
             SpirvType::Float(width) => {
                 match width {
