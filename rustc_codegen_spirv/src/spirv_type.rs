@@ -33,10 +33,12 @@ pub enum SpirvType {
     },
     Vector {
         element: Word,
-        count: Word,
+        /// Note: vector count is literal.
+        count: u32,
     },
     Array {
         element: Word,
+        /// Note: array count is ref to constant.
         count: Word,
     },
     RuntimeArray {
@@ -79,7 +81,7 @@ fn memset_dynamic_scalar<'a, 'tcx>(
 ) -> Word {
     let composite_type = SpirvType::Vector {
         element: SpirvType::Integer(8, false).def(builder),
-        count: builder.constant_u32(byte_width as u32).def,
+        count: byte_width as u32,
     }
     .def(builder);
     let composite = builder
@@ -142,15 +144,18 @@ impl SpirvType {
                 let result = emit.type_struct_id(Some(id), field_types.iter().cloned());
                 emit.name(result, name);
                 // The struct size is only used in our own sizeof_in_bits() (used in e.g. ArrayStride decoration)
-                for (index, offset) in field_offsets.iter().copied().enumerate() {
-                    emit.member_decorate(
-                        result,
-                        index as u32,
-                        Decoration::Offset,
-                        [Operand::LiteralInt32(offset.bytes() as u32)]
-                            .iter()
-                            .cloned(),
-                    );
+                if !cx.kernel_mode {
+                    // TODO: kernel mode can't do this??
+                    for (index, offset) in field_offsets.iter().copied().enumerate() {
+                        emit.member_decorate(
+                            result,
+                            index as u32,
+                            Decoration::Offset,
+                            [Operand::LiteralInt32(offset.bytes() as u32)]
+                                .iter()
+                                .cloned(),
+                        );
+                    }
                 }
                 if let Some(field_names) = field_names {
                     for (index, field_name) in field_names.iter().enumerate() {
@@ -169,14 +174,23 @@ impl SpirvType {
                     .expect("Element of sized array must be sized")
                     .bytes();
                 let result = cx.emit_global().type_array(element, count);
-                cx.emit_global().decorate(
-                    result,
-                    Decoration::ArrayStride,
-                    once(Operand::LiteralInt32(element_size as u32)),
-                );
+                if !cx.kernel_mode {
+                    // TODO: kernel mode can't do this??
+                    cx.emit_global().decorate(
+                        result,
+                        Decoration::ArrayStride,
+                        once(Operand::LiteralInt32(element_size as u32)),
+                    );
+                }
                 result
             }
-            SpirvType::RuntimeArray { element } => cx.emit_global().type_runtime_array(element),
+            SpirvType::RuntimeArray { element } => {
+                let result = cx.emit_global().type_runtime_array(element);
+                if cx.kernel_mode {
+                    cx.poison(result);
+                }
+                result
+            }
             SpirvType::Pointer {
                 storage_class,
                 pointee,
@@ -241,7 +255,7 @@ impl SpirvType {
             SpirvType::Adt { size, .. } => size?,
             SpirvType::Opaque { .. } => Size::ZERO,
             SpirvType::Vector { element, count } => {
-                cx.lookup_type(element).sizeof(cx)? * cx.builder.lookup_const_u64(count).unwrap()
+                cx.lookup_type(element).sizeof(cx)? * count as u64
             }
             SpirvType::Array { element, count } => {
                 cx.lookup_type(element).sizeof(cx)? * cx.builder.lookup_const_u64(count).unwrap()
@@ -296,9 +310,8 @@ impl SpirvType {
             SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
             SpirvType::Vector { element, count } => {
                 let elem_pat = cx.lookup_type(element).memset_const_pattern(cx, fill_byte);
-                let count = cx.builder.lookup_const_u64(count).unwrap() as usize;
                 cx.emit_global()
-                    .constant_composite(self.def(cx), vec![elem_pat; count])
+                    .constant_composite(self.def(cx), vec![elem_pat; count as usize])
             }
             SpirvType::Array { element, count } => {
                 let elem_pat = cx.lookup_type(element).memset_const_pattern(cx, fill_byte);
@@ -336,7 +349,7 @@ impl SpirvType {
             },
             SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
             SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
-            SpirvType::Array { element, count } | SpirvType::Vector { element, count } => {
+            SpirvType::Array { element, count } => {
                 let elem_pat = builder
                     .lookup_type(element)
                     .memset_dynamic_pattern(builder, fill_var);
@@ -347,6 +360,19 @@ impl SpirvType {
                         self.def(builder),
                         None,
                         std::iter::repeat(elem_pat).take(count),
+                    )
+                    .unwrap()
+            }
+            SpirvType::Vector { element, count } => {
+                let elem_pat = builder
+                    .lookup_type(element)
+                    .memset_dynamic_pattern(builder, fill_var);
+                builder
+                    .emit()
+                    .composite_construct(
+                        self.def(builder),
+                        None,
+                        std::iter::repeat(elem_pat).take(count as usize),
                     )
                     .unwrap()
             }
@@ -421,14 +447,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .debug_struct("Vector")
                 .field("id", &self.id)
                 .field("element", &self.cx.debug_type(element))
-                .field(
-                    "count",
-                    &self
-                        .cx
-                        .builder
-                        .lookup_const_u64(count)
-                        .expect("Vector type has invalid count value"),
-                )
+                .field("count", &count)
                 .finish(),
             SpirvType::Array { element, count } => f
                 .debug_struct("Array")
@@ -536,11 +555,8 @@ impl SpirvTypePrinter<'_, '_> {
             }
             SpirvType::Opaque { ref name } => write!(f, "struct {}", name),
             SpirvType::Vector { element, count } => {
-                let len = self.cx.builder.lookup_const_u64(count);
-                let len = len.expect("Vector type has invalid count value");
-                f.write_str("vec<")?;
                 ty(self.cx, stack, f, element)?;
-                write!(f, ", {}>", len)
+                write!(f, "x{}", count)
             }
             SpirvType::Array { element, count } => {
                 let len = self.cx.builder.lookup_const_u64(count);

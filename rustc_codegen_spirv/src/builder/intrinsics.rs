@@ -528,7 +528,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                     }
                 };
                 if signed {
-                    let ty = SpirvType::Integer(width as u32, true).def(self);
+                    let ty = SpirvType::Integer(width as u32, !self.kernel_mode).def(self);
                     self.fptosi(args[0].immediate(), ty)
                 } else {
                     let ty = SpirvType::Integer(width as u32, false).def(self);

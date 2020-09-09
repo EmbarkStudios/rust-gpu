@@ -253,7 +253,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
         } else if let PassMode::Cast(cast) = arg_abi.mode {
             let cast_ty = cast.spirv_type(self);
             let cast_ptr_ty = SpirvType::Pointer {
-                storage_class: StorageClass::Generic,
+                storage_class: StorageClass::Function,
                 pointee: cast_ty,
             }
             .def(self);

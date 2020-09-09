@@ -138,7 +138,7 @@ impl<'tcx> ConvSpirvType<'tcx> for Reg {
             RegKind::Float => SpirvType::Float(self.size.bits() as u32).def(cx),
             RegKind::Vector => SpirvType::Vector {
                 element: SpirvType::Integer(8, false).def(cx),
-                count: cx.constant_u32(self.size.bytes() as u32).def,
+                count: self.size.bytes() as u32,
             }
             .def(cx),
         }
@@ -226,7 +226,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
                 }
                 let pointee = self.ret.layout.spirv_type(cx);
                 let pointer = SpirvType::Pointer {
-                    storage_class: StorageClass::Generic,
+                    storage_class: StorageClass::Function,
                     pointee,
                 }
                 .def(cx);
@@ -256,7 +256,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
                 PassMode::Indirect(_, None) => {
                     let pointee = arg.layout.spirv_type(cx);
                     SpirvType::Pointer {
-                        storage_class: StorageClass::Generic,
+                        storage_class: StorageClass::Function,
                         pointee,
                     }
                     .def(cx)
@@ -316,10 +316,9 @@ fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immedia
         }
         Abi::Vector { ref element, count } => {
             let elem_spirv = trans_scalar(cx, ty, element, None, is_immediate);
-            let count_spv = cx.constant_u32(count as u32);
             SpirvType::Vector {
                 element: elem_spirv,
-                count: count_spv.def,
+                count: count as u32,
             }
             .def(cx)
         }
@@ -354,7 +353,10 @@ fn trans_scalar<'tcx>(
 
     match scalar.value {
         // TODO: Do we use scalar.valid_range?
-        Primitive::Int(width, signedness) => {
+        Primitive::Int(width, mut signedness) => {
+            if cx.kernel_mode {
+                signedness = false;
+            }
             SpirvType::Integer(width.size().bits() as u32, signedness).def(cx)
         }
         Primitive::F32 => SpirvType::Float(32).def(cx),
@@ -372,7 +374,7 @@ fn trans_scalar<'tcx>(
                 cx.type_cache.recursive_pointee_cache.end(
                     cx,
                     pointee_ty,
-                    StorageClass::Generic,
+                    StorageClass::Function,
                     pointee,
                 )
             }
@@ -591,8 +593,10 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     let name = name_of_struct(ty);
     if let TyKind::Foreign(_) = ty.ty.kind() {
         // "An unsized FFI type that is opaque to Rust"
-        // TODO: OpTypeOpaque requires kernel capability. Detect if we're in kernel mode and do that.
-        // return SpirvType::Opaque { name }.def(cx);
+        if cx.kernel_mode {
+            return SpirvType::Opaque { name }.def(cx);
+        }
+        // otherwise fall back
     };
     let size = if ty.is_unsized() { None } else { Some(ty.size) };
     let align = ty.align.abi;

@@ -1,8 +1,8 @@
 use super::Builder;
 use crate::builder_spirv::{BuilderCursor, SpirvValueExt};
 use crate::spirv_type::SpirvType;
-use rspirv::dr::Operand;
-use rspirv::spirv::{MemorySemantics, Scope, StorageClass};
+use rspirv::dr::{InsertPoint, Instruction, Operand};
+use rspirv::spirv::{MemorySemantics, Op, Scope, StorageClass};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -276,12 +276,54 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     simple_op! {unchecked_usub, i_sub} // already unchecked by default
     simple_op! {unchecked_smul, i_mul} // already unchecked by default
     simple_op! {unchecked_umul, i_mul} // already unchecked by default
-    simple_op! {and, bitwise_and}
-    simple_op! {or, bitwise_or}
-    simple_op! {xor, bitwise_xor}
     simple_uni_op! {neg, s_negate}
     simple_uni_op! {fneg, f_negate}
-    simple_uni_op! {not, not}
+
+    fn and(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
+        assert_ty_eq!(self, lhs.ty, rhs.ty);
+        let ty = lhs.ty;
+        match self.lookup_type(ty) {
+            SpirvType::Integer(_, _) => self.emit().bitwise_and(ty, None, lhs.def, rhs.def),
+            SpirvType::Bool => self.emit().logical_and(ty, None, lhs.def, rhs.def),
+            o => panic!("TODO: and() not implemented for type {}", o.debug(ty, self)),
+        }
+        .unwrap()
+        .with_type(ty)
+    }
+    fn or(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
+        assert_ty_eq!(self, lhs.ty, rhs.ty);
+        let ty = lhs.ty;
+        match self.lookup_type(ty) {
+            SpirvType::Integer(_, _) => self.emit().bitwise_or(ty, None, lhs.def, rhs.def),
+            SpirvType::Bool => self.emit().logical_or(ty, None, lhs.def, rhs.def),
+            o => panic!("TODO: or() not implemented for type {}", o.debug(ty, self)),
+        }
+        .unwrap()
+        .with_type(ty)
+    }
+    fn xor(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
+        assert_ty_eq!(self, lhs.ty, rhs.ty);
+        let ty = lhs.ty;
+        match self.lookup_type(ty) {
+            SpirvType::Integer(_, _) => self.emit().bitwise_xor(ty, None, lhs.def, rhs.def),
+            SpirvType::Bool => self.emit().logical_not_equal(ty, None, lhs.def, rhs.def),
+            o => panic!("TODO: xor() not implemented for type {}", o.debug(ty, self)),
+        }
+        .unwrap()
+        .with_type(ty)
+    }
+    fn not(&mut self, val: Self::Value) -> Self::Value {
+        match self.lookup_type(val.ty) {
+            SpirvType::Integer(_, _) => self.emit().not(val.ty, None, val.def),
+            SpirvType::Bool => self.emit().logical_not(val.ty, None, val.def),
+            o => panic!(
+                "TODO: not() not implemented for type {}",
+                o.debug(val.ty, self)
+            ),
+        }
+        .unwrap()
+        .with_type(val.ty)
+    }
 
     fn checked_binop(
         &mut self,
@@ -318,13 +360,39 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn alloca(&mut self, ty: Self::Type, _align: Align) -> Self::Value {
         let ptr_ty = SpirvType::Pointer {
-            storage_class: StorageClass::Generic,
+            storage_class: StorageClass::Function,
             pointee: ty,
         }
         .def(self);
-        self.emit()
-            .variable(ptr_ty, None, StorageClass::Generic, None)
-            .with_type(ptr_ty)
+        // "All OpVariable instructions in a function must be the first instructions in the first block."
+        let mut builder = self.emit();
+        builder.select_block(Some(0)).unwrap();
+        let index = {
+            let block = &builder.module_ref().functions[builder.selected_function().unwrap()]
+                .blocks[builder.selected_block().unwrap()];
+            block
+                .instructions
+                .iter()
+                .enumerate()
+                .find_map(|(index, inst)| {
+                    if inst.class.opcode != Op::Variable {
+                        Some(InsertPoint::FromBegin(index))
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or(InsertPoint::End)
+        };
+        // TODO: rspirv doesn't have insert_variable function
+        let result_id = builder.id();
+        let inst = Instruction::new(
+            Op::Variable,
+            Some(ptr_ty),
+            Some(result_id),
+            vec![Operand::StorageClass(StorageClass::Function)],
+        );
+        builder.insert_into_block(index, inst).unwrap();
+        result_id.with_type(ptr_ty)
     }
 
     fn dynamic_alloca(&mut self, ty: Self::Type, align: Align) -> Self::Value {
@@ -564,8 +632,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .with_type(result_type)
     }
 
-    // TODO: If any of these conversions below are identity, don't emit an instruction.
-
     // intcast has the logic for dealing with bools, so use that
     fn trunc(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         self.intcast(val, dest_ty, false)
@@ -590,45 +656,69 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn fptoui(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .convert_f_to_u(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .convert_f_to_u(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn fptosi(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .convert_f_to_s(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .convert_f_to_s(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn uitofp(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .convert_u_to_f(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .convert_u_to_f(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn sitofp(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .convert_s_to_f(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .convert_s_to_f(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn fptrunc(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .f_convert(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .f_convert(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn fpext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .f_convert(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .f_convert(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn ptrtoint(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
@@ -636,10 +726,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => (),
             other => panic!("ptrtoint called on non-pointer source type: {:?}", other),
         }
-        self.emit()
-            .bitcast(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .bitcast(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn inttoptr(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
@@ -647,17 +741,25 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => (),
             other => panic!("inttoptr called on non-pointer dest type: {:?}", other),
         }
-        self.emit()
-            .bitcast(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .bitcast(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn bitcast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.emit()
-            .bitcast(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .bitcast(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn intcast(&mut self, val: Self::Value, dest_ty: Self::Type, is_signed: bool) -> Self::Value {
@@ -721,10 +823,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => (),
             other => panic!("pointercast called on non-pointer dest type: {:?}", other),
         }
-        self.emit()
-            .bitcast(dest_ty, None, val.def)
-            .unwrap()
-            .with_type(dest_ty)
+        if val.ty == dest_ty {
+            val
+        } else {
+            self.emit()
+                .bitcast(dest_ty, None, val.def)
+                .unwrap()
+                .with_type(dest_ty)
+        }
     }
 
     fn icmp(&mut self, op: IntPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
@@ -733,18 +839,99 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         use IntPredicate::*;
         assert_ty_eq!(self, lhs.ty, rhs.ty);
         let b = SpirvType::Bool.def(self);
-        let mut e = self.emit();
-        match op {
-            IntEQ => e.i_equal(b, None, lhs.def, rhs.def),
-            IntNE => e.i_not_equal(b, None, lhs.def, rhs.def),
-            IntUGT => e.u_greater_than(b, None, lhs.def, rhs.def),
-            IntUGE => e.u_greater_than_equal(b, None, lhs.def, rhs.def),
-            IntULT => e.u_less_than(b, None, lhs.def, rhs.def),
-            IntULE => e.u_less_than_equal(b, None, lhs.def, rhs.def),
-            IntSGT => e.s_greater_than(b, None, lhs.def, rhs.def),
-            IntSGE => e.s_greater_than_equal(b, None, lhs.def, rhs.def),
-            IntSLT => e.s_less_than(b, None, lhs.def, rhs.def),
-            IntSLE => e.s_less_than_equal(b, None, lhs.def, rhs.def),
+        match self.lookup_type(lhs.ty) {
+            SpirvType::Integer(_, _) => match op {
+                IntEQ => self.emit().i_equal(b, None, lhs.def, rhs.def),
+                IntNE => self.emit().i_not_equal(b, None, lhs.def, rhs.def),
+                IntUGT => self.emit().u_greater_than(b, None, lhs.def, rhs.def),
+                IntUGE => self.emit().u_greater_than_equal(b, None, lhs.def, rhs.def),
+                IntULT => self.emit().u_less_than(b, None, lhs.def, rhs.def),
+                IntULE => self.emit().u_less_than_equal(b, None, lhs.def, rhs.def),
+                IntSGT => self.emit().s_greater_than(b, None, lhs.def, rhs.def),
+                IntSGE => self.emit().s_greater_than_equal(b, None, lhs.def, rhs.def),
+                IntSLT => self.emit().s_less_than(b, None, lhs.def, rhs.def),
+                IntSLE => self.emit().s_less_than_equal(b, None, lhs.def, rhs.def),
+            },
+            SpirvType::Pointer { .. } => match op {
+                IntEQ => self.emit().ptr_equal(b, None, lhs.def, rhs.def),
+                IntNE => self.emit().ptr_not_equal(b, None, lhs.def, rhs.def),
+                IntUGT => {
+                    let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
+                    let ptr_diff = SpirvType::Integer(ptr_size, false).def(self);
+                    let diff = self
+                        .emit()
+                        .ptr_diff(ptr_diff, None, lhs.def, rhs.def)
+                        .unwrap();
+                    let zero = self.constant_int(ptr_diff, 0);
+                    self.emit().u_greater_than(b, None, diff, zero.def)
+                }
+                IntUGE => {
+                    let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
+                    let ptr_diff = SpirvType::Integer(ptr_size, false).def(self);
+                    let diff = self
+                        .emit()
+                        .ptr_diff(ptr_diff, None, lhs.def, rhs.def)
+                        .unwrap();
+                    let zero = self.constant_int(ptr_diff, 0);
+                    self.emit().u_greater_than_equal(b, None, diff, zero.def)
+                }
+                IntULT => {
+                    let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
+                    let ptr_diff = SpirvType::Integer(ptr_size, false).def(self);
+                    let diff = self
+                        .emit()
+                        .ptr_diff(ptr_diff, None, lhs.def, rhs.def)
+                        .unwrap();
+                    let zero = self.constant_int(ptr_diff, 0);
+                    self.emit().u_less_than(b, None, diff, zero.def)
+                }
+                IntULE => {
+                    let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
+                    let ptr_diff = SpirvType::Integer(ptr_size, false).def(self);
+                    let diff = self
+                        .emit()
+                        .ptr_diff(ptr_diff, None, lhs.def, rhs.def)
+                        .unwrap();
+                    let zero = self.constant_int(ptr_diff, 0);
+                    self.emit().u_less_than_equal(b, None, diff, zero.def)
+                }
+                IntSGT => panic!("TODO: pointer operator IntSGT not implemented yet"),
+                IntSGE => panic!("TODO: pointer operator IntSGE not implemented yet"),
+                IntSLT => panic!("TODO: pointer operator IntSLT not implemented yet"),
+                IntSLE => panic!("TODO: pointer operator IntSLE not implemented yet"),
+            },
+            SpirvType::Bool => match op {
+                IntEQ => self.emit().logical_equal(b, None, lhs.def, rhs.def),
+                IntNE => self.emit().logical_not_equal(b, None, lhs.def, rhs.def),
+                // x > y  =>  x && !y
+                IntUGT => {
+                    let rhs = self.emit().logical_not(b, None, rhs.def).unwrap();
+                    self.emit().logical_and(b, None, lhs.def, rhs)
+                }
+                // x >= y  =>  x || !y
+                IntUGE => {
+                    let rhs = self.emit().logical_not(b, None, rhs.def).unwrap();
+                    self.emit().logical_or(b, None, lhs.def, rhs)
+                }
+                // x < y  =>  !x && y
+                IntULE => {
+                    let lhs = self.emit().logical_not(b, None, lhs.def).unwrap();
+                    self.emit().logical_and(b, None, lhs, rhs.def)
+                }
+                // x <= y  =>  !x || y
+                IntULT => {
+                    let lhs = self.emit().logical_not(b, None, lhs.def).unwrap();
+                    self.emit().logical_or(b, None, lhs, rhs.def)
+                }
+                IntSGT => panic!("TODO: boolean operator IntSGT not implemented yet"),
+                IntSGE => panic!("TODO: boolean operator IntSGE not implemented yet"),
+                IntSLT => panic!("TODO: boolean operator IntSLT not implemented yet"),
+                IntSLE => panic!("TODO: boolean operator IntSLE not implemented yet"),
+            },
+            other => panic!(
+                "Int comparison not implemented on {}",
+                other.debug(lhs.ty, self)
+            ),
         }
         .unwrap()
         .with_type(b)
@@ -919,10 +1106,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn vector_splat(&mut self, num_elts: usize, elt: Self::Value) -> Self::Value {
-        let count = self.constant_u32(num_elts as u32).def;
         let result_type = SpirvType::Vector {
             element: elt.ty,
-            count,
+            count: num_elts as u32,
         }
         .def(self);
         if self.builder.lookup_const(elt.def).is_ok() {

@@ -69,6 +69,7 @@ pub struct CodegenCx<'tcx> {
     pub ext_inst: RefCell<ExtInst>,
     /// Invalid spir-v IDs that should be stripped from the final binary
     poisoned_values: RefCell<HashSet<Word>>,
+    pub kernel_mode: bool,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -84,6 +85,7 @@ impl<'tcx> CodegenCx<'tcx> {
             vtables: Default::default(),
             ext_inst: Default::default(),
             poisoned_values: Default::default(),
+            kernel_mode: true,
         }
     }
 
@@ -159,7 +161,7 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     pub fn constant_i32(&self, val: i32) -> SpirvValue {
-        let ty = SpirvType::Integer(32, true).def(self);
+        let ty = SpirvType::Integer(32, !self.kernel_mode).def(self);
         self.builder
             .def_constant(ty, Operand::LiteralInt32(val as u32))
     }
@@ -455,7 +457,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     }
     fn type_ptr_to(&self, ty: Self::Type) -> Self::Type {
         SpirvType::Pointer {
-            storage_class: StorageClass::Generic,
+            storage_class: StorageClass::Function,
             pointee: ty,
         }
         .def(self)
@@ -465,7 +467,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             panic!("TODO: Unimplemented AddressSpace {:?}", address_space)
         }
         SpirvType::Pointer {
-            storage_class: StorageClass::Generic,
+            storage_class: StorageClass::Function,
             pointee: ty,
         }
         .def(self)
@@ -516,13 +518,17 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
             return already_defined;
         }
         let ty = SpirvType::Pointer {
-            storage_class: StorageClass::Generic,
+            storage_class: StorageClass::Function,
             pointee: cv.ty,
         }
         .def(self);
-        self.emit_global()
-            .variable(ty, None, StorageClass::Generic, Some(cv.def))
-            .with_type(ty)
+        let result = self
+            .emit_global()
+            .variable(ty, None, StorageClass::Function, Some(cv.def))
+            .with_type(ty);
+        // TODO: These should be StorageClass::Private, so just poison for now.
+        self.poison(result.def);
+        result
     }
 
     fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
@@ -746,14 +752,16 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 impl<'tcx> DeclareMethods<'tcx> for CodegenCx<'tcx> {
     fn declare_global(&self, name: &str, ty: Self::Type) -> Self::Value {
         let ptr_ty = SpirvType::Pointer {
-            storage_class: StorageClass::Generic,
+            storage_class: StorageClass::Function,
             pointee: ty,
         }
         .def(self);
         let result = self
             .emit_global()
-            .variable(ptr_ty, None, StorageClass::Generic, None)
+            .variable(ptr_ty, None, StorageClass::Function, None)
             .with_type(ptr_ty);
+        // TODO: These should be StorageClass::Private, so just poison for now.
+        self.poison(result.def);
         self.declared_values
             .borrow_mut()
             .insert(name.to_string(), result);
@@ -899,9 +907,13 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             .find_global_constant_variable(raw_bytes.def)
             .unwrap_or_else(|| {
                 let ty = self.type_ptr_to(self.layout_of(self.tcx.types.str_).spirv_type(self));
-                self.emit_global()
-                    .variable(ty, None, StorageClass::Generic, Some(raw_bytes.def))
-                    .with_type(ty)
+                let result = self
+                    .emit_global()
+                    .variable(ty, None, StorageClass::Function, Some(raw_bytes.def))
+                    .with_type(ty);
+                // The types don't line up (dynamic array vs. constant array)
+                self.poison(result.def);
+                result
             });
         // let cs = consts::ptrcast(
         //     self.const_cstr(s, false),
@@ -953,7 +965,9 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     match self.lookup_type(ty) {
                         SpirvType::Integer(width, spirv_signedness) => {
                             assert_eq!(width as u64, int_size.size().bits());
-                            assert_eq!(spirv_signedness, int_signedness);
+                            if !self.kernel_mode {
+                                assert_eq!(spirv_signedness, int_signedness);
+                            }
                             self.constant_int(ty, data as u64)
                         }
                         SpirvType::Bool => match data {
@@ -1016,7 +1030,25 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     panic!("Non-pointer-typed scalar_to_backend Scalar::Ptr not supported");
                 // unsafe { llvm::LLVMConstPtrToInt(llval, llty) }
                 } else {
-                    assert_ty_eq!(self, value.ty, ty);
+                    match (self.lookup_type(value.ty), self.lookup_type(ty)) {
+                        (
+                            SpirvType::Pointer {
+                                storage_class: a_space,
+                                pointee: a,
+                            },
+                            SpirvType::Pointer {
+                                storage_class: b_space,
+                                pointee: b,
+                            },
+                        ) => {
+                            if a_space != b_space {
+                                // TODO: make sure the type here is right.
+                                self.poison(value.def);
+                            }
+                            assert_ty_eq!(self, a, b);
+                        }
+                        _ => assert_ty_eq!(self, value.ty, ty),
+                    }
                     value
                 }
             }
@@ -1117,8 +1149,16 @@ fn create_const_alloc2(
                 .with_type(ty)
         }
         SpirvType::Opaque { name } => panic!("Cannot create const alloc of type opaque: {}", name),
-        SpirvType::Vector { element, count } | SpirvType::Array { element, count } => {
+        SpirvType::Array { element, count } => {
             let count = cx.builder.lookup_const_u64(count).unwrap() as usize;
+            let values = (0..count)
+                .map(|_| create_const_alloc2(cx, alloc, offset, element).def)
+                .collect::<Vec<_>>();
+            cx.emit_global()
+                .constant_composite(ty, values)
+                .with_type(ty)
+        }
+        SpirvType::Vector { element, count } => {
             let values = (0..count)
                 .map(|_| create_const_alloc2(cx, alloc, offset, element).def)
                 .collect::<Vec<_>>();
@@ -1131,9 +1171,24 @@ fn create_const_alloc2(
             while offset.bytes_usize() != alloc.len() {
                 values.push(create_const_alloc2(cx, alloc, offset, element).def);
             }
-            cx.emit_global()
+            let result = cx
+                .emit_global()
                 .constant_composite(ty, values)
-                .with_type(ty)
+                .with_type(ty);
+            // TODO: Figure out how to do this. Compiling the below crashes both clspv *and* llvm-spirv:
+            /*
+            __constant struct A {
+                float x;
+                int y[];
+            } a = {1, {2, 3, 4}};
+
+            __kernel void foo(__global int* data, __constant int* c) {
+            __constant struct A* asdf = &a;
+            *data = *c + asdf->y[*c];
+            }
+            */
+            cx.poison(result.def);
+            result
         }
         SpirvType::Pointer { .. } => {
             let ptr = read_alloc_ptr(cx, alloc, offset);
