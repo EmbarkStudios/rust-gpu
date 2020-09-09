@@ -592,12 +592,55 @@ pub fn get_fn<'tcx>(cx: &CodegenCx<'tcx>, instance: Instance<'tcx>) -> SpirvValu
     let llfn = if let Some(llfn) = cx.get_declared_value(&sym) {
         llfn
     } else {
-        cx.declare_fn(&sym, &fn_abi)
+        let human_name = format!("{}", instance);
+        declare_fn(cx, &sym, Some(&human_name), &fn_abi)
     };
 
     cx.instances.borrow_mut().insert(instance, llfn);
 
     llfn
+}
+
+fn declare_fn<'tcx>(
+    cx: &CodegenCx<'tcx>,
+    name: &str,
+    human_name: Option<&str>,
+    fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
+) -> SpirvValue {
+    let control = FunctionControl::NONE;
+    let function_id = None;
+
+    let function_type = fn_abi.spirv_type(cx);
+    let (return_type, argument_types) = match cx.lookup_type(function_type) {
+        SpirvType::Function {
+            return_type,
+            arguments,
+        } => (return_type, arguments),
+        other => panic!("fn_abi type {}", other.debug(function_type, cx)),
+    };
+
+    let mut emit = cx.emit_global();
+    let fn_id = emit
+        .begin_function(return_type, function_id, control, function_type)
+        .unwrap();
+    let parameter_values = argument_types
+        .iter()
+        .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
+        .collect::<Vec<_>>();
+    emit.end_function().unwrap();
+    match human_name {
+        Some(human_name) => emit.name(fn_id, human_name),
+        None => emit.name(fn_id, name),
+    }
+
+    cx.function_parameter_values
+        .borrow_mut()
+        .insert(fn_id, parameter_values);
+    let result = fn_id.with_type(function_type);
+    cx.declared_values
+        .borrow_mut()
+        .insert(name.to_string(), result);
+    result
 }
 
 impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
@@ -685,7 +728,8 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         symbol_name: &str,
     ) {
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
-        let declared = self.declare_fn(symbol_name, &fn_abi);
+        let human_name = format!("{}", instance);
+        let declared = declare_fn(self, symbol_name, Some(&human_name), &fn_abi);
         self.instances.borrow_mut().insert(instance, declared);
     }
 }
@@ -712,37 +756,7 @@ impl<'tcx> DeclareMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn declare_fn(&self, name: &str, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Function {
-        let control = FunctionControl::NONE;
-        let function_id = None;
-
-        let function_type = fn_abi.spirv_type(self);
-        let (return_type, argument_types) = match self.lookup_type(function_type) {
-            SpirvType::Function {
-                return_type,
-                arguments,
-            } => (return_type, arguments),
-            other => panic!("fn_abi type {}", other.debug(function_type, self)),
-        };
-
-        let mut emit = self.emit_global();
-        let fn_id = emit
-            .begin_function(return_type, function_id, control, function_type)
-            .unwrap();
-        let parameter_values = argument_types
-            .iter()
-            .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
-            .collect::<Vec<_>>();
-        emit.end_function().unwrap();
-        emit.name(fn_id, name);
-
-        self.function_parameter_values
-            .borrow_mut()
-            .insert(fn_id, parameter_values);
-        let result = fn_id.with_type(function_type);
-        self.declared_values
-            .borrow_mut()
-            .insert(name.to_string(), result);
-        result
+        declare_fn(self, name, None, fn_abi)
     }
 
     fn define_global(&self, name: &str, ty: Self::Type) -> Option<Self::Value> {
