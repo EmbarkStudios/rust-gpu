@@ -37,6 +37,14 @@ impl BuilderSpirv {
         builder.capability(Capability::Shader);
         // Temp hack: Linkage allows us to get away with no OpEntryPoint
         builder.capability(Capability::Linkage);
+        // All the below capabilities are temp hacks to validate libcore with spirv-val
+        builder.capability(Capability::GenericPointer);
+        builder.capability(Capability::Int8);
+        builder.capability(Capability::Int16);
+        builder.capability(Capability::Int64);
+        builder.capability(Capability::Float64);
+        builder.extension("SPV_INTEL_shader_integer_functions2");
+        builder.capability(Capability::IntegerFunctions2INTEL);
         builder.memory_model(AddressingModel::Logical, MemoryModel::GLSL450);
         Self {
             builder: RefCell::new(builder),
@@ -184,23 +192,30 @@ impl BuilderSpirv {
 
     pub fn set_global_initializer(&self, global: Word, initialiezr: Word) {
         let mut builder = self.builder.borrow_mut();
-        for inst in &mut builder.module_mut().types_global_values {
-            if inst.result_id == Some(global) {
-                assert_eq!(inst.class.opcode, Op::Variable);
-                assert_eq!(
-                    inst.operands.len(),
-                    1,
-                    "global already has initializer defined: {}",
-                    global
-                );
-                inst.operands.push(Operand::IdRef(initialiezr));
-                return;
-            }
-        }
-        panic!(
-            "set_global_initializer global not found: {} with init {}",
-            global, initialiezr
+        let module = builder.module_mut();
+        let index = module
+            .types_global_values
+            .iter()
+            .enumerate()
+            .find_map(|(index, inst)| {
+                if inst.result_id == Some(global) {
+                    Some(index)
+                } else {
+                    None
+                }
+            })
+            .expect("set_global_initializer global not found");
+        // Remove and push it to the end, to keep spir-v definition order.
+        let mut inst = module.types_global_values.remove(index);
+        assert_eq!(inst.class.opcode, Op::Variable);
+        assert_eq!(
+            inst.operands.len(),
+            1,
+            "global already has initializer defined: {}",
+            global
         );
+        inst.operands.push(Operand::IdRef(initialiezr));
+        module.types_global_values.push(inst);
     }
 
     pub fn fix_up_pointer_forward(&self, id: Word, storage_class: StorageClass) {

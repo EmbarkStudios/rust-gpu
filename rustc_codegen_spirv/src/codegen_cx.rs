@@ -140,6 +140,8 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
         poison_pass(&mut result, &mut self.poisoned_values.borrow_mut());
+        // defs go before fns
+        result.functions.sort_by_key(|f| !f.blocks.is_empty());
         result
     }
 
@@ -233,23 +235,11 @@ impl<'tcx> CodegenCx<'tcx> {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn set_linkage_export(&self, target: Word, name: String) {
+    pub fn set_linkage(&self, target: Word, name: String, linkage: LinkageType) {
         self.emit_global().decorate(
             target,
             Decoration::LinkageAttributes,
-            once(Operand::LiteralString(name))
-                .chain(once(Operand::LinkageType(LinkageType::Export))),
-        )
-    }
-
-    #[allow(dead_code)]
-    pub fn set_linkage_import(&self, target: Word, name: String) {
-        self.emit_global().decorate(
-            target,
-            Decoration::LinkageAttributes,
-            once(Operand::LiteralString(name))
-                .chain(once(Operand::LinkageType(LinkageType::Import))),
+            once(Operand::LiteralString(name)).chain(once(Operand::LinkageType(linkage))),
         )
     }
 
@@ -589,11 +579,19 @@ pub fn get_fn<'tcx>(cx: &CodegenCx<'tcx>, instance: Instance<'tcx>) -> SpirvValu
 
     let fn_abi = FnAbi::of_instance(cx, instance, &[]);
 
-    let llfn = if let Some(llfn) = cx.get_declared_value(&sym) {
+    let llfn = if let Some(llfn) = cx.get_declared_value(sym) {
         llfn
     } else {
+        // Because we've already declared everything with predefine_fn, if we hit this branch, we're guaranteed to be
+        // importing this function from elsewhere. So, slap an extern on it.
         let human_name = format!("{}", instance);
-        declare_fn(cx, &sym, Some(&human_name), &fn_abi)
+        declare_fn(
+            cx,
+            sym,
+            Some(&human_name),
+            Some(LinkageType::Import),
+            &fn_abi,
+        )
     };
 
     cx.instances.borrow_mut().insert(instance, llfn);
@@ -605,6 +603,7 @@ fn declare_fn<'tcx>(
     cx: &CodegenCx<'tcx>,
     name: &str,
     human_name: Option<&str>,
+    linkage: Option<LinkageType>,
     fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
 ) -> SpirvValue {
     let control = FunctionControl::NONE;
@@ -623,19 +622,25 @@ fn declare_fn<'tcx>(
     let fn_id = emit
         .begin_function(return_type, function_id, control, function_type)
         .unwrap();
-    let parameter_values = argument_types
-        .iter()
-        .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
-        .collect::<Vec<_>>();
+    if linkage != Some(LinkageType::Import) {
+        let parameter_values = argument_types
+            .iter()
+            .map(|&ty| emit.function_parameter(ty).unwrap().with_type(ty))
+            .collect::<Vec<_>>();
+        cx.function_parameter_values
+            .borrow_mut()
+            .insert(fn_id, parameter_values);
+    }
     emit.end_function().unwrap();
     match human_name {
         Some(human_name) => emit.name(fn_id, human_name),
         None => emit.name(fn_id, name),
     }
+    drop(emit); // set_linkage uses emit
+    if let Some(linkage) = linkage {
+        cx.set_linkage(fn_id, name.to_owned(), linkage);
+    }
 
-    cx.function_parameter_values
-        .borrow_mut()
-        .insert(fn_id, parameter_values);
     let result = fn_id.with_type(function_type);
     cx.declared_values
         .borrow_mut()
@@ -724,12 +729,16 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         &self,
         instance: Instance<'tcx>,
         _linkage: Linkage,
-        _visibility: Visibility,
+        visibility: Visibility,
         symbol_name: &str,
     ) {
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
         let human_name = format!("{}", instance);
-        let declared = declare_fn(self, symbol_name, Some(&human_name), &fn_abi);
+        let linkage = match visibility {
+            Visibility::Default | Visibility::Protected => Some(LinkageType::Export),
+            Visibility::Hidden => None,
+        };
+        let declared = declare_fn(self, symbol_name, Some(&human_name), linkage, &fn_abi);
         self.instances.borrow_mut().insert(instance, declared);
     }
 }
@@ -756,7 +765,7 @@ impl<'tcx> DeclareMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn declare_fn(&self, name: &str, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Function {
-        declare_fn(self, name, None, fn_abi)
+        declare_fn(self, name, None, None, fn_abi)
     }
 
     fn define_global(&self, name: &str, ty: Self::Type) -> Option<Self::Value> {

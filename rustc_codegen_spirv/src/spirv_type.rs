@@ -180,7 +180,14 @@ impl SpirvType {
             SpirvType::Pointer {
                 storage_class,
                 pointee,
-            } => cx.emit_global().type_pointer(None, storage_class, pointee),
+            } => {
+                let result = cx.emit_global().type_pointer(None, storage_class, pointee);
+                // no pointers to functions
+                if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
+                    cx.poison(result)
+                }
+                result
+            }
             SpirvType::Function {
                 return_type,
                 ref arguments,
@@ -201,9 +208,16 @@ impl SpirvType {
             SpirvType::Pointer {
                 storage_class,
                 pointee,
-            } => cx
-                .emit_global()
-                .type_pointer(Some(id), storage_class, pointee),
+            } => {
+                let result = cx
+                    .emit_global()
+                    .type_pointer(Some(id), storage_class, pointee);
+                // no pointers to functions
+                if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
+                    cx.poison(result)
+                }
+                result
+            }
             ref other => panic!("def_with_id invalid for type {:?}", other),
         };
         cx.type_cache.def(result, self);

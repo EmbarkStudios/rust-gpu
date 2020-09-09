@@ -95,6 +95,9 @@ fn spread_poison(module: &mut Module, poison: &mut HashSet<Word>) -> bool {
                 func_poisoned = true;
             }
         };
+        for def in &func.def {
+            spread_func(def);
+        }
         for param in &func.parameters {
             spread_func(param);
         }
