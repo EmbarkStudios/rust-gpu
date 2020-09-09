@@ -257,6 +257,27 @@ impl WriteBackendMethods for SsaBackend {
             .unwrap()
             .write_all(spirv_module)
             .unwrap();
+        if let Some(dump_path) = option_env!("SPIRV_VAL") {
+            let status = std::process::Command::new("spirv-val").arg(&path).status();
+            let status = status.expect("spirv-val failed to execute");
+            if !status.success() {
+                let dump_path = Path::new(dump_path);
+                if dump_path.is_absolute() {
+                    let dump_path = dump_path.join(&module.name);
+                    println!(
+                        "spirv-val failed on module {} with code {}, dumping module to {:?}",
+                        module.name, status, dump_path
+                    );
+                    std::fs::create_dir_all(dump_path.parent().unwrap()).unwrap();
+                    std::fs::copy(&path, dump_path).unwrap();
+                } else {
+                    println!(
+                        "spirv-val failed on module {} with code {}",
+                        module.name, status
+                    );
+                }
+            }
+        }
         Ok(CompiledModule {
             name: module.name,
             kind: module.kind,
