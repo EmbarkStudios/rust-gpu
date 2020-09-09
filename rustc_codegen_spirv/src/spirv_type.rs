@@ -108,10 +108,21 @@ impl SpirvType {
         let result = match *self {
             SpirvType::Void => cx.emit_global().type_void(),
             SpirvType::Bool => cx.emit_global().type_bool(),
-            SpirvType::Integer(width, signedness) => cx
-                .emit_global()
-                .type_int(width, if signedness { 1 } else { 0 }),
-            SpirvType::Float(width) => cx.emit_global().type_float(width),
+            SpirvType::Integer(width, signedness) => {
+                match width {
+                    8 | 16 | 32 | 64 => (),
+                    other => panic!("Integer width {} invalid for spir-v", other),
+                };
+                cx.emit_global()
+                    .type_int(width, if signedness { 1 } else { 0 })
+            }
+            SpirvType::Float(width) => {
+                match width {
+                    32 | 64 => (),
+                    other => panic!("Float width {} invalid for spir-v", other),
+                };
+                cx.emit_global().type_float(width)
+            }
             SpirvType::Adt {
                 ref name,
                 align: _,
@@ -245,25 +256,21 @@ impl SpirvType {
             SpirvType::Void => panic!("TODO: void memset not implemented yet"),
             SpirvType::Bool => panic!("TODO: bool memset not implemented yet"),
             SpirvType::Integer(width, _signedness) => match width {
-                8 => cx.builder.constant_u32(self.def(cx), fill_byte as u32),
-                16 => cx
-                    .builder
-                    .constant_u32(self.def(cx), memset_fill_u16(fill_byte) as u32),
-                32 => cx
-                    .builder
-                    .constant_u32(self.def(cx), memset_fill_u32(fill_byte)),
-                64 => cx
-                    .builder
-                    .constant_u64(self.def(cx), memset_fill_u64(fill_byte)),
+                8 => cx.constant_u8(fill_byte).def,
+                16 => cx.constant_u16(memset_fill_u16(fill_byte)).def,
+                32 => cx.constant_u32(memset_fill_u32(fill_byte)).def,
+                64 => cx.constant_u64(memset_fill_u64(fill_byte)).def,
                 _ => panic!("memset on integer width {} not implemented yet", width),
             },
             SpirvType::Float(width) => match width {
-                32 => cx
-                    .builder
-                    .constant_f32(self.def(cx), f32::from_bits(memset_fill_u32(fill_byte))),
-                64 => cx
-                    .builder
-                    .constant_f64(self.def(cx), f64::from_bits(memset_fill_u64(fill_byte))),
+                32 => {
+                    cx.constant_f32(f32::from_bits(memset_fill_u32(fill_byte)))
+                        .def
+                }
+                64 => {
+                    cx.constant_f64(f64::from_bits(memset_fill_u64(fill_byte)))
+                        .def
+                }
                 _ => panic!("memset on float width {} not implemented yet", width),
             },
             SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),

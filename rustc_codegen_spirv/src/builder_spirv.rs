@@ -106,23 +106,7 @@ impl BuilderSpirv {
         panic!("Function not found: {}", id);
     }
 
-    pub fn constant_u32(&self, ty: Word, val: u32) -> Word {
-        self.def_constant(ty, Operand::LiteralInt32(val))
-    }
-
-    pub fn constant_u64(&self, ty: Word, val: u64) -> Word {
-        self.def_constant(ty, Operand::LiteralInt64(val))
-    }
-
-    pub fn constant_f32(&self, ty: Word, val: f32) -> Word {
-        self.def_constant(ty, Operand::LiteralFloat32(val))
-    }
-
-    pub fn constant_f64(&self, ty: Word, val: f64) -> Word {
-        self.def_constant(ty, Operand::LiteralFloat64(val))
-    }
-
-    fn def_constant(&self, ty: Word, val: Operand) -> Word {
+    pub fn def_constant(&self, ty: Word, val: Operand) -> SpirvValue {
         let mut builder = self.builder.borrow_mut();
         // TODO: Cache these instead of doing a search.
         for inst in &builder.module_ref().types_global_values {
@@ -130,7 +114,7 @@ impl BuilderSpirv {
                 && inst.result_type == Some(ty)
                 && inst.operands[0] == val
             {
-                return inst.result_id.unwrap();
+                return inst.result_id.unwrap().with_type(ty);
             }
         }
         match val {
@@ -140,6 +124,7 @@ impl BuilderSpirv {
             Operand::LiteralFloat64(v) => builder.constant_f64(ty, v),
             unknown => panic!("def_constant doesn't support constant type {}", unknown),
         }
+        .with_type(ty)
     }
 
     pub fn lookup_const_u64(&self, def: Word) -> Result<u64, &'static str> {

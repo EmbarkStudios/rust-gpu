@@ -27,6 +27,7 @@ mod things;
 #[path = "../test/lib.rs"]
 mod test;
 
+use abi::ConvSpirvType;
 use builder::Builder;
 use codegen_cx::CodegenCx;
 use rspirv::binary::Assemble;
@@ -44,12 +45,14 @@ use rustc_errors::{ErrorReported, FatalError, Handler};
 use rustc_middle::dep_graph::{DepGraph, WorkProduct};
 use rustc_middle::middle::cstore::{EncodedMetadata, MetadataLoader, MetadataLoaderDyn};
 use rustc_middle::mir::mono::MonoItem;
+use rustc_middle::ty::layout::FnAbiExt;
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::{Instance, InstanceDef, TyCtxt};
 use rustc_session::config::{OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::Symbol;
+use rustc_target::abi::call::FnAbi;
 use rustc_target::spec::Target;
 use std::any::Any;
 use std::path::Path;
@@ -317,6 +320,12 @@ impl ExtraBackendMethods for SsaBackend {
                         dump_mir(tcx, instance);
                     }
                 }
+                if let MonoItem::Fn(instance) = mono_item {
+                    let fn_abi = FnAbi::of_instance(&cx, instance, &[]);
+                    if !fn_abi.is_valid_spirv_type(&cx) {
+                        return;
+                    }
+                }
                 if is_blocklisted_fn(name) {
                     continue;
                 }
@@ -329,6 +338,12 @@ impl ExtraBackendMethods for SsaBackend {
                 if option_env!("DUMP_MIR").is_some() {
                     if let MonoItem::Fn(instance) = mono_item {
                         dump_mir(tcx, instance);
+                    }
+                }
+                if let MonoItem::Fn(instance) = mono_item {
+                    let fn_abi = FnAbi::of_instance(&cx, instance, &[]);
+                    if !fn_abi.is_valid_spirv_type(&cx) {
+                        return;
                     }
                 }
                 if is_blocklisted_fn(name) {

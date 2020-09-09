@@ -135,62 +135,84 @@ impl<'tcx> CodegenCx<'tcx> {
     // Presumably these methods will get used eventually, so allow(dead_code) to not have to rewrite when needed.
     pub fn constant_u8(&self, val: u8) -> SpirvValue {
         let ty = SpirvType::Integer(8, false).def(self);
-        self.builder.constant_u32(ty, val as u32).with_type(ty)
+        self.builder
+            .def_constant(ty, Operand::LiteralInt32(val as u32))
     }
 
     pub fn constant_u16(&self, val: u16) -> SpirvValue {
         let ty = SpirvType::Integer(16, false).def(self);
-        self.builder.constant_u32(ty, val as u32).with_type(ty)
+        self.builder
+            .def_constant(ty, Operand::LiteralInt32(val as u32))
+    }
+
+    pub fn constant_i32(&self, val: i32) -> SpirvValue {
+        let ty = SpirvType::Integer(32, true).def(self);
+        self.builder
+            .def_constant(ty, Operand::LiteralInt32(val as u32))
     }
 
     pub fn constant_u32(&self, val: u32) -> SpirvValue {
         let ty = SpirvType::Integer(32, false).def(self);
-        self.builder.constant_u32(ty, val).with_type(ty)
+        self.builder.def_constant(ty, Operand::LiteralInt32(val))
     }
 
     pub fn constant_u64(&self, val: u64) -> SpirvValue {
         let ty = SpirvType::Integer(64, false).def(self);
-        self.builder.constant_u64(ty, val).with_type(ty)
+        self.builder.def_constant(ty, Operand::LiteralInt64(val))
     }
 
     pub fn constant_int(&self, ty: Word, val: u64) -> SpirvValue {
         match self.lookup_type(ty) {
-            SpirvType::Integer(8, false) => self.builder.constant_u32(ty, val as u8 as u32),
-            SpirvType::Integer(16, false) => self.builder.constant_u32(ty, val as u16 as u32),
-            SpirvType::Integer(32, false) => self.builder.constant_u32(ty, val as u32),
-            SpirvType::Integer(64, false) => self.builder.constant_u64(ty, val as u64),
-            // TODO: remove
-            SpirvType::Integer(128, false) => self.builder.constant_u64(ty, val as u64),
-            SpirvType::Integer(8, true) => self.builder.constant_u32(ty, val as i64 as i8 as u32),
-            SpirvType::Integer(16, true) => self.builder.constant_u32(ty, val as i64 as i16 as u32),
-            SpirvType::Integer(32, true) => self.builder.constant_u32(ty, val as i64 as i32 as u32),
-            SpirvType::Integer(64, true) => self.builder.constant_u64(ty, val),
-            // TODO: remove
-            SpirvType::Integer(128, true) => self.builder.constant_u64(ty, val),
+            SpirvType::Integer(8, false) => self
+                .builder
+                .def_constant(ty, Operand::LiteralInt32(val as u8 as u32)),
+            SpirvType::Integer(16, false) => self
+                .builder
+                .def_constant(ty, Operand::LiteralInt32(val as u16 as u32)),
+            SpirvType::Integer(32, false) => self
+                .builder
+                .def_constant(ty, Operand::LiteralInt32(val as u32)),
+            SpirvType::Integer(64, false) => {
+                self.builder.def_constant(ty, Operand::LiteralInt64(val))
+            }
+            SpirvType::Integer(8, true) => self
+                .builder
+                .def_constant(ty, Operand::LiteralInt32(val as i64 as i8 as u32)),
+            SpirvType::Integer(16, true) => self
+                .builder
+                .def_constant(ty, Operand::LiteralInt32(val as i64 as i16 as u32)),
+            SpirvType::Integer(32, true) => self
+                .builder
+                .def_constant(ty, Operand::LiteralInt32(val as i64 as i32 as u32)),
+            SpirvType::Integer(64, true) => {
+                self.builder.def_constant(ty, Operand::LiteralInt64(val))
+            }
             SpirvType::Bool => match val {
                 0 => self.emit_global().constant_false(ty),
                 1 => self.emit_global().constant_true(ty),
                 _ => panic!("Invalid constant value for bool: {}", val),
-            },
+            }
+            .with_type(ty),
             other => panic!("constant_int invalid on type {}", other.debug(ty, self)),
         }
-        .with_type(ty)
     }
 
     pub fn constant_f32(&self, val: f32) -> SpirvValue {
         let ty = SpirvType::Float(32).def(self);
-        self.builder.constant_f32(ty, val).with_type(ty)
+        self.builder.def_constant(ty, Operand::LiteralFloat32(val))
     }
 
     pub fn constant_f64(&self, val: f64) -> SpirvValue {
         let ty = SpirvType::Float(64).def(self);
-        self.builder.constant_f64(ty, val).with_type(ty)
+        self.builder.def_constant(ty, Operand::LiteralFloat64(val))
     }
 
     pub fn constant_float(&self, ty: Word, val: f64) -> SpirvValue {
         match self.lookup_type(ty) {
-            SpirvType::Float(32) => self.builder.constant_f32(ty, val as f32).with_type(ty),
-            SpirvType::Float(64) => self.builder.constant_f64(ty, val).with_type(ty),
+            SpirvType::Float(32) => self
+                .builder
+                .def_constant(ty, Operand::LiteralFloat32(val as f32)),
+            SpirvType::Float(64) => self.builder.def_constant(ty, Operand::LiteralFloat64(val)),
             other => panic!("constant_float invalid on type {}", other.debug(ty, self)),
         }
     }
@@ -798,27 +820,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         self.constant_int(t, i)
     }
     fn const_uint_big(&self, t: Self::Type, u: u128) -> Self::Value {
-        match self.lookup_type(t) {
-            SpirvType::Integer(8, false) => self.builder.constant_u32(t, u as u8 as u32),
-            SpirvType::Integer(16, false) => self.builder.constant_u32(t, u as u16 as u32),
-            SpirvType::Integer(32, false) => self.builder.constant_u32(t, u as u32),
-            SpirvType::Integer(64, false) => self.builder.constant_u64(t, u as u64),
-            // TODO: remove
-            SpirvType::Integer(128, false) => self.builder.constant_u64(t, u as u64),
-            SpirvType::Integer(8, true) => self.builder.constant_u32(t, u as i128 as i8 as u32),
-            SpirvType::Integer(16, true) => self.builder.constant_u32(t, u as i128 as i16 as u32),
-            SpirvType::Integer(32, true) => self.builder.constant_u32(t, u as i128 as i32 as u32),
-            SpirvType::Integer(64, true) => self.builder.constant_u64(t, u as i128 as i64 as u64),
-            // TODO: remove
-            SpirvType::Integer(128, true) => self.builder.constant_u64(t, u as i128 as i64 as u64),
-            SpirvType::Bool => match u {
-                0 => self.emit_global().constant_false(t),
-                1 => self.emit_global().constant_true(t),
-                _ => panic!("Invalid constant value for bool: {}", u),
-            },
-            other => panic!("const_uint_big invalid on type {}", other.debug(t, self)),
-        }
-        .with_type(t)
+        self.constant_int(t, u as u64)
     }
     fn const_bool(&self, val: bool) -> Self::Value {
         let bool = SpirvType::Bool.def(self);
@@ -830,16 +832,13 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         .with_type(bool)
     }
     fn const_i32(&self, i: i32) -> Self::Value {
-        let t = SpirvType::Integer(32, true).def(self);
-        self.builder.constant_u32(t, i as u32).with_type(t)
+        self.constant_i32(i)
     }
     fn const_u32(&self, i: u32) -> Self::Value {
-        let t = SpirvType::Integer(32, false).def(self);
-        self.builder.constant_u32(t, i).with_type(t)
+        self.constant_u32(i)
     }
     fn const_u64(&self, i: u64) -> Self::Value {
-        let t = SpirvType::Integer(64, false).def(self);
-        self.builder.constant_u64(t, i).with_type(t)
+        self.constant_u64(i)
     }
     fn const_usize(&self, i: u64) -> Self::Value {
         let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
@@ -847,18 +846,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         self.constant_int(t, i)
     }
     fn const_u8(&self, i: u8) -> Self::Value {
-        let t = SpirvType::Integer(8, false).def(self);
-        self.builder.constant_u32(t, i as u32).with_type(t)
+        self.constant_u8(i)
     }
     fn const_real(&self, t: Self::Type, val: f64) -> Self::Value {
-        match self.lookup_type(t) {
-            SpirvType::Float(32) => self.constant_f32(val as f32),
-            SpirvType::Float(64) => self.constant_f64(val),
-            other => panic!(
-                "const_real not implemented for type: {:#?}",
-                other.debug(t, self)
-            ),
-        }
+        self.constant_float(t, val)
     }
 
     fn const_str(&self, s: Symbol) -> (Self::Value, Self::Value) {
@@ -918,26 +909,35 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     ) -> Self::Value {
         match scalar {
             Scalar::Raw { data, size } => match layout.value {
-                Primitive::Int(_size, _signedness) => match size {
-                    1 => self.builder.constant_u32(ty, data as u32).with_type(ty),
-                    2 => self.builder.constant_u32(ty, data as u32).with_type(ty),
-                    4 => self.builder.constant_u32(ty, data as u32).with_type(ty),
-                    8 => self.builder.constant_u64(ty, data as u64).with_type(ty),
-                    // TODO: Probably remove this eventually?
-                    16 => self.builder.constant_u64(ty, data as u64).with_type(ty),
-                    size => panic!(
-                        "TODO: scalar_to_backend int size {} not implemented yet",
-                        size
-                    ),
-                },
-                Primitive::F32 => self
-                    .builder
-                    .constant_f32(ty, f32::from_bits(data as u32))
-                    .with_type(ty),
-                Primitive::F64 => self
-                    .builder
-                    .constant_f64(ty, f64::from_bits(data as u64))
-                    .with_type(ty),
+                Primitive::Int(int_size, int_signedness) => {
+                    assert_eq!(size as u64, int_size.size().bytes());
+                    match self.lookup_type(ty) {
+                        SpirvType::Integer(width, spirv_signedness) => {
+                            assert_eq!(width as u64, int_size.size().bits());
+                            assert_eq!(spirv_signedness, int_signedness);
+                            self.constant_int(ty, data as u64)
+                        }
+                        SpirvType::Bool => match data {
+                            0 => self.emit_global().constant_false(ty).with_type(ty),
+                            1 => self.emit_global().constant_true(ty).with_type(ty),
+                            _ => panic!("Invalid constant value for bool: {}", data),
+                        },
+                        other => panic!(
+                            "scalar_to_backend Primitive::Int not supported on type {}",
+                            other.debug(ty, self)
+                        ),
+                    }
+                }
+                Primitive::F32 => {
+                    let res = self.constant_f32(f32::from_bits(data as u32));
+                    assert_eq!(res.ty, ty);
+                    res
+                }
+                Primitive::F64 => {
+                    let res = self.constant_f64(f64::from_bits(data as u64));
+                    assert_eq!(res.ty, ty);
+                    res
+                }
                 Primitive::Pointer => {
                     panic!("TODO: scalar_to_backend Primitive::Ptr not implemented yet")
                 }

@@ -394,7 +394,9 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             }
 
             sym::unreachable => {
-                self.unreachable();
+                // codegen_llvm ignores this intrinsic, presumably because an unreachable instruction will be emitted
+                // directly afterwards:
+                // https://github.com/rust-lang/rust/blob/0855263dcd329878b7183aa44b4ecdfdee229e6d/compiler/rustc_codegen_ssa/src/mir/block.rs#L706
                 assert!(fn_abi.ret.is_ignore());
                 return;
             }
@@ -646,7 +648,9 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     }
 
     fn abort(&mut self) {
+        // codegen_llvm uses call(llvm.trap) here, so it is not a block terminator
         self.emit().kill().unwrap();
+        *self = self.build_sibling_block("abort_continue");
     }
 
     fn assume(&mut self, _val: Self::Value) {
