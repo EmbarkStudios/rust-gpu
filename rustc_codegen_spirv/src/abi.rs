@@ -220,10 +220,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
             PassMode::Ignore => SpirvType::Void.def(cx),
             PassMode::Direct(_) | PassMode::Pair(..) => self.ret.layout.spirv_type_immediate(cx),
             PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
-            PassMode::Indirect(_arg_attributes, wide_ptr_attrs) => {
-                if wide_ptr_attrs.is_some() {
-                    panic!("TODO: PassMode::Indirect wide ptr not supported for return type");
-                }
+            PassMode::Indirect(..) => {
                 let pointee = self.ret.layout.spirv_type(cx);
                 let pointer = SpirvType::Pointer {
                     storage_class: StorageClass::Function,
@@ -300,7 +297,8 @@ fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immedia
             // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
             let one_spirv = trans_scalar(cx, ty, one, Some(0), false);
             let two_spirv = trans_scalar(cx, ty, two, Some(1), false);
-            // TODO: Note: We can't use auto_struct_layout here because the spirv types here might be undefined.
+            // Note: We can't use auto_struct_layout here because the spirv types here might be undefined due to
+            // recursive pointer types.
             let one_offset = Size::ZERO;
             let two_offset = one.value.size(cx).align_to(two.value.align(cx).abi);
             let size = if ty.is_unsized() { None } else { Some(ty.size) };
@@ -352,7 +350,6 @@ fn trans_scalar<'tcx>(
     }
 
     match scalar.value {
-        // TODO: Do we use scalar.valid_range?
         Primitive::Int(width, mut signedness) => {
             if cx.kernel_mode {
                 signedness = false;
@@ -434,10 +431,6 @@ fn dig_scalar_pointee<'tcx>(
             let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
             dig_scalar_pointee(cx, ptr_ty, index)
         }
-        // TyKind::Tuple(substs) if substs.len() == 1 => {
-        //     let item = cx.layout_of(ty.ty.tuple_fields().next().unwrap());
-        //     trans_scalar_known_ty(cx, item, scalar, is_immediate)
-        // }
         TyKind::Tuple(_) | TyKind::Adt(..) | TyKind::Closure(..) => {
             dig_scalar_pointee_adt(cx, ty, index)
         }
@@ -454,6 +447,9 @@ fn dig_scalar_pointee_adt<'tcx>(
     index: Option<usize>,
 ) -> PointeeTy<'tcx> {
     match &ty.variants {
+        // If it's a Variants::Multiple, then we want to emit the type of the dataful variant, not the type of the
+        // discriminant. This is because the discriminant can e.g. have type *mut(), whereas we want the full underlying
+        // type, only available in the dataful variant.
         Variants::Multiple {
             tag_encoding,
             tag_field,
@@ -513,8 +509,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
             "FieldsShape::Primitive not supported yet in trans_type: {:?}",
             ty
         ),
-        // TODO: Is this the right thing to do?
-        FieldsShape::Union(_field_count) => {
+        FieldsShape::Union(_) => {
             assert_ne!(ty.size.bytes(), 0, "{:#?}", ty);
             assert!(!ty.is_unsized(), "{:#?}", ty);
             let byte = SpirvType::Integer(8, false).def(cx);
@@ -525,7 +520,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
             }
             .def(cx)
         }
-        FieldsShape::Array { stride: _, count } => {
+        FieldsShape::Array { stride, count } => {
             let element_type = trans_type_impl(cx, ty.field(cx, 0), false);
             if ty.is_unsized() {
                 // There's a potential for this array to be sized, but the element to be unsized, e.g. `[[u8]; 5]`.
@@ -547,8 +542,13 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
                 }
                 .def(cx)
             } else {
-                // TODO: Assert stride is same as spirv's stride?
                 let count_const = cx.constant_u32(count as u32).def;
+                let element_spv = cx.lookup_type(element_type);
+                let stride_spv = element_spv
+                    .sizeof(cx)
+                    .expect("Unexpected unsized type in sized FieldsShape::Array")
+                    .align_to(element_spv.alignof(cx));
+                assert_eq!(stride_spv, stride);
                 SpirvType::Array {
                     element: element_type,
                     count: count_const,

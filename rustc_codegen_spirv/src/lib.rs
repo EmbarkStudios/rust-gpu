@@ -19,8 +19,8 @@ mod abi;
 mod builder;
 mod builder_spirv;
 mod codegen_cx;
+mod finalizing_passes;
 mod link;
-mod poison_pass;
 mod spirv_type;
 mod things;
 

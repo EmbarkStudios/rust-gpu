@@ -160,6 +160,20 @@ impl BuilderSpirv {
         Err("Definition not found")
     }
 
+    pub fn lookup_const_bool(&self, def: Word) -> Result<bool, &'static str> {
+        let builder = self.builder.borrow();
+        for inst in &builder.module_ref().types_global_values {
+            if inst.result_id == Some(def) {
+                return match inst.class.opcode {
+                    Op::ConstantFalse => Ok(true),
+                    Op::ConstantTrue => Ok(true),
+                    _ => Err("Instruction not OpConstantTrue/False"),
+                };
+            }
+        }
+        Err("Definition not found")
+    }
+
     pub fn lookup_global_constant_variable(&self, def: Word) -> Result<Word, &'static str> {
         // TODO: Maybe assert that this indeed a constant?
         let builder = self.builder.borrow();

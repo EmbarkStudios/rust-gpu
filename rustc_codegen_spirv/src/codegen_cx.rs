@@ -1,7 +1,7 @@
 use crate::abi::ConvSpirvType;
 use crate::builder::ExtInst;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
-use crate::poison_pass::poison_pass;
+use crate::finalizing_passes::{block_ordering_pass, poison_pass};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word};
@@ -144,6 +144,9 @@ impl<'tcx> CodegenCx<'tcx> {
         poison_pass(&mut result, &mut self.poisoned_values.borrow_mut());
         // defs go before fns
         result.functions.sort_by_key(|f| !f.blocks.is_empty());
+        for function in &mut result.functions {
+            block_ordering_pass(function);
+        }
         result
     }
 
@@ -383,9 +386,6 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
 }
 
 impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
-    // TODO: llvm types are signless, as in neither signed nor unsigned (I think?), so these are expected to be
-    // signless. Do we want a SpirvType::Integer(_, Signless) to indicate the sign is unknown, and to do conversions at
-    // appropriate places?
     fn type_i1(&self) -> Self::Type {
         SpirvType::Bool.def(self)
     }
@@ -462,10 +462,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
         }
         .def(self)
     }
-    fn type_ptr_to_ext(&self, ty: Self::Type, address_space: AddressSpace) -> Self::Type {
-        if address_space != AddressSpace::DATA {
-            panic!("TODO: Unimplemented AddressSpace {:?}", address_space)
-        }
+    fn type_ptr_to_ext(&self, ty: Self::Type, _address_space: AddressSpace) -> Self::Type {
         SpirvType::Pointer {
             storage_class: StorageClass::Function,
             pointee: ty,
@@ -526,7 +523,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
             .emit_global()
             .variable(ty, None, StorageClass::Function, Some(cv.def))
             .with_type(ty);
-        // TODO: These should be StorageClass::Private, so just poison for now.
+        // TODO: These should be StorageClass::UniformConstant, so just poison for now.
         self.poison(result.def);
         result
     }
@@ -544,23 +541,16 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
             SpirvType::Pointer { pointee, .. } => pointee,
             other => panic!("global had non-pointer type {}", other.debug(g.ty, self)),
         };
-        let v = create_const_alloc(self, alloc, value_ty);
+        let mut v = create_const_alloc(self, alloc, value_ty);
 
         if self.lookup_type(v.ty) == SpirvType::Bool {
-            // convert bool -> i8
-            todo!();
+            let val = self.builder.lookup_const_bool(v.def).unwrap();
+            let val_int = if val { 1 } else { 0 };
+            v = self.constant_u8(val_int);
         }
-
-        // let instance = Instance::mono(self.tcx, def_id);
-        // let ty = instance.ty(self.tcx, ParamEnv::reveal_all());
-        // let llty = self.layout_of(ty).llvm_type(self);
 
         assert_ty_eq!(self, value_ty, v.ty);
         self.builder.set_global_initializer(g.def, v.def);
-
-        // if attrs.flags.contains(CodegenFnAttrFlags::USED) {
-        //     self.add_used_global(g);
-        // }
     }
 
     /// Mark the given global value as "used", to prevent a backend from potentially removing a
@@ -569,7 +559,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     /// Static variables in Rust can be annotated with the `#[used]` attribute to direct the `rustc`
     /// compiler to mark the variable as a "used global".
     fn add_used_global(&self, _global: Self::Value) {
-        todo!()
+        // TODO: Ignore for now.
     }
 }
 
@@ -992,7 +982,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     res
                 }
                 Primitive::Pointer => {
-                    panic!("TODO: scalar_to_backend Primitive::Ptr not implemented yet")
+                    panic!("scalar_to_backend Primitive::Ptr is an invalid state")
                 }
             },
             Scalar::Ptr(ptr) => {
@@ -1042,7 +1032,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             },
                         ) => {
                             if a_space != b_space {
-                                // TODO: make sure the type here is right.
+                                // TODO: Emit the correct type that is passed into this function.
                                 self.poison(value.def);
                             }
                             assert_ty_eq!(self, a, b);
@@ -1068,8 +1058,14 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn const_ptrcast(&self, val: Self::Value, ty: Self::Type) -> Self::Value {
-        // TODO: hack to get things working, this *will* fail spirv-val
-        val.def.with_type(ty)
+        if val.ty == ty {
+            val
+        } else {
+            // constant ptrcast is not supported in spir-v
+            let result = val.def.with_type(ty);
+            self.poison(result.def);
+            result
+        }
     }
 }
 

@@ -286,8 +286,8 @@ impl SpirvType {
 
     pub fn memset_const_pattern<'tcx>(&self, cx: &CodegenCx<'tcx>, fill_byte: u8) -> Word {
         match *self {
-            SpirvType::Void => panic!("TODO: void memset not implemented yet"),
-            SpirvType::Bool => panic!("TODO: bool memset not implemented yet"),
+            SpirvType::Void => panic!("memset invalid on void pattern"),
+            SpirvType::Bool => panic!("memset invalid on bool pattern"),
             SpirvType::Integer(width, _signedness) => match width {
                 8 => cx.constant_u8(fill_byte).def,
                 16 => cx.constant_u16(memset_fill_u16(fill_byte)).def,
@@ -333,8 +333,8 @@ impl SpirvType {
         fill_var: Word,
     ) -> Word {
         match *self {
-            SpirvType::Void => panic!("TODO: void memset not implemented yet"),
-            SpirvType::Bool => panic!("TODO: bool memset not implemented yet"),
+            SpirvType::Void => panic!("memset invalid on void pattern"),
+            SpirvType::Bool => panic!("memset invalid on bool pattern"),
             SpirvType::Integer(width, _signedness) => match width {
                 8 => fill_var,
                 16 => memset_dynamic_scalar(builder, fill_var, 2, false),

@@ -649,8 +649,11 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 
     fn abort(&mut self) {
         // codegen_llvm uses call(llvm.trap) here, so it is not a block terminator
-        self.emit().kill().unwrap();
-        *self = self.build_sibling_block("abort_continue");
+        if !self.kernel_mode {
+            self.emit().kill().unwrap();
+            *self = self.build_sibling_block("abort_continue");
+        }
+        // TODO: Figure out an appropriate instruction for kernel mode.
     }
 
     fn assume(&mut self, _val: Self::Value) {

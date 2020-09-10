@@ -178,7 +178,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let (signed, construct_case) = match self.lookup_type(v.ty) {
             SpirvType::Integer(width, signed) => {
                 let construct_case = match width {
-                    // TODO: How are negative values represented? sign-extended? if so, they'll be >MAX
                     8 => |signed, v| {
                         if v > u8::MAX as u128 {
                             panic!("Switches to values above u8::MAX not supported: {:?}", v)
@@ -285,7 +284,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Integer(_, _) => self.emit().bitwise_and(ty, None, lhs.def, rhs.def),
             SpirvType::Bool => self.emit().logical_and(ty, None, lhs.def, rhs.def),
-            o => panic!("TODO: and() not implemented for type {}", o.debug(ty, self)),
+            o => panic!("and() not implemented for type {}", o.debug(ty, self)),
         }
         .unwrap()
         .with_type(ty)
@@ -296,7 +295,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Integer(_, _) => self.emit().bitwise_or(ty, None, lhs.def, rhs.def),
             SpirvType::Bool => self.emit().logical_or(ty, None, lhs.def, rhs.def),
-            o => panic!("TODO: or() not implemented for type {}", o.debug(ty, self)),
+            o => panic!("or() not implemented for type {}", o.debug(ty, self)),
         }
         .unwrap()
         .with_type(ty)
@@ -307,7 +306,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Integer(_, _) => self.emit().bitwise_xor(ty, None, lhs.def, rhs.def),
             SpirvType::Bool => self.emit().logical_not_equal(ty, None, lhs.def, rhs.def),
-            o => panic!("TODO: xor() not implemented for type {}", o.debug(ty, self)),
+            o => panic!("xor() not implemented for type {}", o.debug(ty, self)),
         }
         .unwrap()
         .with_type(ty)
@@ -316,10 +315,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         match self.lookup_type(val.ty) {
             SpirvType::Integer(_, _) => self.emit().not(val.ty, None, val.def),
             SpirvType::Bool => self.emit().logical_not(val.ty, None, val.def),
-            o => panic!(
-                "TODO: not() not implemented for type {}",
-                o.debug(val.ty, self)
-            ),
+            o => panic!("not() not implemented for type {}", o.debug(val.ty, self)),
         }
         .unwrap()
         .with_type(val.ty)
@@ -834,8 +830,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn icmp(&mut self, op: IntPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
-        // TODO: Do we want to assert signedness matches the opcode? Is it possible to have one that doesn't match? Does
-        // spir-v allow nonmatching instructions?
+        // Note: the signedness of the opcode doesn't have to match the signedness of the operands.
         use IntPredicate::*;
         assert_ty_eq!(self, lhs.ty, rhs.ty);
         let b = SpirvType::Bool.def(self);
@@ -1112,7 +1107,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
         .def(self);
         if self.builder.lookup_const(elt.def).is_ok() {
-            // TODO: Cache this?
             self.emit()
                 .constant_composite(result_type, std::iter::repeat(elt.def).take(num_elts))
         } else {
@@ -1362,10 +1356,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     unsafe fn delete_basic_block(&mut self, _bb: Self::BasicBlock) {
-        todo!()
+        // Ignore: If we were to delete the block, then other builder's selected_block index would become invalid, due
+        // to shifting blocks.
     }
 
     fn do_not_inline(&mut self, _llret: Self::Value) {
-        todo!()
+        // Ignore
     }
 }
