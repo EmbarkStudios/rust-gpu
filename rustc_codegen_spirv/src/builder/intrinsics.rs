@@ -3,7 +3,7 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::SpirvValueExt;
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::GLOp;
+use rspirv::spirv::{CLOp, GLOp};
 use rustc_codegen_ssa::common::span_invalid_monomorphization_error;
 use rustc_codegen_ssa::common::IntPredicate;
 use rustc_codegen_ssa::glue;
@@ -459,43 +459,166 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             }
 
             // TODO: Configure these to be ocl vs. gl ext instructions, etc.
-            sym::sqrtf32 | sym::sqrtf64 => self.gl_op(GLOp::Sqrt, [args[0].immediate()]),
+            sym::sqrtf32 | sym::sqrtf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::sqrt, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Sqrt, [args[0].immediate()])
+                }
+            }
             sym::powif32 | sym::powif64 => {
-                let float = self.sitofp(args[1].immediate(), args[0].immediate().ty);
-                self.gl_op(GLOp::Pow, [args[0].immediate(), float])
+                if self.kernel_mode {
+                    self.cl_op(CLOp::pown, [args[0].immediate(), args[1].immediate()])
+                } else {
+                    let float = self.sitofp(args[1].immediate(), args[0].immediate().ty);
+                    self.gl_op(GLOp::Pow, [args[0].immediate(), float])
+                }
             }
-            sym::sinf32 | sym::sinf64 => self.gl_op(GLOp::Sin, [args[0].immediate()]),
-            sym::cosf32 | sym::cosf64 => self.gl_op(GLOp::Cos, [args[0].immediate()]),
+            sym::sinf32 | sym::sinf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::sin, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Sin, [args[0].immediate()])
+                }
+            }
+            sym::cosf32 | sym::cosf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::cos, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Cos, [args[0].immediate()])
+                }
+            }
             sym::powf32 | sym::powf64 => {
-                self.gl_op(GLOp::Pow, [args[0].immediate(), args[1].immediate()])
+                if self.kernel_mode {
+                    self.cl_op(CLOp::pow, [args[0].immediate(), args[1].immediate()])
+                } else {
+                    self.gl_op(GLOp::Pow, [args[0].immediate(), args[1].immediate()])
+                }
             }
-            sym::expf32 | sym::expf64 => self.gl_op(GLOp::Exp, [args[0].immediate()]),
-            sym::exp2f32 | sym::exp2f64 => self.gl_op(GLOp::Exp2, [args[0].immediate()]),
-            sym::logf32 | sym::logf64 => self.gl_op(GLOp::Log, [args[0].immediate()]),
-            sym::log2f32 | sym::log2f64 => self.gl_op(GLOp::Log2, [args[0].immediate()]),
+            sym::expf32 | sym::expf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::exp, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Exp, [args[0].immediate()])
+                }
+            }
+            sym::exp2f32 | sym::exp2f64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::exp2, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Exp2, [args[0].immediate()])
+                }
+            }
+            sym::logf32 | sym::logf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::log, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Log, [args[0].immediate()])
+                }
+            }
+            sym::log2f32 | sym::log2f64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::log2, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Log2, [args[0].immediate()])
+                }
+            }
             sym::log10f32 | sym::log10f64 => {
-                // spir-v doesn't have log10, so,
-                // log10(x) == (1 / ln(10)) * ln(x)
-                let mul = self.constant_float(args[0].immediate().ty, 1.0 / 10.0f64.ln());
-                let ln = self.gl_op(GLOp::Log, [args[0].immediate()]);
-                self.mul(mul, ln)
+                if self.kernel_mode {
+                    self.cl_op(CLOp::log10, [args[0].immediate()])
+                } else {
+                    // spir-v glsl doesn't have log10, so,
+                    // log10(x) == (1 / ln(10)) * ln(x)
+                    let mul = self.constant_float(args[0].immediate().ty, 1.0 / 10.0f64.ln());
+                    let ln = self.gl_op(GLOp::Log, [args[0].immediate()]);
+                    self.mul(mul, ln)
+                }
             }
-            sym::fmaf32 | sym::fmaf64 => self.gl_op(GLOp::Fma, [args[0].immediate()]),
-            sym::fabsf32 | sym::fabsf64 => self.gl_op(GLOp::FAbs, [args[0].immediate()]),
-            sym::minnumf32 | sym::minnumf64 => self.gl_op(GLOp::FMin, [args[0].immediate()]),
-            sym::maxnumf32 | sym::maxnumf64 => self.gl_op(GLOp::FMax, [args[0].immediate()]),
-            // sym::copysignf32 => "llvm.copysign.f32",
-            // sym::copysignf64 => "llvm.copysign.f64",
-            sym::floorf32 | sym::floorf64 => self.gl_op(GLOp::Floor, [args[0].immediate()]),
-            sym::ceilf32 | sym::ceilf64 => self.gl_op(GLOp::Ceil, [args[0].immediate()]),
-            sym::truncf32 | sym::truncf64 => self.gl_op(GLOp::Trunc, [args[0].immediate()]),
-            // TODO: Correctness of round
-            sym::rintf32
-            | sym::rintf64
-            | sym::nearbyintf32
-            | sym::nearbyintf64
-            | sym::roundf32
-            | sym::roundf64 => self.gl_op(GLOp::Round, [args[1].immediate()]),
+            sym::fmaf32 | sym::fmaf64 => {
+                if self.kernel_mode {
+                    self.cl_op(
+                        CLOp::fma,
+                        [
+                            args[0].immediate(),
+                            args[1].immediate(),
+                            args[2].immediate(),
+                        ],
+                    )
+                } else {
+                    self.gl_op(
+                        GLOp::Fma,
+                        [
+                            args[0].immediate(),
+                            args[1].immediate(),
+                            args[2].immediate(),
+                        ],
+                    )
+                }
+            }
+            sym::fabsf32 | sym::fabsf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::fabs, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::FAbs, [args[0].immediate()])
+                }
+            }
+            sym::minnumf32 | sym::minnumf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::fmin, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::FMin, [args[0].immediate()])
+                }
+            }
+            sym::maxnumf32 | sym::maxnumf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::fmax, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::FMax, [args[0].immediate()])
+                }
+            }
+            sym::copysignf32 | sym::copysignf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::copysign, [args[0].immediate(), args[1].immediate()])
+                } else {
+                    panic!("TODO: Shader copysign not supported yet")
+                }
+            }
+            sym::floorf32 | sym::floorf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::floor, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Floor, [args[0].immediate()])
+                }
+            }
+            sym::ceilf32 | sym::ceilf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::ceil, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Ceil, [args[0].immediate()])
+                }
+            }
+            sym::truncf32 | sym::truncf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::trunc, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Trunc, [args[0].immediate()])
+                }
+            }
+            // TODO: Correctness of all these rounds
+            sym::rintf32 | sym::rintf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::rint, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Round, [args[0].immediate()])
+                }
+            }
+            sym::nearbyintf32 | sym::nearbyintf64 | sym::roundf32 | sym::roundf64 => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::round, [args[0].immediate()])
+                } else {
+                    self.gl_op(GLOp::Round, [args[0].immediate()])
+                }
+            }
 
             sym::float_to_int_unchecked => {
                 if float_type_width(arg_tys[0]).is_none() {
@@ -544,16 +667,37 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             }
 
             // TODO: Do we want to manually implement these instead of using intel instructions?
-            sym::ctlz | sym::ctlz_nonzero => self
-                .emit()
-                .u_count_leading_zeros_intel(args[0].immediate().ty, None, args[0].immediate().def)
-                .unwrap()
-                .with_type(args[0].immediate().ty),
-            sym::cttz | sym::cttz_nonzero => self
-                .emit()
-                .u_count_trailing_zeros_intel(args[0].immediate().ty, None, args[0].immediate().def)
-                .unwrap()
-                .with_type(args[0].immediate().ty),
+            sym::ctlz | sym::ctlz_nonzero => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::clz, [args[0].immediate()])
+                } else {
+                    self.ext_inst
+                        .borrow_mut()
+                        .import_integer_functions_2_intel(self);
+                    self.emit()
+                        .u_count_leading_zeros_intel(
+                            args[0].immediate().ty,
+                            None,
+                            args[0].immediate().def,
+                        )
+                        .unwrap()
+                        .with_type(args[0].immediate().ty)
+                }
+            }
+            sym::cttz | sym::cttz_nonzero => {
+                if self.kernel_mode {
+                    self.cl_op(CLOp::ctz, [args[0].immediate()])
+                } else {
+                    self.emit()
+                        .u_count_trailing_zeros_intel(
+                            args[0].immediate().ty,
+                            None,
+                            args[0].immediate().def,
+                        )
+                        .unwrap()
+                        .with_type(args[0].immediate().ty)
+                }
+            }
 
             sym::ctpop => self
                 .emit()

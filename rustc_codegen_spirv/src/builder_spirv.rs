@@ -44,8 +44,6 @@ impl BuilderSpirv {
         builder.capability(Capability::Int16);
         builder.capability(Capability::Int64);
         builder.capability(Capability::Float64);
-        //builder.extension("SPV_INTEL_shader_integer_functions2");
-        //builder.capability(Capability::IntegerFunctions2INTEL);
         builder.capability(Capability::Addresses);
         // TODO: Physical pointer size
         builder.memory_model(AddressingModel::Physical32, MemoryModel::OpenCL);
