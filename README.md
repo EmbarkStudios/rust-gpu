@@ -1,7 +1,8 @@
-# 🐉 Rust on the GPU
+# 🐉 Rust GPU
 
 [![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
 [![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](http://embark.dev)
+[![Embark](https://img.shields.io/badge/discord%20chat-ark-green.svg)](https://discord.gg/dAuKfZS)
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
@@ -40,7 +41,7 @@ We use this repo as a small monorepo for everything related to the project: crat
 
 We meet weekly over vidcon to discuss design and triage issues. Each meeting has an [issue](https://github.com/EmbarkStudios/rust-gpu/issues?q=label%3Ameeting+) with agenda, links and minutes.
 
-We have an internal Embark Slack channel for fast discussion (now while this is an internal Embark project): [#ark-pod-rust-gpu](https://embark-studios.slack.com/archives/C017HE6TV7S)
+We have a [#rust-gpu Discord channel](https://discord.gg/dAuKfZS) for fast discussion and collaboration. Once you join the Discord, ping @repi for access if you don't have it already.
 
 For discussions with [Bytecode Alliance](https://bytecodealliance.org/) and Cranelift developers, there is a public [Zulip chat thread](https://bytecodealliance.zulipchat.com/#narrow/stream/225524-cranelift-new-backend/topic/spir-v)
 
