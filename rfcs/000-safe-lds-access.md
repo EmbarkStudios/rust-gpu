@@ -6,8 +6,7 @@ Provide safe access to a (limited) set of LDS memory without race conditions and
 # Explanation
 
 
-```
-
+```rust
 struct LdsWriter;
 
 impl LdsWriter {
@@ -24,7 +23,7 @@ impl LdsReader {
 ```
 ## Barriers in non-uniform control flow
 
-```
+```rust
 // sample 1:
 let lds = LdsWriter::<u32>::new();
 
@@ -39,7 +38,7 @@ let value = if something {
 ```
 
 ## Multiple barriers with write in one branch
-```
+```rust
 // sample 2:
 
 let lds = LdsWriter::<u32>::new();
@@ -58,7 +57,7 @@ let value = if something {
 ```
 
 ## Multiple consecutive writes to same location
-```
+```rust
 // sample 3:
 let lds = LdsWriter::<u32>::new();
 
@@ -67,7 +66,7 @@ lds.write_thread_idx(666); // race?
 ```
 
 ## Multiple writes to same memory location after a read
-```
+```rust
 // sample 4:
 let lds = LdsWriter::<u32>::new();
 
@@ -93,7 +92,44 @@ wrt.write_thread_idx(12234);
 
 # Alternatives
 
- * No known alternatives
+@Tobski proposed making join operations explict and potentially passing in ranges in, to partition the data
+```rust
+struct BufferWriter;
+
+impl BufferWriter {
+    fn write_thread_idx(&mut self, value: T);
+}
+
+struct BufferReader;
+
+
+impl BufferReader {
+    fn read(&self, idx: usize) -> T;
+    fn partition_readers(self, ranges: [(usize, usize)]) -> [BufferReader];
+    fn partition_writers(self, ranges: [(usize, usize)]) -> [BufferWriter];
+}
+
+fn join_writers(a: BufferWriter, b: BufferWriter) -> BufferReader;
+fn join_readers(a: BufferReader, b: BufferReader) -> BufferReader;
+```
+
+@Jasper-Bekkers proposed making thread index a type with limited safe operations to extend the writer types with some more flexibilty. One concern here is also that this should be done in uniform controlflow most likely.
+
+```rust
+struct ThreadIdx;
+
+impl ThreadIdx {
+    /// XOR shuffle with a constant
+    fn butterfly_shuffle(&self, i: u32) -> ThreadIdx;
+
+    /// Shuffle all lanes up / down by a constant
+    fn up(&self, i: u32) -> ThreadIdx;
+    fn down(&self, i: u32) -> ThreadIdx;
+
+    /// Selecting arbitrary threads is unsafe
+    unsafe fn new(idx: u32) -> ThreadIdx;
+}
+```
 
 # Prior art
 
