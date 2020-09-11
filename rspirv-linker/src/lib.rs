@@ -1,3 +1,4 @@
+#[cfg(test)]
 mod test;
 
 use rspirv::binary::Consumer;
@@ -410,12 +411,12 @@ fn import_kill_annotations_and_debug(module: &mut rspirv::dr::Module, info: &Lin
     }
 }
 
-struct Options {
+pub struct Options {
     /// `true` if we're creating a library
-    lib: bool,
+    pub lib: bool,
 
     /// `true` if partial linking is allowed
-    partial: bool,
+    pub partial: bool,
 }
 
 impl Default for Options {
@@ -769,7 +770,7 @@ fn trans_aggregate_type(
     })
 }
 
-fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rspirv::dr::Module> {
+pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rspirv::dr::Module> {
     // shift all the ids
     let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
 

@@ -73,15 +73,9 @@ impl BuilderSpirv {
         let disas = module.disassemble();
         println!("{}", disas);
         let spirv_module = module.assemble();
-        let spirv_module_u8: &[u8] = unsafe {
-            std::slice::from_raw_parts(
-                spirv_module.as_ptr() as *const u8,
-                spirv_module.len() * std::mem::size_of::<u32>(),
-            )
-        };
         File::create(path)
             .unwrap()
-            .write_all(spirv_module_u8)
+            .write_all(crate::slice_u32_to_u8(&spirv_module))
             .unwrap();
     }
 

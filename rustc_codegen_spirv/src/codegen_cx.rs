@@ -724,15 +724,22 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
     fn predefine_fn(
         &self,
         instance: Instance<'tcx>,
-        _linkage: Linkage,
+        linkage: Linkage,
         visibility: Visibility,
         symbol_name: &str,
     ) {
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
         let human_name = format!("{}", instance);
+        if symbol_name == "_ZN51_$LT$i32$u20$as$u20$compiler_builtins..int..Int$GT$12extract_sign17h33d8e137c5cab7faE" {
+            println!("{} = {:?} {:?}", human_name, linkage, visibility);
+        }
         let linkage = match visibility {
             Visibility::Default | Visibility::Protected => Some(LinkageType::Export),
-            Visibility::Hidden => None,
+            Visibility::Hidden => match linkage {
+                Linkage::External | Linkage::AvailableExternally => Some(LinkageType::Export),
+                // TODO: Figure out linkage types
+                _ => None,
+            },
         };
         let declared = declare_fn(self, symbol_name, Some(&human_name), linkage, &fn_abi);
         self.instances.borrow_mut().insert(instance, declared);

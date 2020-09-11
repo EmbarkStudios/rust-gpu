@@ -2,14 +2,17 @@
 #![feature(once_cell)]
 
 extern crate rustc_ast;
+extern crate rustc_attr;
 extern crate rustc_codegen_ssa;
 extern crate rustc_data_structures;
 extern crate rustc_driver;
 extern crate rustc_errors;
 extern crate rustc_hir;
+extern crate rustc_incremental;
 extern crate rustc_interface;
 extern crate rustc_middle;
 extern crate rustc_mir;
+extern crate rustc_serialize;
 extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_symbol_mangling;
@@ -33,7 +36,7 @@ use codegen_cx::CodegenCx;
 use rspirv::binary::Assemble;
 use rustc_ast::expand::allocator::AllocatorKind;
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule};
-use rustc_codegen_ssa::back::write::{CodegenContext, FatLTOInput, ModuleConfig};
+use rustc_codegen_ssa::back::write::{CodegenContext, FatLTOInput, ModuleConfig, OngoingCodegen};
 use rustc_codegen_ssa::base::maybe_create_entry_wrapper;
 use rustc_codegen_ssa::mono_item::MonoItemExt;
 use rustc_codegen_ssa::traits::{CodegenBackend, ExtraBackendMethods, WriteBackendMethods};
@@ -48,7 +51,8 @@ use rustc_middle::mir::mono::MonoItem;
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::{Instance, InstanceDef, TyCtxt};
-use rustc_session::config::{OptLevel, OutputFilenames, OutputType};
+use rustc_serialize::json;
+use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::Symbol;
 use rustc_target::spec::Target;
@@ -94,9 +98,9 @@ impl MetadataLoader for NoLlvmMetadataLoader {
 }
 
 #[derive(Clone)]
-struct SsaBackend;
+struct SpirvCodegenBackend;
 
-impl CodegenBackend for SsaBackend {
+impl CodegenBackend for SpirvCodegenBackend {
     fn metadata_loader(&self) -> Box<MetadataLoaderDyn> {
         Box::new(NoLlvmMetadataLoader)
     }
@@ -125,7 +129,7 @@ impl CodegenBackend for SsaBackend {
         need_metadata_module: bool,
     ) -> Box<dyn Any> {
         Box::new(rustc_codegen_ssa::base::codegen_crate(
-            SsaBackend,
+            SpirvCodegenBackend,
             tcx,
             metadata,
             need_metadata_module,
@@ -136,19 +140,19 @@ impl CodegenBackend for SsaBackend {
         &self,
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
-        _dep_graph: &DepGraph,
+        dep_graph: &DepGraph,
     ) -> Result<Box<dyn Any>, ErrorReported> {
-        let (codegen_results, _work_products) = ongoing_codegen
-            .downcast::<rustc_codegen_ssa::back::write::OngoingCodegen<SsaBackend>>()
-            .expect("Expected SpirvCodegenBackend's OngoingCodegen, found Box<Any>")
+        let (codegen_results, work_products) = ongoing_codegen
+            .downcast::<OngoingCodegen<SpirvCodegenBackend>>()
+            .expect("Expected OngoingCodegen, found Box<Any>")
             .join(sess);
         if sess.opts.debugging_opts.incremental_info {
             rustc_codegen_ssa::back::write::dump_incremental_data(&codegen_results);
         }
 
-        // sess.time("serialize_work_products", move || {
-        //     rustc_incremental::save_work_product_index(sess, &dep_graph, work_products)
-        // });
+        sess.time("serialize_work_products", move || {
+            rustc_incremental::save_work_product_index(sess, &dep_graph, work_products)
+        });
 
         sess.compile_status()?;
 
@@ -157,15 +161,38 @@ impl CodegenBackend for SsaBackend {
 
     fn link(
         &self,
-        _sess: &Session,
+        sess: &Session,
         codegen_results: Box<dyn Any>,
-        _outputs: &OutputFilenames,
+        outputs: &OutputFilenames,
     ) -> Result<(), ErrorReported> {
-        let _codegen_results = codegen_results
+        let codegen_results = codegen_results
             .downcast::<CodegenResults>()
             .expect("Expected CodegenResults, found Box<Any>");
 
-        // TODO: see rustc_codegen_llvm for example of implementation
+        if sess.opts.debugging_opts.no_link {
+            // FIXME: use a binary format to encode the `.rlink` file
+            let rlink_data = json::encode(&codegen_results).map_err(|err| {
+                sess.fatal(&format!("failed to encode rlink: {}", err));
+            })?;
+            let rlink_file = outputs.with_extension(config::RLINK_EXT);
+            std::fs::write(&rlink_file, rlink_data).map_err(|err| {
+                sess.fatal(&format!(
+                    "failed to write file {}: {}",
+                    rlink_file.display(),
+                    err
+                ));
+            })?;
+            return Ok(());
+        }
+
+        link::link(
+            sess,
+            &codegen_results,
+            outputs,
+            &codegen_results.crate_name.as_str(),
+        );
+
+        rustc_incremental::finalize_session_directory(sess, codegen_results.crate_hash);
 
         Ok(())
     }
@@ -190,7 +217,7 @@ fn slice_u8_to_u32(slice: &[u8]) -> &[u32] {
     }
 }
 
-impl WriteBackendMethods for SsaBackend {
+impl WriteBackendMethods for SpirvCodegenBackend {
     type Module = Vec<u32>;
     type TargetMachine = ();
     type ModuleBuffer = SpirvModuleBuffer;
@@ -302,7 +329,7 @@ impl WriteBackendMethods for SsaBackend {
     }
 }
 
-impl ExtraBackendMethods for SsaBackend {
+impl ExtraBackendMethods for SpirvCodegenBackend {
     fn new_metadata(&self, _: TyCtxt<'_>, _: &str) -> Self::Module {
         todo!()
     }
@@ -416,7 +443,7 @@ impl Drop for DumpModuleOnPanic<'_, '_, '_> {
 /// This is the entrypoint for a hot plugged rustc_codegen_spirv
 #[no_mangle]
 pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
-    Box::new(SsaBackend)
+    Box::new(SpirvCodegenBackend)
 }
 
 // https://github.com/bjorn3/rustc_codegen_cranelift/blob/1b8df386aa72bc3dacb803f7d4deb4eadd63b56f/src/base.rs

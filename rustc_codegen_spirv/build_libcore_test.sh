@@ -6,7 +6,7 @@ set -e
 # build rustc_codegen_spirv
 cargo build
 
-export RUSTFLAGS=-Zcodegen-backend=$PWD/target/debug/librustc_codegen_spirv.so
+export RUSTFLAGS=-Zcodegen-backend=$PWD/../target/debug/librustc_codegen_spirv.so
 
 pushd build_libcore_test
 # Use wasm32 because it's a relatively simple platform - if the x86 libcore is used, there's all sorts of "feature sse2
