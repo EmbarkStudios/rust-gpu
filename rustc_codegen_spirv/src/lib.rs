@@ -112,15 +112,11 @@ impl CodegenBackend for SpirvCodegenBackend {
             // Temp hack to make wasm target work
             [("simd128".to_string(), None)].iter().cloned().collect()
         };
-        providers.is_reachable_non_generic = |_tcx, _defid| true;
-        providers.exported_symbols = |_tcx, _crate| &[];
         // Temp hack to make wasm target work
         providers.wasm_import_module_map = |_tcx, _crate| Default::default();
     }
 
-    fn provide_extern(&self, providers: &mut Providers) {
-        providers.is_reachable_non_generic = |_tcx, _defid| true;
-    }
+    fn provide_extern(&self, _providers: &mut Providers) {}
 
     fn codegen_crate<'tcx>(
         &self,
