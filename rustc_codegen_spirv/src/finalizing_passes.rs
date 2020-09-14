@@ -1,34 +1,42 @@
 use rspirv::dr::{Block, Function, Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
+use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::mem::replace;
 
-fn contains_poison(inst: &Instruction, poison: &HashSet<Word>) -> bool {
-    inst.result_type.map_or(false, |w| poison.contains(&w))
-        || inst.operands.iter().any(|op| match op {
-            rspirv::dr::Operand::IdMemorySemantics(w)
-            | rspirv::dr::Operand::IdScope(w)
-            | rspirv::dr::Operand::IdRef(w) => poison.contains(w),
-            _ => false,
-        })
+fn contains_poison(
+    inst: &Instruction,
+    poison: &HashMap<Word, &'static str>,
+) -> Option<&'static str> {
+    inst.result_type.map_or_else(
+        || {
+            inst.operands.iter().find_map(|op| match op {
+                rspirv::dr::Operand::IdMemorySemantics(w)
+                | rspirv::dr::Operand::IdScope(w)
+                | rspirv::dr::Operand::IdRef(w) => poison.get(w).copied(),
+                _ => None,
+            })
+        },
+        |w| poison.get(&w).copied(),
+    )
 }
 
-fn is_poison(inst: &Instruction, poison: &HashSet<Word>) -> bool {
+fn is_poison(inst: &Instruction, poison: &HashMap<Word, &'static str>) -> Option<&'static str> {
     if let Some(result_id) = inst.result_id {
-        poison.contains(&result_id)
+        poison.get(&result_id).copied()
     } else {
         contains_poison(inst, poison)
     }
 }
 
-pub fn poison_pass(module: &mut Module, poison: &mut HashSet<Word>) {
+pub fn poison_pass(module: &mut Module, poison: &mut HashMap<Word, &'static str>) {
     // Note: This is O(n^2).
     while spread_poison(module, poison) {}
 
     if option_env!("PRINT_POISON").is_some() {
         for f in &module.functions {
-            if is_poison(f.def.as_ref().unwrap(), poison) {
+            if let Some(reason) = is_poison(f.def.as_ref().unwrap(), poison) {
                 let name_id = f.def.as_ref().unwrap().result_id.unwrap();
                 let name = module.debugs.iter().find(|inst| {
                     inst.class.opcode == Op::Name && inst.operands[0] == Operand::IdRef(name_id)
@@ -40,61 +48,81 @@ pub fn poison_pass(module: &mut Module, poison: &mut HashSet<Word>) {
                     },
                     _ => format!("{}", name_id),
                 };
-                println!("Function removed: {}", name)
+                println!("Function removed {:?} because {:?}", name, reason)
             }
         }
     }
-    module.capabilities.retain(|inst| !is_poison(inst, poison));
-    module.extensions.retain(|inst| !is_poison(inst, poison));
+    module
+        .capabilities
+        .retain(|inst| is_poison(inst, poison).is_none());
+    module
+        .extensions
+        .retain(|inst| is_poison(inst, poison).is_none());
     module
         .ext_inst_imports
-        .retain(|inst| !is_poison(inst, poison));
+        .retain(|inst| is_poison(inst, poison).is_none());
     if module
         .memory_model
         .as_ref()
-        .map_or(false, |inst| is_poison(inst, poison))
+        .map_or(false, |inst| is_poison(inst, poison).is_some())
     {
         module.memory_model = None;
     }
-    module.entry_points.retain(|inst| !is_poison(inst, poison));
+    module
+        .entry_points
+        .retain(|inst| is_poison(inst, poison).is_none());
     module
         .execution_modes
-        .retain(|inst| !is_poison(inst, poison));
-    module.debugs.retain(|inst| !is_poison(inst, poison));
-    module.annotations.retain(|inst| !is_poison(inst, poison));
+        .retain(|inst| is_poison(inst, poison).is_none());
+    module
+        .debugs
+        .retain(|inst| is_poison(inst, poison).is_none());
+    module
+        .annotations
+        .retain(|inst| is_poison(inst, poison).is_none());
     module
         .types_global_values
-        .retain(|inst| !is_poison(inst, poison));
+        .retain(|inst| is_poison(inst, poison).is_none());
     module
         .functions
-        .retain(|f| !is_poison(f.def.as_ref().unwrap(), poison));
+        .retain(|f| is_poison(f.def.as_ref().unwrap(), poison).is_none());
 }
 
-fn spread_poison(module: &mut Module, poison: &mut HashSet<Word>) -> bool {
+fn spread_poison(module: &mut Module, poison: &mut HashMap<Word, &'static str>) -> bool {
     let mut any = false;
     // globals are easy
     for inst in module.global_inst_iter() {
         if let Some(result_id) = inst.result_id {
-            if contains_poison(inst, poison) && poison.insert(result_id) {
-                any = true;
+            if let Some(reason) = contains_poison(inst, poison) {
+                match poison.entry(result_id) {
+                    Entry::Vacant(entry) => {
+                        entry.insert(reason);
+                        any = true;
+                    }
+                    Entry::Occupied(_) => {}
+                }
             }
         }
     }
     // function IDs implicitly reference their contents
     for func in &module.functions {
-        let mut func_poisoned = false;
+        let mut func_poisoned = None;
         let mut spread_func = |inst: &Instruction| {
             if let Some(result_id) = inst.result_id {
-                if contains_poison(inst, poison) {
-                    if poison.insert(result_id) {
-                        any = true;
+                if let Some(reason) = contains_poison(inst, poison) {
+                    match poison.entry(result_id) {
+                        Entry::Vacant(entry) => {
+                            entry.insert(reason);
+                            any = true;
+                        }
+                        Entry::Occupied(_) => {}
                     }
-                    func_poisoned = true;
-                } else if poison.contains(&result_id) {
-                    func_poisoned = true;
+                    func_poisoned = Some(func_poisoned.unwrap_or(reason));
+                } else if let Some(reason) = poison.get(&result_id) {
+                    func_poisoned = Some(func_poisoned.unwrap_or(reason));
                 }
-            } else if is_poison(inst, poison) {
-                func_poisoned = true;
+            } else if let Some(reason) = is_poison(inst, poison) {
+                func_poisoned = Some(func_poisoned.unwrap_or(reason));
             }
         };
         for def in &func.def {
@@ -114,8 +142,14 @@ fn spread_poison(module: &mut Module, poison: &mut HashSet<Word>) -> bool {
         for inst in &func.end {
             spread_func(inst);
         }
-        if func_poisoned && poison.insert(func.def.as_ref().unwrap().result_id.unwrap()) {
-            any = true;
+        if let Some(reason) = func_poisoned {
+            match poison.entry(func.def.as_ref().unwrap().result_id.unwrap()) {
+                Entry::Vacant(entry) => {
+                    entry.insert(reason);
+                    any = true;
+                }
+                Entry::Occupied(_) => {}
+            }
         }
     }
     any
