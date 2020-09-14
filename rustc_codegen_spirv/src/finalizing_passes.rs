@@ -5,38 +5,38 @@ use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::mem::replace;
 
-fn contains_poison(
+fn contains_zombie(
     inst: &Instruction,
-    poison: &HashMap<Word, &'static str>,
+    zombie: &HashMap<Word, &'static str>,
 ) -> Option<&'static str> {
     inst.result_type.map_or_else(
         || {
             inst.operands.iter().find_map(|op| match op {
                 rspirv::dr::Operand::IdMemorySemantics(w)
                 | rspirv::dr::Operand::IdScope(w)
-                | rspirv::dr::Operand::IdRef(w) => poison.get(w).copied(),
+                | rspirv::dr::Operand::IdRef(w) => zombie.get(w).copied(),
                 _ => None,
             })
         },
-        |w| poison.get(&w).copied(),
+        |w| zombie.get(&w).copied(),
     )
 }
 
-fn is_poison(inst: &Instruction, poison: &HashMap<Word, &'static str>) -> Option<&'static str> {
+fn is_zombie(inst: &Instruction, zombie: &HashMap<Word, &'static str>) -> Option<&'static str> {
     if let Some(result_id) = inst.result_id {
-        poison.get(&result_id).copied()
+        zombie.get(&result_id).copied()
     } else {
-        contains_poison(inst, poison)
+        contains_zombie(inst, zombie)
     }
 }
 
-pub fn poison_pass(module: &mut Module, poison: &mut HashMap<Word, &'static str>) {
+pub fn zombie_pass(module: &mut Module, zombie: &mut HashMap<Word, &'static str>) {
     // Note: This is O(n^2).
-    while spread_poison(module, poison) {}
+    while spread_zombie(module, zombie) {}
 
-    if option_env!("PRINT_POISON").is_some() {
+    if option_env!("PRINT_ZOMBIE").is_some() {
         for f in &module.functions {
-            if let Some(reason) = is_poison(f.def.as_ref().unwrap(), poison) {
+            if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), zombie) {
                 let name_id = f.def.as_ref().unwrap().result_id.unwrap();
                 let name = module.debugs.iter().find(|inst| {
                     inst.class.opcode == Op::Name && inst.operands[0] == Operand::IdRef(name_id)
@@ -54,47 +54,47 @@ pub fn poison_pass(module: &mut Module, poison: &mut HashMap<Word, &'static str>
     }
     module
         .capabilities
-        .retain(|inst| is_poison(inst, poison).is_none());
+        .retain(|inst| is_zombie(inst, zombie).is_none());
     module
         .extensions
-        .retain(|inst| is_poison(inst, poison).is_none());
+        .retain(|inst| is_zombie(inst, zombie).is_none());
     module
         .ext_inst_imports
-        .retain(|inst| is_poison(inst, poison).is_none());
+        .retain(|inst| is_zombie(inst, zombie).is_none());
     if module
         .memory_model
         .as_ref()
-        .map_or(false, |inst| is_poison(inst, poison).is_some())
+        .map_or(false, |inst| is_zombie(inst, zombie).is_some())
     {
         module.memory_model = None;
     }
     module
         .entry_points
-        .retain(|inst| is_poison(inst, poison).is_none());
+        .retain(|inst| is_zombie(inst, zombie).is_none());
     module
         .execution_modes
-        .retain(|inst| is_poison(inst, poison).is_none());
+        .retain(|inst| is_zombie(inst, zombie).is_none());
     module
         .debugs
-        .retain(|inst| is_poison(inst, poison).is_none());
+        .retain(|inst| is_zombie(inst, zombie).is_none());
     module
         .annotations
-        .retain(|inst| is_poison(inst, poison).is_none());
+        .retain(|inst| is_zombie(inst, zombie).is_none());
     module
         .types_global_values
-        .retain(|inst| is_poison(inst, poison).is_none());
+        .retain(|inst| is_zombie(inst, zombie).is_none());
     module
         .functions
-        .retain(|f| is_poison(f.def.as_ref().unwrap(), poison).is_none());
+        .retain(|f| is_zombie(f.def.as_ref().unwrap(), zombie).is_none());
 }
 
-fn spread_poison(module: &mut Module, poison: &mut HashMap<Word, &'static str>) -> bool {
+fn spread_zombie(module: &mut Module, zombie: &mut HashMap<Word, &'static str>) -> bool {
     let mut any = false;
     // globals are easy
     for inst in module.global_inst_iter() {
         if let Some(result_id) = inst.result_id {
-            if let Some(reason) = contains_poison(inst, poison) {
-                match poison.entry(result_id) {
+            if let Some(reason) = contains_zombie(inst, zombie) {
+                match zombie.entry(result_id) {
                     Entry::Vacant(entry) => {
                         entry.insert(reason);
                         any = true;
@@ -106,23 +106,23 @@ fn spread_poison(module: &mut Module, poison: &mut HashMap<Word, &'static str>) 
     }
     // function IDs implicitly reference their contents
     for func in &module.functions {
-        let mut func_poisoned = None;
+        let mut func_is_zombie = None;
         let mut spread_func = |inst: &Instruction| {
             if let Some(result_id) = inst.result_id {
-                if let Some(reason) = contains_poison(inst, poison) {
-                    match poison.entry(result_id) {
+                if let Some(reason) = contains_zombie(inst, zombie) {
+                    match zombie.entry(result_id) {
                         Entry::Vacant(entry) => {
                             entry.insert(reason);
                             any = true;
                         }
                         Entry::Occupied(_) => {}
                     }
-                    func_poisoned = Some(func_poisoned.unwrap_or(reason));
-                } else if let Some(reason) = poison.get(&result_id) {
-                    func_poisoned = Some(func_poisoned.unwrap_or(reason));
+                    func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
+                } else if let Some(reason) = zombie.get(&result_id) {
+                    func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
                 }
-            } else if let Some(reason) = is_poison(inst, poison) {
-                func_poisoned = Some(func_poisoned.unwrap_or(reason));
+            } else if let Some(reason) = is_zombie(inst, zombie) {
+                func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
             }
         };
         for def in &func.def {
@@ -142,8 +142,8 @@ fn spread_poison(module: &mut Module, poison: &mut HashMap<Word, &'static str>) 
         for inst in &func.end {
             spread_func(inst);
         }
-        if let Some(reason) = func_poisoned {
-            match poison.entry(func.def.as_ref().unwrap().result_id.unwrap()) {
+        if let Some(reason) = func_is_zombie {
+            match zombie.entry(func.def.as_ref().unwrap().result_id.unwrap()) {
                 Entry::Vacant(entry) => {
                     entry.insert(reason);
                     any = true;

@@ -1,7 +1,7 @@
 use crate::abi::ConvSpirvType;
 use crate::builder::ExtInst;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
-use crate::finalizing_passes::{block_ordering_pass, poison_pass};
+use crate::finalizing_passes::{block_ordering_pass, zombie_pass};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word};
@@ -67,7 +67,7 @@ pub struct CodegenCx<'tcx> {
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
     pub ext_inst: RefCell<ExtInst>,
     /// Invalid spir-v IDs that should be stripped from the final binary
-    poisoned_values: RefCell<HashMap<Word, &'static str>>,
+    zombie_values: RefCell<HashMap<Word, &'static str>>,
     pub kernel_mode: bool,
 }
 
@@ -83,7 +83,7 @@ impl<'tcx> CodegenCx<'tcx> {
             type_cache: Default::default(),
             vtables: Default::default(),
             ext_inst: Default::default(),
-            poisoned_values: Default::default(),
+            zombie_values: Default::default(),
             kernel_mode: true,
         }
     }
@@ -134,13 +134,13 @@ impl<'tcx> CodegenCx<'tcx> {
         self.lookup_type(ty).debug(ty, self)
     }
 
-    pub fn poison(&self, word: Word, reason: &'static str) {
-        self.poisoned_values.borrow_mut().insert(word, reason);
+    pub fn zombie(&self, word: Word, reason: &'static str) {
+        self.zombie_values.borrow_mut().insert(word, reason);
     }
 
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
-        poison_pass(&mut result, &mut self.poisoned_values.borrow_mut());
+        zombie_pass(&mut result, &mut self.zombie_values.borrow_mut());
         // defs go before fns
         result.functions.sort_by_key(|f| !f.blocks.is_empty());
         for function in &mut result.functions {
@@ -212,7 +212,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .with_type(ty),
             SpirvType::Integer(128, _) => {
                 let result = self.emit_global().undef(ty, None);
-                self.poison(result, "u128 constant");
+                self.zombie(result, "u128 constant");
                 result.with_type(ty)
             }
             other => panic!("constant_int invalid on type {}", other.debug(ty, self)),
@@ -522,8 +522,8 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
             .emit_global()
             .variable(ty, None, StorageClass::Function, Some(cv.def))
             .with_type(ty);
-        // TODO: These should be StorageClass::UniformConstant, so just poison for now.
-        self.poison(result.def, "static_addr_of");
+        // TODO: These should be StorageClass::UniformConstant, so just zombie for now.
+        self.zombie(result.def, "static_addr_of");
         result
     }
 
@@ -617,7 +617,7 @@ fn declare_fn<'tcx>(
     if crate::is_blocklisted_fn(name) {
         // This can happen if we call a blocklisted function in another crate.
         let result = emit.undef(function_type, None);
-        cx.poison(result, "called blocklisted fn");
+        cx.zombie(result, "called blocklisted fn");
         return result.with_type(function_type);
     }
     let fn_id = emit
@@ -756,8 +756,8 @@ impl<'tcx> DeclareMethods<'tcx> for CodegenCx<'tcx> {
             .emit_global()
             .variable(ptr_ty, None, StorageClass::Function, None)
             .with_type(ptr_ty);
-        // TODO: These should be StorageClass::Private, so just poison for now.
-        self.poison(result.def, "declare_global");
+        // TODO: These should be StorageClass::Private, so just zombie for now.
+        self.zombie(result.def, "declare_global");
         self.declared_values
             .borrow_mut()
             .insert(name.to_string(), result);
@@ -908,7 +908,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     .variable(ty, None, StorageClass::Function, Some(raw_bytes.def))
                     .with_type(ty);
                 // The types don't line up (dynamic array vs. constant array)
-                self.poison(result.def, "constant string");
+                self.zombie(result.def, "constant string");
                 result
             });
         // let cs = consts::ptrcast(
@@ -1039,7 +1039,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         ) => {
                             if a_space != b_space {
                                 // TODO: Emit the correct type that is passed into this function.
-                                self.poison(value.def, "invalid pointer space in constant");
+                                self.zombie(value.def, "invalid pointer space in constant");
                             }
                             assert_ty_eq!(self, a, b);
                         }
@@ -1069,7 +1069,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         } else {
             // constant ptrcast is not supported in spir-v
             let result = val.def.with_type(ty);
-            self.poison(result.def, "const_ptrcast");
+            self.zombie(result.def, "const_ptrcast");
             result
         }
     }
@@ -1189,7 +1189,7 @@ fn create_const_alloc2(
             *data = *c + asdf->y[*c];
             }
             */
-            cx.poison(result.def, "constant runtime array value");
+            cx.zombie(result.def, "constant runtime array value");
             result
         }
         SpirvType::Pointer { .. } => {
