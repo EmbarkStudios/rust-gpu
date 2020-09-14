@@ -216,6 +216,14 @@ impl WriteBackendMethods for SpirvCodegenBackend {
     type ThinData = ();
     type ThinBuffer = SpirvThinBuffer;
 
+    fn run_link(
+        _cgcx: &CodegenContext<Self>,
+        _diag_handler: &Handler,
+        _modules: Vec<ModuleCodegen<Self::Module>>,
+    ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
+        todo!()
+    }
+
     fn run_fat_lto(
         _: &CodegenContext<Self>,
         _: Vec<FatLTOInput<Self>>,
