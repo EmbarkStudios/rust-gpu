@@ -24,9 +24,9 @@ pub enum LinkerError {
     Unknown,
 }
 
-type Result<T> = std::result::Result<T, LinkerError>;
+pub type Result<T> = std::result::Result<T, LinkerError>;
 
-fn load(bytes: &[u8]) -> rspirv::dr::Module {
+pub fn load(bytes: &[u8]) -> rspirv::dr::Module {
     let mut loader = rspirv::dr::Loader::new();
     rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
     let module = loader.module();
@@ -837,22 +837,4 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
 
     // output the module
     Ok(output)
-}
-
-fn main() -> Result<()> {
-    let body1 = include_bytes!("../test/1/body_1.spv");
-    let body2 = include_bytes!("../test/1/body_2.spv");
-
-    let mut body1 = load(&body1[..]);
-    let mut body2 = load(&body2[..]);
-
-    let opts = Options {
-        lib: false,
-        partial: false,
-    };
-
-    let output = link(&mut [&mut body1, &mut body2], &opts)?;
-    println!("{}\n\n", output.disassemble());
-
-    Ok(())
 }
