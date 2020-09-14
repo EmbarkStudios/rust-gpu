@@ -41,8 +41,6 @@ use rustc_codegen_ssa::base::maybe_create_entry_wrapper;
 use rustc_codegen_ssa::mono_item::MonoItemExt;
 use rustc_codegen_ssa::traits::{CodegenBackend, ExtraBackendMethods, WriteBackendMethods};
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
-use rustc_data_structures::owning_ref::OwningRef;
-use rustc_data_structures::rustc_erase_owner;
 use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::{ErrorReported, FatalError, Handler};
 use rustc_middle::dep_graph::{DepGraph, WorkProduct};
@@ -85,15 +83,12 @@ fn is_blocklisted_fn(symbol_name: &str) -> bool {
 struct NoLlvmMetadataLoader;
 
 impl MetadataLoader for NoLlvmMetadataLoader {
-    fn get_rlib_metadata(&self, _: &Target, filename: &Path) -> Result<MetadataRef, String> {
-        let buf =
-            std::fs::read(filename).map_err(|e| format!("metadata file open err: {:?}", e))?;
-        let buf: OwningRef<Vec<u8>, [u8]> = OwningRef::new(buf);
-        Ok(rustc_erase_owner!(buf.map_owner_box()))
+    fn get_rlib_metadata(&self, _: &Target, path: &Path) -> Result<MetadataRef, String> {
+        Ok(link::read_metadata(path))
     }
 
-    fn get_dylib_metadata(&self, target: &Target, filename: &Path) -> Result<MetadataRef, String> {
-        self.get_rlib_metadata(target, filename)
+    fn get_dylib_metadata(&self, _: &Target, _: &Path) -> Result<MetadataRef, String> {
+        panic!("TODO: implement get_dylib_metadata");
     }
 }
 

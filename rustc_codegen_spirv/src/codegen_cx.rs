@@ -615,6 +615,12 @@ fn declare_fn<'tcx>(
     };
 
     let mut emit = cx.emit_global();
+    if crate::is_blocklisted_fn(name) {
+        // This can happen if we call a blocklisted function in another crate.
+        let result = emit.undef(function_type, None);
+        cx.poison(result);
+        return result.with_type(function_type);
+    }
     let fn_id = emit
         .begin_function(return_type, function_id, control, function_type)
         .unwrap();

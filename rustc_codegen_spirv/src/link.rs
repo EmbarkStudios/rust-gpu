@@ -3,6 +3,9 @@ use crate::SpirvCodegenBackend;
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::CodegenResults;
+use rustc_data_structures::owning_ref::OwningRef;
+use rustc_data_structures::rustc_erase_owner;
+use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::FatalError;
 use rustc_middle::dep_graph::WorkProduct;
 use rustc_middle::middle::cstore::NativeLib;
@@ -12,13 +15,12 @@ use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, 
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
 use std::collections::HashSet;
-use std::ffi::CString;
+use std::ffi::{CString, OsStr};
 use std::fs::File;
-use std::io::Read;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tar::{Archive, Builder};
+use tar::{Archive, Builder, Header};
 
 pub fn link<'a>(
     sess: &'a Session,
@@ -88,10 +90,7 @@ fn link_rlib(codegen_results: &CodegenResults, out_filename: &Path) {
         }
     }
 
-    // let metadata = &codegen_results.metadata.raw_data;
-    // file_list.push(metadata);
-
-    create_archive(&file_list, out_filename);
+    create_archive(&file_list, &codegen_results.metadata.raw_data, out_filename);
 }
 
 fn link_exe(
@@ -220,10 +219,18 @@ fn relevant_lib(sess: &Session, lib: &NativeLib) -> bool {
     }
 }
 
-fn create_archive(files: &[&Path], out_filename: &Path) {
+fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
     let file = File::create(out_filename).unwrap();
     let mut builder = Builder::new(file);
+    {
+        let mut header = Header::new_gnu();
+        header.set_path(".metadata").unwrap();
+        header.set_size(metadata.len() as u64);
+        header.set_cksum();
+        builder.append(&header, metadata).unwrap();
+    }
     let mut filenames = HashSet::new();
+    filenames.insert(OsStr::new(".metadata"));
     for file in files {
         assert!(
             filenames.insert(file.file_name().unwrap()),
@@ -237,6 +244,19 @@ fn create_archive(files: &[&Path], out_filename: &Path) {
     builder.into_inner().unwrap();
 }
 
+pub fn read_metadata(rlib: &Path) -> MetadataRef {
+    for entry in Archive::new(File::open(rlib).unwrap()).entries().unwrap() {
+        let mut entry = entry.unwrap();
+        if entry.path().unwrap() == Path::new(".metadata") {
+            let mut bytes = Vec::new();
+            entry.read_to_end(&mut bytes).unwrap();
+            let buf: OwningRef<Vec<u8>, [u8]> = OwningRef::new(bytes);
+            return rustc_erase_owner!(buf.map_owner_box());
+        }
+    }
+    panic!("No .metadata file in rlib: {:?}", rlib);
+}
+
 fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
     let mut modules = Vec::new();
     for obj in objects {
@@ -246,9 +266,12 @@ fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
     }
     for rlib in rlibs {
         for entry in Archive::new(File::open(rlib).unwrap()).entries().unwrap() {
-            let mut bytes = Vec::new();
-            entry.unwrap().read_to_end(&mut bytes).unwrap();
-            modules.push(load(&bytes));
+            let mut entry = entry.unwrap();
+            if entry.path().unwrap() != Path::new(".metadata") {
+                let mut bytes = Vec::new();
+                entry.read_to_end(&mut bytes).unwrap();
+                modules.push(load(&bytes));
+            }
         }
     }
 
