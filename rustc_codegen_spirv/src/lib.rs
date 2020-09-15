@@ -25,6 +25,7 @@ mod codegen_cx;
 mod finalizing_passes;
 mod link;
 mod spirv_type;
+mod symbols;
 mod things;
 
 #[cfg(test)]

@@ -3,6 +3,7 @@ use crate::builder::ExtInst;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
 use crate::finalizing_passes::{block_ordering_pass, zombie_pass};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
+use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word};
 use rustc_codegen_ssa::common::TypeKind;
@@ -69,6 +70,8 @@ pub struct CodegenCx<'tcx> {
     /// Invalid spir-v IDs that should be stripped from the final binary
     zombie_values: RefCell<HashMap<Word, &'static str>>,
     pub kernel_mode: bool,
+    /// Cache of all the builtin symbols we need
+    pub sym: Box<Symbols>,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -85,6 +88,7 @@ impl<'tcx> CodegenCx<'tcx> {
             ext_inst: Default::default(),
             zombie_values: Default::default(),
             kernel_mode: true,
+            sym: Box::new(Symbols::new()),
         }
     }
 

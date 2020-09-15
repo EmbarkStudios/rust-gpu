@@ -1,6 +1,7 @@
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{StorageClass, Word};
+use rustc_ast::ast::AttrKind;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
@@ -19,7 +20,13 @@ pub struct RecursivePointeeCache<'tcx> {
 }
 
 impl<'tcx> RecursivePointeeCache<'tcx> {
-    fn begin(&self, cx: &CodegenCx<'tcx>, pointee: PointeeTy<'tcx>) -> Option<Word> {
+    fn begin(
+        &self,
+        cx: &CodegenCx<'tcx>,
+        pointee: PointeeTy<'tcx>,
+        storage_class: StorageClass,
+    ) -> Option<Word> {
+        // Warning: storage_class must match the one called with end()
         match self.map.borrow_mut().entry(pointee) {
             // State: This is the first time we've seen this type. Record that we're beginning to translate this type,
             // and start doing the translation.
@@ -33,9 +40,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                 // emit an OpTypeForwardPointer, and use that ID. (This is the juicy part of this algorithm)
                 PointeeDefState::Defining => {
                     let new_id = cx.emit_global().id();
-                    // StorageClass will be fixed up later
-                    cx.emit_global()
-                        .type_forward_pointer(new_id, StorageClass::Generic);
+                    cx.emit_global().type_forward_pointer(new_id, storage_class);
                     entry.insert(PointeeDefState::DefiningWithForward(new_id));
                     Some(new_id)
                 }
@@ -54,6 +59,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
         storage_class: StorageClass,
         pointee_spv: Word,
     ) -> Word {
+        // Warning: storage_class must match the one called with begin()
         match self.map.borrow_mut().entry(pointee) {
             // We should have hit begin() on this type already, which always inserts an entry.
             Entry::Vacant(_) => panic!("RecursivePointeeCache::end should always have entry"),
@@ -73,7 +79,6 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                 // Make sure to use the same ID.
                 PointeeDefState::DefiningWithForward(id) => {
                     entry.insert(PointeeDefState::Defined(id));
-                    cx.builder.fix_up_pointer_forward(id, storage_class);
                     SpirvType::Pointer {
                         storage_class,
                         pointee: pointee_spv,
@@ -359,21 +364,22 @@ fn trans_scalar<'tcx>(
         Primitive::F32 => SpirvType::Float(32).def(cx),
         Primitive::F64 => SpirvType::Float(64).def(cx),
         Primitive::Pointer => {
-            let pointee_ty = dig_scalar_pointee(cx, ty, index);
+            let (storage_class, pointee_ty) = dig_scalar_pointee(cx, ty, index);
+            // Default to function storage class.
+            let storage_class = storage_class.unwrap_or(StorageClass::Function);
             // Pointers can be recursive. So, record what we're currently translating, and if we're already translating
             // the same type, emit an OpTypeForwardPointer and use that ID.
             if let Some(predefined_result) =
-                cx.type_cache.recursive_pointee_cache.begin(cx, pointee_ty)
+                cx.type_cache
+                    .recursive_pointee_cache
+                    .begin(cx, pointee_ty, storage_class)
             {
                 predefined_result
             } else {
                 let pointee = pointee_ty.spirv_type(cx);
-                cx.type_cache.recursive_pointee_cache.end(
-                    cx,
-                    pointee_ty,
-                    StorageClass::Function,
-                    pointee,
-                )
+                cx.type_cache
+                    .recursive_pointee_cache
+                    .end(cx, pointee_ty, storage_class, pointee)
             }
         }
     }
@@ -393,12 +399,12 @@ fn dig_scalar_pointee<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     index: Option<usize>,
-) -> PointeeTy<'tcx> {
+) -> (Option<StorageClass>, PointeeTy<'tcx>) {
     match *ty.ty.kind() {
         TyKind::Ref(_region, elem_ty, _mutability) => {
             let elem = cx.layout_of(elem_ty);
             match index {
-                None => PointeeTy::Ty(elem),
+                None => (None, PointeeTy::Ty(elem)),
                 Some(index) => {
                     if elem.is_unsized() {
                         dig_scalar_pointee(cx, ty.field(cx, index), None)
@@ -407,7 +413,7 @@ fn dig_scalar_pointee<'tcx>(
                         // of ScalarPair could be deduced, but it's actually e.g. a sized pointer followed by some other
                         // completely unrelated type, not a wide pointer. So, translate this as a single scalar, one
                         // component of that ScalarPair.
-                        PointeeTy::Ty(elem)
+                        (None, PointeeTy::Ty(elem))
                     }
                 }
             }
@@ -415,18 +421,18 @@ fn dig_scalar_pointee<'tcx>(
         TyKind::RawPtr(type_and_mut) => {
             let elem = cx.layout_of(type_and_mut.ty);
             match index {
-                None => PointeeTy::Ty(elem),
+                None => (None, PointeeTy::Ty(elem)),
                 Some(index) => {
                     if elem.is_unsized() {
                         dig_scalar_pointee(cx, ty.field(cx, index), None)
                     } else {
                         // Same comment as TyKind::Ref
-                        PointeeTy::Ty(elem)
+                        (None, PointeeTy::Ty(elem))
                     }
                 }
             }
         }
-        TyKind::FnPtr(sig) if index.is_none() => PointeeTy::Fn(sig),
+        TyKind::FnPtr(sig) if index.is_none() => (None, PointeeTy::Fn(sig)),
         TyKind::Adt(def, _) if def.is_box() => {
             let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
             dig_scalar_pointee(cx, ptr_ty, index)
@@ -445,8 +451,11 @@ fn dig_scalar_pointee_adt<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     index: Option<usize>,
-) -> PointeeTy<'tcx> {
-    match &ty.variants {
+) -> (Option<StorageClass>, PointeeTy<'tcx>) {
+    // Storage classes can only be applied on structs containing a single pointer field (because we said so), so we only
+    // need to handle the attribute here.
+    let storage_class = get_storage_class(cx, ty);
+    let result = match &ty.variants {
         // If it's a Variants::Multiple, then we want to emit the type of the dataful variant, not the type of the
         // discriminant. This is because the discriminant can e.g. have type *mut(), whereas we want the full underlying
         // type, only available in the dataful variant.
@@ -500,7 +509,74 @@ fn dig_scalar_pointee_adt<'tcx>(
                 },
             }
         }
+    };
+    match (storage_class, result) {
+        (storage_class, (None, result)) => (storage_class, result),
+        (None, (storage_class, result)) => (storage_class, result),
+        (Some(one), (Some(two), _)) => panic!(
+            "Double-applied storage class ({:?} and {:?}) on type {}",
+            one, two, ty.ty
+        ),
     }
+}
+
+fn get_storage_class<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Option<StorageClass> {
+    if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
+        // TODO: Split out this attribute parsing
+        for attr in cx.tcx.get_attrs(adt.did) {
+            let is_spirv = match attr.kind {
+                AttrKind::Normal(ref item) => {
+                    // TODO: We ignore the rest of the path. Is this right?
+                    let last = item.path.segments.last();
+                    last.map_or(false, |seg| seg.ident.name == cx.sym.spirv)
+                }
+                AttrKind::DocComment(..) => false,
+            };
+            if !is_spirv {
+                continue;
+            }
+            // Mark it used, since all invalid cases below emit errors.
+            cx.tcx.sess.mark_attr_used(attr);
+            let args = if let Some(args) = attr.meta_item_list() {
+                args
+            } else {
+                cx.tcx
+                    .sess
+                    .span_err(attr.span, "#[spirv(..)] attribute must have one argument");
+                continue;
+            };
+            if args.len() != 1 {
+                cx.tcx
+                    .sess
+                    .span_err(attr.span, "#[spirv(..)] attribute must have one argument");
+                continue;
+            }
+            let arg = &args[0];
+            if arg.has_name(cx.sym.storage_class) {
+                if let Some(storage_arg) = arg.value_str() {
+                    match cx.sym.symbol_to_storageclass(storage_arg) {
+                        Some(storage_class) => return Some(storage_class),
+                        None => {
+                            cx.tcx
+                                .sess
+                                .span_err(attr.span, "unknown spir-v storage class");
+                            continue;
+                        }
+                    }
+                } else {
+                    cx.tcx.sess.span_err(
+                        attr.span,
+                        "storage_class must have value: #[spirv(storage_class = \"..\")]",
+                    );
+                }
+            } else {
+                cx.tcx
+                    .sess
+                    .span_err(attr.span, "unknown argument to spirv attribute");
+            }
+        }
+    }
+    None
 }
 
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
