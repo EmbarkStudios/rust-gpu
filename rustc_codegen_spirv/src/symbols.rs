@@ -1,33 +1,69 @@
 use crate::codegen_cx::CodegenCx;
-use rspirv::spirv::StorageClass;
+use rspirv::spirv::{ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute};
 use rustc_span::symbol::Symbol;
+use std::collections::HashMap;
 
 pub struct Symbols {
     pub spirv: Symbol,
     pub storage_class: Symbol,
+    pub entry: Symbol,
 
-    // storage classes
-    pub uniform_constant: Symbol,
-    pub input: Symbol,
-    pub uniform: Symbol,
-    pub output: Symbol,
-    pub workgroup: Symbol,
-    pub cross_workgroup: Symbol,
-    pub private: Symbol,
-    pub function: Symbol,
-    pub generic: Symbol,
-    pub push_constant: Symbol,
-    pub atomic_counter: Symbol,
-    pub image: Symbol,
-    pub storage_buffer: Symbol,
-    pub callable_data_nv: Symbol,
-    pub incoming_callable_data_nv: Symbol,
-    pub ray_payload_nv: Symbol,
-    pub hit_attribute_nv: Symbol,
-    pub incoming_ray_payload_nv: Symbol,
-    pub shader_record_buffer_nv: Symbol,
-    pub physical_storage_buffer: Symbol,
+    storage_classes: HashMap<Symbol, StorageClass>,
+    execution_models: HashMap<Symbol, ExecutionModel>,
+}
+
+fn make_storage_classes() -> HashMap<Symbol, StorageClass> {
+    use StorageClass::*;
+    [
+        ("uniform_constant", UniformConstant),
+        ("input", Input),
+        ("uniform", Uniform),
+        ("output", Output),
+        ("workgroup", Workgroup),
+        ("cross_workgroup", CrossWorkgroup),
+        ("private", Private),
+        ("function", Function),
+        ("generic", Generic),
+        ("push_constant", PushConstant),
+        ("atomic_counter", AtomicCounter),
+        ("image", Image),
+        ("storage_buffer", StorageBuffer),
+        ("callable_data_nv", CallableDataNV),
+        ("incoming_callable_data_nv", IncomingCallableDataNV),
+        ("ray_payload_nv", RayPayloadNV),
+        ("hit_attribute_nv", HitAttributeNV),
+        ("incoming_ray_payload_nv", IncomingRayPayloadNV),
+        ("shader_record_buffer_nv", ShaderRecordBufferNV),
+        ("physical_storage_buffer", PhysicalStorageBuffer),
+    ]
+    .iter()
+    .map(|&(a, b)| (Symbol::intern(a), b))
+    .collect()
+}
+
+fn make_execution_models() -> HashMap<Symbol, ExecutionModel> {
+    use ExecutionModel::*;
+    [
+        ("vertex", Vertex),
+        ("tessellation_control", TessellationControl),
+        ("tessellation_evaluation", TessellationEvaluation),
+        ("geometry", Geometry),
+        ("fragment", Fragment),
+        ("gl_compute", GLCompute),
+        ("kernel", Kernel),
+        ("task_nv", TaskNV),
+        ("mesh_nv", MeshNV),
+        ("ray_generation_nv", RayGenerationNV),
+        ("intersection_nv", IntersectionNV),
+        ("any_hit_nv", AnyHitNV),
+        ("closest_hit_nv", ClosestHitNV),
+        ("miss_nv", MissNV),
+        ("callable_nv", CallableNV),
+    ]
+    .iter()
+    .map(|&(a, b)| (Symbol::intern(a), b))
+    .collect()
 }
 
 impl Symbols {
@@ -35,80 +71,24 @@ impl Symbols {
         Symbols {
             spirv: Symbol::intern("spirv"),
             storage_class: Symbol::intern("storage_class"),
-
-            uniform_constant: Symbol::intern("uniform_constant"),
-            input: Symbol::intern("input"),
-            uniform: Symbol::intern("uniform"),
-            output: Symbol::intern("output"),
-            workgroup: Symbol::intern("workgroup"),
-            cross_workgroup: Symbol::intern("cross_workgroup"),
-            private: Symbol::intern("private"),
-            function: Symbol::intern("function"),
-            generic: Symbol::intern("generic"),
-            push_constant: Symbol::intern("push_constant"),
-            atomic_counter: Symbol::intern("atomic_counter"),
-            image: Symbol::intern("image"),
-            storage_buffer: Symbol::intern("storage_buffer"),
-            callable_data_nv: Symbol::intern("callable_data_nv"),
-            incoming_callable_data_nv: Symbol::intern("incoming_callable_data_nv"),
-            ray_payload_nv: Symbol::intern("ray_payload_nv"),
-            hit_attribute_nv: Symbol::intern("hit_attribute_nv"),
-            incoming_ray_payload_nv: Symbol::intern("incoming_ray_payload_nv"),
-            shader_record_buffer_nv: Symbol::intern("shader_record_buffer_nv"),
-            physical_storage_buffer: Symbol::intern("physical_storage_buffer"),
+            entry: Symbol::intern("entry"),
+            storage_classes: make_storage_classes(),
+            execution_models: make_execution_models(),
         }
     }
 
     pub fn symbol_to_storageclass(&self, sym: Symbol) -> Option<StorageClass> {
-        let result = if sym == self.uniform_constant {
-            StorageClass::UniformConstant
-        } else if sym == self.input {
-            StorageClass::Input
-        } else if sym == self.uniform {
-            StorageClass::Uniform
-        } else if sym == self.output {
-            StorageClass::Output
-        } else if sym == self.workgroup {
-            StorageClass::Workgroup
-        } else if sym == self.cross_workgroup {
-            StorageClass::CrossWorkgroup
-        } else if sym == self.private {
-            StorageClass::Private
-        } else if sym == self.function {
-            StorageClass::Function
-        } else if sym == self.generic {
-            StorageClass::Generic
-        } else if sym == self.push_constant {
-            StorageClass::PushConstant
-        } else if sym == self.atomic_counter {
-            StorageClass::AtomicCounter
-        } else if sym == self.image {
-            StorageClass::Image
-        } else if sym == self.storage_buffer {
-            StorageClass::StorageBuffer
-        } else if sym == self.callable_data_nv {
-            StorageClass::CallableDataNV
-        } else if sym == self.incoming_callable_data_nv {
-            StorageClass::IncomingCallableDataNV
-        } else if sym == self.ray_payload_nv {
-            StorageClass::RayPayloadNV
-        } else if sym == self.hit_attribute_nv {
-            StorageClass::HitAttributeNV
-        } else if sym == self.incoming_ray_payload_nv {
-            StorageClass::IncomingRayPayloadNV
-        } else if sym == self.shader_record_buffer_nv {
-            StorageClass::ShaderRecordBufferNV
-        } else if sym == self.physical_storage_buffer {
-            StorageClass::PhysicalStorageBuffer
-        } else {
-            return None;
-        };
-        Some(result)
+        self.storage_classes.get(&sym).copied()
+    }
+
+    pub fn symbol_to_execution_model(&self, sym: Symbol) -> Option<ExecutionModel> {
+        self.execution_models.get(&sym).copied()
     }
 }
 
 pub enum SpirvAttribute {
     StorageClass(StorageClass),
+    Entry(ExecutionModel),
 }
 
 // Note that we could mark thie attr as used via cx.tcx.sess.mark_attr_used(attr), but unused reporting already happens
@@ -157,6 +137,23 @@ pub fn parse_attr<'tcx>(cx: &CodegenCx<'tcx>, attr: &Attribute) -> Option<SpirvA
                 attr.span,
                 "storage_class must have value: #[spirv(storage_class = \"..\")]",
             );
+            None
+        }
+    } else if arg.has_name(cx.sym.entry) {
+        if let Some(storage_arg) = arg.value_str() {
+            match cx.sym.symbol_to_execution_model(storage_arg) {
+                Some(execution_model) => Some(SpirvAttribute::Entry(execution_model)),
+                None => {
+                    cx.tcx
+                        .sess
+                        .span_err(attr.span, "unknown spir-v execution model");
+                    None
+                }
+            }
+        } else {
+            cx.tcx
+                .sess
+                .span_err(attr.span, "entry must have value: #[spirv(entry = \"..\")]");
             None
         }
     } else {

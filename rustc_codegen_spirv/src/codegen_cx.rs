@@ -3,7 +3,7 @@ use crate::builder::ExtInst;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
 use crate::finalizing_passes::{block_ordering_pass, delete_dead_blocks, zombie_pass};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
-use crate::symbols::Symbols;
+use crate::symbols::{parse_attr, SpirvAttribute, Symbols};
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
@@ -778,6 +778,19 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             spv_attrs,
             &fn_abi,
         );
+
+        for attr in self.tcx.get_attrs(instance.def_id()) {
+            if let Some(SpirvAttribute::Entry(execution_model)) = parse_attr(self, attr) {
+                let interface = &[];
+                self.emit_global().entry_point(
+                    execution_model,
+                    declared.def,
+                    human_name.clone(),
+                    interface,
+                );
+            }
+        }
+
         self.instances.borrow_mut().insert(instance, declared);
     }
 }

@@ -179,12 +179,16 @@ fn export_zombies(module: &mut Module, zombie: &HashMap<Word, &'static str>) {
             if zombie.contains_key(&target) {
                 let str = format!("rustc_codegen_spirv_export_zombie_symbol={}", name);
                 let dummy_id = id(&mut module.header);
-                module.debugs.push(Instruction::new(
-                    Op::String,
-                    None,
-                    Some(dummy_id),
-                    vec![Operand::LiteralString(str)],
-                ));
+                // TODO: OpString must come before other sections in the debug group. Fix rspirv here.
+                module.debugs.insert(
+                    0,
+                    Instruction::new(
+                        Op::String,
+                        None,
+                        Some(dummy_id),
+                        vec![Operand::LiteralString(str)],
+                    ),
+                );
             }
         }
     }

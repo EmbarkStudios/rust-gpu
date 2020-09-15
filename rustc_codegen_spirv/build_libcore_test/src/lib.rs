@@ -3,9 +3,11 @@
 #![register_attr(spirv)]
 
 use core::panic::PanicInfo;
-use spirv_std::Private;
+use spirv_std::Workgroup;
 
-pub fn screaming_bananans(mut x: Private<u32>) {
+#[allow(unused_attributes)]
+#[spirv(entry = "kernel")]
+pub fn screaming_bananans(mut x: Workgroup<u32>) {
     x.store(x.load() + 1);
 }
 
