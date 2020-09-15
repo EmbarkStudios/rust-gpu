@@ -1,5 +1,5 @@
-use rspirv::dr::{Block, Function, Instruction, Module, Operand};
-use rspirv::spirv::{Op, Word};
+use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
+use rspirv::spirv::{Decoration, LinkageType, Op, Word};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
@@ -33,6 +33,8 @@ fn is_zombie(inst: &Instruction, zombie: &HashMap<Word, &'static str>) -> Option
 pub fn zombie_pass(module: &mut Module, zombie: &mut HashMap<Word, &'static str>) {
     // Note: This is O(n^2).
     while spread_zombie(module, zombie) {}
+
+    export_zombies(module, zombie);
 
     if option_env!("PRINT_ZOMBIE").is_some() {
         for f in &module.functions {
@@ -153,6 +155,39 @@ fn spread_zombie(module: &mut Module, zombie: &mut HashMap<Word, &'static str>) 
         }
     }
     any
+}
+
+fn export_zombies(module: &mut Module, zombie: &HashMap<Word, &'static str>) {
+    fn id(header: &mut Option<ModuleHeader>) -> Word {
+        let header = match header {
+            Some(h) => h,
+            None => panic!(),
+        };
+        let id = header.bound;
+        header.bound += 1;
+        id
+    }
+    for inst in &module.annotations {
+        if inst.class.opcode == Op::Decorate
+            && inst.operands[1] == Operand::Decoration(Decoration::LinkageAttributes)
+            && inst.operands[3] == Operand::LinkageType(LinkageType::Export)
+        {
+            let (target, name) = match (&inst.operands[0], &inst.operands[2]) {
+                (&Operand::IdRef(id), Operand::LiteralString(name)) => (id, name),
+                _ => panic!(),
+            };
+            if zombie.contains_key(&target) {
+                let str = format!("rustc_codegen_spirv_export_zombie_symbol={}", name);
+                let dummy_id = id(&mut module.header);
+                module.debugs.push(Instruction::new(
+                    Op::String,
+                    None,
+                    Some(dummy_id),
+                    vec![Operand::LiteralString(str)],
+                ));
+            }
+        }
+    }
 }
 
 // https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
