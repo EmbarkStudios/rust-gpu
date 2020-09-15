@@ -1,7 +1,7 @@
 use crate::abi::ConvSpirvType;
 use crate::builder::ExtInst;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
-use crate::finalizing_passes::{block_ordering_pass, zombie_pass};
+use crate::finalizing_passes::{block_ordering_pass, delete_dead_blocks, zombie_pass};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
@@ -144,12 +144,14 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
-        zombie_pass(&mut result, &mut self.zombie_values.borrow_mut());
         // defs go before fns
         result.functions.sort_by_key(|f| !f.blocks.is_empty());
         for function in &mut result.functions {
+            // Should delete dead code blocks before zombie pass, in case a dead block references a zombie id.
+            delete_dead_blocks(function);
             block_ordering_pass(function);
         }
+        zombie_pass(&mut result, &mut self.zombie_values.borrow_mut());
         result
     }
 

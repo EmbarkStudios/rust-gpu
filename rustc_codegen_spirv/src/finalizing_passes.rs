@@ -190,7 +190,30 @@ fn export_zombies(module: &mut Module, zombie: &HashMap<Word, &'static str>) {
     }
 }
 
-// https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
+fn label_of(block: &Block) -> Word {
+    block.label.as_ref().unwrap().result_id.unwrap()
+}
+
+pub fn delete_dead_blocks(func: &mut Function) {
+    if func.blocks.len() < 2 {
+        return;
+    }
+    let entry_label = label_of(&func.blocks[0]);
+    let mut stack = Vec::new();
+    let mut visited = HashSet::new();
+    stack.push(entry_label);
+    visited.insert(entry_label);
+    while let Some(label) = stack.pop() {
+        let block = func.blocks.iter().find(|b| label_of(b) == label).unwrap();
+        for outgoing in outgoing_edges(block) {
+            if visited.insert(outgoing) {
+                stack.push(outgoing);
+            }
+        }
+    }
+    func.blocks.retain(|b| visited.contains(&label_of(b)))
+}
+
 pub fn block_ordering_pass(func: &mut Function) {
     if func.blocks.len() < 2 {
         return;
@@ -198,14 +221,9 @@ pub fn block_ordering_pass(func: &mut Function) {
     let mut graph = func
         .blocks
         .iter()
-        .map(|block| {
-            (
-                block.label.as_ref().unwrap().result_id.unwrap(),
-                outgoing_edges(block),
-            )
-        })
+        .map(|block| (label_of(block), outgoing_edges(block)))
         .collect();
-    let entry_label = func.blocks[0].label.as_ref().unwrap().result_id.unwrap();
+    let entry_label = label_of(&func.blocks[0]);
     delete_backedges(&mut graph, entry_label);
 
     let mut sorter = topological_sort::TopologicalSort::<Word>::new();
@@ -216,16 +234,13 @@ pub fn block_ordering_pass(func: &mut Function) {
     }
     let mut old_blocks = replace(&mut func.blocks, Vec::new());
     while let Some(item) = sorter.pop() {
-        let index = old_blocks
-            .iter()
-            .position(|b| b.label.as_ref().unwrap().result_id.unwrap() == item)
-            .unwrap();
+        let index = old_blocks.iter().position(|b| label_of(b) == item).unwrap();
         func.blocks.push(old_blocks.remove(index));
     }
     assert!(sorter.is_empty());
     assert!(old_blocks.is_empty());
     assert_eq!(
-        func.blocks[0].label.as_ref().unwrap().result_id.unwrap(),
+        label_of(&func.blocks[0]),
         entry_label,
         "Topo sorter did something weird (unreachable blocks?)"
     );

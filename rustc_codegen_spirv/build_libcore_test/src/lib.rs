@@ -3,14 +3,12 @@
 #![register_attr(spirv)]
 
 use core::panic::PanicInfo;
-
-#[spirv(storage_class = "private")]
-pub struct Private<'a, T> {
-    x: &'a T,
-}
+use spirv_std::Private;
 
 #[no_mangle]
-pub extern "C" fn screaming_bananans(x: Private<u32>) {}
+pub extern "C" fn screaming_bananans(mut x: Private<u32>) {
+    x.store(x.load() + 1);
+}
 
 #[panic_handler]
 fn panic(_: &PanicInfo) -> ! {
