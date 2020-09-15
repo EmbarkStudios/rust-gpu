@@ -1,7 +1,7 @@
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
+use crate::symbols::{parse_attr, SpirvAttribute};
 use rspirv::spirv::{StorageClass, Word};
-use rustc_ast::ast::AttrKind;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
@@ -524,55 +524,8 @@ fn get_storage_class<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Optio
     if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
         // TODO: Split out this attribute parsing
         for attr in cx.tcx.get_attrs(adt.did) {
-            let is_spirv = match attr.kind {
-                AttrKind::Normal(ref item) => {
-                    // TODO: We ignore the rest of the path. Is this right?
-                    let last = item.path.segments.last();
-                    last.map_or(false, |seg| seg.ident.name == cx.sym.spirv)
-                }
-                AttrKind::DocComment(..) => false,
-            };
-            if !is_spirv {
-                continue;
-            }
-            // Mark it used, since all invalid cases below emit errors.
-            cx.tcx.sess.mark_attr_used(attr);
-            let args = if let Some(args) = attr.meta_item_list() {
-                args
-            } else {
-                cx.tcx
-                    .sess
-                    .span_err(attr.span, "#[spirv(..)] attribute must have one argument");
-                continue;
-            };
-            if args.len() != 1 {
-                cx.tcx
-                    .sess
-                    .span_err(attr.span, "#[spirv(..)] attribute must have one argument");
-                continue;
-            }
-            let arg = &args[0];
-            if arg.has_name(cx.sym.storage_class) {
-                if let Some(storage_arg) = arg.value_str() {
-                    match cx.sym.symbol_to_storageclass(storage_arg) {
-                        Some(storage_class) => return Some(storage_class),
-                        None => {
-                            cx.tcx
-                                .sess
-                                .span_err(attr.span, "unknown spir-v storage class");
-                            continue;
-                        }
-                    }
-                } else {
-                    cx.tcx.sess.span_err(
-                        attr.span,
-                        "storage_class must have value: #[spirv(storage_class = \"..\")]",
-                    );
-                }
-            } else {
-                cx.tcx
-                    .sess
-                    .span_err(attr.span, "unknown argument to spirv attribute");
+            if let Some(SpirvAttribute::StorageClass(storage_class)) = parse_attr(cx, attr) {
+                return Some(storage_class);
             }
         }
     }

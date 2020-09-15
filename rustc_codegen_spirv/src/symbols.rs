@@ -1,4 +1,6 @@
+use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::StorageClass;
+use rustc_ast::ast::{AttrKind, Attribute};
 use rustc_span::symbol::Symbol;
 
 pub struct Symbols {
@@ -102,5 +104,65 @@ impl Symbols {
             return None;
         };
         Some(result)
+    }
+}
+
+pub enum SpirvAttribute {
+    StorageClass(StorageClass),
+}
+
+// Note that we could mark thie attr as used via cx.tcx.sess.mark_attr_used(attr), but unused reporting already happens
+// even before we get here :(
+/// Returns None if this attribute is not a spirv attribute, or if it's a malformed (and an error is reported).
+pub fn parse_attr<'tcx>(cx: &CodegenCx<'tcx>, attr: &Attribute) -> Option<SpirvAttribute> {
+    let is_spirv = match attr.kind {
+        AttrKind::Normal(ref item) => {
+            // TODO: We ignore the rest of the path. Is this right?
+            let last = item.path.segments.last();
+            last.map_or(false, |seg| seg.ident.name == cx.sym.spirv)
+        }
+        AttrKind::DocComment(..) => false,
+    };
+    if !is_spirv {
+        return None;
+    }
+    let args = if let Some(args) = attr.meta_item_list() {
+        args
+    } else {
+        cx.tcx
+            .sess
+            .span_err(attr.span, "#[spirv(..)] attribute must have one argument");
+        return None;
+    };
+    if args.len() != 1 {
+        cx.tcx
+            .sess
+            .span_err(attr.span, "#[spirv(..)] attribute must have one argument");
+        return None;
+    }
+    let arg = &args[0];
+    if arg.has_name(cx.sym.storage_class) {
+        if let Some(storage_arg) = arg.value_str() {
+            match cx.sym.symbol_to_storageclass(storage_arg) {
+                Some(storage_class) => Some(SpirvAttribute::StorageClass(storage_class)),
+                None => {
+                    cx.tcx
+                        .sess
+                        .span_err(attr.span, "unknown spir-v storage class");
+                    None
+                }
+            }
+        } else {
+            cx.tcx.sess.span_err(
+                attr.span,
+                "storage_class must have value: #[spirv(storage_class = \"..\")]",
+            );
+            None
+        }
+    } else {
+        cx.tcx
+            .sess
+            .span_err(attr.span, "unknown argument to spirv attribute");
+        None
     }
 }
