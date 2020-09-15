@@ -331,7 +331,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
 impl ExtraBackendMethods for SpirvCodegenBackend {
     fn new_metadata(&self, _: TyCtxt<'_>, _: &str) -> Self::Module {
-        todo!()
+        Self::Module::new()
     }
 
     fn write_compressed_metadata<'tcx>(
@@ -340,7 +340,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         _: &EncodedMetadata,
         _: &mut Self::Module,
     ) {
-        todo!()
+        // Ignore for now.
     }
 
     fn codegen_allocator<'tcx>(&self, _: TyCtxt<'tcx>, _: &mut Self::Module, _: AllocatorKind) {

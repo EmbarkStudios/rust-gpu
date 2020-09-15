@@ -5,8 +5,7 @@
 use core::panic::PanicInfo;
 use spirv_std::Private;
 
-#[no_mangle]
-pub extern "C" fn screaming_bananans(mut x: Private<u32>) {
+pub fn screaming_bananans(mut x: Private<u32>) {
     x.store(x.load() + 1);
 }
 
