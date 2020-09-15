@@ -6,6 +6,7 @@ use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Decoration, FunctionControl, LinkageType, StorageClass, Word};
+use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -15,6 +16,8 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir::GlobalAsm;
+use rustc_middle::middle::codegen_fn_attrs::CodegenFnAttrFlags;
+use rustc_middle::middle::codegen_fn_attrs::CodegenFnAttrs;
 use rustc_middle::mir::interpret::{
     read_target_uint, Allocation, ConstValue, GlobalAlloc, Pointer,
 };
@@ -568,6 +571,23 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     }
 }
 
+pub fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
+    let mut control = FunctionControl::NONE;
+    match attrs.inline {
+        InlineAttr::None => (),
+        InlineAttr::Hint => control.insert(FunctionControl::INLINE),
+        InlineAttr::Always => control.insert(FunctionControl::INLINE),
+        InlineAttr::Never => control.insert(FunctionControl::DONT_INLINE),
+    }
+    if attrs.flags.contains(CodegenFnAttrFlags::FFI_PURE) {
+        control.insert(FunctionControl::PURE)
+    }
+    if attrs.flags.contains(CodegenFnAttrFlags::FFI_CONST) {
+        control.insert(FunctionControl::CONST)
+    }
+    control
+}
+
 pub fn get_fn<'tcx>(cx: &CodegenCx<'tcx>, instance: Instance<'tcx>) -> SpirvValue {
     assert!(!instance.substs.needs_infer());
     assert!(!instance.substs.has_escaping_bound_vars());
@@ -586,11 +606,14 @@ pub fn get_fn<'tcx>(cx: &CodegenCx<'tcx>, instance: Instance<'tcx>) -> SpirvValu
         // Because we've already declared everything with predefine_fn, if we hit this branch, we're guaranteed to be
         // importing this function from elsewhere. So, slap an extern on it.
         let human_name = format!("{}", instance);
+        let rust_attrs = cx.tcx.codegen_fn_attrs(instance.def_id());
+        let spv_attrs = attrs_to_spirv(rust_attrs);
         declare_fn(
             cx,
             sym,
             Some(&human_name),
             Some(LinkageType::Import),
+            spv_attrs,
             &fn_abi,
         )
     };
@@ -605,11 +628,9 @@ fn declare_fn<'tcx>(
     name: &str,
     human_name: Option<&str>,
     linkage: Option<LinkageType>,
+    control: FunctionControl,
     fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
 ) -> SpirvValue {
-    let control = FunctionControl::NONE;
-    let function_id = None;
-
     let function_type = fn_abi.spirv_type(cx);
     let (return_type, argument_types) = match cx.lookup_type(function_type) {
         SpirvType::Function {
@@ -627,7 +648,7 @@ fn declare_fn<'tcx>(
         return result.with_type(function_type);
     }
     let fn_id = emit
-        .begin_function(return_type, function_id, control, function_type)
+        .begin_function(return_type, None, control, function_type)
         .unwrap();
     if linkage != Some(LinkageType::Import) {
         let parameter_values = argument_types
@@ -746,7 +767,17 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             Linkage::Internal => None,
             other => panic!("TODO: Linkage type not supported yet: {:?}", other),
         };
-        let declared = declare_fn(self, symbol_name, Some(&human_name), linkage, &fn_abi);
+        let rust_attrs = self.tcx.codegen_fn_attrs(instance.def_id());
+        let spv_attrs = attrs_to_spirv(rust_attrs);
+
+        let declared = declare_fn(
+            self,
+            symbol_name,
+            Some(&human_name),
+            linkage,
+            spv_attrs,
+            &fn_abi,
+        );
         self.instances.borrow_mut().insert(instance, declared);
     }
 }
@@ -775,7 +806,7 @@ impl<'tcx> DeclareMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn declare_fn(&self, name: &str, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Function {
-        declare_fn(self, name, None, None, fn_abi)
+        declare_fn(self, name, None, None, FunctionControl::NONE, fn_abi)
     }
 
     fn define_global(&self, name: &str, ty: Self::Type) -> Option<Self::Value> {
