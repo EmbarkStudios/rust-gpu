@@ -9,8 +9,5 @@ cargo build
 export RUSTFLAGS="-Zcodegen-backend=$PWD/../target/debug/librustc_codegen_spirv.so -Ccodegen-units=1"
 
 pushd build_libcore_test
-# Use wasm32 because it's a relatively simple platform - if the x86 libcore is used, there's all sorts of "feature sse2
-# not found" and the like, and our spirv backend is never reached. With wasm32, it at least gets reached.
-# (We probably want to add our own target eventually)
 cargo build -Z build-std=core --target ../spirv-target.json --release
 popd

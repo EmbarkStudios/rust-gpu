@@ -69,6 +69,11 @@ impl<'tcx> CodegenCx<'tcx> {
         llfn
     }
 
+    // The call graph of how this is reachable is a little tangled, so:
+    // MiscMethods::get_fn -> get_fn_ext -> declare_fn_ext
+    // MiscMethods::get_fn_addr -> get_fn_ext -> declare_fn_ext
+    // PreDefineMethods::predefine_fn -> declare_fn_ext
+    // DeclareMethods::declare_fn -> declare_fn_ext (as of right now, this is never called)
     fn declare_fn_ext(
         &self,
         name: &str,
