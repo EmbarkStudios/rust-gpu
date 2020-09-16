@@ -173,44 +173,40 @@ fn remove_duplicate_types(module: rspirv::dr::Module) -> rspirv::dr::Module {
     // jb-todo: spirv-tools's linker has special case handling for SpvOpTypeForwardPointer,
     // not sure if we need that; see https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp for reference
 
-    // need to do this process iteratively because types can reference each other
-
-
-    let instructions = module
+    let mut instructions = module
         .all_inst_iter()
         .cloned()
-        .map(|v| std::rc::Rc::new(std::cell::RefCell::new(v)))
         .collect::<Vec<_>>()
         .into_boxed_slice();
 
     let mut def_ids = HashMap::new();
-    let mut use_ids: HashMap<u32, Vec<std::rc::Rc<std::cell::RefCell<rspirv::dr::Instruction>>>> = HashMap::new();
-    let mut use_result_type_ids: HashMap<u32, Vec<std::rc::Rc<std::cell::RefCell<rspirv::dr::Instruction>>>> = HashMap::new();
+    let mut use_ids: HashMap<u32, Vec<usize>> = HashMap::new();
+    let mut use_result_type_ids: HashMap<u32, Vec<usize>> = HashMap::new();
 
-    instructions.iter().for_each(|inst| {
-        if let Some(def_id) = inst.borrow().result_id {
+    instructions.iter().enumerate().for_each(|(inst_idx, inst)| {
+        if let Some(def_id) = inst.result_id {
             def_ids
                 .entry(def_id)
                 .and_modify(|stored_inst| {
-                    *stored_inst = inst;
+                    *stored_inst = inst_idx;
                 })
-                .or_insert(inst);
+                .or_insert(inst_idx);
         }
 
-        if let Some(result_type) = inst.borrow().result_type {
+        if let Some(result_type) = inst.result_type {
             use_result_type_ids.entry(result_type)
-                .and_modify(|v| v.push(inst.clone()))
-                .or_insert(vec![inst.clone()]);
+                .and_modify(|v| v.push(inst_idx))
+                .or_insert(vec![inst_idx]);
         }
 
-        for op in inst.borrow().operands.iter() {
+        for op in inst.operands.iter() {
             match op {
                 rspirv::dr::Operand::IdMemorySemantics(w)
                 | rspirv::dr::Operand::IdScope(w)
                 | rspirv::dr::Operand::IdRef(w) => {
                     use_ids.entry(*w)
-                        .and_modify(|v| v.push(inst.clone()))
-                        .or_insert(vec![inst.clone()]);
+                        .and_modify(|v| v.push(inst_idx))
+                        .or_insert(vec![inst_idx]);
                 }
                 _ => {}
             }
@@ -219,16 +215,17 @@ fn remove_duplicate_types(module: rspirv::dr::Module) -> rspirv::dr::Module {
 
     let mut kill_annotations = vec![];
     let mut continue_from_idx = 0;
+
+    // need to do this process iteratively because types can reference each other
     loop {
         let mut dedup = std::collections::HashMap::new();
         let mut duplicate = None;
 
-        let iter = module.types_global_values.iter().enumerate().skip(continue_from_idx);
+        for (iterator_idx, module_inst) in module.types_global_values.iter().enumerate().skip(continue_from_idx) {
+            let inst_idx = def_ids[&module_inst.result_id.unwrap()];
+            let inst = &instructions[inst_idx];
 
-        for (i_idx, i) in iter {
-            let i = def_ids[&i.result_id.unwrap()];
-
-            if i.borrow().class.opcode == spirv::Op::Nop {
+            if inst.class.opcode == spirv::Op::Nop {
                 continue;
             }
 
@@ -237,7 +234,6 @@ fn remove_duplicate_types(module: rspirv::dr::Module) -> rspirv::dr::Module {
             let data =  {
                 let mut data = vec![];
 
-                let inst = i.borrow();
                 data.push(inst.class.opcode as u32);
                 for op in &inst.operands {
                     op.assemble_into(&mut data);
@@ -246,34 +242,41 @@ fn remove_duplicate_types(module: rspirv::dr::Module) -> rspirv::dr::Module {
                 data
             };
 
+            // dedup contains a tuple of three indices;
+            // the first two point into our `instructions` map
+            // the last one points into the `module.types_global_values` iterator so we can resume iteration 
             dedup
                 .entry(data)
-                .and_modify(|(identical, first_found_idx)| {
-                    duplicate = Some((i, *identical, *first_found_idx));
+                .and_modify(|(identical_idx, backtrack_idx)| {
+                    duplicate = Some((inst_idx, *identical_idx, *backtrack_idx));
                 })
-                .or_insert((i, i_idx));
+                .or_insert((inst_idx, iterator_idx)); // store the index that we encountered an instruction 
+                                                      // for the first time so we can backtrack later
 
-            if let Some((_, _, first_found_idx)) = duplicate {
-                continue_from_idx = first_found_idx;
+            if let Some((_, _, backtrack_idx)) = duplicate {
+                continue_from_idx = backtrack_idx;
                 break;
             }
         }
 
-        if let Some((before, after, _)) = duplicate {
-            let before_id = before.borrow().result_id.unwrap();
-            let after_id = after.borrow().result_id.unwrap();
+        if let Some((before_idx, after_idx, _)) = duplicate {
+            let before_id = instructions[before_idx].result_id.unwrap();
+            let after_id = instructions[after_idx].result_id.unwrap();
 
+            // remove annotations later
             kill_annotations.push(before_id);
 
+            // update `result_type`
             if let Some(use_result_type_id) = use_result_type_ids.get(&before_id) {
-                for before_inst in use_result_type_id {
-                    before_inst.borrow_mut().result_type = Some(after_id);
+                for before_inst_idx in use_result_type_id {
+                    instructions[*before_inst_idx].result_type = Some(after_id);
                 }
             }
 
+            // update operand
             if let Some(use_id) = use_ids.get(&before_id) {
-                for before_inst in use_id {
-                    for op in before_inst.borrow_mut().operands.iter_mut() {
+                for before_inst_idx in use_id {
+                    for op in instructions[*before_inst_idx].operands.iter_mut() {
                         match op {
                             rspirv::dr::Operand::IdMemorySemantics(w)
                             | rspirv::dr::Operand::IdScope(w)
@@ -288,7 +291,10 @@ fn remove_duplicate_types(module: rspirv::dr::Module) -> rspirv::dr::Module {
                 }
             }
 
-            before.replace(rspirv::dr::Instruction::new(spirv::Op::Nop, None, None, vec![]));
+            // this loop / system works on the assumption that all indices remain valid,
+            // so instead of removing the instruction we just nop it out - `consume_instruction` will then
+            // skip all OpNops and they won't appear in the newly constructed module
+            instructions[before_idx] = rspirv::dr::Instruction::new(spirv::Op::Nop, None, None, vec![]);
         } else {
             break;
         }
@@ -297,7 +303,7 @@ fn remove_duplicate_types(module: rspirv::dr::Module) -> rspirv::dr::Module {
     let mut loader = rspirv::dr::Loader::new();
 
     for inst in instructions.iter() {
-        loader.consume_instruction(inst.borrow().clone());
+        loader.consume_instruction(inst.clone());
     }
 
     let mut module = loader.module();
@@ -307,10 +313,6 @@ fn remove_duplicate_types(module: rspirv::dr::Module) -> rspirv::dr::Module {
     }
 
     module
-}
-
-fn remove_duplicates(module: &mut rspirv::dr::Module) {
-    
 }
 
 #[derive(Clone, Debug)]
