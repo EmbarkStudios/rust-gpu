@@ -1,5 +1,4 @@
-use crate::things::{SpirvModuleBuffer, SpirvThinBuffer};
-use crate::SpirvCodegenBackend;
+use crate::{SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::CodegenResults;

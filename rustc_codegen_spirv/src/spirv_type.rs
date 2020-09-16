@@ -26,8 +26,6 @@ pub enum SpirvType {
         field_offsets: Vec<Size>,
         field_names: Option<Vec<String>>,
     },
-    // see comment where Opaque is constructed
-    #[allow(dead_code)]
     Opaque {
         name: String,
     },

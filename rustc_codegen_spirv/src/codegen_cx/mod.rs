@@ -89,11 +89,21 @@ impl<'tcx> CodegenCx<'tcx> {
         self.type_cache.lookup(ty)
     }
 
-    // Useful for printing out types when debugging
     pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'tcx> {
         self.lookup_type(ty).debug(ty, self)
     }
 
+    /// Zombie system:
+    /// When compiling libcore and other system libraries, if something unrepresentable is encountered, we don't want to
+    /// fail the compilation. Instead, we emit something bogus (usually it's fairly faithful, though, e.g. u128 emits
+    /// OpTypeInt 128), and then mark the resulting ID as a "zombie". We continue compiling the rest of the crate, then,
+    /// at the very end, anything that transtively references a zombie value is stripped from the binary.
+    ///
+    /// If an exported function is stripped, then we emit a special "zombie export" item, which is consumed by the
+    /// linker, which continues to infect other values that reference it.
+    ///
+    /// Finally, if *user* code is marked as zombie, then this means that the user tried to do something that isn't
+    /// supported, and should be an error.
     pub fn zombie(&self, word: Word, reason: &'static str) {
         self.zombie_values.borrow_mut().insert(word, reason);
     }

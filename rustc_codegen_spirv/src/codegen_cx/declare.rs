@@ -35,6 +35,7 @@ fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
 }
 
 impl<'tcx> CodegenCx<'tcx> {
+    /// Returns a function if it already exists, or declares a header if it doesn't.
     pub fn get_fn_ext(&self, instance: Instance<'tcx>) -> SpirvValue {
         assert!(!instance.substs.needs_infer());
         assert!(!instance.substs.has_escaping_bound_vars());

@@ -38,7 +38,6 @@ mod finalizing_passes;
 mod link;
 mod spirv_type;
 mod symbols;
-mod things;
 
 #[cfg(test)]
 #[path = "../test/lib.rs"]
@@ -52,7 +51,10 @@ use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModul
 use rustc_codegen_ssa::back::write::{CodegenContext, FatLTOInput, ModuleConfig, OngoingCodegen};
 use rustc_codegen_ssa::base::maybe_create_entry_wrapper;
 use rustc_codegen_ssa::mono_item::MonoItemExt;
-use rustc_codegen_ssa::traits::{CodegenBackend, ExtraBackendMethods, WriteBackendMethods};
+use rustc_codegen_ssa::traits::{
+    CodegenBackend, ExtraBackendMethods, ModuleBufferMethods, ThinBufferMethods,
+    WriteBackendMethods,
+};
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::{ErrorReported, FatalError, Handler};
@@ -71,7 +73,6 @@ use rustc_target::spec::Target;
 use std::any::Any;
 use std::path::Path;
 use std::{fs::File, io::Write, sync::Arc};
-use things::{SpirvModuleBuffer, SpirvThinBuffer};
 
 fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
     match instance.def {
@@ -94,9 +95,27 @@ fn is_blocklisted_fn(symbol_name: &str) -> bool {
     symbol_name.contains("core..fmt..Debug")
 }
 
-struct NoLlvmMetadataLoader;
+// TODO: Should this store Vec or Module?
+struct SpirvModuleBuffer(Vec<u32>);
 
-impl MetadataLoader for NoLlvmMetadataLoader {
+impl ModuleBufferMethods for SpirvModuleBuffer {
+    fn data(&self) -> &[u8] {
+        crate::slice_u32_to_u8(&self.0)
+    }
+}
+
+// TODO: Should this store Vec or Module?
+struct SpirvThinBuffer(Vec<u32>);
+
+impl ThinBufferMethods for SpirvThinBuffer {
+    fn data(&self) -> &[u8] {
+        crate::slice_u32_to_u8(&self.0)
+    }
+}
+
+struct SpirvMetadataLoader;
+
+impl MetadataLoader for SpirvMetadataLoader {
     fn get_rlib_metadata(&self, _: &Target, path: &Path) -> Result<MetadataRef, String> {
         Ok(link::read_metadata(path))
     }
@@ -111,7 +130,7 @@ struct SpirvCodegenBackend;
 
 impl CodegenBackend for SpirvCodegenBackend {
     fn metadata_loader(&self) -> Box<MetadataLoaderDyn> {
-        Box::new(NoLlvmMetadataLoader)
+        Box::new(SpirvMetadataLoader)
     }
 
     fn provide(&self, providers: &mut Providers) {
