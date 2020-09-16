@@ -167,47 +167,150 @@ fn kill_annotations_and_debug(module: &mut rspirv::dr::Module, id: u32) {
     kill_with_id(&mut module.debugs, id);
 }
 
-fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
+fn remove_duplicate_types(module: rspirv::dr::Module) -> rspirv::dr::Module {
+    use rspirv::binary::Assemble;
+
     // jb-todo: spirv-tools's linker has special case handling for SpvOpTypeForwardPointer,
     // not sure if we need that; see https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp for reference
 
     // need to do this process iteratively because types can reference each other
-    loop {
-        let mut replace = None;
 
-        // start with `nth` so we can restart this loop quickly after killing the op
-        for (i_idx, i) in module.types_global_values.iter().enumerate() {
-            let mut identical = None;
-            for j in module.types_global_values.iter().skip(i_idx + 1) {
-                if i.is_type_identical(j) {
-                    identical = j.result_id;
-                    break;
+
+    let instructions = module
+        .all_inst_iter()
+        .cloned()
+        .map(|v| std::rc::Rc::new(std::cell::RefCell::new(v)))
+        .collect::<Vec<_>>()
+        .into_boxed_slice();
+
+    let mut def_ids = HashMap::new();
+    let mut use_ids: HashMap<u32, Vec<std::rc::Rc<std::cell::RefCell<rspirv::dr::Instruction>>>> = HashMap::new();
+    let mut use_result_type_ids: HashMap<u32, Vec<std::rc::Rc<std::cell::RefCell<rspirv::dr::Instruction>>>> = HashMap::new();
+
+    instructions.iter().for_each(|inst| {
+        if let Some(def_id) = inst.borrow().result_id {
+            def_ids
+                .entry(def_id)
+                .and_modify(|stored_inst| {
+                    *stored_inst = inst;
+                })
+                .or_insert(inst);
+        }
+
+        if let Some(result_type) = inst.borrow().result_type {
+            use_result_type_ids.entry(result_type)
+                .and_modify(|v| v.push(inst.clone()))
+                .or_insert(vec![inst.clone()]);
+        }
+
+        for op in inst.borrow().operands.iter() {
+            match op {
+                rspirv::dr::Operand::IdMemorySemantics(w)
+                | rspirv::dr::Operand::IdScope(w)
+                | rspirv::dr::Operand::IdRef(w) => {
+                    use_ids.entry(*w)
+                        .and_modify(|v| v.push(inst.clone()))
+                        .or_insert(vec![inst.clone()]);
                 }
+                _ => {}
+            }
+        }
+    });
+
+    let mut kill_annotations = vec![];
+    let mut continue_from_idx = 0;
+    loop {
+        let mut dedup = std::collections::HashMap::new();
+        let mut duplicate = None;
+
+        let iter = module.types_global_values.iter().enumerate().skip(continue_from_idx);
+
+        for (i_idx, i) in iter {
+            let i = def_ids[&i.result_id.unwrap()];
+
+            if i.borrow().class.opcode == spirv::Op::Nop {
+                continue;
             }
 
-            if let Some(identical) = identical {
-                replace = Some((i.result_id.unwrap(), identical, i_idx));
+            // partially assemble only the opcode and operands to be used as a key
+            // maybe this should also include the result_type
+            let data =  {
+                let mut data = vec![];
+
+                let inst = i.borrow();
+                data.push(inst.class.opcode as u32);
+                for op in &inst.operands {
+                    op.assemble_into(&mut data);
+                }
+
+                data
+            };
+
+            dedup
+                .entry(data)
+                .and_modify(|(identical, first_found_idx)| {
+                    duplicate = Some((i, *identical, *first_found_idx));
+                })
+                .or_insert((i, i_idx));
+
+            if let Some((_, _, first_found_idx)) = duplicate {
+                continue_from_idx = first_found_idx;
                 break;
             }
         }
 
-        // can't do this directly in the previous loop because of the
-        // mut borrow needed on `module`
-        if let Some((remove, keep, kill_idx)) = replace {
-            kill_annotations_and_debug(module, remove);
-            replace_all_uses_with(module, remove, keep);
-            module.types_global_values.swap_remove(kill_idx);
+        if let Some((before, after, _)) = duplicate {
+            let before_id = before.borrow().result_id.unwrap();
+            let after_id = after.borrow().result_id.unwrap();
+
+            kill_annotations.push(before_id);
+
+            if let Some(use_result_type_id) = use_result_type_ids.get(&before_id) {
+                for before_inst in use_result_type_id {
+                    before_inst.borrow_mut().result_type = Some(after_id);
+                }
+            }
+
+            if let Some(use_id) = use_ids.get(&before_id) {
+                for before_inst in use_id {
+                    for op in before_inst.borrow_mut().operands.iter_mut() {
+                        match op {
+                            rspirv::dr::Operand::IdMemorySemantics(w)
+                            | rspirv::dr::Operand::IdScope(w)
+                            | rspirv::dr::Operand::IdRef(w) => {
+                                if *w == before_id {
+                                    *w = after_id
+                                }
+                            },
+                            _ => {}
+                        }
+                    }
+                }
+            }
+
+            before.replace(rspirv::dr::Instruction::new(spirv::Op::Nop, None, None, vec![]));
         } else {
             break;
         }
     }
+
+    let mut loader = rspirv::dr::Loader::new();
+
+    for inst in instructions.iter() {
+        loader.consume_instruction(inst.borrow().clone());
+    }
+
+    let mut module = loader.module();
+
+    for remove in kill_annotations {
+        kill_annotations_and_debug(&mut module, remove);
+    }
+
+    module
 }
 
 fn remove_duplicates(module: &mut rspirv::dr::Module) {
-    remove_duplicate_capablities(module);
-    remove_duplicate_ext_inst_imports(module);
-    remove_duplicate_types(module);
-    // jb-todo: strip identical OpDecoration / OpDecorationGroups
+    
 }
 
 #[derive(Clone, Debug)]
@@ -779,10 +882,6 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
         bound += module.header.as_ref().unwrap().bound - 1;
     }
 
-    for i in inputs.iter() {
-        println!("{}\n\n", i.disassemble());
-    }
-
     // merge the binaries
     let mut loader = rspirv::dr::Loader::new();
 
@@ -793,7 +892,6 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
     }
 
     let mut output = loader.module();
-    println!("{}\n\n", output.disassemble());
 
     // find import / export pairs
     let defs = DefAnalyzer::new(&output);
@@ -803,9 +901,10 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
     let matching_pairs = info.ensure_matching_import_export_pairs(&defs)?;
 
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
-    remove_duplicates(&mut output);
-
-    println!("{}\n\n", output.disassemble());
+    remove_duplicate_capablities(&mut output);
+    remove_duplicate_ext_inst_imports(&mut output);
+    let mut output = remove_duplicate_types(output);
+    // jb-todo: strip identical OpDecoration / OpDecorationGroups
 
     // remove names and decorations of import variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L404
     import_kill_annotations_and_debug(&mut output, &info);
@@ -832,8 +931,6 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
             "Linked by rspirv-linker".to_string(),
         )],
     ));
-
-    println!("{}\n\n", output.disassemble());
 
     // output the module
     Ok(output)

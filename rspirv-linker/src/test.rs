@@ -368,11 +368,11 @@ mod test {
         let result = assemble_and_link(&[&a, &b], &Options::default())?;
 
         let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
-            %1 = OpTypeFloat 32
-            %2 = OpTypeVoid
-            %3 = OpTypeFunction %2
-            %4 = OpVariable %1 Uniform
-            %5 = OpFunction %2 Inline %3
+            %1 = OpTypeVoid
+            %2 = OpTypeFloat 32
+            %3 = OpTypeFunction %1
+            %4 = OpVariable %2 Uniform
+            %5 = OpFunction %1 Inline %3
             %6 = OpLabel
             OpReturn
             OpFunctionEnd"#;
@@ -441,7 +441,7 @@ mod test {
         without_header_eq(result, expect);
         Ok(())
     }
-    /*
+    
     #[test]
     fn names_and_decorations() -> Result<()> {
         let a = assemble_spirv(
@@ -489,14 +489,14 @@ mod test {
         let result = assemble_and_link(&[&a, &b], &Options::default())?;
 
         let expect = r#"OpCapability Kernel
-        OpName %1 "foo"
-        OpName %2 "param"
+        OpName %1 "param"
+        OpName %2 "foo"
         OpModuleProcessed "Linked by rspirv-linker"
+        OpDecorate %1 Restrict
         OpDecorate %3 Restrict
         OpDecorate %4 NonWritable
         %3 = OpDecorationGroup
         OpGroupDecorate %3 %4
-        OpDecorate %2 Restrict
         %5 = OpTypeVoid
         %6 = OpTypeInt 32 0
         %7 = OpTypePointer Function %6
@@ -504,14 +504,13 @@ mod test {
         %9 = OpFunction %5 None %8
         %4 = OpFunctionParameter %7
         OpFunctionEnd
-        %1 = OpFunction %5 None %8
-        %2 = OpFunctionParameter %7
+        %2 = OpFunction %5 None %8
+        %1 = OpFunctionParameter %7
         %10 = OpLabel
         OpReturn
-        OpFunctionEnd
-        "#;
+        OpFunctionEnd"#;
 
         without_header_eq(result, expect);
         Ok(())
-    }*/
+    }
 }
