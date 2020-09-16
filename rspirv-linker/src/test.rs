@@ -441,7 +441,7 @@ mod test {
         without_header_eq(result, expect);
         Ok(())
     }
-    
+
     #[test]
     fn names_and_decorations() -> Result<()> {
         let a = assemble_spirv(
