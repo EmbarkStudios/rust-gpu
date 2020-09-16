@@ -18,6 +18,18 @@ extern crate rustc_span;
 extern crate rustc_symbol_mangling;
 extern crate rustc_target;
 
+macro_rules! assert_ty_eq {
+    ($codegen_cx:expr, $left:expr, $right:expr) => {
+        assert_eq!(
+            $left,
+            $right,
+            "Expected types to be equal:\n{}\n==\n{}",
+            $codegen_cx.debug_type($left),
+            $codegen_cx.debug_type($right)
+        )
+    };
+}
+
 mod abi;
 mod builder;
 mod builder_spirv;
