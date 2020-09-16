@@ -2,6 +2,8 @@ use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
 use std::cell::{RefCell, RefMut};
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::{fs::File, io::Write, path::Path};
 
 #[derive(Copy, Clone, Debug, Default, Ord, PartialOrd, Eq, PartialEq)]
@@ -20,6 +22,20 @@ impl SpirvValueExt for Word {
     }
 }
 
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub enum SpirvConst {
+    U32(Word, u32),
+    U64(Word, u64),
+    /// f32 isn't hash, so store bits
+    F32(Word, u32),
+    /// f64 isn't hash, so store bits
+    F64(Word, u64),
+    Bool(Word, bool),
+    Composite(Word, Vec<Word>),
+    Null(Word),
+    Undef(Word),
+}
+
 #[derive(Debug, Default, Copy, Clone)]
 #[must_use = "BuilderCursor should usually be assigned to the Builder.cursor field"]
 pub struct BuilderCursor {
@@ -29,6 +45,8 @@ pub struct BuilderCursor {
 
 pub struct BuilderSpirv {
     builder: RefCell<Builder>,
+    constants: RefCell<HashMap<SpirvConst, SpirvValue>>,
+    constants_inverse: RefCell<HashMap<Word, SpirvConst>>,
 }
 
 impl BuilderSpirv {
@@ -49,6 +67,8 @@ impl BuilderSpirv {
         builder.memory_model(AddressingModel::Physical32, MemoryModel::OpenCL);
         Self {
             builder: RefCell::new(builder),
+            constants: Default::default(),
+            constants_inverse: Default::default(),
         }
     }
 
@@ -109,94 +129,65 @@ impl BuilderSpirv {
         panic!("Function not found: {}", id);
     }
 
-    pub fn def_constant(&self, ty: Word, val: Operand) -> SpirvValue {
-        let mut builder = self.builder.borrow_mut();
-        // TODO: Cache these instead of doing a search.
-        for inst in &builder.module_ref().types_global_values {
-            if inst.class.opcode == Op::Constant
-                && inst.result_type == Some(ty)
-                && inst.operands[0] == val
-            {
-                return inst.result_id.unwrap().with_type(ty);
+    pub fn def_constant(&self, val: SpirvConst) -> SpirvValue {
+        match self.constants.borrow_mut().entry(val) {
+            Entry::Occupied(entry) => *entry.get(),
+            Entry::Vacant(entry) => {
+                let id = match *entry.key() {
+                    SpirvConst::U32(ty, v) => {
+                        self.builder.borrow_mut().constant_u32(ty, v).with_type(ty)
+                    }
+                    SpirvConst::U64(ty, v) => {
+                        self.builder.borrow_mut().constant_u64(ty, v).with_type(ty)
+                    }
+                    SpirvConst::F32(ty, v) => self
+                        .builder
+                        .borrow_mut()
+                        .constant_f32(ty, f32::from_bits(v))
+                        .with_type(ty),
+                    SpirvConst::F64(ty, v) => self
+                        .builder
+                        .borrow_mut()
+                        .constant_f64(ty, f64::from_bits(v))
+                        .with_type(ty),
+                    SpirvConst::Bool(ty, v) => {
+                        if v {
+                            self.builder.borrow_mut().constant_true(ty).with_type(ty)
+                        } else {
+                            self.builder.borrow_mut().constant_false(ty).with_type(ty)
+                        }
+                    }
+                    SpirvConst::Composite(ty, ref v) => self
+                        .builder
+                        .borrow_mut()
+                        .constant_composite(ty, v.iter().copied())
+                        .with_type(ty),
+                    SpirvConst::Null(ty) => {
+                        self.builder.borrow_mut().constant_null(ty).with_type(ty)
+                    }
+                    SpirvConst::Undef(ty) => {
+                        self.builder.borrow_mut().undef(ty, None).with_type(ty)
+                    }
+                };
+                self.constants_inverse
+                    .borrow_mut()
+                    .insert(id.def, entry.key().clone());
+                entry.insert(id);
+                id
             }
         }
-        match val {
-            Operand::LiteralInt32(v) => builder.constant_u32(ty, v),
-            Operand::LiteralInt64(v) => builder.constant_u64(ty, v),
-            Operand::LiteralFloat32(v) => builder.constant_f32(ty, v),
-            Operand::LiteralFloat64(v) => builder.constant_f64(ty, v),
-            unknown => panic!("def_constant doesn't support constant type {}", unknown),
-        }
-        .with_type(ty)
     }
 
-    pub fn lookup_const_u64(&self, def: Word) -> Result<u64, &'static str> {
+    pub fn lookup_const(&self, def: Word) -> Option<SpirvConst> {
+        self.constants_inverse.borrow().get(&def).cloned()
+    }
+
+    pub fn lookup_const_u64(&self, def: Word) -> Option<u64> {
         match self.lookup_const(def)? {
-            Operand::LiteralInt32(v) => Ok(v as u64),
-            Operand::LiteralInt64(v) => Ok(v),
-            _ => Err("Literal value not Int32/64"),
+            SpirvConst::U32(_, v) => Some(v as u64),
+            SpirvConst::U64(_, v) => Some(v),
+            _ => None,
         }
-    }
-
-    pub fn lookup_const(&self, def: Word) -> Result<Operand, &'static str> {
-        let builder = self.builder.borrow();
-        for inst in &builder.module_ref().types_global_values {
-            if inst.result_id == Some(def) {
-                return if inst.class.opcode == Op::Constant {
-                    Ok(inst.operands[0].clone())
-                } else {
-                    Err("Instruction not OpConstant")
-                };
-            }
-        }
-        Err("Definition not found")
-    }
-
-    pub fn lookup_const_bool(&self, def: Word) -> Result<bool, &'static str> {
-        let builder = self.builder.borrow();
-        for inst in &builder.module_ref().types_global_values {
-            if inst.result_id == Some(def) {
-                return match inst.class.opcode {
-                    Op::ConstantFalse => Ok(true),
-                    Op::ConstantTrue => Ok(true),
-                    _ => Err("Instruction not OpConstantTrue/False"),
-                };
-            }
-        }
-        Err("Definition not found")
-    }
-
-    pub fn lookup_global_constant_variable(&self, def: Word) -> Result<Word, &'static str> {
-        // TODO: Maybe assert that this indeed a constant?
-        let builder = self.builder.borrow();
-        for inst in &builder.module_ref().types_global_values {
-            if inst.result_id == Some(def) {
-                return if inst.class.opcode == Op::Variable {
-                    if let Some(&Operand::IdRef(id_ref)) = inst.operands.get(1) {
-                        Ok(id_ref)
-                    } else {
-                        Err("Instruction had no initializer")
-                    }
-                } else {
-                    Err("Instruction not OpVariable")
-                };
-            }
-        }
-        Err("Definition not found")
-    }
-
-    pub fn find_global_constant_variable(&self, value: Word) -> Option<SpirvValue> {
-        let builder = self.builder.borrow();
-        for inst in &builder.module_ref().types_global_values {
-            if inst.class.opcode == Op::Variable {
-                if let Some(&Operand::IdRef(id_ref)) = inst.operands.get(1) {
-                    if id_ref == value {
-                        return Some(inst.result_id.unwrap().with_type(inst.result_type.unwrap()));
-                    }
-                }
-            }
-        }
-        None
     }
 
     pub fn set_global_initializer(&self, global: Word, initializer: Word) {

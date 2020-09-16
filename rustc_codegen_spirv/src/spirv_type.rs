@@ -308,14 +308,14 @@ impl SpirvType {
             SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
             SpirvType::Vector { element, count } => {
                 let elem_pat = cx.lookup_type(element).memset_const_pattern(cx, fill_byte);
-                cx.emit_global()
-                    .constant_composite(self.def(cx), vec![elem_pat; count as usize])
+                cx.constant_composite(self.def(cx), vec![elem_pat; count as usize])
+                    .def
             }
             SpirvType::Array { element, count } => {
                 let elem_pat = cx.lookup_type(element).memset_const_pattern(cx, fill_byte);
                 let count = cx.builder.lookup_const_u64(count).unwrap() as usize;
-                cx.emit_global()
-                    .constant_composite(self.def(cx), vec![elem_pat; count])
+                cx.constant_composite(self.def(cx), vec![elem_pat; count])
+                    .def
             }
             SpirvType::RuntimeArray { .. } => {
                 panic!("memset on runtime arrays not implemented yet")

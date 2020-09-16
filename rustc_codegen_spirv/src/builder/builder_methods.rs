@@ -1,5 +1,5 @@
 use super::Builder;
-use crate::builder_spirv::{BuilderCursor, SpirvValueExt};
+use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
 use rspirv::spirv::{MemorySemantics, Op, Scope, StorageClass};
@@ -316,8 +316,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         lhs: Self::Value,
         rhs: Self::Value,
     ) -> (Self::Value, Self::Value) {
-        let bool = SpirvType::Bool.def(self);
-        let fals = self.emit_global().constant_false(bool).with_type(bool);
+        let fals = self.constant_bool(false);
         match oop {
             OverflowOp::Add => (self.add(lhs, rhs), fals),
             OverflowOp::Sub => (self.sub(lhs, rhs), fals),
@@ -924,24 +923,29 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         use RealPredicate::*;
         assert_ty_eq!(self, lhs.ty, rhs.ty);
         let b = SpirvType::Bool.def(self);
-        let mut e = self.emit();
         match op {
-            RealPredicateFalse => return e.constant_false(b).with_type(b),
-            RealPredicateTrue => return e.constant_true(b).with_type(b),
-            RealOEQ => e.f_ord_equal(b, None, lhs.def, rhs.def),
-            RealOGT => e.f_ord_greater_than(b, None, lhs.def, rhs.def),
-            RealOGE => e.f_ord_greater_than_equal(b, None, lhs.def, rhs.def),
-            RealOLT => e.f_ord_less_than(b, None, lhs.def, rhs.def),
-            RealOLE => e.f_ord_less_than_equal(b, None, lhs.def, rhs.def),
-            RealONE => e.f_ord_not_equal(b, None, lhs.def, rhs.def),
-            RealORD => e.ordered(b, None, lhs.def, rhs.def),
-            RealUNO => e.unordered(b, None, lhs.def, rhs.def),
-            RealUEQ => e.f_unord_equal(b, None, lhs.def, rhs.def),
-            RealUGT => e.f_unord_greater_than(b, None, lhs.def, rhs.def),
-            RealUGE => e.f_unord_greater_than_equal(b, None, lhs.def, rhs.def),
-            RealULT => e.f_unord_less_than(b, None, lhs.def, rhs.def),
-            RealULE => e.f_unord_less_than_equal(b, None, lhs.def, rhs.def),
-            RealUNE => e.f_unord_not_equal(b, None, lhs.def, rhs.def),
+            RealPredicateFalse => return self.cx.constant_bool(false),
+            RealPredicateTrue => return self.cx.constant_bool(true),
+            RealOEQ => self.emit().f_ord_equal(b, None, lhs.def, rhs.def),
+            RealOGT => self.emit().f_ord_greater_than(b, None, lhs.def, rhs.def),
+            RealOGE => self
+                .emit()
+                .f_ord_greater_than_equal(b, None, lhs.def, rhs.def),
+            RealOLT => self.emit().f_ord_less_than(b, None, lhs.def, rhs.def),
+            RealOLE => self.emit().f_ord_less_than_equal(b, None, lhs.def, rhs.def),
+            RealONE => self.emit().f_ord_not_equal(b, None, lhs.def, rhs.def),
+            RealORD => self.emit().ordered(b, None, lhs.def, rhs.def),
+            RealUNO => self.emit().unordered(b, None, lhs.def, rhs.def),
+            RealUEQ => self.emit().f_unord_equal(b, None, lhs.def, rhs.def),
+            RealUGT => self.emit().f_unord_greater_than(b, None, lhs.def, rhs.def),
+            RealUGE => self
+                .emit()
+                .f_unord_greater_than_equal(b, None, lhs.def, rhs.def),
+            RealULT => self.emit().f_unord_less_than(b, None, lhs.def, rhs.def),
+            RealULE => self
+                .emit()
+                .f_unord_less_than_equal(b, None, lhs.def, rhs.def),
+            RealUNE => self.emit().f_unord_not_equal(b, None, lhs.def, rhs.def),
         }
         .unwrap()
         .with_type(b)
@@ -995,14 +999,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             self.builder.lookup_const(fill_byte.def),
             self.builder.lookup_const(size.def),
         ) {
-            (Ok(fill_byte), Ok(size)) => {
+            (Some(fill_byte), Some(size)) => {
                 let fill_byte = match fill_byte {
-                    Operand::LiteralInt32(v) => v as u8,
-                    other => panic!("memset fill_byte constant value not supported: {}", other),
+                    SpirvConst::U32(_, v) => v as u8,
+                    other => panic!("memset fill_byte constant value not supported: {:?}", other),
                 };
                 let size = match size {
-                    Operand::LiteralInt32(v) => v as usize,
-                    other => panic!("memset size constant value not supported: {}", other),
+                    SpirvConst::U32(_, v) => v as usize,
+                    other => panic!("memset size constant value not supported: {:?}", other),
                 };
                 let pat = elem_ty_spv
                     .memset_const_pattern(self, fill_byte)
@@ -1021,13 +1025,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     }
                 }
             }
-            (Ok(_fill_byte), Err(_)) => {
+            (Some(_fill_byte), None) => {
                 panic!("memset constant fill_byte dynamic size not implemented yet")
             }
-            (Err(_), Ok(size)) => {
+            (None, Some(size)) => {
                 let size = match size {
-                    Operand::LiteralInt32(v) => v as usize,
-                    other => panic!("memset size constant value not supported: {}", other),
+                    SpirvConst::U32(_, v) => v as usize,
+                    other => panic!("memset size constant value not supported: {:?}", other),
                 };
                 let pat = elem_ty_spv
                     .memset_dynamic_pattern(self, fill_byte.def)
@@ -1046,7 +1050,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     }
                 }
             }
-            (Err(_), Err(_)) => panic!("memset dynamic fill_byte dynamic size not implemented yet"),
+            (None, None) => panic!("memset dynamic fill_byte dynamic size not implemented yet"),
         }
     }
 
@@ -1074,13 +1078,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             other => panic!("extract_element not implemented on type {:?}", other),
         };
         match self.builder.lookup_const_u64(idx.def) {
-            Ok(const_index) => self.emit().composite_extract(
+            Some(const_index) => self.emit().composite_extract(
                 result_type,
                 None,
                 vec.def,
                 [const_index as u32].iter().cloned(),
             ),
-            Err(_) => self
+            None => self
                 .emit()
                 .vector_extract_dynamic(result_type, None, vec.def, idx.def),
         }
@@ -1094,15 +1098,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             count: num_elts as u32,
         }
         .def(self);
-        if self.builder.lookup_const(elt.def).is_ok() {
-            self.emit()
-                .constant_composite(result_type, std::iter::repeat(elt.def).take(num_elts))
+        if self.builder.lookup_const(elt.def).is_some() {
+            self.constant_composite(result_type, vec![elt.def; num_elts])
         } else {
             self.emit()
                 .composite_construct(result_type, None, std::iter::repeat(elt.def).take(num_elts))
                 .unwrap()
+                .with_type(result_type)
         }
-        .with_type(result_type)
     }
 
     fn extract_value(&mut self, agg_val: Self::Value, idx: u64) -> Self::Value {
@@ -1315,16 +1318,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let (result_type, argument_types) = loop {
             match self.lookup_type(llfn.ty) {
                 SpirvType::Pointer { pointee, .. } => {
-                    llfn = match self.builder.lookup_global_constant_variable(llfn.def) {
-                        // constant, known deref
-                        Ok(v) => v.with_type(pointee),
-                        // dynamic deref
-                        Err(_) => self
-                            .emit()
-                            .load(pointee, None, llfn.def, None, empty())
-                            .unwrap()
-                            .with_type(pointee),
-                    }
+                    llfn = self
+                        .emit()
+                        .load(pointee, None, llfn.def, None, empty())
+                        .unwrap()
+                        .with_type(pointee)
                 }
                 SpirvType::Function {
                     return_type,

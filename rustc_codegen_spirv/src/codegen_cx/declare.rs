@@ -1,6 +1,6 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
-use crate::builder_spirv::{SpirvValue, SpirvValueExt};
+use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attr, SpirvAttribute};
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass};
@@ -92,13 +92,13 @@ impl<'tcx> CodegenCx<'tcx> {
             other => panic!("fn_abi type {}", other.debug(function_type, self)),
         };
 
-        let mut emit = self.emit_global();
         if crate::is_blocklisted_fn(name) {
             // This can happen if we call a blocklisted function in another crate.
-            let result = emit.undef(function_type, None);
-            self.zombie(result, "called blocklisted fn");
-            return result.with_type(function_type);
+            let result = self.undef(function_type);
+            self.zombie(result.def, "called blocklisted fn");
+            return result;
         }
+        let mut emit = self.emit_global();
         let fn_id = emit
             .begin_function(return_type, None, control, function_type)
             .unwrap();
@@ -273,20 +273,13 @@ impl<'tcx> DeclareMethods<'tcx> for CodegenCx<'tcx> {
 
 impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
-        // TODO: Integrate this into define_static and whatnot?
-        if let Some(already_defined) = self.builder.find_global_constant_variable(cv.def) {
-            return already_defined;
-        }
+        // TODO: Implement this.
         let ty = SpirvType::Pointer {
             storage_class: StorageClass::Function,
             pointee: cv.ty,
         }
         .def(self);
-        let result = self
-            .emit_global()
-            .variable(ty, None, StorageClass::Function, Some(cv.def))
-            .with_type(ty);
-        // TODO: These should be StorageClass::UniformConstant, so just zombie for now.
+        let result = self.undef(ty);
         self.zombie(result.def, "static_addr_of");
         result
     }
@@ -307,8 +300,12 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         let mut v = self.create_const_alloc(alloc, value_ty);
 
         if self.lookup_type(v.ty) == SpirvType::Bool {
-            let val = self.builder.lookup_const_bool(v.def).unwrap();
-            let val_int = if val { 1 } else { 0 };
+            let val = self.builder.lookup_const(v.def).unwrap();
+            let val_int = match val {
+                SpirvConst::Bool(_, false) => 0,
+                SpirvConst::Bool(_, true) => 0,
+                _ => panic!(),
+            };
             v = self.constant_u8(val_int);
         }
 

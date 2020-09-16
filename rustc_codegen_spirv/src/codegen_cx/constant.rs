@@ -1,9 +1,8 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
-use crate::builder_spirv::{SpirvValue, SpirvValueExt};
+use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
-use rspirv::dr::Operand;
-use rspirv::spirv::{StorageClass, Word};
+use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::mir::interpret::{read_target_uint, Allocation, GlobalAlloc, Pointer};
@@ -16,68 +15,60 @@ use std::ops::Range;
 impl<'tcx> CodegenCx<'tcx> {
     pub fn constant_u8(&self, val: u8) -> SpirvValue {
         let ty = SpirvType::Integer(8, false).def(self);
-        self.builder
-            .def_constant(ty, Operand::LiteralInt32(val as u32))
+        self.builder.def_constant(SpirvConst::U32(ty, val as u32))
     }
 
     pub fn constant_u16(&self, val: u16) -> SpirvValue {
         let ty = SpirvType::Integer(16, false).def(self);
-        self.builder
-            .def_constant(ty, Operand::LiteralInt32(val as u32))
+        self.builder.def_constant(SpirvConst::U32(ty, val as u32))
     }
 
     pub fn constant_i32(&self, val: i32) -> SpirvValue {
         let ty = SpirvType::Integer(32, !self.kernel_mode).def(self);
-        self.builder
-            .def_constant(ty, Operand::LiteralInt32(val as u32))
+        self.builder.def_constant(SpirvConst::U32(ty, val as u32))
     }
 
     pub fn constant_u32(&self, val: u32) -> SpirvValue {
         let ty = SpirvType::Integer(32, false).def(self);
-        self.builder.def_constant(ty, Operand::LiteralInt32(val))
+        self.builder.def_constant(SpirvConst::U32(ty, val))
     }
 
     pub fn constant_u64(&self, val: u64) -> SpirvValue {
         let ty = SpirvType::Integer(64, false).def(self);
-        self.builder.def_constant(ty, Operand::LiteralInt64(val))
+        self.builder.def_constant(SpirvConst::U64(ty, val))
     }
 
     pub fn constant_int(&self, ty: Word, val: u64) -> SpirvValue {
         match self.lookup_type(ty) {
             SpirvType::Integer(8, false) => self
                 .builder
-                .def_constant(ty, Operand::LiteralInt32(val as u8 as u32)),
+                .def_constant(SpirvConst::U32(ty, val as u8 as u32)),
             SpirvType::Integer(16, false) => self
                 .builder
-                .def_constant(ty, Operand::LiteralInt32(val as u16 as u32)),
-            SpirvType::Integer(32, false) => self
-                .builder
-                .def_constant(ty, Operand::LiteralInt32(val as u32)),
-            SpirvType::Integer(64, false) => {
-                self.builder.def_constant(ty, Operand::LiteralInt64(val))
+                .def_constant(SpirvConst::U32(ty, val as u16 as u32)),
+            SpirvType::Integer(32, false) => {
+                self.builder.def_constant(SpirvConst::U32(ty, val as u32))
             }
+            SpirvType::Integer(64, false) => self.builder.def_constant(SpirvConst::U64(ty, val)),
             SpirvType::Integer(8, true) => self
                 .builder
-                .def_constant(ty, Operand::LiteralInt32(val as i64 as i8 as u32)),
+                .def_constant(SpirvConst::U32(ty, val as i64 as i8 as u32)),
             SpirvType::Integer(16, true) => self
                 .builder
-                .def_constant(ty, Operand::LiteralInt32(val as i64 as i16 as u32)),
+                .def_constant(SpirvConst::U32(ty, val as i64 as i16 as u32)),
             SpirvType::Integer(32, true) => self
                 .builder
-                .def_constant(ty, Operand::LiteralInt32(val as i64 as i32 as u32)),
-            SpirvType::Integer(64, true) => {
-                self.builder.def_constant(ty, Operand::LiteralInt64(val))
-            }
+                .def_constant(SpirvConst::U32(ty, val as i64 as i32 as u32)),
+            SpirvType::Integer(64, true) => self.builder.def_constant(SpirvConst::U64(ty, val)),
             SpirvType::Bool => match val {
-                0 => self.emit_global().constant_false(ty),
-                1 => self.emit_global().constant_true(ty),
+                0 => self.builder.def_constant(SpirvConst::Bool(ty, false)),
+                1 => self.builder.def_constant(SpirvConst::Bool(ty, true)),
                 _ => panic!("Invalid constant value for bool: {}", val),
-            }
-            .with_type(ty),
+            },
             SpirvType::Integer(128, _) => {
-                let result = self.emit_global().undef(ty, None);
-                self.zombie(result, "u128 constant");
-                result.with_type(ty)
+                let result = self.undef(ty);
+                self.zombie(result.def, "u128 constant");
+                result
             }
             other => panic!("constant_int invalid on type {}", other.debug(ty, self)),
         }
@@ -85,31 +76,52 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn constant_f32(&self, val: f32) -> SpirvValue {
         let ty = SpirvType::Float(32).def(self);
-        self.builder.def_constant(ty, Operand::LiteralFloat32(val))
+        self.builder
+            .def_constant(SpirvConst::F32(ty, val.to_bits()))
     }
 
     pub fn constant_f64(&self, val: f64) -> SpirvValue {
         let ty = SpirvType::Float(64).def(self);
-        self.builder.def_constant(ty, Operand::LiteralFloat64(val))
+        self.builder
+            .def_constant(SpirvConst::F64(ty, val.to_bits()))
     }
 
     pub fn constant_float(&self, ty: Word, val: f64) -> SpirvValue {
         match self.lookup_type(ty) {
             SpirvType::Float(32) => self
                 .builder
-                .def_constant(ty, Operand::LiteralFloat32(val as f32)),
-            SpirvType::Float(64) => self.builder.def_constant(ty, Operand::LiteralFloat64(val)),
+                .def_constant(SpirvConst::F32(ty, (val as f32).to_bits())),
+            SpirvType::Float(64) => self
+                .builder
+                .def_constant(SpirvConst::F64(ty, val.to_bits())),
             other => panic!("constant_float invalid on type {}", other.debug(ty, self)),
         }
+    }
+
+    pub fn constant_bool(&self, val: bool) -> SpirvValue {
+        let ty = SpirvType::Bool.def(self);
+        self.builder.def_constant(SpirvConst::Bool(ty, val))
+    }
+
+    pub fn constant_composite(&self, ty: Word, val: Vec<Word>) -> SpirvValue {
+        self.builder.def_constant(SpirvConst::Composite(ty, val))
+    }
+
+    pub fn constant_null(&self, ty: Word) -> SpirvValue {
+        self.builder.def_constant(SpirvConst::Null(ty))
+    }
+
+    pub fn undef(&self, ty: Word) -> SpirvValue {
+        self.builder.def_constant(SpirvConst::Undef(ty))
     }
 }
 
 impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     fn const_null(&self, t: Self::Type) -> Self::Value {
-        self.emit_global().constant_null(t).with_type(t)
+        self.constant_null(t)
     }
     fn const_undef(&self, ty: Self::Type) -> Self::Value {
-        self.emit_global().undef(ty, None).with_type(ty)
+        self.undef(ty)
     }
     fn const_int(&self, t: Self::Type, i: i64) -> Self::Value {
         self.constant_int(t, i as u64)
@@ -121,13 +133,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         self.constant_int(t, u as u64)
     }
     fn const_bool(&self, val: bool) -> Self::Value {
-        let bool = SpirvType::Bool.def(self);
-        if val {
-            self.emit_global().constant_true(bool)
-        } else {
-            self.emit_global().constant_false(bool)
-        }
-        .with_type(bool)
+        self.constant_bool(val)
     }
     fn const_i32(&self, i: i32) -> Self::Value {
         self.constant_i32(i)
@@ -152,25 +158,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
 
     fn const_str(&self, s: Symbol) -> (Self::Value, Self::Value) {
         let len = s.as_str().len();
-        let raw_bytes = self.const_bytes(s.as_str().as_bytes());
-        let ptr = self
-            .builder
-            .find_global_constant_variable(raw_bytes.def)
-            .unwrap_or_else(|| {
-                let ty = self.type_ptr_to(self.layout_of(self.tcx.types.str_).spirv_type(self));
-                let result = self
-                    .emit_global()
-                    .variable(ty, None, StorageClass::Function, Some(raw_bytes.def))
-                    .with_type(ty);
-                // The types don't line up (dynamic array vs. constant array)
-                self.zombie(result.def, "constant string");
-                result
-            });
-        // let cs = consts::ptrcast(
-        //     self.const_cstr(s, false),
-        //     self.type_ptr_to(self.layout_of(self.tcx.types.str_).llvm_type(self)),
-        // );
-        (ptr, self.const_usize(len as u64))
+        let ty = self.type_ptr_to(self.layout_of(self.tcx.types.str_).spirv_type(self));
+        let result = self.undef(ty);
+        self.zombie(result.def, "constant string");
+        (result, self.const_usize(len as u64))
     }
     fn const_struct(&self, elts: &[Self::Value], _packed: bool) -> Self::Value {
         // Presumably this will get bitcasted to the right type?
@@ -185,16 +176,14 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             field_names: None,
         }
         .def(self);
-        self.emit_global()
-            .constant_composite(struct_ty, elts.iter().map(|f| f.def))
-            .with_type(struct_ty)
+        self.constant_composite(struct_ty, elts.iter().map(|f| f.def).collect())
     }
 
     fn const_to_opt_uint(&self, v: Self::Value) -> Option<u64> {
-        self.builder.lookup_const_u64(v.def).ok()
+        self.builder.lookup_const_u64(v.def)
     }
     fn const_to_opt_u128(&self, v: Self::Value, sign_ext: bool) -> Option<u128> {
-        self.builder.lookup_const_u64(v.def).ok().map(|v| {
+        self.builder.lookup_const_u64(v.def).map(|v| {
             if sign_ext {
                 v as i64 as i128 as u128
             } else {
@@ -222,8 +211,8 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             self.constant_int(ty, data as u64)
                         }
                         SpirvType::Bool => match data {
-                            0 => self.emit_global().constant_false(ty).with_type(ty),
-                            1 => self.emit_global().constant_true(ty).with_type(ty),
+                            0 => self.constant_bool(false),
+                            1 => self.constant_bool(true),
                             _ => panic!("Invalid constant value for bool: {}", data),
                         },
                         other => panic!(
@@ -355,11 +344,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // println!("const at {}: {}", offset.bytes(), self.debug_type(ty));
         match ty_concrete {
             SpirvType::Void => panic!("Cannot create const alloc of type void"),
-            SpirvType::Bool => match self.read_alloc_val(alloc, offset, 1) != 0 {
-                true => self.emit_global().constant_true(ty),
-                false => self.emit_global().constant_false(ty),
-            }
-            .with_type(ty),
+            SpirvType::Bool => self.constant_bool(self.read_alloc_val(alloc, offset, 1) != 0),
             SpirvType::Integer(width, _) => {
                 let v = self.read_alloc_val(alloc, offset, (width / 8) as usize);
                 self.constant_int(ty, v as u64)
@@ -400,9 +385,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 );
                 }
                 Self::assert_uninit(alloc, base, *offset, occupied_spaces);
-                self.emit_global()
-                    .constant_composite(ty, values)
-                    .with_type(ty)
+                self.constant_composite(ty, values)
             }
             SpirvType::Opaque { name } => {
                 panic!("Cannot create const alloc of type opaque: {}", name)
@@ -412,27 +395,20 @@ impl<'tcx> CodegenCx<'tcx> {
                 let values = (0..count)
                     .map(|_| self.create_const_alloc2(alloc, offset, element).def)
                     .collect::<Vec<_>>();
-                self.emit_global()
-                    .constant_composite(ty, values)
-                    .with_type(ty)
+                self.constant_composite(ty, values)
             }
             SpirvType::Vector { element, count } => {
                 let values = (0..count)
                     .map(|_| self.create_const_alloc2(alloc, offset, element).def)
                     .collect::<Vec<_>>();
-                self.emit_global()
-                    .constant_composite(ty, values)
-                    .with_type(ty)
+                self.constant_composite(ty, values)
             }
             SpirvType::RuntimeArray { element } => {
                 let mut values = Vec::new();
                 while offset.bytes_usize() != alloc.len() {
                     values.push(self.create_const_alloc2(alloc, offset, element).def);
                 }
-                let result = self
-                    .emit_global()
-                    .constant_composite(ty, values)
-                    .with_type(ty);
+                let result = self.constant_composite(ty, values);
                 // TODO: Figure out how to do this. Compiling the below crashes both clspv *and* llvm-spirv:
                 /*
                 __constant struct A {
@@ -518,20 +494,5 @@ impl<'tcx> CodegenCx<'tcx> {
             );
             index += Size::from_bytes(1);
         }
-    }
-
-    fn const_bytes(&self, bytes: &[u8]) -> SpirvValue {
-        let ty = SpirvType::Array {
-            element: SpirvType::Integer(8, false).def(self),
-            count: self.constant_u32(bytes.len() as u32).def,
-        }
-        .def(self);
-        let values = bytes
-            .iter()
-            .map(|&b| self.constant_u8(b).def)
-            .collect::<Vec<_>>();
-        self.emit_global()
-            .constant_composite(ty, values)
-            .with_type(ty)
     }
 }
