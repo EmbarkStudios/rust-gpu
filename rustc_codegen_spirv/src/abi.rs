@@ -1,5 +1,8 @@
+//! This file is responsible for translation from rustc tys (TyAndLayout) to spir-v types. It's surprisingly difficult.
+
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
+use crate::symbols::{parse_attr, SpirvAttribute};
 use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind};
@@ -13,13 +16,23 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Write;
 
+/// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk of the fields will
+/// result in an infinite loop. Because pointers are the only thing that are allowed to be recursive, keep track of what
+/// pointers we've translated, or are currently in the progress of translating, and break the recursion that way. This
+/// struct manages that state tracking.
 #[derive(Default)]
 pub struct RecursivePointeeCache<'tcx> {
     map: RefCell<HashMap<PointeeTy<'tcx>, PointeeDefState>>,
 }
 
 impl<'tcx> RecursivePointeeCache<'tcx> {
-    fn begin(&self, cx: &CodegenCx<'tcx>, pointee: PointeeTy<'tcx>) -> Option<Word> {
+    fn begin(
+        &self,
+        cx: &CodegenCx<'tcx>,
+        pointee: PointeeTy<'tcx>,
+        storage_class: StorageClass,
+    ) -> Option<Word> {
+        // Warning: storage_class must match the one called with end()
         match self.map.borrow_mut().entry(pointee) {
             // State: This is the first time we've seen this type. Record that we're beginning to translate this type,
             // and start doing the translation.
@@ -33,9 +46,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                 // emit an OpTypeForwardPointer, and use that ID. (This is the juicy part of this algorithm)
                 PointeeDefState::Defining => {
                     let new_id = cx.emit_global().id();
-                    // StorageClass will be fixed up later
-                    cx.emit_global()
-                        .type_forward_pointer(new_id, StorageClass::Generic);
+                    cx.emit_global().type_forward_pointer(new_id, storage_class);
                     entry.insert(PointeeDefState::DefiningWithForward(new_id));
                     Some(new_id)
                 }
@@ -54,6 +65,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
         storage_class: StorageClass,
         pointee_spv: Word,
     ) -> Word {
+        // Warning: storage_class must match the one called with begin()
         match self.map.borrow_mut().entry(pointee) {
             // We should have hit begin() on this type already, which always inserts an entry.
             Entry::Vacant(_) => panic!("RecursivePointeeCache::end should always have entry"),
@@ -73,7 +85,6 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                 // Make sure to use the same ID.
                 PointeeDefState::DefiningWithForward(id) => {
                     entry.insert(PointeeDefState::Defined(id));
-                    cx.builder.fix_up_pointer_forward(id, storage_class);
                     SpirvType::Pointer {
                         storage_class,
                         pointee: pointee_spv,
@@ -109,8 +120,13 @@ enum PointeeDefState {
     Defined(Word),
 }
 
+/// Various type-like things can be converted to a spirv type - normal types, function types, etc. - and this trait
+/// provides a uniform way of translating them.
 pub trait ConvSpirvType<'tcx> {
     fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word;
+    /// spirv (and llvm) do not allow storing booleans in memory, they are abstract unsized values. So, if we're dealing
+    /// with a "memory type", convert bool to u8. The opposite is an "immediate type", which keeps bools as bools. See
+    /// also the functions from_immediate and to_immediate, which convert between the two.
     fn spirv_type_immediate(&self, cx: &CodegenCx<'tcx>) -> Word {
         self.spirv_type(cx)
     }
@@ -280,8 +296,9 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
 }
 
 fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immediate: bool) -> Word {
-    // Note: ty.abi is orthogonal to ty.variants and ty.fields, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
+    // Note: ty.layout is orthogonal to ty.ty, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
     // `ScalarPair`.
+    // There's a few layers that we go through here. First we inspect layout.abi, then if relevant, layout.fields, etc.
     match ty.abi {
         Abi::Uninhabited => SpirvType::Adt {
             name: format!("<uninhabited={}>", ty.ty),
@@ -324,7 +341,7 @@ fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immedia
     }
 }
 
-// only pub for LayoutTypeMethods::scalar_pair_element_backend_type
+/// Only pub for LayoutTypeMethods::scalar_pair_element_backend_type. Think about what you're doing before calling this.
 pub fn scalar_pair_element_backend_type<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
@@ -338,6 +355,13 @@ pub fn scalar_pair_element_backend_type<'tcx>(
     trans_scalar(cx, ty, scalar, Some(index), is_immediate)
 }
 
+/// A "scalar" is a basic building block: bools, ints, floats, pointers. (i.e. not something complex like a struct)
+/// A "scalar pair" is a bit of a strange concept: if there is a `fn f(x: (u32, u32))`, then what's preferred for
+/// performance is to compile that ABI to `f(x_1: u32, x_2: u32)`, i.e. splitting out the pair into their own arguments,
+/// and pretending that they're one unit. So, there's quite a bit of special handling around these scalar pairs to enable
+/// scenarios like that.
+/// I say it's "preferred", but spirv doesn't really care - only CPU ABIs really care here. However, following rustc's
+/// lead and doing what they want makes things go smoothly, so we'll implement it here too.
 fn trans_scalar<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
@@ -359,21 +383,22 @@ fn trans_scalar<'tcx>(
         Primitive::F32 => SpirvType::Float(32).def(cx),
         Primitive::F64 => SpirvType::Float(64).def(cx),
         Primitive::Pointer => {
-            let pointee_ty = dig_scalar_pointee(cx, ty, index);
+            let (storage_class, pointee_ty) = dig_scalar_pointee(cx, ty, index);
+            // Default to function storage class.
+            let storage_class = storage_class.unwrap_or(StorageClass::Function);
             // Pointers can be recursive. So, record what we're currently translating, and if we're already translating
             // the same type, emit an OpTypeForwardPointer and use that ID.
             if let Some(predefined_result) =
-                cx.type_cache.recursive_pointee_cache.begin(cx, pointee_ty)
+                cx.type_cache
+                    .recursive_pointee_cache
+                    .begin(cx, pointee_ty, storage_class)
             {
                 predefined_result
             } else {
                 let pointee = pointee_ty.spirv_type(cx);
-                cx.type_cache.recursive_pointee_cache.end(
-                    cx,
-                    pointee_ty,
-                    StorageClass::Function,
-                    pointee,
-                )
+                cx.type_cache
+                    .recursive_pointee_cache
+                    .end(cx, pointee_ty, storage_class, pointee)
             }
         }
     }
@@ -393,12 +418,12 @@ fn dig_scalar_pointee<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     index: Option<usize>,
-) -> PointeeTy<'tcx> {
+) -> (Option<StorageClass>, PointeeTy<'tcx>) {
     match *ty.ty.kind() {
         TyKind::Ref(_region, elem_ty, _mutability) => {
             let elem = cx.layout_of(elem_ty);
             match index {
-                None => PointeeTy::Ty(elem),
+                None => (None, PointeeTy::Ty(elem)),
                 Some(index) => {
                     if elem.is_unsized() {
                         dig_scalar_pointee(cx, ty.field(cx, index), None)
@@ -407,7 +432,7 @@ fn dig_scalar_pointee<'tcx>(
                         // of ScalarPair could be deduced, but it's actually e.g. a sized pointer followed by some other
                         // completely unrelated type, not a wide pointer. So, translate this as a single scalar, one
                         // component of that ScalarPair.
-                        PointeeTy::Ty(elem)
+                        (None, PointeeTy::Ty(elem))
                     }
                 }
             }
@@ -415,18 +440,18 @@ fn dig_scalar_pointee<'tcx>(
         TyKind::RawPtr(type_and_mut) => {
             let elem = cx.layout_of(type_and_mut.ty);
             match index {
-                None => PointeeTy::Ty(elem),
+                None => (None, PointeeTy::Ty(elem)),
                 Some(index) => {
                     if elem.is_unsized() {
                         dig_scalar_pointee(cx, ty.field(cx, index), None)
                     } else {
                         // Same comment as TyKind::Ref
-                        PointeeTy::Ty(elem)
+                        (None, PointeeTy::Ty(elem))
                     }
                 }
             }
         }
-        TyKind::FnPtr(sig) if index.is_none() => PointeeTy::Fn(sig),
+        TyKind::FnPtr(sig) if index.is_none() => (None, PointeeTy::Fn(sig)),
         TyKind::Adt(def, _) if def.is_box() => {
             let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
             dig_scalar_pointee(cx, ptr_ty, index)
@@ -445,8 +470,11 @@ fn dig_scalar_pointee_adt<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     index: Option<usize>,
-) -> PointeeTy<'tcx> {
-    match &ty.variants {
+) -> (Option<StorageClass>, PointeeTy<'tcx>) {
+    // Storage classes can only be applied on structs containing a single pointer field (because we said so), so we only
+    // need to handle the attribute here.
+    let storage_class = get_storage_class(cx, ty);
+    let result = match &ty.variants {
         // If it's a Variants::Multiple, then we want to emit the type of the dataful variant, not the type of the
         // discriminant. This is because the discriminant can e.g. have type *mut(), whereas we want the full underlying
         // type, only available in the dataful variant.
@@ -500,7 +528,28 @@ fn dig_scalar_pointee_adt<'tcx>(
                 },
             }
         }
+    };
+    match (storage_class, result) {
+        (storage_class, (None, result)) => (storage_class, result),
+        (None, (storage_class, result)) => (storage_class, result),
+        (Some(one), (Some(two), _)) => panic!(
+            "Double-applied storage class ({:?} and {:?}) on type {}",
+            one, two, ty.ty
+        ),
     }
+}
+
+/// Handles #[spirv(storage_class="blah")]. Note this is only called in the scalar translation code, because this is only used for spooky builtin stuff, and we
+fn get_storage_class<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Option<StorageClass> {
+    if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
+        // TODO: Split out this attribute parsing
+        for attr in cx.tcx.get_attrs(adt.did) {
+            if let Some(SpirvAttribute::StorageClass(storage_class)) = parse_attr(cx, attr) {
+                return Some(storage_class);
+            }
+        }
+    }
+    None
 }
 
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
@@ -592,7 +641,7 @@ pub fn auto_struct_layout<'tcx>(
 fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     let name = name_of_struct(ty);
     if let TyKind::Foreign(_) = ty.ty.kind() {
-        // "An unsized FFI type that is opaque to Rust"
+        // "An unsized FFI type that is opaque to Rust", `extern type A;` (currently unstable)
         if cx.kernel_mode {
             return SpirvType::Opaque { name }.def(cx);
         }

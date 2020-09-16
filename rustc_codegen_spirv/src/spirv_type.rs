@@ -26,8 +26,6 @@ pub enum SpirvType {
         field_offsets: Vec<Size>,
         field_names: Option<Vec<String>>,
     },
-    // see comment where Opaque is constructed
-    #[allow(dead_code)]
     Opaque {
         name: String,
     },
@@ -118,7 +116,7 @@ impl SpirvType {
                     .type_int(width, if signedness { 1 } else { 0 });
                 match width {
                     8 | 16 | 32 | 64 => (),
-                    128 => cx.poison(result),
+                    128 => cx.zombie(result, "u128"),
                     other => panic!("Integer width {} invalid for spir-v", other),
                 };
                 result
@@ -187,7 +185,7 @@ impl SpirvType {
             SpirvType::RuntimeArray { element } => {
                 let result = cx.emit_global().type_runtime_array(element);
                 if cx.kernel_mode {
-                    cx.poison(result);
+                    cx.zombie(result, "RuntimeArray in kernel mode");
                 }
                 result
             }
@@ -198,7 +196,7 @@ impl SpirvType {
                 let result = cx.emit_global().type_pointer(None, storage_class, pointee);
                 // no pointers to functions
                 if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
-                    cx.poison(result)
+                    cx.zombie(result, "pointer to function")
                 }
                 result
             }
@@ -228,7 +226,7 @@ impl SpirvType {
                     .type_pointer(Some(id), storage_class, pointee);
                 // no pointers to functions
                 if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
-                    cx.poison(result)
+                    cx.zombie(result, "pointer to function")
                 }
                 result
             }

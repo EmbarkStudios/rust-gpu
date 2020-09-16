@@ -15,18 +15,6 @@ use rustc_target::abi::{Abi, Align, Scalar, Size};
 use std::iter::empty;
 use std::ops::Range;
 
-macro_rules! assert_ty_eq {
-    ($codegen_cx:expr, $left:expr, $right:expr) => {
-        assert_eq!(
-            $left,
-            $right,
-            "Expected types to be equal:\n{}\n==\n{}",
-            $codegen_cx.debug_type($left),
-            $codegen_cx.debug_type($right)
-        )
-    };
-}
-
 macro_rules! simple_op {
     ($func_name:ident, $inst_name:ident) => {
         fn $func_name(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {

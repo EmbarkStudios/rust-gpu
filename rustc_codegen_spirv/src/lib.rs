@@ -18,6 +18,18 @@ extern crate rustc_span;
 extern crate rustc_symbol_mangling;
 extern crate rustc_target;
 
+macro_rules! assert_ty_eq {
+    ($codegen_cx:expr, $left:expr, $right:expr) => {
+        assert_eq!(
+            $left,
+            $right,
+            "Expected types to be equal:\n{}\n==\n{}",
+            $codegen_cx.debug_type($left),
+            $codegen_cx.debug_type($right)
+        )
+    };
+}
+
 mod abi;
 mod builder;
 mod builder_spirv;
@@ -25,7 +37,7 @@ mod codegen_cx;
 mod finalizing_passes;
 mod link;
 mod spirv_type;
-mod things;
+mod symbols;
 
 #[cfg(test)]
 #[path = "../test/lib.rs"]
@@ -39,10 +51,11 @@ use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModul
 use rustc_codegen_ssa::back::write::{CodegenContext, FatLTOInput, ModuleConfig, OngoingCodegen};
 use rustc_codegen_ssa::base::maybe_create_entry_wrapper;
 use rustc_codegen_ssa::mono_item::MonoItemExt;
-use rustc_codegen_ssa::traits::{CodegenBackend, ExtraBackendMethods, WriteBackendMethods};
+use rustc_codegen_ssa::traits::{
+    CodegenBackend, ExtraBackendMethods, ModuleBufferMethods, ThinBufferMethods,
+    WriteBackendMethods,
+};
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
-use rustc_data_structures::owning_ref::OwningRef;
-use rustc_data_structures::rustc_erase_owner;
 use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::{ErrorReported, FatalError, Handler};
 use rustc_middle::dep_graph::{DepGraph, WorkProduct};
@@ -55,11 +68,11 @@ use rustc_serialize::json;
 use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::Symbol;
+use rustc_target::spec::abi::Abi;
 use rustc_target::spec::Target;
 use std::any::Any;
 use std::path::Path;
 use std::{fs::File, io::Write, sync::Arc};
-use things::{SpirvModuleBuffer, SpirvThinBuffer};
 
 fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
     match instance.def {
@@ -82,18 +95,33 @@ fn is_blocklisted_fn(symbol_name: &str) -> bool {
     symbol_name.contains("core..fmt..Debug")
 }
 
-struct NoLlvmMetadataLoader;
+// TODO: Should this store Vec or Module?
+struct SpirvModuleBuffer(Vec<u32>);
 
-impl MetadataLoader for NoLlvmMetadataLoader {
-    fn get_rlib_metadata(&self, _: &Target, filename: &Path) -> Result<MetadataRef, String> {
-        let buf =
-            std::fs::read(filename).map_err(|e| format!("metadata file open err: {:?}", e))?;
-        let buf: OwningRef<Vec<u8>, [u8]> = OwningRef::new(buf);
-        Ok(rustc_erase_owner!(buf.map_owner_box()))
+impl ModuleBufferMethods for SpirvModuleBuffer {
+    fn data(&self) -> &[u8] {
+        crate::slice_u32_to_u8(&self.0)
+    }
+}
+
+// TODO: Should this store Vec or Module?
+struct SpirvThinBuffer(Vec<u32>);
+
+impl ThinBufferMethods for SpirvThinBuffer {
+    fn data(&self) -> &[u8] {
+        crate::slice_u32_to_u8(&self.0)
+    }
+}
+
+struct SpirvMetadataLoader;
+
+impl MetadataLoader for SpirvMetadataLoader {
+    fn get_rlib_metadata(&self, _: &Target, path: &Path) -> Result<MetadataRef, String> {
+        Ok(link::read_metadata(path))
     }
 
-    fn get_dylib_metadata(&self, target: &Target, filename: &Path) -> Result<MetadataRef, String> {
-        self.get_rlib_metadata(target, filename)
+    fn get_dylib_metadata(&self, _: &Target, _: &Path) -> Result<MetadataRef, String> {
+        panic!("TODO: implement get_dylib_metadata");
     }
 }
 
@@ -102,21 +130,46 @@ struct SpirvCodegenBackend;
 
 impl CodegenBackend for SpirvCodegenBackend {
     fn metadata_loader(&self) -> Box<MetadataLoaderDyn> {
-        Box::new(NoLlvmMetadataLoader)
+        Box::new(SpirvMetadataLoader)
     }
 
     fn provide(&self, providers: &mut Providers) {
-        rustc_symbol_mangling::provide(providers);
-
-        providers.supported_target_features = |_tcx, _cnum| {
-            // Temp hack to make wasm target work
-            [("simd128".to_string(), None)].iter().cloned().collect()
+        // For now, rustc requires this to be provided.
+        providers.supported_target_features = |_, _| Default::default();
+        // This is a lil weird: so, we obviously don't support C ABIs at all. However, libcore does declare some extern
+        // C functions:
+        // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/slice/cmp.rs#L119
+        // However, those functions will be implemented by compiler-builtins:
+        // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/lib.rs#L23-L27
+        // This theoretically then should be fine to leave as C, but, there's no backend hook for
+        // FnAbi::adjust_for_cabi, causing it to panic:
+        // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/compiler/rustc_target/src/abi/call/mod.rs#L603
+        // So, treat any extern "C" functions as actually being Rust ABI, to be able to compile libcore with arch=spirv.
+        providers.fn_sig = |tcx, def_id| {
+            // We can't capture the old fn_sig and just call that, because fn_sig is a `fn`, not a `Fn`, i.e. it can't
+            // capture variables. Fortunately, the defaults are exposed (thanks rustdoc), so use that instead.
+            let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
+            result.map_bound(|mut inner| {
+                if inner.abi == Abi::C {
+                    inner.abi = Abi::Rust;
+                }
+                inner
+            })
         };
-        // Temp hack to make wasm target work
-        providers.wasm_import_module_map = |_tcx, _crate| Default::default();
     }
 
-    fn provide_extern(&self, _providers: &mut Providers) {}
+    fn provide_extern(&self, providers: &mut Providers) {
+        // See comments in provide(), only this time we use the default *extern* provider.
+        providers.fn_sig = |tcx, def_id| {
+            let result = (rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
+            result.map_bound(|mut inner| {
+                if inner.abi == Abi::C {
+                    inner.abi = Abi::Rust;
+                }
+                inner
+            })
+        };
+    }
 
     fn codegen_crate<'tcx>(
         &self,
@@ -220,6 +273,14 @@ impl WriteBackendMethods for SpirvCodegenBackend {
     type Context = ();
     type ThinData = ();
     type ThinBuffer = SpirvThinBuffer;
+
+    fn run_link(
+        _cgcx: &CodegenContext<Self>,
+        _diag_handler: &Handler,
+        _modules: Vec<ModuleCodegen<Self::Module>>,
+    ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
+        todo!()
+    }
 
     fn run_fat_lto(
         _: &CodegenContext<Self>,
@@ -327,7 +388,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
 impl ExtraBackendMethods for SpirvCodegenBackend {
     fn new_metadata(&self, _: TyCtxt<'_>, _: &str) -> Self::Module {
-        todo!()
+        Self::Module::new()
     }
 
     fn write_compressed_metadata<'tcx>(
@@ -336,7 +397,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         _: &EncodedMetadata,
         _: &mut Self::Module,
     ) {
-        todo!()
+        // Ignore for now.
     }
 
     fn codegen_allocator<'tcx>(&self, _: TyCtxt<'tcx>, _: &mut Self::Module, _: AllocatorKind) {

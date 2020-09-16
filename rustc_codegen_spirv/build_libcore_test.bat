@@ -1,8 +1,8 @@
 setlocal
 cargo build
 
-set RUSTFLAGS=-Zcodegen-backend=%cd%/target/debug/rustc_codegen_spirv.dll
+set RUSTFLAGS=-Zcodegen-backend=%cd%/../target/debug/rustc_codegen_spirv.dll -Ccodegen-units=1
 
 pushd build_libcore_test
-xargo build --target wasm32-unknown-unknown
+cargo build -Z build-std=core --target ../spirv-target.json --release
 popd
