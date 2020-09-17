@@ -1,5 +1,5 @@
-use rspirv_linker::*;
 use rspirv::binary::Disassemble;
+use rspirv_linker::*;
 
 fn main() -> Result<()> {
     let body1 = include_bytes!("../test/1/body_1.spv");
