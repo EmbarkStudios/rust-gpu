@@ -82,6 +82,27 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 return;
             }
 
+            sym::saturating_add => {
+                assert_eq!(arg_tys[0], arg_tys[1]);
+                match &arg_tys[0].kind() {
+                    TyKind::Int(_) | TyKind::Uint(_) => {
+                        self.add(args[0].immediate(), args[1].immediate())
+                    }
+                    TyKind::Float(_) => self.fadd(args[0].immediate(), args[1].immediate()),
+                    other => panic!("Unimplemented intrinsic type: {:#?}", other),
+                }
+            }
+            sym::saturating_sub => {
+                assert_eq!(arg_tys[0], arg_tys[1]);
+                match &arg_tys[0].kind() {
+                    TyKind::Int(_) | TyKind::Uint(_) => {
+                        self.sub(args[0].immediate(), args[1].immediate())
+                    }
+                    TyKind::Float(_) => self.fsub(args[0].immediate(), args[1].immediate()),
+                    other => panic!("Unimplemented intrinsic type: {:#?}", other),
+                }
+            }
+
             // TODO: Configure these to be ocl vs. gl ext instructions, etc.
             sym::sqrtf32 | sym::sqrtf64 => {
                 if self.kernel_mode {
