@@ -3,12 +3,12 @@
 #![register_attr(spirv)]
 
 use core::panic::PanicInfo;
-use spirv_std::Workgroup;
+use spirv_std::{CrossWorkgroup, UniformConstant};
 
 #[allow(unused_attributes)]
 #[spirv(entry = "kernel")]
-pub fn screaming_bananans(mut x: Workgroup<u32>) {
-    x.store(x.load() + 1);
+pub fn add_two_ints(x: UniformConstant<u32>, y: UniformConstant<u32>, mut z: CrossWorkgroup<u32>) {
+    z.store(x.load() + y.load())
 }
 
 #[panic_handler]

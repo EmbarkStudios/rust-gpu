@@ -15,6 +15,7 @@ pub struct Symbols {
 
 fn make_storage_classes() -> HashMap<Symbol, StorageClass> {
     use StorageClass::*;
+    // make sure these strings stay synced with spirv-std's pointer types
     [
         ("uniform_constant", UniformConstant),
         ("input", Input),

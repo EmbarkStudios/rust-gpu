@@ -6,7 +6,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::{fs::File, io::Write, path::Path};
 
-#[derive(Copy, Clone, Debug, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct SpirvValue {
     pub def: Word,
     pub ty: Word,

@@ -3,15 +3,15 @@ mod declare;
 mod type_;
 
 use crate::builder::ExtInst;
-use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue};
+use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
 use crate::finalizing_passes::{block_ordering_pass, delete_dead_blocks, zombie_pass};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
-use rspirv::spirv::{Decoration, LinkageType, Word};
+use rspirv::spirv::{Decoration, LinkageType, StorageClass, Word};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
-    AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods, StaticMethods,
+    AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
 };
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir::GlobalAsm;
@@ -25,7 +25,7 @@ use rustc_span::source_map::Span;
 use rustc_span::symbol::Symbol;
 use rustc_span::SourceFile;
 use rustc_target::abi::call::FnAbi;
-use rustc_target::abi::{Align, HasDataLayout, TargetDataLayout};
+use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -51,6 +51,8 @@ pub struct CodegenCx<'tcx> {
     pub kernel_mode: bool,
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
+    /// Functions created in get_fn_addr
+    pub function_pointers: RefCell<HashMap<SpirvValue, SpirvValue>>,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -68,6 +70,7 @@ impl<'tcx> CodegenCx<'tcx> {
             zombie_values: Default::default(),
             kernel_mode: true,
             sym: Box::new(Symbols::new()),
+            function_pointers: Default::default(),
         }
     }
 
@@ -186,7 +189,16 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
 
     fn get_fn_addr(&self, instance: Instance<'tcx>) -> Self::Value {
         let function = self.get_fn_ext(instance);
-        self.static_addr_of(function, Align::from_bytes(0).unwrap(), None)
+        let ty = SpirvType::Pointer {
+            storage_class: StorageClass::Function,
+            pointee: function.ty,
+        }
+        .def(self);
+        // We want a unique ID for these undefs, so don't use the caching system.
+        let result = self.emit_global().undef(ty, None).with_type(ty);
+        self.zombie(result.def, "get_fn_addr");
+        self.function_pointers.borrow_mut().insert(result, function);
+        result
     }
 
     fn eh_personality(&self) -> Self::Value {

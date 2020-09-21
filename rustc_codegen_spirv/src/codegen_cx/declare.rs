@@ -3,7 +3,7 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attr, SpirvAttribute};
-use rspirv::spirv::{FunctionControl, LinkageType, StorageClass};
+use rspirv::spirv::{ExecutionModel, FunctionControl, LinkageType, StorageClass};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{DeclareMethods, MiscMethods, PreDefineMethods, StaticMethods};
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
@@ -147,6 +147,102 @@ impl<'tcx> CodegenCx<'tcx> {
         self.instances.borrow_mut().insert(instance, g);
         g
     }
+
+    // Entry points declare their "interface" (all uniforms, inputs, outputs, etc.) as parameters. spir-v uses globals
+    // to declare the interface. So, we need to generate a lil stub for the "real" main that collects all those global
+    // variables and calls the user-defined main function.
+    fn entry_stub(&self, entry_func: SpirvValue, name: String, execution_model: ExecutionModel) {
+        let void = SpirvType::Void.def(self);
+        let fn_void_void = SpirvType::Function {
+            return_type: void,
+            arguments: vec![],
+        }
+        .def(self);
+        let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
+            SpirvType::Function {
+                return_type,
+                arguments,
+            } => (return_type, arguments),
+            other => panic!(
+                "Invalid entry_stub type: {}",
+                other.debug(entry_func.ty, self)
+            ),
+        };
+        let mut emit = self.emit_global();
+        // Create OpVariables before OpFunction so they're global instead of local vars.
+        let arguments = entry_func_args
+            .iter()
+            .map(|&arg| {
+                let storage_class = match self.lookup_type(arg) {
+                    SpirvType::Pointer { storage_class, .. } => storage_class,
+                    other => panic!("Invalid entry arg type {}", other.debug(arg, self)),
+                };
+                // Note: this *declares* the variable too.
+                emit.variable(arg, None, storage_class, None)
+            })
+            .collect::<Vec<_>>();
+        let fn_id = emit
+            .begin_function(void, None, FunctionControl::NONE, fn_void_void)
+            .unwrap();
+        emit.begin_block(None).unwrap();
+        emit.function_call(
+            entry_func_return,
+            None,
+            entry_func.def,
+            arguments.iter().copied(),
+        )
+        .unwrap();
+        emit.ret().unwrap();
+        emit.end_function().unwrap();
+
+        let interface = arguments;
+        emit.entry_point(execution_model, fn_id, name, interface);
+    }
+
+    // Kernel mode takes its interface as function parameters(??)
+    // OpEntryPoints cannot be OpLinkage, so write out a stub to call through.
+    fn kernel_entry_stub(
+        &self,
+        entry_func: SpirvValue,
+        name: String,
+        execution_model: ExecutionModel,
+    ) {
+        let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
+            SpirvType::Function {
+                return_type,
+                arguments,
+            } => (return_type, arguments),
+            other => panic!(
+                "Invalid kernel_entry_stub type: {}",
+                other.debug(entry_func.ty, self)
+            ),
+        };
+        let mut emit = self.emit_global();
+        let fn_id = emit
+            .begin_function(
+                entry_func_return,
+                None,
+                FunctionControl::NONE,
+                entry_func.ty,
+            )
+            .unwrap();
+        let arguments = entry_func_args
+            .iter()
+            .map(|&ty| emit.function_parameter(ty).unwrap())
+            .collect::<Vec<_>>();
+        emit.begin_block(None).unwrap();
+        let call_result = emit
+            .function_call(entry_func_return, None, entry_func.def, arguments)
+            .unwrap();
+        if self.lookup_type(entry_func_return) == SpirvType::Void {
+            emit.ret().unwrap();
+        } else {
+            emit.ret_value(call_result).unwrap();
+        }
+        emit.end_function().unwrap();
+
+        emit.entry_point(execution_model, fn_id, name, &[]);
+    }
 }
 
 impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
@@ -198,13 +294,11 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
         for attr in self.tcx.get_attrs(instance.def_id()) {
             if let Some(SpirvAttribute::Entry(execution_model)) = parse_attr(self, attr) {
-                let interface = &[];
-                self.emit_global().entry_point(
-                    execution_model,
-                    declared.def,
-                    human_name.clone(),
-                    interface,
-                );
+                if execution_model == ExecutionModel::Kernel {
+                    self.kernel_entry_stub(declared, human_name.clone(), execution_model);
+                } else {
+                    self.entry_stub(declared, human_name.clone(), execution_model);
+                }
             }
         }
 
