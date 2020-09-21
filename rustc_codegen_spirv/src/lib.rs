@@ -69,7 +69,7 @@ use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::Symbol;
 use rustc_target::spec::abi::Abi;
-use rustc_target::spec::Target;
+use rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions, TargetTriple};
 use std::any::Any;
 use std::path::Path;
 use std::{fs::File, io::Write, sync::Arc};
@@ -93,6 +93,33 @@ fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
 fn is_blocklisted_fn(symbol_name: &str) -> bool {
     // TODO: These sometimes have a constant value of an enum variant with a hole
     symbol_name.contains("core..fmt..Debug")
+}
+
+fn target_options() -> Target {
+    Target {
+        llvm_target: "no-llvm".to_string(),
+        target_endian: "little".to_string(),
+        target_pointer_width: "32".to_string(),
+        target_c_int_width: "32".to_string(),
+        target_os: "unknown".to_string(),
+        target_env: String::new(),
+        target_vendor: "unknown".to_string(),
+        data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".to_string(),
+        arch: "spirv".to_string(),
+        linker_flavor: LinkerFlavor::Ld,
+        options: TargetOptions {
+            dll_prefix: "".to_string(),
+            dll_suffix: ".spv".to_string(),
+            panic_strategy: PanicStrategy::Abort,
+            emit_debug_gdb_scripts: false,
+            allows_weak_linkage: false,
+            dynamic_linking: true,
+            crt_static_allows_dylibs: true,
+            // TODO: Investigate if main_needs_argc_argv is useful (for building exes)
+            main_needs_argc_argv: false,
+            ..Default::default()
+        },
+    }
 }
 
 // TODO: Should this store Vec or Module?
@@ -131,6 +158,18 @@ struct SpirvCodegenBackend;
 impl CodegenBackend for SpirvCodegenBackend {
     fn metadata_loader(&self) -> Box<MetadataLoaderDyn> {
         Box::new(SpirvMetadataLoader)
+    }
+
+    fn target_override(&self, opts: &config::Options) -> Option<Target> {
+        match opts.target_triple {
+            TargetTriple::TargetTriple(ref target_triple) => match &**target_triple {
+                // TODO: Do we want to match *everything* here, since, well, we only support one thing? that will allow
+                // folks to not specify --target spirv-unknown-unknown on the commandline.
+                "spirv-unknown-unknown" => Some(target_options()),
+                _ => None,
+            },
+            TargetTriple::TargetPath(_) => None,
+        }
     }
 
     fn provide(&self, providers: &mut Providers) {

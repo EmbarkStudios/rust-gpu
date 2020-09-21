@@ -9,5 +9,5 @@ cargo build
 export RUSTFLAGS="-Zcodegen-backend=$PWD/../target/debug/librustc_codegen_spirv.so -Ccodegen-units=1"
 
 pushd build_libcore_test
-cargo build -Z build-std=core --target ../spirv-target.json --release
+cargo build -Z build-std=core --target spirv-unknown-unknown --release
 popd

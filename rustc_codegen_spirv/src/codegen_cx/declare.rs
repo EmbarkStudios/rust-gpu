@@ -6,11 +6,8 @@ use crate::symbols::{parse_attr, SpirvAttribute};
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{DeclareMethods, MiscMethods, PreDefineMethods, StaticMethods};
-use rustc_middle::middle::codegen_fn_attrs::CodegenFnAttrFlags;
-use rustc_middle::middle::codegen_fn_attrs::CodegenFnAttrs;
-use rustc_middle::mir::interpret::ConstValue;
-use rustc_middle::mir::mono::MonoItem;
-use rustc_middle::mir::mono::{Linkage, Visibility};
+use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
+use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::FnAbiExt;
 use rustc_middle::ty::{Instance, ParamEnv, Ty, TypeFoldable};
 use rustc_span::def_id::DefId;
@@ -215,6 +212,8 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
+// Note: DeclareMethods is getting nuked soon, don't spend time fleshing out these impls.
+// https://github.com/rust-lang/rust/pull/76872
 impl<'tcx> DeclareMethods<'tcx> for CodegenCx<'tcx> {
     fn declare_global(&self, name: &str, ty: Self::Type) -> Self::Value {
         let ptr_ty = SpirvType::Pointer {
@@ -287,9 +286,8 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
         let g = self.get_static(def_id);
 
-        let alloc = match self.tcx.const_eval_poly(def_id) {
-            Ok(ConstValue::ByRef { alloc, offset }) if offset.bytes() == 0 => alloc,
-            Ok(val) => panic!("static const eval returned {:#?}", val),
+        let alloc = match self.tcx.eval_static_initializer(def_id) {
+            Ok(alloc) => alloc,
             // Error has already been reported
             Err(_) => return,
         };

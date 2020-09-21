@@ -55,7 +55,7 @@ There are a few different components to this repo - for example, the [rfcs folde
     rustup +nightly component add rust-src rustc-dev llvm-tools-preview
     ```
 2) `cargo build`. Note the `rust-toolchain` file that specifies nightly, this is equivalent to passing `cargo +nightly build`, without having to type that out. (If you run that `rustup component add` in this directory, you don't need to pass +nightly either)
-3) Run (i.e. compile a shader): This is pretty complicated right now, we're working on making the UX better. It involves passing `-Z codegen-backend` to rustc, and `-Z build-std=core` and `--target ./spirv-target.json` to cargo. However, both building the compiler, and compiling a sample test project (`build_libcore_test`) is automated by the script `build_libcore_test.sh`/`build_libcore_test.bat`. Feel free to inspect those scripts for what's needed, if you'd like to try yourself.
+3) Run (i.e. compile a shader): This is pretty complicated right now, we're working on making the UX better. It involves passing `-Z codegen-backend` to rustc, and `-Z build-std=core` and `--target spirv-unknown-unknown` to cargo. However, both building the compiler, and compiling a sample test project (`build_libcore_test`) is automated by the script `build_libcore_test.sh`/`build_libcore_test.bat`. Feel free to inspect those scripts for what's needed, if you'd like to try yourself.
 
 ## Contributing
 
