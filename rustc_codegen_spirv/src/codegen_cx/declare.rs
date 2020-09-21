@@ -145,6 +145,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let sym = self.tcx.symbol_name(instance).name;
         let g = self.declare_global(sym, self.layout_of(ty).spirv_type(self));
         self.instances.borrow_mut().insert(instance, g);
+        self.set_linkage(g.def, sym.to_string(), LinkageType::Import);
         g
     }
 
@@ -249,13 +250,18 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
     fn predefine_static(
         &self,
         def_id: DefId,
-        _linkage: Linkage,
+        linkage: Linkage,
         _visibility: Visibility,
         symbol_name: &str,
     ) {
         let instance = Instance::mono(self.tcx, def_id);
         let ty = instance.ty(self.tcx, ParamEnv::reveal_all());
         let spvty = self.layout_of(ty).spirv_type(self);
+        let linkage = match linkage {
+            Linkage::External => Some(LinkageType::Export),
+            Linkage::Internal => None,
+            other => panic!("TODO: Linkage type not supported yet: {:?}", other),
+        };
 
         let g = self.define_global(symbol_name, spvty).unwrap_or_else(|| {
             self.sess().span_fatal(
@@ -270,6 +276,9 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         // }
 
         self.instances.borrow_mut().insert(instance, g);
+        if let Some(linkage) = linkage {
+            self.set_linkage(g.def, symbol_name.to_string(), linkage);
+        }
     }
 
     fn predefine_fn(
