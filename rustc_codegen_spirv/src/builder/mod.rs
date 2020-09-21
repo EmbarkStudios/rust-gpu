@@ -38,6 +38,7 @@ pub struct Builder<'a, 'tcx> {
 }
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
+    /// See comment on BuilderCursor
     pub fn emit(&self) -> std::cell::RefMut<rspirv::dr::Builder> {
         self.emit_with_cursor(self.cursor)
     }

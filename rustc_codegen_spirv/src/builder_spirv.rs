@@ -36,6 +36,22 @@ pub enum SpirvConst {
     Undef(Word),
 }
 
+/// Cursor system:
+/// The LLVM module builder model (and therefore codegen_ssa) assumes that there is a central module object, then,
+/// builder objects are created pointing at that central module object (e.g. for adding instructions to a basic block).
+/// Several of these builder objects can be live at the same time, mutating the central module object all at once.
+/// Unfortunately, rspirv doesn't work like that. Instead, there is a single builder object, which owns a module and a
+/// "cursor". This cursor indicates to the builder where to append instructions when an instruction is added - e.g. if
+/// add() is called, then OpAdd is appended to the basic block pointed to by the cursor.
+/// So! We emulate the LLVM system by treating the rspirv Builder as the "central module object", then, when a "builder
+/// object" is created, we store a reference to a RefCell<rspirv builder>, *as well as* a copy of the cursor for that
+/// particular builder. Whenever the RefCell is borrowed, then we stomp over the rspirv cursor with our copy, causing the
+/// duration of that RefCell borrow to use that cursor.
+/// So, if you're writing code inside crate::builder::Builder, then self.emit() will use self.cursor (the current basic
+/// block) as that "stomp-over" cursor and return a mutable reference to the rspirv builder. If you're writing code
+/// elsewhere (codegen_cx::CodegenCx), then self.emit_global() will use the generic "global cursor" and return a mutable
+/// reference to the rspirv builder with no basic block nor function selected, i.e. any instructions emitted will be in
+/// the global section.
 #[derive(Debug, Default, Copy, Clone)]
 #[must_use = "BuilderCursor should usually be assigned to the Builder.cursor field"]
 pub struct BuilderCursor {
@@ -99,8 +115,7 @@ impl BuilderSpirv {
             .unwrap();
     }
 
-    /// Note: This Builder can be used by multiple things being built at the same time, so, we need to save and restore
-    /// the current cursor every time we do something.
+    /// See comment on BuilderCursor
     pub fn builder(&self, cursor: BuilderCursor) -> RefMut<Builder> {
         let mut builder = self.builder.borrow_mut();
         // select_function does bounds checks and other relatively expensive things, so don't just call it

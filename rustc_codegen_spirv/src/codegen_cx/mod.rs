@@ -52,7 +52,7 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
     /// Functions created in get_fn_addr
-    pub function_pointers: RefCell<HashMap<SpirvValue, SpirvValue>>,
+    function_pointers: RefCell<HashMap<SpirvValue, SpirvValue>>,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -74,6 +74,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
     }
 
+    /// See comment on BuilderCursor
     pub fn emit_global(&self) -> std::cell::RefMut<rspirv::dr::Builder> {
         self.builder.builder(BuilderCursor {
             function: None,
@@ -81,6 +82,7 @@ impl<'tcx> CodegenCx<'tcx> {
         })
     }
 
+    /// See comment on BuilderCursor
     pub fn emit_with_cursor(
         &self,
         cursor: BuilderCursor,
@@ -130,6 +132,32 @@ impl<'tcx> CodegenCx<'tcx> {
             Decoration::LinkageAttributes,
             once(Operand::LiteralString(name)).chain(once(Operand::LinkageType(linkage))),
         )
+    }
+
+    /// Function pointer registration:
+    /// LLVM, and therefore codegen_ssa, is very murky with function values vs. function pointers. So, codegen_ssa has a
+    /// pattern where *even for direct function calls*, it uses get_fn_*addr*, and then uses that function *pointer* when
+    /// calling BuilderMethods::call(). However, spir-v doesn't support function pointers! So, instead, when get_fn_addr
+    /// is called, we register a "token" (via OpUndef), storing it in a dictionary. Then, when BuilderMethods::call() is
+    /// called, and it's calling a function pointer, we check the dictionary, and if it is, invoke the function directly.
+    /// It's kind of conceptually similar to a constexpr deref, except specialized to just functions.
+    pub fn register_fn_ptr(&self, function: SpirvValue) -> SpirvValue {
+        let ty = SpirvType::Pointer {
+            storage_class: StorageClass::Function,
+            pointee: function.ty,
+        }
+        .def(self);
+        // We want a unique ID for these undefs, so don't use the caching system.
+        let result = self.emit_global().undef(ty, None).with_type(ty);
+        // It's obviously invalid, so zombie it.
+        self.zombie(result.def, "get_fn_addr");
+        self.function_pointers.borrow_mut().insert(result, function);
+        result
+    }
+
+    /// See comment on register_fn_ptr
+    pub fn lookup_fn_ptr(&self, pointer: SpirvValue) -> Option<SpirvValue> {
+        self.function_pointers.borrow().get(&pointer).cloned()
     }
 }
 
@@ -189,16 +217,7 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
 
     fn get_fn_addr(&self, instance: Instance<'tcx>) -> Self::Value {
         let function = self.get_fn_ext(instance);
-        let ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: function.ty,
-        }
-        .def(self);
-        // We want a unique ID for these undefs, so don't use the caching system.
-        let result = self.emit_global().undef(ty, None).with_type(ty);
-        self.zombie(result.def, "get_fn_addr");
-        self.function_pointers.borrow_mut().insert(result, function);
-        result
+        self.register_fn_ptr(function)
     }
 
     fn eh_personality(&self) -> Self::Value {

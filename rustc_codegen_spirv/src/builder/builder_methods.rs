@@ -1318,8 +1318,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let (result_type, argument_types) = loop {
             match self.lookup_type(llfn.ty) {
                 SpirvType::Pointer { pointee, .. } => {
-                    if let Some(func) = self.cx.function_pointers.borrow().get(&llfn) {
-                        llfn = *func;
+                    // See comment on register_fn_ptr
+                    if let Some(func) = self.lookup_fn_ptr(llfn) {
+                        llfn = func;
                     } else {
                         llfn = self
                             .emit()
