@@ -3,9 +3,9 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attr, SpirvAttribute};
-use rspirv::spirv::{ExecutionModel, FunctionControl, LinkageType, StorageClass};
+use rspirv::spirv::{ExecutionModel, FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
-use rustc_codegen_ssa::traits::{DeclareMethods, MiscMethods, PreDefineMethods, StaticMethods};
+use rustc_codegen_ssa::traits::{MiscMethods, PreDefineMethods, StaticMethods};
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::FnAbiExt;
@@ -32,6 +32,10 @@ fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
 }
 
 impl<'tcx> CodegenCx<'tcx> {
+    fn get_declared_value(&self, name: &str) -> Option<SpirvValue> {
+        self.declared_values.borrow().get(name).copied()
+    }
+
     /// Returns a function if it already exists, or declares a header if it doesn't.
     pub fn get_fn_ext(&self, instance: Instance<'tcx>) -> SpirvValue {
         assert!(!instance.substs.needs_infer());
@@ -71,7 +75,6 @@ impl<'tcx> CodegenCx<'tcx> {
     // MiscMethods::get_fn -> get_fn_ext -> declare_fn_ext
     // MiscMethods::get_fn_addr -> get_fn_ext -> declare_fn_ext
     // PreDefineMethods::predefine_fn -> declare_fn_ext
-    // DeclareMethods::declare_fn -> declare_fn_ext (as of right now, this is never called)
     fn declare_fn_ext(
         &self,
         name: &str,
@@ -147,6 +150,24 @@ impl<'tcx> CodegenCx<'tcx> {
         self.instances.borrow_mut().insert(instance, g);
         self.set_linkage(g.def, sym.to_string(), LinkageType::Import);
         g
+    }
+
+    fn declare_global(&self, name: &str, ty: Word) -> SpirvValue {
+        let ptr_ty = SpirvType::Pointer {
+            storage_class: StorageClass::Function,
+            pointee: ty,
+        }
+        .def(self);
+        let result = self
+            .emit_global()
+            .variable(ptr_ty, None, StorageClass::Function, None)
+            .with_type(ptr_ty);
+        // TODO: These should be StorageClass::Private, so just zombie for now.
+        self.zombie(result.def, "declare_global");
+        self.declared_values
+            .borrow_mut()
+            .insert(name.to_string(), result);
+        result
     }
 
     // Entry points declare their "interface" (all uniforms, inputs, outputs, etc.) as parameters. spir-v uses globals
@@ -263,12 +284,14 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             other => panic!("TODO: Linkage type not supported yet: {:?}", other),
         };
 
-        let g = self.define_global(symbol_name, spvty).unwrap_or_else(|| {
+        let g = if self.get_declared_value(symbol_name).is_some() {
             self.sess().span_fatal(
                 self.tcx.def_span(def_id),
                 &format!("symbol `{}` is already defined", symbol_name),
             )
-        });
+        } else {
+            self.declare_global(symbol_name, spvty)
+        };
 
         // unsafe {
         //     llvm::LLVMRustSetLinkage(g, base::linkage_to_llvm(linkage));
@@ -312,64 +335,6 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         }
 
         self.instances.borrow_mut().insert(instance, declared);
-    }
-}
-
-// Note: DeclareMethods is getting nuked soon, don't spend time fleshing out these impls.
-// https://github.com/rust-lang/rust/pull/76872
-impl<'tcx> DeclareMethods<'tcx> for CodegenCx<'tcx> {
-    fn declare_global(&self, name: &str, ty: Self::Type) -> Self::Value {
-        let ptr_ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: ty,
-        }
-        .def(self);
-        let result = self
-            .emit_global()
-            .variable(ptr_ty, None, StorageClass::Function, None)
-            .with_type(ptr_ty);
-        // TODO: These should be StorageClass::Private, so just zombie for now.
-        self.zombie(result.def, "declare_global");
-        self.declared_values
-            .borrow_mut()
-            .insert(name.to_string(), result);
-        result
-    }
-
-    fn declare_cfn(&self, _name: &str, _fn_type: Self::Type) -> Self::Function {
-        todo!()
-    }
-
-    fn declare_fn(&self, name: &str, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Function {
-        self.declare_fn_ext(name, None, None, FunctionControl::NONE, fn_abi)
-    }
-
-    fn define_global(&self, name: &str, ty: Self::Type) -> Option<Self::Value> {
-        if self.get_defined_value(name).is_some() {
-            None
-        } else {
-            Some(self.declare_global(name, ty))
-        }
-    }
-
-    fn define_private_global(&self, _ty: Self::Type) -> Self::Value {
-        todo!()
-    }
-
-    fn get_declared_value(&self, name: &str) -> Option<Self::Value> {
-        self.declared_values.borrow().get(name).copied()
-    }
-
-    fn get_defined_value(&self, name: &str) -> Option<Self::Value> {
-        self.get_declared_value(name)
-        // self.get_declared_value(name).and_then(|val| {
-        //     let declaration = unsafe { llvm::LLVMIsDeclaration(val) != 0 };
-        //     if !declaration {
-        //         Some(val)
-        //     } else {
-        //         None
-        //     }
-        // })
     }
 }
 

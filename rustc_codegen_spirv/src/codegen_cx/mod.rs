@@ -247,6 +247,10 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
     fn create_used_variable(&self) {
         todo!()
     }
+
+    fn declare_c_main(&self, _fn_type: Self::Type) -> Option<Self::Function> {
+        todo!()
+    }
 }
 
 impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
