@@ -90,21 +90,38 @@ fn remove_duplicate_capablities(module: &mut rspirv::dr::Module) {
 }
 
 fn remove_duplicate_ext_inst_imports(module: &mut rspirv::dr::Module) {
-    let mut set = HashSet::new();
-    let mut caps = vec![];
+    // This is a simpler version of remove_duplicate_types, see that for comments
+    let mut ext_to_id = HashMap::new();
+    let mut rewrite_rules = HashMap::new();
 
-    for c in &module.ext_inst_imports {
-        let keep = match &c.operands[0] {
-            rspirv::dr::Operand::LiteralString(ext_inst_import) => set.insert(ext_inst_import),
-            _ => true,
-        };
-
-        if keep {
-            caps.push(c.clone());
+    // First deduplicate the imports
+    for inst in &mut module.ext_inst_imports {
+        if let rspirv::dr::Operand::LiteralString(ext_inst_import) = &inst.operands[0] {
+            match ext_to_id.entry(ext_inst_import.clone()) {
+                hash_map::Entry::Vacant(entry) => {
+                    entry.insert(inst.result_id.unwrap());
+                }
+                hash_map::Entry::Occupied(entry) => {
+                    let old_value = rewrite_rules.insert(inst.result_id.unwrap(), *entry.get());
+                    assert!(old_value.is_none());
+                    *inst = rspirv::dr::Instruction::new(spirv::Op::Nop, None, None, vec![]);
+                }
+            }
         }
     }
 
-    module.ext_inst_imports = caps;
+    module
+        .ext_inst_imports
+        .retain(|op| op.class.opcode != spirv::Op::Nop);
+
+    // Then rewrite all OpExtInst referencing the rewritten IDs
+    for inst in module.all_inst_iter_mut() {
+        if inst.class.opcode == spirv::Op::ExtInst {
+            if let rspirv::dr::Operand::IdRef(ref mut id) = inst.operands[0] {
+                *id = rewrite_rules.get(id).copied().unwrap_or(*id);
+            }
+        }
+    }
 }
 
 fn kill_with_id(insts: &mut Vec<rspirv::dr::Instruction>, id: u32) {
@@ -163,6 +180,7 @@ fn kill_annotations_and_debug(module: &mut rspirv::dr::Module, id: u32) {
     kill_with_id(&mut module.debugs, id);
 }
 
+// TODO: Don't merge zombie types with non-zombie types
 fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
     fn rewrite_inst_with_rules(inst: &mut rspirv::dr::Instruction, rules: &HashMap<u32, u32>) {
         if let Some(ref mut id) = inst.result_type {
@@ -226,6 +244,8 @@ fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
                         // TODO: This is implementing forward pointers incorrectly. All unresolved forward pointers will
                         // compare equal.
                         rspirv::dr::Operand::IdRef(0).assemble_into(&mut data);
+                    } else {
+                        op.assemble_into(&mut data);
                     }
                 } else {
                     op.assemble_into(&mut data);
@@ -570,17 +590,17 @@ fn remove_zombies(module: &mut rspirv::dr::Module) {
         inst: &rspirv::dr::Instruction,
         zombie: &HashMap<spirv::Word, &'a str>,
     ) -> Option<&'a str> {
-        inst.result_type.map_or_else(
-            || {
-                inst.operands.iter().find_map(|op| match op {
-                    rspirv::dr::Operand::IdMemorySemantics(w)
-                    | rspirv::dr::Operand::IdScope(w)
-                    | rspirv::dr::Operand::IdRef(w) => zombie.get(w).copied(),
-                    _ => None,
-                })
-            },
-            |w| zombie.get(&w).copied(),
-        )
+        if let Some(result_type) = inst.result_type {
+            if let Some(reason) = zombie.get(&result_type).copied() {
+                return Some(reason);
+            }
+        }
+        inst.operands.iter().find_map(|op| match op {
+            rspirv::dr::Operand::IdMemorySemantics(w)
+            | rspirv::dr::Operand::IdScope(w)
+            | rspirv::dr::Operand::IdRef(w) => zombie.get(w).copied(),
+            _ => None,
+        })
     }
 
     fn is_zombie<'a>(
@@ -669,6 +689,17 @@ fn remove_zombies(module: &mut rspirv::dr::Module) {
     remove_zombie_annotations(module);
     // Note: This is O(n^2).
     while spread_zombie(module, &mut zombies) {}
+
+    if option_env!("PRINT_ALL_ZOMBIE").is_some() {
+        for (&zomb, &reason) in &zombies {
+            let orig = if zombies_owned.iter().any(|&(z, _)| z == zomb) {
+                "original"
+            } else {
+                "infected"
+            };
+            println!("zombie'd {} because {} ({})", zomb, reason, orig);
+        }
+    }
 
     if option_env!("PRINT_ZOMBIE").is_some() {
         for f in &module.functions {
