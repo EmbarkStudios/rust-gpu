@@ -4,7 +4,7 @@ mod type_;
 
 use crate::builder::ExtInst;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
-use crate::finalizing_passes::{block_ordering_pass, delete_dead_blocks, zombie_pass};
+use crate::finalizing_passes::{block_ordering_pass, delete_dead_blocks, export_zombies};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
@@ -122,7 +122,7 @@ impl<'tcx> CodegenCx<'tcx> {
             delete_dead_blocks(function);
             block_ordering_pass(function);
         }
-        zombie_pass(&mut result, &mut self.zombie_values.borrow_mut());
+        export_zombies(&mut result, &self.zombie_values.borrow());
         result
     }
 

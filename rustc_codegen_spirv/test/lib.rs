@@ -113,11 +113,16 @@ fn go(code: &str, check: &[&str]) {
 
     for expected in check {
         if !output_disas.contains(expected) {
-            panic!("assertion failed: `(left.contains(right))`\
+            panic!(
+                "assertion failed: `(left.contains(right))`\
                 \n\
                 \n{}\
                 \n",
-                pretty_assertions::Comparison::new(&PrettyString(&output_disas), &PrettyString(expected)))
+                pretty_assertions::Comparison::new(
+                    &PrettyString(&output_disas),
+                    &PrettyString(expected)
+                )
+            )
         }
     }
 
@@ -138,22 +143,16 @@ pub fn it_works() {
 pub fn add_numbers(x: u32, y: u32) -> u32 {
     x + y
 }",
-    &[
-        "OpTypeFunction",
-        "OpIAdd",
-        "OpReturnValue",
-    ]);
+        &["OpTypeFunction", "OpIAdd", "OpReturnValue"],
+    );
 
     go(
         r"
 pub fn add_numbers(x: f32, y: f32) -> f32 {
     x + y
 }",
-    &[
-        "OpTypeFunction",
-        "OpFAdd",
-        "OpReturnValue",
-    ]);
+        &["OpTypeFunction", "OpFAdd", "OpReturnValue"],
+    );
 }
 
 /*

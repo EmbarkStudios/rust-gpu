@@ -4,7 +4,7 @@ mod test;
 use rspirv::binary::Consumer;
 use rspirv::binary::Disassemble;
 use rspirv::spirv;
-use std::collections::{HashMap, HashSet};
+use std::collections::{hash_map, HashMap, HashSet};
 use thiserror::Error;
 use topological_sort::TopologicalSort;
 
@@ -156,7 +156,8 @@ fn kill_annotations_and_debug(module: &mut rspirv::dr::Module, id: u32) {
     // need to remove OpGroupDecorate members that mention this id
     module.annotations.iter_mut().for_each(|inst| {
         if inst.class.opcode == spirv::Op::GroupDecorate {
-            inst.operands.retain(|op| matches!(op, rspirv::dr::Operand::IdRef(w) if *w != id));
+            inst.operands
+                .retain(|op| matches!(op, rspirv::dr::Operand::IdRef(w) if *w != id));
         }
     });
 
@@ -602,19 +603,17 @@ fn kill_linkage_instructions(
 
     // drop linkage attributes (both import and export)
     kill_with(&mut module.annotations, |inst| {
-        let eq = pairs
-            .iter()
-            .any(|p| {
-                if inst.operands.is_empty() {
-                    return false;
-                }
+        let eq = pairs.iter().any(|p| {
+            if inst.operands.is_empty() {
+                return false;
+            }
 
-                if let rspirv::dr::Operand::IdRef(id) = inst.operands[0] {
-                    id == p.import.id || id == p.export.id
-                } else {
-                    false
-                }
-            });
+            if let rspirv::dr::Operand::IdRef(id) = inst.operands[0] {
+                id == p.import.id || id == p.export.id
+            } else {
+                false
+            }
+        });
 
         eq && inst.class.opcode == spirv::Op::Decorate
             && inst.operands[1]
@@ -637,14 +636,197 @@ fn kill_linkage_instructions(
     })
 }
 
+fn remove_zombies(module: &mut rspirv::dr::Module) {
+    // rustc_codegen_spirv_zombie=id:reason
+    const ZOMBIE_PREFIX: &str = "rustc_codegen_spirv_zombie=";
+
+    fn collect_zombies(module: &rspirv::dr::Module) -> Vec<(spirv::Word, String)> {
+        module
+            .debugs
+            .iter()
+            .filter_map(|inst| {
+                if inst.class.opcode == spirv::Op::String {
+                    if let rspirv::dr::Operand::LiteralString(ref v) = inst.operands[0] {
+                        if v.starts_with(ZOMBIE_PREFIX) {
+                            let mut value = v[ZOMBIE_PREFIX.len()..].splitn(2, ':');
+                            if let (Some(id), Some(reason)) = (value.next(), value.next()) {
+                                return Some((id.parse().ok()?, reason.to_string()));
+                            }
+                        }
+                    }
+                }
+                None
+            })
+            .collect()
+    }
+
+    fn contains_zombie<'a>(
+        inst: &rspirv::dr::Instruction,
+        zombie: &HashMap<spirv::Word, &'a str>,
+    ) -> Option<&'a str> {
+        inst.result_type.map_or_else(
+            || {
+                inst.operands.iter().find_map(|op| match op {
+                    rspirv::dr::Operand::IdMemorySemantics(w)
+                    | rspirv::dr::Operand::IdScope(w)
+                    | rspirv::dr::Operand::IdRef(w) => zombie.get(w).copied(),
+                    _ => None,
+                })
+            },
+            |w| zombie.get(&w).copied(),
+        )
+    }
+
+    fn is_zombie<'a>(
+        inst: &rspirv::dr::Instruction,
+        zombie: &HashMap<spirv::Word, &'a str>,
+    ) -> Option<&'a str> {
+        if let Some(result_id) = inst.result_id {
+            zombie.get(&result_id).copied()
+        } else {
+            contains_zombie(inst, zombie)
+        }
+    }
+
+    fn spread_zombie(
+        module: &mut rspirv::dr::Module,
+        zombie: &mut HashMap<spirv::Word, &str>,
+    ) -> bool {
+        let mut any = false;
+        // globals are easy
+        for inst in module.global_inst_iter() {
+            if let Some(result_id) = inst.result_id {
+                if let Some(reason) = contains_zombie(inst, zombie) {
+                    match zombie.entry(result_id) {
+                        hash_map::Entry::Vacant(entry) => {
+                            entry.insert(reason);
+                            any = true;
+                        }
+                        hash_map::Entry::Occupied(_) => {}
+                    }
+                }
+            }
+        }
+        // function IDs implicitly reference their contents
+        for func in &module.functions {
+            let mut func_is_zombie = None;
+            let mut spread_func = |inst: &rspirv::dr::Instruction| {
+                if let Some(result_id) = inst.result_id {
+                    if let Some(reason) = contains_zombie(inst, zombie) {
+                        match zombie.entry(result_id) {
+                            hash_map::Entry::Vacant(entry) => {
+                                entry.insert(reason);
+                                any = true;
+                            }
+                            hash_map::Entry::Occupied(_) => {}
+                        }
+                        func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
+                    } else if let Some(reason) = zombie.get(&result_id) {
+                        func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
+                    }
+                } else if let Some(reason) = is_zombie(inst, zombie) {
+                    func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
+                }
+            };
+            for def in &func.def {
+                spread_func(def);
+            }
+            for param in &func.parameters {
+                spread_func(param);
+            }
+            for block in &func.blocks {
+                for inst in &block.label {
+                    spread_func(inst);
+                }
+                for inst in &block.instructions {
+                    spread_func(inst);
+                }
+            }
+            for inst in &func.end {
+                spread_func(inst);
+            }
+            if let Some(reason) = func_is_zombie {
+                match zombie.entry(func.def.as_ref().unwrap().result_id.unwrap()) {
+                    hash_map::Entry::Vacant(entry) => {
+                        entry.insert(reason);
+                        any = true;
+                    }
+                    hash_map::Entry::Occupied(_) => {}
+                }
+            }
+        }
+        any
+    }
+
+    let zombies_owned = collect_zombies(module);
+    let mut zombies = zombies_owned.iter().map(|(a, b)| (*a, b as &str)).collect();
+    // Note: This is O(n^2).
+    while spread_zombie(module, &mut zombies) {}
+
+    if option_env!("PRINT_ZOMBIE").is_some() {
+        for f in &module.functions {
+            if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
+                let name_id = f.def.as_ref().unwrap().result_id.unwrap();
+                let name = module.debugs.iter().find(|inst| {
+                    inst.class.opcode == spirv::Op::Name
+                        && inst.operands[0] == rspirv::dr::Operand::IdRef(name_id)
+                });
+                let name = match name {
+                    Some(rspirv::dr::Instruction { ref operands, .. }) => {
+                        match operands as &[rspirv::dr::Operand] {
+                            [_, rspirv::dr::Operand::LiteralString(name)] => name.clone(),
+                            _ => panic!(),
+                        }
+                    }
+                    _ => format!("{}", name_id),
+                };
+                println!("Function removed {:?} because {:?}", name, reason)
+            }
+        }
+    }
+
+    module
+        .capabilities
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    module
+        .extensions
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    module
+        .ext_inst_imports
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    if module
+        .memory_model
+        .as_ref()
+        .map_or(false, |inst| is_zombie(inst, &zombies).is_some())
+    {
+        module.memory_model = None;
+    }
+    module
+        .entry_points
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    module
+        .execution_modes
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    module
+        .debugs
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    module
+        .annotations
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    module
+        .types_global_values
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    module
+        .functions
+        .retain(|f| is_zombie(f.def.as_ref().unwrap(), &zombies).is_none());
+}
+
 fn compact_ids(module: &mut rspirv::dr::Module) -> u32 {
     let mut remap = HashMap::new();
 
     let mut insert = |current_id: u32| -> u32 {
         let len = remap.len();
-        *remap.entry(current_id).or_insert_with(|| {
-            len as u32 + 1
-        })
+        *remap.entry(current_id).or_insert_with(|| len as u32 + 1)
     };
 
     module.all_inst_iter_mut().for_each(|inst| {
@@ -755,9 +937,7 @@ fn trans_scalar_type(inst: &rspirv::dr::Instruction) -> Option<ScalarType> {
                 _ => panic!("Unexpected operand while parsing type"),
             },
             signed: match inst.operands[1] {
-                rspirv::dr::Operand::LiteralInt32(s) => {
-                    s != 0
-                }
+                rspirv::dr::Operand::LiteralInt32(s) => s != 0,
                 _ => panic!("Unexpected operand while parsing type"),
             },
         },
@@ -959,6 +1139,8 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
 
     // remove linkage specific instructions
     kill_linkage_instructions(&matching_pairs, &mut output, &opts);
+
+    remove_zombies(&mut output);
 
     sort_globals(&mut output);
 

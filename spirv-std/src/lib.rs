@@ -46,3 +46,20 @@ pointer_addrspace!("hit_attribute_nv", HitAttributeNV);
 pointer_addrspace!("incoming_ray_payload_nv", IncomingRayPayloadNV);
 pointer_addrspace!("shader_record_buffer_nv", ShaderRecordBufferNV);
 pointer_addrspace!("physical_storage_buffer", PhysicalStorageBuffer);
+
+/// # Safety
+///
+/// TODO: Copied from compiler_builtins/mem.rs
+#[no_mangle]
+pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32 {
+    let mut i = 0;
+    while i < n {
+        let a = *s1.add(i);
+        let b = *s2.add(i);
+        if a != b {
+            return a as i32 - b as i32;
+        }
+        i += 1;
+    }
+    0
+}

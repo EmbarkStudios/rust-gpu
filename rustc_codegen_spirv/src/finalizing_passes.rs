@@ -1,164 +1,11 @@
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
-use rspirv::spirv::{Decoration, LinkageType, Op, Word};
-use std::collections::hash_map::Entry;
+use rspirv::spirv::{Op, Word};
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::mem::replace;
 
-fn contains_zombie(
-    inst: &Instruction,
-    zombie: &HashMap<Word, &'static str>,
-) -> Option<&'static str> {
-    inst.result_type.map_or_else(
-        || {
-            inst.operands.iter().find_map(|op| match op {
-                rspirv::dr::Operand::IdMemorySemantics(w)
-                | rspirv::dr::Operand::IdScope(w)
-                | rspirv::dr::Operand::IdRef(w) => zombie.get(w).copied(),
-                _ => None,
-            })
-        },
-        |w| zombie.get(&w).copied(),
-    )
-}
-
-fn is_zombie(inst: &Instruction, zombie: &HashMap<Word, &'static str>) -> Option<&'static str> {
-    if let Some(result_id) = inst.result_id {
-        zombie.get(&result_id).copied()
-    } else {
-        contains_zombie(inst, zombie)
-    }
-}
-
-pub fn zombie_pass(module: &mut Module, zombie: &mut HashMap<Word, &'static str>) {
-    // Note: This is O(n^2).
-    while spread_zombie(module, zombie) {}
-
-    export_zombies(module, zombie);
-
-    if option_env!("PRINT_ZOMBIE").is_some() {
-        for f in &module.functions {
-            if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), zombie) {
-                let name_id = f.def.as_ref().unwrap().result_id.unwrap();
-                let name = module.debugs.iter().find(|inst| {
-                    inst.class.opcode == Op::Name && inst.operands[0] == Operand::IdRef(name_id)
-                });
-                let name = match name {
-                    Some(Instruction { ref operands, .. }) => match operands as &[Operand] {
-                        [_, Operand::LiteralString(name)] => name.clone(),
-                        _ => panic!(),
-                    },
-                    _ => format!("{}", name_id),
-                };
-                println!("Function removed {:?} because {:?}", name, reason)
-            }
-        }
-    }
-    module
-        .capabilities
-        .retain(|inst| is_zombie(inst, zombie).is_none());
-    module
-        .extensions
-        .retain(|inst| is_zombie(inst, zombie).is_none());
-    module
-        .ext_inst_imports
-        .retain(|inst| is_zombie(inst, zombie).is_none());
-    if module
-        .memory_model
-        .as_ref()
-        .map_or(false, |inst| is_zombie(inst, zombie).is_some())
-    {
-        module.memory_model = None;
-    }
-    module
-        .entry_points
-        .retain(|inst| is_zombie(inst, zombie).is_none());
-    module
-        .execution_modes
-        .retain(|inst| is_zombie(inst, zombie).is_none());
-    module
-        .debugs
-        .retain(|inst| is_zombie(inst, zombie).is_none());
-    module
-        .annotations
-        .retain(|inst| is_zombie(inst, zombie).is_none());
-    module
-        .types_global_values
-        .retain(|inst| is_zombie(inst, zombie).is_none());
-    module
-        .functions
-        .retain(|f| is_zombie(f.def.as_ref().unwrap(), zombie).is_none());
-}
-
-fn spread_zombie(module: &mut Module, zombie: &mut HashMap<Word, &'static str>) -> bool {
-    let mut any = false;
-    // globals are easy
-    for inst in module.global_inst_iter() {
-        if let Some(result_id) = inst.result_id {
-            if let Some(reason) = contains_zombie(inst, zombie) {
-                match zombie.entry(result_id) {
-                    Entry::Vacant(entry) => {
-                        entry.insert(reason);
-                        any = true;
-                    }
-                    Entry::Occupied(_) => {}
-                }
-            }
-        }
-    }
-    // function IDs implicitly reference their contents
-    for func in &module.functions {
-        let mut func_is_zombie = None;
-        let mut spread_func = |inst: &Instruction| {
-            if let Some(result_id) = inst.result_id {
-                if let Some(reason) = contains_zombie(inst, zombie) {
-                    match zombie.entry(result_id) {
-                        Entry::Vacant(entry) => {
-                            entry.insert(reason);
-                            any = true;
-                        }
-                        Entry::Occupied(_) => {}
-                    }
-                    func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
-                } else if let Some(reason) = zombie.get(&result_id) {
-                    func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
-                }
-            } else if let Some(reason) = is_zombie(inst, zombie) {
-                func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
-            }
-        };
-        for def in &func.def {
-            spread_func(def);
-        }
-        for param in &func.parameters {
-            spread_func(param);
-        }
-        for block in &func.blocks {
-            for inst in &block.label {
-                spread_func(inst);
-            }
-            for inst in &block.instructions {
-                spread_func(inst);
-            }
-        }
-        for inst in &func.end {
-            spread_func(inst);
-        }
-        if let Some(reason) = func_is_zombie {
-            match zombie.entry(func.def.as_ref().unwrap().result_id.unwrap()) {
-                Entry::Vacant(entry) => {
-                    entry.insert(reason);
-                    any = true;
-                }
-                Entry::Occupied(_) => {}
-            }
-        }
-    }
-    any
-}
-
-fn export_zombies(module: &mut Module, zombie: &HashMap<Word, &'static str>) {
-    fn id(header: &mut Option<ModuleHeader>) -> Word {
+pub fn export_zombies(module: &mut Module, zombies: &HashMap<Word, &'static str>) {
+    fn gen_id(header: &mut Option<ModuleHeader>) -> Word {
         let header = match header {
             Some(h) => h,
             None => panic!(),
@@ -167,30 +14,19 @@ fn export_zombies(module: &mut Module, zombie: &HashMap<Word, &'static str>) {
         header.bound += 1;
         id
     }
-    for inst in &module.annotations {
-        if inst.class.opcode == Op::Decorate
-            && inst.operands[1] == Operand::Decoration(Decoration::LinkageAttributes)
-            && inst.operands[3] == Operand::LinkageType(LinkageType::Export)
-        {
-            let (target, name) = match (&inst.operands[0], &inst.operands[2]) {
-                (&Operand::IdRef(id), Operand::LiteralString(name)) => (id, name),
-                _ => panic!(),
-            };
-            if zombie.contains_key(&target) {
-                let str = format!("rustc_codegen_spirv_export_zombie_symbol={}", name);
-                let dummy_id = id(&mut module.header);
-                // TODO: OpString must come before other sections in the debug group. Fix rspirv here.
-                module.debugs.insert(
-                    0,
-                    Instruction::new(
-                        Op::String,
-                        None,
-                        Some(dummy_id),
-                        vec![Operand::LiteralString(str)],
-                    ),
-                );
-            }
-        }
+    for (id, reason) in zombies {
+        let str = format!("rustc_codegen_spirv_zombie={}:{}", id, reason);
+        let dummy_id = gen_id(&mut module.header);
+        // TODO: OpString must come before other sections in the debug group. Fix rspirv here.
+        module.debugs.insert(
+            0,
+            Instruction::new(
+                Op::String,
+                None,
+                Some(dummy_id),
+                vec![Operand::LiteralString(str)],
+            ),
+        );
     }
 }
 
