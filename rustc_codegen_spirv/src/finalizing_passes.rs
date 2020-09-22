@@ -34,6 +34,7 @@ fn label_of(block: &Block) -> Word {
     block.label.as_ref().unwrap().result_id.unwrap()
 }
 
+// TODO: Move this to the linker.
 pub fn delete_dead_blocks(func: &mut Function) {
     if func.blocks.len() < 2 {
         return;
@@ -54,36 +55,45 @@ pub fn delete_dead_blocks(func: &mut Function) {
     func.blocks.retain(|b| visited.contains(&label_of(b)))
 }
 
+// TODO: Do we move this to the linker?
 pub fn block_ordering_pass(func: &mut Function) {
     if func.blocks.len() < 2 {
         return;
     }
-    let mut graph = func
-        .blocks
-        .iter()
-        .map(|block| (label_of(block), outgoing_edges(block)))
-        .collect();
-    let entry_label = label_of(&func.blocks[0]);
-    delete_backedges(&mut graph, entry_label);
-
-    let mut sorter = topological_sort::TopologicalSort::<Word>::new();
-    for (key, values) in graph {
-        for value in values {
-            sorter.add_dependency(key, value);
+    fn visit_postorder(
+        func: &Function,
+        visited: &mut HashSet<Word>,
+        postorder: &mut Vec<Word>,
+        current: Word,
+    ) {
+        if !visited.insert(current) {
+            return;
         }
+        let current_block = func.blocks.iter().find(|b| label_of(b) == current).unwrap();
+        // Reverse the order, so reverse-postorder keeps things tidy
+        for &outgoing in outgoing_edges(current_block).iter().rev() {
+            visit_postorder(func, visited, postorder, outgoing);
+        }
+        postorder.push(current);
     }
+
+    let mut visited = HashSet::new();
+    let mut postorder = Vec::new();
+
+    let entry_label = label_of(&func.blocks[0]);
+    visit_postorder(func, &mut visited, &mut postorder, entry_label);
+
     let mut old_blocks = replace(&mut func.blocks, Vec::new());
-    while let Some(item) = sorter.pop() {
-        let index = old_blocks.iter().position(|b| label_of(b) == item).unwrap();
+    // Order blocks according to reverse postorder
+    for &block in postorder.iter().rev() {
+        let index = old_blocks
+            .iter()
+            .position(|b| label_of(b) == block)
+            .unwrap();
         func.blocks.push(old_blocks.remove(index));
     }
-    assert!(sorter.is_empty());
     assert!(old_blocks.is_empty());
-    assert_eq!(
-        label_of(&func.blocks[0]),
-        entry_label,
-        "Topo sorter did something weird (unreachable blocks?)"
-    );
+    assert_eq!(label_of(&func.blocks[0]), entry_label,);
 }
 
 fn outgoing_edges(block: &Block) -> Vec<Word> {
@@ -111,30 +121,5 @@ fn outgoing_edges(block: &Block) -> Vec<Word> {
             .collect(),
         Op::Return | Op::ReturnValue | Op::Kill | Op::Unreachable => Vec::new(),
         _ => panic!("Invalid block terminator: {:?}", terminator),
-    }
-}
-
-fn delete_backedges(graph: &mut HashMap<Word, Vec<Word>>, entry: Word) {
-    // TODO: This has extremely bad runtime
-    let mut backedges = HashSet::new();
-    fn re(
-        graph: &HashMap<Word, Vec<Word>>,
-        entry: Word,
-        stack: &mut Vec<Word>,
-        backedges: &mut HashSet<(Word, Word)>,
-    ) {
-        stack.push(entry);
-        for &item in &graph[&entry] {
-            if stack.contains(&item) {
-                backedges.insert((entry, item));
-            } else if !backedges.contains(&(entry, item)) {
-                re(graph, item, stack, backedges);
-            }
-        }
-        assert_eq!(stack.pop(), Some(entry));
-    }
-    re(graph, entry, &mut Vec::new(), &mut backedges);
-    for (from, to) in backedges {
-        graph.get_mut(&from).unwrap().retain(|&o| o != to);
     }
 }

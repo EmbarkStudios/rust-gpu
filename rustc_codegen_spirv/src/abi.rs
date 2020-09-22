@@ -5,7 +5,7 @@ use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attr, SpirvAttribute};
 use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
-use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind};
+use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind, TypeAndMut};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{
     Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, TagEncoding, Variants,
@@ -420,7 +420,7 @@ fn dig_scalar_pointee<'tcx>(
     index: Option<usize>,
 ) -> (Option<StorageClass>, PointeeTy<'tcx>) {
     match *ty.ty.kind() {
-        TyKind::Ref(_region, elem_ty, _mutability) => {
+        TyKind::Ref(_, elem_ty, _) | TyKind::RawPtr(TypeAndMut { ty: elem_ty, .. }) => {
             let elem = cx.layout_of(elem_ty);
             match index {
                 None => (None, PointeeTy::Ty(elem)),
@@ -432,20 +432,6 @@ fn dig_scalar_pointee<'tcx>(
                         // of ScalarPair could be deduced, but it's actually e.g. a sized pointer followed by some other
                         // completely unrelated type, not a wide pointer. So, translate this as a single scalar, one
                         // component of that ScalarPair.
-                        (None, PointeeTy::Ty(elem))
-                    }
-                }
-            }
-        }
-        TyKind::RawPtr(type_and_mut) => {
-            let elem = cx.layout_of(type_and_mut.ty);
-            match index {
-                None => (None, PointeeTy::Ty(elem)),
-                Some(index) => {
-                    if elem.is_unsized() {
-                        dig_scalar_pointee(cx, ty.field(cx, index), None)
-                    } else {
-                        // Same comment as TyKind::Ref
                         (None, PointeeTy::Ty(elem))
                     }
                 }

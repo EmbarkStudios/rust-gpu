@@ -2,7 +2,7 @@ use super::Builder;
 use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
-use rspirv::spirv::{MemorySemantics, Op, Scope, StorageClass};
+use rspirv::spirv::{MemorySemantics, Op, Scope, StorageClass, Word};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -62,6 +62,147 @@ fn ordering_to_semantics(ordering: AtomicOrdering) -> MemorySemantics {
         Release => MemorySemantics::RELEASE,
         AcquireRelease => MemorySemantics::ACQUIRE_RELEASE,
         SequentiallyConsistent => MemorySemantics::SEQUENTIALLY_CONSISTENT,
+    }
+}
+
+fn memset_fill_u16(b: u8) -> u16 {
+    b as u16 | ((b as u16) << 8)
+}
+
+fn memset_fill_u32(b: u8) -> u32 {
+    b as u32 | ((b as u32) << 8) | ((b as u32) << 16) | ((b as u32) << 24)
+}
+
+fn memset_fill_u64(b: u8) -> u64 {
+    b as u64
+        | ((b as u64) << 8)
+        | ((b as u64) << 16)
+        | ((b as u64) << 24)
+        | ((b as u64) << 32)
+        | ((b as u64) << 40)
+        | ((b as u64) << 48)
+        | ((b as u64) << 56)
+}
+
+fn memset_dynamic_scalar<'a, 'tcx>(
+    builder: &Builder<'a, 'tcx>,
+    fill_var: Word,
+    byte_width: usize,
+    is_float: bool,
+) -> Word {
+    let composite_type = SpirvType::Vector {
+        element: SpirvType::Integer(8, false).def(builder),
+        count: byte_width as u32,
+    }
+    .def(builder);
+    let composite = builder
+        .emit()
+        .composite_construct(
+            composite_type,
+            None,
+            std::iter::repeat(fill_var).take(byte_width),
+        )
+        .unwrap();
+    let result_type = if is_float {
+        SpirvType::Float(byte_width as u32 * 8)
+    } else {
+        SpirvType::Integer(byte_width as u32 * 8, false)
+    };
+    builder
+        .emit()
+        .bitcast(result_type.def(builder), None, composite)
+        .unwrap()
+}
+
+impl<'a, 'tcx> Builder<'a, 'tcx> {
+    fn memset_const_pattern(&self, ty: &SpirvType, fill_byte: u8) -> Word {
+        match *ty {
+            SpirvType::Void => panic!("memset invalid on void pattern"),
+            SpirvType::Bool => panic!("memset invalid on bool pattern"),
+            SpirvType::Integer(width, _signedness) => match width {
+                8 => self.constant_u8(fill_byte).def,
+                16 => self.constant_u16(memset_fill_u16(fill_byte)).def,
+                32 => self.constant_u32(memset_fill_u32(fill_byte)).def,
+                64 => self.constant_u64(memset_fill_u64(fill_byte)).def,
+                _ => panic!("memset on integer width {} not implemented yet", width),
+            },
+            SpirvType::Float(width) => match width {
+                32 => {
+                    self.constant_f32(f32::from_bits(memset_fill_u32(fill_byte)))
+                        .def
+                }
+                64 => {
+                    self.constant_f64(f64::from_bits(memset_fill_u64(fill_byte)))
+                        .def
+                }
+                _ => panic!("memset on float width {} not implemented yet", width),
+            },
+            SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
+            SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
+            SpirvType::Vector { element, count } => {
+                let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
+                self.constant_composite(ty.def(self), vec![elem_pat; count as usize])
+                    .def
+            }
+            SpirvType::Array { element, count } => {
+                let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
+                let count = self.builder.lookup_const_u64(count).unwrap() as usize;
+                self.constant_composite(ty.def(self), vec![elem_pat; count])
+                    .def
+            }
+            SpirvType::RuntimeArray { .. } => {
+                panic!("memset on runtime arrays not implemented yet")
+            }
+            SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
+            SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
+        }
+    }
+
+    fn memset_dynamic_pattern(&self, ty: &SpirvType, fill_var: Word) -> Word {
+        match *ty {
+            SpirvType::Void => panic!("memset invalid on void pattern"),
+            SpirvType::Bool => panic!("memset invalid on bool pattern"),
+            SpirvType::Integer(width, _signedness) => match width {
+                8 => fill_var,
+                16 => memset_dynamic_scalar(self, fill_var, 2, false),
+                32 => memset_dynamic_scalar(self, fill_var, 4, false),
+                64 => memset_dynamic_scalar(self, fill_var, 8, false),
+                _ => panic!("memset on integer width {} not implemented yet", width),
+            },
+            SpirvType::Float(width) => match width {
+                32 => memset_dynamic_scalar(self, fill_var, 4, true),
+                64 => memset_dynamic_scalar(self, fill_var, 8, true),
+                _ => panic!("memset on float width {} not implemented yet", width),
+            },
+            SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
+            SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
+            SpirvType::Array { element, count } => {
+                let elem_pat = self.memset_dynamic_pattern(&self.lookup_type(element), fill_var);
+                let count = self.builder.lookup_const_u64(count).unwrap() as usize;
+                self.emit()
+                    .composite_construct(
+                        ty.def(self),
+                        None,
+                        std::iter::repeat(elem_pat).take(count),
+                    )
+                    .unwrap()
+            }
+            SpirvType::Vector { element, count } => {
+                let elem_pat = self.memset_dynamic_pattern(&self.lookup_type(element), fill_var);
+                self.emit()
+                    .composite_construct(
+                        ty.def(self),
+                        None,
+                        std::iter::repeat(elem_pat).take(count as usize),
+                    )
+                    .unwrap()
+            }
+            SpirvType::RuntimeArray { .. } => {
+                panic!("memset on runtime arrays not implemented yet")
+            }
+            SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
+            SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
+        }
     }
 }
 
@@ -1008,8 +1149,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     SpirvConst::U32(_, v) => v as usize,
                     other => panic!("memset size constant value not supported: {:?}", other),
                 };
-                let pat = elem_ty_spv
-                    .memset_const_pattern(self, fill_byte)
+                let pat = self
+                    .memset_const_pattern(&elem_ty_spv, fill_byte)
                     .with_type(elem_ty);
                 let elem_ty_sizeof = elem_ty_spv
                     .sizeof(self)
@@ -1033,8 +1174,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     SpirvConst::U32(_, v) => v as usize,
                     other => panic!("memset size constant value not supported: {:?}", other),
                 };
-                let pat = elem_ty_spv
-                    .memset_dynamic_pattern(self, fill_byte.def)
+                let pat = self
+                    .memset_dynamic_pattern(&elem_ty_spv, fill_byte.def)
                     .with_type(elem_ty);
                 let elem_ty_sizeof = elem_ty_spv
                     .sizeof(self)

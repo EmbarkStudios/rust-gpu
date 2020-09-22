@@ -256,13 +256,18 @@ pub fn read_metadata(rlib: &Path) -> MetadataRef {
     panic!("No .metadata file in rlib: {:?}", rlib);
 }
 
+/// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc's
+/// shenanigans to collect all the object files we need to link.
 fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
     let mut modules = Vec::new();
+    // `objects` are the plain obj files we need to link - usually produced by the final crate.
     for obj in objects {
         let mut bytes = Vec::new();
         File::open(obj).unwrap().read_to_end(&mut bytes).unwrap();
         modules.push(load(&bytes));
     }
+    // `rlibs` are archive files we've created in `create_archive`, usually produced by crates that are being
+    // referenced. We need to unpack them and add the modules inside.
     for rlib in rlibs {
         for entry in Archive::new(File::open(rlib).unwrap()).entries().unwrap() {
             let mut entry = entry.unwrap();
@@ -276,6 +281,21 @@ fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
 
     let mut module_refs = modules.iter_mut().collect::<Vec<_>>();
 
+    {
+        let path = Path::new("/home/khyperia/tmp");
+        if path.is_file() {
+            std::fs::remove_file(path).unwrap();
+        }
+        std::fs::create_dir_all(path).unwrap();
+        for (num, module) in module_refs.iter().enumerate() {
+            File::create(path.join(format!("mod_{}.spv", num)))
+                .unwrap()
+                .write_all(crate::slice_u32_to_u8(&module.assemble()))
+                .unwrap();
+        }
+    }
+
+    // Do the link...
     let result = match rspirv_linker::link(
         &mut module_refs,
         &rspirv_linker::Options {
@@ -302,6 +322,7 @@ fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
         }
     };
 
+    // And finally write out the linked binary.
     use rspirv::binary::Assemble;
     File::create(out_filename)
         .unwrap()
@@ -315,6 +336,8 @@ fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
     }
 }
 
+/// As of right now, this is essentially a no-op, just plumbing through all the files.
+// TODO: WorkProduct impl
 pub(crate) fn run_thin(
     cgcx: &CodegenContext<SpirvCodegenBackend>,
     modules: Vec<(String, SpirvThinBuffer)>,

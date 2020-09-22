@@ -1,5 +1,4 @@
 use crate::abi::RecursivePointeeCache;
-use crate::builder::Builder;
 use crate::codegen_cx::CodegenCx;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
@@ -11,6 +10,11 @@ use std::iter::once;
 use std::lazy::SyncLazy;
 use std::sync::Mutex;
 
+/// Spir-v types are represented as simple Words, which are the result_id of instructions like OpTypeInteger. Sometimes,
+/// however, we want to inspect one of these Words and ask questions like "Is this an OpTypeInteger? How many bits does
+/// it have?". This struct holds all of that information. All types that are emitted are registered in CodegenCx, so you
+/// can always look up the definition of a Word via cx.lookup_type. Note that this type doesn't actually store the
+/// result_id of the type declaration instruction, merely the contents.
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum SpirvType {
     Void,
@@ -50,55 +54,6 @@ pub enum SpirvType {
         return_type: Word,
         arguments: Vec<Word>,
     },
-}
-
-fn memset_fill_u16(b: u8) -> u16 {
-    b as u16 | ((b as u16) << 8)
-}
-
-fn memset_fill_u32(b: u8) -> u32 {
-    b as u32 | ((b as u32) << 8) | ((b as u32) << 16) | ((b as u32) << 24)
-}
-
-fn memset_fill_u64(b: u8) -> u64 {
-    b as u64
-        | ((b as u64) << 8)
-        | ((b as u64) << 16)
-        | ((b as u64) << 24)
-        | ((b as u64) << 32)
-        | ((b as u64) << 40)
-        | ((b as u64) << 48)
-        | ((b as u64) << 56)
-}
-
-fn memset_dynamic_scalar<'a, 'tcx>(
-    builder: &Builder<'a, 'tcx>,
-    fill_var: Word,
-    byte_width: usize,
-    is_float: bool,
-) -> Word {
-    let composite_type = SpirvType::Vector {
-        element: SpirvType::Integer(8, false).def(builder),
-        count: byte_width as u32,
-    }
-    .def(builder);
-    let composite = builder
-        .emit()
-        .composite_construct(
-            composite_type,
-            None,
-            std::iter::repeat(fill_var).take(byte_width),
-        )
-        .unwrap();
-    let result_type = if is_float {
-        SpirvType::Float(byte_width as u32 * 8)
-    } else {
-        SpirvType::Integer(byte_width as u32 * 8, false)
-    };
-    builder
-        .emit()
-        .bitcast(result_type.def(builder), None, composite)
-        .unwrap()
 }
 
 impl SpirvType {
@@ -211,6 +166,8 @@ impl SpirvType {
         result
     }
 
+    /// def_with_id is used by the RecursivePointeeCache to handle OpTypeForwardPointer: when emitting the subsequent
+    /// OpTypePointer, the ID is already known and must be re-used.
     pub fn def_with_id<'tcx>(&self, cx: &CodegenCx<'tcx>, id: Word) -> Word {
         if let Some(cached) = cx.type_cache.get(self) {
             assert_eq!(cached, id);
@@ -236,6 +193,7 @@ impl SpirvType {
         result
     }
 
+    /// Use this if you want a pretty type printing that recursively prints the types within (e.g. struct fields)
     pub fn debug<'cx, 'tcx>(
         self,
         id: Word,
@@ -281,106 +239,6 @@ impl SpirvType {
             SpirvType::Function { .. } => cx.tcx.data_layout.pointer_align.abi,
         }
     }
-
-    pub fn memset_const_pattern<'tcx>(&self, cx: &CodegenCx<'tcx>, fill_byte: u8) -> Word {
-        match *self {
-            SpirvType::Void => panic!("memset invalid on void pattern"),
-            SpirvType::Bool => panic!("memset invalid on bool pattern"),
-            SpirvType::Integer(width, _signedness) => match width {
-                8 => cx.constant_u8(fill_byte).def,
-                16 => cx.constant_u16(memset_fill_u16(fill_byte)).def,
-                32 => cx.constant_u32(memset_fill_u32(fill_byte)).def,
-                64 => cx.constant_u64(memset_fill_u64(fill_byte)).def,
-                _ => panic!("memset on integer width {} not implemented yet", width),
-            },
-            SpirvType::Float(width) => match width {
-                32 => {
-                    cx.constant_f32(f32::from_bits(memset_fill_u32(fill_byte)))
-                        .def
-                }
-                64 => {
-                    cx.constant_f64(f64::from_bits(memset_fill_u64(fill_byte)))
-                        .def
-                }
-                _ => panic!("memset on float width {} not implemented yet", width),
-            },
-            SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
-            SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
-            SpirvType::Vector { element, count } => {
-                let elem_pat = cx.lookup_type(element).memset_const_pattern(cx, fill_byte);
-                cx.constant_composite(self.def(cx), vec![elem_pat; count as usize])
-                    .def
-            }
-            SpirvType::Array { element, count } => {
-                let elem_pat = cx.lookup_type(element).memset_const_pattern(cx, fill_byte);
-                let count = cx.builder.lookup_const_u64(count).unwrap() as usize;
-                cx.constant_composite(self.def(cx), vec![elem_pat; count])
-                    .def
-            }
-            SpirvType::RuntimeArray { .. } => {
-                panic!("memset on runtime arrays not implemented yet")
-            }
-            SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
-            SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
-        }
-    }
-
-    pub fn memset_dynamic_pattern<'a, 'tcx>(
-        &self,
-        builder: &Builder<'a, 'tcx>,
-        fill_var: Word,
-    ) -> Word {
-        match *self {
-            SpirvType::Void => panic!("memset invalid on void pattern"),
-            SpirvType::Bool => panic!("memset invalid on bool pattern"),
-            SpirvType::Integer(width, _signedness) => match width {
-                8 => fill_var,
-                16 => memset_dynamic_scalar(builder, fill_var, 2, false),
-                32 => memset_dynamic_scalar(builder, fill_var, 4, false),
-                64 => memset_dynamic_scalar(builder, fill_var, 8, false),
-                _ => panic!("memset on integer width {} not implemented yet", width),
-            },
-            SpirvType::Float(width) => match width {
-                32 => memset_dynamic_scalar(builder, fill_var, 4, true),
-                64 => memset_dynamic_scalar(builder, fill_var, 8, true),
-                _ => panic!("memset on float width {} not implemented yet", width),
-            },
-            SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
-            SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
-            SpirvType::Array { element, count } => {
-                let elem_pat = builder
-                    .lookup_type(element)
-                    .memset_dynamic_pattern(builder, fill_var);
-                let count = builder.builder.lookup_const_u64(count).unwrap() as usize;
-                builder
-                    .emit()
-                    .composite_construct(
-                        self.def(builder),
-                        None,
-                        std::iter::repeat(elem_pat).take(count),
-                    )
-                    .unwrap()
-            }
-            SpirvType::Vector { element, count } => {
-                let elem_pat = builder
-                    .lookup_type(element)
-                    .memset_dynamic_pattern(builder, fill_var);
-                builder
-                    .emit()
-                    .composite_construct(
-                        self.def(builder),
-                        None,
-                        std::iter::repeat(elem_pat).take(count as usize),
-                    )
-                    .unwrap()
-            }
-            SpirvType::RuntimeArray { .. } => {
-                panic!("memset on runtime arrays not implemented yet")
-            }
-            SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
-            SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
-        }
-    }
 }
 
 pub struct SpirvTypePrinter<'cx, 'tcx> {
@@ -389,6 +247,9 @@ pub struct SpirvTypePrinter<'cx, 'tcx> {
     cx: &'cx CodegenCx<'tcx>,
 }
 
+/// Types can be recursive, e.g. a struct can contain a pointer to itself. So, we need to keep track of a stack of what
+/// types are currently being printed, to not infinitely loop. Unfortunately, unlike fmt::Display, we can't easily pass
+/// down the "stack" of currently-being-printed types, so we use a global static.
 static DEBUG_STACK: SyncLazy<Mutex<Vec<Word>>> = SyncLazy::new(|| Mutex::new(Vec::new()));
 
 impl fmt::Debug for SpirvTypePrinter<'_, '_> {
@@ -497,6 +358,10 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
     }
 }
 
+/// Types can be recursive, e.g. a struct can contain a pointer to itself. So, we need to keep track of a stack of what
+/// types are currently being printed, to not infinitely loop. So, we only use fmt::Display::fmt as an "entry point", and
+/// then call through to our own (recursive) custom function that has a parameter for the current stack. Make sure to not
+/// call Display on a type inside the custom function!
 impl fmt::Display for SpirvTypePrinter<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.display(&mut Vec::new(), f)

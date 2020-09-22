@@ -4,6 +4,11 @@ use rustc_ast::ast::{AttrKind, Attribute};
 use rustc_span::symbol::Symbol;
 use std::collections::HashMap;
 
+/// Various places in the codebase (mostly attribute parsing) need to compare rustc Symbols to particular keywords.
+/// Symbols are interned, as in, they don't actually store the string itself inside them, but rather an index into a
+/// global table of strings. Then, whenever a new Symbol is created, the global table is checked to see if the string
+/// already exists, deduplicating it if so. This makes things like comparison and cloning really cheap. So, this struct
+/// is to allocate all our keywords up front and intern them all, so we can do comparisons really easily and fast.
 pub struct Symbols {
     pub spirv: Symbol,
     pub storage_class: Symbol,
@@ -92,10 +97,13 @@ pub enum SpirvAttribute {
     Entry(ExecutionModel),
 }
 
-// Note that we could mark thie attr as used via cx.tcx.sess.mark_attr_used(attr), but unused reporting already happens
+// Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused reporting already happens
 // even before we get here :(
-/// Returns None if this attribute is not a spirv attribute, or if it's a malformed (and an error is reported).
+/// Returns None if this attribute is not a spirv attribute, or if it's malformed (and an error is reported).
 pub fn parse_attr<'tcx>(cx: &CodegenCx<'tcx>, attr: &Attribute) -> Option<SpirvAttribute> {
+    // Example attributes that we parse here:
+    // #[spirv(storage_class = "uniform")]
+    // #[spirv(entry = "kernel")]
     let is_spirv = match attr.kind {
         AttrKind::Normal(ref item) => {
             // TODO: We ignore the rest of the path. Is this right?
