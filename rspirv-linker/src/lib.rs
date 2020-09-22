@@ -185,8 +185,21 @@ fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
     // This means that any instruction that declares the same type, but with different result_id, will result in the
     // same key.
     let mut key_to_result_id = HashMap::new();
+    // TODO: This is implementing forward pointers incorrectly.
+    let mut unresolved_forward_pointers = HashSet::new();
 
     for inst in &mut module.types_global_values {
+        if inst.class.opcode == spirv::Op::TypeForwardPointer {
+            if let rspirv::dr::Operand::IdRef(id) = inst.operands[0] {
+                unresolved_forward_pointers.insert(id);
+                continue;
+            }
+        }
+        if inst.class.opcode == spirv::Op::TypeForwardPointer
+            && unresolved_forward_pointers.contains(&inst.result_id.unwrap())
+        {
+            unresolved_forward_pointers.remove(&inst.result_id.unwrap());
+        }
         // This is an important spot: Say that we come upon a duplicated aggregate type (one that references
         // other types). Its arguments may be duplicated themselves, and so building the key directly will fail
         // to match up with the first type. However, **because forward references are not allowed**, we're
@@ -208,6 +221,13 @@ fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
                 data.push(id);
             }
             for op in &mut inst.operands {
+                if let rspirv::dr::Operand::IdRef(ref mut id) = op {
+                    if unresolved_forward_pointers.contains(id) {
+                        // TODO: This is implementing forward pointers incorrectly. All unresolved forward pointers will
+                        // compare equal.
+                        *id = 0;
+                    }
+                }
                 op.assemble_into(&mut data);
             }
 
