@@ -644,7 +644,12 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     if let TyKind::Foreign(_) = ty.ty.kind() {
         // "An unsized FFI type that is opaque to Rust", `extern type A;` (currently unstable)
         if cx.kernel_mode {
-            return SpirvType::Opaque { name }.def(cx);
+            // TODO: This should use the name of the struct as the name. However, names are not stable across crates,
+            // e.g. core::fmt::Opaque in one crate and fmt::Opaque in core.
+            return SpirvType::Opaque {
+                name: "".to_string(),
+            }
+            .def(cx);
         }
         // otherwise fall back
     };
