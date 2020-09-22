@@ -34,27 +34,6 @@ fn label_of(block: &Block) -> Word {
     block.label.as_ref().unwrap().result_id.unwrap()
 }
 
-// TODO: Move this to the linker.
-pub fn delete_dead_blocks(func: &mut Function) {
-    if func.blocks.len() < 2 {
-        return;
-    }
-    let entry_label = label_of(&func.blocks[0]);
-    let mut stack = Vec::new();
-    let mut visited = HashSet::new();
-    stack.push(entry_label);
-    visited.insert(entry_label);
-    while let Some(label) = stack.pop() {
-        let block = func.blocks.iter().find(|b| label_of(b) == label).unwrap();
-        for outgoing in outgoing_edges(block) {
-            if visited.insert(outgoing) {
-                stack.push(outgoing);
-            }
-        }
-    }
-    func.blocks.retain(|b| visited.contains(&label_of(b)))
-}
-
 // TODO: Do we move this to the linker?
 pub fn block_ordering_pass(func: &mut Function) {
     if func.blocks.len() < 2 {
@@ -92,8 +71,8 @@ pub fn block_ordering_pass(func: &mut Function) {
             .unwrap();
         func.blocks.push(old_blocks.remove(index));
     }
-    assert!(old_blocks.is_empty());
-    assert_eq!(label_of(&func.blocks[0]), entry_label,);
+    // Note: if old_blocks isn't empty here, that means there were unreachable blocks that were deleted.
+    assert_eq!(label_of(&func.blocks[0]), entry_label);
 }
 
 fn outgoing_edges(block: &Block) -> Vec<Word> {
