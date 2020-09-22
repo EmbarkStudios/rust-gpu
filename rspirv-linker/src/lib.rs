@@ -29,8 +29,7 @@ pub type Result<T> = std::result::Result<T, LinkerError>;
 pub fn load(bytes: &[u8]) -> rspirv::dr::Module {
     let mut loader = rspirv::dr::Loader::new();
     rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
-    let module = loader.module();
-    module
+    loader.module()
 }
 
 fn shift_ids(module: &mut rspirv::dr::Module, add: u32) {
@@ -157,10 +156,7 @@ fn kill_annotations_and_debug(module: &mut rspirv::dr::Module, id: u32) {
     // need to remove OpGroupDecorate members that mention this id
     module.annotations.iter_mut().for_each(|inst| {
         if inst.class.opcode == spirv::Op::GroupDecorate {
-            inst.operands.retain(|op| match op {
-                rspirv::dr::Operand::IdRef(w) if *w != id => return true,
-                _ => return false,
-            });
+            inst.operands.retain(|op| matches!(op, rspirv::dr::Operand::IdRef(w) if *w != id));
         }
     });
 
@@ -335,7 +331,7 @@ fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> 
 
             let def_inst = defs
                 .def(id)
-                .expect(&format!("Need a matching op for ID {}", id));
+                .unwrap_or_else(|| panic!("Need a matching op for ID {}", id));
 
             let (type_id, parameters) = match def_inst.class.opcode {
                 spirv::Op::Variable => (def_inst.result_type.unwrap(), vec![]),
@@ -462,7 +458,7 @@ impl DefAnalyzer {
                     .and_modify(|stored_inst| {
                         *stored_inst = inst.clone();
                     })
-                    .or_insert(inst.clone());
+                    .or_insert_with(|| inst.clone());
             }
         });
 
@@ -504,7 +500,7 @@ impl<'a> DefUseAnalyzer<'a> {
                     use_result_type_ids
                         .entry(result_type)
                         .and_modify(|v| v.push(inst_idx))
-                        .or_insert(vec![inst_idx]);
+                        .or_insert_with(|| vec![inst_idx]);
                 }
 
                 for op in inst.operands.iter() {
@@ -515,7 +511,7 @@ impl<'a> DefUseAnalyzer<'a> {
                             use_ids
                                 .entry(*w)
                                 .and_modify(|v| v.push(inst_idx))
-                                .or_insert(vec![inst_idx]);
+                                .or_insert_with(|| vec![inst_idx]);
                         }
                         _ => {}
                     }
@@ -586,7 +582,7 @@ impl Default for Options {
 }
 
 fn kill_linkage_instructions(
-    pairs: &Vec<ImportExportPair>,
+    pairs: &[ImportExportPair],
     module: &mut rspirv::dr::Module,
     opts: &Options,
 ) {
@@ -608,7 +604,7 @@ fn kill_linkage_instructions(
     kill_with(&mut module.annotations, |inst| {
         let eq = pairs
             .iter()
-            .find(|p| {
+            .any(|p| {
                 if inst.operands.is_empty() {
                     return false;
                 }
@@ -618,8 +614,7 @@ fn kill_linkage_instructions(
                 } else {
                     false
                 }
-            })
-            .is_some();
+            });
 
         eq && inst.class.opcode == spirv::Op::Decorate
             && inst.operands[1]
@@ -646,13 +641,10 @@ fn compact_ids(module: &mut rspirv::dr::Module) -> u32 {
     let mut remap = HashMap::new();
 
     let mut insert = |current_id: u32| -> u32 {
-        if remap.contains_key(&current_id) {
-            remap[&current_id]
-        } else {
-            let new_id = remap.len() as u32 + 1;
-            remap.insert(current_id, new_id);
-            new_id
-        }
+        let len = remap.len();
+        *remap.entry(current_id).or_insert_with(|| {
+            len as u32 + 1
+        })
     };
 
     module.all_inst_iter_mut().for_each(|inst| {
@@ -709,7 +701,7 @@ fn sort_globals(module: &mut rspirv::dr::Module) {
         }
 
         let mut v = ts.pop_all();
-        v.sort();
+        v.sort_unstable();
 
         for result_id in v {
             new_types_global_values.push(defs.def(result_id).unwrap().clone());
@@ -764,11 +756,7 @@ fn trans_scalar_type(inst: &rspirv::dr::Instruction) -> Option<ScalarType> {
             },
             signed: match inst.operands[1] {
                 rspirv::dr::Operand::LiteralInt32(s) => {
-                    if s == 0 {
-                        false
-                    } else {
-                        true
-                    }
+                    s != 0
                 }
                 _ => panic!("Unexpected operand while parsing type"),
             },
@@ -790,6 +778,7 @@ fn trans_scalar_type(inst: &rspirv::dr::Instruction) -> Option<ScalarType> {
 }
 
 #[derive(PartialEq, Debug)]
+#[allow(dead_code)]
 enum AggregateType {
     Scalar(ScalarType),
     Array {
@@ -876,7 +865,7 @@ fn trans_aggregate_type(
         | spirv::Op::TypeMatrix
         | spirv::Op::TypeSampledImage => AggregateType::Aggregate(
             trans_aggregate_type(def, &op_def(def, &inst.operands[0]))
-                .map_or_else(|| vec![], |v| vec![v]),
+                .map_or_else(Vec::new, |v| vec![v]),
         ),
         spirv::Op::TypeStruct | spirv::Op::TypeFunction => {
             let mut types = vec![];
@@ -912,7 +901,7 @@ fn trans_aggregate_type(
                 .operands
                 .get(7)
                 .map(|op| match op {
-                    rspirv::dr::Operand::AccessQualifier(a) => Some(a.clone()),
+                    rspirv::dr::Operand::AccessQualifier(a) => Some(*a),
                     _ => None,
                 })
                 .flatten(),
