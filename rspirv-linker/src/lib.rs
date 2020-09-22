@@ -478,11 +478,11 @@ struct DefUseAnalyzer<'a> {
     def_ids: HashMap<u32, usize>,
     use_ids: HashMap<u32, Vec<usize>>,
     use_result_type_ids: HashMap<u32, Vec<usize>>,
-    instructions: &'a mut [rspirv::dr::Instruction]
+    instructions: &'a mut [rspirv::dr::Instruction],
 }
 
 impl<'a> DefUseAnalyzer<'a> {
-    fn new(instructions: &'a mut [rspirv::dr::Instruction]) -> Self{
+    fn new(instructions: &'a mut [rspirv::dr::Instruction]) -> Self {
         let mut def_ids = HashMap::new();
         let mut use_ids: HashMap<u32, Vec<usize>> = HashMap::new();
         let mut use_result_type_ids: HashMap<u32, Vec<usize>> = HashMap::new();
@@ -526,7 +526,7 @@ impl<'a> DefUseAnalyzer<'a> {
             def_ids,
             use_ids,
             use_result_type_ids,
-            instructions
+            instructions,
         }
     }
 
@@ -539,8 +539,10 @@ impl<'a> DefUseAnalyzer<'a> {
         (idx, &self.instructions[idx])
     }
 
-    fn for_each_use<F>(&mut self, id: u32, mut f: F) 
-    where F: FnMut(&mut rspirv::dr::Instruction) {
+    fn for_each_use<F>(&mut self, id: u32, mut f: F)
+    where
+        F: FnMut(&mut rspirv::dr::Instruction),
+    {
         // find by `result_type`
         if let Some(use_result_type_id) = self.use_result_type_ids.get(&id) {
             for inst_idx in use_result_type_id {
