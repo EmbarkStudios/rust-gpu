@@ -536,27 +536,34 @@ fn kill_linkage_instructions(
 }
 
 fn remove_zombies(module: &mut rspirv::dr::Module) {
-    // rustc_codegen_spirv_zombie=id:reason
-    const ZOMBIE_PREFIX: &str = "rustc_codegen_spirv_zombie=";
-
     fn collect_zombies(module: &rspirv::dr::Module) -> Vec<(spirv::Word, String)> {
         module
-            .debugs
+            .annotations
             .iter()
             .filter_map(|inst| {
-                if inst.class.opcode == spirv::Op::String {
-                    if let rspirv::dr::Operand::LiteralString(ref v) = inst.operands[0] {
-                        if v.starts_with(ZOMBIE_PREFIX) {
-                            let mut value = v[ZOMBIE_PREFIX.len()..].splitn(2, ':');
-                            if let (Some(id), Some(reason)) = (value.next(), value.next()) {
-                                return Some((id.parse().ok()?, reason.to_string()));
-                            }
-                        }
+                // TODO: Temp hack. We hijack UserTypeGOOGLE right now, since the compiler never emits this.
+                if inst.class.opcode == spirv::Op::DecorateString
+                    && inst.operands[1]
+                        == rspirv::dr::Operand::Decoration(spirv::Decoration::UserTypeGOOGLE)
+                {
+                    if let (
+                        &rspirv::dr::Operand::IdRef(id),
+                        rspirv::dr::Operand::LiteralString(reason),
+                    ) = (&inst.operands[0], &inst.operands[2])
+                    {
+                        return Some((id, reason.to_string()));
                     }
                 }
                 None
             })
             .collect()
+    }
+    fn remove_zombie_annotations(module: &mut rspirv::dr::Module) {
+        module.annotations.retain(|inst| {
+            inst.class.opcode != spirv::Op::DecorateString
+                || inst.operands[1]
+                    != rspirv::dr::Operand::Decoration(spirv::Decoration::UserTypeGOOGLE)
+        })
     }
 
     fn contains_zombie<'a>(
@@ -659,6 +666,7 @@ fn remove_zombies(module: &mut rspirv::dr::Module) {
 
     let zombies_owned = collect_zombies(module);
     let mut zombies = zombies_owned.iter().map(|(a, b)| (*a, b as &str)).collect();
+    remove_zombie_annotations(module);
     // Note: This is O(n^2).
     while spread_zombie(module, &mut zombies) {}
 

@@ -1,32 +1,25 @@
-use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
-use rspirv::spirv::{Op, Word};
+use rspirv::dr::{Block, Function, Instruction, Module, Operand};
+use rspirv::spirv::{Decoration, Op, Word};
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::mem::replace;
 
 pub fn export_zombies(module: &mut Module, zombies: &HashMap<Word, &'static str>) {
-    fn gen_id(header: &mut Option<ModuleHeader>) -> Word {
-        let header = match header {
-            Some(h) => h,
-            None => panic!(),
-        };
-        let id = header.bound;
-        header.bound += 1;
-        id
-    }
-    for (id, reason) in zombies {
-        let str = format!("rustc_codegen_spirv_zombie={}:{}", id, reason);
-        let dummy_id = gen_id(&mut module.header);
-        // TODO: OpString must come before other sections in the debug group. Fix rspirv here.
-        module.debugs.insert(
-            0,
-            Instruction::new(
-                Op::String,
-                None,
-                Some(dummy_id),
-                vec![Operand::LiteralString(str)],
-            ),
+    for (&id, &reason) in zombies {
+        // TODO: Right now we just piggyback off UserTypeGOOGLE since we never use it elsewhere. We should, uh, fix this
+        // to use non_semantic or something.
+        // https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_non_semantic_info.html
+        let inst = Instruction::new(
+            Op::DecorateString,
+            None,
+            None,
+            vec![
+                Operand::IdRef(id),
+                Operand::Decoration(Decoration::UserTypeGOOGLE),
+                Operand::LiteralString(reason.to_string()),
+            ],
         );
+        module.annotations.push(inst);
     }
 }
 
