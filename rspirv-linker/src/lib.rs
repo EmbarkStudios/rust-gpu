@@ -195,7 +195,7 @@ fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
                 continue;
             }
         }
-        if inst.class.opcode == spirv::Op::TypeForwardPointer
+        if inst.class.opcode == spirv::Op::TypePointer
             && unresolved_forward_pointers.contains(&inst.result_id.unwrap())
         {
             unresolved_forward_pointers.remove(&inst.result_id.unwrap());
@@ -220,15 +220,16 @@ fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
                 // and it should not be deduplicated (e.g. the constants 1u8 and 1u16).
                 data.push(id);
             }
-            for op in &mut inst.operands {
-                if let rspirv::dr::Operand::IdRef(ref mut id) = op {
+            for op in &inst.operands {
+                if let rspirv::dr::Operand::IdRef(id) = op {
                     if unresolved_forward_pointers.contains(id) {
                         // TODO: This is implementing forward pointers incorrectly. All unresolved forward pointers will
                         // compare equal.
-                        *id = 0;
+                        rspirv::dr::Operand::IdRef(0).assemble_into(&mut data);
                     }
+                } else {
+                    op.assemble_into(&mut data);
                 }
-                op.assemble_into(&mut data);
             }
 
             data
@@ -496,7 +497,7 @@ fn kill_linkage_instructions(
     for pair in pairs.iter() {
         module
             .types_global_values
-            .retain(|v| pair.import.id != v.result_id.unwrap());
+            .retain(|v| v.result_id.map_or(true, |v| v != pair.import.id));
     }
 
     // drop linkage attributes (both import and export)
