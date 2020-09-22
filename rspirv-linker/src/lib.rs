@@ -2,7 +2,6 @@
 mod test;
 
 use rspirv::binary::Consumer;
-use rspirv::binary::Disassemble;
 use rspirv::spirv;
 use std::collections::{hash_map, HashMap, HashSet};
 use thiserror::Error;
@@ -380,9 +379,8 @@ fn find_import_export_pairs(module: &rspirv::dr::Module, defs: &DefAnalyzer) -> 
     .find_potential_pairs()
 }
 
-fn cleanup_type(mut ty: rspirv::dr::Instruction) -> String {
-    ty.result_id = None;
-    ty.disassemble()
+fn print_type(defs: &DefAnalyzer, ty: &rspirv::dr::Instruction) -> String {
+    format!("{}", trans_aggregate_type(defs, ty).unwrap())
 }
 
 impl LinkInfo {
@@ -421,8 +419,8 @@ impl LinkInfo {
             if imp != exp {
                 return Err(LinkerError::TypeMismatch {
                     name: pair.import.name.clone(),
-                    import_type: cleanup_type(import_result_type.clone()),
-                    export_type: cleanup_type(export_result_type.clone()),
+                    import_type: print_type(defs, import_result_type),
+                    export_type: print_type(defs, export_result_type),
                 });
             }
 
@@ -957,6 +955,35 @@ fn trans_scalar_type(inst: &rspirv::dr::Instruction) -> Option<ScalarType> {
     })
 }
 
+impl std::fmt::Display for ScalarType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            ScalarType::Void => f.write_str("void"),
+            ScalarType::Bool => f.write_str("bool"),
+            ScalarType::Int { width, signed } => {
+                if signed {
+                    write!(f, "i{}", width)
+                } else {
+                    write!(f, "u{}", width)
+                }
+            }
+            ScalarType::Float { width } => write!(f, "f{}", width),
+            ScalarType::Opaque { ref name } => write!(f, "Opaque{{{}}}", name),
+            ScalarType::Event => f.write_str("Event"),
+            ScalarType::DeviceEvent => f.write_str("DeviceEvent"),
+            ScalarType::ReserveId => f.write_str("ReserveId"),
+            ScalarType::Queue => f.write_str("Queue"),
+            ScalarType::Pipe => f.write_str("Pipe"),
+            ScalarType::ForwardPointer { storage_class } => {
+                write!(f, "ForwardPointer{{{:?}}}", storage_class)
+            }
+            ScalarType::PipeStorage => f.write_str("PipeStorage"),
+            ScalarType::NamedBarrier => f.write_str("NamedBarrier"),
+            ScalarType::Sampler => f.write_str("Sampler"),
+        }
+    }
+}
+
 #[derive(PartialEq, Debug)]
 #[allow(dead_code)]
 enum AggregateType {
@@ -983,6 +1010,7 @@ enum AggregateType {
         ty: Box<AggregateType>,
     },
     Aggregate(Vec<AggregateType>),
+    Function(Vec<AggregateType>, Box<AggregateType>),
 }
 
 fn op_def(def: &DefAnalyzer, operand: &rspirv::dr::Operand) -> rspirv::dr::Instruction {
@@ -1020,7 +1048,7 @@ fn trans_aggregate_type(
             let len_def = op_def(def, &inst.operands[1]);
             assert!(len_def.class.opcode == spirv::Op::Constant); // don't support spec constants yet
 
-            let len_value = extract_literal_int_as_u64(&len_def.operands[1]);
+            let len_value = extract_literal_int_as_u64(&len_def.operands[0]);
 
             AggregateType::Array {
                 ty: Box::new(
@@ -1047,7 +1075,7 @@ fn trans_aggregate_type(
             trans_aggregate_type(def, &op_def(def, &inst.operands[0]))
                 .map_or_else(Vec::new, |v| vec![v]),
         ),
-        spirv::Op::TypeStruct | spirv::Op::TypeFunction => {
+        spirv::Op::TypeStruct => {
             let mut types = vec![];
             for operand in inst.operands.iter() {
                 let op_def = op_def(def, operand);
@@ -1059,6 +1087,20 @@ fn trans_aggregate_type(
             }
 
             AggregateType::Aggregate(types)
+        }
+        spirv::Op::TypeFunction => {
+            let mut parameters = vec![];
+            let ret = trans_aggregate_type(def, &op_def(def, &inst.operands[0])).unwrap();
+            for operand in inst.operands.iter().skip(1) {
+                let op_def = op_def(def, operand);
+
+                match trans_aggregate_type(def, &op_def) {
+                    Some(ty) => parameters.push(ty),
+                    None => panic!("Expected type"),
+                }
+            }
+
+            AggregateType::Function(parameters, Box::new(ret))
         }
         spirv::Op::TypeImage => AggregateType::Image {
             ty: Box::new(
@@ -1094,6 +1136,48 @@ fn trans_aggregate_type(
             }
         }
     })
+}
+
+impl std::fmt::Display for AggregateType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AggregateType::Scalar(scalar) => write!(f, "{}", scalar),
+            AggregateType::Array { ty, len } => write!(f, "[{}; {}]", ty, len),
+            AggregateType::Pointer { ty, storage_class } => {
+                write!(f, "*{{{:?}}} {}", storage_class, ty)
+            }
+            AggregateType::Image {
+                ty,
+                dim,
+                depth,
+                arrayed,
+                multi_sampled,
+                sampled,
+                format,
+                access,
+            } => write!(
+                f,
+                "Image {{ {}, dim:{:?}, depth:{}, arrayed:{}, \
+                multi_sampled:{}, sampled:{}, format:{:?}, access:{:?} }}",
+                ty, dim, depth, arrayed, multi_sampled, sampled, format, access
+            ),
+            AggregateType::SampledImage { ty } => write!(f, "SampledImage{{{}}}", ty),
+            AggregateType::Aggregate(agg) => {
+                f.write_str("struct {")?;
+                for elem in agg {
+                    write!(f, " {},", elem)?;
+                }
+                f.write_str(" }")
+            }
+            AggregateType::Function(args, ret) => {
+                f.write_str("fn(")?;
+                for elem in args {
+                    write!(f, " {},", elem)?;
+                }
+                write!(f, " ) -> {}", ret)
+            }
+        }
+    }
 }
 
 pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rspirv::dr::Module> {

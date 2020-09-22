@@ -276,14 +276,31 @@ fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
 
     let mut module_refs = modules.iter_mut().collect::<Vec<_>>();
 
-    let result = rspirv_linker::link(
+    let result = match rspirv_linker::link(
         &mut module_refs,
         &rspirv_linker::Options {
             lib: false,
             partial: false,
         },
-    )
-    .unwrap();
+    ) {
+        Ok(result) => result,
+        Err(err) => {
+            if let Some(path) = option_env!("DUMP_MODULE_ON_PANIC") {
+                let path = Path::new(path);
+                if path.is_file() {
+                    std::fs::remove_file(path).unwrap();
+                }
+                std::fs::create_dir_all(path).unwrap();
+                for (num, module) in modules.iter().enumerate() {
+                    File::create(path.join(format!("mod_{}.spv", num)))
+                        .unwrap()
+                        .write_all(crate::slice_u32_to_u8(&module.assemble()))
+                        .unwrap();
+                }
+            }
+            panic!("Linker error: {}", err)
+        }
+    };
 
     use rspirv::binary::Assemble;
     File::create(out_filename)
