@@ -37,8 +37,6 @@ pub struct CodegenCx<'tcx> {
     pub codegen_unit: &'tcx CodegenUnit<'tcx>,
     /// Spir-v module builder
     pub builder: BuilderSpirv,
-    /// Used for the DeclareMethods API (not sure what it is yet)
-    pub declared_values: RefCell<HashMap<String, SpirvValue>>,
     /// Map from MIR function to spir-v function ID
     pub instances: RefCell<HashMap<Instance<'tcx>, SpirvValue>>,
     /// Map from function ID to parameter list
@@ -63,7 +61,6 @@ impl<'tcx> CodegenCx<'tcx> {
             tcx,
             codegen_unit,
             builder: BuilderSpirv::new(),
-            declared_values: Default::default(),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),

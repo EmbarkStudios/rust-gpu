@@ -5,7 +5,7 @@ use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attr, SpirvAttribute};
 use rspirv::spirv::{ExecutionModel, FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
-use rustc_codegen_ssa::traits::{MiscMethods, PreDefineMethods, StaticMethods};
+use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::FnAbiExt;
@@ -32,10 +32,6 @@ fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
 }
 
 impl<'tcx> CodegenCx<'tcx> {
-    fn get_declared_value(&self, name: &str) -> Option<SpirvValue> {
-        self.declared_values.borrow().get(name).copied()
-    }
-
     /// Returns a function if it already exists, or declares a header if it doesn't.
     pub fn get_fn_ext(&self, instance: Instance<'tcx>) -> SpirvValue {
         assert!(!instance.substs.needs_infer());
@@ -46,25 +42,13 @@ impl<'tcx> CodegenCx<'tcx> {
         }
 
         let sym = self.tcx.symbol_name(instance).name;
-
+        // Because we've already declared everything with predefine_fn, if we hit this branch, we're guaranteed to be
+        // importing this function from elsewhere. So, slap an extern on it.
+        let human_name = format!("{}", instance);
+        let linkage = Some(LinkageType::Import);
+        let attrs = attrs_to_spirv(self.tcx.codegen_fn_attrs(instance.def_id()));
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
-
-        let llfn = if let Some(llfn) = self.get_declared_value(sym) {
-            llfn
-        } else {
-            // Because we've already declared everything with predefine_fn, if we hit this branch, we're guaranteed to be
-            // importing this function from elsewhere. So, slap an extern on it.
-            let human_name = format!("{}", instance);
-            let rust_attrs = self.tcx.codegen_fn_attrs(instance.def_id());
-            let spv_attrs = attrs_to_spirv(rust_attrs);
-            self.declare_fn_ext(
-                sym,
-                Some(&human_name),
-                Some(LinkageType::Import),
-                spv_attrs,
-                &fn_abi,
-            )
-        };
+        let llfn = self.declare_fn_ext(sym, Some(&human_name), linkage, attrs, &fn_abi);
 
         self.instances.borrow_mut().insert(instance, llfn);
 
@@ -121,11 +105,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.set_linkage(fn_id, name.to_owned(), linkage);
         }
 
-        let result = fn_id.with_type(function_type);
-        self.declared_values
-            .borrow_mut()
-            .insert(name.to_string(), result);
-        result
+        fn_id.with_type(function_type)
     }
 
     pub fn get_static(&self, def_id: DefId) -> SpirvValue {
@@ -146,13 +126,13 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let ty = instance.ty(self.tcx, ParamEnv::reveal_all());
         let sym = self.tcx.symbol_name(instance).name;
-        let g = self.declare_global(sym, self.layout_of(ty).spirv_type(self));
+        let g = self.declare_global(self.layout_of(ty).spirv_type(self));
         self.instances.borrow_mut().insert(instance, g);
         self.set_linkage(g.def, sym.to_string(), LinkageType::Import);
         g
     }
 
-    fn declare_global(&self, name: &str, ty: Word) -> SpirvValue {
+    fn declare_global(&self, ty: Word) -> SpirvValue {
         let ptr_ty = SpirvType::Pointer {
             storage_class: StorageClass::Function,
             pointee: ty,
@@ -164,9 +144,6 @@ impl<'tcx> CodegenCx<'tcx> {
             .with_type(ptr_ty);
         // TODO: These should be StorageClass::Private, so just zombie for now.
         self.zombie(result.def, "declare_global");
-        self.declared_values
-            .borrow_mut()
-            .insert(name.to_string(), result);
         result
     }
 
@@ -284,14 +261,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             other => panic!("TODO: Linkage type not supported yet: {:?}", other),
         };
 
-        let g = if self.get_declared_value(symbol_name).is_some() {
-            self.sess().span_fatal(
-                self.tcx.def_span(def_id),
-                &format!("symbol `{}` is already defined", symbol_name),
-            )
-        } else {
-            self.declare_global(symbol_name, spvty)
-        };
+        let g = self.declare_global(spvty);
 
         // unsafe {
         //     llvm::LLVMRustSetLinkage(g, base::linkage_to_llvm(linkage));
