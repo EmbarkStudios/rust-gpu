@@ -1,9 +1,8 @@
+use bimap::BiHashMap;
 use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
 use std::cell::{RefCell, RefMut};
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
 use std::{fs::File, io::Write, path::Path};
 
 #[derive(Copy, Clone, Debug, Default, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -61,8 +60,7 @@ pub struct BuilderCursor {
 
 pub struct BuilderSpirv {
     builder: RefCell<Builder>,
-    constants: RefCell<HashMap<SpirvConst, SpirvValue>>,
-    constants_inverse: RefCell<HashMap<Word, SpirvConst>>,
+    constants: RefCell<BiHashMap<SpirvConst, SpirvValue>>,
 }
 
 impl BuilderSpirv {
@@ -84,7 +82,6 @@ impl BuilderSpirv {
         Self {
             builder: RefCell::new(builder),
             constants: Default::default(),
-            constants_inverse: Default::default(),
         }
     }
 
@@ -146,45 +143,39 @@ impl BuilderSpirv {
 
     pub fn def_constant(&self, val: SpirvConst) -> SpirvValue {
         let mut builder = self.builder(BuilderCursor::default());
-        match self.constants.borrow_mut().entry(val) {
-            Entry::Occupied(entry) => *entry.get(),
-            Entry::Vacant(entry) => {
-                let id = match *entry.key() {
-                    SpirvConst::U32(ty, v) => builder.constant_u32(ty, v).with_type(ty),
-                    SpirvConst::U64(ty, v) => builder.constant_u64(ty, v).with_type(ty),
-                    SpirvConst::F32(ty, v) => {
-                        builder.constant_f32(ty, f32::from_bits(v)).with_type(ty)
-                    }
-                    SpirvConst::F64(ty, v) => {
-                        builder.constant_f64(ty, f64::from_bits(v)).with_type(ty)
-                    }
-                    SpirvConst::Bool(ty, v) => {
-                        if v {
-                            builder.constant_true(ty).with_type(ty)
-                        } else {
-                            builder.constant_false(ty).with_type(ty)
-                        }
-                    }
-                    SpirvConst::Composite(ty, ref v) => builder
-                        .constant_composite(ty, v.iter().copied())
-                        .with_type(ty),
-                    SpirvConst::Null(ty) => builder.constant_null(ty).with_type(ty),
-                    SpirvConst::Undef(ty) => builder.undef(ty, None).with_type(ty),
-                };
-                self.constants_inverse
-                    .borrow_mut()
-                    .insert(id.def, entry.key().clone());
-                entry.insert(id);
-                id
-            }
+        if let Some(value) = self.constants.borrow_mut().get_by_left(&val) {
+            return *value;
         }
+        let id = match val {
+            SpirvConst::U32(ty, v) => builder.constant_u32(ty, v).with_type(ty),
+            SpirvConst::U64(ty, v) => builder.constant_u64(ty, v).with_type(ty),
+            SpirvConst::F32(ty, v) => builder.constant_f32(ty, f32::from_bits(v)).with_type(ty),
+            SpirvConst::F64(ty, v) => builder.constant_f64(ty, f64::from_bits(v)).with_type(ty),
+            SpirvConst::Bool(ty, v) => {
+                if v {
+                    builder.constant_true(ty).with_type(ty)
+                } else {
+                    builder.constant_false(ty).with_type(ty)
+                }
+            }
+            SpirvConst::Composite(ty, ref v) => builder
+                .constant_composite(ty, v.iter().copied())
+                .with_type(ty),
+            SpirvConst::Null(ty) => builder.constant_null(ty).with_type(ty),
+            SpirvConst::Undef(ty) => builder.undef(ty, None).with_type(ty),
+        };
+        self.constants
+            .borrow_mut()
+            .insert_no_overwrite(val, id)
+            .unwrap();
+        id
     }
 
-    pub fn lookup_const(&self, def: Word) -> Option<SpirvConst> {
-        self.constants_inverse.borrow().get(&def).cloned()
+    pub fn lookup_const(&self, def: SpirvValue) -> Option<SpirvConst> {
+        self.constants.borrow().get_by_right(&def).cloned()
     }
 
-    pub fn lookup_const_u64(&self, def: Word) -> Option<u64> {
+    pub fn lookup_const_u64(&self, def: SpirvValue) -> Option<u64> {
         match self.lookup_const(def)? {
             SpirvConst::U32(_, v) => Some(v as u64),
             SpirvConst::U64(_, v) => Some(v),

@@ -7,6 +7,7 @@ use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueEx
 use crate::finalizing_passes::{block_ordering_pass, export_zombies};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
+use bimap::BiHashMap;
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Decoration, LinkageType, StorageClass, Word};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
@@ -52,7 +53,8 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
     /// Functions created in get_fn_addr
-    function_pointers: RefCell<HashMap<SpirvValue, SpirvValue>>,
+    /// left: the OpUndef value. right: the function value.
+    function_pointers: RefCell<BiHashMap<SpirvValue, SpirvValue>>,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -140,6 +142,9 @@ impl<'tcx> CodegenCx<'tcx> {
     /// called, and it's calling a function pointer, we check the dictionary, and if it is, invoke the function directly.
     /// It's kind of conceptually similar to a constexpr deref, except specialized to just functions.
     pub fn register_fn_ptr(&self, function: SpirvValue) -> SpirvValue {
+        if let Some(undef) = self.function_pointers.borrow().get_by_right(&function) {
+            return *undef;
+        }
         let ty = SpirvType::Pointer {
             storage_class: StorageClass::Function,
             pointee: function.ty,
@@ -149,13 +154,19 @@ impl<'tcx> CodegenCx<'tcx> {
         let result = self.emit_global().undef(ty, None).with_type(ty);
         // It's obviously invalid, so zombie it.
         self.zombie(result.def, "get_fn_addr");
-        self.function_pointers.borrow_mut().insert(result, function);
+        self.function_pointers
+            .borrow_mut()
+            .insert_no_overwrite(result, function)
+            .unwrap();
         result
     }
 
     /// See comment on register_fn_ptr
     pub fn lookup_fn_ptr(&self, pointer: SpirvValue) -> Option<SpirvValue> {
-        self.function_pointers.borrow().get(&pointer).cloned()
+        self.function_pointers
+            .borrow()
+            .get_by_left(&pointer)
+            .cloned()
     }
 }
 

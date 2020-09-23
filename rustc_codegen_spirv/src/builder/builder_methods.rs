@@ -141,13 +141,13 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
             SpirvType::Vector { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
-                self.constant_composite(ty.def(self), vec![elem_pat; count as usize])
+                self.constant_composite(ty.clone().def(self), vec![elem_pat; count as usize])
                     .def
             }
             SpirvType::Array { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
-                self.constant_composite(ty.def(self), vec![elem_pat; count])
+                self.constant_composite(ty.clone().def(self), vec![elem_pat; count])
                     .def
             }
             SpirvType::RuntimeArray { .. } => {
@@ -181,7 +181,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 self.emit()
                     .composite_construct(
-                        ty.def(self),
+                        ty.clone().def(self),
                         None,
                         std::iter::repeat(elem_pat).take(count),
                     )
@@ -191,7 +191,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let elem_pat = self.memset_dynamic_pattern(&self.lookup_type(element), fill_var);
                 self.emit()
                     .composite_construct(
-                        ty.def(self),
+                        ty.clone().def(self),
                         None,
                         std::iter::repeat(elem_pat).take(count as usize),
                     )
@@ -1137,8 +1137,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         let elem_ty_spv = self.lookup_type(elem_ty);
         match (
-            self.builder.lookup_const(fill_byte.def),
-            self.builder.lookup_const(size.def),
+            self.builder.lookup_const(fill_byte),
+            self.builder.lookup_const(size),
         ) {
             (Some(fill_byte), Some(size)) => {
                 let fill_byte = match fill_byte {
@@ -1218,7 +1218,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Vector { element, .. } => element,
             other => panic!("extract_element not implemented on type {:?}", other),
         };
-        match self.builder.lookup_const_u64(idx.def) {
+        match self.builder.lookup_const_u64(idx) {
             Some(const_index) => self.emit().composite_extract(
                 result_type,
                 None,
@@ -1239,7 +1239,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             count: num_elts as u32,
         }
         .def(self);
-        if self.builder.lookup_const(elt.def).is_some() {
+        if self.builder.lookup_const(elt).is_some() {
             self.constant_composite(result_type, vec![elt.def; num_elts])
         } else {
             self.emit()

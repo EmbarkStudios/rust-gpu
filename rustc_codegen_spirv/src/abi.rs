@@ -183,7 +183,7 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
             if rem_bytes == 0 {
                 return SpirvType::Array {
                     element: rest_ll_unit,
-                    count: cx.constant_u32(rest_count as u32).def,
+                    count: cx.constant_u32(rest_count as u32),
                 }
                 .def(cx);
             }
@@ -549,7 +549,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
             assert_ne!(ty.size.bytes(), 0, "{:#?}", ty);
             assert!(!ty.is_unsized(), "{:#?}", ty);
             let byte = SpirvType::Integer(8, false).def(cx);
-            let count = cx.constant_u32(ty.size.bytes() as u32).def;
+            let count = cx.constant_u32(ty.size.bytes() as u32);
             SpirvType::Array {
                 element: byte,
                 count,
@@ -578,7 +578,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
                 }
                 .def(cx)
             } else {
-                let count_const = cx.constant_u32(count as u32).def;
+                let count_const = cx.constant_u32(count as u32);
                 let element_spv = cx.lookup_type(element_type);
                 let stride_spv = element_spv
                     .sizeof(cx)

@@ -180,10 +180,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn const_to_opt_uint(&self, v: Self::Value) -> Option<u64> {
-        self.builder.lookup_const_u64(v.def)
+        self.builder.lookup_const_u64(v)
     }
     fn const_to_opt_u128(&self, v: Self::Value, sign_ext: bool) -> Option<u128> {
-        self.builder.lookup_const_u64(v.def).map(|v| {
+        self.builder.lookup_const_u64(v).map(|v| {
             if sign_ext {
                 v as i64 as i128 as u128
             } else {

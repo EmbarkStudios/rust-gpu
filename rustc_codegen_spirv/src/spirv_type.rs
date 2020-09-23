@@ -1,10 +1,11 @@
 use crate::abi::RecursivePointeeCache;
+use crate::builder_spirv::SpirvValue;
 use crate::codegen_cx::CodegenCx;
+use bimap::BiHashMap;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, StorageClass, Word};
 use rustc_target::abi::{Align, Size};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::fmt;
 use std::iter::once;
 use std::lazy::SyncLazy;
@@ -41,7 +42,7 @@ pub enum SpirvType {
     Array {
         element: Word,
         /// Note: array count is ref to constant.
-        count: Word,
+        count: SpirvValue,
     },
     RuntimeArray {
         element: Word,
@@ -58,11 +59,11 @@ pub enum SpirvType {
 
 impl SpirvType {
     /// Note: Builder::type_* should be called *nowhere else* but here, to ensure CodegenCx::type_defs stays up-to-date
-    pub fn def<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Word {
-        if let Some(cached) = cx.type_cache.get(self) {
+    pub fn def<'tcx>(self, cx: &CodegenCx<'tcx>) -> Word {
+        if let Some(cached) = cx.type_cache.get(&self) {
             return cached;
         }
-        let result = match *self {
+        let result = match self {
             SpirvType::Void => cx.emit_global().type_void(),
             SpirvType::Bool => cx.emit_global().type_bool(),
             SpirvType::Integer(width, signedness) => {
@@ -126,7 +127,7 @@ impl SpirvType {
                     .sizeof(cx)
                     .expect("Element of sized array must be sized")
                     .bytes();
-                let result = cx.emit_global().type_array(element, count);
+                let result = cx.emit_global().type_array(element, count.def);
                 if !cx.kernel_mode {
                     // TODO: kernel mode can't do this??
                     cx.emit_global().decorate(
@@ -168,12 +169,12 @@ impl SpirvType {
 
     /// def_with_id is used by the RecursivePointeeCache to handle OpTypeForwardPointer: when emitting the subsequent
     /// OpTypePointer, the ID is already known and must be re-used.
-    pub fn def_with_id<'tcx>(&self, cx: &CodegenCx<'tcx>, id: Word) -> Word {
-        if let Some(cached) = cx.type_cache.get(self) {
+    pub fn def_with_id<'tcx>(self, cx: &CodegenCx<'tcx>, id: Word) -> Word {
+        if let Some(cached) = cx.type_cache.get(&self) {
             assert_eq!(cached, id);
             return cached;
         }
-        let result = match *self {
+        let result = match self {
             SpirvType::Pointer {
                 storage_class,
                 pointee,
@@ -463,44 +464,29 @@ impl SpirvTypePrinter<'_, '_> {
 
 #[derive(Default)]
 pub struct TypeCache<'tcx> {
-    /// Map from ID to structure
-    pub type_defs: RefCell<HashMap<Word, SpirvType>>,
-    /// Inverse of type_defs (used to cache generating types)
-    pub type_cache: RefCell<HashMap<SpirvType, Word>>,
+    /// Map between ID and structure
+    pub type_defs: RefCell<BiHashMap<Word, SpirvType>>,
     /// Recursive pointer breaking
     pub recursive_pointee_cache: RecursivePointeeCache<'tcx>,
 }
 
 impl TypeCache<'_> {
     fn get(&self, ty: &SpirvType) -> Option<Word> {
-        self.type_cache.borrow().get(ty).copied()
+        self.type_defs.borrow().get_by_right(ty).copied()
     }
 
     pub fn lookup(&self, word: Word) -> SpirvType {
         self.type_defs
             .borrow()
-            .get(&word)
+            .get_by_left(&word)
             .expect("Tried to lookup value that wasn't a type, or has no definition")
             .clone()
     }
 
-    fn def(&self, word: Word, ty: &SpirvType) {
-        // Change to expect_none if/when stabilized
-        assert!(
-            self.type_defs
-                .borrow_mut()
-                .insert(word, ty.clone())
-                .is_none(),
-            "type_defs already had entry, caching failed? {:#?}",
-            ty
-        );
-        assert!(
-            self.type_cache
-                .borrow_mut()
-                .insert(ty.clone(), word)
-                .is_none(),
-            "type_cache already had entry, caching failed? {:#?}",
-            ty
-        );
+    fn def(&self, word: Word, ty: SpirvType) {
+        self.type_defs
+            .borrow_mut()
+            .insert_no_overwrite(word, ty)
+            .unwrap();
     }
 }
