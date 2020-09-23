@@ -145,44 +145,31 @@ impl BuilderSpirv {
     }
 
     pub fn def_constant(&self, val: SpirvConst) -> SpirvValue {
+        let mut builder = self.builder(BuilderCursor::default());
         match self.constants.borrow_mut().entry(val) {
             Entry::Occupied(entry) => *entry.get(),
             Entry::Vacant(entry) => {
                 let id = match *entry.key() {
-                    SpirvConst::U32(ty, v) => {
-                        self.builder.borrow_mut().constant_u32(ty, v).with_type(ty)
+                    SpirvConst::U32(ty, v) => builder.constant_u32(ty, v).with_type(ty),
+                    SpirvConst::U64(ty, v) => builder.constant_u64(ty, v).with_type(ty),
+                    SpirvConst::F32(ty, v) => {
+                        builder.constant_f32(ty, f32::from_bits(v)).with_type(ty)
                     }
-                    SpirvConst::U64(ty, v) => {
-                        self.builder.borrow_mut().constant_u64(ty, v).with_type(ty)
+                    SpirvConst::F64(ty, v) => {
+                        builder.constant_f64(ty, f64::from_bits(v)).with_type(ty)
                     }
-                    SpirvConst::F32(ty, v) => self
-                        .builder
-                        .borrow_mut()
-                        .constant_f32(ty, f32::from_bits(v))
-                        .with_type(ty),
-                    SpirvConst::F64(ty, v) => self
-                        .builder
-                        .borrow_mut()
-                        .constant_f64(ty, f64::from_bits(v))
-                        .with_type(ty),
                     SpirvConst::Bool(ty, v) => {
                         if v {
-                            self.builder.borrow_mut().constant_true(ty).with_type(ty)
+                            builder.constant_true(ty).with_type(ty)
                         } else {
-                            self.builder.borrow_mut().constant_false(ty).with_type(ty)
+                            builder.constant_false(ty).with_type(ty)
                         }
                     }
-                    SpirvConst::Composite(ty, ref v) => self
-                        .builder
-                        .borrow_mut()
+                    SpirvConst::Composite(ty, ref v) => builder
                         .constant_composite(ty, v.iter().copied())
                         .with_type(ty),
-                    SpirvConst::Null(ty) => {
-                        self.builder.borrow_mut().constant_null(ty).with_type(ty)
-                    }
-                    SpirvConst::Undef(ty) => {
-                        self.builder.borrow_mut().undef(ty, None).with_type(ty)
-                    }
+                    SpirvConst::Null(ty) => builder.constant_null(ty).with_type(ty),
+                    SpirvConst::Undef(ty) => builder.undef(ty, None).with_type(ty),
                 };
                 self.constants_inverse
                     .borrow_mut()
