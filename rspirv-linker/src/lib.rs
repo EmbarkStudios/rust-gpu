@@ -272,7 +272,6 @@ fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
                 // 2) Erase this instruction. Because we're iterating over this vec, removing an element is hard, so
                 // clear it with OpNop, and then remove it in the retain() call below.
                 assert!(old_value.is_none());
-                println!("killing duplicate {:?} -> {}", *inst, entry.get());
                 *inst = rspirv::dr::Instruction::new(spirv::Op::Nop, None, None, vec![]);
             }
         }
@@ -282,10 +281,6 @@ fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
     module
         .types_global_values
         .retain(|op| op.class.opcode != spirv::Op::Nop);
-
-    for (key, value) in &rewrite_rules {
-        println!("rewrite {} -> {}", key, value);
-    }
 
     // Apply the rewrite rules to the whole module
     for inst in module.all_inst_iter_mut() {
