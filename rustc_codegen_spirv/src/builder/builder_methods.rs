@@ -749,7 +749,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             pointee: result_pointee_type,
         }
         .def(self);
-        let index_const = self.constant_u64(idx).def;
+        // Important! LLVM, and therefore intel-compute-runtime, require the `getelementptr` instruction (and therefore
+        // OpAccessChain) on structs to be a constant i32. Not i64! i32.
+        if idx > u32::MAX as u64 {
+            panic!("struct_gep bigger than u32::MAX");
+        }
+        let index_const = self.constant_u32(idx as u32).def;
         self.emit()
             .access_chain(result_type, None, ptr.def, [index_const].iter().cloned())
             .unwrap()
