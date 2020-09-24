@@ -976,47 +976,49 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 IntSLE => self.emit().s_less_than_equal(b, None, lhs.def, rhs.def),
             },
             SpirvType::Pointer { .. } => match op {
-                IntEQ => self.emit().ptr_equal(b, None, lhs.def, rhs.def),
-                IntNE => self.emit().ptr_not_equal(b, None, lhs.def, rhs.def),
+                IntEQ => {
+                    if self.emit().version().unwrap() > (1, 3) {
+                        self.emit().ptr_equal(b, None, lhs.def, rhs.def)
+                    } else {
+                        let int_ty = self.type_usize();
+                        let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                        let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                        self.emit().i_not_equal(b, None, lhs, rhs)
+                    }
+                }
+                IntNE => {
+                    if self.emit().version().unwrap() > (1, 3) {
+                        self.emit().ptr_not_equal(b, None, lhs.def, rhs.def)
+                    } else {
+                        let int_ty = self.type_usize();
+                        let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                        let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                        self.emit().i_not_equal(b, None, lhs, rhs)
+                    }
+                }
                 IntUGT => {
-                    let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
-                    let ptr_diff = SpirvType::Integer(ptr_size, false).def(self);
-                    let diff = self
-                        .emit()
-                        .ptr_diff(ptr_diff, None, lhs.def, rhs.def)
-                        .unwrap();
-                    let zero = self.constant_int(ptr_diff, 0);
-                    self.emit().u_greater_than(b, None, diff, zero.def)
+                    let int_ty = self.type_usize();
+                    let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    self.emit().u_greater_than(b, None, lhs, rhs)
                 }
                 IntUGE => {
-                    let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
-                    let ptr_diff = SpirvType::Integer(ptr_size, false).def(self);
-                    let diff = self
-                        .emit()
-                        .ptr_diff(ptr_diff, None, lhs.def, rhs.def)
-                        .unwrap();
-                    let zero = self.constant_int(ptr_diff, 0);
-                    self.emit().u_greater_than_equal(b, None, diff, zero.def)
+                    let int_ty = self.type_usize();
+                    let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    self.emit().u_greater_than_equal(b, None, lhs, rhs)
                 }
                 IntULT => {
-                    let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
-                    let ptr_diff = SpirvType::Integer(ptr_size, false).def(self);
-                    let diff = self
-                        .emit()
-                        .ptr_diff(ptr_diff, None, lhs.def, rhs.def)
-                        .unwrap();
-                    let zero = self.constant_int(ptr_diff, 0);
-                    self.emit().u_less_than(b, None, diff, zero.def)
+                    let int_ty = self.type_usize();
+                    let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    self.emit().u_less_than(b, None, lhs, rhs)
                 }
                 IntULE => {
-                    let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
-                    let ptr_diff = SpirvType::Integer(ptr_size, false).def(self);
-                    let diff = self
-                        .emit()
-                        .ptr_diff(ptr_diff, None, lhs.def, rhs.def)
-                        .unwrap();
-                    let zero = self.constant_int(ptr_diff, 0);
-                    self.emit().u_less_than_equal(b, None, diff, zero.def)
+                    let int_ty = self.type_usize();
+                    let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    self.emit().u_less_than_equal(b, None, lhs, rhs)
                 }
                 IntSGT => panic!("TODO: pointer operator IntSGT not implemented yet"),
                 IntSGE => panic!("TODO: pointer operator IntSGE not implemented yet"),

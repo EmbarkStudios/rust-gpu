@@ -1131,10 +1131,12 @@ impl std::fmt::Display for AggregateType {
 pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rspirv::dr::Module> {
     // shift all the ids
     let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
+    let version = inputs[0].header.as_ref().unwrap().version();
 
     for mut module in inputs.iter_mut().skip(1) {
         shift_ids(&mut module, bound);
         bound += module.header.as_ref().unwrap().bound - 1;
+        assert_eq!(version, module.header.as_ref().unwrap().version());
     }
 
     // merge the binaries
@@ -1184,7 +1186,9 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
         // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
         compact_ids(&mut output)
     };
-    output.header = Some(rspirv::dr::ModuleHeader::new(bound));
+    let mut header = rspirv::dr::ModuleHeader::new(bound);
+    header.set_version(version.0, version.1);
+    output.header = Some(header);
 
     output.debugs.push(rspirv::dr::Instruction::new(
         spirv::Op::ModuleProcessed,

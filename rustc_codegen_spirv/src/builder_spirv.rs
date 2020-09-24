@@ -66,6 +66,8 @@ pub struct BuilderSpirv {
 impl BuilderSpirv {
     pub fn new() -> Self {
         let mut builder = Builder::new();
+        // intel-compute-runtime only supports v1.3
+        builder.set_version(1, 3);
         // TODO: Flip this back to Shader once the structurizer is working.
         builder.capability(Capability::Kernel);
         // Temp hack: Linkage allows us to get away with no OpEntryPoint

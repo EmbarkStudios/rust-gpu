@@ -2,6 +2,7 @@ use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::StorageClass;
+use rspirv::spirv::Word;
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, LayoutTypeMethods};
 use rustc_middle::ty::layout::{LayoutError, TyAndLayout};
@@ -91,6 +92,13 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
 
     fn reg_backend_type(&self, ty: &Reg) -> Self::Type {
         ty.spirv_type(self)
+    }
+}
+
+impl<'tcx> CodegenCx<'tcx> {
+    pub fn type_usize(&self) -> Word {
+        let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
+        SpirvType::Integer(ptr_size, false).def(self)
     }
 }
 
