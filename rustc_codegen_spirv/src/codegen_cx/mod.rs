@@ -53,6 +53,9 @@ pub struct CodegenCx<'tcx> {
     /// Functions created in get_fn_addr
     /// left: the OpUndef value. right: the function value.
     function_pointers: RefCell<BiHashMap<SpirvValue, SpirvValue>>,
+    /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
+    /// This enables/disables them.
+    pub i8_i16_atomics_allowed: bool,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -70,6 +73,7 @@ impl<'tcx> CodegenCx<'tcx> {
             kernel_mode: true,
             sym: Box::new(Symbols::new()),
             function_pointers: Default::default(),
+            i8_i16_atomics_allowed: false,
         }
     }
 
@@ -164,6 +168,17 @@ impl<'tcx> CodegenCx<'tcx> {
             .borrow()
             .get_by_left(&pointer)
             .cloned()
+    }
+
+    pub fn validate_atomic(&self, ty: Word, to_zombie: Word) {
+        if !self.i8_i16_atomics_allowed {
+            match self.lookup_type(ty) {
+                SpirvType::Integer(width, _) if width < 32 => {
+                    self.zombie(to_zombie, "atomic on i8 or i16 when disallowed by runtime");
+                }
+                _ => (),
+            }
+        }
     }
 }
 

@@ -565,10 +565,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
         let semantics = self.constant_u32(ordering_to_semantics(order).bits());
-        self.emit()
+        let result = self
+            .emit()
             .atomic_load(ty, None, ptr.def, memory.def, semantics.def)
             .unwrap()
-            .with_type(ty)
+            .with_type(ty);
+        self.validate_atomic(ty, result.def);
+        result
     }
 
     fn load_operand(
@@ -719,9 +722,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
         let semantics = self.constant_u32(ordering_to_semantics(order).bits());
+        self.validate_atomic(val.ty, ptr.def);
         self.emit()
             .atomic_store(ptr.def, memory.def, semantics.def, val.def)
-            .unwrap()
+            .unwrap();
     }
 
     fn gep(&mut self, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
@@ -1383,6 +1387,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         assert_ty_eq!(self, dst_pointee_ty, cmp.ty);
         assert_ty_eq!(self, dst_pointee_ty, src.ty);
+        self.validate_atomic(dst_pointee_ty, dst.def);
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
         let semantics_equal = self.constant_u32(ordering_to_semantics(order).bits());
@@ -1421,6 +1426,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             ),
         };
         assert_ty_eq!(self, dst_pointee_ty, src.ty);
+        self.validate_atomic(dst_pointee_ty, dst.def);
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32).def;
         let semantics = self.constant_u32(ordering_to_semantics(order).bits()).def;
