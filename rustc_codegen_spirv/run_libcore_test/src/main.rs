@@ -1,4 +1,5 @@
-use ocl::{Buffer, Context, Device, Kernel, Platform, Program, Queue};
+use ocl::enums::ProgramInfo;
+use ocl::{Buffer, Context, Kernel, Platform, Program, Queue};
 use std::ffi::CString;
 use std::fs::File;
 use std::io::Read;
@@ -8,20 +9,17 @@ fn main() {
     let mut spirv = Vec::new();
     File::open(path).unwrap().read_to_end(&mut spirv).unwrap();
 
-    let dims = [1];
     let platform = Platform::list()
         .into_iter()
-        .find(|p| {
-            for device in Device::list_all(p).unwrap() {
-                println!("{:?} = {}", device, device.name().unwrap());
-            }
-            let version = p.version().unwrap();
-            println!("{:?} = {}", p, version);
-            version.contains("2.")
-        })
+        .find(|p| p.version().unwrap().contains("2."))
         .unwrap();
     let context = Context::builder().platform(platform).build().unwrap();
     let device = context.devices()[0];
+    println!(
+        "Using {} -> {}",
+        platform.name().unwrap(),
+        device.name().unwrap()
+    );
     let queue = Queue::new(&context, device, None).unwrap();
     let program = Program::with_il(
         &spirv,
@@ -30,25 +28,36 @@ fn main() {
         &context,
     )
     .unwrap();
+    println!(
+        "Kernel names: {:?}",
+        program.info(ProgramInfo::KernelNames).unwrap()
+    );
     let one = Buffer::<u32>::builder()
         .queue(queue.clone())
-        .copy_host_slice(&[1])
+        .len(1)
         .build()
         .unwrap();
     let two = Buffer::<u32>::builder()
         .queue(queue.clone())
-        .copy_host_slice(&[2])
+        .len(1)
         .build()
         .unwrap();
     let three = Buffer::<u32>::builder()
         .queue(queue.clone())
-        .len(dims)
+        .len(1)
         .build()
         .unwrap();
+
+    one.write(&[1u32] as &[u32]).enq().unwrap();
+    two.write(&[2u32] as &[u32]).enq().unwrap();
+    three.write(&[5u32] as &[u32]).enq().unwrap();
+
     let kernel = Kernel::builder()
+        .queue(queue.clone())
         .program(&program)
-        .name("add_two_numbers")
-        .global_work_size(&dims)
+        .name("add_two_ints.1")
+        .local_work_size(&[1])
+        .global_work_size(&[1])
         .arg(&one)
         .arg(&two)
         .arg(&three)
@@ -59,8 +68,13 @@ fn main() {
         kernel.enq().unwrap();
     }
 
-    let mut vec = vec![0u32; three.len()];
-    three.read(&mut vec).enq().unwrap();
+    fn read(buf: Buffer<u32>) {
+        let mut vec = vec![0; 1];
+        buf.read(&mut vec).enq().unwrap();
+        println!("{:?}", vec);
+    }
 
-    println!("The value at index [{}] is now '{}'!", 0, vec[0]);
+    read(one);
+    read(two);
+    read(three);
 }
