@@ -443,7 +443,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn not(&mut self, val: Self::Value) -> Self::Value {
         match self.lookup_type(val.ty) {
             SpirvType::Integer(_, _) => self.emit().not(val.ty, None, val.def),
-            SpirvType::Bool => self.emit().logical_not(val.ty, None, val.def),
+            SpirvType::Bool => {
+                let true_ = self.constant_bool(true);
+                // intel-compute-runtime doesn't like OpLogicalNot
+                self.emit()
+                    .logical_not_equal(val.ty, None, val.def, true_.def)
+            }
             o => panic!("not() not implemented for type {}", o.debug(val.ty, self)),
         }
         .unwrap()
@@ -1035,22 +1040,39 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 IntNE => self.emit().logical_not_equal(b, None, lhs.def, rhs.def),
                 // x > y  =>  x && !y
                 IntUGT => {
-                    let rhs = self.emit().logical_not(b, None, rhs.def).unwrap();
+                    // intel-compute-runtime doesn't like OpLogicalNot
+                    let true_ = self.constant_bool(true);
+                    let rhs = self
+                        .emit()
+                        .logical_not_equal(b, None, rhs.def, true_.def)
+                        .unwrap();
                     self.emit().logical_and(b, None, lhs.def, rhs)
                 }
                 // x >= y  =>  x || !y
                 IntUGE => {
-                    let rhs = self.emit().logical_not(b, None, rhs.def).unwrap();
+                    let true_ = self.constant_bool(true);
+                    let rhs = self
+                        .emit()
+                        .logical_not_equal(b, None, rhs.def, true_.def)
+                        .unwrap();
                     self.emit().logical_or(b, None, lhs.def, rhs)
                 }
                 // x < y  =>  !x && y
                 IntULE => {
-                    let lhs = self.emit().logical_not(b, None, lhs.def).unwrap();
+                    let true_ = self.constant_bool(true);
+                    let lhs = self
+                        .emit()
+                        .logical_not_equal(b, None, lhs.def, true_.def)
+                        .unwrap();
                     self.emit().logical_and(b, None, lhs, rhs.def)
                 }
                 // x <= y  =>  !x || y
                 IntULT => {
-                    let lhs = self.emit().logical_not(b, None, lhs.def).unwrap();
+                    let true_ = self.constant_bool(true);
+                    let lhs = self
+                        .emit()
+                        .logical_not_equal(b, None, lhs.def, true_.def)
+                        .unwrap();
                     self.emit().logical_or(b, None, lhs, rhs.def)
                 }
                 IntSGT => panic!("TODO: boolean operator IntSGT not implemented yet"),
