@@ -22,7 +22,7 @@ use std::fmt::Write;
 /// struct manages that state tracking.
 #[derive(Default)]
 pub struct RecursivePointeeCache<'tcx> {
-    map: RefCell<HashMap<PointeeTy<'tcx>, PointeeDefState>>,
+    map: RefCell<HashMap<(PointeeTy<'tcx>, StorageClass), PointeeDefState>>,
 }
 
 impl<'tcx> RecursivePointeeCache<'tcx> {
@@ -33,7 +33,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
         storage_class: StorageClass,
     ) -> Option<Word> {
         // Warning: storage_class must match the one called with end()
-        match self.map.borrow_mut().entry(pointee) {
+        match self.map.borrow_mut().entry((pointee, storage_class)) {
             // State: This is the first time we've seen this type. Record that we're beginning to translate this type,
             // and start doing the translation.
             Entry::Vacant(entry) => {
@@ -66,7 +66,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
         pointee_spv: Word,
     ) -> Word {
         // Warning: storage_class must match the one called with begin()
-        match self.map.borrow_mut().entry(pointee) {
+        match self.map.borrow_mut().entry((pointee, storage_class)) {
             // We should have hit begin() on this type already, which always inserts an entry.
             Entry::Vacant(_) => panic!("RecursivePointeeCache::end should always have entry"),
             Entry::Occupied(mut entry) => match *entry.get() {

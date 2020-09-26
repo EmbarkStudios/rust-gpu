@@ -2,7 +2,7 @@ use super::Builder;
 use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
-use rspirv::spirv::{MemorySemantics, Op, Scope, StorageClass, Word};
+use rspirv::spirv::{AddressingModel, Capability, MemorySemantics, Op, Scope, StorageClass, Word};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -202,6 +202,46 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             }
             SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
             SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
+        }
+    }
+
+    fn zombie_convert_ptr_to_u(&self, def: Word) {
+        if !self.builder.has_capability(Capability::Addresses)
+            && !self
+                .builder
+                .has_capability(Capability::PhysicalStorageBufferAddresses)
+        {
+            self.zombie(
+                def,
+                "OpConvertPtrToU without OpCapability Addresses or PhysicalStorageBufferAddresses",
+            );
+        }
+    }
+
+    fn zombie_convert_u_to_ptr(&self, def: Word) {
+        if !self.builder.has_capability(Capability::Addresses)
+            && !self
+                .builder
+                .has_capability(Capability::PhysicalStorageBufferAddresses)
+        {
+            self.zombie(
+                def,
+                "OpConvertUToPtr OpCapability Addresses or PhysicalStorageBufferAddresses",
+            );
+        }
+    }
+
+    fn zombie_bitcast_ptr(&self, def: Word) {
+        let is_logical = self
+            .emit()
+            .module_ref()
+            .memory_model
+            .as_ref()
+            .map_or(false, |inst| {
+                inst.operands[0] == Operand::AddressingModel(AddressingModel::Logical)
+            });
+        if is_logical {
+            self.zombie(def, "OpBitcast on ptr without AddressingModel != Logical")
         }
     }
 }
@@ -867,10 +907,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if val.ty == dest_ty {
             val
         } else {
-            self.emit()
-                .bitcast(dest_ty, None, val.def)
+            let result = self
+                .emit()
+                .convert_ptr_to_u(dest_ty, None, val.def)
                 .unwrap()
-                .with_type(dest_ty)
+                .with_type(dest_ty);
+            self.zombie_convert_ptr_to_u(result.def);
+            result
         }
     }
 
@@ -882,10 +925,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if val.ty == dest_ty {
             val
         } else {
-            self.emit()
-                .bitcast(dest_ty, None, val.def)
+            let result = self
+                .emit()
+                .convert_u_to_ptr(dest_ty, None, val.def)
                 .unwrap()
-                .with_type(dest_ty)
+                .with_type(dest_ty);
+            self.zombie_convert_u_to_ptr(result.def);
+            result
         }
     }
 
@@ -893,10 +939,17 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if val.ty == dest_ty {
             val
         } else {
-            self.emit()
+            let result = self
+                .emit()
                 .bitcast(dest_ty, None, val.def)
                 .unwrap()
-                .with_type(dest_ty)
+                .with_type(dest_ty);
+            let val_is_ptr = matches!(self.lookup_type(val.ty), SpirvType::Pointer{..});
+            let dest_is_ptr = matches!(self.lookup_type(dest_ty), SpirvType::Pointer{..});
+            if val_is_ptr || dest_is_ptr {
+                self.zombie_bitcast_ptr(result.def);
+            }
+            result
         }
     }
 
@@ -964,10 +1017,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if val.ty == dest_ty {
             val
         } else {
-            self.emit()
+            let result = self
+                .emit()
                 .bitcast(dest_ty, None, val.def)
                 .unwrap()
-                .with_type(dest_ty)
+                .with_type(dest_ty);
+            self.zombie_bitcast_ptr(result.def);
+            result
         }
     }
 
@@ -996,7 +1052,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     } else {
                         let int_ty = self.type_usize();
                         let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                        self.zombie_convert_ptr_to_u(lhs);
                         let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                        self.zombie_convert_ptr_to_u(rhs);
                         self.emit().i_not_equal(b, None, lhs, rhs)
                     }
                 }
@@ -1006,32 +1064,42 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     } else {
                         let int_ty = self.type_usize();
                         let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                        self.zombie_convert_ptr_to_u(lhs);
                         let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                        self.zombie_convert_ptr_to_u(rhs);
                         self.emit().i_not_equal(b, None, lhs, rhs)
                     }
                 }
                 IntUGT => {
                     let int_ty = self.type_usize();
                     let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    self.zombie_convert_ptr_to_u(lhs);
                     let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    self.zombie_convert_ptr_to_u(rhs);
                     self.emit().u_greater_than(b, None, lhs, rhs)
                 }
                 IntUGE => {
                     let int_ty = self.type_usize();
                     let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    self.zombie_convert_ptr_to_u(lhs);
                     let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    self.zombie_convert_ptr_to_u(rhs);
                     self.emit().u_greater_than_equal(b, None, lhs, rhs)
                 }
                 IntULT => {
                     let int_ty = self.type_usize();
                     let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    self.zombie_convert_ptr_to_u(lhs);
                     let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    self.zombie_convert_ptr_to_u(rhs);
                     self.emit().u_less_than(b, None, lhs, rhs)
                 }
                 IntULE => {
                     let int_ty = self.type_usize();
                     let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    self.zombie_convert_ptr_to_u(lhs);
                     let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    self.zombie_convert_ptr_to_u(rhs);
                     self.emit().u_less_than_equal(b, None, lhs, rhs)
                 }
                 IntSGT => panic!("TODO: pointer operator IntSGT not implemented yet"),
@@ -1137,6 +1205,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.emit()
             .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
             .unwrap();
+        if !self.builder.has_capability(Capability::Addresses) {
+            self.zombie(dst.def, "OpCopyMemorySized without OpCapability Addresses");
+        }
     }
 
     fn memmove(
@@ -1151,6 +1222,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.emit()
             .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
             .unwrap();
+        if !self.builder.has_capability(Capability::Addresses) {
+            self.zombie(dst.def, "OpCopyMemorySized without OpCapability Addresses");
+        }
     }
 
     fn memset(

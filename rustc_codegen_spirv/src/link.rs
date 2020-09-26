@@ -14,6 +14,7 @@ use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, 
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
 use std::collections::HashSet;
+use std::env;
 use std::ffi::{CString, OsStr};
 use std::fs::File;
 use std::io::{Read, Write};
@@ -116,6 +117,26 @@ fn link_exe(
     );
 
     do_link(&objects, &rlibs, out_filename);
+
+    if env::var("SPIRV_OPT").is_ok() {
+        do_spirv_opt(out_filename);
+    }
+}
+
+fn do_spirv_opt(filename: &Path) {
+    let tmp = filename.with_extension("opt.spv");
+    let status = std::process::Command::new("spirv-opt")
+        .args(&["-Os", "--eliminate-dead-const", "--strip-debug"])
+        .arg(&filename)
+        .arg("-o")
+        .arg(&tmp)
+        .status()
+        .expect("spirv-opt failed to execute");
+    if status.success() {
+        std::fs::rename(tmp, filename).unwrap();
+    } else {
+        println!("spirv-opt failed, leaving as unoptimized");
+    }
 }
 
 fn link_local_crate_native_libs_and_dependent_crate_libs<'a>(
@@ -281,8 +302,8 @@ fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
 
     let mut module_refs = modules.iter_mut().collect::<Vec<_>>();
 
-    {
-        let path = Path::new("/home/khyperia/tmp");
+    if let Ok(ref path) = env::var("DUMP_PRE_LINK") {
+        let path = Path::new(path);
         if path.is_file() {
             std::fs::remove_file(path).unwrap();
         }
@@ -305,7 +326,7 @@ fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
     ) {
         Ok(result) => result,
         Err(err) => {
-            if let Some(path) = option_env!("DUMP_MODULE_ON_PANIC") {
+            if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
                 let path = Path::new(path);
                 if path.is_file() {
                     std::fs::remove_file(path).unwrap();

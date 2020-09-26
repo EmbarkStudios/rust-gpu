@@ -88,22 +88,34 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .unwrap()
                     .with_type(result_type)
             }
-        } else if is_inbounds {
-            self.emit()
-                .in_bounds_ptr_access_chain(
-                    result_type,
-                    None,
-                    ptr.def,
-                    indices[0].def,
-                    result_indices,
-                )
-                .unwrap()
-                .with_type(result_type)
         } else {
-            self.emit()
-                .ptr_access_chain(result_type, None, ptr.def, indices[0].def, result_indices)
-                .unwrap()
-                .with_type(result_type)
+            let result = if is_inbounds {
+                self.emit()
+                    .in_bounds_ptr_access_chain(
+                        result_type,
+                        None,
+                        ptr.def,
+                        indices[0].def,
+                        result_indices,
+                    )
+                    .unwrap()
+                    .with_type(result_type)
+            } else {
+                self.emit()
+                    .ptr_access_chain(result_type, None, ptr.def, indices[0].def, result_indices)
+                    .unwrap()
+                    .with_type(result_type)
+            };
+            let has_addresses = self
+                .builder
+                .has_capability(rspirv::spirv::Capability::Addresses);
+            if !has_addresses {
+                self.zombie(
+                    result.def,
+                    "OpPtrAccessChain without OpCapability Addresses",
+                );
+            }
+            result
         }
     }
 

@@ -4,6 +4,7 @@ mod test;
 use rspirv::binary::Consumer;
 use rspirv::spirv;
 use std::collections::{hash_map, HashMap, HashSet};
+use std::env;
 use thiserror::Error;
 use topological_sort::TopologicalSort;
 
@@ -693,7 +694,7 @@ fn remove_zombies(module: &mut rspirv::dr::Module) {
     // Note: This is O(n^2).
     while spread_zombie(module, &mut zombies) {}
 
-    if option_env!("PRINT_ALL_ZOMBIE").is_some() {
+    if env::var("PRINT_ALL_ZOMBIE").is_ok() {
         for (&zomb, &reason) in &zombies {
             let orig = if zombies_owned.iter().any(|&(z, _)| z == zomb) {
                 "original"
@@ -704,7 +705,7 @@ fn remove_zombies(module: &mut rspirv::dr::Module) {
         }
     }
 
-    if option_env!("PRINT_ZOMBIE").is_some() {
+    if env::var("PRINT_ZOMBIE").is_ok() {
         for f in &module.functions {
             if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
                 let name_id = f.def.as_ref().unwrap().result_id.unwrap();
@@ -1178,7 +1179,7 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
 
     sort_globals(&mut output);
 
-    let bound = if option_env!("NO_COMPACT_IDS").is_some() {
+    let bound = if env::var("NO_COMPACT_IDS").is_ok() {
         // It is sometimes useful to not rewrite IDs. For example, if using PRINT_ALL_ZOMBIE, it's useful to be able to
         // inspect the module and have the same IDs as the ones that were printed in the zombie pass.
         max_bound(&output)

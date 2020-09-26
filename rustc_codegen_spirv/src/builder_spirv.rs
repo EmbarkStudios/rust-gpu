@@ -128,6 +128,18 @@ impl BuilderSpirv {
         builder
     }
 
+    pub fn has_capability(&self, capability: Capability) -> bool {
+        self.builder
+            .borrow()
+            .module_ref()
+            .capabilities
+            .iter()
+            .any(|inst| {
+                inst.class.opcode == Op::Capability
+                    && inst.operands[0] == Operand::Capability(capability)
+            })
+    }
+
     pub fn select_function_by_id(&self, id: Word) -> BuilderCursor {
         let mut builder = self.builder.borrow_mut();
         for (index, func) in builder.module_ref().functions.iter().enumerate() {

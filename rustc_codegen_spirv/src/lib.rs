@@ -71,6 +71,7 @@ use rustc_span::Symbol;
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions, TargetTriple};
 use std::any::Any;
+use std::env;
 use std::path::Path;
 use std::{fs::File, io::Write, sync::Arc};
 
@@ -378,11 +379,11 @@ impl WriteBackendMethods for SpirvCodegenBackend {
             .unwrap()
             .write_all(spirv_module)
             .unwrap();
-        if let Some(dump_path) = option_env!("SPIRV_VAL") {
+        if let Ok(dump_path) = env::var("SPIRV_VAL") {
             let status = std::process::Command::new("spirv-val").arg(&path).status();
             let status = status.expect("spirv-val failed to execute");
             if !status.success() {
-                let dump_path = Path::new(dump_path);
+                let dump_path = Path::new(&dump_path);
                 if dump_path.is_absolute() {
                     let dump_path = dump_path.join(&module.name);
                     println!(
@@ -457,7 +458,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
 
             for &(mono_item, (linkage, visibility)) in mono_items.iter() {
                 let name = mono_item.symbol_name(cx.tcx).name;
-                if option_env!("DUMP_MIR").is_some() {
+                if env::var("DUMP_MIR").is_ok() {
                     if let MonoItem::Fn(instance) = mono_item {
                         dump_mir(tcx, instance);
                     }
@@ -471,7 +472,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
             // ... and now that we have everything pre-defined, fill out those definitions.
             for &(mono_item, _) in mono_items.iter() {
                 let name = mono_item.symbol_name(cx.tcx).name;
-                if option_env!("DUMP_MIR").is_some() {
+                if env::var("DUMP_MIR").is_ok() {
                     if let MonoItem::Fn(instance) = mono_item {
                         dump_mir(tcx, instance);
                     }
@@ -486,7 +487,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
                 // attributes::sanitize(&cx, SanitizerSet::empty(), entry);
             }
         };
-        if let Some(path) = option_env!("DUMP_MODULE_ON_PANIC") {
+        if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
             let module_dumper = DumpModuleOnPanic { cx: &cx, path };
             with_no_trimmed_paths(do_codegen);
             drop(module_dumper)

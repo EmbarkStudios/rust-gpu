@@ -3,7 +3,9 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attr, SpirvAttribute};
-use rspirv::spirv::{ExecutionModel, FunctionControl, LinkageType, StorageClass, Word};
+use rspirv::spirv::{
+    ExecutionMode, ExecutionModel, FunctionControl, LinkageType, StorageClass, Word,
+};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
@@ -196,6 +198,10 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let interface = arguments;
         emit.entry_point(execution_model, fn_id, name, interface);
+        if execution_model == ExecutionModel::Fragment {
+            // TODO: Make this configurable.
+            emit.execution_mode(fn_id, ExecutionMode::OriginUpperLeft, &[]);
+        }
     }
 
     // Kernel mode takes its interface as function parameters(??)
