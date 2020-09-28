@@ -1,3 +1,5 @@
+//! See documentation on CodegenCx::zombie for a description of the zombie system.
+
 use crate::operand_idref;
 use rspirv::spirv;
 use std::collections::{hash_map, HashMap};

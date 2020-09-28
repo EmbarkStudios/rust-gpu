@@ -1,6 +1,9 @@
 use crate::operand_idref;
 use std::collections::HashMap;
 
+/// DefAnalyzer is a simple lookup table for instructions: Sometimes, we have a spirv result_id,
+/// and we want to find the corresponding instruction. This struct loops over all instructions in
+/// the module (expensive!) and builds a table from result_id to its defining instruction.
 pub struct DefAnalyzer {
     def_ids: HashMap<u32, rspirv::dr::Instruction>,
 }
@@ -27,6 +30,11 @@ impl DefAnalyzer {
         self.def_ids.get(&id)
     }
 
+    /// Helper that extracts the operand as an IdRef and then looks up that id's instruction.
+    ///
+    /// # Panics
+    ///
+    /// Panics when provided an operand that doesn't reference an id, or that id is missing.
     pub fn op_def(&self, operand: &rspirv::dr::Operand) -> rspirv::dr::Instruction {
         self.def(operand_idref(operand).expect("Expected ID"))
             .unwrap()

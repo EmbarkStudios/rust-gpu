@@ -363,10 +363,10 @@ fn func_ctrl() -> Result<()> {
 
     let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
             %1 = OpTypeVoid
-            %2 = OpTypeFloat 32
-            %3 = OpTypeFunction %1
-            %4 = OpVariable %2 Uniform
-            %5 = OpFunction %1 Inline %3
+            %2 = OpTypeFunction %1
+            %3 = OpTypeFloat 32
+            %4 = OpVariable %3 Uniform
+            %5 = OpFunction %1 Inline %2
             %6 = OpLabel
             OpReturn
             OpFunctionEnd"#;

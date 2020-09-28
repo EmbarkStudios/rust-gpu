@@ -1,10 +1,8 @@
-use crate::DefAnalyzer;
 use crate::{operand_idref, operand_idref_mut};
 use rspirv::spirv;
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::mem::replace;
-use topological_sort::TopologicalSort;
 
 pub fn shift_ids(module: &mut rspirv::dr::Module, add: u32) {
     module.all_inst_iter_mut().for_each(|inst| {
@@ -24,6 +22,10 @@ pub fn shift_ids(module: &mut rspirv::dr::Module, add: u32) {
     });
 }
 
+/// spir-v requires basic blocks to be ordered so that if A dominates B, A appears before B (except
+/// in the case of backedges). Reverse post-order is a good ordering that satisfies this condition
+/// (with an "already visited set" that blocks going deeper, which solves both the fact that it's a
+/// DAG, not a tree, as well as backedges).
 pub fn block_ordering_pass(func: &mut rspirv::dr::Function) {
     if func.blocks.len() < 2 {
         return;
@@ -144,43 +146,7 @@ pub fn max_bound(module: &rspirv::dr::Module) -> u32 {
 }
 
 pub fn sort_globals(module: &mut rspirv::dr::Module) {
-    let mut ts = TopologicalSort::<u32>::new();
-
-    for t in module.types_global_values.iter() {
-        if let Some(result_id) = t.result_id {
-            if let Some(result_type) = t.result_type {
-                ts.add_dependency(result_type, result_id);
-            }
-
-            for op in &t.operands {
-                if let Some(w) = operand_idref(op) {
-                    ts.add_dependency(w, result_id); // the op defining the IdRef should come before our op / result_id
-                }
-            }
-        }
-    }
-
-    let defs = DefAnalyzer::new(&module);
-
-    let mut new_types_global_values = vec![];
-
-    loop {
-        if ts.is_empty() {
-            break;
-        }
-
-        let mut v = ts.pop_all();
-        v.sort_unstable();
-
-        for result_id in v {
-            new_types_global_values.push(defs.def(result_id).unwrap().clone());
-        }
-    }
-
-    assert!(module.types_global_values.len() == new_types_global_values.len());
-
-    module.types_global_values = new_types_global_values;
-
-    // defs go before fns
+    // Function declarations come before definitions. TODO: Figure out if it's even possible to
+    // have a function declaration without a body in a fully linked module?
     module.functions.sort_by_key(|f| !f.blocks.is_empty());
 }
