@@ -39,10 +39,6 @@ mod link;
 mod spirv_type;
 mod symbols;
 
-#[cfg(test)]
-#[path = "../test/lib.rs"]
-mod test;
-
 use builder::Builder;
 use codegen_cx::CodegenCx;
 use rspirv::binary::Assemble;
