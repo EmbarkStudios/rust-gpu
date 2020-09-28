@@ -1,8 +1,5 @@
 use crate::ty::trans_aggregate_type;
-use crate::{
-    inst_fully_eq, kill_annotations_and_debug, kill_with, print_type, DefAnalyzer, LinkerError,
-    Options, Result,
-};
+use crate::{inst_fully_eq, operand_idref, print_type, DefAnalyzer, LinkerError, Options, Result};
 use rspirv::spirv;
 use std::collections::HashMap;
 
@@ -180,10 +177,10 @@ pub fn kill_linkage_instructions(
     }
 
     // drop linkage attributes (both import and export)
-    kill_with(&mut module.annotations, |inst| {
+    module.annotations.retain(|inst| {
         let eq = pairs.iter().any(|p| {
             if inst.operands.is_empty() {
-                return false;
+                return true;
             }
 
             if let rspirv::dr::Operand::IdRef(id) = inst.operands[0] {
@@ -193,25 +190,49 @@ pub fn kill_linkage_instructions(
             }
         });
 
-        eq && inst.class.opcode == spirv::Op::Decorate
-            && inst.operands[1]
-                == rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
+        !eq || inst.class.opcode != spirv::Op::Decorate
+            || inst.operands[1]
+                != rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
     });
 
     if !opts.lib {
-        kill_with(&mut module.annotations, |inst| {
-            inst.class.opcode == spirv::Op::Decorate
-                && inst.operands[1]
-                    == rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
-                && inst.operands[3] == rspirv::dr::Operand::LinkageType(spirv::LinkageType::Export)
+        module.annotations.retain(|inst| {
+            inst.class.opcode != spirv::Op::Decorate
+                || inst.operands[1]
+                    != rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
+                || inst.operands[3] != rspirv::dr::Operand::LinkageType(spirv::LinkageType::Export)
         });
     }
 
     // drop OpCapability Linkage
-    kill_with(&mut module.capabilities, |inst| {
-        inst.class.opcode == spirv::Op::Capability
-            && inst.operands[0] == rspirv::dr::Operand::Capability(spirv::Capability::Linkage)
+    module.capabilities.retain(|inst| {
+        inst.class.opcode != spirv::Op::Capability
+            || inst.operands[0] != rspirv::dr::Operand::Capability(spirv::Capability::Linkage)
     })
+}
+
+fn kill_with_first_id(insts: &mut Vec<rspirv::dr::Instruction>, id: u32) {
+    insts.retain(|inst| {
+        if inst.operands.is_empty() {
+            return true;
+        }
+
+        matches!(operand_idref(&inst.operands[0]), Some(w) if w != id)
+    })
+}
+
+fn kill_annotations_and_debug(module: &mut rspirv::dr::Module, id: u32) {
+    kill_with_first_id(&mut module.annotations, id);
+
+    // need to remove OpGroupDecorate members that mention this id
+    module.annotations.iter_mut().for_each(|inst| {
+        if inst.class.opcode == spirv::Op::GroupDecorate {
+            inst.operands
+                .retain(|op| matches!(op, rspirv::dr::Operand::IdRef(w) if *w != id));
+        }
+    });
+
+    kill_with_first_id(&mut module.debugs, id);
 }
 
 pub fn import_kill_annotations_and_debug(module: &mut rspirv::dr::Module, info: &LinkInfo) {

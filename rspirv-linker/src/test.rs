@@ -416,18 +416,18 @@ fn use_exported_func_param_attr() -> Result<()> {
 
     let expect = r#"OpCapability Kernel
         OpModuleProcessed "Linked by rspirv-linker"
-        OpDecorate %1 FuncParamAttr Sext
-        OpDecorate %2 FuncParamAttr Zext
-        %2 = OpDecorationGroup
-        OpGroupDecorate %2 %3
+        OpDecorate %1 FuncParamAttr Zext
+        %1 = OpDecorationGroup
+        OpGroupDecorate %1 %2
+        OpDecorate %3 FuncParamAttr Sext
         %4 = OpTypeVoid
         %5 = OpTypeInt 32 0
         %6 = OpTypeFunction %4 %5
         %7 = OpFunction %4 None %6
-        %3 = OpFunctionParameter %5
+        %2 = OpFunctionParameter %5
         OpFunctionEnd
         %8 = OpFunction %4 None %6
-        %1 = OpFunctionParameter %5
+        %3 = OpFunctionParameter %5
         %9 = OpLabel
         OpReturn
         OpFunctionEnd"#;
@@ -483,14 +483,14 @@ fn names_and_decorations() -> Result<()> {
     let result = assemble_and_link(&[&a, &b], &Options::default())?;
 
     let expect = r#"OpCapability Kernel
-        OpName %1 "param"
-        OpName %2 "foo"
+        OpName %1 "foo"
+        OpName %2 "param"
         OpModuleProcessed "Linked by rspirv-linker"
-        OpDecorate %1 Restrict
         OpDecorate %3 Restrict
         OpDecorate %4 NonWritable
         %3 = OpDecorationGroup
         OpGroupDecorate %3 %4
+        OpDecorate %2 Restrict
         %5 = OpTypeVoid
         %6 = OpTypeInt 32 0
         %7 = OpTypePointer Function %6
@@ -498,8 +498,8 @@ fn names_and_decorations() -> Result<()> {
         %9 = OpFunction %5 None %8
         %4 = OpFunctionParameter %7
         OpFunctionEnd
-        %2 = OpFunction %5 None %8
-        %1 = OpFunctionParameter %7
+        %1 = OpFunction %5 None %8
+        %2 = OpFunctionParameter %7
         %10 = OpLabel
         OpReturn
         OpFunctionEnd"#;

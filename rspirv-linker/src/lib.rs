@@ -90,53 +90,6 @@ fn replace_all_uses_with(module: &mut rspirv::dr::Module, before: u32, after: u3
     });
 }
 
-fn kill_with_id(insts: &mut Vec<rspirv::dr::Instruction>, id: u32) {
-    kill_with(insts, |inst| {
-        if inst.operands.is_empty() {
-            return false;
-        }
-
-        matches!(operand_idref(&inst.operands[0]), Some(w) if w == id)
-    })
-}
-
-fn kill_with<F>(insts: &mut Vec<rspirv::dr::Instruction>, f: F)
-where
-    F: Fn(&rspirv::dr::Instruction) -> bool,
-{
-    if insts.is_empty() {
-        return;
-    }
-
-    let mut idx = insts.len() - 1;
-    // odd backwards loop so we can swap_remove
-    loop {
-        if f(&insts[idx]) {
-            insts.swap_remove(idx);
-        }
-
-        if idx == 0 || insts.is_empty() {
-            break;
-        }
-
-        idx -= 1;
-    }
-}
-
-fn kill_annotations_and_debug(module: &mut rspirv::dr::Module, id: u32) {
-    kill_with_id(&mut module.annotations, id);
-
-    // need to remove OpGroupDecorate members that mention this id
-    module.annotations.iter_mut().for_each(|inst| {
-        if inst.class.opcode == spirv::Op::GroupDecorate {
-            inst.operands
-                .retain(|op| matches!(op, rspirv::dr::Operand::IdRef(w) if *w != id));
-        }
-    });
-
-    kill_with_id(&mut module.debugs, id);
-}
-
 fn inst_fully_eq(a: &rspirv::dr::Instruction, b: &rspirv::dr::Instruction) -> bool {
     // both function instructions need to be 100% identical so check all members
     // jb-todo: derive(PartialEq) on Instruction?
