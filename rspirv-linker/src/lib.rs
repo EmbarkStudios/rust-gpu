@@ -118,7 +118,12 @@ fn extract_literal_u32(op: &rspirv::dr::Operand) -> u32 {
     }
 }
 
-pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rspirv::dr::Module> {
+pub fn link<T>(
+    inputs: &mut [&mut rspirv::dr::Module],
+    opts: &Options,
+    timer: impl Fn(&'static str) -> T,
+) -> Result<rspirv::dr::Module> {
+    let merge_timer = timer("link_merge");
     // shift all the ids
     let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
     let version = inputs[0].header.as_ref().unwrap().version();
@@ -139,38 +144,56 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
     }
 
     let mut output = loader.module();
+    drop(merge_timer);
 
+    let find_pairs_timer = timer("link_find_pairs");
     // find import / export pairs
     let defs = DefAnalyzer::new(&output);
     let info = import_export_link::find_import_export_pairs(&output, &defs)?;
 
     // ensure import / export pairs have matching types and defintions
     let matching_pairs = info.ensure_matching_import_export_pairs(&defs)?;
+    drop(find_pairs_timer);
 
+    let remove_duplicates_timer = timer("link_remove_duplicates");
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     duplicates::remove_duplicate_capablities(&mut output);
     duplicates::remove_duplicate_ext_inst_imports(&mut output);
     duplicates::remove_duplicate_types(&mut output);
     // jb-todo: strip identical OpDecoration / OpDecorationGroups
+    drop(remove_duplicates_timer);
 
+    let import_kill_annotations_and_debug_timer = timer("link_import_kill_annotations_and_debug");
     // remove names and decorations of import variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L404
     import_export_link::import_kill_annotations_and_debug(&mut output, &info);
+    drop(import_kill_annotations_and_debug_timer);
 
+    let replace_matching_pairs_timer = timer("link_replace_matching_pairs");
     // rematch import variables and functions to export variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L255
     for pair in matching_pairs {
         replace_all_uses_with(&mut output, pair.import.id, pair.export.id);
     }
+    drop(replace_matching_pairs_timer);
 
+    let kill_linkage_instructions_timer = timer("link_kill_linkage_instructions");
     // remove linkage specific instructions
     import_export_link::kill_linkage_instructions(&matching_pairs, &mut output, &opts);
+    drop(kill_linkage_instructions_timer);
 
+    let remove_zombies_timer = timer("link_remove_zombies");
     zombies::remove_zombies(&mut output);
+    drop(remove_zombies_timer);
 
+    let block_ordering_pass_timer = timer("link_block_ordering_pass");
     for func in &mut output.functions {
         simple_passes::block_ordering_pass(func);
     }
+    drop(block_ordering_pass_timer);
+    let sort_globals_timer = timer("link_sort_globals");
     simple_passes::sort_globals(&mut output);
+    drop(sort_globals_timer);
 
+    let compact_ids_timer = timer("link_compact_ids");
     let bound = if env::var("NO_COMPACT_IDS").is_ok() {
         // It is sometimes useful to not rewrite IDs. For example, if using PRINT_ALL_ZOMBIE, it's useful to be able to
         // inspect the module and have the same IDs as the ones that were printed in the zombie pass.
@@ -179,6 +202,7 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
         // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
         simple_passes::compact_ids(&mut output)
     };
+    drop(compact_ids_timer);
     let mut header = rspirv::dr::ModuleHeader::new(bound);
     header.set_version(version.0, version.1);
     output.header = Some(header);

@@ -270,12 +270,14 @@ impl CodegenBackend for SpirvCodegenBackend {
             return Ok(());
         }
 
+        let timer = sess.prof.generic_activity("link_crate");
         link::link(
             sess,
             &codegen_results,
             outputs,
             &codegen_results.crate_name.as_str(),
         );
+        drop(timer);
 
         rustc_incremental::finalize_session_directory(sess, codegen_results.crate_hash);
 
@@ -445,6 +447,10 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         tcx: TyCtxt<'_>,
         cgu_name: Symbol,
     ) -> (ModuleCodegen<Self::Module>, u64) {
+        let _timer = tcx
+            .prof
+            .generic_activity_with_arg("codegen_module", cgu_name.to_string());
+
         // TODO: Do dep_graph stuff
         let cgu = tcx.codegen_unit(cgu_name);
 

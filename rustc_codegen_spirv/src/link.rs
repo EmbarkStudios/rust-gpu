@@ -116,7 +116,7 @@ fn link_exe(
         codegen_results,
     );
 
-    do_link(&objects, &rlibs, out_filename);
+    do_link(sess, &objects, &rlibs, out_filename);
 
     if env::var("SPIRV_OPT").is_ok() {
         do_spirv_opt(out_filename);
@@ -279,7 +279,7 @@ pub fn read_metadata(rlib: &Path) -> MetadataRef {
 
 /// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc's
 /// shenanigans to collect all the object files we need to link.
-fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
+fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
     let mut modules = Vec::new();
     // `objects` are the plain obj files we need to link - usually produced by the final crate.
     for obj in objects {
@@ -323,6 +323,7 @@ fn do_link(objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
             lib: false,
             partial: false,
         },
+        |name| sess.prof.generic_activity(name),
     ) {
         Ok(result) => result,
         Err(err) => {
