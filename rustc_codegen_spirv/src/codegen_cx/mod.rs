@@ -4,7 +4,7 @@ mod type_;
 
 use crate::builder::ExtInst;
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueExt};
-use crate::finalizing_passes::{block_ordering_pass, export_zombies};
+use crate::finalizing_passes::export_zombies;
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use bimap::BiHashMap;
@@ -118,11 +118,6 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
-        // defs go before fns
-        result.functions.sort_by_key(|f| !f.blocks.is_empty());
-        for function in &mut result.functions {
-            block_ordering_pass(function);
-        }
         export_zombies(&mut result, &self.zombie_values.borrow());
         result
     }

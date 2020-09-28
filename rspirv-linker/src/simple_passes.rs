@@ -1,6 +1,9 @@
 use crate::DefAnalyzer;
 use crate::{operand_idref, operand_idref_mut};
-use std::collections::HashMap;
+use rspirv::spirv;
+use std::collections::{HashMap, HashSet};
+use std::iter::once;
+use std::mem::replace;
 use topological_sort::TopologicalSort;
 
 pub fn shift_ids(module: &mut rspirv::dr::Module, add: u32) {
@@ -19,6 +22,80 @@ pub fn shift_ids(module: &mut rspirv::dr::Module, add: u32) {
             }
         })
     });
+}
+
+pub fn block_ordering_pass(func: &mut rspirv::dr::Function) {
+    if func.blocks.len() < 2 {
+        return;
+    }
+    fn visit_postorder(
+        func: &rspirv::dr::Function,
+        visited: &mut HashSet<spirv::Word>,
+        postorder: &mut Vec<spirv::Word>,
+        current: spirv::Word,
+    ) {
+        if !visited.insert(current) {
+            return;
+        }
+        let current_block = func.blocks.iter().find(|b| label_of(b) == current).unwrap();
+        // Reverse the order, so reverse-postorder keeps things tidy
+        for &outgoing in outgoing_edges(current_block).iter().rev() {
+            visit_postorder(func, visited, postorder, outgoing);
+        }
+        postorder.push(current);
+    }
+
+    let mut visited = HashSet::new();
+    let mut postorder = Vec::new();
+
+    let entry_label = label_of(&func.blocks[0]);
+    visit_postorder(func, &mut visited, &mut postorder, entry_label);
+
+    let mut old_blocks = replace(&mut func.blocks, Vec::new());
+    // Order blocks according to reverse postorder
+    for &block in postorder.iter().rev() {
+        let index = old_blocks
+            .iter()
+            .position(|b| label_of(b) == block)
+            .unwrap();
+        func.blocks.push(old_blocks.remove(index));
+    }
+    // Note: if old_blocks isn't empty here, that means there were unreachable blocks that were deleted.
+    assert_eq!(label_of(&func.blocks[0]), entry_label);
+}
+
+fn label_of(block: &rspirv::dr::Block) -> spirv::Word {
+    block.label.as_ref().unwrap().result_id.unwrap()
+}
+
+fn outgoing_edges(block: &rspirv::dr::Block) -> Vec<spirv::Word> {
+    fn unwrap_id_ref(operand: &rspirv::dr::Operand) -> spirv::Word {
+        match *operand {
+            rspirv::dr::Operand::IdRef(word) => word,
+            _ => panic!("Expected Operand::IdRef: {}", operand),
+        }
+    }
+    let terminator = block.instructions.last().unwrap();
+    // https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#Termination
+    match terminator.class.opcode {
+        spirv::Op::Branch => vec![unwrap_id_ref(&terminator.operands[0])],
+        spirv::Op::BranchConditional => vec![
+            unwrap_id_ref(&terminator.operands[1]),
+            unwrap_id_ref(&terminator.operands[2]),
+        ],
+        spirv::Op::Switch => once(unwrap_id_ref(&terminator.operands[1]))
+            .chain(
+                terminator.operands[3..]
+                    .iter()
+                    .step_by(2)
+                    .map(unwrap_id_ref),
+            )
+            .collect(),
+        spirv::Op::Return | spirv::Op::ReturnValue | spirv::Op::Kill | spirv::Op::Unreachable => {
+            Vec::new()
+        }
+        _ => panic!("Invalid block terminator: {:?}", terminator),
+    }
 }
 
 pub fn compact_ids(module: &mut rspirv::dr::Module) -> u32 {
@@ -103,4 +180,7 @@ pub fn sort_globals(module: &mut rspirv::dr::Module) {
     assert!(module.types_global_values.len() == new_types_global_values.len());
 
     module.types_global_values = new_types_global_values;
+
+    // defs go before fns
+    module.functions.sort_by_key(|f| !f.blocks.is_empty());
 }

@@ -166,6 +166,9 @@ pub fn link(inputs: &mut [&mut rspirv::dr::Module], opts: &Options) -> Result<rs
 
     zombies::remove_zombies(&mut output);
 
+    for func in &mut output.functions {
+        simple_passes::block_ordering_pass(func);
+    }
     simple_passes::sort_globals(&mut output);
 
     let bound = if env::var("NO_COMPACT_IDS").is_ok() {
