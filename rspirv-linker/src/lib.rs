@@ -32,23 +32,6 @@ pub enum LinkerError {
 
 pub type Result<T> = std::result::Result<T, LinkerError>;
 
-pub struct Options {
-    /// `true` if we're creating a library
-    pub lib: bool,
-
-    /// `true` if partial linking is allowed
-    pub partial: bool,
-}
-
-impl Default for Options {
-    fn default() -> Self {
-        Self {
-            lib: false,
-            partial: false,
-        }
-    }
-}
-
 pub fn load(bytes: &[u8]) -> rspirv::dr::Module {
     let mut loader = rspirv::dr::Loader::new();
     rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
@@ -72,33 +55,6 @@ fn operand_idref_mut(op: &mut rspirv::dr::Operand) -> Option<&mut spirv::Word> {
     }
 }
 
-fn replace_all_uses_with(module: &mut rspirv::dr::Module, before: u32, after: u32) {
-    module.all_inst_iter_mut().for_each(|inst| {
-        if let Some(ref mut result_type) = &mut inst.result_type {
-            if *result_type == before {
-                *result_type = after;
-            }
-        }
-
-        inst.operands.iter_mut().for_each(|op| {
-            if let Some(w) = operand_idref_mut(op) {
-                if *w == before {
-                    *w = after
-                }
-            }
-        })
-    });
-}
-
-fn inst_fully_eq(a: &rspirv::dr::Instruction, b: &rspirv::dr::Instruction) -> bool {
-    // both function instructions need to be 100% identical so check all members
-    // jb-todo: derive(PartialEq) on Instruction?
-    a.result_id == b.result_id
-        && a.class == b.class
-        && a.result_type == b.result_type
-        && a.operands == b.operands
-}
-
 fn print_type(defs: &DefAnalyzer, ty: &rspirv::dr::Instruction) -> String {
     format!("{}", ty::trans_aggregate_type(defs, ty).unwrap())
 }
@@ -120,7 +76,6 @@ fn extract_literal_u32(op: &rspirv::dr::Operand) -> u32 {
 
 pub fn link<T>(
     inputs: &mut [&mut rspirv::dr::Module],
-    opts: &Options,
     timer: impl Fn(&'static str) -> T,
 ) -> Result<rspirv::dr::Module> {
     let merge_timer = timer("link_merge");
@@ -148,11 +103,7 @@ pub fn link<T>(
 
     let find_pairs_timer = timer("link_find_pairs");
     // find import / export pairs
-    let defs = DefAnalyzer::new(&output);
-    let info = import_export_link::find_import_export_pairs(&output, &defs)?;
-
-    // ensure import / export pairs have matching types and defintions
-    let matching_pairs = info.ensure_matching_import_export_pairs(&defs)?;
+    import_export_link::run(&mut output)?;
     drop(find_pairs_timer);
 
     let remove_duplicates_timer = timer("link_remove_duplicates");
@@ -162,23 +113,6 @@ pub fn link<T>(
     duplicates::remove_duplicate_types(&mut output);
     // jb-todo: strip identical OpDecoration / OpDecorationGroups
     drop(remove_duplicates_timer);
-
-    let import_kill_annotations_and_debug_timer = timer("link_import_kill_annotations_and_debug");
-    // remove names and decorations of import variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L404
-    import_export_link::import_kill_annotations_and_debug(&mut output, &info);
-    drop(import_kill_annotations_and_debug_timer);
-
-    let replace_matching_pairs_timer = timer("link_replace_matching_pairs");
-    // rematch import variables and functions to export variables / functions https://github.com/KhronosGroup/SPIRV-Tools/blob/8a0ebd40f86d1f18ad42ea96c6ac53915076c3c7/source/opt/ir_context.cpp#L255
-    for pair in matching_pairs {
-        replace_all_uses_with(&mut output, pair.import.id, pair.export.id);
-    }
-    drop(replace_matching_pairs_timer);
-
-    let kill_linkage_instructions_timer = timer("link_kill_linkage_instructions");
-    // remove linkage specific instructions
-    import_export_link::kill_linkage_instructions(&matching_pairs, &mut output, &opts);
-    drop(kill_linkage_instructions_timer);
 
     let remove_zombies_timer = timer("link_remove_zombies");
     zombies::remove_zombies(&mut output);

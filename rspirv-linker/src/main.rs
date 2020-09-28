@@ -8,12 +8,7 @@ fn main() -> Result<()> {
     let mut body1 = crate::load(&body1[..]);
     let mut body2 = crate::load(&body2[..]);
 
-    let opts = Options {
-        lib: false,
-        partial: false,
-    };
-
-    let output = link(&mut [&mut body1, &mut body2], &opts)?;
+    let output = link(&mut [&mut body1, &mut body2], drop)?;
     println!("{}\n\n", output.disassemble());
 
     Ok(())

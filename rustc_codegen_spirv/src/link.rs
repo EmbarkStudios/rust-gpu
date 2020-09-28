@@ -317,32 +317,26 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], out_filename:
     }
 
     // Do the link...
-    let result = match rspirv_linker::link(
-        &mut module_refs,
-        &rspirv_linker::Options {
-            lib: false,
-            partial: false,
-        },
-        |name| sess.prof.generic_activity(name),
-    ) {
-        Ok(result) => result,
-        Err(err) => {
-            if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
-                let path = Path::new(path);
-                if path.is_file() {
-                    std::fs::remove_file(path).unwrap();
+    let result =
+        match rspirv_linker::link(&mut module_refs, |name| sess.prof.generic_activity(name)) {
+            Ok(result) => result,
+            Err(err) => {
+                if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
+                    let path = Path::new(path);
+                    if path.is_file() {
+                        std::fs::remove_file(path).unwrap();
+                    }
+                    std::fs::create_dir_all(path).unwrap();
+                    for (num, module) in modules.iter().enumerate() {
+                        File::create(path.join(format!("mod_{}.spv", num)))
+                            .unwrap()
+                            .write_all(crate::slice_u32_to_u8(&module.assemble()))
+                            .unwrap();
+                    }
                 }
-                std::fs::create_dir_all(path).unwrap();
-                for (num, module) in modules.iter().enumerate() {
-                    File::create(path.join(format!("mod_{}.spv", num)))
-                        .unwrap()
-                        .write_all(crate::slice_u32_to_u8(&module.assemble()))
-                        .unwrap();
-                }
+                panic!("Linker error: {}", err)
             }
-            panic!("Linker error: {}", err)
-        }
-    };
+        };
 
     // And finally write out the linked binary.
     use rspirv::binary::Assemble;

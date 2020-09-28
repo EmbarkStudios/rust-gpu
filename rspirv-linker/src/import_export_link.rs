@@ -1,208 +1,194 @@
 use crate::ty::trans_aggregate_type;
-use crate::{inst_fully_eq, operand_idref, print_type, DefAnalyzer, LinkerError, Options, Result};
+use crate::{operand_idref, operand_idref_mut, print_type, DefAnalyzer, LinkerError, Result};
 use rspirv::spirv;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-#[derive(Clone, Debug)]
-pub struct LinkSymbol {
-    name: String,
-    pub id: u32,
-    type_id: u32,
-    parameters: Vec<rspirv::dr::Instruction>,
+pub fn run(module: &mut rspirv::dr::Module) -> Result<()> {
+    let (rewrite_rules, killed_parameters) = find_import_export_pairs_and_killed_params(module)?;
+    kill_linkage_instructions(module, &rewrite_rules);
+    import_kill_annotations_and_debug(module, &rewrite_rules, &killed_parameters);
+    replace_all_uses_with(module, &rewrite_rules);
+    Ok(())
 }
 
-#[derive(Debug)]
-pub struct ImportExportPair {
-    pub import: LinkSymbol,
-    pub export: LinkSymbol,
-}
-
-#[derive(Debug)]
-pub struct LinkInfo {
-    imports: Vec<LinkSymbol>,
-    exports: HashMap<String, Vec<LinkSymbol>>,
-    potential_pairs: Vec<ImportExportPair>,
-}
-
-pub(crate) fn find_import_export_pairs(
+fn find_import_export_pairs_and_killed_params(
     module: &rspirv::dr::Module,
-    defs: &DefAnalyzer,
-) -> Result<LinkInfo> {
-    let mut imports = vec![];
-    let mut exports: HashMap<String, Vec<LinkSymbol>> = HashMap::new();
+) -> Result<(HashMap<u32, u32>, HashSet<u32>)> {
+    let defs = DefAnalyzer::new(module);
 
+    // Map from name -> (definition, type)
+    let mut exports = HashMap::new();
+    // Rules to rewrite the module with
+    let mut rewrite_rules = HashMap::new();
+    let mut killed_parameters = HashSet::new();
+
+    // First, collect all the exports.
     for annotation in &module.annotations {
-        if annotation.class.opcode == spirv::Op::Decorate
-            && annotation.operands[1]
-                == rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
-        {
-            let id = match annotation.operands[0] {
-                rspirv::dr::Operand::IdRef(i) => i,
-                _ => panic!("Expected IdRef"),
-            };
-
-            let name = match &annotation.operands[2] {
-                rspirv::dr::Operand::LiteralString(s) => s,
-                _ => panic!("Expected LiteralString"),
-            };
-
-            let ty = &annotation.operands[3];
-
-            let def_inst = defs
-                .def(id)
-                .unwrap_or_else(|| panic!("Need a matching op for ID {}", id));
-
-            let (type_id, parameters) = match def_inst.class.opcode {
-                spirv::Op::Variable => (def_inst.result_type.unwrap(), vec![]),
-                spirv::Op::Function => {
-                    let type_id = if let rspirv::dr::Operand::IdRef(id) = &def_inst.operands[1] {
-                        *id
-                    } else {
-                        panic!("Expected IdRef");
-                    };
-
-                    let def_fn = module
-                        .functions
-                        .iter()
-                        .find(|f| inst_fully_eq(f.def.as_ref().unwrap(), def_inst))
-                        .unwrap();
-
-                    (type_id, def_fn.parameters.clone())
-                }
-                _ => panic!("Unexpected op"),
-            };
-
-            let symbol = LinkSymbol {
-                name: name.to_string(),
-                id,
-                type_id,
-                parameters,
-            };
-
-            if ty == &rspirv::dr::Operand::LinkageType(spirv::LinkageType::Import) {
-                imports.push(symbol);
-            } else {
-                exports
-                    .entry(symbol.name.clone())
-                    .and_modify(|v| v.push(symbol.clone()))
-                    .or_insert_with(|| vec![symbol.clone()]);
+        let (id, name) = match get_linkage_inst(annotation) {
+            Some((id, name, spirv::LinkageType::Export)) => (id, name),
+            _ => continue,
+        };
+        let type_id = get_type_for_link(&defs, id);
+        if exports.insert(name, (id, type_id)).is_some() {
+            return Err(LinkerError::MultipleExports(name.to_string()));
+        }
+    }
+    // Then, collect all the imports, and create the rewrite rules.
+    for annotation in &module.annotations {
+        let (import_id, name) = match get_linkage_inst(annotation) {
+            Some((id, name, spirv::LinkageType::Import)) => (id, name),
+            _ => continue,
+        };
+        let (export_id, export_type) = match exports.get(name) {
+            None => {
+                return Err(LinkerError::UnresolvedSymbol(name.to_string()));
             }
+            Some(&x) => x,
+        };
+        let import_type = get_type_for_link(&defs, import_id);
+        // Make sure the import/export pair has the same type.
+        check_tys_equal(&defs, name, import_type, export_type)?;
+        rewrite_rules.insert(import_id, export_id);
+        for param in fn_parameters(module, &defs, import_id) {
+            killed_parameters.insert(param);
         }
     }
 
-    LinkInfo {
-        imports,
-        exports,
-        potential_pairs: vec![],
-    }
-    .find_potential_pairs()
+    Ok((rewrite_rules, killed_parameters))
 }
 
-impl LinkInfo {
-    fn find_potential_pairs(mut self) -> Result<Self> {
-        for import in &self.imports {
-            let potential_matching_exports = self.exports.get(&import.name);
-            if let Some(potential_matching_exports) = potential_matching_exports {
-                if potential_matching_exports.len() > 1 {
-                    return Err(LinkerError::MultipleExports(import.name.clone()));
-                }
+fn get_linkage_inst(
+    inst: &rspirv::dr::Instruction,
+) -> Option<(spirv::Word, &str, spirv::LinkageType)> {
+    if inst.class.opcode == spirv::Op::Decorate
+        && inst.operands[1] == rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
+    {
+        let id = match inst.operands[0] {
+            rspirv::dr::Operand::IdRef(i) => i,
+            _ => panic!("Expected IdRef"),
+        };
 
-                self.potential_pairs.push(ImportExportPair {
-                    import: import.clone(),
-                    export: potential_matching_exports.first().unwrap().clone(),
-                });
+        let name = match &inst.operands[2] {
+            rspirv::dr::Operand::LiteralString(s) => s,
+            _ => panic!("Expected LiteralString"),
+        };
+
+        let linkage_ty = match inst.operands[3] {
+            rspirv::dr::Operand::LinkageType(t) => t,
+            _ => panic!("Expected LinkageType"),
+        };
+        Some((id, name, linkage_ty))
+    } else {
+        None
+    }
+}
+
+fn get_type_for_link(defs: &DefAnalyzer, id: spirv::Word) -> spirv::Word {
+    let def_inst = defs
+        .def(id)
+        .unwrap_or_else(|| panic!("Need a matching op for ID {}", id));
+
+    match def_inst.class.opcode {
+        spirv::Op::Variable => def_inst.result_type.unwrap(),
+        // Note: the result_type of OpFunction is the return type, not the function type. The
+        // function type is in operands[1].
+        spirv::Op::Function => {
+            if let rspirv::dr::Operand::IdRef(id) = def_inst.operands[1] {
+                id
             } else {
-                return Err(LinkerError::UnresolvedSymbol(import.name.clone()));
+                panic!("Expected IdRef");
             }
         }
-
-        Ok(self)
+        _ => panic!("Unexpected op"),
     }
+}
 
-    /// returns the list of matching import / export pairs after validation the list of potential pairs
-    pub(crate) fn ensure_matching_import_export_pairs(
-        &self,
-        defs: &DefAnalyzer,
-    ) -> Result<&Vec<ImportExportPair>> {
-        for pair in &self.potential_pairs {
-            let import_result_type = defs.def(pair.import.type_id).unwrap();
-            let export_result_type = defs.def(pair.export.type_id).unwrap();
+fn fn_parameters<'a>(
+    module: &'a rspirv::dr::Module,
+    defs: &DefAnalyzer,
+    id: spirv::Word,
+) -> impl IntoIterator<Item = spirv::Word> + 'a {
+    let def_inst = defs
+        .def(id)
+        .unwrap_or_else(|| panic!("Need a matching op for ID {}", id));
 
-            let imp = trans_aggregate_type(defs, import_result_type);
-            let exp = trans_aggregate_type(defs, export_result_type);
-
-            if imp != exp {
-                return Err(LinkerError::TypeMismatch {
-                    name: pair.import.name.clone(),
-                    import_type: print_type(defs, import_result_type),
-                    export_type: print_type(defs, export_result_type),
-                });
-            }
-
-            for (import_param, export_param) in pair
-                .import
-                .parameters
+    match def_inst.class.opcode {
+        spirv::Op::Variable => &[],
+        spirv::Op::Function => {
+            &module
+                .functions
                 .iter()
-                .zip(pair.export.parameters.iter())
-            {
-                if !import_param.is_type_identical(export_param) {
-                    panic!("Type error in signatures")
-                }
-
-                // jb-todo: validate that OpDecoration is identical too
-            }
+                .find(|f| f.def.as_ref().unwrap().result_id == def_inst.result_id)
+                .unwrap()
+                .parameters as &[rspirv::dr::Instruction]
         }
+        _ => panic!("Unexpected op"),
+    }
+    .iter()
+    .map(|p| p.result_id.unwrap())
+}
 
-        Ok(&self.potential_pairs)
+fn check_tys_equal(
+    defs: &DefAnalyzer,
+    name: &str,
+    import_type_id: spirv::Word,
+    export_type_id: spirv::Word,
+) -> Result<()> {
+    let import_type = defs.def(import_type_id).unwrap();
+    let export_type = defs.def(export_type_id).unwrap();
+
+    let imp = trans_aggregate_type(defs, import_type);
+    let exp = trans_aggregate_type(defs, export_type);
+
+    if imp == exp {
+        Ok(())
+    } else {
+        Err(LinkerError::TypeMismatch {
+            name: name.to_string(),
+            import_type: print_type(defs, import_type),
+            export_type: print_type(defs, export_type),
+        })
     }
 }
 
-pub fn kill_linkage_instructions(
-    pairs: &[ImportExportPair],
-    module: &mut rspirv::dr::Module,
-    opts: &Options,
-) {
+fn replace_all_uses_with(module: &mut rspirv::dr::Module, rules: &HashMap<u32, u32>) {
+    module.all_inst_iter_mut().for_each(|inst| {
+        if let Some(ref mut result_type) = &mut inst.result_type {
+            if let Some(&rewrite) = rules.get(result_type) {
+                *result_type = rewrite;
+            }
+        }
+
+        inst.operands.iter_mut().for_each(|op| {
+            if let Some(w) = operand_idref_mut(op) {
+                if let Some(&rewrite) = rules.get(w) {
+                    *w = rewrite;
+                }
+            }
+        })
+    });
+}
+
+fn kill_linkage_instructions(module: &mut rspirv::dr::Module, rewrite_rules: &HashMap<u32, u32>) {
     // drop imported functions
-    for pair in pairs.iter() {
+    for &id in rewrite_rules.keys() {
         module
             .functions
-            .retain(|f| pair.import.id != f.def.as_ref().unwrap().result_id.unwrap());
+            .retain(|f| id != f.def.as_ref().unwrap().result_id.unwrap());
     }
 
     // drop imported variables
-    for pair in pairs.iter() {
+    for &id in rewrite_rules.keys() {
         module
             .types_global_values
-            .retain(|v| v.result_id.map_or(true, |v| v != pair.import.id));
+            .retain(|v| v.result_id.map_or(true, |v| v != id));
     }
 
-    // drop linkage attributes (both import and export)
     module.annotations.retain(|inst| {
-        let eq = pairs.iter().any(|p| {
-            if inst.operands.is_empty() {
-                return true;
-            }
-
-            if let rspirv::dr::Operand::IdRef(id) = inst.operands[0] {
-                id == p.import.id || id == p.export.id
-            } else {
-                false
-            }
-        });
-
-        !eq || inst.class.opcode != spirv::Op::Decorate
+        inst.class.opcode != spirv::Op::Decorate
             || inst.operands[1]
                 != rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
     });
-
-    if !opts.lib {
-        module.annotations.retain(|inst| {
-            inst.class.opcode != spirv::Op::Decorate
-                || inst.operands[1]
-                    != rspirv::dr::Operand::Decoration(spirv::Decoration::LinkageAttributes)
-                || inst.operands[3] != rspirv::dr::Operand::LinkageType(spirv::LinkageType::Export)
-        });
-    }
 
     // drop OpCapability Linkage
     module.capabilities.retain(|inst| {
@@ -211,35 +197,31 @@ pub fn kill_linkage_instructions(
     })
 }
 
-fn kill_with_first_id(insts: &mut Vec<rspirv::dr::Instruction>, id: u32) {
-    insts.retain(|inst| {
-        if inst.operands.is_empty() {
-            return true;
-        }
-
-        matches!(operand_idref(&inst.operands[0]), Some(w) if w != id)
-    })
-}
-
-fn kill_annotations_and_debug(module: &mut rspirv::dr::Module, id: u32) {
-    kill_with_first_id(&mut module.annotations, id);
-
-    // need to remove OpGroupDecorate members that mention this id
-    module.annotations.iter_mut().for_each(|inst| {
-        if inst.class.opcode == spirv::Op::GroupDecorate {
-            inst.operands
-                .retain(|op| matches!(op, rspirv::dr::Operand::IdRef(w) if *w != id));
-        }
+fn import_kill_annotations_and_debug(
+    module: &mut rspirv::dr::Module,
+    rewrite_rules: &HashMap<u32, u32>,
+    killed_parameters: &HashSet<u32>,
+) {
+    module.annotations.retain(|inst| {
+        inst.operands.is_empty()
+            || operand_idref(&inst.operands[0]).map_or(true, |id| {
+                !rewrite_rules.contains_key(&id) && !killed_parameters.contains(&id)
+            })
     });
-
-    kill_with_first_id(&mut module.debugs, id);
-}
-
-pub fn import_kill_annotations_and_debug(module: &mut rspirv::dr::Module, info: &LinkInfo) {
-    for import in &info.imports {
-        kill_annotations_and_debug(module, import.id);
-        for param in &import.parameters {
-            kill_annotations_and_debug(module, param.result_id.unwrap())
+    module.debugs.retain(|inst| {
+        inst.operands.is_empty()
+            || operand_idref(&inst.operands[0]).map_or(true, |id| {
+                !rewrite_rules.contains_key(&id) && !killed_parameters.contains(&id)
+            })
+    });
+    // need to remove OpGroupDecorate members that mention this id
+    for inst in &mut module.annotations {
+        if inst.class.opcode == spirv::Op::GroupDecorate {
+            inst.operands.retain(|op| {
+                operand_idref(op).map_or(true, |id| {
+                    !rewrite_rules.contains_key(&id) && !killed_parameters.contains(&id)
+                })
+            })
         }
     }
 }

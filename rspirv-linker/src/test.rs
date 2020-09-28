@@ -1,6 +1,5 @@
 use crate::link;
 use crate::LinkerError;
-use crate::Options;
 use crate::Result;
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
@@ -70,14 +69,11 @@ fn load(bytes: &[u8]) -> rspirv::dr::Module {
     loader.module()
 }
 
-fn assemble_and_link(
-    binaries: &[&[u8]],
-    opts: &crate::Options,
-) -> crate::Result<rspirv::dr::Module> {
+fn assemble_and_link(binaries: &[&[u8]]) -> crate::Result<rspirv::dr::Module> {
     let mut modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
     let mut modules = modules.iter_mut().collect::<Vec<_>>();
 
-    link(&mut modules, opts)
+    link(&mut modules, drop)
 }
 
 fn without_header_eq(mut result: rspirv::dr::Module, expected: &str) {
@@ -132,7 +128,7 @@ fn standard() -> Result<()> {
         "#,
     );
 
-    let result = assemble_and_link(&[&a, &b], &Options::default())?;
+    let result = assemble_and_link(&[&a, &b])?;
     let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
         %1 = OpTypeFloat 32
         %2 = OpVariable %1 Input
@@ -152,7 +148,7 @@ fn not_a_lib_extra_exports() -> Result<()> {
             %1 = OpVariable %2 Uniform"#,
     );
 
-    let result = assemble_and_link(&[&a], &Options::default())?;
+    let result = assemble_and_link(&[&a])?;
     let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
         %1 = OpTypeFloat 32
         %2 = OpVariable %1 Uniform"#;
@@ -160,6 +156,8 @@ fn not_a_lib_extra_exports() -> Result<()> {
     Ok(())
 }
 
+// TODO: Lib mode is not supported yet. Double-TODO: Will it *ever* be supported? (probably not)
+/*
 #[test]
 fn lib_extra_exports() -> Result<()> {
     let a = assemble_spirv(
@@ -169,13 +167,7 @@ fn lib_extra_exports() -> Result<()> {
             %1 = OpVariable %2 Uniform"#,
     );
 
-    let result = assemble_and_link(
-        &[&a],
-        &Options {
-            lib: true,
-            ..Default::default()
-        },
-    )?;
+    let result = assemble_and_link(&[&a])?;
 
     let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
         OpDecorate %1 LinkageAttributes "foo" Export
@@ -184,6 +176,7 @@ fn lib_extra_exports() -> Result<()> {
     without_header_eq(result, expect);
     Ok(())
 }
+*/
 
 #[test]
 fn unresolved_symbol() -> Result<()> {
@@ -196,7 +189,7 @@ fn unresolved_symbol() -> Result<()> {
 
     let b = assemble_spirv("OpCapability Linkage");
 
-    let result = assemble_and_link(&[&a, &b], &Options::default());
+    let result = assemble_and_link(&[&a, &b]);
 
     assert_eq!(
         result.err(),
@@ -225,7 +218,7 @@ fn type_mismatch() -> Result<()> {
         "#,
     );
 
-    let result = assemble_and_link(&[&a, &b], &Options::default());
+    let result = assemble_and_link(&[&a, &b]);
     assert_eq!(
         result.err(),
         Some(LinkerError::TypeMismatch {
@@ -264,7 +257,7 @@ fn multiple_definitions() -> Result<()> {
             %1 = OpVariable %2 Uniform %3"#,
     );
 
-    let result = assemble_and_link(&[&a, &b, &c], &Options::default());
+    let result = assemble_and_link(&[&a, &b, &c]);
     assert_eq!(
         result.err(),
         Some(LinkerError::MultipleExports("foo".to_string()))
@@ -299,7 +292,7 @@ fn multiple_definitions_different_types() -> Result<()> {
             %1 = OpVariable %2 Uniform %3"#,
     );
 
-    let result = assemble_and_link(&[&a, &b, &c], &Options::default());
+    let result = assemble_and_link(&[&a, &b, &c]);
     assert_eq!(
         result.err(),
         Some(LinkerError::MultipleExports("foo".to_string()))
@@ -327,7 +320,7 @@ fn decoration_mismatch() -> Result<()> {
         %1 = OpVariable %2 Uniform %3"#,
     );
 
-    let result = assemble_and_link(&[&a, &b], &Options::default());
+    let result = assemble_and_link(&[&a, &b]);
     assert_eq!(
         result.err(),
         Some(LinkerError::MultipleExports("foo".to_string()))
@@ -359,7 +352,7 @@ fn func_ctrl() -> Result<()> {
             OpFunctionEnd"#,
     );
 
-    let result = assemble_and_link(&[&a, &b], &Options::default())?;
+    let result = assemble_and_link(&[&a, &b])?;
 
     let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
             %1 = OpTypeVoid
@@ -412,7 +405,7 @@ fn use_exported_func_param_attr() -> Result<()> {
             "#,
     );
 
-    let result = assemble_and_link(&[&a, &b], &Options::default())?;
+    let result = assemble_and_link(&[&a, &b])?;
 
     let expect = r#"OpCapability Kernel
         OpModuleProcessed "Linked by rspirv-linker"
@@ -480,7 +473,7 @@ fn names_and_decorations() -> Result<()> {
             "#,
     );
 
-    let result = assemble_and_link(&[&a, &b], &Options::default())?;
+    let result = assemble_and_link(&[&a, &b])?;
 
     let expect = r#"OpCapability Kernel
         OpName %1 "foo"
