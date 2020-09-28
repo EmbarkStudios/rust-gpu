@@ -12,7 +12,7 @@ pub fn build_libcore_test() {
         }
     }
     let rustflags = format!(
-        "-Z codegen-backend=librustc_codegen_spirv{} -C codegen-units=1",
+        "-Z codegen-backend=librustc_codegen_spirv{}",
         std::env::consts::DLL_SUFFIX
     );
     let build = Command::new("cargo")
