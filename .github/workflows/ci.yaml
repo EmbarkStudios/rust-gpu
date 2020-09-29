@@ -3,32 +3,54 @@ on: push
 name: Continuous integration
 
 jobs:
-  # TODO: We need to install https://github.com/KhronosGroup/SPIRV-Tools on the system to be able to run `cargo test`
-  # check:
-  #   name: Test
-  #   strategy:
-  #     matrix:
-  #       os: [ubuntu-latest, windows-latest]
-  #   runs-on: ${{ matrix.os }}
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: actions/cache@v2
-  #       with:
-  #         path: |
-  #           ~/.cargo/registry
-  #           ~/.cargo/git
-  #           target
-  #         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-cargo-
-  #           ${{ runner.os }}-
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: nightly
-  #         components: rust-src, rustc-dev, llvm-tools-preview
-  #     - uses: actions-rs/cargo@v1
-  #       with:
-  #         command: test
+  check:
+    name: Test
+    strategy:
+      matrix:
+        # Skipping mac for now, because mac
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      spirv_tools_version: "20200928"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-
+      - name: Install spirv-tools
+        run: .github/install-spirv-tools.sh ${{ runner.os }}
+        shell: bash
+      # Add ~/spirv-tools/bin to PATH so that we can call the tools easily
+      - run: echo "::add-path::$HOME/spirv-tools/install/bin"
+        shell: bash
+        if: runner.os != 'Windows'
+      - run: Write-Host "::add-path::C:/Users/runneradmin/spirv-tools/install/bin"
+        shell: powershell
+        if: runner.os == 'Windows'
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          components: rust-src, rustc-dev, llvm-tools-preview
+      - name: cargo fetch
+        uses: actions-rs/cargo@v1
+        with:
+          command: fetch
+      - name: cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --no-run
+      - name: cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
   lint:
     name: Lint
     runs-on: ubuntu-latest
