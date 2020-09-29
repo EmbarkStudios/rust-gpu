@@ -23,8 +23,6 @@ fn assemble_spirv(spirv: &str) -> Vec<u8> {
 
     std::fs::write(&input, spirv).unwrap();
 
-    println!("WAT {}", std::env::var("PATH").unwrap());
-
     let process = Command::new("spirv-as")
         .arg(input.to_str().unwrap())
         .arg("-o")

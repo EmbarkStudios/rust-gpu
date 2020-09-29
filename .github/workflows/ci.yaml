@@ -24,13 +24,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
             ${{ runner.os }}-
-      # - uses: actions/cache@v2
-      #   id: spirv-cache
-      #   with:
-      #     path: $HOME/spirv-tools/install/bin
-      #     key: ${{ runner.os }}-${{ env.spirv_tools_version }}
       - name: Install spirv-tools
-        #if: steps.spirv-cache.outputs.cache-hit != 'true'
         run: .github/install-spirv-tools.sh ${{ runner.os }}
         shell: bash
       # Add ~/spirv-tools/bin to PATH so that we can call the tools easily
@@ -40,8 +34,6 @@ jobs:
       - run: Write-Host "::add-path::C:/Users/runneradmin/spirv-tools/install/bin"
         shell: powershell
         if: runner.os == 'Windows'
-      - run: ls -al $HOME/spirv-tools/install/bin
-        shell: bash
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
