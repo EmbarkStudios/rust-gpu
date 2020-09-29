@@ -119,6 +119,7 @@ fn link_exe(
     do_link(sess, &objects, &rlibs, out_filename);
 
     if env::var("SPIRV_OPT").is_ok() {
+        let _timer = sess.timer("link_spirv_opt");
         do_spirv_opt(out_filename);
     }
 }
@@ -280,6 +281,7 @@ pub fn read_metadata(rlib: &Path) -> MetadataRef {
 /// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc's
 /// shenanigans to collect all the object files we need to link.
 fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
+    let load_modules_timer = sess.timer("link_load_modules");
     let mut modules = Vec::new();
     // `objects` are the plain obj files we need to link - usually produced by the final crate.
     for obj in objects {
@@ -315,35 +317,39 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], out_filename:
                 .unwrap();
         }
     }
+    drop(load_modules_timer);
 
     // Do the link...
-    let result =
-        match rspirv_linker::link(&mut module_refs, |name| sess.prof.generic_activity(name)) {
-            Ok(result) => result,
-            Err(err) => {
-                if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
-                    let path = Path::new(path);
-                    if path.is_file() {
-                        std::fs::remove_file(path).unwrap();
-                    }
-                    std::fs::create_dir_all(path).unwrap();
-                    for (num, module) in modules.iter().enumerate() {
-                        File::create(path.join(format!("mod_{}.spv", num)))
-                            .unwrap()
-                            .write_all(crate::slice_u32_to_u8(&module.assemble()))
-                            .unwrap();
-                    }
+    let link_result = rspirv_linker::link(&mut module_refs, |name| sess.timer(name));
+
+    let save_modules_timer = sess.timer("link_save_modules");
+    let assembled = match link_result {
+        Ok(v) => v,
+        Err(err) => {
+            if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
+                let path = Path::new(path);
+                if path.is_file() {
+                    std::fs::remove_file(path).unwrap();
                 }
-                panic!("Linker error: {}", err)
+                std::fs::create_dir_all(path).unwrap();
+                for (num, module) in modules.iter().enumerate() {
+                    File::create(path.join(format!("mod_{}.spv", num)))
+                        .unwrap()
+                        .write_all(crate::slice_u32_to_u8(&module.assemble()))
+                        .unwrap();
+                }
             }
-        };
+            panic!("Linker error: {}", err)
+        }
+    };
 
     // And finally write out the linked binary.
     use rspirv::binary::Assemble;
     File::create(out_filename)
         .unwrap()
-        .write_all(crate::slice_u32_to_u8(&result.assemble()))
+        .write_all(crate::slice_u32_to_u8(&assembled.assemble()))
         .unwrap();
+    drop(save_modules_timer);
 
     fn load(bytes: &[u8]) -> rspirv::dr::Module {
         let mut loader = rspirv::dr::Loader::new();

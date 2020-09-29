@@ -270,7 +270,7 @@ impl CodegenBackend for SpirvCodegenBackend {
             return Ok(());
         }
 
-        let timer = sess.prof.generic_activity("link_crate");
+        let timer = sess.timer("link_crate");
         link::link(
             sess,
             &codegen_results,
@@ -449,7 +449,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
     ) -> (ModuleCodegen<Self::Module>, u64) {
         let _timer = tcx
             .prof
-            .generic_activity_with_arg("codegen_module", cgu_name.to_string());
+            .extra_verbose_generic_activity("codegen_module", cgu_name.to_string());
 
         // TODO: Do dep_graph stuff
         let cgu = tcx.codegen_unit(cgu_name);

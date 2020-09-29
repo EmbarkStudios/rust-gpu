@@ -171,18 +171,15 @@ fn replace_all_uses_with(module: &mut rspirv::dr::Module, rules: &HashMap<u32, u
 
 fn kill_linkage_instructions(module: &mut rspirv::dr::Module, rewrite_rules: &HashMap<u32, u32>) {
     // drop imported functions
-    for &id in rewrite_rules.keys() {
-        module
-            .functions
-            .retain(|f| id != f.def.as_ref().unwrap().result_id.unwrap());
-    }
+    module
+        .functions
+        .retain(|f| !rewrite_rules.contains_key(&f.def.as_ref().unwrap().result_id.unwrap()));
 
     // drop imported variables
-    for &id in rewrite_rules.keys() {
-        module
-            .types_global_values
-            .retain(|v| v.result_id.map_or(true, |v| v != id));
-    }
+    module.types_global_values.retain(|v| {
+        v.result_id
+            .map_or(true, |v| !rewrite_rules.contains_key(&v))
+    });
 
     module.annotations.retain(|inst| {
         inst.class.opcode != spirv::Op::Decorate
