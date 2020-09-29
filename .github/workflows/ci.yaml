@@ -36,6 +36,10 @@ jobs:
       # Add ~/spirv-tools/bin to PATH so that we can call the tools easily
       - run: echo "::add-path::$HOME/spirv-tools/install/bin"
         shell: bash
+        if: runner.os != 'Windows'
+      - run: echo "::add-path::$env:HOME/spirv-tools/install/bin"
+        shell: powershell
+        if: runner.os == 'Windows'
       - run: ls -al $HOME/spirv-tools/install/bin
         shell: bash
       - uses: actions-rs/toolchain@v1
