@@ -64,23 +64,31 @@ pub struct BuilderSpirv {
 }
 
 impl BuilderSpirv {
-    pub fn new() -> Self {
+    pub fn new(kernel_mode: bool) -> Self {
         let mut builder = Builder::new();
         // intel-compute-runtime only supports v1.3
         builder.set_version(1, 3);
-        // TODO: Flip this back to Shader once the structurizer is working.
-        builder.capability(Capability::Kernel);
-        // Temp hack: Linkage allows us to get away with no OpEntryPoint
+        if kernel_mode {
+            builder.capability(Capability::Kernel);
+        } else {
+            builder.extension("SPV_KHR_vulkan_memory_model");
+            builder.capability(Capability::Shader);
+            builder.capability(Capability::VulkanMemoryModel);
+            builder.capability(Capability::VariablePointers);
+        }
+        // The linker will always be ran on this module
         builder.capability(Capability::Linkage);
-        // All the below capabilities are temp hacks to validate libcore with spirv-val
-        builder.capability(Capability::GenericPointer);
+        // TODO: Remove these eventually?
         builder.capability(Capability::Int8);
         builder.capability(Capability::Int16);
         builder.capability(Capability::Int64);
         builder.capability(Capability::Float64);
-        builder.capability(Capability::Addresses);
-        // TODO: Physical pointer size
-        builder.memory_model(AddressingModel::Physical32, MemoryModel::OpenCL);
+        if kernel_mode {
+            builder.capability(Capability::Addresses);
+            builder.memory_model(AddressingModel::Physical32, MemoryModel::OpenCL);
+        } else {
+            builder.memory_model(AddressingModel::Logical, MemoryModel::Vulkan);
+        }
         Self {
             builder: RefCell::new(builder),
             constants: Default::default(),

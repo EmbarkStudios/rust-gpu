@@ -60,18 +60,20 @@ pub struct CodegenCx<'tcx> {
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
+        let sym = Box::new(Symbols::new());
+        let kernel_mode = !tcx.sess.target_features.contains(&sym.shader);
         Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(),
+            builder: BuilderSpirv::new(kernel_mode),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
             vtables: Default::default(),
             ext_inst: Default::default(),
             zombie_values: Default::default(),
-            kernel_mode: true,
-            sym: Box::new(Symbols::new()),
+            kernel_mode,
+            sym,
             function_pointers: Default::default(),
             i8_i16_atomics_allowed: false,
         }

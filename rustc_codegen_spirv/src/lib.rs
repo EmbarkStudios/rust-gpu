@@ -169,6 +169,17 @@ impl CodegenBackend for SpirvCodegenBackend {
         }
     }
 
+    fn target_features(&self, sess: &Session) -> Vec<Symbol> {
+        let cmdline = sess.opts.cg.target_feature.split(',');
+        let cfg = sess.target.target.options.features.split(',');
+        cfg.chain(cmdline)
+            .filter(|l| l.starts_with('+'))
+            .map(|l| &l[1..])
+            .filter(|l| !l.is_empty())
+            .map(Symbol::intern)
+            .collect()
+    }
+
     fn provide(&self, providers: &mut Providers) {
         // For now, rustc requires this to be provided.
         providers.supported_target_features = |_, _| Default::default();

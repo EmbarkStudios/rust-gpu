@@ -11,6 +11,7 @@ use std::collections::HashMap;
 /// is to allocate all our keywords up front and intern them all, so we can do comparisons really easily and fast.
 pub struct Symbols {
     pub spirv: Symbol,
+    pub shader: Symbol,
     pub storage_class: Symbol,
     pub entry: Symbol,
 
@@ -76,6 +77,7 @@ impl Symbols {
     pub fn new() -> Self {
         Symbols {
             spirv: Symbol::intern("spirv"),
+            shader: Symbol::intern("shader"),
             storage_class: Symbol::intern("storage_class"),
             entry: Symbol::intern("entry"),
             storage_classes: make_storage_classes(),

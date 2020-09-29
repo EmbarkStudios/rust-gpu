@@ -54,6 +54,11 @@ pointer_addrspace!("incoming_ray_payload_nv", IncomingRayPayloadNV, true);
 pointer_addrspace!("shader_record_buffer_nv", ShaderRecordBufferNV, true);
 pointer_addrspace!("physical_storage_buffer", PhysicalStorageBuffer, true);
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+#[repr(simd)]
+pub struct f32x4(f32, f32, f32, f32);
+
 /// libcore requires a few external symbols to be defined:
 /// https://github.com/rust-lang/rust/blob/c2bc344eb23d8c1d18e803b3f1e631cf99926fbb/library/core/src/lib.rs#L23-L27
 /// TODO: This is copied from compiler_builtins/mem.rs. Can we use that one instead? The note in the above link says
