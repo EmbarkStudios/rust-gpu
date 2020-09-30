@@ -99,6 +99,10 @@ pub fn link<T>(
     }
 
     let mut output = loader.module();
+    let mut header = rspirv::dr::ModuleHeader::new(bound);
+    header.set_version(version.0, version.1);
+    output.header = Some(header);
+
     drop(merge_timer);
 
     let find_pairs_timer = timer("link_find_pairs");
@@ -127,19 +131,12 @@ pub fn link<T>(
     simple_passes::sort_globals(&mut output);
     drop(sort_globals_timer);
 
-    let compact_ids_timer = timer("link_compact_ids");
-    let bound = if env::var("NO_COMPACT_IDS").is_ok() {
-        // It is sometimes useful to not rewrite IDs. For example, if using PRINT_ALL_ZOMBIE, it's useful to be able to
-        // inspect the module and have the same IDs as the ones that were printed in the zombie pass.
-        simple_passes::max_bound(&output)
-    } else {
+    if env::var("NO_COMPACT_IDS").is_err() {
+        let compact_ids_timer = timer("link_compact_ids");
         // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
-        simple_passes::compact_ids(&mut output)
+        output.header.as_mut().unwrap().bound = simple_passes::compact_ids(&mut output);
+        drop(compact_ids_timer);
     };
-    drop(compact_ids_timer);
-    let mut header = rspirv::dr::ModuleHeader::new(bound);
-    header.set_version(version.0, version.1);
-    output.header = Some(header);
 
     output.debugs.push(rspirv::dr::Instruction::new(
         spirv::Op::ModuleProcessed,

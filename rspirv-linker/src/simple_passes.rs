@@ -1,4 +1,4 @@
-use crate::{operand_idref, operand_idref_mut};
+use crate::operand_idref_mut;
 use rspirv::spirv;
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
@@ -125,24 +125,6 @@ pub fn compact_ids(module: &mut rspirv::dr::Module) -> u32 {
     });
 
     remap.len() as u32 + 1
-}
-
-pub fn max_bound(module: &rspirv::dr::Module) -> u32 {
-    let mut max = 0;
-    for inst in module.all_inst_iter() {
-        if let Some(result_id) = inst.result_id {
-            max = max.max(result_id);
-        }
-        if let Some(result_type) = inst.result_type {
-            max = max.max(result_type);
-        }
-        inst.operands.iter().for_each(|op| {
-            if let Some(w) = operand_idref(op) {
-                max = max.max(w);
-            }
-        })
-    }
-    max + 1
 }
 
 pub fn sort_globals(module: &mut rspirv::dr::Module) {
