@@ -323,6 +323,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn br(&mut self, dest: Self::BasicBlock) {
+        if !self.kernel_mode && self.basic_block == dest {
+            // TODO: Remove once structurizer is done.
+            self.zombie(dest, "Infinite loop before structurizer is done");
+        }
         self.emit().branch(dest).unwrap()
     }
 
@@ -332,6 +336,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         then_llbb: Self::BasicBlock,
         else_llbb: Self::BasicBlock,
     ) {
+        if !self.kernel_mode {
+            // TODO: Remove once structurizer is done.
+            self.zombie(then_llbb, "OpBranchConditional before structurizer is done");
+        }
         self.emit()
             .branch_conditional(cond.def, then_llbb, else_llbb, empty())
             .unwrap()
@@ -343,6 +351,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         else_llbb: Self::BasicBlock,
         cases: impl ExactSizeIterator<Item = (u128, Self::BasicBlock)>,
     ) {
+        if !self.kernel_mode {
+            // TODO: Remove once structurizer is done.
+            self.zombie(else_llbb, "OpSwitch before structurizer is done");
+        }
         // pass in signed into the closure to be able to unify closure types
         let (signed, construct_case) = match self.lookup_type(v.ty) {
             SpirvType::Integer(width, signed) => {

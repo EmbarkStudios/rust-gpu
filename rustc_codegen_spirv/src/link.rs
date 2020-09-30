@@ -127,7 +127,14 @@ fn link_exe(
 fn do_spirv_opt(filename: &Path) {
     let tmp = filename.with_extension("opt.spv");
     let status = std::process::Command::new("spirv-opt")
-        .args(&["-Os", "--eliminate-dead-const", "--strip-debug"])
+        .args(&[
+            "--before-hlsl-legalization",
+            "--inline-entry-points-exhaustive",
+            "--ssa-rewrite",
+            "-Os",
+            "--eliminate-dead-const",
+            "--strip-debug",
+        ])
         .arg(&filename)
         .arg("-o")
         .arg(&tmp)
