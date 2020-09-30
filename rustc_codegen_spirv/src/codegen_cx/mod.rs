@@ -29,7 +29,7 @@ use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::iter::once;
 
 pub struct CodegenCx<'tcx> {
@@ -50,6 +50,7 @@ pub struct CodegenCx<'tcx> {
     pub kernel_mode: bool,
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
+    pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
     /// Functions created in get_fn_addr
     /// left: the OpUndef value. right: the function value.
     function_pointers: RefCell<BiHashMap<SpirvValue, SpirvValue>>,
@@ -74,6 +75,7 @@ impl<'tcx> CodegenCx<'tcx> {
             zombie_values: Default::default(),
             kernel_mode,
             sym,
+            really_unsafe_ignore_bitcasts: Default::default(),
             function_pointers: Default::default(),
             i8_i16_atomics_allowed: false,
         }

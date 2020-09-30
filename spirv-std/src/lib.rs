@@ -6,6 +6,8 @@ macro_rules! pointer_addrspace_write {
     (false) => {};
     (true) => {
         #[inline]
+        #[allow(unused_attributes)]
+        #[spirv(really_unsafe_ignore_bitcasts)]
         pub fn store(&mut self, v: T) {
             *self.x = v
         }
@@ -22,6 +24,8 @@ macro_rules! pointer_addrspace {
 
         impl<'a, T: Copy> $type_name<'a, T> {
             #[inline]
+            #[allow(unused_attributes)]
+            #[spirv(really_unsafe_ignore_bitcasts)]
             pub fn load(&self) -> T {
                 *self.x
             }

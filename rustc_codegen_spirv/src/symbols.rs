@@ -14,6 +14,7 @@ pub struct Symbols {
     pub shader: Symbol,
     pub storage_class: Symbol,
     pub entry: Symbol,
+    pub really_unsafe_ignore_bitcasts: Symbol,
 
     storage_classes: HashMap<Symbol, StorageClass>,
     execution_models: HashMap<Symbol, ExecutionModel>,
@@ -80,6 +81,7 @@ impl Symbols {
             shader: Symbol::intern("shader"),
             storage_class: Symbol::intern("storage_class"),
             entry: Symbol::intern("entry"),
+            really_unsafe_ignore_bitcasts: Symbol::intern("really_unsafe_ignore_bitcasts"),
             storage_classes: make_storage_classes(),
             execution_models: make_execution_models(),
         }
@@ -97,6 +99,7 @@ impl Symbols {
 pub enum SpirvAttribute {
     StorageClass(StorageClass),
     Entry(ExecutionModel),
+    ReallyUnsafeIgnoreBitcasts,
 }
 
 // Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused reporting already happens
@@ -167,6 +170,8 @@ pub fn parse_attr<'tcx>(cx: &CodegenCx<'tcx>, attr: &Attribute) -> Option<SpirvA
                 .span_err(attr.span, "entry must have value: #[spirv(entry = \"..\")]");
             None
         }
+    } else if arg.has_name(cx.sym.really_unsafe_ignore_bitcasts) {
+        Some(SpirvAttribute::ReallyUnsafeIgnoreBitcasts)
     } else {
         cx.tcx
             .sess

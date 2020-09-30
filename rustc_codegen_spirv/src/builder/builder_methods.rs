@@ -1014,7 +1014,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => (),
             other => panic!("pointercast called on non-pointer dest type: {:?}", other),
         }
-        if val.ty == dest_ty {
+        if val.ty == dest_ty
+            || self
+                .really_unsafe_ignore_bitcasts
+                .borrow()
+                .contains(&self.current_fn)
+        {
             val
         } else {
             let result = self

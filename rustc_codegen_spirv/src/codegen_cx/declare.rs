@@ -289,7 +289,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
     ) {
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
         let human_name = format!("{}", instance);
-        let linkage = match linkage {
+        let linkage2 = match linkage {
             Linkage::External => Some(LinkageType::Export),
             Linkage::Internal => None,
             other => panic!("TODO: Linkage type not supported yet: {:?}", other),
@@ -298,15 +298,23 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         let spv_attrs = attrs_to_spirv(rust_attrs);
 
         let declared =
-            self.declare_fn_ext(symbol_name, Some(&human_name), linkage, spv_attrs, &fn_abi);
+            self.declare_fn_ext(symbol_name, Some(&human_name), linkage2, spv_attrs, &fn_abi);
 
         for attr in self.tcx.get_attrs(instance.def_id()) {
-            if let Some(SpirvAttribute::Entry(execution_model)) = parse_attr(self, attr) {
-                if execution_model == ExecutionModel::Kernel {
-                    self.kernel_entry_stub(declared, human_name.clone(), execution_model);
-                } else {
-                    self.entry_stub(declared, human_name.clone(), execution_model);
+            match parse_attr(self, attr) {
+                Some(SpirvAttribute::Entry(execution_model)) => {
+                    if execution_model == ExecutionModel::Kernel {
+                        self.kernel_entry_stub(declared, human_name.clone(), execution_model);
+                    } else {
+                        self.entry_stub(declared, human_name.clone(), execution_model);
+                    }
                 }
+                Some(SpirvAttribute::ReallyUnsafeIgnoreBitcasts) => {
+                    self.really_unsafe_ignore_bitcasts
+                        .borrow_mut()
+                        .insert(declared);
+                }
+                _ => {}
             }
         }
 
