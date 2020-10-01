@@ -3,7 +3,7 @@ use crate::builder_spirv::SpirvValue;
 use crate::codegen_cx::CodegenCx;
 use bimap::BiHashMap;
 use rspirv::dr::Operand;
-use rspirv::spirv::{Decoration, StorageClass, Word};
+use rspirv::spirv::{Capability, Decoration, StorageClass, Word};
 use rustc_target::abi::{Align, Size};
 use std::cell::RefCell;
 use std::fmt;
@@ -71,6 +71,15 @@ impl SpirvType {
                     .emit_global()
                     .type_int(width, if signedness { 1 } else { 0 });
                 match width {
+                    8 if !cx.builder.has_capability(Capability::Int8) => {
+                        cx.zombie(result, "u8 without OpCapability Int8")
+                    }
+                    16 if !cx.builder.has_capability(Capability::Int16) => {
+                        cx.zombie(result, "u16 without OpCapability Int16")
+                    }
+                    64 if !cx.builder.has_capability(Capability::Int64) => {
+                        cx.zombie(result, "u64 without OpCapability Int64")
+                    }
                     8 | 16 | 32 | 64 => (),
                     128 => cx.zombie(result, "u128"),
                     other => panic!("Integer width {} invalid for spir-v", other),
@@ -78,11 +87,15 @@ impl SpirvType {
                 result
             }
             SpirvType::Float(width) => {
+                let result = cx.emit_global().type_float(width);
                 match width {
+                    64 if !cx.builder.has_capability(Capability::Float64) => {
+                        cx.zombie(result, "f64 without OpCapability Float64")
+                    }
                     32 | 64 => (),
                     other => panic!("Float width {} invalid for spir-v", other),
                 };
-                cx.emit_global().type_float(width)
+                result
             }
             SpirvType::Adt {
                 ref name,
