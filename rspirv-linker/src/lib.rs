@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod test;
 
+mod dce;
 mod def_analyzer;
 mod duplicates;
 mod import_export_link;
@@ -125,11 +126,15 @@ pub fn link<T>(inputs: &mut [&mut Module], timer: impl Fn(&'static str) -> T) ->
     simple_passes::sort_globals(&mut output);
     drop(sort_globals_timer);
 
+    if env::var("DCE").is_ok() {
+        let _timer = timer("link_dce");
+        dce::dce(&mut output);
+    }
+
     if env::var("NO_COMPACT_IDS").is_err() {
-        let compact_ids_timer = timer("link_compact_ids");
+        let _timer = timer("link_compact_ids");
         // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
         output.header.as_mut().unwrap().bound = simple_passes::compact_ids(&mut output);
-        drop(compact_ids_timer);
     };
 
     output.debugs.push(Instruction::new(
