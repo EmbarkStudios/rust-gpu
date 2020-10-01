@@ -4,6 +4,18 @@ use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
 use std::collections::{hash_map, HashMap, HashSet};
 
+pub fn remove_duplicate_extensions(module: &mut Module) {
+    let mut set = HashSet::new();
+
+    module.extensions.retain(|inst| {
+        inst.class.opcode != Op::Extension
+            || set.insert(match &inst.operands[0] {
+                Operand::LiteralString(s) => s.clone(),
+                _ => panic!(),
+            })
+    });
+}
+
 pub fn remove_duplicate_capablities(module: &mut Module) {
     let mut set = HashSet::new();
     let mut caps = vec![];

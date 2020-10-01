@@ -107,6 +107,7 @@ pub fn link<T>(inputs: &mut [&mut Module], timer: impl Fn(&'static str) -> T) ->
 
     let remove_duplicates_timer = timer("link_remove_duplicates");
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
+    duplicates::remove_duplicate_extensions(&mut output);
     duplicates::remove_duplicate_capablities(&mut output);
     duplicates::remove_duplicate_ext_inst_imports(&mut output);
     duplicates::remove_duplicate_types(&mut output);
