@@ -99,7 +99,7 @@ pub fn link<T>(
     }
 
     let mut output = loader.module();
-    let mut header = rspirv::dr::ModuleHeader::new(bound);
+    let mut header = rspirv::dr::ModuleHeader::new(bound + 1);
     header.set_version(version.0, version.1);
     output.header = Some(header);
 
