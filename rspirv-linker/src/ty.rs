@@ -1,5 +1,6 @@
 use crate::{extract_literal_int_as_u64, extract_literal_u32, DefAnalyzer};
-use rspirv::spirv;
+use rspirv::dr::{Instruction, Operand};
+use rspirv::spirv::{AccessQualifier, Dim, ImageFormat, Op, StorageClass};
 
 #[derive(PartialEq, Debug)]
 pub enum ScalarType {
@@ -13,49 +14,49 @@ pub enum ScalarType {
     ReserveId,
     Queue,
     Pipe,
-    ForwardPointer { storage_class: spirv::StorageClass },
+    ForwardPointer { storage_class: StorageClass },
     PipeStorage,
     NamedBarrier,
     Sampler,
 }
 
-fn trans_scalar_type(inst: &rspirv::dr::Instruction) -> Option<ScalarType> {
+fn trans_scalar_type(inst: &Instruction) -> Option<ScalarType> {
     Some(match inst.class.opcode {
-        spirv::Op::TypeVoid => ScalarType::Void,
-        spirv::Op::TypeBool => ScalarType::Bool,
-        spirv::Op::TypeEvent => ScalarType::Event,
-        spirv::Op::TypeDeviceEvent => ScalarType::DeviceEvent,
-        spirv::Op::TypeReserveId => ScalarType::ReserveId,
-        spirv::Op::TypeQueue => ScalarType::Queue,
-        spirv::Op::TypePipe => ScalarType::Pipe,
-        spirv::Op::TypePipeStorage => ScalarType::PipeStorage,
-        spirv::Op::TypeNamedBarrier => ScalarType::NamedBarrier,
-        spirv::Op::TypeSampler => ScalarType::Sampler,
-        spirv::Op::TypeForwardPointer => ScalarType::ForwardPointer {
+        Op::TypeVoid => ScalarType::Void,
+        Op::TypeBool => ScalarType::Bool,
+        Op::TypeEvent => ScalarType::Event,
+        Op::TypeDeviceEvent => ScalarType::DeviceEvent,
+        Op::TypeReserveId => ScalarType::ReserveId,
+        Op::TypeQueue => ScalarType::Queue,
+        Op::TypePipe => ScalarType::Pipe,
+        Op::TypePipeStorage => ScalarType::PipeStorage,
+        Op::TypeNamedBarrier => ScalarType::NamedBarrier,
+        Op::TypeSampler => ScalarType::Sampler,
+        Op::TypeForwardPointer => ScalarType::ForwardPointer {
             storage_class: match inst.operands[0] {
-                rspirv::dr::Operand::StorageClass(s) => s,
+                Operand::StorageClass(s) => s,
                 _ => panic!("Unexpected operand while parsing type"),
             },
         },
-        spirv::Op::TypeInt => ScalarType::Int {
+        Op::TypeInt => ScalarType::Int {
             width: match inst.operands[0] {
-                rspirv::dr::Operand::LiteralInt32(w) => w,
+                Operand::LiteralInt32(w) => w,
                 _ => panic!("Unexpected operand while parsing type"),
             },
             signed: match inst.operands[1] {
-                rspirv::dr::Operand::LiteralInt32(s) => s != 0,
+                Operand::LiteralInt32(s) => s != 0,
                 _ => panic!("Unexpected operand while parsing type"),
             },
         },
-        spirv::Op::TypeFloat => ScalarType::Float {
+        Op::TypeFloat => ScalarType::Float {
             width: match inst.operands[0] {
-                rspirv::dr::Operand::LiteralInt32(w) => w,
+                Operand::LiteralInt32(w) => w,
                 _ => panic!("Unexpected operand while parsing type"),
             },
         },
-        spirv::Op::TypeOpaque => ScalarType::Opaque {
+        Op::TypeOpaque => ScalarType::Opaque {
             name: match &inst.operands[0] {
-                rspirv::dr::Operand::LiteralString(s) => s.clone(),
+                Operand::LiteralString(s) => s.clone(),
                 _ => panic!("Unexpected operand while parsing type"),
             },
         },
@@ -102,17 +103,17 @@ pub enum AggregateType {
     },
     Pointer {
         ty: Box<AggregateType>,
-        storage_class: spirv::StorageClass,
+        storage_class: StorageClass,
     },
     Image {
         ty: Box<AggregateType>,
-        dim: spirv::Dim,
+        dim: Dim,
         depth: u32,
         arrayed: u32,
         multi_sampled: u32,
         sampled: u32,
-        format: spirv::ImageFormat,
-        access: Option<spirv::AccessQualifier>,
+        format: ImageFormat,
+        access: Option<AccessQualifier>,
     },
     SampledImage {
         ty: Box<AggregateType>,
@@ -121,14 +122,11 @@ pub enum AggregateType {
     Function(Vec<AggregateType>, Box<AggregateType>),
 }
 
-pub(crate) fn trans_aggregate_type(
-    def: &DefAnalyzer,
-    inst: &rspirv::dr::Instruction,
-) -> Option<AggregateType> {
+pub(crate) fn trans_aggregate_type(def: &DefAnalyzer, inst: &Instruction) -> Option<AggregateType> {
     Some(match inst.class.opcode {
-        spirv::Op::TypeArray => {
+        Op::TypeArray => {
             let len_def = def.op_def(&inst.operands[1]);
-            assert!(len_def.class.opcode == spirv::Op::Constant); // don't support spec constants yet
+            assert!(len_def.class.opcode == Op::Constant); // don't support spec constants yet
 
             let len_value = extract_literal_int_as_u64(&len_def.operands[0]);
 
@@ -140,9 +138,9 @@ pub(crate) fn trans_aggregate_type(
                 len: len_value,
             }
         }
-        spirv::Op::TypePointer => AggregateType::Pointer {
+        Op::TypePointer => AggregateType::Pointer {
             storage_class: match inst.operands[0] {
-                rspirv::dr::Operand::StorageClass(s) => s,
+                Operand::StorageClass(s) => s,
                 _ => panic!("Unexpected operand while parsing type"),
             },
             ty: Box::new(
@@ -150,14 +148,13 @@ pub(crate) fn trans_aggregate_type(
                     .expect("Expect base type for OpTypePointer"),
             ),
         },
-        spirv::Op::TypeRuntimeArray
-        | spirv::Op::TypeVector
-        | spirv::Op::TypeMatrix
-        | spirv::Op::TypeSampledImage => AggregateType::Aggregate(
-            trans_aggregate_type(def, &def.op_def(&inst.operands[0]))
-                .map_or_else(Vec::new, |v| vec![v]),
-        ),
-        spirv::Op::TypeStruct => {
+        Op::TypeRuntimeArray | Op::TypeVector | Op::TypeMatrix | Op::TypeSampledImage => {
+            AggregateType::Aggregate(
+                trans_aggregate_type(def, &def.op_def(&inst.operands[0]))
+                    .map_or_else(Vec::new, |v| vec![v]),
+            )
+        }
+        Op::TypeStruct => {
             let mut types = vec![];
             for operand in inst.operands.iter() {
                 let op_def = def.op_def(operand);
@@ -170,7 +167,7 @@ pub(crate) fn trans_aggregate_type(
 
             AggregateType::Aggregate(types)
         }
-        spirv::Op::TypeFunction => {
+        Op::TypeFunction => {
             let mut parameters = vec![];
             let ret = trans_aggregate_type(def, &def.op_def(&inst.operands[0])).unwrap();
             for operand in inst.operands.iter().skip(1) {
@@ -184,13 +181,13 @@ pub(crate) fn trans_aggregate_type(
 
             AggregateType::Function(parameters, Box::new(ret))
         }
-        spirv::Op::TypeImage => AggregateType::Image {
+        Op::TypeImage => AggregateType::Image {
             ty: Box::new(
                 trans_aggregate_type(def, &def.op_def(&inst.operands[0]))
                     .expect("Expect base type for OpTypeImage"),
             ),
             dim: match inst.operands[1] {
-                rspirv::dr::Operand::Dim(d) => d,
+                Operand::Dim(d) => d,
                 _ => panic!("Invalid dim"),
             },
             depth: extract_literal_u32(&inst.operands[2]),
@@ -198,14 +195,14 @@ pub(crate) fn trans_aggregate_type(
             multi_sampled: extract_literal_u32(&inst.operands[4]),
             sampled: extract_literal_u32(&inst.operands[5]),
             format: match inst.operands[6] {
-                rspirv::dr::Operand::ImageFormat(f) => f,
+                Operand::ImageFormat(f) => f,
                 _ => panic!("Invalid image format"),
             },
             access: inst
                 .operands
                 .get(7)
                 .map(|op| match op {
-                    rspirv::dr::Operand::AccessQualifier(a) => Some(*a),
+                    Operand::AccessQualifier(a) => Some(*a),
                     _ => None,
                 })
                 .flatten(),

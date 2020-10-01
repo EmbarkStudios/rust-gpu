@@ -1,4 +1,5 @@
 use crate::operand_idref;
+use rspirv::dr::{Instruction, Module, Operand};
 use std::collections::HashMap;
 
 /// DefAnalyzer is a simple lookup table for instructions: Sometimes, we have a spirv result_id,
@@ -8,11 +9,11 @@ use std::collections::HashMap;
 /// clone it, it's nice to keep the reference here, since then rustc guarantees we do not mutate
 /// the module while a DefAnalyzer is alive (which would be really bad).
 pub struct DefAnalyzer<'a> {
-    def_ids: HashMap<u32, &'a rspirv::dr::Instruction>,
+    def_ids: HashMap<u32, &'a Instruction>,
 }
 
 impl<'a> DefAnalyzer<'a> {
-    pub fn new(module: &'a rspirv::dr::Module) -> Self {
+    pub fn new(module: &'a Module) -> Self {
         let mut def_ids = HashMap::new();
 
         module.all_inst_iter().for_each(|inst| {
@@ -29,7 +30,7 @@ impl<'a> DefAnalyzer<'a> {
         Self { def_ids }
     }
 
-    pub fn def(&self, id: u32) -> Option<&'a rspirv::dr::Instruction> {
+    pub fn def(&self, id: u32) -> Option<&'a Instruction> {
         self.def_ids.get(&id).copied()
     }
 
@@ -38,7 +39,7 @@ impl<'a> DefAnalyzer<'a> {
     /// # Panics
     ///
     /// Panics when provided an operand that doesn't reference an id, or that id is missing.
-    pub fn op_def(&self, operand: &rspirv::dr::Operand) -> rspirv::dr::Instruction {
+    pub fn op_def(&self, operand: &Operand) -> Instruction {
         self.def(operand_idref(operand).expect("Expected ID"))
             .unwrap()
             .clone()

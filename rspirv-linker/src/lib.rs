@@ -10,7 +10,8 @@ mod zombies;
 
 use def_analyzer::DefAnalyzer;
 use rspirv::binary::Consumer;
-use rspirv::spirv;
+use rspirv::dr::{Instruction, Loader, Module, ModuleHeader, Operand};
+use rspirv::spirv::{Op, Word};
 use std::env;
 use thiserror::Error;
 
@@ -32,52 +33,45 @@ pub enum LinkerError {
 
 pub type Result<T> = std::result::Result<T, LinkerError>;
 
-pub fn load(bytes: &[u8]) -> rspirv::dr::Module {
-    let mut loader = rspirv::dr::Loader::new();
+pub fn load(bytes: &[u8]) -> Module {
+    let mut loader = Loader::new();
     rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
     loader.module()
 }
 
-fn operand_idref(op: &rspirv::dr::Operand) -> Option<spirv::Word> {
+fn operand_idref(op: &Operand) -> Option<Word> {
     match *op {
-        rspirv::dr::Operand::IdMemorySemantics(w)
-        | rspirv::dr::Operand::IdScope(w)
-        | rspirv::dr::Operand::IdRef(w) => Some(w),
+        Operand::IdMemorySemantics(w) | Operand::IdScope(w) | Operand::IdRef(w) => Some(w),
         _ => None,
     }
 }
-fn operand_idref_mut(op: &mut rspirv::dr::Operand) -> Option<&mut spirv::Word> {
+fn operand_idref_mut(op: &mut Operand) -> Option<&mut Word> {
     match op {
-        rspirv::dr::Operand::IdMemorySemantics(w)
-        | rspirv::dr::Operand::IdScope(w)
-        | rspirv::dr::Operand::IdRef(w) => Some(w),
+        Operand::IdMemorySemantics(w) | Operand::IdScope(w) | Operand::IdRef(w) => Some(w),
         _ => None,
     }
 }
 
-fn print_type(defs: &DefAnalyzer, ty: &rspirv::dr::Instruction) -> String {
+fn print_type(defs: &DefAnalyzer, ty: &Instruction) -> String {
     format!("{}", ty::trans_aggregate_type(defs, ty).unwrap())
 }
 
-fn extract_literal_int_as_u64(op: &rspirv::dr::Operand) -> u64 {
+fn extract_literal_int_as_u64(op: &Operand) -> u64 {
     match op {
-        rspirv::dr::Operand::LiteralInt32(v) => (*v).into(),
-        rspirv::dr::Operand::LiteralInt64(v) => *v,
+        Operand::LiteralInt32(v) => (*v).into(),
+        Operand::LiteralInt64(v) => *v,
         _ => panic!("Unexpected literal int"),
     }
 }
 
-fn extract_literal_u32(op: &rspirv::dr::Operand) -> u32 {
+fn extract_literal_u32(op: &Operand) -> u32 {
     match op {
-        rspirv::dr::Operand::LiteralInt32(v) => *v,
+        Operand::LiteralInt32(v) => *v,
         _ => panic!("Unexpected literal u32"),
     }
 }
 
-pub fn link<T>(
-    inputs: &mut [&mut rspirv::dr::Module],
-    timer: impl Fn(&'static str) -> T,
-) -> Result<rspirv::dr::Module> {
+pub fn link<T>(inputs: &mut [&mut Module], timer: impl Fn(&'static str) -> T) -> Result<Module> {
     let merge_timer = timer("link_merge");
     // shift all the ids
     let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
@@ -90,7 +84,7 @@ pub fn link<T>(
     }
 
     // merge the binaries
-    let mut loader = rspirv::dr::Loader::new();
+    let mut loader = Loader::new();
 
     for module in inputs.iter() {
         module.all_inst_iter().for_each(|inst| {
@@ -99,7 +93,7 @@ pub fn link<T>(
     }
 
     let mut output = loader.module();
-    let mut header = rspirv::dr::ModuleHeader::new(bound + 1);
+    let mut header = ModuleHeader::new(bound + 1);
     header.set_version(version.0, version.1);
     output.header = Some(header);
 
@@ -138,11 +132,11 @@ pub fn link<T>(
         drop(compact_ids_timer);
     };
 
-    output.debugs.push(rspirv::dr::Instruction::new(
-        spirv::Op::ModuleProcessed,
+    output.debugs.push(Instruction::new(
+        Op::ModuleProcessed,
         None,
         None,
-        vec![rspirv::dr::Operand::LiteralString(
+        vec![Operand::LiteralString(
             "Linked by rspirv-linker".to_string(),
         )],
     ));

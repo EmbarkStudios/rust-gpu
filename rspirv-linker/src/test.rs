@@ -1,6 +1,7 @@
 use crate::link;
 use crate::LinkerError;
 use crate::Result;
+use rspirv::dr::{Loader, Module};
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
@@ -63,20 +64,20 @@ fn validate(spirv: &[u32]) {
     assert!(process.status.success());
 }
 
-fn load(bytes: &[u8]) -> rspirv::dr::Module {
-    let mut loader = rspirv::dr::Loader::new();
+fn load(bytes: &[u8]) -> Module {
+    let mut loader = Loader::new();
     rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
     loader.module()
 }
 
-fn assemble_and_link(binaries: &[&[u8]]) -> crate::Result<rspirv::dr::Module> {
+fn assemble_and_link(binaries: &[&[u8]]) -> crate::Result<Module> {
     let mut modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
     let mut modules = modules.iter_mut().collect::<Vec<_>>();
 
     link(&mut modules, drop)
 }
 
-fn without_header_eq(mut result: rspirv::dr::Module, expected: &str) {
+fn without_header_eq(mut result: Module, expected: &str) {
     use rspirv::binary::Disassemble;
     //use rspirv::binary::Assemble;
 

@@ -1,10 +1,11 @@
 use crate::operand_idref_mut;
-use rspirv::spirv;
+use rspirv::dr::{Block, Function, Module, Operand};
+use rspirv::spirv::{Op, Word};
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::mem::replace;
 
-pub fn shift_ids(module: &mut rspirv::dr::Module, add: u32) {
+pub fn shift_ids(module: &mut Module, add: u32) {
     module.all_inst_iter_mut().for_each(|inst| {
         if let Some(ref mut result_id) = &mut inst.result_id {
             *result_id += add;
@@ -26,15 +27,15 @@ pub fn shift_ids(module: &mut rspirv::dr::Module, add: u32) {
 /// in the case of backedges). Reverse post-order is a good ordering that satisfies this condition
 /// (with an "already visited set" that blocks going deeper, which solves both the fact that it's a
 /// DAG, not a tree, as well as backedges).
-pub fn block_ordering_pass(func: &mut rspirv::dr::Function) {
+pub fn block_ordering_pass(func: &mut Function) {
     if func.blocks.len() < 2 {
         return;
     }
     fn visit_postorder(
-        func: &rspirv::dr::Function,
-        visited: &mut HashSet<spirv::Word>,
-        postorder: &mut Vec<spirv::Word>,
-        current: spirv::Word,
+        func: &Function,
+        visited: &mut HashSet<Word>,
+        postorder: &mut Vec<Word>,
+        current: Word,
     ) {
         if !visited.insert(current) {
             return;
@@ -66,26 +67,26 @@ pub fn block_ordering_pass(func: &mut rspirv::dr::Function) {
     assert_eq!(label_of(&func.blocks[0]), entry_label);
 }
 
-fn label_of(block: &rspirv::dr::Block) -> spirv::Word {
+fn label_of(block: &Block) -> Word {
     block.label.as_ref().unwrap().result_id.unwrap()
 }
 
-fn outgoing_edges(block: &rspirv::dr::Block) -> Vec<spirv::Word> {
-    fn unwrap_id_ref(operand: &rspirv::dr::Operand) -> spirv::Word {
+fn outgoing_edges(block: &Block) -> Vec<Word> {
+    fn unwrap_id_ref(operand: &Operand) -> Word {
         match *operand {
-            rspirv::dr::Operand::IdRef(word) => word,
+            Operand::IdRef(word) => word,
             _ => panic!("Expected Operand::IdRef: {}", operand),
         }
     }
     let terminator = block.instructions.last().unwrap();
     // https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#Termination
     match terminator.class.opcode {
-        spirv::Op::Branch => vec![unwrap_id_ref(&terminator.operands[0])],
-        spirv::Op::BranchConditional => vec![
+        Op::Branch => vec![unwrap_id_ref(&terminator.operands[0])],
+        Op::BranchConditional => vec![
             unwrap_id_ref(&terminator.operands[1]),
             unwrap_id_ref(&terminator.operands[2]),
         ],
-        spirv::Op::Switch => once(unwrap_id_ref(&terminator.operands[1]))
+        Op::Switch => once(unwrap_id_ref(&terminator.operands[1]))
             .chain(
                 terminator.operands[3..]
                     .iter()
@@ -93,14 +94,12 @@ fn outgoing_edges(block: &rspirv::dr::Block) -> Vec<spirv::Word> {
                     .map(unwrap_id_ref),
             )
             .collect(),
-        spirv::Op::Return | spirv::Op::ReturnValue | spirv::Op::Kill | spirv::Op::Unreachable => {
-            Vec::new()
-        }
+        Op::Return | Op::ReturnValue | Op::Kill | Op::Unreachable => Vec::new(),
         _ => panic!("Invalid block terminator: {:?}", terminator),
     }
 }
 
-pub fn compact_ids(module: &mut rspirv::dr::Module) -> u32 {
+pub fn compact_ids(module: &mut Module) -> u32 {
     let mut remap = HashMap::new();
 
     let mut insert = |current_id: u32| -> u32 {
@@ -127,7 +126,7 @@ pub fn compact_ids(module: &mut rspirv::dr::Module) -> u32 {
     remap.len() as u32 + 1
 }
 
-pub fn sort_globals(module: &mut rspirv::dr::Module) {
+pub fn sort_globals(module: &mut Module) {
     // Function declarations come before definitions. TODO: Figure out if it's even possible to
     // have a function declaration without a body in a fully linked module?
     module.functions.sort_by_key(|f| !f.blocks.is_empty());

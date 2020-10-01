@@ -1,24 +1,22 @@
 //! See documentation on CodegenCx::zombie for a description of the zombie system.
 
 use crate::operand_idref;
-use rspirv::spirv;
+use rspirv::dr::{Instruction, Module, Operand};
+use rspirv::spirv::{Decoration, Op, Word};
 use std::collections::{hash_map, HashMap};
 use std::env;
 
-fn collect_zombies(module: &rspirv::dr::Module) -> Vec<(spirv::Word, String)> {
+fn collect_zombies(module: &Module) -> Vec<(Word, String)> {
     module
         .annotations
         .iter()
         .filter_map(|inst| {
             // TODO: Temp hack. We hijack UserTypeGOOGLE right now, since the compiler never emits this.
-            if inst.class.opcode == spirv::Op::DecorateString
-                && inst.operands[1]
-                    == rspirv::dr::Operand::Decoration(spirv::Decoration::UserTypeGOOGLE)
+            if inst.class.opcode == Op::DecorateString
+                && inst.operands[1] == Operand::Decoration(Decoration::UserTypeGOOGLE)
             {
-                if let (
-                    &rspirv::dr::Operand::IdRef(id),
-                    rspirv::dr::Operand::LiteralString(reason),
-                ) = (&inst.operands[0], &inst.operands[2])
+                if let (&Operand::IdRef(id), Operand::LiteralString(reason)) =
+                    (&inst.operands[0], &inst.operands[2])
                 {
                     return Some((id, reason.to_string()));
                 } else {
@@ -30,18 +28,14 @@ fn collect_zombies(module: &rspirv::dr::Module) -> Vec<(spirv::Word, String)> {
         .collect()
 }
 
-fn remove_zombie_annotations(module: &mut rspirv::dr::Module) {
+fn remove_zombie_annotations(module: &mut Module) {
     module.annotations.retain(|inst| {
-        inst.class.opcode != spirv::Op::DecorateString
-            || inst.operands[1]
-                != rspirv::dr::Operand::Decoration(spirv::Decoration::UserTypeGOOGLE)
+        inst.class.opcode != Op::DecorateString
+            || inst.operands[1] != Operand::Decoration(Decoration::UserTypeGOOGLE)
     })
 }
 
-fn contains_zombie<'a>(
-    inst: &rspirv::dr::Instruction,
-    zombie: &HashMap<spirv::Word, &'a str>,
-) -> Option<&'a str> {
+fn contains_zombie<'a>(inst: &Instruction, zombie: &HashMap<Word, &'a str>) -> Option<&'a str> {
     if let Some(result_type) = inst.result_type {
         if let Some(reason) = zombie.get(&result_type).copied() {
             return Some(reason);
@@ -52,10 +46,7 @@ fn contains_zombie<'a>(
         .find_map(|op| operand_idref(op).and_then(|w| zombie.get(&w).copied()))
 }
 
-fn is_zombie<'a>(
-    inst: &rspirv::dr::Instruction,
-    zombie: &HashMap<spirv::Word, &'a str>,
-) -> Option<&'a str> {
+fn is_zombie<'a>(inst: &Instruction, zombie: &HashMap<Word, &'a str>) -> Option<&'a str> {
     if let Some(result_id) = inst.result_id {
         zombie.get(&result_id).copied()
     } else {
@@ -63,7 +54,7 @@ fn is_zombie<'a>(
     }
 }
 
-fn spread_zombie(module: &mut rspirv::dr::Module, zombie: &mut HashMap<spirv::Word, &str>) -> bool {
+fn spread_zombie(module: &mut Module, zombie: &mut HashMap<Word, &str>) -> bool {
     let mut any = false;
     // globals are easy
     for inst in module.global_inst_iter() {
@@ -82,7 +73,7 @@ fn spread_zombie(module: &mut rspirv::dr::Module, zombie: &mut HashMap<spirv::Wo
     // function IDs implicitly reference their contents
     for func in &module.functions {
         let mut func_is_zombie = None;
-        let mut spread_func = |inst: &rspirv::dr::Instruction| {
+        let mut spread_func = |inst: &Instruction| {
             if let Some(result_id) = inst.result_id {
                 if let Some(reason) = contains_zombie(inst, zombie) {
                     match zombie.entry(result_id) {
@@ -130,7 +121,7 @@ fn spread_zombie(module: &mut rspirv::dr::Module, zombie: &mut HashMap<spirv::Wo
     any
 }
 
-pub fn remove_zombies(module: &mut rspirv::dr::Module) {
+pub fn remove_zombies(module: &mut Module) {
     let zombies_owned = collect_zombies(module);
     let mut zombies = zombies_owned.iter().map(|(a, b)| (*a, b as &str)).collect();
     remove_zombie_annotations(module);
@@ -153,16 +144,13 @@ pub fn remove_zombies(module: &mut rspirv::dr::Module) {
             if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
                 let name_id = f.def.as_ref().unwrap().result_id.unwrap();
                 let name = module.debugs.iter().find(|inst| {
-                    inst.class.opcode == spirv::Op::Name
-                        && inst.operands[0] == rspirv::dr::Operand::IdRef(name_id)
+                    inst.class.opcode == Op::Name && inst.operands[0] == Operand::IdRef(name_id)
                 });
                 let name = match name {
-                    Some(rspirv::dr::Instruction { ref operands, .. }) => {
-                        match operands as &[rspirv::dr::Operand] {
-                            [_, rspirv::dr::Operand::LiteralString(name)] => name.clone(),
-                            _ => panic!(),
-                        }
-                    }
+                    Some(Instruction { ref operands, .. }) => match operands as &[Operand] {
+                        [_, Operand::LiteralString(name)] => name.clone(),
+                        _ => panic!(),
+                    },
                     _ => format!("{}", name_id),
                 };
                 println!("Function removed {:?} because {:?}", name, reason)

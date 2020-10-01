@@ -1,15 +1,16 @@
 use crate::{operand_idref, operand_idref_mut};
 use rspirv::binary::Assemble;
-use rspirv::spirv;
+use rspirv::dr::{Instruction, Module, Operand};
+use rspirv::spirv::{Op, Word};
 use std::collections::{hash_map, HashMap, HashSet};
 
-pub fn remove_duplicate_capablities(module: &mut rspirv::dr::Module) {
+pub fn remove_duplicate_capablities(module: &mut Module) {
     let mut set = HashSet::new();
     let mut caps = vec![];
 
     for c in &module.capabilities {
         let keep = match c.operands[0] {
-            rspirv::dr::Operand::Capability(cap) => set.insert(cap),
+            Operand::Capability(cap) => set.insert(cap),
             _ => true,
         };
 
@@ -21,14 +22,14 @@ pub fn remove_duplicate_capablities(module: &mut rspirv::dr::Module) {
     module.capabilities = caps;
 }
 
-pub fn remove_duplicate_ext_inst_imports(module: &mut rspirv::dr::Module) {
+pub fn remove_duplicate_ext_inst_imports(module: &mut Module) {
     // This is a simpler version of remove_duplicate_types, see that for comments
     let mut ext_to_id = HashMap::new();
     let mut rewrite_rules = HashMap::new();
 
     // First deduplicate the imports
     for inst in &mut module.ext_inst_imports {
-        if let rspirv::dr::Operand::LiteralString(ext_inst_import) = &inst.operands[0] {
+        if let Operand::LiteralString(ext_inst_import) = &inst.operands[0] {
             match ext_to_id.entry(ext_inst_import.clone()) {
                 hash_map::Entry::Vacant(entry) => {
                     entry.insert(inst.result_id.unwrap());
@@ -37,7 +38,7 @@ pub fn remove_duplicate_ext_inst_imports(module: &mut rspirv::dr::Module) {
                     let old_value = rewrite_rules.insert(inst.result_id.unwrap(), *entry.get());
                     assert!(old_value.is_none());
                     // We're iterating through the vec, so removing items is hard - nop it out.
-                    *inst = rspirv::dr::Instruction::new(spirv::Op::Nop, None, None, vec![]);
+                    *inst = Instruction::new(Op::Nop, None, None, vec![]);
                 }
             }
         }
@@ -46,19 +47,19 @@ pub fn remove_duplicate_ext_inst_imports(module: &mut rspirv::dr::Module) {
     // Delete the nops we inserted
     module
         .ext_inst_imports
-        .retain(|op| op.class.opcode != spirv::Op::Nop);
+        .retain(|op| op.class.opcode != Op::Nop);
 
     // Then rewrite all OpExtInst referencing the rewritten IDs
     for inst in module.all_inst_iter_mut() {
-        if inst.class.opcode == spirv::Op::ExtInst {
-            if let rspirv::dr::Operand::IdRef(ref mut id) = inst.operands[0] {
+        if inst.class.opcode == Op::ExtInst {
+            if let Operand::IdRef(ref mut id) = inst.operands[0] {
                 *id = rewrite_rules.get(id).copied().unwrap_or(*id);
             }
         }
     }
 }
 
-fn make_annotation_key(inst: &rspirv::dr::Instruction) -> Vec<u32> {
+fn make_annotation_key(inst: &Instruction) -> Vec<u32> {
     let mut data = vec![];
 
     data.push(inst.class.opcode as u32);
@@ -70,12 +71,10 @@ fn make_annotation_key(inst: &rspirv::dr::Instruction) -> Vec<u32> {
     data
 }
 
-fn gather_annotations(annotations: &[rspirv::dr::Instruction]) -> HashMap<spirv::Word, Vec<u32>> {
+fn gather_annotations(annotations: &[Instruction]) -> HashMap<Word, Vec<u32>> {
     let mut map = HashMap::new();
     for inst in annotations {
-        if inst.class.opcode == spirv::Op::Decorate
-            || inst.class.opcode == spirv::Op::MemberDecorate
-        {
+        if inst.class.opcode == Op::Decorate || inst.class.opcode == Op::MemberDecorate {
             match map.entry(operand_idref(&inst.operands[0]).unwrap()) {
                 hash_map::Entry::Vacant(entry) => {
                     entry.insert(vec![make_annotation_key(inst)]);
@@ -97,9 +96,9 @@ fn gather_annotations(annotations: &[rspirv::dr::Instruction]) -> HashMap<spirv:
 }
 
 fn make_type_key(
-    inst: &rspirv::dr::Instruction,
-    unresolved_forward_pointers: &HashSet<spirv::Word>,
-    annotations: &HashMap<spirv::Word, Vec<u32>>,
+    inst: &Instruction,
+    unresolved_forward_pointers: &HashSet<Word>,
+    annotations: &HashMap<Word, Vec<u32>>,
 ) -> Vec<u32> {
     let mut data = vec![];
 
@@ -111,11 +110,11 @@ fn make_type_key(
         data.push(id);
     }
     for op in &inst.operands {
-        if let rspirv::dr::Operand::IdRef(id) = op {
+        if let Operand::IdRef(id) = op {
             if unresolved_forward_pointers.contains(id) {
                 // TODO: This is implementing forward pointers incorrectly. All unresolved forward pointers will
                 // compare equal.
-                rspirv::dr::Operand::IdRef(0).assemble_into(&mut data);
+                Operand::IdRef(0).assemble_into(&mut data);
             } else {
                 op.assemble_into(&mut data);
             }
@@ -132,7 +131,7 @@ fn make_type_key(
     data
 }
 
-fn rewrite_inst_with_rules(inst: &mut rspirv::dr::Instruction, rules: &HashMap<u32, u32>) {
+fn rewrite_inst_with_rules(inst: &mut Instruction, rules: &HashMap<u32, u32>) {
     if let Some(ref mut id) = inst.result_type {
         // If the rewrite rules contain this ID, replace with the mapped value, otherwise don't touch it.
         *id = rules.get(id).copied().unwrap_or(*id);
@@ -145,7 +144,7 @@ fn rewrite_inst_with_rules(inst: &mut rspirv::dr::Instruction, rules: &HashMap<u
 }
 
 // TODO: Don't merge zombie types with non-zombie types
-pub fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
+pub fn remove_duplicate_types(module: &mut Module) {
     // Keep in mind, this algorithm requires forward type references to not exist - i.e. it's a valid spir-v module.
 
     // When a duplicate type is encountered, then this is a map from the deleted ID, to the new, deduplicated ID.
@@ -161,13 +160,13 @@ pub fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
     let annotations = gather_annotations(&module.annotations);
 
     for inst in &mut module.types_global_values {
-        if inst.class.opcode == spirv::Op::TypeForwardPointer {
-            if let rspirv::dr::Operand::IdRef(id) = inst.operands[0] {
+        if inst.class.opcode == Op::TypeForwardPointer {
+            if let Operand::IdRef(id) = inst.operands[0] {
                 unresolved_forward_pointers.insert(id);
                 continue;
             }
         }
-        if inst.class.opcode == spirv::Op::TypePointer
+        if inst.class.opcode == Op::TypePointer
             && unresolved_forward_pointers.contains(&inst.result_id.unwrap())
         {
             unresolved_forward_pointers.remove(&inst.result_id.unwrap());
@@ -197,7 +196,7 @@ pub fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
                 // 2) Erase this instruction. Because we're iterating over this vec, removing an element is hard, so
                 // clear it with OpNop, and then remove it in the retain() call below.
                 assert!(old_value.is_none());
-                *inst = rspirv::dr::Instruction::new(spirv::Op::Nop, None, None, vec![]);
+                *inst = Instruction::new(Op::Nop, None, None, vec![]);
             }
         }
     }
@@ -205,7 +204,7 @@ pub fn remove_duplicate_types(module: &mut rspirv::dr::Module) {
     // We rewrote instructions we wanted to remove with OpNop. Remove them properly.
     module
         .types_global_values
-        .retain(|op| op.class.opcode != spirv::Op::Nop);
+        .retain(|op| op.class.opcode != Op::Nop);
 
     // Apply the rewrite rules to the whole module
     for inst in module.all_inst_iter_mut() {
