@@ -1,6 +1,4 @@
-use crate::link;
-use crate::LinkerError;
-use crate::Result;
+use crate::{link, LinkerError, Options, Result};
 use rspirv::dr::{Loader, Module};
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
@@ -74,7 +72,14 @@ fn assemble_and_link(binaries: &[&[u8]]) -> crate::Result<Module> {
     let mut modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
     let mut modules = modules.iter_mut().collect::<Vec<_>>();
 
-    link(&mut modules, drop)
+    link(
+        &mut modules,
+        &Options {
+            dce: false,
+            compact_ids: true,
+        },
+        drop,
+    )
 }
 
 fn without_header_eq(mut result: Module, expected: &str) {

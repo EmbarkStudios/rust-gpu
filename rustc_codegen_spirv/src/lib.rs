@@ -281,12 +281,16 @@ impl CodegenBackend for SpirvCodegenBackend {
             return Ok(());
         }
 
+        // TODO: Can we merge this sym with the one in symbols.rs?
+        let legalize = sess.target_features.contains(&Symbol::intern("shader"));
+
         let timer = sess.timer("link_crate");
         link::link(
             sess,
             &codegen_results,
             outputs,
             &codegen_results.crate_name.as_str(),
+            legalize,
         );
         drop(timer);
 

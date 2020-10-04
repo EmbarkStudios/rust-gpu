@@ -3,8 +3,9 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attr, SpirvAttribute};
+use rspirv::dr::Operand;
 use rspirv::spirv::{
-    ExecutionMode, ExecutionModel, FunctionControl, LinkageType, StorageClass, Word,
+    Decoration, ExecutionMode, ExecutionModel, FunctionControl, LinkageType, StorageClass, Word,
 };
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
@@ -15,6 +16,7 @@ use rustc_middle::ty::{Instance, ParamEnv, Ty, TypeFoldable};
 use rustc_span::def_id::DefId;
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Align, LayoutOf};
+use std::collections::HashMap;
 
 fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
     let mut control = FunctionControl::NONE;
@@ -170,6 +172,7 @@ impl<'tcx> CodegenCx<'tcx> {
             ),
         };
         let mut emit = self.emit_global();
+        let mut decoration_locations = HashMap::new();
         // Create OpVariables before OpFunction so they're global instead of local vars.
         let arguments = entry_func_args
             .iter()
@@ -178,8 +181,30 @@ impl<'tcx> CodegenCx<'tcx> {
                     SpirvType::Pointer { storage_class, .. } => storage_class,
                     other => panic!("Invalid entry arg type {}", other.debug(arg, self)),
                 };
+                let has_location = match storage_class {
+                    StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant => {
+                        true
+                    }
+                    _ => false,
+                };
                 // Note: this *declares* the variable too.
-                emit.variable(arg, None, storage_class, None)
+                let variable = emit.variable(arg, None, storage_class, None);
+                // Assign locations from left to right, incrementing each storage class
+                // individually.
+                // TODO: Is this right for UniformConstant? Do they share locations with
+                // input/outpus?
+                if has_location {
+                    let location = decoration_locations
+                        .entry(storage_class)
+                        .or_insert_with(|| 0);
+                    emit.decorate(
+                        variable,
+                        Decoration::Location,
+                        std::iter::once(Operand::LiteralInt32(*location)),
+                    );
+                    *location += 1;
+                }
+                variable
             })
             .collect::<Vec<_>>();
         let fn_id = emit

@@ -27,6 +27,7 @@ pub fn link<'a>(
     codegen_results: &CodegenResults,
     outputs: &OutputFilenames,
     crate_name: &str,
+    legalize: bool,
 ) {
     let output_metadata = sess.opts.output_types.contains_key(&OutputType::Metadata);
     for &crate_type in sess.crate_types().iter() {
@@ -59,7 +60,7 @@ pub fn link<'a>(
                     link_rlib(codegen_results, &out_filename);
                 }
                 CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => {
-                    link_exe(sess, crate_type, &out_filename, codegen_results)
+                    link_exe(sess, crate_type, &out_filename, codegen_results, legalize)
                 }
                 other => panic!("CrateType {:?} not supported yet", other),
             }
@@ -98,6 +99,7 @@ fn link_exe(
     crate_type: CrateType,
     out_filename: &Path,
     codegen_results: &CodegenResults,
+    legalize: bool,
 ) {
     let mut objects = Vec::new();
     let mut rlibs = Vec::new();
@@ -118,23 +120,29 @@ fn link_exe(
 
     do_link(sess, &objects, &rlibs, out_filename);
 
-    if env::var("SPIRV_OPT").is_ok() {
+    let opt = env::var("SPIRV_OPT").is_ok();
+    if legalize || opt {
         let _timer = sess.timer("link_spirv_opt");
-        do_spirv_opt(out_filename);
+        do_spirv_opt(out_filename, legalize, opt);
     }
 }
 
-fn do_spirv_opt(filename: &Path) {
+fn do_spirv_opt(filename: &Path, legalize: bool, opt: bool) {
     let tmp = filename.with_extension("opt.spv");
-    let status = std::process::Command::new("spirv-opt")
-        .args(&[
+    let mut cmd = std::process::Command::new("spirv-opt");
+    if legalize {
+        cmd.args(&[
             "--before-hlsl-legalization",
             "--inline-entry-points-exhaustive",
-            "--ssa-rewrite",
-            "-Os",
-            "--eliminate-dead-const",
-            "--strip-debug",
-        ])
+        ]);
+        if !opt {
+            cmd.arg("--eliminate-dead-functions");
+        }
+    }
+    if opt {
+        cmd.args(&["-Os", "--eliminate-dead-const", "--strip-debug"]);
+    }
+    let status = cmd
         .arg(&filename)
         .arg("-o")
         .arg(&tmp)
@@ -327,7 +335,11 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], out_filename:
     drop(load_modules_timer);
 
     // Do the link...
-    let link_result = rspirv_linker::link(&mut module_refs, |name| sess.timer(name));
+    let options = rspirv_linker::Options {
+        dce: env::var("NO_DCE").is_err(),
+        compact_ids: env::var("NO_COMPACT_IDS").is_err(),
+    };
+    let link_result = rspirv_linker::link(&mut module_refs, &options, |name| sess.timer(name));
 
     let save_modules_timer = sess.timer("link_save_modules");
     let assembled = match link_result {

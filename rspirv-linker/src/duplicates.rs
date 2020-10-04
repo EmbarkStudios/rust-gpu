@@ -18,20 +18,13 @@ pub fn remove_duplicate_extensions(module: &mut Module) {
 
 pub fn remove_duplicate_capablities(module: &mut Module) {
     let mut set = HashSet::new();
-    let mut caps = vec![];
-
-    for c in &module.capabilities {
-        let keep = match c.operands[0] {
-            Operand::Capability(cap) => set.insert(cap),
-            _ => true,
-        };
-
-        if keep {
-            caps.push(c.clone());
-        }
-    }
-
-    module.capabilities = caps;
+    module.capabilities.retain(|inst| {
+        inst.class.opcode != Op::Capability
+            || set.insert(match inst.operands[0] {
+                Operand::Capability(s) => s,
+                _ => panic!(),
+            })
+    });
 }
 
 pub fn remove_duplicate_ext_inst_imports(module: &mut Module) {
