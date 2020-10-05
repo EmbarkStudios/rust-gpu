@@ -1,5 +1,5 @@
 use super::Builder;
-use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValueExt};
+use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemorySemantics, Op, Scope, StorageClass, Word};
@@ -203,6 +203,56 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
             SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
         }
+    }
+
+    fn memset_constant_size(&mut self, ptr: SpirvValue, pat: SpirvValue, size_bytes: u64) {
+        let size_elem = self
+            .lookup_type(pat.ty)
+            .sizeof(self)
+            .expect("Memset on unsized values not supported");
+        let count = size_bytes / size_elem.bytes();
+        if count == 1 {
+            self.store(pat, ptr, Align::from_bytes(0).unwrap());
+        } else {
+            for index in 0..count {
+                let const_index = self.constant_u32(index as u32);
+                let gep_ptr = self.gep(ptr, &[const_index]);
+                self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
+            }
+        }
+    }
+
+    // TODO: Test this is correct
+    fn memset_dynamic_size(&mut self, ptr: SpirvValue, pat: SpirvValue, size_bytes: SpirvValue) {
+        let size_elem = self
+            .lookup_type(pat.ty)
+            .sizeof(self)
+            .expect("Unable to memset a dynamic sized object");
+        let size_elem_const = self.constant_int(size_bytes.ty, size_elem.bytes());
+        let zero = self.constant_int(size_bytes.ty, 0);
+        let one = self.constant_int(size_bytes.ty, 1);
+        let zero_align = Align::from_bytes(0).unwrap();
+
+        let mut header = self.build_sibling_block("memset_header");
+        let mut body = self.build_sibling_block("memset_body");
+        let exit = self.build_sibling_block("memset_exit");
+
+        let count = self.udiv(size_bytes, size_elem_const);
+        let index = self.alloca(count.ty, zero_align);
+        self.store(zero, index, zero_align);
+        self.br(header.llbb());
+
+        let current_index = header.load(index, zero_align);
+        let cond = header.icmp(IntPredicate::IntULT, current_index, count);
+        header.cond_br(cond, body.llbb(), exit.llbb());
+
+        let gep_ptr = body.gep(ptr, &[current_index]);
+        body.store(pat, gep_ptr, zero_align);
+        let current_index_plus_1 = body.add(current_index, one);
+        body.store(current_index_plus_1, index, zero_align);
+        body.br(header.llbb());
+
+        *self = exit;
     }
 
     fn zombie_convert_ptr_to_u(&self, def: Word) {
@@ -1260,66 +1310,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             ),
         };
         let elem_ty_spv = self.lookup_type(elem_ty);
-        match (
-            self.builder.lookup_const(fill_byte),
-            self.builder.lookup_const(size),
-        ) {
-            (Some(fill_byte), Some(size)) => {
-                let fill_byte = match fill_byte {
-                    SpirvConst::U32(_, v) => v as u8,
-                    other => panic!("memset fill_byte constant value not supported: {:?}", other),
-                };
-                let size = match size {
-                    SpirvConst::U32(_, v) => v as usize,
-                    other => panic!("memset size constant value not supported: {:?}", other),
-                };
-                let pat = self
-                    .memset_const_pattern(&elem_ty_spv, fill_byte)
-                    .with_type(elem_ty);
-                let elem_ty_sizeof = elem_ty_spv
-                    .sizeof(self)
-                    .expect("Memset on unsized values not supported");
-                let count = size / elem_ty_sizeof.bytes_usize();
-                if count == 1 {
-                    self.store(pat, ptr, Align::from_bytes(0).unwrap());
-                } else {
-                    for index in 0..size {
-                        let const_index = self.constant_u32(index as u32);
-                        let gep_ptr = self.gep(ptr, &[const_index]);
-                        self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
-                    }
-                }
-            }
-            (Some(_fill_byte), None) => {
-                // TODO: Implement this.
-                self.zombie(ptr.def, "memset constant fill_byte dynamic size");
-            }
-            (None, Some(size)) => {
-                let size = match size {
-                    SpirvConst::U32(_, v) => v as usize,
-                    other => panic!("memset size constant value not supported: {:?}", other),
-                };
-                let pat = self
-                    .memset_dynamic_pattern(&elem_ty_spv, fill_byte.def)
-                    .with_type(elem_ty);
-                let elem_ty_sizeof = elem_ty_spv
-                    .sizeof(self)
-                    .expect("Memset on unsized values not supported");
-                let count = size / elem_ty_sizeof.bytes_usize();
-                if count == 1 {
-                    self.store(pat, ptr, Align::from_bytes(0).unwrap());
-                } else {
-                    for index in 0..size {
-                        let const_index = self.constant_u32(index as u32);
-                        let gep_ptr = self.gep(ptr, &[const_index]);
-                        self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
-                    }
-                }
-            }
-            (None, None) => {
-                // TODO: Implement this.
-                self.zombie(ptr.def, "memset dynamic fill_byte dynamic size");
-            }
+        let pat = match self.builder.lookup_const_u64(fill_byte) {
+            Some(fill_byte) => self.memset_const_pattern(&elem_ty_spv, fill_byte as u8),
+            None => self.memset_dynamic_pattern(&elem_ty_spv, fill_byte.def),
+        }
+        .with_type(elem_ty);
+        match self.builder.lookup_const_u64(size) {
+            Some(size) => self.memset_constant_size(ptr, pat, size),
+            None => self.memset_dynamic_size(ptr, pat, size),
         }
     }
 
