@@ -1291,7 +1291,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 }
             }
             (Some(_fill_byte), None) => {
-                panic!("memset constant fill_byte dynamic size not implemented yet")
+                // TODO: Implement this.
+                self.zombie(ptr.def, "memset constant fill_byte dynamic size");
             }
             (None, Some(size)) => {
                 let size = match size {
@@ -1315,7 +1316,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     }
                 }
             }
-            (None, None) => panic!("memset dynamic fill_byte dynamic size not implemented yet"),
+            (None, None) => {
+                // TODO: Implement this.
+                self.zombie(ptr.def, "memset dynamic fill_byte dynamic size");
+            }
         }
     }
 

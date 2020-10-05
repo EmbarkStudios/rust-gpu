@@ -453,7 +453,13 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         // Ignore for now.
     }
 
-    fn codegen_allocator<'tcx>(&self, _: TyCtxt<'tcx>, _: &mut Self::Module, _: AllocatorKind) {
+    fn codegen_allocator<'tcx>(
+        &self,
+        _: TyCtxt<'tcx>,
+        _: &mut Self::Module,
+        _: AllocatorKind,
+        _: bool,
+    ) {
         todo!()
     }
 
