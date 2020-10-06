@@ -23,10 +23,27 @@ In recent years most Desktop platforms have switched to loading resource descrip
 
 ### Vulkan
 On the other hand in Vulkan resource descriptor binding is designed in such a way that it can accomodate hardware that still relies on descriptor slots instead of memory, because still a lot of such hardware exists in the wild. Especially in the Mobile space.
+
+There are some constraints that currently exist when it comes to binding resources to shaders that we may need to take into account, Vulkan has `maxBoundDescriptorSets` for example (between 4 and 32). However for the sake of argument we'll ignore these practical limitations for now.
 </details>
+
+# Goal 
+Ideally what one would do is have a group of bindings collected together logically for each rendering system; where the bindings are set up (semi-)automatically on both the GPU and CPU.
+
+One thing we'd like to avoid is having a set of names or numbers that manually need to match up between GPU and CPU. 
+
+1. Manual numbers (or strings) aren't type-safe.
+1. They make refactoring more difficult (need to change both CPU and GPU side).
+1. They can clash, especially in large code bases where it's difficult to keep track.
 
 # Suggestion
 
+I would like us to have an easy way to connect bindings on the GPU and CPU side together, in a way that's as ergonomic to use as possible.
+
+
+
+
+<!--
 The simple initial suggestion would be to only support positional binding to shaders at the moment. This has some drawbacks (such as requiring a new root signature / vulkan shader pipeline layout for every shader) and so it doesn't allow you to override the descriptor set index or binding slot so you end up giving up some flexibility.
 
 ```rust
@@ -43,6 +60,7 @@ struct LightingArgs {
 
 fn compute(lighting_info: LightingArgs)
 ```
+-->
 
 
 # Drawbacks
@@ -54,7 +72,7 @@ List potential issues that one would want to have discussed in the RFC comment s
 
 
 # Prior art
-
+<details>
 ## Metal
 
 ## HLSL
@@ -122,3 +140,4 @@ RLSL also passes resource bindings as arguments to the kernel, with two template
 #[spirv(compute)]
 fn compute(compute: Compute, buffer: Buffer<N0, N0, RuntimeArray<f32>>)
 ```
+</details>
