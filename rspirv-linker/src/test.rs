@@ -75,8 +75,9 @@ fn assemble_and_link(binaries: &[&[u8]]) -> crate::Result<Module> {
     link(
         &mut modules,
         &Options {
-            dce: false,
             compact_ids: true,
+            dce: false,
+            inline: false,
         },
         drop,
     )

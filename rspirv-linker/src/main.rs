@@ -8,7 +8,15 @@ fn main() -> Result<()> {
     let mut body1 = crate::load(&body1[..]);
     let mut body2 = crate::load(&body2[..]);
 
-    let output = link(&mut [&mut body1, &mut body2], &Options::default(), drop)?;
+    let output = link(
+        &mut [&mut body1, &mut body2],
+        &Options {
+            compact_ids: true,
+            dce: false,
+            inline: false,
+        },
+        drop,
+    )?;
     println!("{}\n\n", output.disassemble());
 
     Ok(())

@@ -6,6 +6,7 @@ mod dce;
 mod def_analyzer;
 mod duplicates;
 mod import_export_link;
+mod inline;
 mod simple_passes;
 mod ty;
 mod zombies;
@@ -35,17 +36,9 @@ pub enum LinkerError {
 pub type Result<T> = std::result::Result<T, LinkerError>;
 
 pub struct Options {
-    pub dce: bool,
     pub compact_ids: bool,
-}
-
-impl Default for Options {
-    fn default() -> Self {
-        Self {
-            dce: true,
-            compact_ids: true,
-        }
-    }
+    pub dce: bool,
+    pub inline: bool,
 }
 
 pub fn load(bytes: &[u8]) -> Module {
@@ -138,6 +131,11 @@ pub fn link<T>(
     {
         let _timer = timer("link_remove_zombies");
         zombies::remove_zombies(&mut output);
+    }
+
+    if opts.inline {
+        let _timer = timer("link_inline");
+        inline::inline(&mut output);
     }
 
     {

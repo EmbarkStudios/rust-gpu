@@ -118,7 +118,7 @@ fn link_exe(
         codegen_results,
     );
 
-    do_link(sess, &objects, &rlibs, out_filename);
+    do_link(sess, &objects, &rlibs, out_filename, legalize);
 
     let opt = env::var("SPIRV_OPT").is_ok();
     if legalize || opt {
@@ -130,14 +130,8 @@ fn link_exe(
 fn do_spirv_opt(filename: &Path, legalize: bool, opt: bool) {
     let tmp = filename.with_extension("opt.spv");
     let mut cmd = std::process::Command::new("spirv-opt");
-    if legalize {
-        cmd.args(&[
-            "--before-hlsl-legalization",
-            "--inline-entry-points-exhaustive",
-        ]);
-        if !opt {
-            cmd.arg("--eliminate-dead-functions");
-        }
+    if legalize && !opt {
+        cmd.arg("--eliminate-dead-functions");
     }
     if opt {
         cmd.args(&["-Os", "--eliminate-dead-const", "--strip-debug"]);
@@ -295,7 +289,13 @@ pub fn read_metadata(rlib: &Path) -> MetadataRef {
 
 /// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc's
 /// shenanigans to collect all the object files we need to link.
-fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], out_filename: &Path) {
+fn do_link(
+    sess: &Session,
+    objects: &[PathBuf],
+    rlibs: &[PathBuf],
+    out_filename: &Path,
+    legalize: bool,
+) {
     let load_modules_timer = sess.timer("link_load_modules");
     let mut modules = Vec::new();
     // `objects` are the plain obj files we need to link - usually produced by the final crate.
@@ -338,6 +338,7 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], out_filename:
     let options = rspirv_linker::Options {
         dce: env::var("NO_DCE").is_err(),
         compact_ids: env::var("NO_COMPACT_IDS").is_err(),
+        inline: legalize,
     };
     let link_result = rspirv_linker::link(&mut module_refs, &options, |name| sess.timer(name));
 
