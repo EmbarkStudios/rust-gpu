@@ -27,19 +27,10 @@ pub fn build_libcore_test() {
         ])
         .current_dir(Path::new("build_libcore_test").canonicalize().unwrap())
         .env("RUSTFLAGS", rustflags)
+        .env("SPIRV_VAL", "1")
         .status()
         .expect("failed to execute cargo build");
     if !build.success() {
         panic!("build_libcore_test compilation failed with code {}", build);
-    }
-
-    let output_path =
-        Path::new("build_libcore_test/target/spirv-unknown-unknown/release/build_libcore_test.spv");
-    let val = std::process::Command::new("spirv-val")
-        .arg(&output_path)
-        .status()
-        .expect("failed to execute spirv-val");
-    if !val.success() {
-        panic!("build_libcore_test validation failed with code {}", build);
     }
 }
