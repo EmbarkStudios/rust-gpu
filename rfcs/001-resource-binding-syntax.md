@@ -90,6 +90,7 @@ This seems to have a few downsides:
  - Need to ensure no overlap between sets & slots.
  - In big code-bases, the dependencies on shaders become very blurred and one needs to inveriable figure out which bindings don't get DCE'd, and more importantly which bindings are actually being used.
  - If you're using a crate authored by a 3rd-party, it quickly becomes non-obvious which resources need to be bound.
+ - Unclear which downstream call-sites end up requiring more bindings to your SPIR-V blob.
 
 And a few upsides:
 
