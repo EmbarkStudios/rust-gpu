@@ -89,6 +89,7 @@ This seems to have a few downsides:
  - Right now a constructor call is required, and it should be const.
  - Need to ensure no overlap between sets & slots.
  - In big code-bases, the dependencies on shaders become very blurred and one needs to inveriable figure out which bindings don't get DCE'd, and more importantly which bindings are actually being used.
+ - If you're using a crate authored by a 3rd-party, it quickly becomes non-obvious which resources need to be bound.
 
 And a few upsides:
 
@@ -139,7 +140,7 @@ Some upsides:
 
  - No clashes for sets/slots since the language takes care of this.
  - It's clear from the get-go which bindings are being used.
- 
+
 A much nicer and more ergonomic approach would be to store texture bindings in structs:
 
 ```rust
