@@ -71,11 +71,15 @@ impl<T: Default, const SET: u32, const SLOT: u32> Texture<T, SET, SLOT> {
 This is a more traditional example that's closer to how HLSL or GLSL would do bindings, they have a few generic parameters and it relies on `const_generic` to function. If we mirror this in existing Rust syntax we'll get something like this:
 
 ```rust
-static MY_TEXTURE : Texture::<f32, 0, 0> = Texture::new();
+static ALBEDO : Texture::<f32, 0, 0> = Texture::new();
+static NORMAL_MAP : Texture::<f32, 0, 1> = Texture::new();
+static SMOOTHNESS : Texture::<f32, 0, 2> = Texture::new();
+static LIGHTMAP : Texture::<f32, 0, 3> = Texture::new();
 
 fn main() {
-    let v = MY_TEXTURE.sample(1.0, 1.0);
-    println!("{}", v);
+    // functions can access the globals directly
+    let mut T = brdf();
+    T += gi();
 }
 ```
 
@@ -92,7 +96,10 @@ And a few upsides:
 Alternative would be to remove the `const_generic` parameters potentially by moving them into the constructor.
 
 ```rust
-static MY_TEXTURE : Texture::<f32> = Texture::new(0, 0);
+static ALBEDO : Texture::<f32> = Texture::new(0, 0);
+static NORMAL_MAP : Texture::<f32> = Texture::new(0, 1);
+static SMOOTHNESS : Texture::<f32> = Texture::new(0, 2);
+static LIGHTMAP : Texture::<f32> = Texture::new(0, 3);
 ```
 
 This would make it easier to pass textures to functions (even if they're in different slots) because you'd get something like this:
@@ -116,9 +123,9 @@ fn some_system(tex: &Texture::<f32, 0, 0>) {
 Most compute-only languages tend to prefer this along with positional binding. This makes "invoking a shader" look much more like a function call and uses existing and familiar semantics.
 
 ```rust
-fn main(my_texture: Texture::<f32>) {
-    let v = my_texture.sample(1.0, 1.0);
-    println!("{}", v);
+fn main(albedo: Texture::<f32>, normal_map: Texture::<f32>, smoothness: Texture::<f32>, lightmap: Texture<f32>) {
+    let mut T = brdf(&albedo, &normal_map, &smoothness);
+    T += gi(&lightmap);
 }
 ```
 
@@ -131,24 +138,24 @@ Some upsides:
 
  - No clashes for sets/slots since the language takes care of this.
 
-<!--
-The simple initial suggestion would be to only support positional binding to shaders at the moment. This has some drawbacks (such as requiring a new root signature / vulkan shader pipeline layout for every shader) and so it doesn't allow you to override the descriptor set index or binding slot so you end up giving up some flexibility.
+A much nicer and more ergonomic approach would be to store texture bindings in structs:
 
 ```rust
-fn compute(buffer: Buffer<RuntimeArray<f32>>)
-```
-
-Ideally these bindings can also appear in structs that go into the shader/kernel so that each system can have a struct with their input parameters. This would most likely be modeled similar to Metal's Argument Buffers so that one can do things like this:
-
-```rust
-struct LightingArgs {
-    shadow_map: Texture<f32>,
-    material_info: Buffer<RuntimeArray<MaterialInfo>>
+struct ShadingInputs {
+    albedo: Texture::<f32>,
+    normal_map: Texture::<f32>,
+    smoothness: Texture::<f32>,
 }
 
-fn compute(lighting_info: LightingArgs)
+struct IndirectLighting {
+    lightmap: Texture<f32>,
+}
+
+fn main(inputs: &ShadingInputs, indirect_lighting: &IndirectLighting) {
+    let mut T = brdf(&inputs);
+    T += gi(&indirect_lighting);
+}
 ```
--->
 
 
 # Drawbacks
