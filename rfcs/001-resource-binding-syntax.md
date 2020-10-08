@@ -88,6 +88,7 @@ This seems to have a few downsides:
  - All caps for the variable/buffer name.
  - Right now a constructor call is required, and it should be const.
  - Need to ensure no overlap between sets & slots.
+ - In big code-bases, the dependencies on shaders become very blurred and one needs to inveriable figure out which bindings don't get DCE'd, and more importantly which bindings are actually being used.
 
 And a few upsides:
 
@@ -133,11 +134,12 @@ Doing this straight up has a few downsides:
 
  - Big kernels/shader can have lots of buffers and textures bound making this list potentially large.
  - Need to pass down all bindings all the way to leaf-node systems.
-
+ 
 Some upsides:
 
  - No clashes for sets/slots since the language takes care of this.
-
+ - It's clear from the get-go which bindings are being used.
+ 
 A much nicer and more ergonomic approach would be to store texture bindings in structs:
 
 ```rust
