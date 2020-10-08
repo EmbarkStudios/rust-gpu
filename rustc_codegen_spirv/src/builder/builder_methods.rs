@@ -11,6 +11,7 @@ use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BuilderMethods, ConstMethods, LayoutTypeMethods, OverflowOp};
 use rustc_codegen_ssa::MemFlags;
 use rustc_middle::ty::Ty;
+use rustc_span::Span;
 use rustc_target::abi::{Abi, Align, Scalar, Size};
 use std::iter::empty;
 use std::ops::Range;
@@ -362,6 +363,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn llbb(&self) -> Self::BasicBlock {
         self.basic_block
+    }
+
+    fn set_span(&self, _span: Span) {
+        // TODO
     }
 
     fn ret_void(&mut self) {
