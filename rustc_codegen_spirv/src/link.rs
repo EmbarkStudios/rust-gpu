@@ -158,7 +158,6 @@ fn do_spirv_val(sess: &Session, filename: &Path, dump_path: String) {
     let output = output.expect("spirv-val failed to execute");
     if !output.status.success() {
         let dump_path = Path::new(&dump_path);
-        sess.err("wau");
         let mut err = sess.struct_err(&format!("spirv-val failed with {}", output.status));
         if !output.stdout.is_empty() {
             err.note(&String::from_utf8(output.stdout).unwrap());

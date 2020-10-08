@@ -39,10 +39,12 @@ fn compute_idom(preds: &[Vec<usize>]) -> Vec<usize> {
     fn intersect(doms: &[Option<usize>], mut finger1: usize, mut finger2: usize) -> usize {
         // TODO: This may return an optional result?
         while finger1 != finger2 {
-            while finger1 < finger2 {
+            // Note: The comparisons here are inverted from the paper, because the paper uses
+            // comparison to be postorder index. However, we have reverse postorder indices.
+            while finger1 > finger2 {
                 finger1 = doms[finger1].unwrap();
             }
-            while finger2 < finger1 {
+            while finger2 > finger1 {
                 finger2 = doms[finger2].unwrap();
             }
         }
@@ -57,7 +59,10 @@ fn compute_idom(preds: &[Vec<usize>]) -> Vec<usize> {
         for node in 1..(preds.len()) {
             let mut new_idom: Option<usize> = None;
             for &pred in &preds[node] {
-                new_idom = Some(new_idom.map_or(pred, |new_idom| intersect(&idom, pred, new_idom)));
+                if idom[pred].is_some() {
+                    new_idom =
+                        Some(new_idom.map_or(pred, |new_idom| intersect(&idom, pred, new_idom)));
+                }
             }
             // TODO: This may return an optional result?
             let new_idom = new_idom.unwrap();
