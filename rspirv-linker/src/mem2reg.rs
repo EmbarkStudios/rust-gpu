@@ -21,7 +21,7 @@ pub fn mem2reg(
     );
 }
 
-fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
+pub fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
     let mut result = vec![vec![]; blocks.len()];
     for (source_idx, source) in blocks.iter().enumerate() {
         for dest_id in outgoing_edges(source) {
@@ -108,9 +108,15 @@ fn insert_phis_all(
             }
         })
         .collect::<Vec<_>>();
-    for (var, var_type) in thing {
+    for &(var, var_type) in &thing {
         insert_phis(header, blocks, &dominance_frontier, var, var_type);
     }
+    blocks[0].instructions.retain(|inst| {
+        inst.class.opcode != Op::Variable || {
+            let result_id = inst.result_id.unwrap();
+            thing.iter().all(|&(var, _)| var != result_id)
+        }
+    });
 }
 
 fn is_promotable(blocks: &[Block], var: Word) -> bool {
@@ -186,6 +192,7 @@ fn insert_phis(
         &mut rewrite_rules,
     );
     apply_rewrite_rules(&rewrite_rules, blocks);
+    remove_nops(blocks);
 }
 
 // Returns the newly created phi definition.
@@ -290,5 +297,13 @@ fn rename(
 
     while stack.len() > original_stack {
         stack.pop();
+    }
+}
+
+fn remove_nops(blocks: &mut [Block]) {
+    for block in blocks {
+        block
+            .instructions
+            .retain(|inst| inst.class.opcode != Op::Nop);
     }
 }

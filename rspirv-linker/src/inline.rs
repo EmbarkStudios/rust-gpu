@@ -1,7 +1,9 @@
+use crate::mem2reg::compute_preds;
 use crate::{apply_rewrite_rules, operand_idref};
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use std::collections::{HashMap, HashSet};
+use std::mem::replace;
 
 type FunctionMap = HashMap<Word, Function>;
 
@@ -21,7 +23,6 @@ pub fn inline(module: &mut Module) {
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
     let mut dropped_ids = HashSet::new();
-    println!("before: {}", module.functions.len());
     module.functions.retain(|f| {
         if should_inline(&disallowed_argument_types, f) {
             // TODO: We should insert all defined IDs in this function.
@@ -31,7 +32,6 @@ pub fn inline(module: &mut Module) {
             true
         }
     });
-    println!("after: {}", module.functions.len());
     // Drop OpName etc. for inlined functions
     module.debugs.retain(|inst| {
         !inst
@@ -48,6 +48,7 @@ pub fn inline(module: &mut Module) {
     };
     for function in &mut module.functions {
         inliner.inline_fn(function);
+        fuse_trivial_branches(function);
     }
 }
 
@@ -359,4 +360,30 @@ fn insert_opvariables(block: &mut Block, mut insts: Vec<Instruction>) {
         }
         None => block.instructions.append(&mut insts),
     }
+}
+
+fn fuse_trivial_branches(function: &mut Function) {
+    let all_preds = compute_preds(&function.blocks);
+    'outer: for (dest_block, mut preds) in all_preds.iter().enumerate() {
+        // if there's two trivial branches in a row, the middle one might get inlined before the
+        // last one, so when processing the last one, skip through to the first one.
+        let pred = loop {
+            if preds.len() != 1 || preds[0] == dest_block {
+                continue 'outer;
+            }
+            let pred = preds[0];
+            if !function.blocks[pred].instructions.is_empty() {
+                break pred;
+            }
+            preds = &all_preds[pred];
+        };
+        let pred_insts = &function.blocks[pred].instructions;
+        if pred_insts.last().unwrap().class.opcode == Op::Branch {
+            let mut dest_insts = replace(&mut function.blocks[dest_block].instructions, Vec::new());
+            let pred_insts = &mut function.blocks[pred].instructions;
+            pred_insts.pop(); // pop the branch
+            pred_insts.append(&mut dest_insts);
+        }
+    }
+    function.blocks.retain(|b| !b.instructions.is_empty());
 }
