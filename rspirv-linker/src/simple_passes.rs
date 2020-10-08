@@ -1,4 +1,4 @@
-use crate::operand_idref_mut;
+use crate::{label_of, operand_idref_mut};
 use rspirv::dr::{Block, Function, Module, Operand};
 use rspirv::spirv::{Op, Word};
 use std::collections::{HashMap, HashSet};
@@ -67,11 +67,7 @@ pub fn block_ordering_pass(func: &mut Function) {
     assert_eq!(label_of(&func.blocks[0]), entry_label);
 }
 
-fn label_of(block: &Block) -> Word {
-    block.label.as_ref().unwrap().result_id.unwrap()
-}
-
-fn outgoing_edges(block: &Block) -> Vec<Word> {
+pub fn outgoing_edges(block: &Block) -> Vec<Word> {
     fn unwrap_id_ref(operand: &Operand) -> Word {
         match *operand {
             Operand::IdRef(word) => word,

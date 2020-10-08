@@ -1,4 +1,4 @@
-use crate::{operand_idref, operand_idref_mut};
+use crate::{apply_rewrite_rules, operand_idref};
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use std::collections::{HashMap, HashSet};
@@ -12,14 +12,37 @@ pub fn inline(module: &mut Module) {
         .map(|f| (f.def.as_ref().unwrap().result_id.unwrap(), f.clone()))
         .collect();
     let disallowed_argument_types = compute_disallowed_argument_types(module);
+    let void = module
+        .types_global_values
+        .iter()
+        .find(|inst| inst.class.opcode == Op::TypeVoid)
+        .map(|inst| inst.result_id.unwrap())
+        .unwrap_or(0);
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
-    module
-        .functions
-        .retain(|f| !should_inline(&disallowed_argument_types, f));
+    let mut dropped_ids = HashSet::new();
+    println!("before: {}", module.functions.len());
+    module.functions.retain(|f| {
+        if should_inline(&disallowed_argument_types, f) {
+            // TODO: We should insert all defined IDs in this function.
+            dropped_ids.insert(f.def.as_ref().unwrap().result_id.unwrap());
+            false
+        } else {
+            true
+        }
+    });
+    println!("after: {}", module.functions.len());
+    // Drop OpName etc. for inlined functions
+    module.debugs.retain(|inst| {
+        !inst
+            .operands
+            .iter()
+            .any(|op| operand_idref(op).map_or(false, |id| dropped_ids.contains(&id)))
+    });
     let mut inliner = Inliner {
         header: &mut module.header.as_mut().unwrap(),
         types_global_values: &mut module.types_global_values,
+        void,
         functions: &functions,
         disallowed_argument_types: &disallowed_argument_types,
     };
@@ -84,6 +107,7 @@ fn should_inline(disallowed_argument_types: &HashSet<Word>, function: &Function)
 struct Inliner<'m, 'map> {
     header: &'m mut ModuleHeader,
     types_global_values: &'m mut Vec<Instruction>,
+    void: Word,
     functions: &'map FunctionMap,
     disallowed_argument_types: &'map HashSet<Word>,
     // rewrite_rules: HashMap<Word, Word>,
@@ -152,7 +176,14 @@ impl Inliner<'_, '_> {
             None => return false,
             Some(call) => call,
         };
-        let call_result_type = call_inst.result_type.unwrap();
+        let call_result_type = {
+            let ty = call_inst.result_type.unwrap();
+            if ty == self.void {
+                None
+            } else {
+                Some(ty)
+            }
+        };
         let call_result_id = call_inst.result_id.unwrap();
         // Rewrite parameters to arguments
         let call_arguments = call_inst
@@ -166,14 +197,18 @@ impl Inliner<'_, '_> {
         });
         let mut rewrite_rules = callee_parameters.zip(call_arguments).collect();
 
-        let return_variable = self.id();
+        let return_variable = if call_result_type.is_some() {
+            Some(self.id())
+        } else {
+            None
+        };
         let return_jump = self.id();
         // Rewrite OpReturns of the callee.
         let mut inlined_blocks = get_inlined_blocks(callee, return_variable, return_jump);
         // Clone the IDs of the callee, because otherwise they'd be defined multiple times if the
         // fn is inlined multiple times.
         self.add_clone_id_rules(&mut rewrite_rules, &inlined_blocks);
-        Self::apply_rewrite_rules(&rewrite_rules, &mut inlined_blocks);
+        apply_rewrite_rules(&rewrite_rules, &mut inlined_blocks);
 
         // Split the block containing the OpFunctionCall into two, around the call.
         let mut post_call_block_insts = caller.blocks[block_idx]
@@ -183,13 +218,15 @@ impl Inliner<'_, '_> {
         let call = caller.blocks[block_idx].instructions.pop().unwrap();
         assert!(call.class.opcode == Op::FunctionCall);
 
-        // Generate the storage space for the return value: Do this *after* the split above,
-        // because if block_idx=0, inserting a variable here shifts call_index.
-        insert_opvariable(
-            &mut caller.blocks[0],
-            self.ptr_ty(call_result_type),
-            return_variable,
-        );
+        if let Some(call_result_type) = call_result_type {
+            // Generate the storage space for the return value: Do this *after* the split above,
+            // because if block_idx=0, inserting a variable here shifts call_index.
+            insert_opvariable(
+                &mut caller.blocks[0],
+                self.ptr_ty(call_result_type),
+                return_variable.unwrap(),
+            );
+        }
 
         // Fuse the first block of the callee into the block of the caller. This is okay because
         // it's illegal to branch to the first BB in a function.
@@ -205,17 +242,19 @@ impl Inliner<'_, '_> {
         // Move the OpVariables of the callee to the caller.
         insert_opvariables(&mut caller.blocks[0], callee_header);
 
-        // Add the load of the result value after the inlined function. Note there's guaranteed no
-        // OpPhi instructions since we just split this block.
-        post_call_block_insts.insert(
-            0,
-            Instruction::new(
-                Op::Load,
-                Some(call_result_type),
-                Some(call_result_id),
-                vec![Operand::IdRef(return_variable)],
-            ),
-        );
+        if let Some(call_result_type) = call_result_type {
+            // Add the load of the result value after the inlined function. Note there's guaranteed no
+            // OpPhi instructions since we just split this block.
+            post_call_block_insts.insert(
+                0,
+                Instruction::new(
+                    Op::Load,
+                    Some(call_result_type),
+                    Some(call_result_id),
+                    vec![Operand::IdRef(return_variable.unwrap())],
+                ),
+            );
+        }
         // Insert the second half of the split block.
         let continue_block = Block {
             label: Some(Instruction::new(Op::Label, None, Some(return_jump), vec![])),
@@ -234,7 +273,7 @@ impl Inliner<'_, '_> {
 
     fn add_clone_id_rules(&mut self, rewrite_rules: &mut HashMap<Word, Word>, blocks: &[Block]) {
         for block in blocks {
-            for inst in &block.instructions {
+            for inst in block.label.iter().chain(&block.instructions) {
                 if let Some(result_id) = inst.result_id {
                     let new_id = self.id();
                     let old = rewrite_rules.insert(result_id, new_id);
@@ -243,41 +282,13 @@ impl Inliner<'_, '_> {
             }
         }
     }
-
-    fn apply_rewrite_rules(rewrite_rules: &HashMap<Word, Word>, blocks: &mut [Block]) {
-        let apply = |inst: &mut Instruction| {
-            if let Some(ref mut id) = &mut inst.result_id {
-                if let Some(&rewrite) = rewrite_rules.get(id) {
-                    *id = rewrite;
-                }
-            }
-
-            if let Some(ref mut id) = &mut inst.result_type {
-                if let Some(&rewrite) = rewrite_rules.get(id) {
-                    *id = rewrite;
-                }
-            }
-
-            inst.operands.iter_mut().for_each(|op| {
-                if let Some(id) = operand_idref_mut(op) {
-                    if let Some(&rewrite) = rewrite_rules.get(id) {
-                        *id = rewrite;
-                    }
-                }
-            })
-        };
-        for block in blocks {
-            for inst in &mut block.label {
-                apply(inst);
-            }
-            for inst in &mut block.instructions {
-                apply(inst);
-            }
-        }
-    }
 }
 
-fn get_inlined_blocks(function: &Function, return_variable: Word, return_jump: Word) -> Vec<Block> {
+fn get_inlined_blocks(
+    function: &Function,
+    return_variable: Option<Word>,
+    return_jump: Word,
+) -> Vec<Block> {
     let mut blocks = function.blocks.clone();
     for block in &mut blocks {
         let last = block.instructions.last().unwrap();
@@ -291,11 +302,13 @@ fn get_inlined_blocks(function: &Function, return_variable: Word, return_jump: W
                         None,
                         None,
                         vec![
-                            Operand::IdRef(return_variable),
+                            Operand::IdRef(return_variable.unwrap()),
                             Operand::IdRef(return_value),
                         ],
                     ),
                 )
+            } else {
+                assert!(return_variable.is_none())
             }
             *block.instructions.last_mut().unwrap() =
                 Instruction::new(Op::Branch, None, None, vec![Operand::IdRef(return_jump)]);

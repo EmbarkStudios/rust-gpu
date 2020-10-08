@@ -120,23 +120,16 @@ fn link_exe(
 
     do_link(sess, &objects, &rlibs, out_filename, legalize);
 
-    let opt = env::var("SPIRV_OPT").is_ok();
-    if legalize || opt {
+    if env::var("SPIRV_OPT").is_ok() {
         let _timer = sess.timer("link_spirv_opt");
-        do_spirv_opt(out_filename, legalize, opt);
+        do_spirv_opt(out_filename);
     }
 }
 
-fn do_spirv_opt(filename: &Path, legalize: bool, opt: bool) {
+fn do_spirv_opt(filename: &Path) {
     let tmp = filename.with_extension("opt.spv");
-    let mut cmd = std::process::Command::new("spirv-opt");
-    if legalize && !opt {
-        cmd.arg("--eliminate-dead-functions");
-    }
-    if opt {
-        cmd.args(&["-Os", "--eliminate-dead-const", "--strip-debug"]);
-    }
-    let status = cmd
+    let status = std::process::Command::new("spirv-opt")
+        .args(&["-Os", "--eliminate-dead-const", "--strip-debug"])
         .arg(&filename)
         .arg("-o")
         .arg(&tmp)
@@ -339,6 +332,7 @@ fn do_link(
         dce: env::var("NO_DCE").is_err(),
         compact_ids: env::var("NO_COMPACT_IDS").is_err(),
         inline: legalize,
+        mem2reg: legalize,
     };
     let link_result = rspirv_linker::link(&mut module_refs, &options, |name| sess.timer(name));
 

@@ -78,6 +78,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> crate::Result<Module> {
             compact_ids: true,
             dce: false,
             inline: false,
+            mem2reg: false,
         },
         drop,
     )

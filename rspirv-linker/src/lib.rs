@@ -7,14 +7,16 @@ mod def_analyzer;
 mod duplicates;
 mod import_export_link;
 mod inline;
+mod mem2reg;
 mod simple_passes;
 mod ty;
 mod zombies;
 
 use def_analyzer::DefAnalyzer;
 use rspirv::binary::Consumer;
-use rspirv::dr::{Instruction, Loader, Module, ModuleHeader, Operand};
+use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, Word};
+use std::collections::HashMap;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -39,12 +41,19 @@ pub struct Options {
     pub compact_ids: bool,
     pub dce: bool,
     pub inline: bool,
+    pub mem2reg: bool,
 }
 
 pub fn load(bytes: &[u8]) -> Module {
     let mut loader = Loader::new();
     rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
     loader.module()
+}
+
+fn id(header: &mut ModuleHeader) -> Word {
+    let result = header.bound;
+    header.bound += 1;
+    result
 }
 
 fn operand_idref(op: &Operand) -> Option<Word> {
@@ -58,6 +67,10 @@ fn operand_idref_mut(op: &mut Operand) -> Option<&mut Word> {
         Operand::IdMemorySemantics(w) | Operand::IdScope(w) | Operand::IdRef(w) => Some(w),
         _ => None,
     }
+}
+
+fn label_of(block: &Block) -> Word {
+    block.label.as_ref().unwrap().result_id.unwrap()
 }
 
 fn print_type(defs: &DefAnalyzer, ty: &Instruction) -> String {
@@ -76,6 +89,38 @@ fn extract_literal_u32(op: &Operand) -> u32 {
     match op {
         Operand::LiteralInt32(v) => *v,
         _ => panic!("Unexpected literal u32"),
+    }
+}
+
+fn apply_rewrite_rules(rewrite_rules: &HashMap<Word, Word>, blocks: &mut [Block]) {
+    let apply = |inst: &mut Instruction| {
+        if let Some(ref mut id) = &mut inst.result_id {
+            if let Some(&rewrite) = rewrite_rules.get(id) {
+                *id = rewrite;
+            }
+        }
+
+        if let Some(ref mut id) = &mut inst.result_type {
+            if let Some(&rewrite) = rewrite_rules.get(id) {
+                *id = rewrite;
+            }
+        }
+
+        inst.operands.iter_mut().for_each(|op| {
+            if let Some(id) = operand_idref_mut(op) {
+                if let Some(&rewrite) = rewrite_rules.get(id) {
+                    *id = rewrite;
+                }
+            }
+        })
+    };
+    for block in blocks {
+        for inst in &mut block.label {
+            apply(inst);
+        }
+        for inst in &mut block.instructions {
+            apply(inst);
+        }
     }
 }
 
@@ -139,9 +184,28 @@ pub fn link<T>(
     }
 
     {
-        let _timer = timer("link_block_ordering_pass");
+        let _timer = timer("link_block_ordering_pass_and_mem2reg");
+        let pointer_to_pointee = if opts.mem2reg {
+            output
+                .types_global_values
+                .iter()
+                .filter(|inst| inst.class.opcode == Op::TypePointer)
+                .map(|inst| {
+                    (
+                        inst.result_id.unwrap(),
+                        operand_idref(&inst.operands[1]).unwrap(),
+                    )
+                })
+                .collect()
+        } else {
+            Default::default()
+        };
         for func in &mut output.functions {
             simple_passes::block_ordering_pass(func);
+            if opts.mem2reg {
+                // Note: mem2reg requires functions to be in RPO order (i.e. block_ordering_pass)
+                mem2reg::mem2reg(output.header.as_mut().unwrap(), &pointer_to_pointee, func);
+            }
         }
     }
     {
