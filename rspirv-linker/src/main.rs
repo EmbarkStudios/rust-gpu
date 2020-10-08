@@ -14,6 +14,7 @@ fn main() -> Result<()> {
             compact_ids: true,
             dce: false,
             inline: false,
+            mem2reg: false,
         },
         drop,
     )?;
