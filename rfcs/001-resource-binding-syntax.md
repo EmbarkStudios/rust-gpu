@@ -36,12 +36,100 @@ One thing we'd like to avoid is having a set of names or numbers that manually n
 1. They make refactoring more difficult (need to change both CPU and GPU side).
 1. They can clash, especially in large code bases where it's difficult to keep track.
 
-# Suggestion
+# Overview
 
 I would like us to have an easy way to connect bindings on the GPU and CPU side together, in a way that's as ergonomic to use as possible.
 
+## Globals
+
+<details>
+
+```rust
+#![feature(const_generics)]
+#![feature(const_fn)]
+use core::marker::PhantomData;
+
+struct Texture<T: Default, const SET: u32, const SLOT: u32> {
+    d: PhantomData<T>
+}
+
+impl<T: Default, const SET: u32, const SLOT: u32> Texture<T, SET, SLOT> {
+    const fn new() -> Self {
+        Self {
+            d: PhantomData
+        }
+    }
+    
+    fn sample(&self, _u: f32, _v: f32) -> T {
+        T::default()
+    }
+}
+```
+</details>
 
 
+This is a more traditional example that's closer to how HLSL or GLSL would do bindings, they have a few generic parameters and it relies on `const_generic` to function. If we mirror this in existing Rust syntax we'll get something like this:
+
+```rust
+static MY_TEXTURE : Texture::<f32, 0, 0> = Texture::new();
+
+fn main() {
+    let v = MY_TEXTURE.sample(1.0, 1.0);
+    println!("{}", v);
+}
+```
+
+This seems to have a few downsides:
+
+ - All caps for the variable/buffer name.
+ - Right now a constructor call is required, and it should be const.
+ - Need to ensure no overlap between sets & slots.
+
+And a few upsides:
+
+ - Globals can be accessed anywhere in the program, easily.
+
+Alternative would be to remove the `const_generic` parameters potentially by moving them into the constructor.
+
+```rust
+static MY_TEXTURE : Texture::<f32> = Texture::new(0, 0);
+```
+
+This would make it easier to pass textures to functions (even if they're in different slots) because you'd get something like this:
+
+```rust
+fn some_system(tex: &Texture::<f32>) {
+    let v = tex.sample(0.0, 0.0);
+}
+```
+
+Instead of this, which would tightly couple the whole downstream system to have a texture bound to a specific set and slot. This would make changing the bindings later on a nightmare, and wouldn't allow you to conditionally invoke `some_system` with textures bound to different locations.
+
+```rust
+fn some_system(tex: &Texture::<f32, 0, 0>) {
+    let v = tex.sample(0.0, 0.0);
+}
+```
+
+## Arguments to `main`
+
+Most compute-only languages tend to prefer this along with positional binding. This makes "invoking a shader" look much more like a function call and uses existing and familiar semantics.
+
+```rust
+fn main(my_texture: Texture::<f32>) {
+    let v = my_texture.sample(1.0, 1.0);
+    println!("{}", v);
+}
+```
+
+Doing this straight up has a few downsides:
+
+ - Big kernels/shader can have lots of buffers and textures bound making this list potentially large.
+ - Need to pass down all bindings all the way to leaf-node systems.
+
+Some upsides:
+
+ - No clashes for sets/slots since the language takes care of this.
 
 <!--
 The simple initial suggestion would be to only support positional binding to shaders at the moment. This has some drawbacks (such as requiring a new root signature / vulkan shader pipeline layout for every shader) and so it doesn't allow you to override the descriptor set index or binding slot so you end up giving up some flexibility.
@@ -67,7 +155,6 @@ fn compute(lighting_info: LightingArgs)
 
 List potential issues that one would want to have discussed in the RFC comment section
 
-# Alternatives
 
 
 
