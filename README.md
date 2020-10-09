@@ -16,46 +16,84 @@ Our hope with this project is that we push the industry forward by bringing an e
 
 ## Why Embark?
 
-At Embark, we've been building our in-house engine from the ground up in Rust and we have some previous in-house experience developing [RLSL](https://github.com/MaikKlein/rlsl) (a first prototype of this idea) and we have some of the world's best rendering engineers that are familiar with the problems in current shading languages so we're in a unique place to solve this problem. To streamline our own internal development, facilitate code-sharing between GPU and CPU, but most importantly: to enable our users to very rapidly build great looking experiences. If we do this project right one wouldn't nessisarily need a team of rendering engineers to build a good looking game, instead one would simply use a few of the existing open-source crates that provide the graphical effects needed to create the experience you're after. Instead of sharing snippets of TAA code on forum posts one could simply add the right crate(s).
+At Embark, we've been building our in-house engine from the ground up in Rust. We have previous in-house experience developing [RLSL](https://github.com/MaikKlein/rlsl) (a first prototype of this idea) and we have some of the world's best rendering engineers that are familiar with the problems in current shading languages. So, we're in a unique place to solve this problem. We want to streamline our own internal development, facilitate code-sharing between GPU and CPU, but most importantly: to enable our users to very rapidly build great looking experiences. If we do this project right, one wouldn't necessarily need a team of rendering engineers to build a good looking game, instead one would simply use a few of the existing open-source crates that provide the graphical effects needed to create the experience you're after. Instead of sharing snippets of TAA code on forum posts, one could simply add the right crate(s).
 
 ## Project scope
 
-This project will involve a few things if we want to get the experience right and it's quite broad. Initial stages will involve mostly just setting up the backend, however the project will be a bit broader then that.
+This project will involve a few things if we want to get the experience right, and it's quite broad. Initial stages will involve mostly just setting up the backend, however the project will be broader then that.
 
-- A `rustc` compiler backend, either as a cranelift module, or as a seperate `rustc` backend (next to llvm and cranelift). We're currently evaluating both options, but it looks like a `rustc` native backend would be the most preferable.
+- Implement a `rustc` compiler backend, plugging in via -Z codegen-backend. This is the same mechanism that [rustc_codegen_cranelift](https://github.com/bjorn3/rustc_codegen_cranelift) and [rustc_codegen_gcc](https://github.com/antoyo/rustc_codegen_gcc) use.
 - This compiler backend is currently planned to only support SPIR-V (the open compiler target for Vulkan) but it's not unlikely that in future versions this will / should support DXIL (the target for DirectX) or WHLSL (the WebGPU shading language that's bijective with SPIR-V)
-- We'll need language front-end features to be able to support GPU workloads better; this will include among other things
-  - Safe access to groupshared and constant memory
-  - Support for intrinsics
-  - Support for resource binding
 - [crates.io](https://crates.io) support to be able to publish SPIR-V crates
 - An Embark-provided rendering / framegraph abstraction to take advantage of this and to make it easy for users to re-use rendering effects.
 
-The rustc compiler backend support levels are indicated by tiers; macOS, Linux and desktop PC are all Tier 1. However "smaller" platforms such as Android and iOS are Tier 2 and even smaller projects are Tier 3.
-
-I think our initial goal should be to replace our own internal shaders with shaders written in Rust, and then to achieve Tier 3 support, which roughly means that it's possible to get up and running if you're willing to put in some effort into it. Usually this involves setting up a custom build environment, and getting it running in a custom environment. However, I think the ambition of the project ultimately should be Tier 1 support.
+An in-depth exploration of our roadmap and milestones can be found [here](https://github.com/EmbarkStudios/rust-gpu/issues/47).
 
 ## Process
 
-We use this repo as a small monorepo for everything related to the project: crates, tools, shaders, examples, tests, and design documents. This way we can use issues and PRs covering everything in the same place cross-reference stuff within the repo as well as with other GitHub repos (Cranelift/Rust/Ark).
+We use this repo as a monorepo for everything related to the project: crates, tools, shaders, examples, tests, and design documents. This way, we can use issues and PRs covering everything in the same place, cross-reference stuff within the repo, as well as with other GitHub repos (rspirv/Rust/Ark).
 
-We meet weekly over vidcon to discuss design and triage issues. Each meeting has an [issue](https://github.com/EmbarkStudios/rust-gpu/issues?q=label%3Ameeting+) with agenda, links and minutes.
+We meet weekly over a discord call to discuss design and triage issues. Each meeting has an [issue](https://github.com/EmbarkStudios/rust-gpu/issues?q=label%3Ameeting+) with agenda, links and minutes.
 
-We have a [#rust-gpu Discord channel](https://discord.gg/dAuKfZS) for fast discussion and collaboration. Once you join the Discord, ping @repi for access if you don't have it already.
-
-For discussions with [Bytecode Alliance](https://bytecodealliance.org/) and Cranelift developers, there is a public [Zulip chat thread](https://bytecodealliance.zulipchat.com/#narrow/stream/225524-cranelift-new-backend/topic/spir-v)
+We have a [#rust-gpu Discord channel](https://discord.gg/dAuKfZS) for fast discussion and collaboration.
 
 ## Getting started
 
-There are a few different components to this repo - for example, the [rfcs folder](rfcs) is for in-depth discussion and specs. If you would like to build the compiler, `rustc_codegen_spirv` is the relevant folder.
+There are a few different components to this repo:
 
-1) Install the prerequisites (The `setup.sh`/`setup.bat` scripts automate this):
-    ```shell
-    rustup install nightly
-    rustup +nightly component add rust-src rustc-dev llvm-tools-preview
-    ```
-2) `cargo build`. Note the `rust-toolchain` file that specifies nightly, this is equivalent to passing `cargo +nightly build`, without having to type that out. (If you run that `rustup component add` in this directory, you don't need to pass +nightly either)
-3) Run (i.e. compile a shader): This is pretty complicated right now, we're working on making the UX better. It involves passing `-Z codegen-backend` to rustc, and `-Z build-std=core` and `--target spirv-unknown-unknown` to cargo. However, both building the compiler, and compiling a sample test project (`build_libcore_test`) is automated by the script `build_libcore_test.sh`/`build_libcore_test.bat`. Feel free to inspect those scripts for what's needed, if you'd like to try yourself.
+* [rfcs](rfcs) for in-depth discussion and specs.
+* [rustc_codegen_spirv](rustc_codegen_spirv) for the compiler itself.
+* [rspirv-linker](rspirv-linker) for the linker (used by the compiler).
+* [spirv-std](spirv-std) for GPU intrinsics, types, and other library items used by GPU crates.
+* [spirv-builder](spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
+
+To get started, first, we need to install some prerequisites. **Nightly Rust is required for now**. You may use the provided `setup.sh`/`setup.bat` scripts for this, or, just manually do what's in the scripts, which is:
+
+```shell
+rustup install nightly
+rustup +nightly component add rust-src rustc-dev llvm-tools-preview
+```
+
+Note the `rust-toolchain` file in this repository that specifies nightly, this is equivalent to passing `cargo +nightly build`, without having to type that out. (If you run that `rustup component add` in this directory, you don't need to pass +nightly either)
+
+Next, look at the [examples](examples) folder. There are two projects here: [examples/example-shader](examples/example-shader) and [examples/example-runner](examples/example-runner). The example-shader project is a "GPU crate", one that will be compiled to a spir-v module. The example-runner project is a normal, CPU crate that uses vulkan to consume the example-shader spir-v module to display a "hello world" triangle.
+
+Run the example!
+
+```shell
+cargo run --bin example-runner
+```
+
+This will build `rustc_codegen_spirv`, the compiler, then use that compiler to build `example-shader` into a spir-v module, then finally, build a vulkan sample app (taken from [ash's examples](https://github.com/MaikKlein/ash/blob/master/examples/src/bin/triangle.rs)) using the built spir-v module to display a triangle in a window.
+
+All of this is orchestrated by the [spirv-builder](spirv-builder) crate, which is used in example-runner's `build.rs` file. Please look at that file, as well as both example projects in general, to see how to set up your own shaders!
+
+Be aware that this project is in a very early phase - if the above doesn't work, please [file an issue](https://github.com/EmbarkStudios/rust-gpu/issues)!
+
+## Getting started, for power users who don't want to use spirv-builder.
+
+If you would like to build the compiler, `rustc_codegen_spirv` is the relevant folder. Install the prerequisites, as above, then, `cd rustc_codegen_spirv && cargo build`. This produces an .so file, located at `./target/debug/librustc_codegen_spirv.so` (or `.dll`/`.dylib` depending on your platform).
+
+This file is a dynamically loaded backend for rustc - you may tell rustc to use it as a backend through the `-Z codegen-backend=...` flag. To pass this to rustc through cargo, set the environment variable `RUSTFLAGS="-Z codegen-backend=$PATH_TO_FILE"`.
+
+Then, when building a GPU crate, we need to configure some flags when we call cargo. First, we need to build libcore
+ourselves - we obviously have no spir-v libcore installed on our system! Use the flag `-Z build-std=core`. Then, we need
+to tell rustc to generate spir-v instead of x86 code: `--target spirv-unknown-unknown`.
+
+Overall, building your own spir-v crate looks like:
+
+```shell
+export RUSTFLAGS="-Zcodegen-backend=$THIS_REPO/target/debug/librustc_codegen_spirv.so"
+cargo build -Z build-std=core --target spirv-unknown-unknown --release
+```
+
+(with an appropriate path for `$THIS_REPO`, and replacing `export` with `set` if you're on windows as well as the proper dll name)
+
+This will produce a `target/spirv-unknown-unknown/release/crate_name.spv` file.
+
+To create a GPU crate, look at the [examples/example-shader](examples/example-shader) crate. In short, reference the `spirv-std` crate, and use intrinsics defined there to create your shader.
+
+This is all a little convoluted, hence the [spirv-builder](spirv-builder) crate handles a lot of this.
 
 ## Contributing
 
