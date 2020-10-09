@@ -273,7 +273,6 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
             let cast_dst = self.pointercast(dst.llval, cast_ptr_ty);
             self.store(val, cast_dst, arg_abi.layout.align.abi);
         } else {
-            // TODO: Does this need a from_immediate? The LLVM backend doesn't have one here.
             OperandValue::Immediate(val).store(self, dst);
         }
     }
@@ -284,9 +283,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
 }
 
 impl<'a, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'tcx> {
-    fn apply_attrs_callsite(&mut self, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>, _callsite: Self::Value) {
-        // TODO: Implement this?
-    }
+    fn apply_attrs_callsite(&mut self, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>, _callsite: Self::Value) {}
 
     fn get_param(&self, index: usize) -> Self::Value {
         self.function_parameter_values.borrow()[&self.current_fn.def][index]
