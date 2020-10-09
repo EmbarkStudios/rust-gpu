@@ -42,6 +42,7 @@ struct RustcOutput {
     reason: String,
     filenames: Option<Vec<String>>,
 }
+
 fn get_last_artifact(out: &str) -> String {
     let out = serde_json::Deserializer::from_str(out).into_iter::<RustcOutput>();
     let last = out
@@ -49,10 +50,19 @@ fn get_last_artifact(out: &str) -> String {
         .filter(|line| line.reason == "compiler-artifact")
         .last()
         .expect("Did not find output file in rustc output");
+
     let mut filenames = last.filenames.unwrap();
-    println!("{:?}", filenames);
-    assert_eq!(filenames.len(), 1);
-    filenames.pop().unwrap()
+    eprintln!("{:?}", filenames);
+    if cfg!(windows) {
+        filenames
+            .iter()
+            .find(|&v| v.ends_with(".dll") || v.ends_with(".spv"))
+            .unwrap()
+            .clone()
+    } else {
+        assert_eq!(filenames.len(), 1);
+        filenames.pop().unwrap()
+    }
 }
 
 fn build_rustc_codegen_spirv(path_to_codegen: &Path) -> Result<String, SpirvBuilderError> {
@@ -62,7 +72,7 @@ fn build_rustc_codegen_spirv(path_to_codegen: &Path) -> Result<String, SpirvBuil
             "--message-format=json-render-diagnostics",
             "--release",
         ])
-        .current_dir(path_to_codegen.canonicalize().unwrap())
+        .current_dir(path_to_codegen)
         .output()
         .expect("failed to execute cargo build");
     if build.status.success() {
@@ -90,7 +100,7 @@ fn invoke_rustc(
             "spirv-unknown-unknown",
             "--release",
         ])
-        .current_dir(path_to_crate.canonicalize().unwrap())
+        .current_dir(path_to_crate)
         .env("RUSTFLAGS", rustflags)
         .env("SPIRV_VAL", "1")
         .output()
