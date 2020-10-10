@@ -21,7 +21,7 @@ use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 use rustc_session::Session;
-use rustc_span::def_id::CrateNum;
+use rustc_span::def_id::{CrateNum, LOCAL_CRATE};
 use rustc_span::source_map::Span;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_span::SourceFile;
@@ -135,11 +135,10 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     fn is_system_crate(&self) -> bool {
-        let krate_attrs = self.tcx.hir().krate_attrs();
         self.tcx
             .sess
-            .contains_name(krate_attrs, sym::compiler_builtins)
-            || self.tcx.sess.contains_name(krate_attrs, sym::core)
+            .contains_name(self.tcx.hir().krate_attrs(), sym::compiler_builtins)
+            || self.tcx.crate_name(LOCAL_CRATE) == sym::core
     }
 
     pub fn finalize_module(self) -> Module {
