@@ -125,8 +125,8 @@ fn link_exe(
         let _timer = sess.timer("link_spirv_opt");
         do_spirv_opt(sess, out_filename);
     }
-    if let Ok(dump_path) = env::var("SPIRV_VAL") {
-        do_spirv_val(sess, out_filename, dump_path);
+    if env::var("NO_SPIRV_VAL").is_err() {
+        do_spirv_val(sess, out_filename);
     }
 }
 
@@ -153,22 +153,17 @@ fn do_spirv_opt(sess: &Session, filename: &Path) {
     }
 }
 
-fn do_spirv_val(sess: &Session, filename: &Path, dump_path: String) {
+fn do_spirv_val(sess: &Session, filename: &Path) {
     let output = Command::new("spirv-val").arg(&filename).output();
     let output = output.expect("spirv-val failed to execute");
     if !output.status.success() {
-        let dump_path = Path::new(&dump_path);
         let mut err = sess.struct_err(&format!("spirv-val failed with {}", output.status));
+        err.note(&format!("module {:?}", filename));
         if !output.stdout.is_empty() {
             err.note(&String::from_utf8(output.stdout).unwrap());
         }
         if !output.stderr.is_empty() {
             err.note(&String::from_utf8(output.stderr).unwrap());
-        }
-        if dump_path.is_absolute() {
-            err.note(&format!("dumping module to {:?}", dump_path));
-            std::fs::create_dir_all(dump_path.parent().unwrap()).unwrap();
-            std::fs::copy(&filename, dump_path).unwrap();
         }
         err.emit();
     }

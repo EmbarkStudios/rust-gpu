@@ -57,7 +57,6 @@ fn invoke_rustc(path_to_crate: &Path) -> Result<String, SpirvBuilderError> {
         .stderr(Stdio::inherit())
         .current_dir(path_to_crate)
         .env("RUSTFLAGS", rustflags)
-        .env("SPIRV_VAL", "1")
         .output()
         .expect("failed to execute cargo build");
     if build.status.success() {
