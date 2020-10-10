@@ -295,6 +295,35 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             self.zombie(def, "OpBitcast on ptr without AddressingModel != Logical")
         }
     }
+
+    // Sometimes, when accessing the first field of a struct, vector, etc., instead of calling
+    // struct_gep, codegen_ssa will call pointercast. This will then try to catch those cases and
+    // translate them back to a struct_gep, instead of failing to compile the OpBitcast (which is
+    // unsupported on shader target)
+    fn try_pointercast_via_gep(&self, mut val: Word, field: Word) -> Option<Vec<u32>> {
+        let mut indices = Vec::new();
+        while val != field {
+            match self.lookup_type(val) {
+                SpirvType::Adt {
+                    field_types,
+                    field_offsets,
+                    ..
+                } => {
+                    let index = field_offsets.iter().position(|&off| off == Size::ZERO)?;
+                    indices.push(index as u32);
+                    val = field_types[index];
+                }
+                SpirvType::Vector { element, .. }
+                | SpirvType::Array { element, .. }
+                | SpirvType::RuntimeArray { element } => {
+                    indices.push(0);
+                    val = element;
+                }
+                _ => return None,
+            }
+        }
+        Some(indices)
+    }
 }
 
 impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
@@ -1076,19 +1105,29 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        match self.lookup_type(val.ty) {
-            SpirvType::Pointer { .. } => (),
+        let val_pointee = match self.lookup_type(val.ty) {
+            SpirvType::Pointer { pointee, .. } => pointee,
             other => panic!("pointercast called on non-pointer source type: {:?}", other),
-        }
-        match self.lookup_type(dest_ty) {
-            SpirvType::Pointer { .. } => (),
+        };
+        let dest_pointee = match self.lookup_type(dest_ty) {
+            SpirvType::Pointer { pointee, .. } => pointee,
             other => panic!("pointercast called on non-pointer dest type: {:?}", other),
-        }
-        if val.ty == dest_ty
-            || self
-                .really_unsafe_ignore_bitcasts
-                .borrow()
-                .contains(&self.current_fn)
+        };
+        if val.ty == dest_ty {
+            val
+        } else if let Some(indices) = self.try_pointercast_via_gep(val_pointee, dest_pointee) {
+            let indices = indices
+                .into_iter()
+                .map(|idx| self.constant_u32(idx).def)
+                .collect::<Vec<_>>();
+            self.emit()
+                .access_chain(dest_ty, None, val.def, indices)
+                .unwrap()
+                .with_type(dest_ty)
+        } else if self
+            .really_unsafe_ignore_bitcasts
+            .borrow()
+            .contains(&self.current_fn)
         {
             val
         } else {
