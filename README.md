@@ -6,6 +6,8 @@
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
+Compiling a hello world triangle vulkan shader works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles. However, many things aren't implemented yet: for example, branching isn't supported yet! That means that while being technically usable, this project is far from being production-ready.
+
 ## Background
 
 Historically in games GPU programming has been done through writing either HLSL, or to a lesser extent GLSL. These are simple programming languages that have evolved along with rendering APIs over the years. However, as game engines have evolved, these languages have failed to provide mechanisms for dealing with large codebases, and have generally stayed behind the curve compared to other programming languages.
@@ -22,8 +24,9 @@ At Embark, we've been building our in-house engine from the ground up in Rust. W
 
 This project will involve a few things if we want to get the experience right, and it's quite broad. Initial stages will involve mostly just setting up the backend, however the project will be broader then that.
 
-- Implement a `rustc` compiler backend, plugging in via -Z codegen-backend. This is the same mechanism that [rustc_codegen_cranelift](https://github.com/bjorn3/rustc_codegen_cranelift) and [rustc_codegen_gcc](https://github.com/antoyo/rustc_codegen_gcc) use.
-- This compiler backend is currently planned to only support SPIR-V (the open compiler target for Vulkan) but it's not unlikely that in future versions this will / should support DXIL (the target for DirectX) or WHLSL (the WebGPU shading language that's bijective with SPIR-V)
+- Currently only SPIR-V support is planned (the open compiler target for Vulkan) but it's not unlikely that in future versions this will / should support DXIL (the target for DirectX) or WHLSL (the WebGPU shading language that's bijective with SPIR-V)
+- The first and primary target will be Vulkan shaders (vertex, fragment, etc.). However, Vulkan compute (what spir-v calls GLCompute) is also on the roadmap, as well as OpenCL compute (what spir-v calls Kernel).
+- Implement a `rustc` compiler backend, plugging in via `-Z codegen-backend`. This is the same mechanism that [rustc_codegen_cranelift](https://github.com/bjorn3/rustc_codegen_cranelift) and [rustc_codegen_gcc](https://github.com/antoyo/rustc_codegen_gcc) use.
 - [crates.io](https://crates.io) support to be able to publish SPIR-V crates
 - An Embark-provided rendering / framegraph abstraction to take advantage of this and to make it easy for users to re-use rendering effects.
 
@@ -53,6 +56,8 @@ To get started, first, we need to install some prerequisites. **Nightly Rust is 
 rustup install nightly
 rustup +nightly component add rust-src rustc-dev llvm-tools-preview
 ```
+
+[SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools#downloads) is also required to be installed (for now: eventually we will automatically build and link it instead of calling executables)
 
 Note the `rust-toolchain` file in this repository that specifies nightly, this is equivalent to passing `cargo +nightly build`, without having to type that out. (If you run that `rustup component add` in this directory, you don't need to pass +nightly either)
 

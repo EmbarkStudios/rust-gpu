@@ -218,9 +218,9 @@ impl CodegenBackend for SpirvCodegenBackend {
         };
     }
 
-    fn codegen_crate<'tcx>(
+    fn codegen_crate(
         &self,
-        tcx: rustc_middle::ty::TyCtxt<'tcx>,
+        tcx: rustc_middle::ty::TyCtxt,
         metadata: rustc_middle::middle::cstore::EncodedMetadata,
         need_metadata_module: bool,
     ) -> Box<dyn Any> {

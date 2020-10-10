@@ -85,8 +85,8 @@ fn memset_fill_u64(b: u8) -> u64 {
         | ((b as u64) << 56)
 }
 
-fn memset_dynamic_scalar<'a, 'tcx>(
-    builder: &Builder<'a, 'tcx>,
+fn memset_dynamic_scalar(
+    builder: &Builder,
     fill_var: Word,
     byte_width: usize,
     is_float: bool,

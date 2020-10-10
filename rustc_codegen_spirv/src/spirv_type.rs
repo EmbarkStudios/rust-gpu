@@ -59,7 +59,7 @@ pub enum SpirvType {
 
 impl SpirvType {
     /// Note: Builder::type_* should be called *nowhere else* but here, to ensure CodegenCx::type_defs stays up-to-date
-    pub fn def<'tcx>(self, cx: &CodegenCx<'tcx>) -> Word {
+    pub fn def(self, cx: &CodegenCx) -> Word {
         if let Some(cached) = cx.type_cache.get(&self) {
             return cached;
         }
@@ -182,7 +182,7 @@ impl SpirvType {
 
     /// def_with_id is used by the RecursivePointeeCache to handle OpTypeForwardPointer: when emitting the subsequent
     /// OpTypePointer, the ID is already known and must be re-used.
-    pub fn def_with_id<'tcx>(self, cx: &CodegenCx<'tcx>, id: Word) -> Word {
+    pub fn def_with_id(self, cx: &CodegenCx, id: Word) -> Word {
         if let Some(cached) = cx.type_cache.get(&self) {
             assert_eq!(cached, id);
             return cached;
