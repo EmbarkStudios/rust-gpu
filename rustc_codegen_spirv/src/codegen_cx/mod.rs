@@ -62,7 +62,7 @@ pub struct CodegenCx<'tcx> {
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         let sym = Box::new(Symbols::new());
-        let kernel_mode = !tcx.sess.target_features.contains(&sym.shader);
+        let kernel_mode = tcx.sess.target_features.contains(&sym.kernel);
         Self {
             tcx,
             codegen_unit,

@@ -40,7 +40,7 @@ fn invoke_rustc(path_to_crate: &Path) -> Result<String, SpirvBuilderError> {
     // alongside build.rs, and cargo will helpfully add it to LD_LIBRARY_PATH for us! So we just
     // need to pass the direct filename here.
     let rustflags = format!(
-        "-Z codegen-backend={}rustc_codegen_spirv{} -C target-feature=+shader",
+        "-Z codegen-backend={}rustc_codegen_spirv{}",
         std::env::consts::DLL_PREFIX,
         std::env::consts::DLL_SUFFIX
     );
