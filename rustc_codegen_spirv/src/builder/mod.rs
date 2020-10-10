@@ -8,7 +8,7 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::StorageClass;
+use rspirv::spirv::{StorageClass, Word};
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::operand::OperandValue;
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -28,6 +28,7 @@ use rustc_span::source_map::Span;
 use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, LayoutOf, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
+use std::cell::RefCell;
 use std::ops::Deref;
 
 pub struct Builder<'a, 'tcx> {
@@ -35,12 +36,32 @@ pub struct Builder<'a, 'tcx> {
     cursor: BuilderCursor,
     current_fn: <Self as BackendTypes>::Function,
     basic_block: <Self as BackendTypes>::BasicBlock,
+    current_span: RefCell<Option<Span>>,
 }
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
     /// See comment on BuilderCursor
     pub fn emit(&self) -> std::cell::RefMut<rspirv::dr::Builder> {
         self.emit_with_cursor(self.cursor)
+    }
+
+    pub fn zombie(&self, word: Word, reason: &'static str) {
+        if let Some(current_span) = *self.current_span.borrow() {
+            self.zombie_with_span(word, current_span, reason);
+        } else {
+            self.zombie_no_span(word, reason);
+        }
+    }
+
+    pub fn validate_atomic(&self, ty: Word, to_zombie: Word) {
+        if !self.i8_i16_atomics_allowed {
+            match self.lookup_type(ty) {
+                SpirvType::Integer(width, _) if width < 32 => {
+                    self.zombie(to_zombie, "atomic on i8 or i16 when disallowed by runtime");
+                }
+                _ => (),
+            }
+        }
     }
 
     pub fn gep_help(

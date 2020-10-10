@@ -14,6 +14,7 @@ use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::FnAbiExt;
 use rustc_middle::ty::{Instance, ParamEnv, Ty, TypeFoldable};
 use rustc_span::def_id::DefId;
+use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Align, LayoutOf};
 use std::collections::HashMap;
@@ -83,7 +84,8 @@ impl<'tcx> CodegenCx<'tcx> {
         if crate::is_blocklisted_fn(name) {
             // This can happen if we call a blocklisted function in another crate.
             let result = self.undef(function_type);
-            self.zombie(result.def, "called blocklisted fn");
+            // TODO: Span info here
+            self.zombie_no_span(result.def, "called blocklisted fn");
             return result;
         }
         let mut emit = self.emit_global();
@@ -130,13 +132,14 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let ty = instance.ty(self.tcx, ParamEnv::reveal_all());
         let sym = self.tcx.symbol_name(instance).name;
-        let g = self.declare_global(self.layout_of(ty).spirv_type(self));
+        let span = self.tcx.def_span(def_id);
+        let g = self.declare_global(span, self.layout_of(ty).spirv_type(self));
         self.instances.borrow_mut().insert(instance, g);
         self.set_linkage(g.def, sym.to_string(), LinkageType::Import);
         g
     }
 
-    fn declare_global(&self, ty: Word) -> SpirvValue {
+    fn declare_global(&self, span: Span, ty: Word) -> SpirvValue {
         let ptr_ty = SpirvType::Pointer {
             storage_class: StorageClass::Function,
             pointee: ty,
@@ -147,7 +150,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .variable(ptr_ty, None, StorageClass::Function, None)
             .with_type(ptr_ty);
         // TODO: These should be StorageClass::Private, so just zombie for now.
-        self.zombie(result.def, "declare_global");
+        self.zombie_with_span(result.def, span, "Globals are not supported yet");
         result
     }
 
@@ -292,7 +295,8 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             other => panic!("TODO: Linkage type not supported yet: {:?}", other),
         };
 
-        let g = self.declare_global(spvty);
+        let span = self.tcx.def_span(def_id);
+        let g = self.declare_global(span, spvty);
 
         // unsafe {
         //     llvm::LLVMRustSetLinkage(g, base::linkage_to_llvm(linkage));
@@ -356,7 +360,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         }
         .def(self);
         let result = self.undef(ty);
-        self.zombie(result.def, "static_addr_of");
+        self.zombie_no_span(result.def, "static_addr_of");
         result
     }
 

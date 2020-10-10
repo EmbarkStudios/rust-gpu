@@ -305,6 +305,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             cursor: Default::default(),
             current_fn: Default::default(),
             basic_block: Default::default(),
+            current_span: Default::default(),
         }
     }
 
@@ -336,6 +337,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             cursor,
             current_fn: llfn,
             basic_block: label,
+            current_span: Default::default(),
         }
     }
 
@@ -354,6 +356,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             cursor: new_cursor,
             current_fn: self.current_fn,
             basic_block: new_bb,
+            current_span: Default::default(),
         }
     }
 
@@ -365,8 +368,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.basic_block
     }
 
-    fn set_span(&self, _span: Span) {
-        // TODO
+    fn set_span(&self, span: Span) {
+        *self.current_span.borrow_mut() = Some(span);
     }
 
     fn ret_void(&mut self) {
@@ -380,7 +383,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn br(&mut self, dest: Self::BasicBlock) {
         if !self.kernel_mode && self.basic_block == dest {
             // TODO: Remove once structurizer is done.
-            self.zombie(dest, "Infinite loop before structurizer is done");
+            self.zombie_even_in_user_code(dest, "Infinite loop before structurizer is done");
         }
         self.emit().branch(dest).unwrap()
     }

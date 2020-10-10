@@ -23,7 +23,7 @@ use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 use rustc_session::Session;
 use rustc_span::def_id::CrateNum;
 use rustc_span::source_map::Span;
-use rustc_span::symbol::Symbol;
+use rustc_span::symbol::{sym, Symbol};
 use rustc_span::SourceFile;
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
@@ -116,8 +116,30 @@ impl<'tcx> CodegenCx<'tcx> {
     ///
     /// Finally, if *user* code is marked as zombie, then this means that the user tried to do something that isn't
     /// supported, and should be an error.
-    pub fn zombie(&self, word: Word, reason: &'static str) {
+    pub fn zombie_with_span(&self, word: Word, span: Span, reason: &'static str) {
+        if self.is_system_crate() {
+            self.zombie_values.borrow_mut().insert(word, reason);
+        } else {
+            self.tcx.sess.span_err(span, reason);
+        }
+    }
+    pub fn zombie_no_span(&self, word: Word, reason: &'static str) {
+        if self.is_system_crate() {
+            self.zombie_values.borrow_mut().insert(word, reason);
+        } else {
+            self.tcx.sess.err(reason);
+        }
+    }
+    pub fn zombie_even_in_user_code(&self, word: Word, reason: &'static str) {
         self.zombie_values.borrow_mut().insert(word, reason);
+    }
+
+    fn is_system_crate(&self) -> bool {
+        let krate_attrs = self.tcx.hir().krate_attrs();
+        self.tcx
+            .sess
+            .contains_name(krate_attrs, sym::compiler_builtins)
+            || self.tcx.sess.contains_name(krate_attrs, sym::core)
     }
 
     pub fn finalize_module(self) -> Module {
@@ -152,8 +174,8 @@ impl<'tcx> CodegenCx<'tcx> {
         .def(self);
         // We want a unique ID for these undefs, so don't use the caching system.
         let result = self.emit_global().undef(ty, None).with_type(ty);
-        // It's obviously invalid, so zombie it.
-        self.zombie(result.def, "get_fn_addr");
+        // It's obviously invalid, so zombie it. Zombie it in user code as well, because it's valid there too.
+        self.zombie_even_in_user_code(result.def, "get_fn_addr");
         self.function_pointers
             .borrow_mut()
             .insert_no_overwrite(result, function)
@@ -167,17 +189,6 @@ impl<'tcx> CodegenCx<'tcx> {
             .borrow()
             .get_by_left(&pointer)
             .cloned()
-    }
-
-    pub fn validate_atomic(&self, ty: Word, to_zombie: Word) {
-        if !self.i8_i16_atomics_allowed {
-            match self.lookup_type(ty) {
-                SpirvType::Integer(width, _) if width < 32 => {
-                    self.zombie(to_zombie, "atomic on i8 or i16 when disallowed by runtime");
-                }
-                _ => (),
-            }
-        }
     }
 }
 

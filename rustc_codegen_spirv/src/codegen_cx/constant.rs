@@ -67,7 +67,7 @@ impl<'tcx> CodegenCx<'tcx> {
             },
             SpirvType::Integer(128, _) => {
                 let result = self.undef(ty);
-                self.zombie(result.def, "u128 constant");
+                self.zombie_no_span(result.def, "u128 constant");
                 result
             }
             other => panic!("constant_int invalid on type {}", other.debug(ty, self)),
@@ -160,7 +160,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         let len = s.as_str().len();
         let ty = self.type_ptr_to(self.layout_of(self.tcx.types.str_).spirv_type(self));
         let result = self.undef(ty);
-        self.zombie(result.def, "constant string");
+        self.zombie_no_span(result.def, "constant string");
         (result, self.const_usize(len as u64))
     }
     fn const_struct(&self, elts: &[Self::Value], _packed: bool) -> Self::Value {
@@ -283,7 +283,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         ) => {
                             if a_space != b_space {
                                 // TODO: Emit the correct type that is passed into this function.
-                                self.zombie(value.def, "invalid pointer space in constant");
+                                self.zombie_no_span(value.def, "invalid pointer space in constant");
                             }
                             assert_ty_eq!(self, a, b);
                         }
@@ -313,7 +313,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         } else {
             // constant ptrcast is not supported in spir-v
             let result = val.def.with_type(ty);
-            self.zombie(result.def, "const_ptrcast");
+            self.zombie_no_span(result.def, "const_ptrcast");
             result
         }
     }
@@ -421,7 +421,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 *data = *c + asdf->y[*c];
                 }
                 */
-                self.zombie(result.def, "constant runtime array value");
+                self.zombie_no_span(result.def, "constant runtime array value");
                 result
             }
             SpirvType::Pointer { .. } => {
