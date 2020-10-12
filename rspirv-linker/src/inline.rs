@@ -61,29 +61,58 @@ fn compute_disallowed_argument_types(module: &Module) -> HashSet<Word> {
         StorageClass::AtomicCounter,
         // TODO: StorageBuffer is allowed if VariablePointers is enabled
     ];
-    let pointers = module
-        .types_global_values
-        .iter()
-        .filter(|inst| inst.class.opcode == Op::TypePointer)
-        .map(|inst| inst.result_id.unwrap())
-        .collect::<HashSet<_>>();
-    module
-        .types_global_values
-        .iter()
-        .filter(|inst| {
-            inst.class.opcode == Op::TypePointer
-                && match inst.operands[0] {
-                    Operand::StorageClass(class) => {
-                        !allowed_argument_storage_classes.contains(&class)
-                            || (class == StorageClass::Function
-                                && pointers
-                                    .contains(operand_idref(&inst.operands[1]).as_ref().unwrap()))
-                    }
+    let mut disallowed_argument_types = HashSet::new();
+    let mut disallowed_pointees = HashSet::new();
+    for inst in &module.types_global_values {
+        match inst.class.opcode {
+            Op::TypePointer => {
+                let storage_class = match inst.operands[0] {
+                    Operand::StorageClass(x) => x,
                     _ => panic!(),
+                };
+                let pointee = match inst.operands[1] {
+                    Operand::IdRef(x) => x,
+                    _ => panic!(),
+                };
+                if !allowed_argument_storage_classes.contains(&storage_class)
+                    || disallowed_pointees.contains(&pointee)
+                    || disallowed_argument_types.contains(&pointee)
+                {
+                    disallowed_argument_types.insert(inst.result_id.unwrap());
                 }
-        })
-        .map(|inst| inst.result_id.unwrap())
-        .collect()
+                disallowed_pointees.insert(inst.result_id.unwrap());
+            }
+            Op::TypeStruct => {
+                if inst
+                    .operands
+                    .iter()
+                    .map(|op| operand_idref(op).unwrap())
+                    .any(|id| disallowed_argument_types.contains(&id))
+                {
+                    disallowed_argument_types.insert(inst.result_id.unwrap());
+                }
+                if inst
+                    .operands
+                    .iter()
+                    .map(|op| operand_idref(op).unwrap())
+                    .any(|id| disallowed_pointees.contains(&id))
+                {
+                    disallowed_pointees.insert(inst.result_id.unwrap());
+                }
+            }
+            Op::TypeArray | Op::TypeRuntimeArray | Op::TypeVector => {
+                let id = operand_idref(&inst.operands[0]).unwrap();
+                if disallowed_argument_types.contains(&id) {
+                    disallowed_argument_types.insert(inst.result_id.unwrap());
+                }
+                if disallowed_pointees.contains(&id) {
+                    disallowed_pointees.insert(inst.result_id.unwrap());
+                }
+            }
+            _ => {}
+        }
+    }
+    disallowed_argument_types
 }
 
 fn should_inline(disallowed_argument_types: &HashSet<Word>, function: &Function) -> bool {
