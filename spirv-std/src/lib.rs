@@ -50,12 +50,12 @@ pointer_addrspace!("push_constant", PushConstant, false);
 pointer_addrspace!("atomic_counter", AtomicCounter, true);
 pointer_addrspace!("image", Image, true);
 pointer_addrspace!("storage_buffer", StorageBuffer, true);
-pointer_addrspace!("callable_data_nv", CallableDataNV, true);
-pointer_addrspace!("incoming_callable_data_nv", IncomingCallableDataNV, true);
-pointer_addrspace!("ray_payload_nv", RayPayloadNV, true);
-pointer_addrspace!("hit_attribute_nv", HitAttributeNV, true);
-pointer_addrspace!("incoming_ray_payload_nv", IncomingRayPayloadNV, true);
-pointer_addrspace!("shader_record_buffer_nv", ShaderRecordBufferNV, true);
+pointer_addrspace!("callable_data_khr", CallableDataKHR, true);
+pointer_addrspace!("incoming_callable_data_khr", IncomingCallableDataKHR, true);
+pointer_addrspace!("ray_payload_khr", RayPayloadKHR, true);
+pointer_addrspace!("hit_attribute_khr", HitAttributeKHR, true);
+pointer_addrspace!("incoming_ray_payload_khr", IncomingRayPayloadKHR, true);
+pointer_addrspace!("shader_record_buffer_khr", ShaderRecordBufferKHR, true);
 pointer_addrspace!("physical_storage_buffer", PhysicalStorageBuffer, true);
 
 #[allow(non_camel_case_types)]

@@ -38,12 +38,21 @@ fn make_storage_classes() -> HashMap<Symbol, StorageClass> {
         ("atomic_counter", AtomicCounter),
         ("image", Image),
         ("storage_buffer", StorageBuffer),
-        ("callable_data_nv", CallableDataNV),
-        ("incoming_callable_data_nv", IncomingCallableDataNV),
-        ("ray_payload_nv", RayPayloadNV),
-        ("hit_attribute_nv", HitAttributeNV),
-        ("incoming_ray_payload_nv", IncomingRayPayloadNV),
-        ("shader_record_buffer_nv", ShaderRecordBufferNV),
+        ("callable_data_khr", StorageClass::CallableDataKHR),
+        (
+            "incoming_callable_data_khr",
+            StorageClass::IncomingCallableDataKHR,
+        ),
+        ("ray_payload_khr", StorageClass::RayPayloadKHR),
+        ("hit_attribute_khr", StorageClass::HitAttributeKHR),
+        (
+            "incoming_ray_payload_khr",
+            StorageClass::IncomingRayPayloadKHR,
+        ),
+        (
+            "shader_record_buffer_khr",
+            StorageClass::ShaderRecordBufferKHR,
+        ),
         ("physical_storage_buffer", PhysicalStorageBuffer),
     ]
     .iter()
