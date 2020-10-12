@@ -71,17 +71,15 @@ pub struct f32x4(pub f32, pub f32, pub f32, pub f32);
 /// https://github.com/rust-lang/compiler-builtins/blob/eff506cd49b637f1ab5931625a33cef7e91fbbf6/src/mem.rs#L12-L13
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn memcmp(_s1: *const u8, _s2: *const u8, _n: usize) -> i32 {
-    // TODO: Uncomment once loops are supported
-    loop {}
-    // let mut i = 0;
-    // while i < n {
-    //     let a = *s1.add(i);
-    //     let b = *s2.add(i);
-    //     if a != b {
-    //         return a as i32 - b as i32;
-    //     }
-    //     i += 1;
-    // }
-    // 0
+pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32 {
+    let mut i = 0;
+    while i < n {
+        let a = *s1.add(i);
+        let b = *s2.add(i);
+        if a != b {
+            return a as i32 - b as i32;
+        }
+        i += 1;
+    }
+    0
 }

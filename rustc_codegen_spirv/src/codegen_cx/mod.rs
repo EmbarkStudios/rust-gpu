@@ -139,6 +139,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .sess
             .contains_name(self.tcx.hir().krate_attrs(), sym::compiler_builtins)
             || self.tcx.crate_name(LOCAL_CRATE) == sym::core
+            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.spirv_std
     }
 
     pub fn finalize_module(self) -> Module {
