@@ -185,26 +185,46 @@ pub fn link<T>(
 
     {
         let _timer = timer("link_block_ordering_pass_and_mem2reg");
-        let pointer_to_pointee = if opts.mem2reg {
-            output
-                .types_global_values
-                .iter()
-                .filter(|inst| inst.class.opcode == Op::TypePointer)
-                .map(|inst| {
-                    (
-                        inst.result_id.unwrap(),
-                        operand_idref(&inst.operands[1]).unwrap(),
-                    )
-                })
-                .collect()
-        } else {
-            Default::default()
-        };
+        let mut pointer_to_pointee = HashMap::new();
+        let mut constants = HashMap::new();
+        if opts.mem2reg {
+            let mut u32 = None;
+            for inst in &output.types_global_values {
+                match inst.class.opcode {
+                    Op::TypePointer => {
+                        pointer_to_pointee.insert(
+                            inst.result_id.unwrap(),
+                            operand_idref(&inst.operands[1]).unwrap(),
+                        );
+                    }
+                    Op::TypeInt
+                        if inst.operands[0] == Operand::LiteralInt32(32)
+                            && inst.operands[1] == Operand::LiteralInt32(0) =>
+                    {
+                        assert!(u32.is_none());
+                        u32 = Some(inst.result_id.unwrap());
+                    }
+                    Op::Constant if u32.is_some() && inst.result_type == u32 => {
+                        let value = match inst.operands[0] {
+                            Operand::LiteralInt32(value) => value,
+                            _ => panic!(),
+                        };
+                        constants.insert(inst.result_id.unwrap(), value);
+                    }
+                    _ => {}
+                }
+            }
+        }
         for func in &mut output.functions {
             simple_passes::block_ordering_pass(func);
             if opts.mem2reg {
                 // Note: mem2reg requires functions to be in RPO order (i.e. block_ordering_pass)
-                mem2reg::mem2reg(output.header.as_mut().unwrap(), &pointer_to_pointee, func);
+                mem2reg::mem2reg(
+                    output.header.as_mut().unwrap(),
+                    &pointer_to_pointee,
+                    &constants,
+                    func,
+                );
             }
         }
     }
