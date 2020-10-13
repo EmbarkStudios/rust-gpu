@@ -59,7 +59,7 @@ rustup install nightly
 rustup +nightly component add rust-src rustc-dev llvm-tools-preview
 ```
 
-[SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools#downloads) is also required to be installed (for now: eventually we will automatically build and link it instead of calling executables)
+[SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools#downloads) is also required to be installed to your PATH (for now, eventually we will automatically build and link it instead of calling executables)
 
 Note the `rust-toolchain` file in this repository that specifies nightly, this is equivalent to passing `cargo +nightly build`, without having to type that out. (If you run that `rustup component add` in this directory, you don't need to pass +nightly either)
 
