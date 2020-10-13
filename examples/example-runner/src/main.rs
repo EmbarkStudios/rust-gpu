@@ -18,6 +18,7 @@ use std::io::Cursor;
 use std::mem;
 use std::mem::align_of;
 use std::ops::Drop;
+use structopt::StructOpt;
 
 // Simple offset_of macro akin to C++ offsetof
 #[macro_export]
@@ -163,10 +164,11 @@ pub struct ExampleBase {
     pub device: Device,
     pub surface_loader: Surface,
     pub swapchain_loader: Swapchain,
-    pub debug_utils_loader: DebugUtils,
     pub window: winit::Window,
     pub events_loop: RefCell<winit::EventsLoop>,
-    pub debug_call_back: vk::DebugUtilsMessengerEXT,
+
+    pub debug_utils_loader: Option<DebugUtils>,
+    pub debug_call_back: Option<vk::DebugUtilsMessengerEXT>,
 
     pub pdevice: vk::PhysicalDevice,
     pub device_memory_properties: vk::PhysicalDeviceMemoryProperties,
@@ -218,7 +220,7 @@ impl ExampleBase {
         });
     }
 
-    pub fn new(window_width: u32, window_height: u32) -> Self {
+    pub fn new(window_width: u32, window_height: u32, options: &Options) -> Self {
         unsafe {
             let events_loop = winit::EventsLoop::new();
             let window = winit::WindowBuilder::new()
@@ -232,7 +234,11 @@ impl ExampleBase {
             let entry = Entry::new().unwrap();
             let app_name = CString::new("VulkanTriangle").unwrap();
 
-            let layer_names = [CString::new("VK_LAYER_KHRONOS_validation").unwrap()];
+            let layer_names = if options.debug_layer {
+                vec![CString::new("VK_LAYER_KHRONOS_validation").unwrap()]
+            } else {
+                vec![]
+            };
             let layers_names_raw: Vec<*const i8> = layer_names
                 .iter()
                 .map(|raw_name| raw_name.as_ptr())
@@ -243,7 +249,9 @@ impl ExampleBase {
                 .iter()
                 .map(|ext| ext.as_ptr())
                 .collect::<Vec<_>>();
-            extension_names_raw.push(DebugUtils::name().as_ptr());
+            if options.debug_layer {
+                extension_names_raw.push(DebugUtils::name().as_ptr());
+            }
 
             let appinfo = vk::ApplicationInfo::builder()
                 .application_name(&app_name)
@@ -261,19 +269,26 @@ impl ExampleBase {
                 .create_instance(&create_info, None)
                 .expect("Instance creation error");
 
-            let debug_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
-                .message_severity(
-                    vk::DebugUtilsMessageSeverityFlagsEXT::ERROR
-                        | vk::DebugUtilsMessageSeverityFlagsEXT::WARNING
-                        | vk::DebugUtilsMessageSeverityFlagsEXT::INFO,
-                )
-                .message_type(vk::DebugUtilsMessageTypeFlagsEXT::all())
-                .pfn_user_callback(Some(vulkan_debug_callback));
+            let (debug_utils_loader, debug_call_back) = if options.debug_layer {
+                let debug_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
+                    .message_severity(
+                        vk::DebugUtilsMessageSeverityFlagsEXT::ERROR
+                            | vk::DebugUtilsMessageSeverityFlagsEXT::WARNING
+                            | vk::DebugUtilsMessageSeverityFlagsEXT::INFO,
+                    )
+                    .message_type(vk::DebugUtilsMessageTypeFlagsEXT::all())
+                    .pfn_user_callback(Some(vulkan_debug_callback));
 
-            let debug_utils_loader = DebugUtils::new(&entry, &instance);
-            let debug_call_back = debug_utils_loader
-                .create_debug_utils_messenger(&debug_info, None)
-                .unwrap();
+                let debug_utils_loader = DebugUtils::new(&entry, &instance);
+                let debug_call_back = debug_utils_loader
+                    .create_debug_utils_messenger(&debug_info, None)
+                    .unwrap();
+
+                (Some(debug_utils_loader), Some(debug_call_back))
+            } else {
+                (None, None)
+            };
+
             let surface = ash_window::create_surface(&entry, &instance, &window, None).unwrap();
             let pdevices = instance
                 .enumerate_physical_devices()
@@ -606,7 +621,9 @@ impl Drop for ExampleBase {
             self.device.destroy_device(None);
             self.surface_loader.destroy_surface(self.surface, None);
             self.debug_utils_loader
-                .destroy_debug_utils_messenger(self.debug_call_back, None);
+                .take()
+                .unwrap()
+                .destroy_debug_utils_messenger(self.debug_call_back.take().unwrap(), None);
             self.instance.destroy_instance(None);
         }
     }
@@ -618,9 +635,19 @@ struct Vertex {
     color: [f32; 4],
 }
 
+#[derive(Debug, StructOpt)]
+#[structopt()]
+pub struct Options {
+    /// Use Vulkan debug layer (requires Vulkan SDK installed)
+    #[structopt(short, long)]
+    debug_layer: bool,
+}
+
 fn main() {
+    let options = Options::from_args();
+
     unsafe {
-        let base = ExampleBase::new(1920, 1080);
+        let base = ExampleBase::new(1920, 1080, &options);
         let renderpass_attachments = [
             vk::AttachmentDescription {
                 format: base.surface_format.format,
