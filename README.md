@@ -18,7 +18,9 @@ Our hope with this project is that we push the industry forward by bringing an e
 
 ## Why Embark?
 
-At Embark, we've been building our in-house engine from the ground up in Rust. We have previous in-house experience developing [RLSL](https://github.com/MaikKlein/rlsl) (a first prototype of this idea) and we have some of the world's best rendering engineers that are familiar with the problems in current shading languages. So, we're in a unique place to solve this problem. We want to streamline our own internal development, facilitate code-sharing between GPU and CPU, but most importantly: to enable our users to very rapidly build great looking experiences. If we do this project right, one wouldn't necessarily need a team of rendering engineers to build a good looking game, instead one would simply use a few of the existing open-source crates that provide the graphical effects needed to create the experience you're after. Instead of sharing snippets of TAA code on forum posts, one could simply add the right crate(s).
+At Embark, we've been building our in-house engine from the ground up in Rust. We have previous in-house experience developing [RLSL](https://github.com/MaikKlein/rlsl) (a first prototype of this idea) and we have some of the world's best rendering engineers that are familiar with the problems in current shading languages. So, we're in a unique place to solve this problem. We want to streamline our own internal development, facilitate code-sharing between GPU and CPU, but most importantly: to enable our users to very rapidly build great looking experiences. 
+
+If we do this project right, one wouldn't necessarily need a team of rendering engineers to build a good looking game, instead one would simply use a few of the existing open-source crates that provide the graphical effects needed to create the experience you're after. Instead of sharing snippets of TAA code on forum posts, one could simply add the right crate(s).
 
 ## Project scope
 
