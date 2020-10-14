@@ -520,6 +520,10 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
     fn target_cpu<'b>(&self, _: &'b Session) -> &'b str {
         todo!()
     }
+
+    fn tune_cpu<'b>(&self, _: &'b Session) -> Option<&'b str> {
+        None
+    }
 }
 
 struct DumpModuleOnPanic<'a, 'cx, 'tcx> {
