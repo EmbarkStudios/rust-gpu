@@ -3,9 +3,10 @@ mod depfile;
 use raw_string::{RawStr, RawString};
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::env;
 use std::error::Error;
 use std::fmt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 #[derive(Debug)]
@@ -31,19 +32,49 @@ pub fn build_spirv(path_to_crate: impl AsRef<Path>) -> Result<(), SpirvBuilderEr
     Ok(())
 }
 
+// https://github.com/rust-lang/cargo/blob/1857880b5124580c4aeb4e8bc5f1198f491d61b1/src/cargo/util/paths.rs#L29-L52
+fn dylib_path_envvar() -> &'static str {
+    if cfg!(windows) {
+        "PATH"
+    } else if cfg!(target_os = "macos") {
+        "DYLD_FALLBACK_LIBRARY_PATH"
+    } else {
+        "LD_LIBRARY_PATH"
+    }
+}
+fn dylib_path() -> Vec<PathBuf> {
+    match env::var_os(dylib_path_envvar()) {
+        Some(var) => env::split_paths(&var).collect(),
+        None => Vec::new(),
+    }
+}
+
+fn find_rustc_codegen_spirv() -> PathBuf {
+    let filename = format!(
+        "{}rustc_codegen_spirv{}",
+        env::consts::DLL_PREFIX,
+        env::consts::DLL_SUFFIX
+    );
+    for mut path in dylib_path() {
+        path.push(&filename);
+        if path.is_file() {
+            return path;
+        }
+    }
+    panic!("Could not find {} in library path", filename);
+}
+
 fn invoke_rustc(path_to_crate: &Path) -> Result<String, SpirvBuilderError> {
     // Okay, this is a little bonkers: in a normal world, we'd have the user clone
     // rustc_codegen_spirv and pass in the path to it, and then we'd invoke cargo to build it, grab
     // the resulting .so, and pass it into -Z codegen-backend. But that's really gross: the user
     // needs to clone rustc_codegen_spirv and tell us its path! So instead, we *directly reference
     // rustc_codegen_spirv in spirv-builder's Cargo.toml*, which means that it will get built
-    // alongside build.rs, and cargo will helpfully add it to LD_LIBRARY_PATH for us! So we just
-    // need to pass the direct filename here.
-    let rustflags = format!(
-        "-Z codegen-backend={}rustc_codegen_spirv{}",
-        std::env::consts::DLL_PREFIX,
-        std::env::consts::DLL_SUFFIX
-    );
+    // alongside build.rs, and cargo will helpfully add it to LD_LIBRARY_PATH for us! However,
+    // rustc expects a full path, instead of a filename looked up via LD_LIBRARY_PATH, so we need
+    // to copy cargo's understanding of library lookup and find the library and its full path.
+    let rustc_codegen_spirv = find_rustc_codegen_spirv();
+    let rustflags = format!("-Z codegen-backend={}", rustc_codegen_spirv.display());
     let build = Command::new("cargo")
         .args(&[
             "build",
@@ -76,9 +107,16 @@ struct RustcOutput {
 }
 
 fn get_last_artifact(out: &str) -> String {
-    let out = serde_json::Deserializer::from_str(out).into_iter::<RustcOutput>();
     let last = out
-        .map(|line| line.unwrap())
+        .lines()
+        .filter_map(|line| match serde_json::from_str::<RustcOutput>(line) {
+            Ok(line) => Some(line),
+            Err(_) => {
+                // Pass through invalid lines
+                println!("{}", line);
+                None
+            }
+        })
         .filter(|line| line.reason == "compiler-artifact")
         .last()
         .expect("Did not find output file in rustc output");
