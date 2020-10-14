@@ -6,6 +6,8 @@
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
+### Current Status
+
 Compiling a hello world triangle vulkan shader works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles. However, many things aren't implemented yet: for example, branching isn't supported yet! That means that while being technically usable, this project is far from being production-ready.
 
 ## Background
