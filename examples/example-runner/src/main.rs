@@ -159,6 +159,9 @@ pub fn find_memorytype_index_f<F: Fn(vk::MemoryPropertyFlags, vk::MemoryProperty
 }
 
 pub struct ExampleBase {
+    #[cfg(target_os = "macos")]
+    pub entry: ash_molten::MoltenEntry,
+    #[cfg(not(target_os = "macos"))]
     pub entry: Entry,
     pub instance: Instance,
     pub device: Device,
@@ -231,7 +234,15 @@ impl ExampleBase {
                 ))
                 .build(&events_loop)
                 .unwrap();
-            let entry = Entry::new().unwrap();
+
+            cfg_if::cfg_if! {
+                if #[cfg(target_os = "macos")] {
+                    let entry = ash_molten::MoltenEntry::load().unwrap();
+                } else {
+                    let entry = Entry::new().unwrap();
+                }
+            }
+
             let app_name = CString::new("VulkanTriangle").unwrap();
 
             let layer_names = if options.debug_layer {
