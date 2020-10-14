@@ -5,7 +5,7 @@ use rustc_codegen_ssa::CodegenResults;
 use rustc_data_structures::owning_ref::OwningRef;
 use rustc_data_structures::rustc_erase_owner;
 use rustc_data_structures::sync::MetadataRef;
-use rustc_errors::FatalError;
+use rustc_errors::{DiagnosticBuilder, FatalError};
 use rustc_middle::dep_graph::WorkProduct;
 use rustc_middle::middle::cstore::NativeLib;
 use rustc_middle::middle::dependency_format::Linkage;
@@ -132,40 +132,84 @@ fn link_exe(
 
 fn do_spirv_opt(sess: &Session, filename: &Path) {
     let tmp = filename.with_extension("opt.spv");
-    let output = Command::new("spirv-opt")
-        .args(&["-Os", "--eliminate-dead-const", "--strip-debug"])
-        .arg(&filename)
-        .arg("-o")
-        .arg(&tmp)
-        .output()
-        .expect("spirv-opt failed to execute");
-    if output.status.success() {
+    let output = output_spriv_tool(
+        sess,
+        "spirv-opt",
+        |cmd| {
+            cmd.args(&["-Os", "--eliminate-dead-const", "--strip-debug"])
+                .arg(&filename)
+                .arg("-o")
+                .arg(&tmp)
+        },
+        |_| {
+            let mut err = sess.struct_warn("spirv-opt failed, leaving as unoptimized");
+            err.note(&format!("module {:?}", filename));
+            err
+        },
+    );
+
+    if output.is_some() {
         std::fs::rename(tmp, filename).unwrap();
-    } else {
-        let mut warn = sess.struct_warn("spirv-opt failed, leaving as unoptimized");
-        if !output.stdout.is_empty() {
-            warn.note(&String::from_utf8(output.stdout).unwrap());
-        }
-        if !output.stderr.is_empty() {
-            warn.note(&String::from_utf8(output.stderr).unwrap());
-        }
-        warn.emit();
     }
 }
 
 fn do_spirv_val(sess: &Session, filename: &Path) {
-    let output = Command::new("spirv-val").arg(&filename).output();
-    let output = output.expect("spirv-val failed to execute");
-    if !output.status.success() {
-        let mut err = sess.struct_err(&format!("spirv-val failed with {}", output.status));
-        err.note(&format!("module {:?}", filename));
+    output_spriv_tool(
+        sess,
+        "spirv-val",
+        |cmd| cmd.arg(&filename),
+        |status| {
+            let mut err = sess.struct_err(&format!("spirv-val failed with {}", status));
+            err.note(&format!("module {:?}", filename));
+            err
+        },
+    );
+}
+
+/// Runs a given SPIR-V `tool`, configured with `builder`, erroring if not found
+/// or returns a non-zero exit code. All errors will be emitted using the
+/// diagnostics builder provided by `diagnostics.`
+fn output_spriv_tool<'a, F, D>(
+    sess: &Session,
+    tool: &str,
+    builder: F,
+    diagnostics: D,
+) -> Option<std::process::Output>
+where
+    F: FnOnce(&mut Command) -> &mut Command,
+    D: FnOnce(std::process::ExitStatus) -> DiagnosticBuilder<'a>,
+{
+    let mut cmd = Command::new(tool);
+    (builder)(&mut cmd);
+
+    let output = match cmd.output() {
+        Ok(output) => output,
+        _ => {
+            let mut err =
+                sess.struct_err(&format!("Couldn't find `{}` SPRI-V tool in PATH.", tool));
+            err.note(
+                "Please ensure that you have `spirv-tools` installed on \
+                      your system and available in your PATH.",
+            );
+            err.emit();
+            return None;
+        }
+    };
+
+    if output.status.success() {
+        Some(output)
+    } else {
+        let mut diagnostics = (diagnostics)(output.status);
+
         if !output.stdout.is_empty() {
-            err.note(&String::from_utf8(output.stdout).unwrap());
+            diagnostics.note(&String::from_utf8(output.stdout).unwrap());
         }
         if !output.stderr.is_empty() {
-            err.note(&String::from_utf8(output.stderr).unwrap());
+            diagnostics.note(&String::from_utf8(output.stderr).unwrap());
         }
-        err.emit();
+
+        diagnostics.emit();
+        None
     }
 }
 

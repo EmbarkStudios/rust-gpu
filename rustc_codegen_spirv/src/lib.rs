@@ -547,6 +547,16 @@ impl Drop for DumpModuleOnPanic<'_, '_, '_> {
 /// This is the entrypoint for a hot plugged rustc_codegen_spirv
 #[no_mangle]
 pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
+    // Override rustc's panic hook with our own to override the ICE error
+    // message, and direct people to `rust-gpu`.
+    std::panic::set_hook(Box::new(|panic_info| {
+        rustc_driver::report_ice(
+            panic_info,
+            "https://github.com/EmbarkStudios/rust-gpu/issues/new",
+        );
+        eprintln!("note: `rust-gpu` version {}\n", env!("CARGO_PKG_VERSION"));
+    }));
+
     Box::new(SpirvCodegenBackend)
 }
 
