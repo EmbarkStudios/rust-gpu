@@ -209,16 +209,16 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             }
             sym::minnumf32 | sym::minnumf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::fmin, [args[0].immediate()])
+                    self.cl_op(CLOp::fmin, [args[0].immediate(), args[1].immediate()])
                 } else {
-                    self.gl_op(GLOp::FMin, [args[0].immediate()])
+                    self.gl_op(GLOp::FMin, [args[0].immediate(), args[1].immediate()])
                 }
             }
             sym::maxnumf32 | sym::maxnumf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::fmax, [args[0].immediate()])
+                    self.cl_op(CLOp::fmax, [args[0].immediate(), args[1].immediate()])
                 } else {
-                    self.gl_op(GLOp::FMax, [args[0].immediate()])
+                    self.gl_op(GLOp::FMax, [args[0].immediate(), args[1].immediate()])
                 }
             }
             sym::copysignf32 | sym::copysignf64 => {
