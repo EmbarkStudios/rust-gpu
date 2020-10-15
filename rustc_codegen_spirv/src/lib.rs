@@ -8,14 +8,11 @@ extern crate rustc_data_structures;
 extern crate rustc_driver;
 extern crate rustc_errors;
 extern crate rustc_hir;
-extern crate rustc_incremental;
 extern crate rustc_interface;
 extern crate rustc_middle;
 extern crate rustc_mir;
-extern crate rustc_serialize;
 extern crate rustc_session;
 extern crate rustc_span;
-extern crate rustc_symbol_mangling;
 extern crate rustc_target;
 
 macro_rules! assert_ty_eq {
@@ -52,15 +49,15 @@ use rustc_codegen_ssa::traits::{
     WriteBackendMethods,
 };
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::{ErrorReported, FatalError, Handler};
-use rustc_middle::dep_graph::{DepGraph, WorkProduct};
+use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::middle::cstore::{EncodedMetadata, MetadataLoader, MetadataLoaderDyn};
 use rustc_middle::mir::mono::MonoItem;
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::{Instance, InstanceDef, TyCtxt};
-use rustc_serialize::json;
 use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::Symbol;
@@ -236,51 +233,23 @@ impl CodegenBackend for SpirvCodegenBackend {
         &self,
         ongoing_codegen: Box<dyn Any>,
         sess: &Session,
-        dep_graph: &DepGraph,
-    ) -> Result<Box<dyn Any>, ErrorReported> {
+    ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorReported> {
         let (codegen_results, work_products) = ongoing_codegen
             .downcast::<OngoingCodegen<SpirvCodegenBackend>>()
             .expect("Expected OngoingCodegen, found Box<Any>")
             .join(sess);
-        if sess.opts.debugging_opts.incremental_info {
-            rustc_codegen_ssa::back::write::dump_incremental_data(&codegen_results);
-        }
-
-        sess.time("serialize_work_products", move || {
-            rustc_incremental::save_work_product_index(sess, &dep_graph, work_products)
-        });
 
         sess.compile_status()?;
 
-        Ok(Box::new(codegen_results))
+        Ok((codegen_results, work_products))
     }
 
     fn link(
         &self,
         sess: &Session,
-        codegen_results: Box<dyn Any>,
+        codegen_results: CodegenResults,
         outputs: &OutputFilenames,
     ) -> Result<(), ErrorReported> {
-        let codegen_results = codegen_results
-            .downcast::<CodegenResults>()
-            .expect("Expected CodegenResults, found Box<Any>");
-
-        if sess.opts.debugging_opts.no_link {
-            // FIXME: use a binary format to encode the `.rlink` file
-            let rlink_data = json::encode(&codegen_results).map_err(|err| {
-                sess.fatal(&format!("failed to encode rlink: {}", err));
-            })?;
-            let rlink_file = outputs.with_extension(config::RLINK_EXT);
-            std::fs::write(&rlink_file, rlink_data).map_err(|err| {
-                sess.fatal(&format!(
-                    "failed to write file {}: {}",
-                    rlink_file.display(),
-                    err
-                ));
-            })?;
-            return Ok(());
-        }
-
         // TODO: Can we merge this sym with the one in symbols.rs?
         let legalize = !sess.target_features.contains(&Symbol::intern("kernel"));
 
@@ -293,8 +262,6 @@ impl CodegenBackend for SpirvCodegenBackend {
             legalize,
         );
         drop(timer);
-
-        rustc_incremental::finalize_session_directory(sess, codegen_results.crate_hash);
 
         sess.compile_status()?;
         Ok(())
