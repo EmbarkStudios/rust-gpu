@@ -93,7 +93,7 @@ fn target_options() -> Target {
     Target {
         llvm_target: "no-llvm".to_string(),
         target_endian: "little".to_string(),
-        target_pointer_width: "32".to_string(),
+        pointer_width: 32,
         target_c_int_width: "32".to_string(),
         target_os: "unknown".to_string(),
         target_env: String::new(),
@@ -168,7 +168,7 @@ impl CodegenBackend for SpirvCodegenBackend {
 
     fn target_features(&self, sess: &Session) -> Vec<Symbol> {
         let cmdline = sess.opts.cg.target_feature.split(',');
-        let cfg = sess.target.target.options.features.split(',');
+        let cfg = sess.target.options.features.split(',');
         cfg.chain(cmdline)
             .filter(|l| l.starts_with('+'))
             .map(|l| &l[1..])

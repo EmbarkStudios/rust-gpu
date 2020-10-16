@@ -220,7 +220,7 @@ impl<'tcx> HasDataLayout for CodegenCx<'tcx> {
 
 impl<'tcx> HasTargetSpec for CodegenCx<'tcx> {
     fn target_spec(&self) -> &Target {
-        &self.tcx.sess.target.target
+        &self.tcx.sess.target
     }
 }
 

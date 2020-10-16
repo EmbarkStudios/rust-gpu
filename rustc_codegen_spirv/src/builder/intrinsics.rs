@@ -15,11 +15,13 @@ use rustc_target::abi::LayoutOf;
 fn int_type_width_signed(ty: Ty<'_>, cx: &CodegenCx<'_>) -> Option<(u64, bool)> {
     match ty.kind() {
         TyKind::Int(t) => Some((
-            t.bit_width().unwrap_or(cx.tcx.sess.target.ptr_width as u64),
+            t.bit_width()
+                .unwrap_or(cx.tcx.sess.target.pointer_width as u64),
             true,
         )),
         TyKind::Uint(t) => Some((
-            t.bit_width().unwrap_or(cx.tcx.sess.target.ptr_width as u64),
+            t.bit_width()
+                .unwrap_or(cx.tcx.sess.target.pointer_width as u64),
             false,
         )),
         _ => None,
