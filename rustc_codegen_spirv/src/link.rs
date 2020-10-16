@@ -6,6 +6,7 @@ use rustc_data_structures::owning_ref::OwningRef;
 use rustc_data_structures::rustc_erase_owner;
 use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::{DiagnosticBuilder, FatalError};
+use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
 use rustc_middle::middle::cstore::NativeLib;
 use rustc_middle::middle::dependency_format::Linkage;
@@ -40,9 +41,10 @@ pub fn link<'a>(
         }
 
         if invalid_output_for_target(sess, crate_type) {
-            panic!(
+            bug!(
                 "invalid output type `{:?}` for target os `{}`",
-                crate_type, sess.opts.target_triple
+                crate_type,
+                sess.opts.target_triple
             );
         }
 
@@ -58,18 +60,18 @@ pub fn link<'a>(
             let out_filename = out_filename(sess, crate_type, outputs, crate_name);
             match crate_type {
                 CrateType::Rlib => {
-                    link_rlib(codegen_results, &out_filename);
+                    link_rlib(sess, codegen_results, &out_filename);
                 }
                 CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => {
                     link_exe(sess, crate_type, &out_filename, codegen_results, legalize)
                 }
-                other => panic!("CrateType {:?} not supported yet", other),
+                other => sess.err(&format!("CrateType {:?} not supported yet", other)),
             }
         }
     }
 }
 
-fn link_rlib(codegen_results: &CodegenResults, out_filename: &Path) {
+fn link_rlib(sess: &Session, codegen_results: &CodegenResults, out_filename: &Path) {
     let mut file_list = Vec::<&Path>::new();
     for obj in codegen_results
         .modules
@@ -88,7 +90,10 @@ fn link_rlib(codegen_results: &CodegenResults, out_filename: &Path) {
             | NativeLibKind::Unspecified => continue,
         }
         if let Some(name) = lib.name {
-            panic!("Adding native library to rlib not supported yet: {}", name);
+            sess.err(&format!(
+                "Adding native library to rlib not supported yet: {}",
+                name
+            ));
         }
     }
 
@@ -222,7 +227,7 @@ fn link_local_crate_native_libs_and_dependent_crate_libs<'a>(
     if sess.opts.debugging_opts.link_native_libraries {
         add_local_native_libraries(sess, codegen_results);
     }
-    add_upstream_rust_crates(rlibs, codegen_results, crate_type);
+    add_upstream_rust_crates(sess, rlibs, codegen_results, crate_type);
     if sess.opts.debugging_opts.link_native_libraries {
         add_upstream_native_libraries(sess, codegen_results, crate_type);
     }
@@ -238,6 +243,7 @@ fn add_local_native_libraries(sess: &Session, codegen_results: &CodegenResults) 
 }
 
 fn add_upstream_rust_crates(
+    sess: &Session,
     rlibs: &mut Vec<PathBuf>,
     codegen_results: &CodegenResults,
     crate_type: CrateType,
@@ -255,7 +261,7 @@ fn add_upstream_rust_crates(
             Linkage::NotLinked | Linkage::IncludedFromDylib => {}
             Linkage::Static => rlibs.push(src.rlib.as_ref().unwrap().0.clone()),
             //Linkage::Dynamic => rlibs.push(src.dylib.as_ref().unwrap().0.clone()),
-            Linkage::Dynamic => panic!("TODO: Linkage::Dynamic not supported yet"),
+            Linkage::Dynamic => sess.err("TODO: Linkage::Dynamic not supported yet"),
         }
     }
 }
@@ -283,23 +289,25 @@ fn add_upstream_native_libraries(
                 continue;
             }
             match lib.kind {
-                NativeLibKind::Dylib | NativeLibKind::Unspecified => {
-                    panic!("TODO: dylib nativelibkind not supported yet: {}", name)
-                }
-                NativeLibKind::Framework => {
-                    panic!("TODO: framework nativelibkind not supported yet: {}", name)
-                }
+                NativeLibKind::Dylib | NativeLibKind::Unspecified => sess.fatal(&format!(
+                    "TODO: dylib nativelibkind not supported yet: {}",
+                    name
+                )),
+                NativeLibKind::Framework => sess.fatal(&format!(
+                    "TODO: framework nativelibkind not supported yet: {}",
+                    name
+                )),
                 NativeLibKind::StaticNoBundle => {
                     if data[cnum.as_usize() - 1] == Linkage::Static {
-                        panic!(
+                        sess.fatal(&format!(
                             "TODO: staticnobundle nativelibkind not supported yet: {}",
                             name
-                        );
+                        ))
                     }
                 }
                 NativeLibKind::StaticBundle => {}
                 NativeLibKind::RawDylib => {
-                    panic!("raw_dylib feature not yet implemented: {}", name);
+                    sess.fatal(&format!("raw_dylib feature not yet implemented: {}", name))
                 }
             }
         }
@@ -338,17 +346,17 @@ fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
     builder.into_inner().unwrap();
 }
 
-pub fn read_metadata(rlib: &Path) -> MetadataRef {
+pub fn read_metadata(rlib: &Path) -> Result<MetadataRef, String> {
     for entry in Archive::new(File::open(rlib).unwrap()).entries().unwrap() {
         let mut entry = entry.unwrap();
         if entry.path().unwrap() == Path::new(".metadata") {
             let mut bytes = Vec::new();
             entry.read_to_end(&mut bytes).unwrap();
             let buf: OwningRef<Vec<u8>, [u8]> = OwningRef::new(bytes);
-            return rustc_erase_owner!(buf.map_owner_box());
+            return Ok(rustc_erase_owner!(buf.map_owner_box()));
         }
     }
-    panic!("No .metadata file in rlib: {:?}", rlib);
+    Err(format!("No .metadata file in rlib: {:?}", rlib))
 }
 
 /// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc's
@@ -424,7 +432,7 @@ fn do_link(
                         .unwrap();
                 }
             }
-            panic!("Linker error: {}", err)
+            sess.fatal(&format!("Linker error: {}", err))
         }
     };
 
@@ -455,7 +463,7 @@ pub(crate) fn run_thin(
     }
     if cgcx.lto != Lto::ThinLocal {
         for _ in cgcx.each_linked_rlib_for_lto.iter() {
-            panic!("TODO: Implement whatever the heck this is");
+            bug!("TODO: Implement whatever the heck this is");
         }
     }
     let mut thin_buffers = Vec::with_capacity(modules.len());

@@ -1,7 +1,6 @@
 //! See documentation on CodegenCx::zombie for a description of the zombie system.
 
-use crate::operand_idref;
-use rspirv::dr::{Instruction, Module, Operand};
+use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Decoration, Op, Word};
 use std::collections::{hash_map, HashMap};
 use std::env;
@@ -13,15 +12,11 @@ fn collect_zombies(module: &Module) -> Vec<(Word, String)> {
         .filter_map(|inst| {
             // TODO: Temp hack. We hijack UserTypeGOOGLE right now, since the compiler never emits this.
             if inst.class.opcode == Op::DecorateString
-                && inst.operands[1] == Operand::Decoration(Decoration::UserTypeGOOGLE)
+                && inst.operands[1].unwrap_decoration() == Decoration::UserTypeGOOGLE
             {
-                if let (&Operand::IdRef(id), Operand::LiteralString(reason)) =
-                    (&inst.operands[0], &inst.operands[2])
-                {
-                    return Some((id, reason.to_string()));
-                } else {
-                    panic!("Invalid OpDecorateString")
-                }
+                let id = inst.operands[0].unwrap_id_ref();
+                let reason = inst.operands[2].unwrap_literal_string();
+                return Some((id, reason.to_string()));
             }
             None
         })
@@ -31,7 +26,7 @@ fn collect_zombies(module: &Module) -> Vec<(Word, String)> {
 fn remove_zombie_annotations(module: &mut Module) {
     module.annotations.retain(|inst| {
         inst.class.opcode != Op::DecorateString
-            || inst.operands[1] != Operand::Decoration(Decoration::UserTypeGOOGLE)
+            || inst.operands[1].unwrap_decoration() != Decoration::UserTypeGOOGLE
     })
 }
 
@@ -43,7 +38,7 @@ fn contains_zombie<'a>(inst: &Instruction, zombie: &HashMap<Word, &'a str>) -> O
     }
     inst.operands
         .iter()
-        .find_map(|op| operand_idref(op).and_then(|w| zombie.get(&w).copied()))
+        .find_map(|op| op.id_ref_any().and_then(|w| zombie.get(&w).copied()))
 }
 
 fn is_zombie<'a>(inst: &Instruction, zombie: &HashMap<Word, &'a str>) -> Option<&'a str> {
@@ -144,13 +139,12 @@ pub fn remove_zombies(module: &mut Module) {
             if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
                 let name_id = f.def.as_ref().unwrap().result_id.unwrap();
                 let name = module.debugs.iter().find(|inst| {
-                    inst.class.opcode == Op::Name && inst.operands[0] == Operand::IdRef(name_id)
+                    inst.class.opcode == Op::Name && inst.operands[0].unwrap_id_ref() == name_id
                 });
                 let name = match name {
-                    Some(Instruction { ref operands, .. }) => match operands as &[Operand] {
-                        [_, Operand::LiteralString(name)] => name.clone(),
-                        _ => panic!(),
-                    },
+                    Some(Instruction { ref operands, .. }) => {
+                        operands[1].unwrap_literal_string().to_string()
+                    }
                     _ => format!("{}", name_id),
                 };
                 println!("Function removed {:?} because {:?}", name, reason)

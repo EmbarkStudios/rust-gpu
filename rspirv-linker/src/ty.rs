@@ -1,5 +1,5 @@
-use crate::{extract_literal_int_as_u64, extract_literal_u32, DefAnalyzer};
-use rspirv::dr::{Instruction, Operand};
+use crate::{extract_literal_int_as_u64, DefAnalyzer};
+use rspirv::dr::Instruction;
 use rspirv::spirv::{AccessQualifier, Dim, ImageFormat, Op, StorageClass};
 
 #[derive(PartialEq, Debug)]
@@ -33,32 +33,17 @@ fn trans_scalar_type(inst: &Instruction) -> Option<ScalarType> {
         Op::TypeNamedBarrier => ScalarType::NamedBarrier,
         Op::TypeSampler => ScalarType::Sampler,
         Op::TypeForwardPointer => ScalarType::ForwardPointer {
-            storage_class: match inst.operands[0] {
-                Operand::StorageClass(s) => s,
-                _ => panic!("Unexpected operand while parsing type"),
-            },
+            storage_class: inst.operands[0].unwrap_storage_class(),
         },
         Op::TypeInt => ScalarType::Int {
-            width: match inst.operands[0] {
-                Operand::LiteralInt32(w) => w,
-                _ => panic!("Unexpected operand while parsing type"),
-            },
-            signed: match inst.operands[1] {
-                Operand::LiteralInt32(s) => s != 0,
-                _ => panic!("Unexpected operand while parsing type"),
-            },
+            width: inst.operands[0].unwrap_literal_int32(),
+            signed: inst.operands[1].unwrap_literal_int32() != 0,
         },
         Op::TypeFloat => ScalarType::Float {
-            width: match inst.operands[0] {
-                Operand::LiteralInt32(w) => w,
-                _ => panic!("Unexpected operand while parsing type"),
-            },
+            width: inst.operands[0].unwrap_literal_int32(),
         },
         Op::TypeOpaque => ScalarType::Opaque {
-            name: match &inst.operands[0] {
-                Operand::LiteralString(s) => s.clone(),
-                _ => panic!("Unexpected operand while parsing type"),
-            },
+            name: inst.operands[0].unwrap_literal_string().to_string(),
         },
         _ => return None,
     })
@@ -139,10 +124,7 @@ pub(crate) fn trans_aggregate_type(def: &DefAnalyzer, inst: &Instruction) -> Opt
             }
         }
         Op::TypePointer => AggregateType::Pointer {
-            storage_class: match inst.operands[0] {
-                Operand::StorageClass(s) => s,
-                _ => panic!("Unexpected operand while parsing type"),
-            },
+            storage_class: inst.operands[0].unwrap_storage_class(),
             ty: Box::new(
                 trans_aggregate_type(def, &def.op_def(&inst.operands[1]))
                     .expect("Expect base type for OpTypePointer"),
@@ -186,26 +168,13 @@ pub(crate) fn trans_aggregate_type(def: &DefAnalyzer, inst: &Instruction) -> Opt
                 trans_aggregate_type(def, &def.op_def(&inst.operands[0]))
                     .expect("Expect base type for OpTypeImage"),
             ),
-            dim: match inst.operands[1] {
-                Operand::Dim(d) => d,
-                _ => panic!("Invalid dim"),
-            },
-            depth: extract_literal_u32(&inst.operands[2]),
-            arrayed: extract_literal_u32(&inst.operands[3]),
-            multi_sampled: extract_literal_u32(&inst.operands[4]),
-            sampled: extract_literal_u32(&inst.operands[5]),
-            format: match inst.operands[6] {
-                Operand::ImageFormat(f) => f,
-                _ => panic!("Invalid image format"),
-            },
-            access: inst
-                .operands
-                .get(7)
-                .map(|op| match op {
-                    Operand::AccessQualifier(a) => Some(*a),
-                    _ => None,
-                })
-                .flatten(),
+            dim: inst.operands[1].unwrap_dim(),
+            depth: inst.operands[2].unwrap_literal_int32(),
+            arrayed: inst.operands[3].unwrap_literal_int32(),
+            multi_sampled: inst.operands[4].unwrap_literal_int32(),
+            sampled: inst.operands[5].unwrap_literal_int32(),
+            format: inst.operands[6].unwrap_image_format(),
+            access: inst.operands.get(7).map(|op| op.unwrap_access_qualifier()),
         },
         _ => {
             if let Some(ty) = trans_scalar_type(inst) {

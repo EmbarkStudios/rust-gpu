@@ -64,6 +64,32 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
+    /*
+    pub fn struct_err(&self, msg: &str) -> DiagnosticBuilder<'_> {
+        if let Some(current_span) = *self.current_span.borrow() {
+            self.tcx.sess.struct_span_err(current_span, msg)
+        } else {
+            self.tcx.sess.struct_err(msg)
+        }
+    }
+
+    pub fn err(&self, msg: &str) {
+        if let Some(current_span) = *self.current_span.borrow() {
+            self.tcx.sess.span_err(current_span, msg)
+        } else {
+            self.tcx.sess.err(msg)
+        }
+    }
+    */
+
+    pub fn fatal(&self, msg: &str) -> ! {
+        if let Some(current_span) = *self.current_span.borrow() {
+            self.tcx.sess.span_fatal(current_span, msg)
+        } else {
+            self.tcx.sess.fatal(msg)
+        }
+    }
+
     pub fn gep_help(
         &self,
         ptr: SpirvValue,
@@ -80,16 +106,19 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 storage_class,
                 pointee,
             } => (storage_class, pointee),
-            other_type => panic!("GEP first deref not implemented for type {:?}", other_type),
+            other_type => self.fatal(&format!(
+                "GEP first deref not implemented for type {:?}",
+                other_type
+            )),
         };
         for index in indices.iter().cloned().skip(1) {
             result_indices.push(index.def);
             result_pointee_type = match self.lookup_type(result_pointee_type) {
                 SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } => element,
-                _ => panic!(
+                _ => self.fatal(&format!(
                     "GEP not implemented for type {}",
                     self.debug_type(result_pointee_type)
-                ),
+                )),
             };
         }
         let result_type = SpirvType::Pointer {
@@ -144,10 +173,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     fn rotate(&mut self, value: SpirvValue, shift: SpirvValue, is_left: bool) -> SpirvValue {
         let width = match self.lookup_type(shift.ty) {
             SpirvType::Integer(width, _) => width,
-            other => panic!(
+            other => self.fatal(&format!(
                 "Cannot rotate non-integer type: {}",
                 other.debug(shift.ty, self)
-            ),
+            )),
         };
         let int_size = self.constant_int(shift.ty, width as u64);
         let mask = self.constant_int(shift.ty, (width - 1) as u64);
@@ -283,7 +312,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
         if arg_abi.is_sized_indirect() {
             OperandValue::Ref(val, None, arg_abi.layout.align.abi).store(self, dst);
         } else if arg_abi.is_unsized_indirect() {
-            panic!("unsized `ArgAbi` must be handled through `store_fn_arg`");
+            self.fatal("unsized `ArgAbi` must be handled through `store_fn_arg`");
         } else if let PassMode::Cast(cast) = arg_abi.mode {
             let cast_ty = cast.spirv_type(self);
             let cast_ptr_ty = SpirvType::Pointer {

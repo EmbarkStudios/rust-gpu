@@ -1,5 +1,4 @@
-use crate::{label_of, operand_idref_mut};
-use rspirv::dr::{Block, Function, Module, Operand};
+use rspirv::dr::{Block, Function, Module};
 use rspirv::spirv::{Op, Word};
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
@@ -16,7 +15,7 @@ pub fn shift_ids(module: &mut Module, add: u32) {
         }
 
         inst.operands.iter_mut().for_each(|op| {
-            if let Some(w) = operand_idref_mut(op) {
+            if let Some(w) = op.id_ref_any_mut() {
                 *w += add
             }
         })
@@ -40,7 +39,11 @@ pub fn block_ordering_pass(func: &mut Function) {
         if !visited.insert(current) {
             return;
         }
-        let current_block = func.blocks.iter().find(|b| label_of(b) == current).unwrap();
+        let current_block = func
+            .blocks
+            .iter()
+            .find(|b| b.label_id().unwrap() == current)
+            .unwrap();
         // Reverse the order, so reverse-postorder keeps things tidy
         for &outgoing in outgoing_edges(current_block).iter().rev() {
             visit_postorder(func, visited, postorder, outgoing);
@@ -51,7 +54,7 @@ pub fn block_ordering_pass(func: &mut Function) {
     let mut visited = HashSet::new();
     let mut postorder = Vec::new();
 
-    let entry_label = label_of(&func.blocks[0]);
+    let entry_label = func.blocks[0].label_id().unwrap();
     visit_postorder(func, &mut visited, &mut postorder, entry_label);
 
     let mut old_blocks = replace(&mut func.blocks, Vec::new());
@@ -59,35 +62,29 @@ pub fn block_ordering_pass(func: &mut Function) {
     for &block in postorder.iter().rev() {
         let index = old_blocks
             .iter()
-            .position(|b| label_of(b) == block)
+            .position(|b| b.label_id().unwrap() == block)
             .unwrap();
         func.blocks.push(old_blocks.remove(index));
     }
     // Note: if old_blocks isn't empty here, that means there were unreachable blocks that were deleted.
-    assert_eq!(label_of(&func.blocks[0]), entry_label);
+    assert_eq!(func.blocks[0].label_id().unwrap(), entry_label);
 }
 
 pub fn outgoing_edges(block: &Block) -> Vec<Word> {
-    fn unwrap_id_ref(operand: &Operand) -> Word {
-        match *operand {
-            Operand::IdRef(word) => word,
-            _ => panic!("Expected Operand::IdRef: {}", operand),
-        }
-    }
     let terminator = block.instructions.last().unwrap();
     // https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#Termination
     match terminator.class.opcode {
-        Op::Branch => vec![unwrap_id_ref(&terminator.operands[0])],
+        Op::Branch => vec![terminator.operands[0].unwrap_id_ref()],
         Op::BranchConditional => vec![
-            unwrap_id_ref(&terminator.operands[1]),
-            unwrap_id_ref(&terminator.operands[2]),
+            terminator.operands[1].unwrap_id_ref(),
+            terminator.operands[2].unwrap_id_ref(),
         ],
-        Op::Switch => once(unwrap_id_ref(&terminator.operands[1]))
+        Op::Switch => once(terminator.operands[1].unwrap_id_ref())
             .chain(
                 terminator.operands[3..]
                     .iter()
                     .step_by(2)
-                    .map(unwrap_id_ref),
+                    .map(|op| op.unwrap_id_ref()),
             )
             .collect(),
         Op::Return | Op::ReturnValue | Op::Kill | Op::Unreachable => Vec::new(),
@@ -113,7 +110,7 @@ pub fn compact_ids(module: &mut Module) -> u32 {
         }
 
         inst.operands.iter_mut().for_each(|op| {
-            if let Some(w) = operand_idref_mut(op) {
+            if let Some(w) = op.id_ref_any_mut() {
                 *w = insert(*w);
             }
         })

@@ -138,11 +138,11 @@ struct SpirvMetadataLoader;
 
 impl MetadataLoader for SpirvMetadataLoader {
     fn get_rlib_metadata(&self, _: &Target, path: &Path) -> Result<MetadataRef, String> {
-        Ok(link::read_metadata(path))
+        link::read_metadata(path)
     }
 
     fn get_dylib_metadata(&self, _: &Target, _: &Path) -> Result<MetadataRef, String> {
-        panic!("TODO: implement get_dylib_metadata");
+        Err("TODO: implement get_dylib_metadata".to_string())
     }
 }
 
@@ -526,5 +526,3 @@ pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
 
     Box::new(SpirvCodegenBackend)
 }
-
-// https://github.com/bjorn3/rustc_codegen_cranelift/blob/1b8df386aa72bc3dacb803f7d4deb4eadd63b56f/src/base.rs

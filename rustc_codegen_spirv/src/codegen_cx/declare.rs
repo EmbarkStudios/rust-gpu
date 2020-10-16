@@ -9,6 +9,7 @@ use rspirv::spirv::{
 };
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
+use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::FnAbiExt;
@@ -78,7 +79,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 return_type,
                 arguments,
             } => (return_type, arguments),
-            other => panic!("fn_abi type {}", other.debug(function_type, self)),
+            other => bug!("fn_abi type {}", other.debug(function_type, self)),
         };
 
         if crate::is_blocklisted_fn(name) {
@@ -169,10 +170,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 return_type,
                 arguments,
             } => (return_type, arguments),
-            other => panic!(
+            other => self.tcx.sess.fatal(&format!(
                 "Invalid entry_stub type: {}",
                 other.debug(entry_func.ty, self)
-            ),
+            )),
         };
         let mut emit = self.emit_global();
         let mut decoration_locations = HashMap::new();
@@ -182,7 +183,10 @@ impl<'tcx> CodegenCx<'tcx> {
             .map(|&arg| {
                 let storage_class = match self.lookup_type(arg) {
                     SpirvType::Pointer { storage_class, .. } => storage_class,
-                    other => panic!("Invalid entry arg type {}", other.debug(arg, self)),
+                    other => self.tcx.sess.fatal(&format!(
+                        "Invalid entry arg type {}",
+                        other.debug(arg, self)
+                    )),
                 };
                 let has_location = match storage_class {
                     StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant => {
@@ -245,10 +249,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 return_type,
                 arguments,
             } => (return_type, arguments),
-            other => panic!(
+            other => self.tcx.sess.fatal(&format!(
                 "Invalid kernel_entry_stub type: {}",
                 other.debug(entry_func.ty, self)
-            ),
+            )),
         };
         let mut emit = self.emit_global();
         let fn_id = emit
@@ -292,7 +296,10 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         let linkage = match linkage {
             Linkage::External => Some(LinkageType::Export),
             Linkage::Internal => None,
-            other => panic!("TODO: Linkage type not supported yet: {:?}", other),
+            other => self.tcx.sess.fatal(&format!(
+                "TODO: Linkage type not supported yet: {:?}",
+                other
+            )),
         };
 
         let span = self.tcx.def_span(def_id);
@@ -321,7 +328,10 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         let linkage2 = match linkage {
             Linkage::External => Some(LinkageType::Export),
             Linkage::Internal => None,
-            other => panic!("TODO: Linkage type not supported yet: {:?}", other),
+            other => self.tcx.sess.fatal(&format!(
+                "TODO: Linkage type not supported yet: {:?}",
+                other
+            )),
         };
         let rust_attrs = self.tcx.codegen_fn_attrs(instance.def_id());
         let spv_attrs = attrs_to_spirv(rust_attrs);
@@ -374,7 +384,10 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         };
         let value_ty = match self.lookup_type(g.ty) {
             SpirvType::Pointer { pointee, .. } => pointee,
-            other => panic!("global had non-pointer type {}", other.debug(g.ty, self)),
+            other => self.tcx.sess.fatal(&format!(
+                "global had non-pointer type {}",
+                other.debug(g.ty, self)
+            )),
         };
         let mut v = self.create_const_alloc(alloc, value_ty);
 
@@ -383,7 +396,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
             let val_int = match val {
                 SpirvConst::Bool(_, false) => 0,
                 SpirvConst::Bool(_, true) => 0,
-                _ => panic!(),
+                _ => bug!(),
             };
             v = self.constant_u8(val_int);
         }

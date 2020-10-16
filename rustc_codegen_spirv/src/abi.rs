@@ -4,6 +4,7 @@ use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attr, SpirvAttribute};
 use rspirv::spirv::{StorageClass, Word};
+use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind, TypeAndMut};
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
@@ -68,7 +69,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
         // Warning: storage_class must match the one called with begin()
         match self.map.borrow_mut().entry((pointee, storage_class)) {
             // We should have hit begin() on this type already, which always inserts an entry.
-            Entry::Vacant(_) => panic!("RecursivePointeeCache::end should always have entry"),
+            Entry::Vacant(_) => bug!("RecursivePointeeCache::end should always have entry"),
             Entry::Occupied(mut entry) => match *entry.get() {
                 // State: There have been no recursive references to this type while defining it, and so no
                 // OpTypeForwardPointer has been emitted. This is the most common case.
@@ -92,7 +93,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                     .def_with_id(cx, id)
                 }
                 PointeeDefState::Defined(_) => {
-                    panic!("RecursivePointeeCache::end defined pointer twice")
+                    bug!("RecursivePointeeCache::end defined pointer twice")
                 }
             },
         }
@@ -350,7 +351,7 @@ pub fn scalar_pair_element_backend_type<'tcx>(
 ) -> Word {
     let scalar = match &ty.layout.abi {
         Abi::ScalarPair(a, b) => [a, b][index],
-        other => panic!("scalar_pair_element_backend_type invalid abi: {:?}", other),
+        other => bug!("scalar_pair_element_backend_type invalid abi: {:?}", other),
     };
     trans_scalar(cx, ty, scalar, Some(index), is_immediate)
 }
@@ -445,10 +446,10 @@ fn dig_scalar_pointee<'tcx>(
         TyKind::Tuple(_) | TyKind::Adt(..) | TyKind::Closure(..) => {
             dig_scalar_pointee_adt(cx, ty, index)
         }
-        ref kind => panic!(
+        ref kind => cx.tcx.sess.fatal(&format!(
             "TODO: Unimplemented Primitive::Pointer TyKind index={:?} ({:#?}):\n{:#?}",
             index, kind, ty
-        ),
+        )),
     }
 }
 
@@ -471,10 +472,10 @@ fn dig_scalar_pointee_adt<'tcx>(
             ..
         } => {
             match *tag_encoding {
-                TagEncoding::Direct => panic!(
+                TagEncoding::Direct => cx.tcx.sess.fatal(&format!(
                     "dig_scalar_pointee_adt Variants::Multiple TagEncoding::Direct makes no sense: {:#?}",
                     ty
-                ),
+                )),
                 TagEncoding::Niche { dataful_variant, .. } => {
                     // This *should* be something like Option<&T>: a very simple enum.
                     // TODO: This might not be, if it's a scalar pair?
@@ -486,7 +487,7 @@ fn dig_scalar_pointee_adt<'tcx>(
                         let field_ty = adt.variants[dataful_variant].fields[0].ty(cx.tcx, substs);
                         dig_scalar_pointee(cx, cx.layout_of(field_ty), index)
                     } else {
-                        panic!("Variants::Multiple not TyKind::Adt: {:#?}", ty)
+                        bug!("Variants::Multiple not TyKind::Adt: {:#?}", ty)
                     }
                 },
             }
@@ -503,14 +504,17 @@ fn dig_scalar_pointee_adt<'tcx>(
                     1 => dig_scalar_pointee(cx, fields[0], Some(index)),
                     // This case right here is the cause of the comment handling TyKind::Ref.
                     2 => dig_scalar_pointee(cx, fields[index], None),
-                    other => panic!(
+                    other => cx.tcx.sess.fatal(&format!(
                         "Unable to dig scalar pair pointer type: fields length {}",
                         other
-                    ),
+                    )),
                 },
                 None => match fields.len() {
                     1 => dig_scalar_pointee(cx, fields[0], None),
-                    other => panic!("Unable to dig scalar pointer type: fields length {}", other),
+                    other => cx.tcx.sess.fatal(&format!(
+                        "Unable to dig scalar pointer type: fields length {}",
+                        other
+                    )),
                 },
             }
         }
@@ -518,10 +522,10 @@ fn dig_scalar_pointee_adt<'tcx>(
     match (storage_class, result) {
         (storage_class, (None, result)) => (storage_class, result),
         (None, (storage_class, result)) => (storage_class, result),
-        (Some(one), (Some(two), _)) => panic!(
+        (Some(one), (Some(two), _)) => cx.tcx.sess.fatal(&format!(
             "Double-applied storage class ({:?} and {:?}) on type {}",
             one, two, ty.ty
-        ),
+        )),
     }
 }
 
@@ -541,10 +545,10 @@ fn get_storage_class<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Optio
 
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     match ty.fields {
-        FieldsShape::Primitive => panic!(
+        FieldsShape::Primitive => cx.tcx.sess.fatal(&format!(
             "FieldsShape::Primitive not supported yet in trans_type: {:?}",
             ty
-        ),
+        )),
         FieldsShape::Union(_) => {
             assert_ne!(ty.size.bytes(), 0, "{:#?}", ty);
             assert!(!ty.is_unsized(), "{:#?}", ty);
@@ -659,12 +663,12 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
         } else {
             if let TyKind::Adt(_, _) = ty.ty.kind() {
             } else {
-                panic!("Variants::Multiple not supported for non-TyKind::Adt");
+                bug!("Variants::Multiple not TyKind::Adt");
             }
             if i == 0 {
                 field_names.push("discriminant".to_string());
             } else {
-                panic!("Variants::Multiple has multiple fields")
+                cx.tcx.sess.fatal("Variants::Multiple has multiple fields")
             }
         };
     }
