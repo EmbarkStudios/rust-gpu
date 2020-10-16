@@ -1,4 +1,3 @@
-use crate::operand_idref;
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::Word;
 use std::collections::HashSet;
@@ -50,7 +49,7 @@ fn root(inst: &Instruction, rooted: &mut HashSet<Word>) -> bool {
         any |= rooted.insert(id);
     }
     for op in &inst.operands {
-        if let Some(id) = operand_idref(op) {
+        if let Some(id) = op.id_ref_any() {
             any |= rooted.insert(id);
         }
     }
@@ -65,7 +64,7 @@ fn is_rooted(inst: &Instruction, rooted: &HashSet<Word>) -> bool {
         // referenced by roots
         inst.operands
             .iter()
-            .any(|op| operand_idref(op).map_or(false, |w| rooted.contains(&w)))
+            .any(|op| op.id_ref_any().map_or(false, |w| rooted.contains(&w)))
     }
 }
 

@@ -6,6 +6,7 @@ use rspirv::spirv::{CLOp, GLOp};
 use rustc_codegen_ssa::mir::operand::OperandRef;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods, IntrinsicCallMethods};
+use rustc_middle::bug;
 use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyKind};
 use rustc_span::source_map::Span;
 use rustc_span::sym;
@@ -41,7 +42,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 
         let (def_id, substs) = match *callee_ty.kind() {
             FnDef(def_id, substs) => (def_id, substs),
-            _ => panic!("expected fn item type, found {}", callee_ty),
+            _ => bug!("expected fn item type, found {}", callee_ty),
         };
 
         let sig = callee_ty.fn_sig(self.tcx);
@@ -91,7 +92,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         self.add(args[0].immediate(), args[1].immediate())
                     }
                     TyKind::Float(_) => self.fadd(args[0].immediate(), args[1].immediate()),
-                    other => panic!("Unimplemented intrinsic type: {:#?}", other),
+                    other => self.fatal(&format!("Unimplemented intrinsic type: {:#?}", other)),
                 }
             }
             sym::saturating_sub => {
@@ -101,7 +102,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         self.sub(args[0].immediate(), args[1].immediate())
                     }
                     TyKind::Float(_) => self.fsub(args[0].immediate(), args[1].immediate()),
-                    other => panic!("Unimplemented intrinsic type: {:#?}", other),
+                    other => self.fatal(&format!("Unimplemented intrinsic type: {:#?}", other)),
                 }
             }
 
@@ -227,7 +228,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 if self.kernel_mode {
                     self.cl_op(CLOp::copysign, [args[0].immediate(), args[1].immediate()])
                 } else {
-                    panic!("TODO: Shader copysign not supported yet")
+                    self.fatal("TODO: Shader copysign not supported yet")
                 }
             }
             sym::floorf32 | sym::floorf64 => {
@@ -381,16 +382,16 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         let res3 = self.or(res3, res4);
                         self.or(res1, res3)
                     }
-                    other => panic!("bswap not implemented for int width {}", other),
+                    other => self.fatal(&format!("bswap not implemented for int width {}", other)),
                 }
             }
 
-            _ => panic!("TODO: Unknown intrinsic '{}'", name),
+            _ => self.fatal(&format!("TODO: Unknown intrinsic '{}'", name)),
         };
 
         if !fn_abi.ret.is_ignore() {
             if let PassMode::Cast(_ty) = fn_abi.ret.mode {
-                panic!("TODO: PassMode::Cast not implemented yet in intrinsics");
+                self.fatal("TODO: PassMode::Cast not implemented yet in intrinsics");
             } else {
                 OperandRef::from_immediate_or_packed_pair(self, value, result.layout)
                     .val

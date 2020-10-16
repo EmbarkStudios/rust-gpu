@@ -1,4 +1,3 @@
-use crate::{operand_idref, operand_idref_mut};
 use rspirv::binary::Assemble;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
@@ -9,21 +8,14 @@ pub fn remove_duplicate_extensions(module: &mut Module) {
 
     module.extensions.retain(|inst| {
         inst.class.opcode != Op::Extension
-            || set.insert(match &inst.operands[0] {
-                Operand::LiteralString(s) => s.clone(),
-                _ => panic!(),
-            })
+            || set.insert(inst.operands[0].unwrap_literal_string().to_string())
     });
 }
 
 pub fn remove_duplicate_capablities(module: &mut Module) {
     let mut set = HashSet::new();
     module.capabilities.retain(|inst| {
-        inst.class.opcode != Op::Capability
-            || set.insert(match inst.operands[0] {
-                Operand::Capability(s) => s,
-                _ => panic!(),
-            })
+        inst.class.opcode != Op::Capability || set.insert(inst.operands[0].unwrap_capability())
     });
 }
 
@@ -80,7 +72,7 @@ fn gather_annotations(annotations: &[Instruction]) -> HashMap<Word, Vec<u32>> {
     let mut map = HashMap::new();
     for inst in annotations {
         if inst.class.opcode == Op::Decorate || inst.class.opcode == Op::MemberDecorate {
-            match map.entry(operand_idref(&inst.operands[0]).unwrap()) {
+            match map.entry(inst.operands[0].id_ref_any().unwrap()) {
                 hash_map::Entry::Vacant(entry) => {
                     entry.insert(vec![make_annotation_key(inst)]);
                 }
@@ -142,7 +134,7 @@ fn rewrite_inst_with_rules(inst: &mut Instruction, rules: &HashMap<u32, u32>) {
         *id = rules.get(id).copied().unwrap_or(*id);
     }
     for op in &mut inst.operands {
-        if let Some(id) = operand_idref_mut(op) {
+        if let Some(id) = op.id_ref_any_mut() {
             *id = rules.get(id).copied().unwrap_or(*id);
         }
     }

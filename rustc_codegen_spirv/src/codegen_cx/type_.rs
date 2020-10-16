@@ -5,6 +5,7 @@ use rspirv::spirv::StorageClass;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, LayoutTypeMethods};
+use rustc_middle::bug;
 use rustc_middle::ty::layout::{LayoutError, TyAndLayout};
 use rustc_middle::ty::{ParamEnv, Ty};
 use rustc_span::source_map::{Span, DUMMY_SP};
@@ -26,7 +27,7 @@ impl<'tcx> LayoutOf for CodegenCx<'tcx> {
                 if let LayoutError::SizeOverflow(_) = e {
                     self.tcx.sess.span_fatal(span, &e.to_string())
                 } else {
-                    panic!("failed to get layout for `{}`: {}", ty, e)
+                    bug!("failed to get layout for `{}`: {}", ty, e)
                 }
             })
     }
@@ -59,13 +60,13 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn backend_field_index(&self, layout: TyAndLayout<'tcx>, index: usize) -> u64 {
         match layout.abi {
             Abi::Scalar(_) | Abi::ScalarPair(..) => {
-                panic!("backend_field_index({:?}): not applicable", layout)
+                bug!("backend_field_index({:?}): not applicable", layout)
             }
             _ => {}
         }
         match layout.fields {
             FieldsShape::Primitive | FieldsShape::Union(_) => {
-                panic!("backend_field_index({:?}): not applicable", layout)
+                bug!("backend_field_index({:?}): not applicable", layout)
             }
             FieldsShape::Array { .. } => index as u64,
             // note: codegen_llvm implements this as 1+index*2 due to padding fields
@@ -161,7 +162,10 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                 16 => TypeKind::Half,
                 32 => TypeKind::Float,
                 64 => TypeKind::Double,
-                other => panic!("Invalid float width in type_kind: {}", other),
+                other => self
+                    .tcx
+                    .sess
+                    .fatal(&format!("Invalid float width in type_kind: {}", other)),
             },
             SpirvType::Adt { .. } => TypeKind::Struct,
             SpirvType::Opaque { .. } => TypeKind::Struct,
@@ -193,7 +197,10 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                 pointee,
             } => pointee,
             SpirvType::Vector { element, .. } => element,
-            spirv_type => panic!("element_type called on invalid type: {:?}", spirv_type),
+            spirv_type => self.tcx.sess.fatal(&format!(
+                "element_type called on invalid type: {:?}",
+                spirv_type
+            )),
         }
     }
 
@@ -201,14 +208,20 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn vector_length(&self, ty: Self::Type) -> usize {
         match self.lookup_type(ty) {
             SpirvType::Vector { count, .. } => count as usize,
-            ty => panic!("vector_length called on non-vector type: {:?}", ty),
+            ty => self.tcx.sess.fatal(&format!(
+                "vector_length called on non-vector type: {:?}",
+                ty
+            )),
         }
     }
 
     fn float_width(&self, ty: Self::Type) -> usize {
         match self.lookup_type(ty) {
             SpirvType::Float(width) => width as usize,
-            ty => panic!("float_width called on non-float type: {:?}", ty),
+            ty => self
+                .tcx
+                .sess
+                .fatal(&format!("float_width called on non-float type: {:?}", ty)),
         }
     }
 
@@ -216,7 +229,10 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn int_width(&self, ty: Self::Type) -> u64 {
         match self.lookup_type(ty) {
             SpirvType::Integer(width, _) => width as u64,
-            ty => panic!("int_width called on non-integer type: {:?}", ty),
+            ty => self
+                .tcx
+                .sess
+                .fatal(&format!("int_width called on non-integer type: {:?}", ty)),
         }
     }
 

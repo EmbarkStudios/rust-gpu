@@ -118,14 +118,17 @@ fn memset_dynamic_scalar(
 impl<'a, 'tcx> Builder<'a, 'tcx> {
     fn memset_const_pattern(&self, ty: &SpirvType, fill_byte: u8) -> Word {
         match *ty {
-            SpirvType::Void => panic!("memset invalid on void pattern"),
-            SpirvType::Bool => panic!("memset invalid on bool pattern"),
+            SpirvType::Void => self.fatal("memset invalid on void pattern"),
+            SpirvType::Bool => self.fatal("memset invalid on bool pattern"),
             SpirvType::Integer(width, _signedness) => match width {
                 8 => self.constant_u8(fill_byte).def,
                 16 => self.constant_u16(memset_fill_u16(fill_byte)).def,
                 32 => self.constant_u32(memset_fill_u32(fill_byte)).def,
                 64 => self.constant_u64(memset_fill_u64(fill_byte)).def,
-                _ => panic!("memset on integer width {} not implemented yet", width),
+                _ => self.fatal(&format!(
+                    "memset on integer width {} not implemented yet",
+                    width
+                )),
             },
             SpirvType::Float(width) => match width {
                 32 => {
@@ -136,10 +139,13 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     self.constant_f64(f64::from_bits(memset_fill_u64(fill_byte)))
                         .def
                 }
-                _ => panic!("memset on float width {} not implemented yet", width),
+                _ => self.fatal(&format!(
+                    "memset on float width {} not implemented yet",
+                    width
+                )),
             },
-            SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
-            SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
+            SpirvType::Adt { .. } => self.fatal("memset on structs not implemented yet"),
+            SpirvType::Opaque { .. } => self.fatal("memset on opaque type is invalid"),
             SpirvType::Vector { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 self.constant_composite(ty.clone().def(self), vec![elem_pat; count as usize])
@@ -152,31 +158,37 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .def
             }
             SpirvType::RuntimeArray { .. } => {
-                panic!("memset on runtime arrays not implemented yet")
+                self.fatal("memset on runtime arrays not implemented yet")
             }
-            SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
-            SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
+            SpirvType::Pointer { .. } => self.fatal("memset on pointers not implemented yet"),
+            SpirvType::Function { .. } => self.fatal("memset on functions not implemented yet"),
         }
     }
 
     fn memset_dynamic_pattern(&self, ty: &SpirvType, fill_var: Word) -> Word {
         match *ty {
-            SpirvType::Void => panic!("memset invalid on void pattern"),
-            SpirvType::Bool => panic!("memset invalid on bool pattern"),
+            SpirvType::Void => self.fatal("memset invalid on void pattern"),
+            SpirvType::Bool => self.fatal("memset invalid on bool pattern"),
             SpirvType::Integer(width, _signedness) => match width {
                 8 => fill_var,
                 16 => memset_dynamic_scalar(self, fill_var, 2, false),
                 32 => memset_dynamic_scalar(self, fill_var, 4, false),
                 64 => memset_dynamic_scalar(self, fill_var, 8, false),
-                _ => panic!("memset on integer width {} not implemented yet", width),
+                _ => self.fatal(&format!(
+                    "memset on integer width {} not implemented yet",
+                    width
+                )),
             },
             SpirvType::Float(width) => match width {
                 32 => memset_dynamic_scalar(self, fill_var, 4, true),
                 64 => memset_dynamic_scalar(self, fill_var, 8, true),
-                _ => panic!("memset on float width {} not implemented yet", width),
+                _ => self.fatal(&format!(
+                    "memset on float width {} not implemented yet",
+                    width
+                )),
             },
-            SpirvType::Adt { .. } => panic!("memset on structs not implemented yet"),
-            SpirvType::Opaque { .. } => panic!("memset on opaque type is invalid"),
+            SpirvType::Adt { .. } => self.fatal("memset on structs not implemented yet"),
+            SpirvType::Opaque { .. } => self.fatal("memset on opaque type is invalid"),
             SpirvType::Array { element, count } => {
                 let elem_pat = self.memset_dynamic_pattern(&self.lookup_type(element), fill_var);
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
@@ -199,10 +211,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .unwrap()
             }
             SpirvType::RuntimeArray { .. } => {
-                panic!("memset on runtime arrays not implemented yet")
+                self.fatal("memset on runtime arrays not implemented yet")
             }
-            SpirvType::Pointer { .. } => panic!("memset on pointers not implemented yet"),
-            SpirvType::Function { .. } => panic!("memset on functions not implemented yet"),
+            SpirvType::Pointer { .. } => self.fatal("memset on pointers not implemented yet"),
+            SpirvType::Function { .. } => self.fatal("memset on functions not implemented yet"),
         }
     }
 
@@ -289,7 +301,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             .memory_model
             .as_ref()
             .map_or(false, |inst| {
-                inst.operands[0] == Operand::AddressingModel(AddressingModel::Logical)
+                inst.operands[0].unwrap_addressing_model() == AddressingModel::Logical
             });
         if is_logical {
             self.zombie(def, "OpBitcast on ptr without AddressingModel != Logical")
@@ -346,10 +358,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             let selected_function = &emit.module_ref().functions[selected_function];
             let def_inst = selected_function.def.as_ref().unwrap();
             let def = def_inst.result_id.unwrap();
-            let ty = match def_inst.operands[1] {
-                Operand::IdRef(ty) => ty,
-                ref other => panic!("Invalid operand to function inst: {}", other),
-            };
+            let ty = def_inst.operands[1].unwrap_id_ref();
             def.with_type(ty)
         };
         self.cursor = cursor;
@@ -442,57 +451,74 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // TODO: Remove once structurizer is done.
             self.zombie(else_llbb, "OpSwitch before structurizer is done");
         }
+
+        fn construct_8(self_: &Builder, signed: bool, v: u128) -> Operand {
+            if v > u8::MAX as u128 {
+                self_.fatal(&format!(
+                    "Switches to values above u8::MAX not supported: {:?}",
+                    v
+                ))
+            } else if signed {
+                // this cast chain can probably be collapsed, but, whatever, be safe
+                Operand::LiteralInt32(v as u8 as i8 as i32 as u32)
+            } else {
+                Operand::LiteralInt32(v as u8 as u32)
+            }
+        }
+        fn construct_16(self_: &Builder, signed: bool, v: u128) -> Operand {
+            if v > u16::MAX as u128 {
+                self_.fatal(&format!(
+                    "Switches to values above u16::MAX not supported: {:?}",
+                    v
+                ))
+            } else if signed {
+                Operand::LiteralInt32(v as u16 as i16 as i32 as u32)
+            } else {
+                Operand::LiteralInt32(v as u16 as u32)
+            }
+        }
+        fn construct_32(self_: &Builder, _signed: bool, v: u128) -> Operand {
+            if v > u32::MAX as u128 {
+                self_.fatal(&format!(
+                    "Switches to values above u32::MAX not supported: {:?}",
+                    v
+                ))
+            } else {
+                Operand::LiteralInt32(v as u32)
+            }
+        }
+        fn construct_64(self_: &Builder, _signed: bool, v: u128) -> Operand {
+            if v > u64::MAX as u128 {
+                self_.fatal(&format!(
+                    "Switches to values above u64::MAX not supported: {:?}",
+                    v
+                ))
+            } else {
+                Operand::LiteralInt64(v as u64)
+            }
+        }
         // pass in signed into the closure to be able to unify closure types
         let (signed, construct_case) = match self.lookup_type(v.ty) {
             SpirvType::Integer(width, signed) => {
                 let construct_case = match width {
-                    8 => |signed, v| {
-                        if v > u8::MAX as u128 {
-                            panic!("Switches to values above u8::MAX not supported: {:?}", v)
-                        } else if signed {
-                            // this cast chain can probably be collapsed, but, whatever, be safe
-                            Operand::LiteralInt32(v as u8 as i8 as i32 as u32)
-                        } else {
-                            Operand::LiteralInt32(v as u8 as u32)
-                        }
-                    },
-                    16 => |signed, v| {
-                        if v > u16::MAX as u128 {
-                            panic!("Switches to values above u16::MAX not supported: {:?}", v)
-                        } else if signed {
-                            Operand::LiteralInt32(v as u16 as i16 as i32 as u32)
-                        } else {
-                            Operand::LiteralInt32(v as u16 as u32)
-                        }
-                    },
-                    32 => |_signed, v| {
-                        if v > u32::MAX as u128 {
-                            panic!("Switches to values above u32::MAX not supported: {:?}", v)
-                        } else {
-                            Operand::LiteralInt32(v as u32)
-                        }
-                    },
-                    64 => |_signed, v| {
-                        if v > u64::MAX as u128 {
-                            panic!("Switches to values above u64::MAX not supported: {:?}", v)
-                        } else {
-                            Operand::LiteralInt64(v as u64)
-                        }
-                    },
-                    other => panic!(
-                        "switch selector cannot have width {} (only 32 and 64 bits allowed)",
+                    8 => construct_8,
+                    16 => construct_16,
+                    32 => construct_32,
+                    64 => construct_64,
+                    other => self.fatal(&format!(
+                        "switch selector cannot have width {} (only 8, 16, 32, and 64 bits allowed)",
                         other
-                    ),
+                    )),
                 };
                 (signed, construct_case)
             }
-            other => panic!(
+            other => self.fatal(&format!(
                 "switch selector cannot have non-integer type {}",
                 other.debug(v.ty, self)
-            ),
+            )),
         };
         let cases = cases
-            .map(|(i, b)| (construct_case(signed, i), b))
+            .map(|(i, b)| (construct_case(self, signed, i), b))
             .collect::<Vec<_>>();
         self.emit().switch(v.def, else_llbb, cases).unwrap()
     }
@@ -552,7 +578,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Integer(_, _) => self.emit().bitwise_and(ty, None, lhs.def, rhs.def),
             SpirvType::Bool => self.emit().logical_and(ty, None, lhs.def, rhs.def),
-            o => panic!("and() not implemented for type {}", o.debug(ty, self)),
+            o => self.fatal(&format!(
+                "and() not implemented for type {}",
+                o.debug(ty, self)
+            )),
         }
         .unwrap()
         .with_type(ty)
@@ -563,7 +592,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Integer(_, _) => self.emit().bitwise_or(ty, None, lhs.def, rhs.def),
             SpirvType::Bool => self.emit().logical_or(ty, None, lhs.def, rhs.def),
-            o => panic!("or() not implemented for type {}", o.debug(ty, self)),
+            o => self.fatal(&format!(
+                "or() not implemented for type {}",
+                o.debug(ty, self)
+            )),
         }
         .unwrap()
         .with_type(ty)
@@ -574,7 +606,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Integer(_, _) => self.emit().bitwise_xor(ty, None, lhs.def, rhs.def),
             SpirvType::Bool => self.emit().logical_not_equal(ty, None, lhs.def, rhs.def),
-            o => panic!("xor() not implemented for type {}", o.debug(ty, self)),
+            o => self.fatal(&format!(
+                "xor() not implemented for type {}",
+                o.debug(ty, self)
+            )),
         }
         .unwrap()
         .with_type(ty)
@@ -588,7 +623,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 self.emit()
                     .logical_not_equal(val.ty, None, val.def, true_.def)
             }
-            o => panic!("not() not implemented for type {}", o.debug(val.ty, self)),
+            o => self.fatal(&format!(
+                "not() not implemented for type {}",
+                o.debug(val.ty, self)
+            )),
         }
         .unwrap()
         .with_type(val.ty)
@@ -678,7 +716,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn array_alloca(&mut self, _ty: Self::Type, _len: Self::Value, _align: Align) -> Self::Value {
-        panic!("TODO: array_alloca not supported yet")
+        self.fatal("TODO: array_alloca not supported yet")
     }
 
     fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
@@ -687,7 +725,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 storage_class: _,
                 pointee,
             } => pointee,
-            ty => panic!("load called on variable that wasn't a pointer: {:?}", ty),
+            ty => self.fatal(&format!(
+                "load called on variable that wasn't a pointer: {:?}",
+                ty
+            )),
         };
         self.emit()
             .load(ty, None, ptr.def, None, empty())
@@ -706,10 +747,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 storage_class: _,
                 pointee,
             } => pointee,
-            ty => panic!(
+            ty => self.fatal(&format!(
                 "atomic_load called on variable that wasn't a pointer: {:?}",
                 ty
-            ),
+            )),
         };
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
@@ -833,7 +874,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 storage_class: _,
                 pointee,
             } => pointee,
-            ty => panic!("store called on variable that wasn't a pointer: {:?}", ty),
+            ty => self.fatal(&format!(
+                "store called on variable that wasn't a pointer: {:?}",
+                ty
+            )),
         };
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
         self.emit().store(ptr.def, val.def, None, empty()).unwrap();
@@ -862,10 +906,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 storage_class: _,
                 pointee,
             } => pointee,
-            ty => panic!(
+            ty => self.fatal(&format!(
                 "atomic_store called on variable that wasn't a pointer: {:?}",
                 ty
-            ),
+            )),
         };
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
         // TODO: Default to device scope
@@ -895,12 +939,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 SpirvType::Array { element, .. }
                 | SpirvType::RuntimeArray { element, .. }
                 | SpirvType::Vector { element, .. } => (storage_class, element),
-                other => panic!(
+                other => self.fatal(&format!(
                     "struct_gep not on struct, array, or vector type: {:?}, index {}",
                     other, idx
-                ),
+                )),
             },
-            other => panic!("struct_gep not on pointer type: {:?}, index {}", other, idx),
+            other => self.fatal(&format!(
+                "struct_gep not on pointer type: {:?}, index {}",
+                other, idx
+            )),
         };
         let result_type = SpirvType::Pointer {
             storage_class,
@@ -910,7 +957,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // Important! LLVM, and therefore intel-compute-runtime, require the `getelementptr` instruction (and therefore
         // OpAccessChain) on structs to be a constant i32. Not i64! i32.
         if idx > u32::MAX as u64 {
-            panic!("struct_gep bigger than u32::MAX");
+            self.fatal("struct_gep bigger than u32::MAX");
         }
         let index_const = self.constant_u32(idx as u32).def;
         self.emit()
@@ -1011,7 +1058,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn ptrtoint(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         match self.lookup_type(val.ty) {
             SpirvType::Pointer { .. } => (),
-            other => panic!("ptrtoint called on non-pointer source type: {:?}", other),
+            other => self.fatal(&format!(
+                "ptrtoint called on non-pointer source type: {:?}",
+                other
+            )),
         }
         if val.ty == dest_ty {
             val
@@ -1029,7 +1079,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn inttoptr(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         match self.lookup_type(dest_ty) {
             SpirvType::Pointer { .. } => (),
-            other => panic!("inttoptr called on non-pointer dest type: {:?}", other),
+            other => self.fatal(&format!(
+                "inttoptr called on non-pointer dest type: {:?}",
+                other
+            )),
         }
         if val.ty == dest_ty {
             val
@@ -1107,21 +1160,27 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     .unwrap()
                     .with_type(dest_ty)
             }
-            (val_ty, dest_ty_spv) => panic!(
+            (val_ty, dest_ty_spv) => self.fatal(&format!(
                 "TODO: intcast not implemented yet: val={:?} val.ty={:?} dest_ty={:?} is_signed={}",
                 val, val_ty, dest_ty_spv, is_signed
-            ),
+            )),
         }
     }
 
     fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         let val_pointee = match self.lookup_type(val.ty) {
             SpirvType::Pointer { pointee, .. } => pointee,
-            other => panic!("pointercast called on non-pointer source type: {:?}", other),
+            other => self.fatal(&format!(
+                "pointercast called on non-pointer source type: {:?}",
+                other
+            )),
         };
         let dest_pointee = match self.lookup_type(dest_ty) {
             SpirvType::Pointer { pointee, .. } => pointee,
-            other => panic!("pointercast called on non-pointer dest type: {:?}", other),
+            other => self.fatal(&format!(
+                "pointercast called on non-pointer dest type: {:?}",
+                other
+            )),
         };
         if val.ty == dest_ty {
             val
@@ -1226,10 +1285,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     self.zombie_convert_ptr_to_u(rhs);
                     self.emit().u_less_than_equal(b, None, lhs, rhs)
                 }
-                IntSGT => panic!("TODO: pointer operator IntSGT not implemented yet"),
-                IntSGE => panic!("TODO: pointer operator IntSGE not implemented yet"),
-                IntSLT => panic!("TODO: pointer operator IntSLT not implemented yet"),
-                IntSLE => panic!("TODO: pointer operator IntSLE not implemented yet"),
+                IntSGT => self.fatal("TODO: pointer operator IntSGT not implemented yet"),
+                IntSGE => self.fatal("TODO: pointer operator IntSGE not implemented yet"),
+                IntSLT => self.fatal("TODO: pointer operator IntSLT not implemented yet"),
+                IntSLE => self.fatal("TODO: pointer operator IntSLE not implemented yet"),
             },
             SpirvType::Bool => match op {
                 IntEQ => self.emit().logical_equal(b, None, lhs.def, rhs.def),
@@ -1271,15 +1330,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                         .unwrap();
                     self.emit().logical_or(b, None, lhs, rhs.def)
                 }
-                IntSGT => panic!("TODO: boolean operator IntSGT not implemented yet"),
-                IntSGE => panic!("TODO: boolean operator IntSGE not implemented yet"),
-                IntSLT => panic!("TODO: boolean operator IntSLT not implemented yet"),
-                IntSLE => panic!("TODO: boolean operator IntSLE not implemented yet"),
+                IntSGT => self.fatal("TODO: boolean operator IntSGT not implemented yet"),
+                IntSGE => self.fatal("TODO: boolean operator IntSGE not implemented yet"),
+                IntSLT => self.fatal("TODO: boolean operator IntSLT not implemented yet"),
+                IntSLE => self.fatal("TODO: boolean operator IntSLE not implemented yet"),
             },
-            other => panic!(
+            other => self.fatal(&format!(
                 "Int comparison not implemented on {}",
                 other.debug(lhs.ty, self)
-            ),
+            )),
         }
         .unwrap()
         .with_type(b)
@@ -1361,10 +1420,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     ) {
         let elem_ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee, .. } => pointee,
-            _ => panic!(
+            _ => self.fatal(&format!(
                 "memset called on non-pointer type: {}",
                 self.debug_type(ptr.ty)
-            ),
+            )),
         };
         let elem_ty_spv = self.lookup_type(elem_ty);
         let pat = match self.builder.lookup_const_u64(fill_byte) {
@@ -1399,7 +1458,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn extract_element(&mut self, vec: Self::Value, idx: Self::Value) -> Self::Value {
         let result_type = match self.lookup_type(vec.ty) {
             SpirvType::Vector { element, .. } => element,
-            other => panic!("extract_element not implemented on type {:?}", other),
+            other => self.fatal(&format!(
+                "extract_element not implemented on type {:?}",
+                other
+            )),
         };
         match self.builder.lookup_const_u64(idx) {
             Some(const_index) => self.emit().composite_extract(
@@ -1435,7 +1497,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn extract_value(&mut self, agg_val: Self::Value, idx: u64) -> Self::Value {
         let result_type = match self.lookup_type(agg_val.ty) {
             SpirvType::Adt { field_types, .. } => field_types[idx as usize],
-            other => panic!("extract_value not implemented on type {:?}", other),
+            other => self.fatal(&format!(
+                "extract_value not implemented on type {:?}",
+                other
+            )),
         };
         self.emit()
             .composite_extract(result_type, None, agg_val.def, [idx as u32].iter().cloned())
@@ -1448,7 +1513,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Adt { field_types, .. } => {
                 assert_ty_eq!(self, field_types[idx as usize], elt.ty)
             }
-            other => panic!("insert_value not implemented on type {:?}", other),
+            other => self.fatal(&format!("insert_value not implemented on type {:?}", other)),
         };
         self.emit()
             .composite_insert(
@@ -1530,10 +1595,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 storage_class: _,
                 pointee,
             } => pointee,
-            ty => panic!(
+            ty => self.fatal(&format!(
                 "atomic_cmpxchg called on variable that wasn't a pointer: {:?}",
                 ty
-            ),
+            )),
         };
         assert_ty_eq!(self, dst_pointee_ty, cmp.ty);
         assert_ty_eq!(self, dst_pointee_ty, src.ty);
@@ -1570,10 +1635,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 storage_class: _,
                 pointee,
             } => pointee,
-            ty => panic!(
+            ty => self.fatal(&format!(
                 "atomic_rmw called on variable that wasn't a pointer: {:?}",
                 ty
-            ),
+            )),
         };
         assert_ty_eq!(self, dst_pointee_ty, src.ty);
         self.validate_atomic(dst_pointee_ty, dst.def);
@@ -1587,7 +1652,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             AtomicAdd => emit.atomic_i_add(src.ty, None, dst.def, memory, semantics, src.def),
             AtomicSub => emit.atomic_i_sub(src.ty, None, dst.def, memory, semantics, src.def),
             AtomicAnd => emit.atomic_and(src.ty, None, dst.def, memory, semantics, src.def),
-            AtomicNand => panic!("atomic nand is not supported"),
+            AtomicNand => self.fatal("atomic nand is not supported"),
             AtomicOr => emit.atomic_or(src.ty, None, dst.def, memory, semantics, src.def),
             AtomicXor => emit.atomic_xor(src.ty, None, dst.def, memory, semantics, src.def),
             AtomicMax => emit.atomic_s_max(src.ty, None, dst.def, memory, semantics, src.def),
@@ -1638,7 +1703,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         funclet: Option<&Self::Funclet>,
     ) -> Self::Value {
         if funclet.is_some() {
-            panic!("TODO: Funclets are not supported");
+            self.fatal("TODO: Funclets are not supported");
         }
         // dereference pointers
         let (result_type, argument_types) = loop {
@@ -1659,7 +1724,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     return_type,
                     arguments,
                 } => break (return_type, arguments),
-                ty => panic!("Calling non-function type: {:?}", ty),
+                ty => self.fatal(&format!("Calling non-function type: {:?}", ty)),
             }
         };
         for (argument, argument_type) in args.iter().zip(argument_types) {

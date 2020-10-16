@@ -1,4 +1,4 @@
-use rspirv::dr::{Module, Operand};
+use rspirv::dr::Module;
 use rspirv::spirv::{Capability, Op};
 use std::collections::HashSet;
 
@@ -12,32 +12,26 @@ fn compute_capabilities(module: &Module) -> HashSet<Capability> {
     for inst in module.all_inst_iter() {
         set.extend(inst.class.capabilities);
         match inst.class.opcode {
-            Op::TypeInt => match inst.operands[0] {
-                Operand::LiteralInt32(width) => match width {
-                    8 => {
-                        set.insert(Capability::Int8);
-                    }
-                    16 => {
-                        set.insert(Capability::Int16);
-                    }
-                    64 => {
-                        set.insert(Capability::Int64);
-                    }
-                    _ => {}
-                },
-                _ => panic!(),
+            Op::TypeInt => match inst.operands[0].unwrap_literal_int32() {
+                8 => {
+                    set.insert(Capability::Int8);
+                }
+                16 => {
+                    set.insert(Capability::Int16);
+                }
+                64 => {
+                    set.insert(Capability::Int64);
+                }
+                _ => {}
             },
-            Op::TypeFloat => match inst.operands[0] {
-                Operand::LiteralInt32(width) => match width {
-                    16 => {
-                        set.insert(Capability::Float16);
-                    }
-                    64 => {
-                        set.insert(Capability::Float64);
-                    }
-                    _ => {}
-                },
-                _ => panic!(),
+            Op::TypeFloat => match inst.operands[0].unwrap_literal_int32() {
+                16 => {
+                    set.insert(Capability::Float16);
+                }
+                64 => {
+                    set.insert(Capability::Float64);
+                }
+                _ => {}
             },
             _ => {}
         }
@@ -53,11 +47,7 @@ fn compute_capabilities(module: &Module) -> HashSet<Capability> {
 
 fn remove_capabilities(module: &mut Module, set: &HashSet<Capability>) {
     module.capabilities.retain(|inst| {
-        inst.class.opcode != Op::Capability
-            || set.contains(match &inst.operands[0] {
-                Operand::Capability(s) => s,
-                _ => panic!(),
-            })
+        inst.class.opcode != Op::Capability || set.contains(&inst.operands[0].unwrap_capability())
     });
 }
 
@@ -65,21 +55,12 @@ pub fn remove_extra_extensions(module: &mut Module) {
     // TODO: Make this more generalized once this gets more advanced.
     let has_intel_integer_cap = module.capabilities.iter().any(|inst| {
         inst.class.opcode == Op::Capability
-            && match inst.operands[0] {
-                Operand::Capability(s) => s == Capability::IntegerFunctions2INTEL,
-                _ => panic!(),
-            }
+            && inst.operands[0].unwrap_capability() == Capability::IntegerFunctions2INTEL
     });
     if !has_intel_integer_cap {
         module.extensions.retain(|inst| {
             inst.class.opcode != Op::Extension
-                || match &inst.operands[0] {
-                    Operand::LiteralString(s) if s == "SPV_INTEL_shader_integer_functions2" => {
-                        false
-                    }
-                    Operand::LiteralString(_) => true,
-                    _ => panic!(),
-                }
+                || inst.operands[0].unwrap_literal_string() != "SPV_INTEL_shader_integer_functions2"
         })
     }
 }

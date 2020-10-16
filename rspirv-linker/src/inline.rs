@@ -4,8 +4,8 @@
 //! `&Input<T>` in a function! So, we inline all functions that take these "illegal" pointers, then
 //! run mem2reg (see mem2reg.rs) on the result to "unwrap" the Function pointer.
 
+use crate::apply_rewrite_rules;
 use crate::mem2reg::compute_preds;
-use crate::{apply_rewrite_rules, operand_idref};
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use std::collections::{HashMap, HashSet};
@@ -40,10 +40,10 @@ pub fn inline(module: &mut Module) {
     });
     // Drop OpName etc. for inlined functions
     module.debugs.retain(|inst| {
-        !inst
-            .operands
-            .iter()
-            .any(|op| operand_idref(op).map_or(false, |id| dropped_ids.contains(&id)))
+        !inst.operands.iter().any(|op| {
+            op.id_ref_any()
+                .map_or(false, |id| dropped_ids.contains(&id))
+        })
     });
     let mut inliner = Inliner {
         header: &mut module.header.as_mut().unwrap(),
@@ -72,14 +72,8 @@ fn compute_disallowed_argument_types(module: &Module) -> HashSet<Word> {
     for inst in &module.types_global_values {
         match inst.class.opcode {
             Op::TypePointer => {
-                let storage_class = match inst.operands[0] {
-                    Operand::StorageClass(x) => x,
-                    _ => panic!(),
-                };
-                let pointee = match inst.operands[1] {
-                    Operand::IdRef(x) => x,
-                    _ => panic!(),
-                };
+                let storage_class = inst.operands[0].unwrap_storage_class();
+                let pointee = inst.operands[1].unwrap_id_ref();
                 if !allowed_argument_storage_classes.contains(&storage_class)
                     || disallowed_pointees.contains(&pointee)
                     || disallowed_argument_types.contains(&pointee)
@@ -92,7 +86,7 @@ fn compute_disallowed_argument_types(module: &Module) -> HashSet<Word> {
                 if inst
                     .operands
                     .iter()
-                    .map(|op| operand_idref(op).unwrap())
+                    .map(|op| op.id_ref_any().unwrap())
                     .any(|id| disallowed_argument_types.contains(&id))
                 {
                     disallowed_argument_types.insert(inst.result_id.unwrap());
@@ -100,14 +94,14 @@ fn compute_disallowed_argument_types(module: &Module) -> HashSet<Word> {
                 if inst
                     .operands
                     .iter()
-                    .map(|op| operand_idref(op).unwrap())
+                    .map(|op| op.id_ref_any().unwrap())
                     .any(|id| disallowed_pointees.contains(&id))
                 {
                     disallowed_pointees.insert(inst.result_id.unwrap());
                 }
             }
             Op::TypeArray | Op::TypeRuntimeArray | Op::TypeVector => {
-                let id = operand_idref(&inst.operands[0]).unwrap();
+                let id = inst.operands[0].id_ref_any().unwrap();
                 if disallowed_argument_types.contains(&id) {
                     disallowed_argument_types.insert(inst.result_id.unwrap());
                 }
@@ -123,10 +117,7 @@ fn compute_disallowed_argument_types(module: &Module) -> HashSet<Word> {
 
 fn should_inline(disallowed_argument_types: &HashSet<Word>, function: &Function) -> bool {
     let def = function.def.as_ref().unwrap();
-    let control = match def.operands[0] {
-        Operand::FunctionControl(control) => control,
-        _ => panic!(),
-    };
+    let control = def.operands[0].unwrap_function_control();
     control.contains(FunctionControl::INLINE)
         || function
             .parameters
@@ -160,8 +151,8 @@ impl Inliner<'_, '_> {
         // TODO: This is horribly slow, fix this
         let existing = self.types_global_values.iter().find(|inst| {
             inst.class.opcode == Op::TypePointer
-                && inst.operands[0] == Operand::StorageClass(StorageClass::Function)
-                && inst.operands[1] == Operand::IdRef(pointee)
+                && inst.operands[0].unwrap_storage_class() == StorageClass::Function
+                && inst.operands[1].unwrap_id_ref() == pointee
         });
         if let Some(existing) = existing {
             return existing.result_id.unwrap();
@@ -203,7 +194,7 @@ impl Inliner<'_, '_> {
                     index,
                     inst,
                     self.functions
-                        .get(&operand_idref(&inst.operands[0]).unwrap())
+                        .get(&inst.operands[0].id_ref_any().unwrap())
                         .unwrap(),
                 )
             })
@@ -226,7 +217,7 @@ impl Inliner<'_, '_> {
             .operands
             .iter()
             .skip(1)
-            .map(|op| operand_idref(op).unwrap());
+            .map(|op| op.id_ref_any().unwrap());
         let callee_parameters = callee.parameters.iter().map(|inst| {
             assert!(inst.class.opcode == Op::FunctionParameter);
             inst.result_id.unwrap()
@@ -330,7 +321,7 @@ fn get_inlined_blocks(
         let last = block.instructions.last().unwrap();
         if let Op::Return | Op::ReturnValue = last.class.opcode {
             if Op::ReturnValue == last.class.opcode {
-                let return_value = operand_idref(&last.operands[0]).unwrap();
+                let return_value = last.operands[0].id_ref_any().unwrap();
                 block.instructions.insert(
                     block.instructions.len() - 1,
                     Instruction::new(

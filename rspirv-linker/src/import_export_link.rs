@@ -1,6 +1,6 @@
 use crate::ty::trans_aggregate_type;
-use crate::{operand_idref, operand_idref_mut, print_type, DefAnalyzer, LinkerError, Result};
-use rspirv::dr::{Instruction, Module, Operand};
+use crate::{print_type, DefAnalyzer, LinkerError, Result};
+use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
 use std::collections::{HashMap, HashSet};
 
@@ -60,22 +60,11 @@ fn find_import_export_pairs_and_killed_params(
 
 fn get_linkage_inst(inst: &Instruction) -> Option<(Word, &str, LinkageType)> {
     if inst.class.opcode == Op::Decorate
-        && inst.operands[1] == Operand::Decoration(Decoration::LinkageAttributes)
+        && inst.operands[1].unwrap_decoration() == Decoration::LinkageAttributes
     {
-        let id = match inst.operands[0] {
-            Operand::IdRef(i) => i,
-            _ => panic!("Expected IdRef"),
-        };
-
-        let name = match &inst.operands[2] {
-            Operand::LiteralString(s) => s,
-            _ => panic!("Expected LiteralString"),
-        };
-
-        let linkage_ty = match inst.operands[3] {
-            Operand::LinkageType(t) => t,
-            _ => panic!("Expected LinkageType"),
-        };
+        let id = inst.operands[0].unwrap_id_ref();
+        let name = inst.operands[2].unwrap_literal_string();
+        let linkage_ty = inst.operands[3].unwrap_linkage_type();
         Some((id, name, linkage_ty))
     } else {
         None
@@ -91,13 +80,7 @@ fn get_type_for_link(defs: &DefAnalyzer, id: Word) -> Word {
         Op::Variable => def_inst.result_type.unwrap(),
         // Note: the result_type of OpFunction is the return type, not the function type. The
         // function type is in operands[1].
-        Op::Function => {
-            if let Operand::IdRef(id) = def_inst.operands[1] {
-                id
-            } else {
-                panic!("Expected IdRef");
-            }
-        }
+        Op::Function => def_inst.operands[1].unwrap_id_ref(),
         _ => panic!("Unexpected op"),
     }
 }
@@ -159,7 +142,7 @@ fn replace_all_uses_with(module: &mut Module, rules: &HashMap<u32, u32>) {
         }
 
         inst.operands.iter_mut().for_each(|op| {
-            if let Some(w) = operand_idref_mut(op) {
+            if let Some(w) = op.id_ref_any_mut() {
                 if let Some(&rewrite) = rules.get(w) {
                     *w = rewrite;
                 }
@@ -182,13 +165,13 @@ fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &HashMap<u32, u
 
     module.annotations.retain(|inst| {
         inst.class.opcode != Op::Decorate
-            || inst.operands[1] != Operand::Decoration(Decoration::LinkageAttributes)
+            || inst.operands[1].unwrap_decoration() != Decoration::LinkageAttributes
     });
 
     // drop OpCapability Linkage
     module.capabilities.retain(|inst| {
         inst.class.opcode != Op::Capability
-            || inst.operands[0] != Operand::Capability(Capability::Linkage)
+            || inst.operands[0].unwrap_capability() != Capability::Linkage
     })
 }
 
@@ -199,13 +182,13 @@ fn import_kill_annotations_and_debug(
 ) {
     module.annotations.retain(|inst| {
         inst.operands.is_empty()
-            || operand_idref(&inst.operands[0]).map_or(true, |id| {
+            || inst.operands[0].id_ref_any().map_or(true, |id| {
                 !rewrite_rules.contains_key(&id) && !killed_parameters.contains(&id)
             })
     });
     module.debugs.retain(|inst| {
         inst.operands.is_empty()
-            || operand_idref(&inst.operands[0]).map_or(true, |id| {
+            || inst.operands[0].id_ref_any().map_or(true, |id| {
                 !rewrite_rules.contains_key(&id) && !killed_parameters.contains(&id)
             })
     });
@@ -213,7 +196,7 @@ fn import_kill_annotations_and_debug(
     for inst in &mut module.annotations {
         if inst.class.opcode == Op::GroupDecorate {
             inst.operands.retain(|op| {
-                operand_idref(op).map_or(true, |id| {
+                op.id_ref_any().map_or(true, |id| {
                     !rewrite_rules.contains_key(&id) && !killed_parameters.contains(&id)
                 })
             })

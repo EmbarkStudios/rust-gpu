@@ -2,6 +2,7 @@ use bimap::BiHashMap;
 use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
+use rustc_middle::bug;
 use std::cell::{RefCell, RefMut};
 use std::{fs::File, io::Write, path::Path};
 
@@ -144,7 +145,7 @@ impl BuilderSpirv {
             .iter()
             .any(|inst| {
                 inst.class.opcode == Op::Capability
-                    && inst.operands[0] == Operand::Capability(capability)
+                    && inst.operands[0].unwrap_capability() == capability
             })
     }
 
@@ -160,7 +161,7 @@ impl BuilderSpirv {
             }
         }
 
-        panic!("Function not found: {}", id);
+        bug!("Function not found: {}", id);
     }
 
     pub fn def_constant(&self, val: SpirvConst) -> SpirvValue {
@@ -283,6 +284,6 @@ impl BuilderSpirv {
             }
         }
 
-        panic!("Block not found: {}", id);
+        bug!("Block not found: {}", id);
     }
 }

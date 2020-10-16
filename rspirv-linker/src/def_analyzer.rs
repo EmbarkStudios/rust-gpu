@@ -1,4 +1,3 @@
-use crate::operand_idref;
 use rspirv::dr::{Instruction, Module, Operand};
 use std::collections::HashMap;
 
@@ -40,7 +39,7 @@ impl<'a> DefAnalyzer<'a> {
     ///
     /// Panics when provided an operand that doesn't reference an id, or that id is missing.
     pub fn op_def(&self, operand: &Operand) -> Instruction {
-        self.def(operand_idref(operand).expect("Expected ID"))
+        self.def(operand.id_ref_any().expect("Expected ID"))
             .unwrap()
             .clone()
     }

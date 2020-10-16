@@ -82,7 +82,10 @@ impl SpirvType {
                     }
                     8 | 16 | 32 | 64 => (),
                     128 => cx.zombie_no_span(result, "u128"),
-                    other => panic!("Integer width {} invalid for spir-v", other),
+                    other => cx
+                        .tcx
+                        .sess
+                        .fatal(&format!("Integer width {} invalid for spir-v", other)),
                 };
                 result
             }
@@ -93,7 +96,10 @@ impl SpirvType {
                         cx.zombie_no_span(result, "f64 without OpCapability Float64")
                     }
                     32 | 64 => (),
-                    other => panic!("Float width {} invalid for spir-v", other),
+                    other => cx
+                        .tcx
+                        .sess
+                        .fatal(&format!("Float width {} invalid for spir-v", other)),
                 };
                 result
             }
@@ -201,7 +207,10 @@ impl SpirvType {
                 }
                 result
             }
-            ref other => panic!("def_with_id invalid for type {:?}", other),
+            ref other => cx
+                .tcx
+                .sess
+                .fatal(&format!("def_with_id invalid for type {:?}", other)),
         };
         cx.type_cache.def(result, self);
         result

@@ -10,7 +10,7 @@
 //! wikipedia calls "treat pruning as a dead code elimination problem").
 
 use crate::simple_passes::outgoing_edges;
-use crate::{apply_rewrite_rules, id, label_of, operand_idref};
+use crate::{apply_rewrite_rules, id};
 use rspirv::dr::{Block, Function, Instruction, ModuleHeader, Operand};
 use rspirv::spirv::{Op, Word};
 use std::collections::{hash_map, HashMap, HashSet};
@@ -37,7 +37,10 @@ pub fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
     let mut result = vec![vec![]; blocks.len()];
     for (source_idx, source) in blocks.iter().enumerate() {
         for dest_id in outgoing_edges(source) {
-            let dest_idx = blocks.iter().position(|b| label_of(b) == dest_id).unwrap();
+            let dest_idx = blocks
+                .iter()
+                .position(|b| b.label_id().unwrap() == dest_id)
+                .unwrap();
             result[dest_idx].push(source_idx);
         }
     }
@@ -171,7 +174,7 @@ fn collect_access_chains(
             indices: {
                 let mut base_indicies = base.indices.clone();
                 for op in inst.operands.iter().skip(1) {
-                    base_indicies.push(*constants.get(&operand_idref(op).unwrap())?)
+                    base_indicies.push(*constants.get(&op.id_ref_any().unwrap())?)
                 }
                 base_indicies
             },
@@ -201,7 +204,7 @@ fn collect_access_chains(
                 }
             }
             if let Op::AccessChain | Op::InBoundsAccessChain = inst.class.opcode {
-                if let Some(base) = variables.get(&operand_idref(&inst.operands[0]).unwrap()) {
+                if let Some(base) = variables.get(&inst.operands[0].id_ref_any().unwrap()) {
                     let info =
                         construct_access_chain_info(pointer_to_pointee, constants, inst, base)?;
                     match variables.entry(inst.result_id.unwrap()) {
@@ -224,7 +227,7 @@ fn collect_access_chains(
 fn has_store(block: &Block, var_map: &HashMap<Word, VarInfo>) -> bool {
     block.instructions.iter().any(|inst| {
         let ptr = match inst.class.opcode {
-            Op::Store => operand_idref(&inst.operands[0]).unwrap(),
+            Op::Store => inst.operands[0].id_ref_any().unwrap(),
             Op::Variable if inst.operands.len() < 2 => return false,
             Op::Variable => inst.result_id.unwrap(),
             _ => return false,
@@ -274,7 +277,7 @@ struct Renamer<'a> {
 impl Renamer<'_> {
     // Returns the phi definition.
     fn insert_phi_value(&mut self, block: usize, from_block: usize) -> Word {
-        let from_block_label = label_of(&self.blocks[from_block]);
+        let from_block_label = self.blocks[from_block].label_id().unwrap();
         let phi_defs = &self.phi_defs;
         let existing_phi = self.blocks[block].instructions.iter_mut().find(|inst| {
             inst.class.opcode == Op::Phi && phi_defs.contains(&inst.result_id.unwrap())
@@ -325,14 +328,14 @@ impl Renamer<'_> {
         for inst in &mut self.blocks[block].instructions {
             if inst.class.opcode == Op::Variable && inst.operands.len() > 1 {
                 let ptr = inst.result_id.unwrap();
-                let val = operand_idref(&inst.operands[1]).unwrap();
+                let val = inst.operands[1].id_ref_any().unwrap();
                 if let Some(var_info) = self.var_map.get(&ptr) {
                     assert_eq!(var_info.indices, []);
                     self.stack.push(val);
                 }
             } else if inst.class.opcode == Op::Store {
-                let ptr = operand_idref(&inst.operands[0]).unwrap();
-                let val = operand_idref(&inst.operands[1]).unwrap();
+                let ptr = inst.operands[0].id_ref_any().unwrap();
+                let val = inst.operands[1].id_ref_any().unwrap();
                 if let Some(var_info) = self.var_map.get(&ptr) {
                     if var_info.indices.is_empty() {
                         *inst = Instruction::new(Op::Nop, None, None, vec![]);
@@ -353,7 +356,7 @@ impl Renamer<'_> {
                     }
                 }
             } else if inst.class.opcode == Op::Load {
-                let ptr = operand_idref(&inst.operands[0]).unwrap();
+                let ptr = inst.operands[0].id_ref_any().unwrap();
                 if let Some(var_info) = self.var_map.get(&ptr) {
                     let loaded_val = inst.result_id.unwrap();
                     let current_obj = *self.stack.last().unwrap();
@@ -382,7 +385,7 @@ impl Renamer<'_> {
             let dest_idx = self
                 .blocks
                 .iter()
-                .position(|b| label_of(b) == dest_id)
+                .position(|b| b.label_id().unwrap() == dest_id)
                 .unwrap();
             self.rename(dest_idx, Some(block));
         }
@@ -414,7 +417,7 @@ fn remove_old_variables(blocks: &mut [Block], thing: &[(HashMap<u32, VarInfo>, u
         block.instructions.retain(|inst| {
             !matches!(inst.class.opcode, Op::AccessChain | Op::InBoundsAccessChain)
                 || inst.operands.iter().all(|op| {
-                    operand_idref(op).map_or(true, |id| {
+                    op.id_ref_any().map_or(true, |id| {
                         thing.iter().all(|(var_map, _)| !var_map.contains_key(&id))
                     })
                 })

@@ -56,23 +56,6 @@ fn id(header: &mut ModuleHeader) -> Word {
     result
 }
 
-fn operand_idref(op: &Operand) -> Option<Word> {
-    match *op {
-        Operand::IdMemorySemantics(w) | Operand::IdScope(w) | Operand::IdRef(w) => Some(w),
-        _ => None,
-    }
-}
-fn operand_idref_mut(op: &mut Operand) -> Option<&mut Word> {
-    match op {
-        Operand::IdMemorySemantics(w) | Operand::IdScope(w) | Operand::IdRef(w) => Some(w),
-        _ => None,
-    }
-}
-
-fn label_of(block: &Block) -> Word {
-    block.label.as_ref().unwrap().result_id.unwrap()
-}
-
 fn print_type(defs: &DefAnalyzer, ty: &Instruction) -> String {
     format!("{}", ty::trans_aggregate_type(defs, ty).unwrap())
 }
@@ -82,13 +65,6 @@ fn extract_literal_int_as_u64(op: &Operand) -> u64 {
         Operand::LiteralInt32(v) => (*v).into(),
         Operand::LiteralInt64(v) => *v,
         _ => panic!("Unexpected literal int"),
-    }
-}
-
-fn extract_literal_u32(op: &Operand) -> u32 {
-    match op {
-        Operand::LiteralInt32(v) => *v,
-        _ => panic!("Unexpected literal u32"),
     }
 }
 
@@ -107,7 +83,7 @@ fn apply_rewrite_rules(rewrite_rules: &HashMap<Word, Word>, blocks: &mut [Block]
         }
 
         inst.operands.iter_mut().for_each(|op| {
-            if let Some(id) = operand_idref_mut(op) {
+            if let Some(id) = op.id_ref_any_mut() {
                 if let Some(&rewrite) = rewrite_rules.get(id) {
                     *id = rewrite;
                 }
@@ -192,23 +168,18 @@ pub fn link<T>(
             for inst in &output.types_global_values {
                 match inst.class.opcode {
                     Op::TypePointer => {
-                        pointer_to_pointee.insert(
-                            inst.result_id.unwrap(),
-                            operand_idref(&inst.operands[1]).unwrap(),
-                        );
+                        pointer_to_pointee
+                            .insert(inst.result_id.unwrap(), inst.operands[1].unwrap_id_ref());
                     }
                     Op::TypeInt
-                        if inst.operands[0] == Operand::LiteralInt32(32)
-                            && inst.operands[1] == Operand::LiteralInt32(0) =>
+                        if inst.operands[0].unwrap_literal_int32() == 32
+                            && inst.operands[1].unwrap_literal_int32() == 0 =>
                     {
                         assert!(u32.is_none());
                         u32 = Some(inst.result_id.unwrap());
                     }
                     Op::Constant if u32.is_some() && inst.result_type == u32 => {
-                        let value = match inst.operands[0] {
-                            Operand::LiteralInt32(value) => value,
-                            _ => panic!(),
-                        };
+                        let value = inst.operands[0].unwrap_literal_int32();
                         constants.insert(inst.result_id.unwrap(), value);
                     }
                     _ => {}

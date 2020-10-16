@@ -5,6 +5,7 @@ use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
+use rustc_middle::bug;
 use rustc_middle::mir::interpret::{read_target_uint, Allocation, GlobalAlloc, Pointer};
 use rustc_middle::ty::layout::TyAndLayout;
 use rustc_mir::interpret::Scalar;
@@ -63,14 +64,20 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Bool => match val {
                 0 => self.builder.def_constant(SpirvConst::Bool(ty, false)),
                 1 => self.builder.def_constant(SpirvConst::Bool(ty, true)),
-                _ => panic!("Invalid constant value for bool: {}", val),
+                _ => self
+                    .tcx
+                    .sess
+                    .fatal(&format!("Invalid constant value for bool: {}", val)),
             },
             SpirvType::Integer(128, _) => {
                 let result = self.undef(ty);
                 self.zombie_no_span(result.def, "u128 constant");
                 result
             }
-            other => panic!("constant_int invalid on type {}", other.debug(ty, self)),
+            other => self.tcx.sess.fatal(&format!(
+                "constant_int invalid on type {}",
+                other.debug(ty, self)
+            )),
         }
     }
 
@@ -94,7 +101,10 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Float(64) => self
                 .builder
                 .def_constant(SpirvConst::F64(ty, val.to_bits())),
-            other => panic!("constant_float invalid on type {}", other.debug(ty, self)),
+            other => self.tcx.sess.fatal(&format!(
+                "constant_float invalid on type {}",
+                other.debug(ty, self)
+            )),
         }
     }
 
@@ -213,12 +223,15 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         SpirvType::Bool => match data {
                             0 => self.constant_bool(false),
                             1 => self.constant_bool(true),
-                            _ => panic!("Invalid constant value for bool: {}", data),
+                            _ => self
+                                .tcx
+                                .sess
+                                .fatal(&format!("Invalid constant value for bool: {}", data)),
                         },
-                        other => panic!(
+                        other => self.tcx.sess.fatal(&format!(
                             "scalar_to_backend Primitive::Int not supported on type {}",
                             other.debug(ty, self)
-                        ),
+                        )),
                     }
                 }
                 Primitive::F32 => {
@@ -231,19 +244,17 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     assert_eq!(res.ty, ty);
                     res
                 }
-                Primitive::Pointer => {
-                    panic!("scalar_to_backend Primitive::Ptr is an invalid state")
-                }
+                Primitive::Pointer => bug!("scalar_to_backend Primitive::Ptr is an invalid state"),
             },
             Scalar::Ptr(ptr) => {
                 let (base_addr, _base_addr_space) = match self.tcx.global_alloc(ptr.alloc_id) {
                     GlobalAlloc::Memory(alloc) => {
                         let pointee = match self.lookup_type(ty) {
                             SpirvType::Pointer { pointee, .. } => pointee,
-                            other => panic!(
+                            other => self.tcx.sess.fatal(&format!(
                                 "GlobalAlloc::Memory type not implemented: {}",
                                 other.debug(ty, self)
-                            ),
+                            )),
                         };
                         let init = self.create_const_alloc(alloc, pointee);
                         let value = self.static_addr_of(init, alloc.align, None);
@@ -262,12 +273,16 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                 let value = if ptr.offset.bytes() == 0 {
                     base_addr
                 } else {
-                    panic!("Non-constant scalar_to_backend ptr.offset not supported")
+                    self.tcx
+                        .sess
+                        .fatal("Non-constant scalar_to_backend ptr.offset not supported")
                     // let offset = self.constant_u64(ptr.offset.bytes());
                     // self.gep(base_addr, once(offset))
                 };
                 if layout.value != Primitive::Pointer {
-                    panic!("Non-pointer-typed scalar_to_backend Scalar::Ptr not supported");
+                    self.tcx
+                        .sess
+                        .fatal("Non-pointer-typed scalar_to_backend Scalar::Ptr not supported");
                 // unsafe { llvm::LLVMConstPtrToInt(llval, llty) }
                 } else {
                     match (self.lookup_type(value.ty), self.lookup_type(ty)) {
@@ -343,7 +358,10 @@ impl<'tcx> CodegenCx<'tcx> {
         // these print statements are really useful for debugging, so leave them easily available
         // println!("const at {}: {}", offset.bytes(), self.debug_type(ty));
         match ty_concrete {
-            SpirvType::Void => panic!("Cannot create const alloc of type void"),
+            SpirvType::Void => self
+                .tcx
+                .sess
+                .fatal("Cannot create const alloc of type void"),
             SpirvType::Bool => self.constant_bool(self.read_alloc_val(alloc, offset, 1) != 0),
             SpirvType::Integer(width, _) => {
                 let v = self.read_alloc_val(alloc, offset, (width / 8) as usize);
@@ -354,7 +372,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 match width {
                     32 => self.constant_f32(f32::from_bits(v as u32)),
                     64 => self.constant_f64(f64::from_bits(v as u64)),
-                    other => panic!("invalid float width {}", other),
+                    other => self
+                        .tcx
+                        .sess
+                        .fatal(&format!("invalid float width {}", other)),
                 }
             }
             SpirvType::Adt {
@@ -387,9 +408,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 Self::assert_uninit(alloc, base, *offset, occupied_spaces);
                 self.constant_composite(ty, values)
             }
-            SpirvType::Opaque { name } => {
-                panic!("Cannot create const alloc of type opaque: {}", name)
-            }
+            SpirvType::Opaque { name } => self.tcx.sess.fatal(&format!(
+                "Cannot create const alloc of type opaque: {}",
+                name
+            )),
             SpirvType::Array { element, count } => {
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 let values = (0..count)
@@ -435,9 +457,10 @@ impl<'tcx> CodegenCx<'tcx> {
                     ty,
                 )
             }
-            SpirvType::Function { .. } => {
-                panic!("TODO: SpirvType::Function not supported yet in create_const_alloc")
-            }
+            SpirvType::Function { .. } => self
+                .tcx
+                .sess
+                .fatal("TODO: SpirvType::Function not supported yet in create_const_alloc"),
         }
     }
 
