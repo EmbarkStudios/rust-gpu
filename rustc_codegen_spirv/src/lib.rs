@@ -1,5 +1,36 @@
 #![feature(rustc_private)]
 #![feature(once_cell)]
+#![deny(clippy::unimplemented, clippy::ok_expect, clippy::mem_forget)]
+#![warn(
+    clippy::all,
+    clippy::doc_markdown,
+    clippy::dbg_macro,
+    clippy::empty_enum,
+    clippy::pub_enum_variant_names,
+    clippy::use_self,
+    clippy::filter_map_next,
+    clippy::needless_continue,
+    clippy::needless_borrow,
+    clippy::match_wildcard_for_single_variants,
+    clippy::if_let_mutex,
+    clippy::mismatched_target_os,
+    clippy::await_holding_lock,
+    clippy::imprecise_flops,
+    clippy::suboptimal_flops,
+    clippy::lossy_float_literal,
+    clippy::rest_pat_in_fully_bound_structs,
+    clippy::fn_params_excessive_bools,
+    clippy::exit,
+    clippy::inefficient_to_string,
+    clippy::linkedlist,
+    clippy::macro_use_imports,
+    clippy::option_option,
+    clippy::verbose_file_reads,
+    clippy::unnested_or_patterns,
+    rust_2018_idioms,
+    future_incompatible,
+    nonstandard_style
+)]
 
 extern crate rustc_ast;
 extern crate rustc_attr;
@@ -150,8 +181,15 @@ impl MetadataLoader for SpirvMetadataLoader {
 struct SpirvCodegenBackend;
 
 impl CodegenBackend for SpirvCodegenBackend {
-    fn metadata_loader(&self) -> Box<MetadataLoaderDyn> {
-        Box::new(SpirvMetadataLoader)
+    fn target_features(&self, sess: &Session) -> Vec<Symbol> {
+        let cmdline = sess.opts.cg.target_feature.split(',');
+        let cfg = sess.target.options.features.split(',');
+        cfg.chain(cmdline)
+            .filter(|l| l.starts_with('+'))
+            .map(|l| &l[1..])
+            .filter(|l| !l.is_empty())
+            .map(Symbol::intern)
+            .collect()
     }
 
     fn target_override(&self, opts: &config::Options) -> Option<Target> {
@@ -166,15 +204,8 @@ impl CodegenBackend for SpirvCodegenBackend {
         }
     }
 
-    fn target_features(&self, sess: &Session) -> Vec<Symbol> {
-        let cmdline = sess.opts.cg.target_feature.split(',');
-        let cfg = sess.target.options.features.split(',');
-        cfg.chain(cmdline)
-            .filter(|l| l.starts_with('+'))
-            .map(|l| &l[1..])
-            .filter(|l| !l.is_empty())
-            .map(Symbol::intern)
-            .collect()
+    fn metadata_loader(&self) -> Box<MetadataLoaderDyn> {
+        Box::new(SpirvMetadataLoader)
     }
 
     fn provide(&self, providers: &mut Providers) {
@@ -217,12 +248,12 @@ impl CodegenBackend for SpirvCodegenBackend {
 
     fn codegen_crate(
         &self,
-        tcx: rustc_middle::ty::TyCtxt,
+        tcx: rustc_middle::ty::TyCtxt<'_>,
         metadata: rustc_middle::middle::cstore::EncodedMetadata,
         need_metadata_module: bool,
     ) -> Box<dyn Any> {
         Box::new(rustc_codegen_ssa::base::codegen_crate(
-            SpirvCodegenBackend,
+            Self,
             tcx,
             metadata,
             need_metadata_module,
@@ -235,7 +266,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         sess: &Session,
     ) -> Result<(CodegenResults, FxHashMap<WorkProductId, WorkProduct>), ErrorReported> {
         let (codegen_results, work_products) = ongoing_codegen
-            .downcast::<OngoingCodegen<SpirvCodegenBackend>>()
+            .downcast::<OngoingCodegen<Self>>()
             .expect("Expected OngoingCodegen, found Box<Any>")
             .join(sess);
 
@@ -511,7 +542,7 @@ impl Drop for DumpModuleOnPanic<'_, '_, '_> {
     }
 }
 
-/// This is the entrypoint for a hot plugged rustc_codegen_spirv
+/// This is the entrypoint for a hot plugged `rustc_codegen_spirv`
 #[no_mangle]
 pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
     // Override rustc's panic hook with our own to override the ICE error

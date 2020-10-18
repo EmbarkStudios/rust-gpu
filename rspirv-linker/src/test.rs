@@ -7,7 +7,7 @@ use rspirv::dr::{Loader, Module};
 pub struct PrettyString<'a>(pub &'a str);
 /// Make diff to display string as multi-line string
 impl<'a> std::fmt::Debug for PrettyString<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.0)
     }
 }

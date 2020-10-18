@@ -86,7 +86,7 @@ fn make_execution_models() -> HashMap<Symbol, ExecutionModel> {
 
 impl Symbols {
     pub fn new() -> Self {
-        Symbols {
+        Self {
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
             kernel: Symbol::intern("kernel"),

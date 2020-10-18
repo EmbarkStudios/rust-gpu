@@ -52,28 +52,28 @@ fn trans_scalar_type(inst: &Instruction) -> Option<ScalarType> {
 impl std::fmt::Display for ScalarType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
-            ScalarType::Void => f.write_str("void"),
-            ScalarType::Bool => f.write_str("bool"),
-            ScalarType::Int { width, signed } => {
+            Self::Void => f.write_str("void"),
+            Self::Bool => f.write_str("bool"),
+            Self::Int { width, signed } => {
                 if signed {
                     write!(f, "i{}", width)
                 } else {
                     write!(f, "u{}", width)
                 }
             }
-            ScalarType::Float { width } => write!(f, "f{}", width),
-            ScalarType::Opaque { ref name } => write!(f, "Opaque{{{}}}", name),
-            ScalarType::Event => f.write_str("Event"),
-            ScalarType::DeviceEvent => f.write_str("DeviceEvent"),
-            ScalarType::ReserveId => f.write_str("ReserveId"),
-            ScalarType::Queue => f.write_str("Queue"),
-            ScalarType::Pipe => f.write_str("Pipe"),
-            ScalarType::ForwardPointer { storage_class } => {
+            Self::Float { width } => write!(f, "f{}", width),
+            Self::Opaque { ref name } => write!(f, "Opaque{{{}}}", name),
+            Self::Event => f.write_str("Event"),
+            Self::DeviceEvent => f.write_str("DeviceEvent"),
+            Self::ReserveId => f.write_str("ReserveId"),
+            Self::Queue => f.write_str("Queue"),
+            Self::Pipe => f.write_str("Pipe"),
+            Self::ForwardPointer { storage_class } => {
                 write!(f, "ForwardPointer{{{:?}}}", storage_class)
             }
-            ScalarType::PipeStorage => f.write_str("PipeStorage"),
-            ScalarType::NamedBarrier => f.write_str("NamedBarrier"),
-            ScalarType::Sampler => f.write_str("Sampler"),
+            Self::PipeStorage => f.write_str("PipeStorage"),
+            Self::NamedBarrier => f.write_str("NamedBarrier"),
+            Self::Sampler => f.write_str("Sampler"),
         }
     }
 }
@@ -107,7 +107,10 @@ pub enum AggregateType {
     Function(Vec<AggregateType>, Box<AggregateType>),
 }
 
-pub(crate) fn trans_aggregate_type(def: &DefAnalyzer, inst: &Instruction) -> Option<AggregateType> {
+pub(crate) fn trans_aggregate_type(
+    def: &DefAnalyzer<'_>,
+    inst: &Instruction,
+) -> Option<AggregateType> {
     Some(match inst.class.opcode {
         Op::TypeArray => {
             let len_def = def.op_def(&inst.operands[1]);
@@ -189,12 +192,10 @@ pub(crate) fn trans_aggregate_type(def: &DefAnalyzer, inst: &Instruction) -> Opt
 impl std::fmt::Display for AggregateType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AggregateType::Scalar(scalar) => write!(f, "{}", scalar),
-            AggregateType::Array { ty, len } => write!(f, "[{}; {}]", ty, len),
-            AggregateType::Pointer { ty, storage_class } => {
-                write!(f, "*{{{:?}}} {}", storage_class, ty)
-            }
-            AggregateType::Image {
+            Self::Scalar(scalar) => write!(f, "{}", scalar),
+            Self::Array { ty, len } => write!(f, "[{}; {}]", ty, len),
+            Self::Pointer { ty, storage_class } => write!(f, "*{{{:?}}} {}", storage_class, ty),
+            Self::Image {
                 ty,
                 dim,
                 depth,
@@ -209,15 +210,15 @@ impl std::fmt::Display for AggregateType {
                 multi_sampled:{}, sampled:{}, format:{:?}, access:{:?} }}",
                 ty, dim, depth, arrayed, multi_sampled, sampled, format, access
             ),
-            AggregateType::SampledImage { ty } => write!(f, "SampledImage{{{}}}", ty),
-            AggregateType::Aggregate(agg) => {
+            Self::SampledImage { ty } => write!(f, "SampledImage{{{}}}", ty),
+            Self::Aggregate(agg) => {
                 f.write_str("struct {")?;
                 for elem in agg {
                     write!(f, " {},", elem)?;
                 }
                 f.write_str(" }")
             }
-            AggregateType::Function(args, ret) => {
+            Self::Function(args, ret) => {
                 f.write_str("fn(")?;
                 for elem in args {
                     write!(f, " {},", elem)?;

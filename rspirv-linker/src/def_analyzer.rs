@@ -1,12 +1,12 @@
 use rspirv::dr::{Instruction, Module, Operand};
 use std::collections::HashMap;
 
-/// DefAnalyzer is a simple lookup table for instructions: Sometimes, we have a spirv result_id,
-/// and we want to find the corresponding instruction. This struct loops over all instructions in
-/// the module (expensive!) and builds a table from result_id to its defining instruction. Note
-/// that it holds a reference to the instruction, instead of cloning it. While we really could
-/// clone it, it's nice to keep the reference here, since then rustc guarantees we do not mutate
-/// the module while a DefAnalyzer is alive (which would be really bad).
+/// `DefAnalyzer` is a simple lookup table for instructions: Sometimes, we have a spirv
+/// `result_id`, and we want to find the corresponding instruction. This struct loops over all
+/// instructions in the module (expensive!) and builds a table from `result_id` to its defining
+/// instruction. Note that it holds a reference to the instruction, instead of cloning it. While we
+/// really could clone it, it's nice to keep the reference here, since then rustc guarantees we do
+/// not mutate the module while a `DefAnalyzer` is alive (which would be really bad).
 pub struct DefAnalyzer<'a> {
     def_ids: HashMap<u32, &'a Instruction>,
 }
@@ -33,7 +33,7 @@ impl<'a> DefAnalyzer<'a> {
         self.def_ids.get(&id).copied()
     }
 
-    /// Helper that extracts the operand as an IdRef and then looks up that id's instruction.
+    /// Helper that extracts the operand as an `IdRef` and then looks up that id's instruction.
     ///
     /// # Panics
     ///

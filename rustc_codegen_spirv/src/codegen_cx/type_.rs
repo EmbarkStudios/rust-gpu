@@ -38,6 +38,18 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
         layout.spirv_type(self)
     }
 
+    fn cast_backend_type(&self, ty: &CastTarget) -> Self::Type {
+        ty.spirv_type(self)
+    }
+
+    fn fn_ptr_backend_type(&self, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Type {
+        fn_abi.spirv_type(self)
+    }
+
+    fn reg_backend_type(&self, ty: &Reg) -> Self::Type {
+        ty.spirv_type(self)
+    }
+
     fn immediate_backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
         layout.spirv_type_immediate(self)
     }
@@ -81,18 +93,6 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
         immediate: bool,
     ) -> Self::Type {
         crate::abi::scalar_pair_element_backend_type(self, layout, index, immediate)
-    }
-
-    fn cast_backend_type(&self, ty: &CastTarget) -> Self::Type {
-        ty.spirv_type(self)
-    }
-
-    fn fn_ptr_backend_type(&self, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Type {
-        fn_abi.spirv_type(self)
-    }
-
-    fn reg_backend_type(&self, ty: &Reg) -> Self::Type {
-        ty.spirv_type(self)
     }
 }
 
@@ -142,7 +142,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
         .def(self)
     }
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
-        let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, &els);
+        let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, els);
         SpirvType::Adt {
             name: "<generated_struct>".to_string(),
             align,

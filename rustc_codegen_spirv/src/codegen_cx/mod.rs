@@ -51,7 +51,7 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
     pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
-    /// Functions created in get_fn_addr
+    /// Functions created in `get_fn_addr`
     /// left: the OpUndef value. right: the function value.
     function_pointers: RefCell<BiHashMap<SpirvValue, SpirvValue>>,
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
@@ -81,19 +81,19 @@ impl<'tcx> CodegenCx<'tcx> {
         }
     }
 
-    /// See comment on BuilderCursor
-    pub fn emit_global(&self) -> std::cell::RefMut<rspirv::dr::Builder> {
+    /// See comment on `BuilderCursor`
+    pub fn emit_global(&self) -> std::cell::RefMut<'_, rspirv::dr::Builder> {
         self.builder.builder(BuilderCursor {
             function: None,
             block: None,
         })
     }
 
-    /// See comment on BuilderCursor
+    /// See comment on `BuilderCursor`
     pub fn emit_with_cursor(
         &self,
         cursor: BuilderCursor,
-    ) -> std::cell::RefMut<rspirv::dr::Builder> {
+    ) -> std::cell::RefMut<'_, rspirv::dr::Builder> {
         self.builder.builder(cursor)
     }
 
@@ -106,16 +106,17 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     /// Zombie system:
-    /// When compiling libcore and other system libraries, if something unrepresentable is encountered, we don't want to
-    /// fail the compilation. Instead, we emit something bogus (usually it's fairly faithful, though, e.g. u128 emits
-    /// OpTypeInt 128), and then mark the resulting ID as a "zombie". We continue compiling the rest of the crate, then,
-    /// at the very end, anything that transtively references a zombie value is stripped from the binary.
+    /// When compiling libcore and other system libraries, if something unrepresentable is
+    /// encountered, we don't want to fail the compilation. Instead, we emit something bogus
+    /// (usually it's fairly faithful, though, e.g. u128 emits `OpTypeInt 128`), and then mark the
+    /// resulting ID as a "zombie". We continue compiling the rest of the crate, then, at the very
+    /// end, anything that transtively references a zombie value is stripped from the binary.
     ///
-    /// If an exported function is stripped, then we emit a special "zombie export" item, which is consumed by the
-    /// linker, which continues to infect other values that reference it.
+    /// If an exported function is stripped, then we emit a special "zombie export" item, which is
+    /// consumed by the linker, which continues to infect other values that reference it.
     ///
-    /// Finally, if *user* code is marked as zombie, then this means that the user tried to do something that isn't
-    /// supported, and should be an error.
+    /// Finally, if *user* code is marked as zombie, then this means that the user tried to do
+    /// something that isn't supported, and should be an error.
     pub fn zombie_with_span(&self, word: Word, span: Span, reason: &'static str) {
         if self.is_system_crate() {
             self.zombie_values.borrow_mut().insert(word, reason);
@@ -157,12 +158,14 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     /// Function pointer registration:
-    /// LLVM, and therefore codegen_ssa, is very murky with function values vs. function pointers. So, codegen_ssa has a
-    /// pattern where *even for direct function calls*, it uses get_fn_*addr*, and then uses that function *pointer* when
-    /// calling BuilderMethods::call(). However, spir-v doesn't support function pointers! So, instead, when get_fn_addr
-    /// is called, we register a "token" (via OpUndef), storing it in a dictionary. Then, when BuilderMethods::call() is
-    /// called, and it's calling a function pointer, we check the dictionary, and if it is, invoke the function directly.
-    /// It's kind of conceptually similar to a constexpr deref, except specialized to just functions.
+    /// LLVM, and therefore `codegen_ssa`, is very murky with function values vs. function
+    /// pointers.  So, `codegen_ssa` has a pattern where *even for direct function calls*, it uses
+    /// `get_fn_*addr*`, and then uses that function *pointer* when calling
+    /// `BuilderMethods::call()`.  However, spir-v doesn't support function pointers! So, instead,
+    /// when `get_fn_addr` is called, we register a "token" (via `OpUndef`), storing it in a
+    /// dictionary. Then, when `BuilderMethods::call()` is called, and it's calling a function
+    /// pointer, we check the dictionary, and if it is, invoke the function directly.  It's kind of
+    /// conceptually similar to a constexpr deref, except specialized to just functions.
     pub fn register_fn_ptr(&self, function: SpirvValue) -> SpirvValue {
         if let Some(undef) = self.function_pointers.borrow().get_by_right(&function) {
             return *undef;
@@ -183,7 +186,7 @@ impl<'tcx> CodegenCx<'tcx> {
         result
     }
 
-    /// See comment on register_fn_ptr
+    /// See comment on `register_fn_ptr`
     pub fn lookup_fn_ptr(&self, pointer: SpirvValue) -> Option<SpirvValue> {
         self.function_pointers
             .borrow()
@@ -256,7 +259,7 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn sess(&self) -> &Session {
-        &self.tcx.sess
+        self.tcx.sess
     }
 
     fn codegen_unit(&self) -> &'tcx CodegenUnit<'tcx> {

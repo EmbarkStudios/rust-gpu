@@ -86,7 +86,7 @@ fn memset_fill_u64(b: u8) -> u64 {
 }
 
 fn memset_dynamic_scalar(
-    builder: &Builder,
+    builder: &Builder<'_, '_>,
     fill_var: Word,
     byte_width: usize,
     is_float: bool,
@@ -339,33 +339,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 }
 
 impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
-    fn with_cx(cx: &'a Self::CodegenCx) -> Self {
-        // Note: all defaults here *must* be filled out by position_at_end
-        Self {
-            cx,
-            cursor: Default::default(),
-            current_fn: Default::default(),
-            basic_block: Default::default(),
-            current_span: Default::default(),
-        }
-    }
-
-    fn position_at_end(&mut self, llbb: Self::BasicBlock) {
-        let cursor = self.cx.builder.select_block_by_id(llbb);
-        let current_fn = {
-            let emit = self.emit_with_cursor(cursor);
-            let selected_function = emit.selected_function().unwrap();
-            let selected_function = &emit.module_ref().functions[selected_function];
-            let def_inst = selected_function.def.as_ref().unwrap();
-            let def = def_inst.result_id.unwrap();
-            let ty = def_inst.operands[1].unwrap_id_ref();
-            def.with_type(ty)
-        };
-        self.cursor = cursor;
-        self.current_fn = current_fn;
-        self.basic_block = llbb;
-    }
-
     fn new_block<'b>(cx: &'a Self::CodegenCx, llfn: Self::Function, _name: &'b str) -> Self {
         let cursor_fn = cx.builder.select_function_by_id(llfn.def);
         let label = cx.emit_with_cursor(cursor_fn).begin_block(None).unwrap();
@@ -375,6 +348,17 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             cursor,
             current_fn: llfn,
             basic_block: label,
+            current_span: Default::default(),
+        }
+    }
+
+    fn with_cx(cx: &'a Self::CodegenCx) -> Self {
+        // Note: all defaults here *must* be filled out by position_at_end
+        Self {
+            cx,
+            cursor: Default::default(),
+            current_fn: Default::default(),
+            basic_block: Default::default(),
             current_span: Default::default(),
         }
     }
@@ -408,6 +392,22 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn set_span(&self, span: Span) {
         *self.current_span.borrow_mut() = Some(span);
+    }
+
+    fn position_at_end(&mut self, llbb: Self::BasicBlock) {
+        let cursor = self.cx.builder.select_block_by_id(llbb);
+        let current_fn = {
+            let emit = self.emit_with_cursor(cursor);
+            let selected_function = emit.selected_function().unwrap();
+            let selected_function = &emit.module_ref().functions[selected_function];
+            let def_inst = selected_function.def.as_ref().unwrap();
+            let def = def_inst.result_id.unwrap();
+            let ty = def_inst.operands[1].unwrap_id_ref();
+            def.with_type(ty)
+        };
+        self.cursor = cursor;
+        self.current_fn = current_fn;
+        self.basic_block = llbb;
     }
 
     fn ret_void(&mut self) {
@@ -452,7 +452,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             self.zombie(else_llbb, "OpSwitch before structurizer is done");
         }
 
-        fn construct_8(self_: &Builder, signed: bool, v: u128) -> Operand {
+        fn construct_8(self_: &Builder<'_, '_>, signed: bool, v: u128) -> Operand {
             if v > u8::MAX as u128 {
                 self_.fatal(&format!(
                     "Switches to values above u8::MAX not supported: {:?}",
@@ -465,7 +465,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 Operand::LiteralInt32(v as u8 as u32)
             }
         }
-        fn construct_16(self_: &Builder, signed: bool, v: u128) -> Operand {
+        fn construct_16(self_: &Builder<'_, '_>, signed: bool, v: u128) -> Operand {
             if v > u16::MAX as u128 {
                 self_.fatal(&format!(
                     "Switches to values above u16::MAX not supported: {:?}",
@@ -477,7 +477,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 Operand::LiteralInt32(v as u16 as u32)
             }
         }
-        fn construct_32(self_: &Builder, _signed: bool, v: u128) -> Operand {
+        fn construct_32(self_: &Builder<'_, '_>, _signed: bool, v: u128) -> Operand {
             if v > u32::MAX as u128 {
                 self_.fatal(&format!(
                     "Switches to values above u32::MAX not supported: {:?}",
@@ -487,7 +487,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 Operand::LiteralInt32(v as u32)
             }
         }
-        fn construct_64(self_: &Builder, _signed: bool, v: u128) -> Operand {
+        fn construct_64(self_: &Builder<'_, '_>, _signed: bool, v: u128) -> Operand {
             if v > u64::MAX as u128 {
                 self_.fatal(&format!(
                     "Switches to values above u64::MAX not supported: {:?}",
@@ -805,7 +805,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
     }
 
-    /// Called for Rvalue::Repeat when the elem is neither a ZST nor optimizable using memset.
+    /// Called for `Rvalue::Repeat` when the elem is neither a ZST nor optimizable using memset.
     fn write_operand_repeatedly(
         mut self,
         cg_elem: OperandRef<'tcx, Self::Value>,
@@ -970,23 +970,19 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn trunc(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         self.intcast(val, dest_ty, false)
     }
-    fn zext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        self.intcast(val, dest_ty, false)
-    }
     fn sext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         self.intcast(val, dest_ty, true)
     }
-
-    fn fptosui_may_trap(&self, _val: Self::Value, _dest_ty: Self::Type) -> bool {
-        false
-    }
-
     fn fptoui_sat(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Option<Self::Value> {
         None
     }
 
     fn fptosi_sat(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Option<Self::Value> {
         None
+    }
+
+    fn fptosui_may_trap(&self, _val: Self::Value, _dest_ty: Self::Type) -> bool {
+        false
     }
 
     fn fptoui(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
@@ -1735,6 +1731,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .function_call(result_type, None, llfn.def, args)
             .unwrap()
             .with_type(result_type)
+    }
+
+    fn zext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.intcast(val, dest_ty, false)
     }
 
     unsafe fn delete_basic_block(&mut self, _bb: Self::BasicBlock) {

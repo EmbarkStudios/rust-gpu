@@ -71,7 +71,7 @@ fn get_linkage_inst(inst: &Instruction) -> Option<(Word, &str, LinkageType)> {
     }
 }
 
-fn get_type_for_link(defs: &DefAnalyzer, id: Word) -> Word {
+fn get_type_for_link(defs: &DefAnalyzer<'_>, id: Word) -> Word {
     let def_inst = defs
         .def(id)
         .unwrap_or_else(|| panic!("Need a matching op for ID {}", id));
@@ -87,7 +87,7 @@ fn get_type_for_link(defs: &DefAnalyzer, id: Word) -> Word {
 
 fn fn_parameters<'a>(
     module: &'a Module,
-    defs: &DefAnalyzer,
+    defs: &DefAnalyzer<'_>,
     id: Word,
 ) -> impl IntoIterator<Item = Word> + 'a {
     let def_inst = defs
@@ -111,7 +111,7 @@ fn fn_parameters<'a>(
 }
 
 fn check_tys_equal(
-    defs: &DefAnalyzer,
+    defs: &DefAnalyzer<'_>,
     name: &str,
     import_type_id: Word,
     export_type_id: Word,

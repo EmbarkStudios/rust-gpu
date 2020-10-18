@@ -1,4 +1,5 @@
-//! This file is responsible for translation from rustc tys (TyAndLayout) to spir-v types. It's surprisingly difficult.
+//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It's
+//! surprisingly difficult.
 
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
@@ -17,10 +18,11 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Write;
 
-/// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk of the fields will
-/// result in an infinite loop. Because pointers are the only thing that are allowed to be recursive, keep track of what
-/// pointers we've translated, or are currently in the progress of translating, and break the recursion that way. This
-/// struct manages that state tracking.
+/// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk
+/// of the fields will result in an infinite loop. Because pointers are the only thing that are
+/// allowed to be recursive, keep track of what pointers we've translated, or are currently in the
+/// progress of translating, and break the recursion that way. This struct manages that state
+/// tracking.
 #[derive(Default)]
 pub struct RecursivePointeeCache<'tcx> {
     map: RefCell<HashMap<(PointeeTy<'tcx>, StorageClass), PointeeDefState>>,
@@ -125,9 +127,10 @@ enum PointeeDefState {
 /// provides a uniform way of translating them.
 pub trait ConvSpirvType<'tcx> {
     fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word;
-    /// spirv (and llvm) do not allow storing booleans in memory, they are abstract unsized values. So, if we're dealing
-    /// with a "memory type", convert bool to u8. The opposite is an "immediate type", which keeps bools as bools. See
-    /// also the functions from_immediate and to_immediate, which convert between the two.
+    /// spirv (and llvm) do not allow storing booleans in memory, they are abstract unsized values.
+    /// So, if we're dealing with a "memory type", convert bool to u8. The opposite is an
+    /// "immediate type", which keeps bools as bools. See also the functions `from_immediate` and
+    /// `to_immediate`, which convert between the two.
     fn spirv_type_immediate(&self, cx: &CodegenCx<'tcx>) -> Word {
         self.spirv_type(cx)
     }
@@ -342,7 +345,8 @@ fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immedia
     }
 }
 
-/// Only pub for LayoutTypeMethods::scalar_pair_element_backend_type. Think about what you're doing before calling this.
+/// Only pub for `LayoutTypeMethods::scalar_pair_element_backend_type`. Think about what you're
+/// doing before calling this.
 pub fn scalar_pair_element_backend_type<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
@@ -529,7 +533,7 @@ fn dig_scalar_pointee_adt<'tcx>(
     }
 }
 
-/// Handles #[spirv(storage_class="blah")]. Note this is only called in the scalar translation code, because this is only
+/// Handles `#[spirv(storage_class="blah")]`. Note this is only called in the scalar translation code, because this is only
 /// used for spooky builtin stuff, and we pinky promise to never have more than one pointer field in one of these.
 // TODO: Enforce this is only used in spirv-std.
 fn get_storage_class<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Option<StorageClass> {

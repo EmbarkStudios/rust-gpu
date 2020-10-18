@@ -189,7 +189,7 @@ where
 
     let output = match cmd.output() {
         Ok(output) => output,
-        _ => {
+        Err(_) => {
             let mut err =
                 sess.struct_err(&format!("Couldn't find `{}` SPRI-V tool in PATH.", tool));
             err.note(
@@ -285,7 +285,7 @@ fn add_upstream_native_libraries(
                 Some(l) => l,
                 None => continue,
             };
-            if !relevant_lib(sess, &lib) {
+            if !relevant_lib(sess, lib) {
                 continue;
             }
             match lib.kind {

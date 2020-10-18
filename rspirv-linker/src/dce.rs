@@ -71,13 +71,13 @@ fn is_rooted(inst: &Instruction, rooted: &HashSet<Word>) -> bool {
 fn kill_unrooted(module: &mut Module, rooted: &HashSet<Word>) {
     module
         .ext_inst_imports
-        .retain(|inst| is_rooted(inst, &rooted));
-    module.debugs.retain(|inst| is_rooted(inst, &rooted));
-    module.annotations.retain(|inst| is_rooted(inst, &rooted));
+        .retain(|inst| is_rooted(inst, rooted));
+    module.debugs.retain(|inst| is_rooted(inst, rooted));
+    module.annotations.retain(|inst| is_rooted(inst, rooted));
     module
         .types_global_values
-        .retain(|inst| is_rooted(inst, &rooted));
+        .retain(|inst| is_rooted(inst, rooted));
     module
         .functions
-        .retain(|f| is_rooted(f.def.as_ref().unwrap(), &rooted));
+        .retain(|f| is_rooted(f.def.as_ref().unwrap(), rooted));
 }

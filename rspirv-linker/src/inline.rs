@@ -1,6 +1,6 @@
 //! This algorithm is not intended to be an optimization, it is rather for legalization.
-//! Specifically, spir-v disallows things like a StorageClass::Function pointer to a
-//! StorageClass::Input pointer. Our frontend definitely allows it, though, this is like taking a
+//! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a
+//! `StorageClass::Input` pointer. Our frontend definitely allows it, though, this is like taking a
 //! `&Input<T>` in a function! So, we inline all functions that take these "illegal" pointers, then
 //! run mem2reg (see mem2reg.rs) on the result to "unwrap" the Function pointer.
 

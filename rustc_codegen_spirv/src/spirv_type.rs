@@ -11,11 +11,12 @@ use std::iter::once;
 use std::lazy::SyncLazy;
 use std::sync::Mutex;
 
-/// Spir-v types are represented as simple Words, which are the result_id of instructions like OpTypeInteger. Sometimes,
-/// however, we want to inspect one of these Words and ask questions like "Is this an OpTypeInteger? How many bits does
-/// it have?". This struct holds all of that information. All types that are emitted are registered in CodegenCx, so you
-/// can always look up the definition of a Word via cx.lookup_type. Note that this type doesn't actually store the
-/// result_id of the type declaration instruction, merely the contents.
+/// Spir-v types are represented as simple Words, which are the `result_id` of instructions like
+/// `OpTypeInteger`. Sometimes, however, we want to inspect one of these Words and ask questions
+/// like "Is this an `OpTypeInteger`? How many bits does it have?". This struct holds all of that
+/// information. All types that are emitted are registered in `CodegenCx`, so you can always look
+/// up the definition of a `Word` via `cx.lookup_type`. Note that this type doesn't actually store
+/// the `result_id` of the type declaration instruction, merely the contents.
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum SpirvType {
     Void,
@@ -58,15 +59,16 @@ pub enum SpirvType {
 }
 
 impl SpirvType {
-    /// Note: Builder::type_* should be called *nowhere else* but here, to ensure CodegenCx::type_defs stays up-to-date
-    pub fn def(self, cx: &CodegenCx) -> Word {
+    /// Note: `Builder::type_*` should be called *nowhere else* but here, to ensure
+    /// `CodegenCx::type_defs` stays up-to-date
+    pub fn def(self, cx: &CodegenCx<'_>) -> Word {
         if let Some(cached) = cx.type_cache.get(&self) {
             return cached;
         }
         let result = match self {
-            SpirvType::Void => cx.emit_global().type_void(),
-            SpirvType::Bool => cx.emit_global().type_bool(),
-            SpirvType::Integer(width, signedness) => {
+            Self::Void => cx.emit_global().type_void(),
+            Self::Bool => cx.emit_global().type_bool(),
+            Self::Integer(width, signedness) => {
                 let result = cx
                     .emit_global()
                     .type_int(width, if signedness { 1 } else { 0 });
@@ -89,7 +91,7 @@ impl SpirvType {
                 };
                 result
             }
-            SpirvType::Float(width) => {
+            Self::Float(width) => {
                 let result = cx.emit_global().type_float(width);
                 match width {
                     64 if !cx.builder.has_capability(Capability::Float64) => {
@@ -103,7 +105,7 @@ impl SpirvType {
                 };
                 result
             }
-            SpirvType::Adt {
+            Self::Adt {
                 ref name,
                 align: _,
                 size: _,
@@ -137,9 +139,9 @@ impl SpirvType {
                 }
                 result
             }
-            SpirvType::Opaque { ref name } => cx.emit_global().type_opaque(name),
-            SpirvType::Vector { element, count } => cx.emit_global().type_vector(element, count),
-            SpirvType::Array { element, count } => {
+            Self::Opaque { ref name } => cx.emit_global().type_opaque(name),
+            Self::Vector { element, count } => cx.emit_global().type_vector(element, count),
+            Self::Array { element, count } => {
                 // ArrayStride decoration wants in *bytes*
                 let element_size = cx
                     .lookup_type(element)
@@ -157,25 +159,25 @@ impl SpirvType {
                 }
                 result
             }
-            SpirvType::RuntimeArray { element } => {
+            Self::RuntimeArray { element } => {
                 let result = cx.emit_global().type_runtime_array(element);
                 if cx.kernel_mode {
                     cx.zombie_no_span(result, "RuntimeArray in kernel mode");
                 }
                 result
             }
-            SpirvType::Pointer {
+            Self::Pointer {
                 storage_class,
                 pointee,
             } => {
                 let result = cx.emit_global().type_pointer(None, storage_class, pointee);
                 // no pointers to functions
-                if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
+                if let Self::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(result, "pointer to function")
                 }
                 result
             }
-            SpirvType::Function {
+            Self::Function {
                 return_type,
                 ref arguments,
             } => cx
@@ -186,15 +188,15 @@ impl SpirvType {
         result
     }
 
-    /// def_with_id is used by the RecursivePointeeCache to handle OpTypeForwardPointer: when emitting the subsequent
-    /// OpTypePointer, the ID is already known and must be re-used.
-    pub fn def_with_id(self, cx: &CodegenCx, id: Word) -> Word {
+    /// `def_with_id` is used by the `RecursivePointeeCache` to handle `OpTypeForwardPointer`: when
+    /// emitting the subsequent `OpTypePointer`, the ID is already known and must be re-used.
+    pub fn def_with_id(self, cx: &CodegenCx<'_>, id: Word) -> Word {
         if let Some(cached) = cx.type_cache.get(&self) {
             assert_eq!(cached, id);
             return cached;
         }
         let result = match self {
-            SpirvType::Pointer {
+            Self::Pointer {
                 storage_class,
                 pointee,
             } => {
@@ -202,7 +204,7 @@ impl SpirvType {
                     .emit_global()
                     .type_pointer(Some(id), storage_class, pointee);
                 // no pointers to functions
-                if let SpirvType::Function { .. } = cx.lookup_type(pointee) {
+                if let Self::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(result, "pointer to function")
                 }
                 result
@@ -227,39 +229,37 @@ impl SpirvType {
 
     pub fn sizeof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Option<Size> {
         let result = match *self {
-            SpirvType::Void => Size::ZERO,
-            SpirvType::Bool => Size::from_bytes(1),
-            SpirvType::Integer(width, _) => Size::from_bits(width),
-            SpirvType::Float(width) => Size::from_bits(width),
-            SpirvType::Adt { size, .. } => size?,
-            SpirvType::Opaque { .. } => Size::ZERO,
-            SpirvType::Vector { element, count } => {
-                cx.lookup_type(element).sizeof(cx)? * count as u64
-            }
-            SpirvType::Array { element, count } => {
+            Self::Void => Size::ZERO,
+            Self::Bool => Size::from_bytes(1),
+            Self::Integer(width, _) => Size::from_bits(width),
+            Self::Float(width) => Size::from_bits(width),
+            Self::Adt { size, .. } => size?,
+            Self::Opaque { .. } => Size::ZERO,
+            Self::Vector { element, count } => cx.lookup_type(element).sizeof(cx)? * count as u64,
+            Self::Array { element, count } => {
                 cx.lookup_type(element).sizeof(cx)? * cx.builder.lookup_const_u64(count).unwrap()
             }
-            SpirvType::RuntimeArray { .. } => return None,
-            SpirvType::Pointer { .. } => cx.tcx.data_layout.pointer_size,
-            SpirvType::Function { .. } => cx.tcx.data_layout.pointer_size,
+            Self::RuntimeArray { .. } => return None,
+            Self::Pointer { .. } => cx.tcx.data_layout.pointer_size,
+            Self::Function { .. } => cx.tcx.data_layout.pointer_size,
         };
         Some(result)
     }
 
     pub fn alignof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Align {
         match *self {
-            SpirvType::Void => Align::from_bytes(0).unwrap(),
-            SpirvType::Bool => Align::from_bytes(1).unwrap(),
-            SpirvType::Integer(width, _) => Align::from_bits(width as u64).unwrap(),
-            SpirvType::Float(width) => Align::from_bits(width as u64).unwrap(),
-            SpirvType::Adt { align, .. } => align,
-            SpirvType::Opaque { .. } => Align::from_bytes(0).unwrap(),
+            Self::Void => Align::from_bytes(0).unwrap(),
+            Self::Bool => Align::from_bytes(1).unwrap(),
+            Self::Integer(width, _) => Align::from_bits(width as u64).unwrap(),
+            Self::Float(width) => Align::from_bits(width as u64).unwrap(),
+            Self::Adt { align, .. } => align,
+            Self::Opaque { .. } => Align::from_bytes(0).unwrap(),
             // TODO: Is this right? (must match rustc's understanding)
-            SpirvType::Vector { element, .. } => cx.lookup_type(element).alignof(cx),
-            SpirvType::Array { element, .. } => cx.lookup_type(element).alignof(cx),
-            SpirvType::RuntimeArray { element } => cx.lookup_type(element).alignof(cx),
-            SpirvType::Pointer { .. } => cx.tcx.data_layout.pointer_align.abi,
-            SpirvType::Function { .. } => cx.tcx.data_layout.pointer_align.abi,
+            Self::Vector { element, .. } => cx.lookup_type(element).alignof(cx),
+            Self::Array { element, .. } => cx.lookup_type(element).alignof(cx),
+            Self::RuntimeArray { element } => cx.lookup_type(element).alignof(cx),
+            Self::Pointer { .. } => cx.tcx.data_layout.pointer_align.abi,
+            Self::Function { .. } => cx.tcx.data_layout.pointer_align.abi,
         }
     }
 }
@@ -270,9 +270,10 @@ pub struct SpirvTypePrinter<'cx, 'tcx> {
     cx: &'cx CodegenCx<'tcx>,
 }
 
-/// Types can be recursive, e.g. a struct can contain a pointer to itself. So, we need to keep track of a stack of what
-/// types are currently being printed, to not infinitely loop. Unfortunately, unlike fmt::Display, we can't easily pass
-/// down the "stack" of currently-being-printed types, so we use a global static.
+/// Types can be recursive, e.g. a struct can contain a pointer to itself. So, we need to keep
+/// track of a stack of what types are currently being printed, to not infinitely loop.
+/// Unfortunately, unlike `fmt::Display`, we can't easily pass down the "stack" of
+/// currently-being-printed types, so we use a global static.
 static DEBUG_STACK: SyncLazy<Mutex<Vec<Word>>> = SyncLazy::new(|| Mutex::new(Vec::new()));
 
 impl fmt::Debug for SpirvTypePrinter<'_, '_> {
@@ -381,10 +382,11 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
     }
 }
 
-/// Types can be recursive, e.g. a struct can contain a pointer to itself. So, we need to keep track of a stack of what
-/// types are currently being printed, to not infinitely loop. So, we only use fmt::Display::fmt as an "entry point", and
-/// then call through to our own (recursive) custom function that has a parameter for the current stack. Make sure to not
-/// call Display on a type inside the custom function!
+/// Types can be recursive, e.g. a struct can contain a pointer to itself. So, we need to keep
+/// track of a stack of what types are currently being printed, to not infinitely loop. So, we only
+/// use `fmt::Display::fmt` as an "entry point", and then call through to our own (recursive)
+/// custom function that has a parameter for the current stack. Make sure to not call Display on a
+/// type inside the custom function!
 impl fmt::Display for SpirvTypePrinter<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.display(&mut Vec::new(), f)

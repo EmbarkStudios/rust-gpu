@@ -1,4 +1,4 @@
-//! See documentation on CodegenCx::zombie for a description of the zombie system.
+//! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Decoration, Op, Word};
