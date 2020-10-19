@@ -170,21 +170,6 @@ impl Inliner<'_, '_> {
         inst_id
     }
 
-    fn undef_for(&mut self, ty: Word) -> Word {
-        // TODO: This is horribly slow, fix this
-        let existing = self
-            .types_global_values
-            .iter()
-            .find(|inst| inst.class.opcode == Op::Undef && inst.result_type.unwrap() == ty);
-        if let Some(existing) = existing {
-            return existing.result_id.unwrap();
-        }
-        let inst_id = self.id();
-        self.types_global_values
-            .push(Instruction::new(Op::Undef, Some(ty), Some(inst_id), vec![]));
-        inst_id
-    }
-
     fn inline_fn(&mut self, function: &mut Function) {
         let mut block_idx = 0;
         while block_idx < function.blocks.len() {
@@ -267,7 +252,6 @@ impl Inliner<'_, '_> {
                 &mut caller.blocks[0],
                 self.ptr_ty(call_result_type),
                 return_variable.unwrap(),
-                self.undef_for(call_result_type),
             );
         }
 
@@ -360,7 +344,7 @@ fn get_inlined_blocks(
     blocks
 }
 
-fn insert_opvariable(block: &mut Block, ptr_ty: Word, result_id: Word, undef_value: Word) {
+fn insert_opvariable(block: &mut Block, ptr_ty: Word, result_id: Word) {
     let index = block
         .instructions
         .iter()
@@ -376,11 +360,7 @@ fn insert_opvariable(block: &mut Block, ptr_ty: Word, result_id: Word, undef_val
         Op::Variable,
         Some(ptr_ty),
         Some(result_id),
-        vec![
-            Operand::StorageClass(StorageClass::Function),
-            // See comment in `builder_methods.rs` `alloca` for why this undef is here.
-            Operand::IdRef(undef_value),
-        ],
+        vec![Operand::StorageClass(StorageClass::Function)],
     );
     match index {
         Some(index) => block.instructions.insert(index, inst),

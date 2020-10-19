@@ -670,7 +670,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             pointee: ty,
         }
         .def(self);
-        let undef_ty = self.undef(ty);
         // "All OpVariable instructions in a function must be the first instructions in the first block."
         let mut builder = self.emit();
         builder.select_block(Some(0)).unwrap();
@@ -696,16 +695,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             Op::Variable,
             Some(ptr_ty),
             Some(result_id),
-            vec![
-                Operand::StorageClass(StorageClass::Function),
-                // TODO: Always include an undef initializer, because spir-v does not specify the
-                // value of an uninitialized variable. So, initialize it to undef.
-                // See #17 for tracking spec'ing this in spir-v:
-                // https://github.com/EmbarkStudios/rust-gpu/issues/17
-                // (This also helps out linker/mem2reg.rs in some places - it gives it a handy
-                // source of a deduped OpUndef so it doesn't have to do that work itself)
-                Operand::IdRef(undef_ty.def),
-            ],
+            vec![Operand::StorageClass(StorageClass::Function)],
         );
         builder.insert_into_block(index, inst).unwrap();
         result_id.with_type(ptr_ty)

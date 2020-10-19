@@ -184,6 +184,7 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
                 // Note: mem2reg requires functions to be in RPO order (i.e. block_ordering_pass)
                 mem2reg::mem2reg(
                     output.header.as_mut().unwrap(),
+                    &mut output.types_global_values,
                     &pointer_to_pointee,
                     &constants,
                     func,
