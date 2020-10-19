@@ -49,6 +49,16 @@ fn is_zombie<'a>(inst: &Instruction, zombie: &HashMap<Word, &'a str>) -> Option<
     }
 }
 
+fn is_or_contains_zombie<'a>(
+    inst: &Instruction,
+    zombie: &HashMap<Word, &'a str>,
+) -> Option<&'a str> {
+    let result_zombie = inst
+        .result_id
+        .and_then(|result_id| zombie.get(&result_id).copied());
+    result_zombie.or_else(|| contains_zombie(inst, zombie))
+}
+
 fn spread_zombie(module: &mut Module, zombie: &mut HashMap<Word, &str>) -> bool {
     let mut any = false;
     // globals are easy
@@ -65,52 +75,22 @@ fn spread_zombie(module: &mut Module, zombie: &mut HashMap<Word, &str>) -> bool 
             }
         }
     }
-    // function IDs implicitly reference their contents
+    // No need to zombie defs within a function: If any def within a function is zombied, then the
+    // whole function is zombied. But, we don't have to mark the defs within a function as zombie,
+    // because the defs can't escape the function.
     for func in &module.functions {
-        let mut func_is_zombie = None;
-        let mut spread_func = |inst: &Instruction| {
-            if let Some(result_id) = inst.result_id {
-                if let Some(reason) = contains_zombie(inst, zombie) {
-                    match zombie.entry(result_id) {
-                        hash_map::Entry::Vacant(entry) => {
-                            entry.insert(reason);
-                            any = true;
-                        }
-                        hash_map::Entry::Occupied(_) => {}
-                    }
-                    func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
-                } else if let Some(reason) = zombie.get(&result_id) {
-                    func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
-                }
-            } else if let Some(reason) = is_zombie(inst, zombie) {
-                func_is_zombie = Some(func_is_zombie.unwrap_or(reason));
-            }
-        };
-        for def in &func.def {
-            spread_func(def);
+        let func_id = func.def_id().unwrap();
+        // Can't use zombie.entry() here, due to using the map in contains_zombie
+        if zombie.contains_key(&func_id) {
+            // Func is already zombie, no need to scan it again.
+            continue;
         }
-        for param in &func.parameters {
-            spread_func(param);
-        }
-        for block in &func.blocks {
-            for inst in &block.label {
-                spread_func(inst);
-            }
-            for inst in &block.instructions {
-                spread_func(inst);
-            }
-        }
-        for inst in &func.end {
-            spread_func(inst);
-        }
+        let func_is_zombie = func
+            .all_inst_iter()
+            .find_map(|inst| is_or_contains_zombie(inst, zombie));
         if let Some(reason) = func_is_zombie {
-            match zombie.entry(func.def.as_ref().unwrap().result_id.unwrap()) {
-                hash_map::Entry::Vacant(entry) => {
-                    entry.insert(reason);
-                    any = true;
-                }
-                hash_map::Entry::Occupied(_) => {}
-            }
+            zombie.insert(func_id, reason);
+            any = true;
         }
     }
     any

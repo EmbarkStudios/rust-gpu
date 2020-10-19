@@ -16,6 +16,7 @@ use def_analyzer::DefAnalyzer;
 use rspirv::binary::Consumer;
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, Word};
+use rustc_session::Session;
 use std::collections::HashMap;
 use thiserror::Error;
 
@@ -92,11 +93,10 @@ fn apply_rewrite_rules(rewrite_rules: &HashMap<Word, Word>, blocks: &mut [Block]
     }
 }
 
-pub fn link<T>(
-    inputs: &mut [&mut Module],
-    opts: &Options,
-    timer: impl Fn(&'static str) -> T,
-) -> Result<Module> {
+// Sess needs to be Option because linker tests call this method, and linker tests can't synthesize
+// a test Session (not sure how to do that).
+pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) -> Result<Module> {
+    let timer = |n| sess.map(|s| s.timer(n));
     let mut output = {
         let _timer = timer("link_merge");
         // shift all the ids

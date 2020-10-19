@@ -73,6 +73,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> super::Result<Module> {
     let mut modules = modules.iter_mut().collect::<Vec<_>>();
 
     link(
+        None,
         &mut modules,
         &Options {
             compact_ids: true,
@@ -80,7 +81,6 @@ fn assemble_and_link(binaries: &[&[u8]]) -> super::Result<Module> {
             inline: false,
             mem2reg: false,
         },
-        drop,
     )
 }
 

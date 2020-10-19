@@ -413,7 +413,7 @@ fn do_link(
         inline: legalize,
         mem2reg: legalize,
     };
-    let link_result = linker::link(&mut module_refs, &options, |name| sess.timer(name));
+    let link_result = linker::link(Some(sess), &mut module_refs, &options);
 
     let save_modules_timer = sess.timer("link_save_modules");
     let assembled = match link_result {
