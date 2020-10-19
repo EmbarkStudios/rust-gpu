@@ -306,7 +306,7 @@ fn exp_v3(a: Vec3) -> Vec3 {
 fn lerp(a: Vec3, b: Vec3, c: f32) -> Vec3 {
     a * c + b * (1.0 - c)
 }
-
+/*
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
     let sunfade = 1.0 - clamp(1.0 - exp(sun_position.1 / 450000.0), 0.0, 1.0);
@@ -360,15 +360,15 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     color.pow(1.0 / (1.2 + (1.2 * sunfade)))
 }
-
+*/
 #[allow(unused_attributes)]
 #[spirv(entry = "fragment")]
 pub fn main(input: Input<f32x4>, mut output: Output<f32x4>) {
     let color = input.load();
 
-    let k = sky(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, -1.0, 0.0)); // todo: nice input variables
+    //let k = sky(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, -1.0, 0.0)); // todo: nice input variables
 
-    output.store(f32x4(k.0, k.1, k.2, 0.0))
+    output.store(color)
 }
 
 #[allow(unused_attributes)]
