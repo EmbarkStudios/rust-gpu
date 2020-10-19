@@ -841,26 +841,14 @@ fn main() {
         base.device
             .bind_buffer_memory(vertex_input_buffer, vertex_input_buffer_memory, 0)
             .unwrap();
-        let mut vertex_spv_file = Cursor::new(&include_bytes!("vert.spv")[..]);
-        let mut frag_spv_file = Cursor::new(&include_bytes!(env!("example_shader.spv"))[..]);
+        let mut spv_file = Cursor::new(&include_bytes!(env!("example_shader.spv"))[..]);
+        let code = read_spv(&mut spv_file).expect("Failed to read spv file");
+        let shader_info = vk::ShaderModuleCreateInfo::builder().code(&code);
 
-        let vertex_code =
-            read_spv(&mut vertex_spv_file).expect("Failed to read vertex shader spv file");
-        let vertex_shader_info = vk::ShaderModuleCreateInfo::builder().code(&vertex_code);
-
-        let frag_code =
-            read_spv(&mut frag_spv_file).expect("Failed to read fragment shader spv file");
-        let frag_shader_info = vk::ShaderModuleCreateInfo::builder().code(&frag_code);
-
-        let vertex_shader_module = base
+        let shader_module = base
             .device
-            .create_shader_module(&vertex_shader_info, None)
-            .expect("Vertex shader module error");
-
-        let fragment_shader_module = base
-            .device
-            .create_shader_module(&frag_shader_info, None)
-            .expect("Fragment shader module error");
+            .create_shader_module(&shader_info, None)
+            .expect("Shader module error");
 
         let layout_create_info = vk::PipelineLayoutCreateInfo::default();
 
@@ -870,16 +858,17 @@ fn main() {
             .unwrap();
 
         let shader_entry_name = CString::new("main").unwrap();
+        let shader_vs_entry_name = CString::new("main_vs").unwrap();
         let shader_stage_create_infos = [
             vk::PipelineShaderStageCreateInfo {
-                module: vertex_shader_module,
-                p_name: shader_entry_name.as_ptr(),
+                module: shader_module,
+                p_name: shader_vs_entry_name.as_ptr(),
                 stage: vk::ShaderStageFlags::VERTEX,
                 ..Default::default()
             },
             vk::PipelineShaderStageCreateInfo {
                 s_type: vk::StructureType::PIPELINE_SHADER_STAGE_CREATE_INFO,
-                module: fragment_shader_module,
+                module: shader_module,
                 p_name: shader_entry_name.as_ptr(),
                 stage: vk::ShaderStageFlags::FRAGMENT,
                 ..Default::default()
@@ -1098,10 +1087,7 @@ fn main() {
             base.device.destroy_pipeline(pipeline, None);
         }
         base.device.destroy_pipeline_layout(pipeline_layout, None);
-        base.device
-            .destroy_shader_module(vertex_shader_module, None);
-        base.device
-            .destroy_shader_module(fragment_shader_module, None);
+        base.device.destroy_shader_module(shader_module, None);
         base.device.free_memory(index_buffer_memory, None);
         base.device.destroy_buffer(index_buffer, None);
         base.device.free_memory(vertex_input_buffer_memory, None);
