@@ -366,7 +366,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 pub fn main(input: Input<f32x4>, mut output: Output<f32x4>) {
     let color = input.load();
 
-    //let k = sky(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, -1.0, 0.0)); // todo: nice input variables
+    let k = sky(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, -1.0, 0.0)); // todo: nice input variables
 
     output.store(color)
 }
