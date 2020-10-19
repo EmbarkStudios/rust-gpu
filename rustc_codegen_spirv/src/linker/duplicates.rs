@@ -157,6 +157,9 @@ pub fn remove_duplicate_types(module: &mut Module) {
     let annotations = gather_annotations(&module.annotations);
 
     for inst in &mut module.types_global_values {
+        if inst.class.opcode == Op::Variable {
+            continue;
+        }
         if inst.class.opcode == Op::TypeForwardPointer {
             if let Operand::IdRef(id) = inst.operands[0] {
                 unresolved_forward_pointers.insert(id);
