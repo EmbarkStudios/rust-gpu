@@ -842,8 +842,7 @@ fn main() {
             .bind_buffer_memory(vertex_input_buffer, vertex_input_buffer_memory, 0)
             .unwrap();
         let mut spv_file = Cursor::new(&include_bytes!(env!("example_shader.spv"))[..]);
-        let code =
-            read_spv(&mut spv_file).expect("Failed to read spv file");
+        let code = read_spv(&mut spv_file).expect("Failed to read spv file");
         let shader_info = vk::ShaderModuleCreateInfo::builder().code(&code);
 
         let shader_module = base
@@ -1088,8 +1087,7 @@ fn main() {
             base.device.destroy_pipeline(pipeline, None);
         }
         base.device.destroy_pipeline_layout(pipeline_layout, None);
-        base.device
-            .destroy_shader_module(shader_module, None);
+        base.device.destroy_shader_module(shader_module, None);
         base.device.free_memory(index_buffer_memory, None);
         base.device.destroy_buffer(index_buffer, None);
         base.device.free_memory(vertex_input_buffer_memory, None);
