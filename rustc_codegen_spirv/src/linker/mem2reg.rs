@@ -193,11 +193,13 @@ fn collect_access_chains(
     loop {
         let mut changed = false;
         for inst in blocks.iter().flat_map(|b| &b.instructions) {
-            for op in &inst.operands {
+            for (index, op) in inst.operands.iter().enumerate() {
                 if let Operand::IdRef(id) = op {
                     if variables.contains_key(id) {
                         match inst.class.opcode {
-                            Op::Load | Op::Store | Op::AccessChain | Op::InBoundsAccessChain => {}
+                            // Only allow store if pointer is the lhs, not rhs
+                            Op::Store if index == 0 => {}
+                            Op::Load | Op::AccessChain | Op::InBoundsAccessChain => {}
                             _ => return None,
                         }
                     }
