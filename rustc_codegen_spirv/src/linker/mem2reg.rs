@@ -17,6 +17,7 @@ use std::collections::{hash_map, HashMap, HashSet};
 
 pub fn mem2reg(
     header: &mut ModuleHeader,
+    types_global_values: &mut Vec<Instruction>,
     pointer_to_pointee: &HashMap<Word, Word>,
     constants: &HashMap<Word, u32>,
     func: &mut Function,
@@ -26,6 +27,7 @@ pub fn mem2reg(
     let dominance_frontier = compute_dominance_frontier(&preds, &idom);
     insert_phis_all(
         header,
+        types_global_values,
         pointer_to_pointee,
         constants,
         &mut func.blocks,
@@ -110,6 +112,7 @@ fn compute_dominance_frontier(preds: &[Vec<usize>], idom: &[usize]) -> Vec<HashS
 
 fn insert_phis_all(
     header: &mut ModuleHeader,
+    types_global_values: &mut Vec<Instruction>,
     pointer_to_pointee: &HashMap<Word, Word>,
     constants: &HashMap<Word, u32>,
     blocks: &mut [Block],
@@ -132,6 +135,7 @@ fn insert_phis_all(
         let blocks_with_phi = insert_phis(blocks, &dominance_frontier, var_map);
         let mut renamer = Renamer {
             header,
+            types_global_values,
             blocks,
             blocks_with_phi,
             base_var_type,
@@ -264,8 +268,38 @@ fn insert_phis(
     blocks_with_phi
 }
 
+// These can't be part of the Renamer impl due to borrowck rules.
+fn undef_for(
+    header: &mut ModuleHeader,
+    types_global_values: &mut Vec<Instruction>,
+    ty: Word,
+) -> Word {
+    // TODO: This is horribly slow, fix this
+    let existing = types_global_values
+        .iter()
+        .find(|inst| inst.class.opcode == Op::Undef && inst.result_type.unwrap() == ty);
+    if let Some(existing) = existing {
+        return existing.result_id.unwrap();
+    }
+    let inst_id = id(header);
+    types_global_values.push(Instruction::new(Op::Undef, Some(ty), Some(inst_id), vec![]));
+    inst_id
+}
+fn top_stack_or_undef(
+    header: &mut ModuleHeader,
+    types_global_values: &mut Vec<Instruction>,
+    stack: &[Word],
+    ty: Word,
+) -> Word {
+    match stack.last() {
+        Some(&top) => top,
+        None => undef_for(header, types_global_values, ty),
+    }
+}
+
 struct Renamer<'a> {
     header: &'a mut ModuleHeader,
+    types_global_values: &'a mut Vec<Instruction>,
     blocks: &'a mut [Block],
     blocks_with_phi: HashSet<usize>,
     base_var_type: Word,
@@ -284,7 +318,12 @@ impl Renamer<'_> {
         let existing_phi = self.blocks[block].instructions.iter_mut().find(|inst| {
             inst.class.opcode == Op::Phi && phi_defs.contains(&inst.result_id.unwrap())
         });
-        let top_def = *self.stack.last().unwrap();
+        let top_def = top_stack_or_undef(
+            self.header,
+            self.types_global_values,
+            &self.stack,
+            self.base_var_type,
+        );
         match existing_phi {
             None => {
                 let new_id = id(self.header);
@@ -344,7 +383,12 @@ impl Renamer<'_> {
                         self.stack.push(val);
                     } else {
                         let new_id = id(self.header);
-                        let prev_comp = *self.stack.last().unwrap();
+                        let prev_comp = top_stack_or_undef(
+                            self.header,
+                            self.types_global_values,
+                            &self.stack,
+                            self.base_var_type,
+                        );
                         let mut operands = vec![Operand::IdRef(val), Operand::IdRef(prev_comp)];
                         operands
                             .extend(var_info.indices.iter().copied().map(Operand::LiteralInt32));
@@ -361,7 +405,13 @@ impl Renamer<'_> {
                 let ptr = inst.operands[0].id_ref_any().unwrap();
                 if let Some(var_info) = self.var_map.get(&ptr) {
                     let loaded_val = inst.result_id.unwrap();
-                    let current_obj = *self.stack.last().unwrap();
+                    // TODO: Should this do something more sane if it's undef?
+                    let current_obj = top_stack_or_undef(
+                        self.header,
+                        self.types_global_values,
+                        &self.stack,
+                        self.base_var_type,
+                    );
                     if var_info.indices.is_empty() {
                         *inst = Instruction::new(Op::Nop, None, None, vec![]);
                         self.rewrite_rules.insert(loaded_val, current_obj);
