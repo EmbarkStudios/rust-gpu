@@ -368,7 +368,7 @@ pub fn main(input: Input<f32x4>, mut output: Output<f32x4>) {
 
     let k = sky(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, -1.0, 0.0)); // todo: nice input variables
 
-    output.store(f32x4(color.0 + k.0, k.1, k.2, 0.0))
+    output.store(f32x4(k.0, k.1, k.2, 0.0))
 }
 
 #[allow(unused_attributes)]
