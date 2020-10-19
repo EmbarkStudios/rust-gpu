@@ -1375,7 +1375,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
             .unwrap();
         if !self.builder.has_capability(Capability::Addresses) {
-            self.zombie(dst.def, "OpCopyMemorySized (memcpy) without OpCapability Addresses");
+            self.zombie(
+                dst.def,
+                "OpCopyMemorySized (memcpy) without OpCapability Addresses",
+            );
         }
     }
 
@@ -1392,7 +1395,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
             .unwrap();
         if !self.builder.has_capability(Capability::Addresses) {
-            self.zombie(dst.def, "OpCopyMemorySized (memmov) without OpCapability Addresses");
+            self.zombie(
+                dst.def,
+                "OpCopyMemorySized (memmov) without OpCapability Addresses",
+            );
         }
     }
 
