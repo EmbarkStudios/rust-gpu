@@ -9,6 +9,7 @@ use rspirv::spirv::{
 };
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
+use rustc_hir::Param;
 use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
@@ -17,6 +18,7 @@ use rustc_middle::ty::{Instance, ParamEnv, Ty, TypeFoldable};
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
+use rustc_target::abi::call::PassMode;
 use rustc_target::abi::{Align, LayoutOf};
 use std::collections::HashMap;
 
@@ -158,7 +160,13 @@ impl<'tcx> CodegenCx<'tcx> {
     // Entry points declare their "interface" (all uniforms, inputs, outputs, etc.) as parameters. spir-v uses globals
     // to declare the interface. So, we need to generate a lil stub for the "real" main that collects all those global
     // variables and calls the user-defined main function.
-    fn entry_stub(&self, entry_func: SpirvValue, name: String, execution_model: ExecutionModel) {
+    fn shader_entry_stub(
+        &self,
+        entry_func: SpirvValue,
+        hir_params: &[Param<'_>],
+        name: String,
+        execution_model: ExecutionModel,
+    ) {
         let void = SpirvType::Void.def(self);
         let fn_void_void = SpirvType::Function {
             return_type: void,
@@ -180,7 +188,8 @@ impl<'tcx> CodegenCx<'tcx> {
         // Create OpVariables before OpFunction so they're global instead of local vars.
         let arguments = entry_func_args
             .iter()
-            .map(|&arg| {
+            .zip(hir_params)
+            .map(|(&arg, hir_param)| {
                 let storage_class = match self.lookup_type(arg) {
                     SpirvType::Pointer { storage_class, .. } => storage_class,
                     other => self.tcx.sess.fatal(&format!(
@@ -188,7 +197,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         other.debug(arg, self)
                     )),
                 };
-                let has_location = match storage_class {
+                let mut has_location = match storage_class {
                     StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant => {
                         true
                     }
@@ -196,6 +205,16 @@ impl<'tcx> CodegenCx<'tcx> {
                 };
                 // Note: this *declares* the variable too.
                 let variable = emit.variable(arg, None, storage_class, None);
+                for attr in hir_param.attrs {
+                    if let Some(SpirvAttribute::Builtin(builtin)) = parse_attr(self, attr) {
+                        emit.decorate(
+                            variable,
+                            Decoration::BuiltIn,
+                            std::iter::once(Operand::BuiltIn(builtin)),
+                        );
+                        has_location = false;
+                    }
+                }
                 // Assign locations from left to right, incrementing each storage class
                 // individually.
                 // TODO: Is this right for UniformConstant? Do they share locations with
@@ -280,6 +299,51 @@ impl<'tcx> CodegenCx<'tcx> {
 
         emit.entry_point(execution_model, fn_id, name, &[]);
     }
+
+    fn entry_stub(
+        &self,
+        instance: &Instance<'_>,
+        fn_abi: &FnAbi<'_, Ty<'_>>,
+        entry_func: SpirvValue,
+        name: String,
+        execution_model: ExecutionModel,
+    ) {
+        let local_id = match instance.def_id().as_local() {
+            Some(id) => id,
+            None => {
+                self.tcx
+                    .sess
+                    .err(&format!("Cannot declare {} as an entry point", name));
+                return;
+            }
+        };
+        let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(local_id);
+        let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
+        for (abi, arg) in fn_abi.args.iter().zip(body.params) {
+            if let PassMode::Direct(_) = abi.mode {
+            } else {
+                self.tcx.sess.span_err(
+                    arg.span,
+                    &format!("PassMode {:?} invalid for entry point parameter", abi.mode),
+                )
+            }
+        }
+        if let PassMode::Ignore = fn_abi.ret.mode {
+        } else {
+            self.tcx.sess.span_err(
+                self.tcx.hir().span(fn_hir_id),
+                &format!(
+                    "PassMode {:?} invalid for entry point return type",
+                    fn_abi.ret.mode
+                ),
+            )
+        }
+        if execution_model == ExecutionModel::Kernel {
+            self.kernel_entry_stub(entry_func, name, execution_model);
+        } else {
+            self.shader_entry_stub(entry_func, body.params, name, execution_model);
+        }
+    }
 }
 
 impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
@@ -341,13 +405,13 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
         for attr in self.tcx.get_attrs(instance.def_id()) {
             match parse_attr(self, attr) {
-                Some(SpirvAttribute::Entry(execution_model)) => {
-                    if execution_model == ExecutionModel::Kernel {
-                        self.kernel_entry_stub(declared, human_name.clone(), execution_model);
-                    } else {
-                        self.entry_stub(declared, human_name.clone(), execution_model);
-                    }
-                }
+                Some(SpirvAttribute::Entry(execution_model)) => self.entry_stub(
+                    &instance,
+                    &fn_abi,
+                    declared,
+                    human_name.clone(),
+                    execution_model,
+                ),
                 Some(SpirvAttribute::ReallyUnsafeIgnoreBitcasts) => {
                     self.really_unsafe_ignore_bitcasts
                         .borrow_mut()
