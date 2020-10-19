@@ -4,8 +4,8 @@
 //! `&Input<T>` in a function! So, we inline all functions that take these "illegal" pointers, then
 //! run mem2reg (see mem2reg.rs) on the result to "unwrap" the Function pointer.
 
-use crate::apply_rewrite_rules;
-use crate::mem2reg::compute_preds;
+use super::apply_rewrite_rules;
+use super::mem2reg::compute_preds;
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use std::collections::{HashMap, HashSet};

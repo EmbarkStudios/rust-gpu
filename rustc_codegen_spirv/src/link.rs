@@ -1,4 +1,4 @@
-use crate::{SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
+use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::CodegenResults;
@@ -407,13 +407,13 @@ fn do_link(
     drop(load_modules_timer);
 
     // Do the link...
-    let options = rspirv_linker::Options {
+    let options = linker::Options {
         dce: env::var("NO_DCE").is_err(),
         compact_ids: env::var("NO_COMPACT_IDS").is_err(),
         inline: legalize,
         mem2reg: legalize,
     };
-    let link_result = rspirv_linker::link(&mut module_refs, &options, |name| sess.timer(name));
+    let link_result = linker::link(&mut module_refs, &options, |name| sess.timer(name));
 
     let save_modules_timer = sess.timer("link_save_modules");
     let assembled = match link_result {

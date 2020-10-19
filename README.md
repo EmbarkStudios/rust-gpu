@@ -50,7 +50,6 @@ There are a few different components to this repo:
 
 * [rfcs](rfcs) for in-depth discussion and specs.
 * [rustc_codegen_spirv](rustc_codegen_spirv) for the compiler itself.
-* [rspirv-linker](rspirv-linker) for the linker (used by the compiler).
 * [spirv-std](spirv-std) for GPU intrinsics, types, and other library items used by GPU crates.
 * [spirv-builder](spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
 

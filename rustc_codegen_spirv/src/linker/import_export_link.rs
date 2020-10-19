@@ -1,5 +1,5 @@
-use crate::ty::trans_aggregate_type;
-use crate::{print_type, DefAnalyzer, LinkerError, Result};
+use super::ty::trans_aggregate_type;
+use super::{print_type, DefAnalyzer, LinkerError, Result};
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
 use std::collections::{HashMap, HashSet};

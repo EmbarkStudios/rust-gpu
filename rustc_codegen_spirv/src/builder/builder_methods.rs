@@ -702,8 +702,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // value of an uninitialized variable. So, initialize it to undef.
                 // See #17 for tracking spec'ing this in spir-v:
                 // https://github.com/EmbarkStudios/rust-gpu/issues/17
-                // (This also helps out rspirv-linker/mem2reg.rs in some places - it gives it a
-                // handy source of a deduped OpUndef so it doesn't have to do that work itself)
+                // (This also helps out linker/mem2reg.rs in some places - it gives it a handy
+                // source of a deduped OpUndef so it doesn't have to do that work itself)
                 Operand::IdRef(undef_ty.def),
             ],
         );

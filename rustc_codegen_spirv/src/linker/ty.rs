@@ -1,4 +1,4 @@
-use crate::{extract_literal_int_as_u64, DefAnalyzer};
+use super::{extract_literal_int_as_u64, DefAnalyzer};
 use rspirv::dr::Instruction;
 use rspirv::spirv::{AccessQualifier, Dim, ImageFormat, Op, StorageClass};
 

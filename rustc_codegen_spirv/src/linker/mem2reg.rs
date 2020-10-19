@@ -9,8 +9,8 @@
 //! anywhere - we assume that later optimization passes will take care of these (relying on what
 //! wikipedia calls "treat pruning as a dead code elimination problem").
 
-use crate::simple_passes::outgoing_edges;
-use crate::{apply_rewrite_rules, id};
+use super::simple_passes::outgoing_edges;
+use super::{apply_rewrite_rules, id};
 use rspirv::dr::{Block, Function, Instruction, ModuleHeader, Operand};
 use rspirv::spirv::{Op, Word};
 use std::collections::{hash_map, HashMap, HashSet};
@@ -330,7 +330,7 @@ impl Renamer<'_> {
                 let ptr = inst.result_id.unwrap();
                 let val = inst.operands[1].id_ref_any().unwrap();
                 if let Some(var_info) = self.var_map.get(&ptr) {
-                    assert_eq!(var_info.indices, []);
+                    assert_eq!(var_info.indices, Vec::<u32>::new());
                     self.stack.push(val);
                 }
             } else if inst.class.opcode == Op::Store {
