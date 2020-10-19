@@ -390,8 +390,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.basic_block
     }
 
-    fn set_span(&self, span: Span) {
-        *self.current_span.borrow_mut() = Some(span);
+    fn set_span(&mut self, span: Span) {
+        self.current_span = Some(span);
     }
 
     fn position_at_end(&mut self, llbb: Self::BasicBlock) {

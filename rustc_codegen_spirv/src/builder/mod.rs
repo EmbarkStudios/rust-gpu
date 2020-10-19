@@ -28,7 +28,6 @@ use rustc_span::source_map::Span;
 use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, LayoutOf, Size, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
-use std::cell::RefCell;
 use std::ops::Deref;
 
 pub struct Builder<'a, 'tcx> {
@@ -36,7 +35,7 @@ pub struct Builder<'a, 'tcx> {
     cursor: BuilderCursor,
     current_fn: <Self as BackendTypes>::Function,
     basic_block: <Self as BackendTypes>::BasicBlock,
-    current_span: RefCell<Option<Span>>,
+    current_span: Option<Span>,
 }
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
@@ -46,7 +45,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     pub fn zombie(&self, word: Word, reason: &'static str) {
-        if let Some(current_span) = *self.current_span.borrow() {
+        if let Some(current_span) = self.current_span {
             self.zombie_with_span(word, current_span, reason);
         } else {
             self.zombie_no_span(word, reason);
@@ -66,7 +65,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
     /*
     pub fn struct_err(&self, msg: &str) -> DiagnosticBuilder<'_> {
-        if let Some(current_span) = *self.current_span.borrow() {
+        if let Some(current_span) = self.current_span {
             self.tcx.sess.struct_span_err(current_span, msg)
         } else {
             self.tcx.sess.struct_err(msg)
@@ -74,7 +73,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     pub fn err(&self, msg: &str) {
-        if let Some(current_span) = *self.current_span.borrow() {
+        if let Some(current_span) = self.current_span {
             self.tcx.sess.span_err(current_span, msg)
         } else {
             self.tcx.sess.err(msg)
@@ -83,7 +82,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     */
 
     pub fn fatal(&self, msg: &str) -> ! {
-        if let Some(current_span) = *self.current_span.borrow() {
+        if let Some(current_span) = self.current_span {
             self.tcx.sess.span_fatal(current_span, msg)
         } else {
             self.tcx.sess.fatal(msg)
