@@ -1385,11 +1385,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn memmove(
         &mut self,
         dst: Self::Value,
-        _dst_align: Align,
+        dst_align: Align,
         src: Self::Value,
-        _src_align: Align,
+        src_align: Align,
         size: Self::Value,
-        _flags: MemFlags,
+        flags: MemFlags,
     ) {
         self.emit()
             .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
