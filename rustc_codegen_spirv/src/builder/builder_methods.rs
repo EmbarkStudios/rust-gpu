@@ -710,6 +710,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
+        // See comment on `register_constant_pointer`
+        if let Some(value) = self.lookup_constant_pointer(ptr) {
+            return value;
+        }
         let ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer {
                 storage_class: _,
@@ -1376,9 +1380,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // Nothing to do!
             }
             Some(size) if self.lookup_type(src.ty).sizeof(self) != Some(Size::from_bytes(size)) => {
-                self.emit()
-                    .copy_memory(dst.def, src.def, None, None, empty())
-                    .unwrap();
+                if let Some(const_value) = self.lookup_constant_pointer(src) {
+                    self.store(const_value, dst, Align::from_bytes(0).unwrap());
+                } else {
+                    self.emit()
+                        .copy_memory(dst.def, src.def, None, None, empty())
+                        .unwrap();
+                }
             }
             _ => {
                 self.emit()
@@ -1701,17 +1709,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // dereference pointers
         let (result_type, argument_types) = loop {
             match self.lookup_type(llfn.ty) {
-                SpirvType::Pointer { pointee, .. } => {
-                    // See comment on register_fn_ptr
-                    if let Some(func) = self.lookup_fn_ptr(llfn) {
-                        llfn = func;
-                    } else {
-                        llfn = self
-                            .emit()
-                            .load(pointee, None, llfn.def, None, empty())
-                            .unwrap()
-                            .with_type(pointee)
-                    }
+                SpirvType::Pointer { .. } => {
+                    // Note that this doesn't necessarily mean a dynamic load, the function is
+                    // probably in cx.constant_pointers
+                    llfn = self.load(llfn, Align::from_bytes(0).unwrap());
                 }
                 SpirvType::Function {
                     return_type,

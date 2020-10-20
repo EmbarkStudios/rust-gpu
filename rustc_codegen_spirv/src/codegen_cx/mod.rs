@@ -51,9 +51,9 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
     pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
-    /// Functions created in `get_fn_addr`
-    /// left: the OpUndef value. right: the function value.
-    function_pointers: RefCell<BiHashMap<SpirvValue, SpirvValue>>,
+    /// Functions created in `get_fn_addr`, and values created in `static_addr_of`.
+    /// left: the OpUndef pseudo-pointer. right: the concrete value.
+    constant_pointers: RefCell<BiHashMap<SpirvValue, SpirvValue>>,
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
@@ -76,7 +76,7 @@ impl<'tcx> CodegenCx<'tcx> {
             kernel_mode,
             sym,
             really_unsafe_ignore_bitcasts: Default::default(),
-            function_pointers: Default::default(),
+            constant_pointers: Default::default(),
             i8_i16_atomics_allowed: false,
         }
     }
@@ -159,36 +159,42 @@ impl<'tcx> CodegenCx<'tcx> {
 
     /// Function pointer registration:
     /// LLVM, and therefore `codegen_ssa`, is very murky with function values vs. function
-    /// pointers.  So, `codegen_ssa` has a pattern where *even for direct function calls*, it uses
+    /// pointers. So, `codegen_ssa` has a pattern where *even for direct function calls*, it uses
     /// `get_fn_*addr*`, and then uses that function *pointer* when calling
-    /// `BuilderMethods::call()`.  However, spir-v doesn't support function pointers! So, instead,
+    /// `BuilderMethods::call()`. However, spir-v doesn't support function pointers! So, instead,
     /// when `get_fn_addr` is called, we register a "token" (via `OpUndef`), storing it in a
     /// dictionary. Then, when `BuilderMethods::call()` is called, and it's calling a function
-    /// pointer, we check the dictionary, and if it is, invoke the function directly.  It's kind of
-    /// conceptually similar to a constexpr deref, except specialized to just functions.
-    pub fn register_fn_ptr(&self, function: SpirvValue) -> SpirvValue {
-        if let Some(undef) = self.function_pointers.borrow().get_by_right(&function) {
+    /// pointer, we check the dictionary, and if it is, invoke the function directly. It's kind of
+    /// conceptually similar to a constexpr deref, except specialized to just functions. We also
+    /// use the same system with `static_addr_of`: we don't support creating addresses of arbitrary
+    /// constant values, so instead, we register the constant, and whenever we load something, we
+    /// check if the pointer we're loading is a special `OpUndef` token: if so, we directly
+    /// reference the registered value.
+    pub fn register_constant_pointer(&self, value: SpirvValue) -> SpirvValue {
+        // If we've already registered this value, return it.
+        if let Some(undef) = self.constant_pointers.borrow().get_by_right(&value) {
             return *undef;
         }
         let ty = SpirvType::Pointer {
             storage_class: StorageClass::Function,
-            pointee: function.ty,
+            pointee: value.ty,
         }
         .def(self);
         // We want a unique ID for these undefs, so don't use the caching system.
         let result = self.emit_global().undef(ty, None).with_type(ty);
         // It's obviously invalid, so zombie it. Zombie it in user code as well, because it's valid there too.
-        self.zombie_even_in_user_code(result.def, "get_fn_addr");
-        self.function_pointers
+        // It'd be realllly nice to give this a Span, the UX of this is horrible...
+        self.zombie_even_in_user_code(result.def, "dynamic use of address of constant");
+        self.constant_pointers
             .borrow_mut()
-            .insert_no_overwrite(result, function)
+            .insert_no_overwrite(result, value)
             .unwrap();
         result
     }
 
-    /// See comment on `register_fn_ptr`
-    pub fn lookup_fn_ptr(&self, pointer: SpirvValue) -> Option<SpirvValue> {
-        self.function_pointers
+    /// See comment on `register_constant_pointer`
+    pub fn lookup_constant_pointer(&self, pointer: SpirvValue) -> Option<SpirvValue> {
+        self.constant_pointers
             .borrow()
             .get_by_left(&pointer)
             .cloned()
@@ -251,7 +257,7 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
 
     fn get_fn_addr(&self, instance: Instance<'tcx>) -> Self::Value {
         let function = self.get_fn_ext(instance);
-        self.register_fn_ptr(function)
+        self.register_constant_pointer(function)
     }
 
     fn eh_personality(&self) -> Self::Value {
