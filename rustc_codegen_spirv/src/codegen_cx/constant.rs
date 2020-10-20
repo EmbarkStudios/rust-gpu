@@ -420,9 +420,14 @@ impl<'tcx> CodegenCx<'tcx> {
                 self.constant_composite(ty, values)
             }
             SpirvType::Vector { element, count } => {
+                let total_size = ty_concrete.sizeof(self).expect("create_const_alloc: Vectors must be sized");
+                let final_offset = *offset + total_size;
                 let values = (0..count)
                     .map(|_| self.create_const_alloc2(alloc, offset, element).def)
                     .collect::<Vec<_>>();
+                assert!(*offset <= final_offset);
+                // Vectors sometimes have padding at the end (e.g. vec3), skip over it.
+                *offset = final_offset;
                 self.constant_composite(ty, values)
             }
             SpirvType::RuntimeArray { element } => {

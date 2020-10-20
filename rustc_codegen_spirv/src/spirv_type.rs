@@ -235,7 +235,9 @@ impl SpirvType {
             Self::Float(width) => Size::from_bits(width),
             Self::Adt { size, .. } => size?,
             Self::Opaque { .. } => Size::ZERO,
-            Self::Vector { element, count } => cx.lookup_type(element).sizeof(cx)? * count as u64,
+            Self::Vector { element, count } => {
+                cx.lookup_type(element).sizeof(cx)? * count.next_power_of_two() as u64
+            }
             Self::Array { element, count } => {
                 cx.lookup_type(element).sizeof(cx)? * cx.builder.lookup_const_u64(count).unwrap()
             }
@@ -254,8 +256,13 @@ impl SpirvType {
             Self::Float(width) => Align::from_bits(width as u64).unwrap(),
             Self::Adt { align, .. } => align,
             Self::Opaque { .. } => Align::from_bytes(0).unwrap(),
-            // TODO: Is this right? (must match rustc's understanding)
-            Self::Vector { element, .. } => cx.lookup_type(element).alignof(cx),
+            // Vectors have size==align
+            Self::Vector { .. } => Align::from_bytes(
+                self.sizeof(cx)
+                    .expect("alignof: Vectors must be sized")
+                    .bytes(),
+            )
+            .expect("alignof: Vectors must have power-of-2 size"),
             Self::Array { element, .. } => cx.lookup_type(element).alignof(cx),
             Self::RuntimeArray { element } => cx.lookup_type(element).alignof(cx),
             Self::Pointer { .. } => cx.tcx.data_layout.pointer_align.abi,
