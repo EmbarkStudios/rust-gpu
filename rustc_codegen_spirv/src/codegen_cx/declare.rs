@@ -427,15 +427,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
 impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
-        // TODO: Implement this.
-        let ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: cv.ty,
-        }
-        .def(self);
-        let result = self.undef(ty);
-        self.zombie_no_span(result.def, "static_addr_of");
-        result
+        self.register_constant_pointer(cv)
     }
 
     fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
