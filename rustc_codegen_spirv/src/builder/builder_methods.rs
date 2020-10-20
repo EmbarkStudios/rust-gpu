@@ -1371,29 +1371,36 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         size: Self::Value,
         _flags: MemFlags,
     ) {
-        self.emit()
-            .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
-            .unwrap();
-        if !self.builder.has_capability(Capability::Addresses) {
-            self.zombie(dst.def, "OpCopyMemorySized without OpCapability Addresses");
+        match self.builder.lookup_const_u64(size) {
+            Some(0) => {
+                // Nothing to do!
+            }
+            Some(size) if self.lookup_type(src.ty).sizeof(self) != Some(Size::from_bytes(size)) => {
+                self.emit()
+                    .copy_memory(dst.def, src.def, None, None, empty())
+                    .unwrap();
+            }
+            _ => {
+                self.emit()
+                    .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
+                    .unwrap();
+                if !self.builder.has_capability(Capability::Addresses) {
+                    self.zombie(dst.def, "OpCopyMemorySized without OpCapability Addresses")
+                }
+            }
         }
     }
 
     fn memmove(
         &mut self,
         dst: Self::Value,
-        _dst_align: Align,
+        dst_align: Align,
         src: Self::Value,
-        _src_align: Align,
+        src_align: Align,
         size: Self::Value,
-        _flags: MemFlags,
+        flags: MemFlags,
     ) {
-        self.emit()
-            .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
-            .unwrap();
-        if !self.builder.has_capability(Capability::Addresses) {
-            self.zombie(dst.def, "OpCopyMemorySized without OpCapability Addresses");
-        }
+        self.memcpy(dst, dst_align, src, src_align, size, flags)
     }
 
     fn memset(
