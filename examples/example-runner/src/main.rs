@@ -861,7 +861,7 @@ fn main() {
             .create_pipeline_layout(&layout_create_info, None)
             .unwrap();
 
-        let shader_entry_name = CString::new("main").unwrap();
+        let shader_fs_entry_name = CString::new("main_fs").unwrap();
         let shader_vs_entry_name = CString::new("main_vs").unwrap();
         let shader_stage_create_infos = [
             vk::PipelineShaderStageCreateInfo {
@@ -873,7 +873,7 @@ fn main() {
             vk::PipelineShaderStageCreateInfo {
                 s_type: vk::StructureType::PIPELINE_SHADER_STAGE_CREATE_INFO,
                 module: shader_module,
-                p_name: shader_entry_name.as_ptr(),
+                p_name: shader_fs_entry_name.as_ptr(),
                 stage: vk::ShaderStageFlags::FRAGMENT,
                 ..Default::default()
             },
