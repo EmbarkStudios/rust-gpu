@@ -221,27 +221,22 @@ const TURBIDITY: f32 = 2.0;
 
 use core::f32::consts::PI;
 
-#[inline]
 fn pow(base: f32, factor: f32) -> f32 {
     unsafe { core::intrinsics::powf32(base, factor) }
 }
 
-#[inline]
 fn sqrt(f: f32) -> f32 {
     unsafe { core::intrinsics::sqrtf32(f) }
 }
 
-#[inline]
 fn log2(f: f32) -> f32 {
     unsafe { core::intrinsics::log2f32(f) }
 }
 
-#[inline]
 fn abs(f: f32) -> f32 {
     unsafe { core::intrinsics::fabsf32(f) }
 }
 
-#[inline]
 fn acos(v: f32) -> f32 {
     let x = abs(v);
     let mut res = -0.155972 * x + 1.56467; // p(x)
@@ -253,23 +248,19 @@ fn acos(v: f32) -> f32 {
     (res * mask) + ((1.0f32 - mask) * (PI - res))
 }
 
-#[inline]
 fn cos(n: f32) -> f32 {
     unsafe { core::intrinsics::cosf32(n) }
 }
 
-#[inline]
 fn normalize(v: Vec3) -> Vec3 {
     let len = 1.0 / sqrt(dot(v, v));
     Vec3::new(v.0 * len, v.1 * len, v.2 * len)
 }
 
-#[inline]
 fn dot(a: Vec3, b: Vec3) -> f32 {
     a.0 * b.0 + a.1 * b.1 + a.2 * b.2
 }
 
-#[inline]
 fn total_rayleigh(lambda: Vec3) -> Vec3 {
     (8.0 * pow(PI, 3.0)
         * pow(pow(REFRACTIVE_INDEX, 2.0) - 1.0, 2.0)
@@ -277,23 +268,19 @@ fn total_rayleigh(lambda: Vec3) -> Vec3 {
         / (3.0 * NUM_MOLECULES * lambda.pow(4.0) * (6.0 - 7.0 * DEPOLARIZATION_FACTOR))
 }
 
-#[inline]
 fn total_mie(lambda: Vec3, k: Vec3, t: f32) -> Vec3 {
     let c = 0.2 * t * 10e-18;
     0.434 * c * PI * ((2.0 * PI) / lambda).pow(MIE_V - 2.0) * k
 }
 
-#[inline]
 fn rayleigh_phase(cos_theta: f32) -> f32 {
     (3.0 / (16.0 * PI)) * (1.0 + pow(cos_theta, 2.0))
 }
 
-#[inline]
 fn henyey_greenstein_phase(cos_theta: f32, g: f32) -> f32 {
     (1.0 / (4.0 * PI)) * ((1.0 - pow(g, 2.0)) / pow(1.0 - 2.0 * g * cos_theta + pow(g, 2.0), 1.5))
 }
 
-#[inline]
 fn sun_intensity(zenith_angle_cos: f32) -> f32 {
     let cutoff_angle = PI / 1.95; // Earth shadow hack
     SUN_INTENSITY_FACTOR
@@ -302,7 +289,6 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
         )
 }
 
-#[inline]
 fn uncharted2_tonemap(w: Vec3) -> Vec3 {
     const A: f32 = 0.15; // Shoulder strength
     const B: f32 = 0.50; // Linear strength
@@ -314,27 +300,22 @@ fn uncharted2_tonemap(w: Vec3) -> Vec3 {
     ((w * (A * w + C * B) + D * E) / (w * (A * w + B) + D * F)) - E / F
 }
 
-#[inline]
 fn clamp(a: f32, b: f32, c: f32) -> f32 {
     a.max(b).min(c)
 }
 
-#[inline]
 fn exp(a: f32) -> f32 {
     unsafe { core::intrinsics::expf32(a) }
 }
 
-#[inline]
 fn exp_v3(a: Vec3) -> Vec3 {
     Vec3::new(exp(a.0), exp(a.1), exp(a.2))
 }
 
-#[inline]
 fn lerp(a: Vec3, b: Vec3, c: f32) -> Vec3 {
     a + (b - a) * c
 }
 
-#[inline]
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
     let sunfade = 1.0 - clamp(1.0 - exp(sun_position.1 / 450000.0), 0.0, 1.0);
