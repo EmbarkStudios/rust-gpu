@@ -1,6 +1,6 @@
-use crate::math::*;
-use core::{fmt, ops::*};
+use crate::math::builtin::*;
 use core::{cmp::Ordering, f32, mem::MaybeUninit};
+use core::{fmt, ops::*};
 
 /// A 4-dimensional vector.
 ///
@@ -10,12 +10,7 @@ use core::{cmp::Ordering, f32, mem::MaybeUninit};
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]
 // if compiling with simd enabled assume alignment needs to match the simd type
 #[repr(C)]
-pub struct Vec4(
-    pub f32,
-    pub f32,
-    pub f32,
-    pub f32,
-);
+pub struct Vec4(pub f32, pub f32, pub f32, pub f32);
 
 /// Creates a `Vec4`.
 #[inline]
@@ -214,7 +209,7 @@ impl Vec4 {
     #[inline]
     pub fn length(self) -> f32 {
         {
-            builtin_sqrtf32(self.dot(self))
+            sqrtf32(self.dot(self))
         }
     }
 
@@ -351,7 +346,12 @@ impl Vec4 {
     #[inline]
     pub fn abs(self) -> Self {
         {
-            Self(builtin_absf32(self.0), builtin_absf32(self.1), builtin_absf32(self.2), builtin_absf32(self.3))
+            Self(
+                absf32(self.0),
+                absf32(self.1),
+                absf32(self.2),
+                absf32(self.3),
+            )
         }
     }
 
@@ -361,10 +361,10 @@ impl Vec4 {
     pub fn round(self) -> Self {
         {
             Self(
-                builtin_roundf32(self.0),
-                builtin_roundf32(self.1),
-                builtin_roundf32(self.2),
-                builtin_roundf32(self.3),
+                roundf32(self.0),
+                roundf32(self.1),
+                roundf32(self.2),
+                roundf32(self.3),
             )
         }
     }
@@ -375,32 +375,47 @@ impl Vec4 {
     pub fn floor(self) -> Self {
         {
             Self(
-                builtin_floorf32(self.0),
-                builtin_floorf32(self.1),
-                builtin_floorf32(self.2),
-                builtin_floorf32(self.3),
+                floorf32(self.0),
+                floorf32(self.1),
+                floorf32(self.2),
+                floorf32(self.3),
             )
         }
     }
-    
+
     /// Returns a `Vec4` containing this vector raised to the power of `power`
     #[inline]
     pub fn pow(self, power: f32) -> Self {
-        Self(builtin_powf32(self.0, power), builtin_powf32(self.1, power), builtin_powf32(self.2, power), builtin_powf32(self.3, power))
+        Self(
+            powf32(self.0, power),
+            powf32(self.1, power),
+            powf32(self.2, power),
+            powf32(self.3, power),
+        )
     }
 
     /// Returns a `Vec4` containing this vector exp'd
     #[inline]
     pub fn exp(self) -> Self {
-        Self(builtin_expf32(self.0), builtin_expf32(self.1), builtin_expf32(self.2), builtin_expf32(self.3))
+        Self(
+            expf32(self.0),
+            expf32(self.1),
+            expf32(self.2),
+            expf32(self.3),
+        )
     }
-    
+
     /// Returns a `Vec4` containing the smallest integer greater than or equal to a number for each
     /// element of `self`.
     #[inline]
     pub fn ceil(self) -> Self {
         {
-            Self(builtin_ceilf32(self.0), builtin_ceilf32(self.1), builtin_ceilf32(self.2), builtin_ceilf32(self.3))
+            Self(
+                ceilf32(self.0),
+                ceilf32(self.1),
+                ceilf32(self.2),
+                ceilf32(self.3),
+            )
         }
     }
 

@@ -1,5 +1,5 @@
-use crate::math::*;
 use super::{Vec2, Vec4};
+use crate::math::builtin::*;
 use core::{fmt, ops::*};
 
 /// A 3-dimensional vector without SIMD support.
@@ -171,7 +171,7 @@ impl Vec3 {
     /// Computes the length of `self`.
     #[inline]
     pub fn length(self) -> f32 {
-        builtin_sqrtf32(self.dot(self))
+        sqrtf32(self.dot(self))
     }
 
     /// Computes the squared length of `self`.
@@ -285,40 +285,44 @@ impl Vec3 {
     /// Returns a `Vec3` containing the absolute value of each element of `self`.
     #[inline]
     pub fn abs(self) -> Self {
-        Self(builtin_absf32(self.0), builtin_absf32(self.1), builtin_absf32(self.2))
+        Self(absf32(self.0), absf32(self.1), absf32(self.2))
     }
 
     /// Returns a `Vec3` containing the nearest integer to a number for each element of `self`.
     /// Round half-way cases away from 0.0.
     #[inline]
     pub fn round(self) -> Self {
-        Self(builtin_roundf32(self.0), builtin_roundf32(self.1), builtin_roundf32(self.2))
+        Self(roundf32(self.0), roundf32(self.1), roundf32(self.2))
     }
 
     /// Returns a `Vec3` containing the largest integer less than or equal to a number for each
     /// element of `self`.
     #[inline]
     pub fn floor(self) -> Self {
-        Self(builtin_floorf32(self.0), builtin_floorf32(self.1), builtin_floorf32(self.2))
+        Self(floorf32(self.0), floorf32(self.1), floorf32(self.2))
     }
 
     /// Returns a `Vec3` containing this vector raised to the power of `power`
     #[inline]
     pub fn pow(self, power: f32) -> Self {
-        Self(builtin_powf32(self.0, power), builtin_powf32(self.1, power), builtin_powf32(self.2, power))
+        Self(
+            powf32(self.0, power),
+            powf32(self.1, power),
+            powf32(self.2, power),
+        )
     }
 
     /// Returns a `Vec3` containing this vector exp'd
     #[inline]
     pub fn exp(self) -> Self {
-        Self(builtin_expf32(self.0), builtin_expf32(self.1), builtin_expf32(self.2))
+        Self(expf32(self.0), expf32(self.1), expf32(self.2))
     }
-    
+
     /// Returns a `Vec3` containing the smallest integer greater than or equal to a number for each
     /// element of `self`.
     #[inline]
     pub fn ceil(self) -> Self {
-        Self(builtin_ceilf32(self.0), builtin_ceilf32(self.1), builtin_ceilf32(self.2))
+        Self(ceilf32(self.0), ceilf32(self.1), ceilf32(self.2))
     }
 
     #[deprecated(since = "0.9.5", note = "please use `Vec3::recip` instead")]
@@ -503,7 +507,6 @@ impl From<Vec3> for [f32; 3] {
         [v.0, v.1, v.2]
     }
 }
-
 
 #[test]
 fn test_vec3_private() {

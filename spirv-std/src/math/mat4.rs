@@ -42,7 +42,7 @@ impl Mat4 {
             x_axis: Vec4::zero(),
             y_axis: Vec4::zero(),
             z_axis: Vec4::zero(),
-            w_axis: Vec4::zero()
+            w_axis: Vec4::zero(),
         }
     }
 
@@ -53,7 +53,7 @@ impl Mat4 {
             x_axis: Vec4::new(1.0, 0.0, 0.0, 0.0),
             y_axis: Vec4::new(0.0, 1.0, 0.0, 0.0),
             z_axis: Vec4::new(0.0, 0.0, 1.0, 0.0),
-            w_axis: Vec4::new(0.0, 0.0, 0.0, 1.0)
+            w_axis: Vec4::new(0.0, 0.0, 0.0, 1.0),
         }
     }
 
@@ -279,7 +279,6 @@ impl Mat4 {
     ///
     /// If the matrix is not invertible the returned matrix will be invalid.
     pub fn inverse(&self) -> Self {
-    
         let (m00, m01, m02, m03) = self.x_axis.into();
         let (m10, m11, m12, m13) = self.y_axis.into();
         let (m20, m21, m22, m23) = self.z_axis.into();

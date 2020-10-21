@@ -22,12 +22,6 @@ impl Default for Mat2 {
     }
 }
 
-impl fmt::Display for Mat2 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[{}, {}]", self.x_axis(), self.y_axis())
-    }
-}
-
 impl Mat2 {
     /// Creates a 2x2 matrix with all elements set to `0.0`.
     #[inline]
@@ -88,15 +82,15 @@ impl Mat2 {
     /// Sets the first column, the `x` axis.
     #[inline]
     pub fn set_x_axis(&mut self, x: Vec2) {
-        self.0.0 = x.x();
-        self.0.1 = x.y();
+        (self.0).0 = x.x();
+        (self.0).1 = x.y();
     }
 
     /// Sets the second column, the `y` axis.
     #[inline]
     pub fn set_y_axis(&mut self, y: Vec2) {
-        self.0.2 = y.x();
-        self.0.3 = y.y();
+        (self.0).2 = y.x();
+        (self.0).3 = y.y();
     }
 
     /// Returns the first column, the `x` axis.

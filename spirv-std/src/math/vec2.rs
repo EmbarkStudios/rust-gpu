@@ -1,5 +1,5 @@
-use super::{Vec3};
-use crate::math::*;
+use super::Vec3;
+use crate::math::builtin::*;
 use core::{f32, fmt, ops::*};
 
 /// A 2-dimensional vector.
@@ -123,7 +123,7 @@ impl Vec2 {
     /// Computes the length of `self`.
     #[inline]
     pub fn length(self) -> f32 {
-        builtin_sqrtf32(self.dot(self))
+        sqrtf32(self.dot(self))
     }
 
     /// Computes the squared length of `self`.
@@ -217,40 +217,40 @@ impl Vec2 {
     /// Returns a `Vec2` containing the absolute value of each element of `self`.
     #[inline]
     pub fn abs(self) -> Self {
-        Self(builtin_absf32(self.0), builtin_absf32(self.1))
+        Self(absf32(self.0), absf32(self.1))
     }
 
     /// Returns a `Vec2` containing the nearest integer to a number for each element of `self`.
     /// Round half-way cases away from 0.0.
     #[inline]
     pub fn round(self) -> Self {
-        Self(builtin_roundf32(self.0), builtin_roundf32(self.1))
+        Self(roundf32(self.0), roundf32(self.1))
     }
 
     /// Returns a `Vec2` containing the largest integer less than or equal to a number for each
     /// element of `self`.
     #[inline]
     pub fn floor(self) -> Self {
-        Self(builtin_floorf32(self.0), builtin_floorf32(self.1))
+        Self(floorf32(self.0), floorf32(self.1))
     }
 
     /// Returns a `Vec2` containing this vector raised to the power of `power`
     #[inline]
     pub fn pow(self, power: f32) -> Self {
-        Self(builtin_powf32(self.0, power), builtin_powf32(self.1, power))
+        Self(powf32(self.0, power), powf32(self.1, power))
     }
 
     /// Returns a `Vec2` containing this vector exp'd
     #[inline]
     pub fn exp(self) -> Self {
-        Self(builtin_expf32(self.0), builtin_expf32(self.1))
+        Self(expf32(self.0), expf32(self.1))
     }
 
     /// Returns a `Vec2` containing the smallest integer greater than or equal to a number for each
     /// element of `self`.
     #[inline]
     pub fn ceil(self) -> Self {
-        Self(builtin_ceilf32(self.0), builtin_ceilf32(self.1))
+        Self(ceilf32(self.0), ceilf32(self.1))
     }
 
     /// The perpendicular dot product of the vector and `other`.
