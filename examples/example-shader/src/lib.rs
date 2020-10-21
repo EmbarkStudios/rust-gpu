@@ -143,8 +143,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
 #[spirv(entry = "fragment")]
 pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
-    let color = input.load();
-    let mut dir = Vec3::new(color.0, color.1, 0.0);
+    let dir: Vec3 = input.load().truncate();
 
     // hard-code information because we can't bind buffers at the moment
     let eye_pos = Vec3(0.0, 0.0997, 0.2);
@@ -157,16 +156,16 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
     };
 
     let cs_pos = Vec4(dir.0, -dir.1, 1.0, 1.0);
-    let mut ws_pos = clip_to_world.mul_vec4(cs_pos);
-    let ws_pos = Vec3(
-        ws_pos.0 / ws_pos.3,
-        ws_pos.1 / ws_pos.3,
-        ws_pos.2 / ws_pos.3,
-    );
+    let ws_pos = {
+        let p = clip_to_world.mul_vec4(cs_pos);
+        p.truncate() / p.3
+    };
     let dir = (ws_pos - eye_pos).normalize();
-    let k = sky(dir, sun_pos);
 
-    output.store(k.extend(0.0))
+    // evaluate Preetham sky model
+    let color = sky(dir, sun_pos);
+
+    output.store(color.extend(0.0))
 }
 
 #[spirv(entry = "vertex")]
