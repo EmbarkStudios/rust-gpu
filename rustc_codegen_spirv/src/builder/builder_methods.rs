@@ -1375,26 +1375,30 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         size: Self::Value,
         _flags: MemFlags,
     ) {
-        match self.builder.lookup_const_u64(size) {
-            Some(0) => {
-                // Nothing to do!
-            }
-            Some(size) if self.lookup_type(src.ty).sizeof(self) != Some(Size::from_bytes(size)) => {
-                if let Some(const_value) = self.lookup_constant_pointer(src) {
-                    self.store(const_value, dst, Align::from_bytes(0).unwrap());
-                } else {
-                    self.emit()
-                        .copy_memory(dst.def, src.def, None, None, empty())
-                        .unwrap();
-                }
-            }
-            _ => {
+        let const_size = self.builder.lookup_const_u64(size);
+        if const_size == Some(0) {
+            // Nothing to do!
+            return;
+        }
+        let src_pointee = match self.lookup_type(src.ty) {
+            SpirvType::Pointer { pointee, .. } => Some(pointee),
+            _ => None,
+        };
+        let src_element_size = src_pointee.and_then(|p| self.lookup_type(p).sizeof(self));
+        if src_element_size.is_some() && src_element_size == const_size.map(Size::from_bytes) {
+            if let Some(const_value) = self.lookup_constant_pointer(src) {
+                self.store(const_value, dst, Align::from_bytes(0).unwrap());
+            } else {
                 self.emit()
-                    .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
+                    .copy_memory(dst.def, src.def, None, None, empty())
                     .unwrap();
-                if !self.builder.has_capability(Capability::Addresses) {
-                    self.zombie(dst.def, "OpCopyMemorySized without OpCapability Addresses")
-                }
+            }
+        } else {
+            self.emit()
+                .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
+                .unwrap();
+            if !self.builder.has_capability(Capability::Addresses) {
+                self.zombie(dst.def, "OpCopyMemorySized without OpCapability Addresses")
             }
         }
     }
