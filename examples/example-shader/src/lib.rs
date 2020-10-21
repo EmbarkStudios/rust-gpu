@@ -839,7 +839,7 @@ pub fn main_fs(input: Input<f32x4>, mut output: Output<f32x4>) {
 
     let k = sky(dir, Vec3::new(0.0, 1000.0, 0.0)); // todo: nice input variables
 
-    output.store(f32x4(k.2, k.1, k.0, 0.0))
+    output.store(f32x4(k.2, k.1, k.0, 0.0)) // bgra output because that's the swapchain we're requesting
 }
 
 #[allow(unused_attributes)]
