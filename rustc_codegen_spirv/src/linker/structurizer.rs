@@ -3,14 +3,15 @@
 use super::id;
 use super::simple_passes::outgoing_edges;
 use rspirv::spirv::{Op, Word};
+use rustc_session::Session;
 use rspirv::{
     dr::{Block, Function, Instruction, ModuleHeader, Operand},
     spirv::SelectionControl,
 };
 use std::collections::VecDeque;
 
-pub fn structurize(header: &mut ModuleHeader, func: &mut Function) {
-    insert_selection_merge_on_conditional_branch(header, &mut func.blocks);
+pub fn structurize(sess: Option<&Session>, header: &mut ModuleHeader, func: &mut Function) {
+    insert_selection_merge_on_conditional_branch(sess, header, &mut func.blocks);
 }
 
 fn find_block_index_from_id(blocks: &[Block], id: &Word) -> usize {
@@ -23,9 +24,10 @@ fn find_block_index_from_id(blocks: &[Block], id: &Word) -> usize {
     panic!("Failed to find block from id");
 }
 
-fn get_possible_merge_positions(blocks: &[Block], start: Word) -> Vec<usize> {
+fn get_possible_merge_positions(sess: Option<&Session>, blocks: &[Block], start: Word) -> Vec<usize> {
     let mut retval = Vec::new();
     let mut next: VecDeque<Word> = VecDeque::new();
+    let mut processed = Vec::new();
     next.push_back(start);
 
     while let Some(front) = next.pop_front() {
@@ -35,6 +37,15 @@ fn get_possible_merge_positions(blocks: &[Block], start: Word) -> Vec<usize> {
         // We found a possible merge position
         if new_edges.len() == 1 {
             retval.push(find_block_index_from_id(blocks, &new_edges[0]));
+        }
+
+        if processed.contains(&front) {	
+            if let Some(sess) = sess {
+                sess.err("Loops are unsupported");
+            }
+            break;	
+        } else {	
+            processed.push(front);	
         }
 
         next.extend(new_edges);
@@ -49,6 +60,7 @@ fn ends_in_return(block: &Block) -> bool {
 }
 
 pub fn insert_selection_merge_on_conditional_branch(
+    sess: Option<&Session>,
     header: &mut ModuleHeader,
     blocks: &mut [Block],
 ) {
@@ -69,8 +81,8 @@ pub fn insert_selection_merge_on_conditional_branch(
         if out.len() != 2 {
             panic!("Viktor missunderstood something");
         }
-        let a_nexts = get_possible_merge_positions(blocks, out[0]);
-        let b_nexts = get_possible_merge_positions(blocks, out[1]);
+        let a_nexts = get_possible_merge_positions(sess, blocks, out[0]);
+        let b_nexts = get_possible_merge_positions(sess, blocks, out[1]);
 
         // Check for a matching possible merge position.
         let mut first_merge = None;
