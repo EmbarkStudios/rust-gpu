@@ -1,7 +1,5 @@
 use super::{Vec3, Vec4};
-use core::{
-    ops::{Add, Mul, Sub},
-};
+use core::ops::{Add, Mul, Sub};
 
 /// Creates a `Mat4` from four column vectors.
 #[inline]

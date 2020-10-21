@@ -1,7 +1,5 @@
 use super::{Vec2, Vec4};
-use core::{
-    ops::{Add, Mul, Sub},
-};
+use core::ops::{Add, Mul, Sub};
 
 /// Creates a `Mat2` from two column vectors.
 #[inline]

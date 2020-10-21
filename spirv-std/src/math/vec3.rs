@@ -1,6 +1,6 @@
 use super::{Vec2, Vec4};
 use crate::math::builtin::*;
-use core::{ops::*};
+use core::ops::*;
 
 /// A 3-dimensional vector without SIMD support.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]

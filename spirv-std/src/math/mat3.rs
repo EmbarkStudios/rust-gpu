@@ -1,7 +1,5 @@
-use super::{Vec3};
-use core::{
-    ops::{Add, Mul, Sub},
-};
+use super::Vec3;
+use core::ops::{Add, Mul, Sub};
 
 /// Creates a `Mat3` from three column vectors.
 #[inline]
