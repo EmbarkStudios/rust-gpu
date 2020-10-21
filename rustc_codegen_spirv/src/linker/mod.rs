@@ -9,6 +9,7 @@ mod import_export_link;
 mod inline;
 mod mem2reg;
 mod simple_passes;
+mod structurizer;
 mod ty;
 mod zombies;
 
@@ -41,6 +42,7 @@ pub struct Options {
     pub dce: bool,
     pub inline: bool,
     pub mem2reg: bool,
+    pub structurize: bool,
 }
 
 fn id(header: &mut ModuleHeader) -> Word {
@@ -143,7 +145,7 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
 
     {
         let _timer = timer("link_remove_zombies");
-        zombies::remove_zombies(&mut output);
+        zombies::remove_zombies(sess, &mut output);
     }
 
     if opts.inline {
@@ -200,6 +202,13 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
     if opts.dce {
         let _timer = timer("link_dce");
         dce::dce(&mut output);
+    }
+
+    if opts.structurize {
+        let _timer = timer("link_structurize");
+        for func in &mut output.functions {
+            structurizer::structurize(sess, output.header.as_mut().unwrap(), func);
+        }
     }
 
     {

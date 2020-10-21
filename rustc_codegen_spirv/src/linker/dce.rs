@@ -8,7 +8,7 @@ pub fn dce(module: &mut Module) {
     kill_unrooted(module, &rooted);
 }
 
-fn collect_roots(module: &Module) -> HashSet<Word> {
+pub fn collect_roots(module: &Module) -> HashSet<Word> {
     let mut rooted = HashSet::new();
     for inst in &module.entry_points {
         root(inst, &mut rooted);
