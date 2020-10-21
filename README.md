@@ -6,9 +6,39 @@
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
-### Current Status
+### Example
 
-Compiling a hello world triangle vulkan shader works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles. However, many things aren't implemented yet: for example, branching (e.g. if-statements) isn't supported yet! That means that while being technically usable, this project is far from being production-ready.
+[![Sky shader](assets/aky.jpg)]
+
+```rust
+#[spirv(entry = "fragment")]
+pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
+    let color = input.load();
+    let mut dir = Vec3::new(color.0, color.1, 0.0);
+
+    let cs_pos = Vec4(dir.0, -dir.1, 1.0, 1.0);
+    let mut ws_pos = clip_to_world.mul_vec4(cs_pos);
+    let ws_pos = Vec3(
+        ws_pos.0 / ws_pos.3,
+        ws_pos.1 / ws_pos.3,
+        ws_pos.2 / ws_pos.3,
+    );
+    let dir = (ws_pos - eye_pos).normalize();
+    // evaluate Preetham sky model
+    let k = sky(dir, sun_pos);
+
+    output.store(k.extend(0.0))
+}
+```
+
+See [source](examples/example-shader/src/lib.rs) for full details.
+
+
+### Current Status - v0.1
+
+Compiling and running very simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
+
+However, many things aren't implemented yet: for example, branching (e.g. if-statements) isn't supported yet! That means that while being technically usable, this project is far from being production-ready.
 
 ## Background
 
