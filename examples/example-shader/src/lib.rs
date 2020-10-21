@@ -133,6 +133,7 @@ impl Sub<Vec3> for f32 {
     }
 }
 
+#[inline]
 fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32{
     // Scale, bias and saturate x to 0..1 range
     let x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
@@ -218,30 +219,35 @@ const TURBIDITY: f32 = 2.0;
 
 use core::f32::consts::PI;
 
+#[inline]
 fn pow(base: f32, factor: f32) -> f32 {
     unsafe {
         core::intrinsics::powf32(base, factor)
     }
 }
 
+#[inline]
 fn sqrt(f: f32) -> f32 {
     unsafe {
         core::intrinsics::sqrtf32(f)
     }
 }
 
+#[inline]
 fn log2(f: f32) -> f32 {
     unsafe {
         core::intrinsics::log2f32(f)
     }
 }
 
+#[inline]
 fn abs(f: f32) -> f32 {
     unsafe {
         core::intrinsics::fabsf32(f)
     }
 }
 
+#[inline]
 fn acos(v: f32) -> f32 {
     let x = abs(v);
     let mut res = -0.155972 * x + 1.56467; // p(x)
@@ -253,12 +259,14 @@ fn acos(v: f32) -> f32 {
     (res * mask) + ((1.0f32 - mask) * (PI - res))
 }
 
+#[inline]
 fn cos(n: f32) -> f32 {
     unsafe {
         core::intrinsics::cosf32(n)
     }
 }
 
+#[inline]
 fn normalize(v: Vec3) -> Vec3 {
     let len = 1.0 / sqrt(dot(v, v));
     Vec3::new(
@@ -268,35 +276,42 @@ fn normalize(v: Vec3) -> Vec3 {
     )
 }
 
+#[inline]
 fn dot(a: Vec3, b: Vec3) -> f32 {
     a.0 * b.0 + a.1 * b.1 + a.2 * b.2
 }
 
+#[inline]
 fn total_rayleigh(lambda: Vec3) -> Vec3
 {
     (8.0 * pow(PI, 3.0) * pow(pow(REFRACTIVE_INDEX, 2.0) - 1.0, 2.0) * (6.0 + 3.0 * DEPOLARIZATION_FACTOR)) / (3.0 * NUM_MOLECULES * lambda.pow(4.0) * (6.0 - 7.0 * DEPOLARIZATION_FACTOR))
 }
 
+#[inline]
 fn total_mie(lambda: Vec3, k: Vec3, t: f32) -> Vec3
 {
 	let c = 0.2 * t * 10e-18;
 	0.434 * c * PI * ((2.0 * PI) / lambda).pow(MIE_V - 2.0) * k
 }
 
+#[inline]
 fn rayleigh_phase(cos_theta: f32)-> f32
 {
 	(3.0 / (16.0 * PI)) * (1.0 + pow(cos_theta, 2.0))
 }
 
+#[inline]
 fn henyey_greenstein_phase(cos_theta: f32, g: f32) -> f32 {
 	(1.0 / (4.0 * PI)) * ((1.0 - pow(g, 2.0)) / pow(1.0 - 2.0 * g * cos_theta + pow(g, 2.0), 1.5))
 }
 
+#[inline]
 fn sun_intensity(zenith_angle_cos: f32) -> f32 {
 	let cutoff_angle = PI / 1.95; // Earth shadow hack
 	SUN_INTENSITY_FACTOR * 0.0f32.max(1.0 - exp(-((cutoff_angle - acos(zenith_angle_cos)) / SUN_INTENSITY_FALLOFF_STEEPNESS)))
 }
 
+#[inline]
 fn uncharted2_tonemap(w: Vec3)->Vec3
 {
     const A: f32 = 0.15; // Shoulder strength
@@ -309,14 +324,17 @@ fn uncharted2_tonemap(w: Vec3)->Vec3
 	((w * (A * w + C * B) + D * E) / (w * (A * w + B) + D * F)) - E / F
 }
 
+#[inline]
 fn clamp(a: f32, b: f32, c: f32) -> f32 {
     a.max(b).min(c)
 }
 
+#[inline]
 fn exp(a: f32) -> f32 {
     unsafe { core::intrinsics::expf32(a) }
 }
 
+#[inline]
 fn exp_v3(a: Vec3) -> Vec3 {
     Vec3::new(
         exp(a.0),
@@ -325,10 +343,12 @@ fn exp_v3(a: Vec3) -> Vec3 {
     )
 }
 
+#[inline]
 fn lerp(a: Vec3, b: Vec3, c: f32) -> Vec3 {
     a + (b - a) * c
 }
 
+#[inline]
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
     let sunfade = 1.0 - clamp(1.0 - exp(sun_position.1 / 450000.0), 0.0, 1.0);
@@ -375,7 +395,8 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     color.pow(1.0 / (1.2 + (1.2 * sunfade)))
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]
+#[repr(C)]
 pub struct Vec4(
     pub(crate) f32,
     pub(crate) f32,
@@ -384,22 +405,28 @@ pub struct Vec4(
 );
 
 impl Vec4 {
-    pub(crate) fn dup_x(self) -> Self {
+    #[inline]
+    pub(crate) fn dup_x(&self) -> Self {
         Self(self.0, self.0, self.0, self.0)
     }
 
-    pub(crate) fn dup_y(self) -> Self {
+    #[inline]
+    pub(crate) fn dup_y(&self) -> Self {
         Self(self.1, self.1, self.1, self.1)
     }
 
-    pub(crate) fn dup_z(self) -> Self {
+    #[inline]
+    pub(crate) fn dup_z(&self) -> Self {
         Self(self.2, self.2, self.2, self.2)
     }
 
-    pub(crate) fn dup_w(self) -> Self {
+    #[inline]
+    pub(crate) fn dup_w(&self) -> Self {
         Self(self.3, self.3, self.3, self.3)
     }
-    pub(crate) fn mul_add(self, a: Self, b: Self) -> Self {
+
+    #[inline]
+    pub(crate) fn mul_add(&self, a: Self, b: Self) -> Self {
         Self(
             (self.0 * a.0) + b.0,
             (self.1 * a.1) + b.1,
@@ -422,6 +449,13 @@ impl Mul<Vec4> for Vec4 {
     }
 }
 
+impl From<Vec4> for (f32, f32, f32, f32) {
+    #[inline]
+    fn from(v: Vec4) -> Self {
+        (v.0, v.1, v.2, v.3)
+    }
+}
+
 pub struct Mat4 {
     pub(crate) x_axis: Vec4,
     pub(crate) y_axis: Vec4,
@@ -430,22 +464,46 @@ pub struct Mat4 {
 }
 
 impl Mat4 {
-    pub fn mul_vec4(&self, other: Vec4) -> Vec4 {
-        let mut res = self.x_axis * other.dup_x();
-        res = self.y_axis.mul_add(other.dup_y(), res);
-        res = self.z_axis.mul_add(other.dup_z(), res);
-        res = self.w_axis.mul_add(other.dup_w(), res);
+    #[inline]
+    pub fn mul_vec4(&self, other: &Vec4) -> Vec4 {
+        let xxxx = other.dup_x();
+        let yyyy = other.dup_y();
+        let zzzz = other.dup_z();
+        let wwww = other.dup_w();
+
+        let res = self.x_axis * xxxx;
+        let res = self.y_axis.mul_add(yyyy, res);
+        let res = self.z_axis.mul_add(zzzz, res);
+        let res = self.w_axis.mul_add(wwww, res);
         res
     }
+
+    #[inline]
+    pub fn transpose(&self) -> Self {
+        {
+            let (m00, m01, m02, m03) = self.x_axis.into();
+            let (m10, m11, m12, m13) = self.y_axis.into();
+            let (m20, m21, m22, m23) = self.z_axis.into();
+            let (m30, m31, m32, m33) = self.w_axis.into();
+
+            Self {
+                x_axis: Vec4(m00, m10, m20, m30),
+                y_axis: Vec4(m01, m11, m21, m31),
+                z_axis: Vec4(m02, m12, m22, m32),
+                w_axis: Vec4(m03, m13, m23, m33),
+            }
+        }
+    }
+
 }
 
 #[allow(unused_attributes)]
 #[spirv(entry = "fragment")]
 pub fn main_fs(input: Input<f32x4>, mut output: Output<f32x4>) {
     let color = input.load();
-    let mut dir = Vec3::new(color.0, color.1, color.2);
-    dir += Vec3::splat(1.0);
-    dir *= Vec3::splat(0.5);
+    let mut dir = Vec3::new(color.0, color.1, 0.0);
+    //dir += Vec3::new(1.0, 1.0, 0.0);
+    //dir *= Vec3::new(0.5, 0.5, 0.0);
 
     let clip_to_world = Mat4 {
         x_axis: Vec4(
@@ -474,17 +532,17 @@ pub fn main_fs(input: Input<f32x4>, mut output: Output<f32x4>) {
         ),
     };
 
-    //let dir = Vec3(dir.0, -dir.1, 1.0);
-    let cs_pos = Vec4(dir.0, dir.1, 1.0, 1.0);
-    let mut ws_pos = clip_to_world.mul_vec4(cs_pos);
 
-    let eye_pos = Vec3(0.0, 1.0, 2.0);
+    let cs_pos = Vec4(dir.0, -dir.1, 1.0, 1.0);
+    let mut ws_pos = clip_to_world.mul_vec4(&cs_pos);
+
+    let eye_pos = Vec3(0.0, 0.1, 0.2);
     let ws_pos = Vec3(ws_pos.0 / ws_pos.3, ws_pos.1 / ws_pos.3, ws_pos.2 / ws_pos.3);
     let dir = normalize(ws_pos - eye_pos);
 
-    let k = sky(dir, Vec3::new(0.0, 1000.0, 0.0)); // todo: nice input variables
+    let k = sky(dir, Vec3::new(0.0, 150.0, -1000.0)); // todo: nice input variables
 
-    output.store(f32x4(k.2, k.1, k.0, 0.0)) // bgra output because that's the swapchain we're requesting
+    output.store(f32x4(k.0, k.1, k.2, 0.0)) // bgra output because that's the swapchain we're requesting
 }
 
 #[allow(unused_attributes)]
