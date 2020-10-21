@@ -1,4 +1,4 @@
-use super::{Vec2, Vec3};
+use super::{Vec3};
 use core::{
     ops::{Add, Mul, Sub},
 };
@@ -259,7 +259,7 @@ impl Mat3 {
         let mut res = self.x_axis * Vec3::splat(other.x());
         res = self.y_axis.mul_add(Vec3::splat(other.y()), res);
         res = self.z_axis.mul_add(Vec3::splat(other.z()), res);
-        Vec3::from(res)
+        res
     }
 
     #[inline]

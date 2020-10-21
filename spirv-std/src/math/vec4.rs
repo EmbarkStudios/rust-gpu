@@ -1,6 +1,5 @@
 use crate::math::builtin::*;
-use core::{cmp::Ordering, f32, mem::MaybeUninit};
-use core::{ops::*};
+use core::{f32, ops::*};
 
 /// A 4-dimensional vector.
 ///

@@ -1,4 +1,4 @@
-use super::{Mat3, Vec3, Vec4};
+use super::{Vec3, Vec4};
 use core::{
     ops::{Add, Mul, Sub},
 };
