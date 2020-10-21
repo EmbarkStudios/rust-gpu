@@ -412,7 +412,7 @@ fn do_link(
         compact_ids: env::var("NO_COMPACT_IDS").is_err(),
         inline: legalize,
         mem2reg: legalize,
-        structurize: env::var("NO_STRUCTURIZE").is_err(), 
+        structurize: env::var("NO_STRUCTURIZE").is_err(),
     };
     let link_result = linker::link(Some(sess), &mut module_refs, &options);
 

@@ -206,10 +206,7 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
 
     if opts.structurize {
         for func in &mut output.functions {
-            structurizer::structurize(
-                output.header.as_mut().unwrap(),
-                func,
-            );
+            structurizer::structurize(output.header.as_mut().unwrap(), func);
         }
     }
 
