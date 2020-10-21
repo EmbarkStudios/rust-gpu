@@ -6,9 +6,15 @@
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
+### Current Status: v0.1
+
+Compiling and running very simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
+
+However, many things aren't implemented yet: for example, branching (e.g. if-statements) isn't supported yet! That means that while being technically usable, this project is far from being production-ready.
+
 ### Example
 
-[![Sky shader](assets/aky.jpg)]
+![Sky shader](assets/sky.jpg)
 
 ```rust
 #[spirv(entry = "fragment")]
@@ -24,6 +30,7 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
         ws_pos.2 / ws_pos.3,
     );
     let dir = (ws_pos - eye_pos).normalize();
+
     // evaluate Preetham sky model
     let k = sky(dir, sun_pos);
 
@@ -32,13 +39,6 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
 ```
 
 See [source](examples/example-shader/src/lib.rs) for full details.
-
-
-### Current Status - v0.1
-
-Compiling and running very simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
-
-However, many things aren't implemented yet: for example, branching (e.g. if-statements) isn't supported yet! That means that while being technically usable, this project is far from being production-ready.
 
 ## Background
 
