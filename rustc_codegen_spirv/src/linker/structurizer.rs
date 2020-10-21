@@ -11,8 +11,6 @@ use std::collections::{hash_map, HashMap, HashSet, VecDeque};
 
 pub fn structurize(
     header: &mut ModuleHeader,
-    _pointer_to_pointee: &HashMap<Word, Word>,
-    _constants: &HashMap<Word, u32>,
     func: &mut Function,
 ) {
     insert_selection_merge_on_conditional_branch(header, &mut func.blocks);
@@ -31,7 +29,6 @@ fn find_block_index_from_id(blocks: &[Block], id: &Word) -> usize {
 fn get_possible_merge_positions(blocks: &[Block], start: Word) -> Vec<usize> {
     let mut retval = Vec::new();
     let mut next: VecDeque<Word> = VecDeque::new();
-    let mut processed = Vec::new();
     next.push_back(start);
 
     while !next.is_empty() {
@@ -42,13 +39,6 @@ fn get_possible_merge_positions(blocks: &[Block], start: Word) -> Vec<usize> {
         // We found a possible merge position
         if new_edges.len() == 1 {
             retval.push(find_block_index_from_id(blocks, &new_edges[0]));
-        }
-
-        if processed.contains(&front) {
-            panic!("Recursive?");
-            break;
-        } else {
-            processed.push(front);
         }
 
         next.extend(new_edges);

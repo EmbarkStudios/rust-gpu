@@ -42,6 +42,7 @@ pub struct Options {
     pub dce: bool,
     pub inline: bool,
     pub mem2reg: bool,
+    pub structurize: bool,
 }
 
 fn id(header: &mut ModuleHeader) -> Word {
@@ -203,15 +204,10 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
         dce::dce(&mut output);
     }
 
-    {
-        let _timer = timer("link_block_ordering_pass_and_mem2reg");
-        let mut pointer_to_pointee = HashMap::new();
-        let mut constants = HashMap::new();
+    if opts.structurize {
         for func in &mut output.functions {
             structurizer::structurize(
                 output.header.as_mut().unwrap(),
-                &pointer_to_pointee,
-                &constants,
                 func,
             );
         }
