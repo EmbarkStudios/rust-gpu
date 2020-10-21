@@ -1,4 +1,4 @@
-use crate::math::MathExt;
+use crate::math::{MathExt, Vec3};
 use core::{f32, ops::*};
 
 /// A 4-dimensional vector.
@@ -64,6 +64,13 @@ impl Vec4 {
     #[inline]
     pub const fn splat(v: f32) -> Self {
         Self(v, v, v, v)
+    }
+
+    /// Creates a `Vec3` from the first three elements of `self`,
+    /// removing `w`.
+    #[inline]
+    pub fn truncate(self) -> Vec3 {
+        Vec3::new(self.0, self.1, self.2)
     }
 
     /// Returns element `x`.
