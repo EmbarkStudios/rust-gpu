@@ -5,7 +5,10 @@
 #![allow(dead_code)]
 
 use core::panic::PanicInfo;
-use spirv_std::{f32x4, Input, Output, StorageBuffer, Uniform, Vec3, Vec4, Mat4, builtin_powf32, builtin_sqrtf32, builtin_log2f32, builtin_absf32, builtin_cosf32, builtin_expf32};
+use spirv_std::{
+    builtin_absf32, builtin_cosf32, builtin_expf32, builtin_log2f32, builtin_powf32,
+    builtin_sqrtf32, f32x4, Input, Mat4, Output, StorageBuffer, Uniform, Vec3, Vec4,
+};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const LUMINANCE: f32 = 1.0;
@@ -67,14 +70,18 @@ fn rayleigh_phase(cos_theta: f32) -> f32 {
 }
 
 fn henyey_greenstein_phase(cos_theta: f32, g: f32) -> f32 {
-    (1.0 / (4.0 * PI)) * ((1.0 - builtin_powf32(g, 2.0)) / builtin_powf32(1.0 - 2.0 * g * cos_theta + builtin_powf32(g, 2.0), 1.5))
+    (1.0 / (4.0 * PI))
+        * ((1.0 - builtin_powf32(g, 2.0))
+            / builtin_powf32(1.0 - 2.0 * g * cos_theta + builtin_powf32(g, 2.0), 1.5))
 }
 
 fn sun_intensity(zenith_angle_cos: f32) -> f32 {
     let cutoff_angle = PI / 1.95; // Earth shadow hack
     SUN_INTENSITY_FACTOR
         * 0.0f32.max(
-            1.0 - builtin_expf32(-((cutoff_angle - acos(zenith_angle_cos)) / SUN_INTENSITY_FALLOFF_STEEPNESS)),
+            1.0 - builtin_expf32(
+                -((cutoff_angle - acos(zenith_angle_cos)) / SUN_INTENSITY_FALLOFF_STEEPNESS),
+            ),
         )
 }
 
@@ -100,7 +107,8 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     // Optical length, cutoff angle at 90 to avoid singularity
     let zenith_angle = acos(up.dot(dir).max(0.0));
-    let denom = builtin_cosf32(zenith_angle) + 0.15 * builtin_powf32(93.885 - ((zenith_angle * 180.0) / PI), -1.253);
+    let denom = builtin_cosf32(zenith_angle)
+        + 0.15 * builtin_powf32(93.885 - ((zenith_angle * 180.0) / PI), -1.253);
     let s_r = RAYLEIGH_ZENITH_LENGTH / denom;
     let s_m = MIE_ZENITH_LENGTH / denom;
 
@@ -115,7 +123,8 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let beta_m_theta = beta_m * henyey_greenstein_phase(cos_theta, MIE_DIRECTIONAL_G);
     let sun_e = sun_intensity(sun_direction.dot(up));
     let mut lin =
-        (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * (Vec3::splat(1.0) - fex)).pow(1.5);
+        (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * (Vec3::splat(1.0) - fex))
+            .pow(1.5);
     lin *= Vec3::splat(1.0).lerp(
         (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex).pow(0.5),
         clamp(builtin_powf32(1.0 - up.dot(sun_direction), 5.0), 0.0, 1.0),
@@ -136,7 +145,8 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     // Tonemapping
     let white_scale = 1.0 / uncharted2_tonemap(TONEMAP_WEIGHTING);
-    let curr = uncharted2_tonemap((builtin_log2f32(2.0 / builtin_powf32(LUMINANCE, 4.0))) * tex_color);
+    let curr =
+        uncharted2_tonemap((builtin_log2f32(2.0 / builtin_powf32(LUMINANCE, 4.0))) * tex_color);
     let color = curr * white_scale;
 
     color.pow(1.0 / (1.2 + (1.2 * sunfade)))
