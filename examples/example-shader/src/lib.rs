@@ -6,9 +6,7 @@
 
 use core::f32::consts::PI;
 use core::panic::PanicInfo;
-use spirv_std::{
-    builtin::*, f32x4, Input, Mat4, Output, Vec3, Vec4,
-};
+use spirv_std::{f32x4, Input, Mat4, MathExt, Output, Vec3, Vec4};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const LUMINANCE: f32 = 1.0;
@@ -30,9 +28,9 @@ const TURBIDITY: f32 = 2.0;
 
 /// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
 fn acos_approx(v: f32) -> f32 {
-    let x = absf32(v);
+    let x = v.abs();
     let mut res = -0.155972 * x + 1.56467; // p(x)
-    res *= sqrtf32(1.0f32 - x);
+    res *= (1.0f32 - x).sqrt();
 
     let mask = (v >= 0.0) as u32 as f32;
 
@@ -52,8 +50,8 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
 }
 
 fn total_rayleigh(lambda: Vec3) -> Vec3 {
-    (8.0 * powf32(PI, 3.0)
-        * powf32(powf32(REFRACTIVE_INDEX, 2.0) - 1.0, 2.0)
+    (8.0 * PI.pow(3.0)
+        * (REFRACTIVE_INDEX.pow(2.0) - 1.0).pow(2.0)
         * (6.0 + 3.0 * DEPOLARIZATION_FACTOR))
         / (3.0 * NUM_MOLECULES * lambda.pow(4.0) * (6.0 - 7.0 * DEPOLARIZATION_FACTOR))
 }
@@ -64,22 +62,20 @@ fn total_mie(lambda: Vec3, k: Vec3, t: f32) -> Vec3 {
 }
 
 fn rayleigh_phase(cos_theta: f32) -> f32 {
-    (3.0 / (16.0 * PI)) * (1.0 + powf32(cos_theta, 2.0))
+    (3.0 / (16.0 * PI)) * (1.0 + cos_theta.pow(2.0))
 }
 
 fn henyey_greenstein_phase(cos_theta: f32, g: f32) -> f32 {
-    (1.0 / (4.0 * PI))
-        * ((1.0 - powf32(g, 2.0))
-            / powf32(1.0 - 2.0 * g * cos_theta + powf32(g, 2.0), 1.5))
+    (1.0 / (4.0 * PI)) * ((1.0 - g.pow(2.0)) / (1.0 - 2.0 * g * cos_theta + g.pow(2.0)).pow(1.5))
 }
 
 fn sun_intensity(zenith_angle_cos: f32) -> f32 {
     let cutoff_angle = PI / 1.95; // Earth shadow hack
     SUN_INTENSITY_FACTOR
         * 0.0f32.max(
-            1.0 - expf32(
-                -((cutoff_angle - acos_approx(zenith_angle_cos)) / SUN_INTENSITY_FALLOFF_STEEPNESS),
-            ),
+            1.0 - (-((cutoff_angle - acos_approx(zenith_angle_cos))
+                / SUN_INTENSITY_FALLOFF_STEEPNESS))
+                .exp(),
         )
 }
 
@@ -96,7 +92,7 @@ fn uncharted2_tonemap(w: Vec3) -> Vec3 {
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
-    let sunfade = 1.0 - clamp(1.0 - expf32(sun_position.1 / 450000.0), 0.0, 1.0);
+    let sunfade = 1.0 - clamp(1.0 - (sun_position.1 / 450000.0).exp(), 0.0, 1.0);
     let rayleigh_coefficient = RAYLEIGH - (1.0 * (1.0 - sunfade));
     let beta_r = total_rayleigh(PRIMARIES) * rayleigh_coefficient;
 
@@ -105,8 +101,8 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     // Optical length, cutoff angle at 90 to avoid singularity
     let zenith_angle = acos_approx(up.dot(dir).max(0.0));
-    let denom = cosf32(zenith_angle)
-        + 0.15 * powf32(93.885 - ((zenith_angle * 180.0) / PI), -1.253);
+    let denom = (zenith_angle).cos() + 0.15 * (93.885 - ((zenith_angle * 180.0) / PI)).pow(-1.253);
+
     let s_r = RAYLEIGH_ZENITH_LENGTH / denom;
     let s_m = MIE_ZENITH_LENGTH / denom;
 
@@ -125,11 +121,11 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
             .pow(1.5);
     lin *= Vec3::splat(1.0).lerp(
         (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex).pow(0.5),
-        clamp(powf32(1.0 - up.dot(sun_direction), 5.0), 0.0, 1.0),
+        clamp((1.0 - up.dot(sun_direction)).pow(5.0), 0.0, 1.0),
     );
 
     // Composition + solar disc
-    let sun_angular_diameter_cos = cosf32(SUN_ANGULAR_DIAMETER_DEGREES);
+    let sun_angular_diameter_cos = SUN_ANGULAR_DIAMETER_DEGREES.cos();
     let sundisk = smoothstep(
         sun_angular_diameter_cos,
         sun_angular_diameter_cos + 0.00002,
@@ -143,8 +139,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     // Tonemapping
     let white_scale = 1.0 / uncharted2_tonemap(TONEMAP_WEIGHTING);
-    let curr =
-        uncharted2_tonemap((log2f32(2.0 / powf32(LUMINANCE, 4.0))) * tex_color);
+    let curr = uncharted2_tonemap(((2.0 / LUMINANCE.pow(4.0)).log2()) * tex_color);
     let color = curr * white_scale;
 
     color.pow(1.0 / (1.2 + (1.2 * sunfade)))

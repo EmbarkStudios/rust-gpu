@@ -3,7 +3,7 @@
 #![register_attr(spirv)]
 
 pub mod math;
-pub use crate::math::builtin::*;
+pub use crate::math::MathExt;
 pub use crate::math::*;
 
 macro_rules! pointer_addrspace_write {

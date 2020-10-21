@@ -1,4 +1,4 @@
-use crate::math::builtin::*;
+use crate::math::MathExt;
 use core::{f32, ops::*};
 
 /// A 4-dimensional vector.
@@ -63,153 +63,115 @@ impl Vec4 {
     /// Creates a `Vec4` with all elements set to `v`.
     #[inline]
     pub const fn splat(v: f32) -> Self {
-        {
-            Self(v, v, v, v)
-        }
+        Self(v, v, v, v)
     }
 
     /// Returns element `x`.
     #[inline]
     pub fn x(self) -> f32 {
-        {
-            self.0
-        }
+        self.0
     }
 
     /// Returns element `y`.
     #[inline]
     pub fn y(self) -> f32 {
-        {
-            self.1
-        }
+        self.1
     }
 
     /// Returns element `z`.
     #[inline]
     pub fn z(self) -> f32 {
-        {
-            self.2
-        }
+        self.2
     }
 
     /// Returns element `w`.
     #[inline]
     pub fn w(self) -> f32 {
-        {
-            self.3
-        }
+        self.3
     }
 
     /// Returns a mutable reference to element `x`.
     #[inline]
     pub fn x_mut(&mut self) -> &mut f32 {
-        {
-            &mut self.0
-        }
+        &mut self.0
     }
 
     /// Returns a mutable reference to element `y`.
     #[inline]
     pub fn y_mut(&mut self) -> &mut f32 {
-        {
-            &mut self.1
-        }
+        &mut self.1
     }
 
     /// Returns a mutable reference to element `z`.
     #[inline]
     pub fn z_mut(&mut self) -> &mut f32 {
-        {
-            &mut self.2
-        }
+        &mut self.2
     }
 
     /// Returns a mutable reference to element `w`.
     #[inline]
     pub fn w_mut(&mut self) -> &mut f32 {
-        {
-            &mut self.3
-        }
+        &mut self.3
     }
 
     /// Sets element `x`.
     #[inline]
     pub fn set_x(&mut self, x: f32) {
-        {
-            self.0 = x;
-        }
+        self.0 = x;
     }
 
     /// Sets element `y`.
     #[inline]
     pub fn set_y(&mut self, y: f32) {
-        {
-            self.1 = y;
-        }
+        self.1 = y;
     }
 
     /// Sets element `z`.
     #[inline]
     pub fn set_z(&mut self, z: f32) {
-        {
-            self.2 = z;
-        }
+        self.2 = z;
     }
 
     /// Sets element `w`.
     #[inline]
     pub fn set_w(&mut self, w: f32) {
-        {
-            self.3 = w;
-        }
+        self.3 = w;
     }
 
     /// Returns a `Vec4` with all elements set to the value of element `x`.
     #[inline]
     pub fn dup_x(self) -> Self {
-        {
-            Self(self.0, self.0, self.0, self.0)
-        }
+        Self(self.0, self.0, self.0, self.0)
     }
 
     /// Returns a `Vec4` with all elements set to the value of element `y`.
     #[inline]
     pub fn dup_y(self) -> Self {
-        {
-            Self(self.1, self.1, self.1, self.1)
-        }
+        Self(self.1, self.1, self.1, self.1)
     }
 
     /// Returns a `Vec4` with all elements set to the value of element `z`.
     #[inline]
     pub fn dup_z(self) -> Self {
-        {
-            Self(self.2, self.2, self.2, self.2)
-        }
+        Self(self.2, self.2, self.2, self.2)
     }
 
     /// Returns a `Vec4` with all elements set to the value of element `w`.
     #[inline]
     pub fn dup_w(self) -> Self {
-        {
-            Self(self.3, self.3, self.3, self.3)
-        }
+        Self(self.3, self.3, self.3, self.3)
     }
 
     /// Computes the 4D dot product of `self` and `other`.
     #[inline]
     pub fn dot(self, other: Self) -> f32 {
-        {
-            (self.0 * other.0) + (self.1 * other.1) + (self.2 * other.2) + (self.3 * other.3)
-        }
+        (self.0 * other.0) + (self.1 * other.1) + (self.2 * other.2) + (self.3 * other.3)
     }
 
     /// Computes the 4D length of `self`.
     #[inline]
     pub fn length(self) -> f32 {
-        {
-            sqrtf32(self.dot(self))
-        }
+        self.dot(self).sqrt()
     }
 
     /// Computes the squared 4D length of `self`.
@@ -232,9 +194,7 @@ impl Vec4 {
     /// For valid results, `self` must _not_ be of length zero.
     #[inline]
     pub fn length_recip(self) -> f32 {
-        {
-            self.length().recip()
-        }
+        self.length().recip()
     }
 
     /// Returns `self` normalized to length 1.0.
@@ -242,9 +202,7 @@ impl Vec4 {
     /// For valid results, `self` must _not_ be of length zero.
     #[inline]
     pub fn normalize(self) -> Self {
-        {
-            self * self.length_recip()
-        }
+        self * self.length_recip()
     }
 
     /// Returns the vertical minimum of `self` and `other`.
@@ -254,14 +212,12 @@ impl Vec4 {
     /// taking the minimum of each element individually.
     #[inline]
     pub fn min(self, other: Self) -> Self {
-        {
-            Self(
-                self.0.min(other.0),
-                self.1.min(other.1),
-                self.2.min(other.2),
-                self.3.min(other.3),
-            )
-        }
+        Self(
+            self.0.min(other.0),
+            self.1.min(other.1),
+            self.2.min(other.2),
+            self.3.min(other.3),
+        )
     }
 
     /// Returns the vertical maximum of `self` and `other`.
@@ -271,14 +227,12 @@ impl Vec4 {
     /// taking the maximum of each element individually.
     #[inline]
     pub fn max(self, other: Self) -> Self {
-        {
-            Self(
-                self.0.max(other.0),
-                self.1.max(other.1),
-                self.2.max(other.2),
-                self.3.max(other.3),
-            )
-        }
+        Self(
+            self.0.max(other.0),
+            self.1.max(other.1),
+            self.2.max(other.2),
+            self.3.max(other.3),
+        )
     }
 
     /// Returns the horizontal minimum of `self`'s elements.
@@ -286,9 +240,7 @@ impl Vec4 {
     /// In other words, this computes `min(x, y, z, w)`.
     #[inline]
     pub fn min_element(self) -> f32 {
-        {
-            self.0.min(self.1.min(self.2.min(self.3)))
-        }
+        self.0.min(self.1.min(self.2.min(self.3)))
     }
 
     /// Returns the horizontal maximum of `self`'s elements.
@@ -296,9 +248,7 @@ impl Vec4 {
     /// In other words, this computes `max(x, y, z, w)`.
     #[inline]
     pub fn max_element(self) -> f32 {
-        {
-            self.0.max(self.1.max(self.2.min(self.3)))
-        }
+        self.0.max(self.1.max(self.2.min(self.3)))
     }
 
     /// Creates a `Vec4` from the first four values in `slice`.
@@ -308,9 +258,7 @@ impl Vec4 {
     /// Panics if `slice` is less than four elements long.
     #[inline]
     pub fn from_slice_unaligned(slice: &[f32]) -> Self {
-        {
-            Self(slice[0], slice[1], slice[2], slice[3])
-        }
+        Self(slice[0], slice[1], slice[2], slice[3])
     }
 
     /// Writes the elements of `self` to the first four elements in `slice`.
@@ -320,102 +268,75 @@ impl Vec4 {
     /// Panics if `slice` is less than four elements long.
     #[inline]
     pub fn write_to_slice_unaligned(self, slice: &mut [f32]) {
-        {
-            slice[0] = self.0;
-            slice[1] = self.1;
-            slice[2] = self.2;
-            slice[3] = self.3;
-        }
+        slice[0] = self.0;
+        slice[1] = self.1;
+        slice[2] = self.2;
+        slice[3] = self.3;
     }
 
     /// Per element multiplication/addition of the three inputs: b + (self * a)
     #[inline]
     pub fn mul_add(self, a: Self, b: Self) -> Self {
-        {
-            Self(
-                (self.0 * a.0) + b.0,
-                (self.1 * a.1) + b.1,
-                (self.2 * a.2) + b.2,
-                (self.3 * a.3) + b.3,
-            )
-        }
+        Self(
+            (self.0 * a.0) + b.0,
+            (self.1 * a.1) + b.1,
+            (self.2 * a.2) + b.2,
+            (self.3 * a.3) + b.3,
+        )
     }
 
     /// Returns a `Vec4` containing the absolute value of each element of `self`.
     #[inline]
     pub fn abs(self) -> Self {
-        {
-            Self(
-                absf32(self.0),
-                absf32(self.1),
-                absf32(self.2),
-                absf32(self.3),
-            )
-        }
+        Self(self.0.abs(), self.1.abs(), self.2.abs(), self.3.abs())
     }
 
     /// Returns a `Vec4` containing the nearest integer to a number for each element of `self`.
     /// Round half-way cases away from 0.0.
     #[inline]
     pub fn round(self) -> Self {
-        {
-            Self(
-                roundf32(self.0),
-                roundf32(self.1),
-                roundf32(self.2),
-                roundf32(self.3),
-            )
-        }
+        Self(
+            self.0.round(),
+            self.1.round(),
+            self.2.round(),
+            self.3.round(),
+        )
     }
 
     /// Returns a `Vec4` containing the largest integer less than or equal to a number for each
     /// element of `self`.
     #[inline]
     pub fn floor(self) -> Self {
-        {
-            Self(
-                floorf32(self.0),
-                floorf32(self.1),
-                floorf32(self.2),
-                floorf32(self.3),
-            )
-        }
+        Self(
+            self.0.floor(),
+            self.1.floor(),
+            self.2.floor(),
+            self.3.floor(),
+        )
     }
 
     /// Returns a `Vec4` containing this vector raised to the power of `power`
     #[inline]
     pub fn pow(self, power: f32) -> Self {
         Self(
-            powf32(self.0, power),
-            powf32(self.1, power),
-            powf32(self.2, power),
-            powf32(self.3, power),
+            self.0.pow(power),
+            self.1.pow(power),
+            self.2.pow(power),
+            self.3.pow(power),
         )
     }
 
     /// Returns a `Vec4` containing this vector exp'd
     #[inline]
     pub fn exp(self) -> Self {
-        Self(
-            expf32(self.0),
-            expf32(self.1),
-            expf32(self.2),
-            expf32(self.3),
-        )
+        Self(self.0.exp(), self.1.exp(), self.2.exp(), self.3.exp())
     }
 
     /// Returns a `Vec4` containing the smallest integer greater than or equal to a number for each
     /// element of `self`.
     #[inline]
     pub fn ceil(self) -> Self {
-        {
-            Self(
-                ceilf32(self.0),
-                ceilf32(self.1),
-                ceilf32(self.2),
-                ceilf32(self.3),
-            )
-        }
+        Self(self.0.ceil(), self.1.ceil(), self.2.ceil(), self.3.ceil())
     }
 
     #[deprecated(since = "0.9.5", note = "please use `Vec4::recip` instead")]

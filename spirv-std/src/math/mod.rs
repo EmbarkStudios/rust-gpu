@@ -13,40 +13,52 @@ pub use vec2::*;
 pub use vec3::*;
 pub use vec4::*;
 
-pub mod builtin {
-    pub fn powf32(base: f32, factor: f32) -> f32 {
-        unsafe { core::intrinsics::powf32(base, factor) }
+pub trait MathExt {
+    fn pow(self, factor: f32) -> f32;
+    fn sqrt(self) -> f32;
+    fn log2(self) -> f32;
+    fn abs(self) -> f32;
+    fn cos(self) -> f32;
+    fn round(self) -> f32;
+    fn floor(self) -> f32;
+    fn ceil(self) -> f32;
+    fn exp(self) -> f32;
+}
+
+impl MathExt for f32 {
+    fn pow(self, factor: f32) -> f32 {
+        unsafe { core::intrinsics::powf32(self, factor) }
     }
 
-    pub fn sqrtf32(f: f32) -> f32 {
-        unsafe { core::intrinsics::sqrtf32(f) }
+    fn sqrt(self) -> f32 {
+        unsafe { core::intrinsics::sqrtf32(self) }
     }
 
-    pub fn log2f32(f: f32) -> f32 {
-        unsafe { core::intrinsics::log2f32(f) }
+    fn log2(self) -> f32 {
+        unsafe { core::intrinsics::log2f32(self) }
     }
 
-    pub fn absf32(f: f32) -> f32 {
-        unsafe { core::intrinsics::fabsf32(f) }
+    fn abs(self) -> f32 {
+        unsafe { core::intrinsics::fabsf32(self) }
     }
 
-    pub fn cosf32(n: f32) -> f32 {
-        unsafe { core::intrinsics::cosf32(n) }
+    fn cos(self) -> f32 {
+        unsafe { core::intrinsics::cosf32(self) }
     }
 
-    pub fn roundf32(n: f32) -> f32 {
-        unsafe { core::intrinsics::roundf32(n) }
+    fn round(self) -> f32 {
+        unsafe { core::intrinsics::roundf32(self) }
     }
 
-    pub fn floorf32(n: f32) -> f32 {
-        unsafe { core::intrinsics::floorf32(n) }
+    fn floor(self) -> f32 {
+        unsafe { core::intrinsics::floorf32(self) }
     }
 
-    pub fn ceilf32(n: f32) -> f32 {
-        unsafe { core::intrinsics::ceilf32(n) }
+    fn ceil(self) -> f32 {
+        unsafe { core::intrinsics::ceilf32(self) }
     }
 
-    pub fn expf32(n: f32) -> f32 {
-        unsafe { core::intrinsics::expf32(n) }
+    fn exp(self) -> f32 {
+        unsafe { core::intrinsics::expf32(self) }
     }
 }

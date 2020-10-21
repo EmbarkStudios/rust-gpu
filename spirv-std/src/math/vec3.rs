@@ -1,5 +1,5 @@
 use super::{Vec2, Vec4};
-use crate::math::builtin::*;
+use crate::math::MathExt;
 use core::ops::*;
 
 /// A 3-dimensional vector without SIMD support.
@@ -171,7 +171,7 @@ impl Vec3 {
     /// Computes the length of `self`.
     #[inline]
     pub fn length(self) -> f32 {
-        sqrtf32(self.dot(self))
+        self.dot(self).sqrt()
     }
 
     /// Computes the squared length of `self`.
@@ -285,44 +285,40 @@ impl Vec3 {
     /// Returns a `Vec3` containing the absolute value of each element of `self`.
     #[inline]
     pub fn abs(self) -> Self {
-        Self(absf32(self.0), absf32(self.1), absf32(self.2))
+        Self(self.0.abs(), self.1.abs(), self.2.abs())
     }
 
     /// Returns a `Vec3` containing the nearest integer to a number for each element of `self`.
     /// Round half-way cases away from 0.0.
     #[inline]
     pub fn round(self) -> Self {
-        Self(roundf32(self.0), roundf32(self.1), roundf32(self.2))
+        Self(self.0.round(), self.1.round(), self.2.round())
     }
 
     /// Returns a `Vec3` containing the largest integer less than or equal to a number for each
     /// element of `self`.
     #[inline]
     pub fn floor(self) -> Self {
-        Self(floorf32(self.0), floorf32(self.1), floorf32(self.2))
+        Self(self.0.floor(), self.1.floor(), self.2.floor())
     }
 
     /// Returns a `Vec3` containing this vector raised to the power of `power`
     #[inline]
     pub fn pow(self, power: f32) -> Self {
-        Self(
-            powf32(self.0, power),
-            powf32(self.1, power),
-            powf32(self.2, power),
-        )
+        Self(self.0.pow(power), self.1.pow(power), self.2.pow(power))
     }
 
     /// Returns a `Vec3` containing this vector exp'd
     #[inline]
     pub fn exp(self) -> Self {
-        Self(expf32(self.0), expf32(self.1), expf32(self.2))
+        Self(self.0.exp(), self.1.exp(), self.2.exp())
     }
 
     /// Returns a `Vec3` containing the smallest integer greater than or equal to a number for each
     /// element of `self`.
     #[inline]
     pub fn ceil(self) -> Self {
-        Self(ceilf32(self.0), ceilf32(self.1), ceilf32(self.2))
+        Self(self.0.ceil(), self.1.ceil(), self.2.ceil())
     }
 
     #[deprecated(since = "0.9.5", note = "please use `Vec3::recip` instead")]
