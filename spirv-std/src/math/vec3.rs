@@ -1,6 +1,6 @@
 use super::{Vec2, Vec4};
 use crate::math::builtin::*;
-use core::{fmt, ops::*};
+use core::{ops::*};
 
 /// A 3-dimensional vector without SIMD support.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]
@@ -345,12 +345,6 @@ impl Vec3 {
     #[inline]
     pub fn lerp(self, other: Self, s: f32) -> Self {
         self + ((other - self) * s)
-    }
-}
-
-impl fmt::Display for Vec3 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[{}, {}, {}]", self.0, self.1, self.2)
     }
 }
 

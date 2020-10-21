@@ -1,6 +1,5 @@
 use super::{Vec2, Vec3};
 use core::{
-    fmt,
     ops::{Add, Mul, Sub},
 };
 
@@ -27,12 +26,6 @@ impl Default for Mat3 {
     #[inline]
     fn default() -> Self {
         Self::identity()
-    }
-}
-
-impl fmt::Display for Mat3 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[{}, {}, {}]", self.x_axis, self.y_axis, self.z_axis)
     }
 }
 

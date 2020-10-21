@@ -1,6 +1,5 @@
 use super::{Vec2, Vec4};
 use core::{
-    fmt,
     ops::{Add, Mul, Sub},
 };
 

@@ -1,6 +1,6 @@
 use super::Vec3;
 use crate::math::builtin::*;
-use core::{f32, fmt, ops::*};
+use core::{f32, ops::*};
 
 /// A 2-dimensional vector.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]
@@ -257,12 +257,6 @@ impl Vec2 {
     #[inline]
     pub fn perp_dot(self, other: Vec2) -> f32 {
         (self.0 * other.1) - (self.1 * other.0)
-    }
-}
-
-impl fmt::Display for Vec2 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[{}, {}]", self.0, self.1)
     }
 }
 
