@@ -12,7 +12,7 @@ use core::ops::MulAssign;
 use core::ops::Neg;
 use core::ops::Sub;
 use core::panic::PanicInfo;
-use spirv_std::{f32x4, Input, Output};
+use spirv_std::{f32x4, Input, Output, StorageBuffer, Uniform};
 
 /// A 3-dimensional vector without SIMD support.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]
@@ -536,13 +536,13 @@ pub fn main_fs(input: Input<f32x4>, mut output: Output<f32x4>) {
     let cs_pos = Vec4(dir.0, -dir.1, 1.0, 1.0);
     let mut ws_pos = clip_to_world.mul_vec4(&cs_pos);
 
-    let eye_pos = Vec3(0.0, 0.1, 0.2);
+    let eye_pos = Vec3(0.0, 0.0997, 0.2);
     let ws_pos = Vec3(ws_pos.0 / ws_pos.3, ws_pos.1 / ws_pos.3, ws_pos.2 / ws_pos.3);
     let dir = normalize(ws_pos - eye_pos);
 
-    let k = sky(dir, Vec3::new(0.0, 150.0, -1000.0)); // todo: nice input variables
+    let k = sky(dir, Vec3::new(0.0, 75.0, -1000.0));
 
-    output.store(f32x4(k.0, k.1, k.2, 0.0)) // bgra output because that's the swapchain we're requesting
+    output.store(f32x4(k.0, k.1, k.2, 0.0))
 }
 
 #[allow(unused_attributes)]
