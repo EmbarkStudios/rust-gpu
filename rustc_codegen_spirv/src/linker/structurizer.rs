@@ -15,7 +15,7 @@ pub fn structurize(header: &mut ModuleHeader, func: &mut Function) {
 
 fn find_block_index_from_id(blocks: &[Block], id: &Word) -> usize {
     for (i, block) in blocks.iter().enumerate() {
-        if block.label_id().is_some() && block.label_id().unwrap() == *id {
+        if block.label_id() == Some(*id) {
             return i;
         }
     }
@@ -28,8 +28,8 @@ fn get_possible_merge_positions(blocks: &[Block], start: Word) -> Vec<usize> {
     let mut next: VecDeque<Word> = VecDeque::new();
     next.push_back(start);
 
-    while !next.is_empty() {
-        let front = next.front().unwrap().clone();
+    while let Some(front) = next.pop_front() {
+        let front = *next.front().unwrap();
         let block_idx = find_block_index_from_id(blocks, &front);
         let new_edges = outgoing_edges(&blocks[block_idx]);
 
@@ -39,7 +39,6 @@ fn get_possible_merge_positions(blocks: &[Block], start: Word) -> Vec<usize> {
         }
 
         next.extend(new_edges);
-        next.pop_front();
     }
 
     retval
@@ -94,8 +93,8 @@ pub fn insert_selection_merge_on_conditional_branch(
             ]
         } else {
             // insert a new block that might be unreachable but that is okay.
-            // I think this can only happen if one of the branches returns from the func.
-            // if this happens inside of a loop, this is a break/continue so the merge block
+            // I think this can only happen if one of the branches returns from the func
+            // or inside of a loop, this is a break/continue so the merge block
             // doesn't become unreachable but instead branches to the for loops merge/continue block.
             // AKA, first do the for loops, then do the conditional branch instructions.
             let end = if ends_in_return(&blocks[*a_nexts.last().unwrap()]) {
@@ -127,6 +126,5 @@ pub fn insert_selection_merge_on_conditional_branch(
         let block = &mut blocks[bi];
         let merge_inst = Instruction::new(Op::SelectionMerge, None, None, selection_merge_operands);
         block.instructions.insert(ii, merge_inst);
-        return;
     }
 }
