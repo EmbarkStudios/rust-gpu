@@ -1,9 +1,10 @@
+//! Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
+
 #![no_std]
 #![feature(register_attr)]
 #![register_attr(spirv)]
-#![feature(core_intrinsics)]
-#![allow(dead_code)]
 
+use core::f32::consts::PI;
 use core::panic::PanicInfo;
 use spirv_std::{
     builtin::*, f32x4, Input, Mat4, Output, StorageBuffer, Uniform, Vec3, Vec4,
@@ -27,9 +28,8 @@ const SUN_INTENSITY_FALLOFF_STEEPNESS: f32 = 1.5;
 const TONEMAP_WEIGHTING: Vec3 = Vec3::splat(9.50);
 const TURBIDITY: f32 = 2.0;
 
-use core::f32::consts::PI;
-
-fn acos(v: f32) -> f32 {
+//! Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
+fn acos_approx(v: f32) -> f32 {
     let x = absf32(v);
     let mut res = -0.155972 * x + 1.56467; // p(x)
     res *= sqrtf32(1.0f32 - x);
@@ -44,7 +44,6 @@ fn clamp(a: f32, b: f32, c: f32) -> f32 {
     a.max(b).min(c)
 }
 
-#[inline]
 fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
     // Scale, bias and saturate x to 0..1 range
     let x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
@@ -79,7 +78,7 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
     SUN_INTENSITY_FACTOR
         * 0.0f32.max(
             1.0 - expf32(
-                -((cutoff_angle - acos(zenith_angle_cos)) / SUN_INTENSITY_FALLOFF_STEEPNESS),
+                -((cutoff_angle - acos_approx(zenith_angle_cos)) / SUN_INTENSITY_FALLOFF_STEEPNESS),
             ),
         )
 }
@@ -105,7 +104,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let beta_m = total_mie(PRIMARIES, MIE_K_COEFFICIENT, TURBIDITY) * MIE_COEFFICIENT;
 
     // Optical length, cutoff angle at 90 to avoid singularity
-    let zenith_angle = acos(up.dot(dir).max(0.0));
+    let zenith_angle = acos_approx(up.dot(dir).max(0.0));
     let denom = cosf32(zenith_angle)
         + 0.15 * powf32(93.885 - ((zenith_angle * 180.0) / PI), -1.253);
     let s_r = RAYLEIGH_ZENITH_LENGTH / denom;
@@ -151,12 +150,14 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     color.pow(1.0 / (1.2 + (1.2 * sunfade)))
 }
 
-#[allow(unused_attributes)]
 #[spirv(entry = "fragment")]
 pub fn main_fs(input: Input<f32x4>, mut output: Output<f32x4>) {
     let color = input.load();
     let mut dir = Vec3::new(color.0, color.1, 0.0);
 
+    // hard-code information because we can't bind buffers at the moment
+    let eye_pos = Vec3(0.0, 0.0997, 0.2);
+    let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
     let clip_to_world = Mat4 {
         x_axis: Vec4(-0.5522849, 0.0, 0.0, 0.0),
         y_axis: Vec4(0.0, 0.4096309, -0.061444636, 0.0),
@@ -166,21 +167,17 @@ pub fn main_fs(input: Input<f32x4>, mut output: Output<f32x4>) {
 
     let cs_pos = Vec4(dir.0, -dir.1, 1.0, 1.0);
     let mut ws_pos = clip_to_world.mul_vec4(cs_pos);
-
-    let eye_pos = Vec3(0.0, 0.0997, 0.2);
     let ws_pos = Vec3(
         ws_pos.0 / ws_pos.3,
         ws_pos.1 / ws_pos.3,
         ws_pos.2 / ws_pos.3,
     );
     let dir = (ws_pos - eye_pos).normalize();
-
-    let k = sky(dir, Vec3::new(0.0, 75.0, -1000.0));
+    let k = sky(dir, sun_pos);
 
     output.store(f32x4(k.0, k.1, k.2, 0.0))
 }
 
-#[allow(unused_attributes)]
 #[spirv(entry = "vertex")]
 pub fn main_vs(
     in_pos: Input<f32x4>,

@@ -1,7 +1,8 @@
+//! This math library is heavily borrowed from https://github.com/bitshifter/glam-rs
+
 pub mod mat2;
 pub mod mat3;
 pub mod mat4;
-/// This math library is heavily borrowed from https://github.com/bitshifter/glam-rs
 pub mod vec2;
 pub mod vec3;
 pub mod vec4;
