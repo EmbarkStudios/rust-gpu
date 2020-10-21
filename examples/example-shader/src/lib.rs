@@ -7,7 +7,7 @@
 use core::f32::consts::PI;
 use core::panic::PanicInfo;
 use spirv_std::{
-    builtin::*, f32x4, Input, Mat4, Output, StorageBuffer, Uniform, Vec3, Vec4,
+    builtin::*, f32x4, Input, Mat4, Output, Vec3, Vec4,
 };
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
