@@ -80,6 +80,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> super::Result<Module> {
             dce: false,
             inline: false,
             mem2reg: false,
+            structurize: false,
         },
     )
 }

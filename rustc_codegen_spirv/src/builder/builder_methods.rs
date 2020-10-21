@@ -432,10 +432,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         then_llbb: Self::BasicBlock,
         else_llbb: Self::BasicBlock,
     ) {
-        if !self.kernel_mode {
-            // TODO: Remove once structurizer is done.
-            self.zombie(then_llbb, "OpBranchConditional before structurizer is done");
-        }
         self.emit()
             .branch_conditional(cond.def, then_llbb, else_llbb, empty())
             .unwrap()

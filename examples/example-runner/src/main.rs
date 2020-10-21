@@ -631,12 +631,14 @@ impl Drop for ExampleBase {
                 .destroy_swapchain(self.swapchain, None);
             self.device.destroy_device(None);
             self.surface_loader.destroy_surface(self.surface, None);
+
             if let Some((debug_utils, call_back)) =
                 Option::zip(self.debug_utils_loader.take(), self.debug_call_back.take())
             {
                 debug_utils.destroy_debug_utils_messenger(call_back, None);
             }
-            self.instance.destroy_instance(None);
+
+          self.instance.destroy_instance(None);
         }
     }
 }
@@ -729,7 +731,7 @@ fn main() {
             })
             .collect();
 
-        let index_buffer_data = [0u32, 1, 2];
+        let index_buffer_data = [0u32, 1, 2, 1, 2, 3];
         let index_buffer_info = vk::BufferCreateInfo::builder()
             .size(std::mem::size_of_val(&index_buffer_data) as u64)
             .usage(vk::BufferUsageFlags::INDEX_BUFFER)
@@ -773,8 +775,27 @@ fn main() {
             .bind_buffer_memory(index_buffer, index_buffer_memory, 0)
             .unwrap();
 
+        let vertices = [
+            Vertex {
+                pos: [-1.0, 1.0, 0.0, 1.0],
+                color: [0.0, 1.0, 0.0, 1.0],
+            },
+            Vertex {
+                pos: [1.0, 1.0, 0.0, 1.0],
+                color: [0.0, 0.0, 1.0, 1.0],
+            },
+            Vertex {
+                pos: [-1.0, -1.0, 0.0, 1.0],
+                color: [1.0, 0.0, 0.0, 1.0],
+            },
+            Vertex {
+                pos: [1.0, -1.0, 0.0, 1.0],
+                color: [1.0, 1.0, 1.0, 1.0],
+            },
+        ];
+
         let vertex_input_buffer_info = vk::BufferCreateInfo {
-            size: 3 * std::mem::size_of::<Vertex>() as u64,
+            size: std::mem::size_of_val(&vertices) as u64 as u64,
             usage: vk::BufferUsageFlags::VERTEX_BUFFER,
             sharing_mode: vk::SharingMode::EXCLUSIVE,
             ..Default::default()
@@ -806,21 +827,6 @@ fn main() {
             .device
             .allocate_memory(&vertex_buffer_allocate_info, None)
             .unwrap();
-
-        let vertices = [
-            Vertex {
-                pos: [-1.0, 1.0, 0.0, 1.0],
-                color: [0.0, 1.0, 0.0, 1.0],
-            },
-            Vertex {
-                pos: [1.0, 1.0, 0.0, 1.0],
-                color: [0.0, 0.0, 1.0, 1.0],
-            },
-            Vertex {
-                pos: [0.0, -1.0, 0.0, 1.0],
-                color: [1.0, 0.0, 0.0, 1.0],
-            },
-        ];
 
         let vert_ptr = base
             .device
@@ -1062,7 +1068,7 @@ fn main() {
                         1,
                         0,
                         0,
-                        1,
+                        0,
                     );
                     // Or draw without the index buffer
                     // device.cmd_draw(draw_command_buffer, 3, 1, 0, 0);

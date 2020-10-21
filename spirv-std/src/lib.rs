@@ -1,6 +1,10 @@
 #![no_std]
-#![feature(register_attr, repr_simd)]
+#![feature(register_attr, repr_simd, core_intrinsics)]
 #![register_attr(spirv)]
+
+pub mod math;
+pub use crate::math::MathExt;
+pub use crate::math::*;
 
 macro_rules! pointer_addrspace_write {
     (false) => {};
