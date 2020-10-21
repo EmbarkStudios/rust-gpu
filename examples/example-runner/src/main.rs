@@ -638,7 +638,7 @@ impl Drop for ExampleBase {
                 debug_utils.destroy_debug_utils_messenger(call_back, None);
             }
 
-          self.instance.destroy_instance(None);
+            self.instance.destroy_instance(None);
         }
     }
 }
