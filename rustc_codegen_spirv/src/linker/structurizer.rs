@@ -3,11 +3,11 @@
 use super::id;
 use super::simple_passes::outgoing_edges;
 use rspirv::spirv::{Op, Word};
-use rustc_session::Session;
 use rspirv::{
     dr::{Block, Function, Instruction, ModuleHeader, Operand},
     spirv::SelectionControl,
 };
+use rustc_session::Session;
 use std::collections::VecDeque;
 
 pub fn structurize(sess: Option<&Session>, header: &mut ModuleHeader, func: &mut Function) {
@@ -24,7 +24,11 @@ fn find_block_index_from_id(blocks: &[Block], id: &Word) -> usize {
     panic!("Failed to find block from id");
 }
 
-fn get_possible_merge_positions(sess: Option<&Session>, blocks: &[Block], start: Word) -> Vec<usize> {
+fn get_possible_merge_positions(
+    sess: Option<&Session>,
+    blocks: &[Block],
+    start: Word,
+) -> Vec<usize> {
     let mut retval = Vec::new();
     let mut next: VecDeque<Word> = VecDeque::new();
     let mut processed = Vec::new();
@@ -39,13 +43,13 @@ fn get_possible_merge_positions(sess: Option<&Session>, blocks: &[Block], start:
             retval.push(find_block_index_from_id(blocks, &new_edges[0]));
         }
 
-        if processed.contains(&front) {	
+        if processed.contains(&front) {
             if let Some(sess) = sess {
                 sess.err("Loops are unsupported");
             }
-            break;	
-        } else {	
-            processed.push(front);	
+            break;
+        } else {
+            processed.push(front);
         }
 
         next.extend(new_edges);
