@@ -29,7 +29,6 @@ fn get_possible_merge_positions(blocks: &[Block], start: Word) -> Vec<usize> {
     next.push_back(start);
 
     while let Some(front) = next.pop_front() {
-        let front = *next.front().unwrap();
         let block_idx = find_block_index_from_id(blocks, &front);
         let new_edges = outgoing_edges(&blocks[block_idx]);
 
