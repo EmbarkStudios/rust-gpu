@@ -463,6 +463,14 @@ impl Sub<f32> for Vec3 {
     }
 }
 
+impl Sub<Vec3> for Vec3 {
+    type Output = Self;
+    #[inline]
+    fn sub(self, other: Vec3) -> Vec3 {
+        Self(self.0 - other.0, self.1 - other.1, self.2 - other.2)
+    }
+}
+
 impl Mul<Vec3> for f32 {
     type Output = Vec3;
     #[inline]
@@ -590,7 +598,7 @@ fn abs(f: f32) -> f32 {
 
 fn acos(v: f32) -> f32 {
     let x = abs(v);
-    let mut res = -0.155972 * x + 1.56467; // p(x)
+    let mut res = -0.1565827 * x + 1.570796; // p(x)
     res *= sqrt(1.0f32 - x);
 
     let mask = (v >= 0.0) as u32 as f32;
@@ -609,7 +617,7 @@ fn normalize(v: Vec3) -> Vec3 {
 }
 
 fn dot(a: Vec3, b: Vec3) -> f32 {
-    a.0 * b.0 + a.1 * b.1 + a.2 * b.2
+    (a.0 * b.0) + (a.1 * b.1) + (a.2 * b.2)
 }
 
 fn total_rayleigh(lambda: Vec3) -> Vec3 {
@@ -652,7 +660,7 @@ fn uncharted2_tonemap(w: Vec3) -> Vec3 {
 }
 
 fn clamp(a: f32, b: f32, c: f32) -> f32 {
-    a.min(b).max(c)
+    a.max(b).min(c)
 }
 
 fn exp(a: f32) -> f32 {
@@ -664,7 +672,7 @@ fn exp_v3(a: Vec3) -> Vec3 {
 }
 
 fn lerp(a: Vec3, b: Vec3, c: f32) -> Vec3 {
-    a * c + b * (1.0 - c)
+    a + (b - a) * c
 }
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
@@ -694,6 +702,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let sun_e = sun_intensity(dot(sun_direction, up));
     let mut lin =
         (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * (1.0 - fex)).pow(1.5);
+
     lin *= lerp(
         Vec3::splat(1.0),
         (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex).pow(0.5),
@@ -718,17 +727,119 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let curr = uncharted2_tonemap((log2(2.0 / pow(LUMINANCE, 4.0))) * tex_color);
     let color = curr * white_scale;
 
-    color.pow(1.0 / (1.2 + (1.2 * sunfade)))
+    color
+}
+
+#[derive(Copy, Clone)]
+pub struct Vec4(
+    pub(crate) f32,
+    pub(crate) f32,
+    pub(crate) f32,
+    pub(crate) f32,
+);
+
+impl Vec4 {
+    pub(crate) fn dup_x(self) -> Self {
+        Self(self.0, self.0, self.0, self.0)
+    }
+
+    pub(crate) fn dup_y(self) -> Self {
+        Self(self.1, self.1, self.1, self.1)
+    }
+
+    pub(crate) fn dup_z(self) -> Self {
+        Self(self.2, self.2, self.2, self.2)
+    }
+
+    pub(crate) fn dup_w(self) -> Self {
+        Self(self.3, self.3, self.3, self.3)
+    }
+    pub(crate) fn mul_add(self, a: Self, b: Self) -> Self {
+        Self(
+            (self.0 * a.0) + b.0,
+            (self.1 * a.1) + b.1,
+            (self.2 * a.2) + b.2,
+            (self.3 * a.3) + b.3,
+        )
+    }
+}
+
+impl Mul<Vec4> for Vec4 {
+    type Output = Self;
+    #[inline]
+    fn mul(self, other: Self) -> Self {
+        Self(
+            self.0 * other.0,
+            self.1 * other.1,
+            self.2 * other.2,
+            self.3 * other.3,
+        )
+    }
+}
+
+pub struct Mat4 {
+    pub(crate) x_axis: Vec4,
+    pub(crate) y_axis: Vec4,
+    pub(crate) z_axis: Vec4,
+    pub(crate) w_axis: Vec4,
+}
+
+impl Mat4 {
+    pub fn mul_vec4(&self, other: Vec4) -> Vec4 {
+        let mut res = self.x_axis * other.dup_x();
+        res = self.y_axis.mul_add(other.dup_y(), res);
+        res = self.z_axis.mul_add(other.dup_z(), res);
+        res = self.w_axis.mul_add(other.dup_w(), res);
+        res
+    }
 }
 
 #[allow(unused_attributes)]
 #[spirv(entry = "fragment")]
-pub fn main(input: Input<f32x4>, mut output: Output<f32x4>) {
+pub fn main_fs(input: Input<f32x4>, mut output: Output<f32x4>) {
     let color = input.load();
+    let mut dir = Vec3::new(color.0, color.1, color.2);
+    dir += Vec3::splat(1.0);
+    dir *= Vec3::splat(0.5);
 
-    let k = sky(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, -1.0, 0.0)); // todo: nice input variables
+    let clip_to_world = Mat4 {
+        x_axis: Vec4(
+            -0.5522849,
+            0.0,
+            0.0,
+            0.0,
+        ),
+        y_axis: Vec4(
+            0.0,
+            0.4096309,
+            -0.061444636,
+            0.0,
+        ),
+        z_axis: Vec4(
+            0.0,
+            99.99999,
+            199.99998,
+            999.99994,
+        ),
+        w_axis: Vec4(
+            0.0,
+            -0.14834046,
+            -0.98893654,
+            0.0,
+        ),
+    };
 
-    output.store(f32x4(color.0 + k.0, k.1, k.2, 0.0))
+    //let dir = Vec3(dir.0, -dir.1, 1.0);
+    let cs_pos = Vec4(dir.0, dir.1, 1.0, 1.0);
+    let mut ws_pos = clip_to_world.mul_vec4(cs_pos);
+
+    let eye_pos = Vec3(0.0, 1.0, 2.0);
+    let ws_pos = Vec3(ws_pos.0 / ws_pos.3, ws_pos.1 / ws_pos.3, ws_pos.2 / ws_pos.3);
+    let dir = normalize(ws_pos - eye_pos);
+
+    let k = sky(dir, Vec3::new(0.0, 1000.0, 0.0)); // todo: nice input variables
+
+    output.store(f32x4(k.2, k.1, k.0, 0.0))
 }
 
 #[allow(unused_attributes)]
@@ -740,7 +851,7 @@ pub fn main_vs(
     mut out_color: Output<f32x4>,
 ) {
     out_pos.store(in_pos.load());
-    out_color.store(in_color.load());
+    out_color.store(in_pos.load());
 }
 
 #[panic_handler]
