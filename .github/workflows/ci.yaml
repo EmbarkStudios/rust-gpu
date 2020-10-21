@@ -7,7 +7,6 @@ jobs:
     name: Test
     strategy:
       matrix:
-        # Skipping mac for now, because mac
         os: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     env:
@@ -26,8 +25,7 @@ jobs:
       - if: ${{ runner.os == 'Windows' }}
         run: echo "$HOME/spirv-tools/install/bin" >> $env:GITHUB_PATH
       - run: rustup component add rust-src rustc-dev llvm-tools-preview
-      - run: cargo test --workspace --exclude example-runner
-      - run: cargo test example-runner
+      - run: cargo test --workspace
   lint:
     name: Lint
     runs-on: ubuntu-latest
