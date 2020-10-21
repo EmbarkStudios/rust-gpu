@@ -367,7 +367,7 @@ impl ExampleBase {
                         format: vk::Format::B8G8R8_UNORM,
                         color_space: sfmt.color_space,
                     },
-                    _ => dbg!(*sfmt),
+                    _ => *sfmt,
                 })
                 .next()
                 .expect("Unable to find suitable surface format.");
