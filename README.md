@@ -26,6 +26,7 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
     let ws_pos = Vec3(ws_pos.0, ws_pos.1, ws_pos.2) / ws_pos.3;
     
     let dir = (ws_pos - eye_pos).normalize();
+    // evaluate Preetham sky model
     let result = sky(dir, sun_pos);
 
     output.store(result.extend(0.0))
