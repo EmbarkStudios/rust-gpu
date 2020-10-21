@@ -69,7 +69,7 @@ There are a few different components to this repo:
     setup.bat
     ```
     
-    The setup script installs nightly Rust (required for now, see ___ for tracking issue).
+    The setup script installs nightly Rust (required for now, see [#78](https://github.com/EmbarkStudios/rust-gpu/issues/78) for tracking issue).
 
 1. Install [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools#downloads) and add it to your PATH (for now, eventually we will automatically build and link it instead of calling executables)
 
