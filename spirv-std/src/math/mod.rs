@@ -15,15 +15,16 @@ pub use vec3::*;
 pub use vec4::*;
 
 pub trait MathExt {
-    fn pow(self, factor: f32) -> f32;
-    fn sqrt(self) -> f32;
-    fn log2(self) -> f32;
-    fn abs(self) -> f32;
-    fn cos(self) -> f32;
-    fn round(self) -> f32;
-    fn floor(self) -> f32;
-    fn ceil(self) -> f32;
-    fn exp(self) -> f32;
+    fn pow(self, factor: Self) -> Self;
+    fn sqrt(self) -> Self;
+    fn log2(self) -> Self;
+    fn abs(self) -> Self;
+    fn cos(self) -> Self;
+    fn round(self) -> Self;
+    fn floor(self) -> Self;
+    fn ceil(self) -> Self;
+    fn exp(self) -> Self;
+    fn clamp(self, low: Self, high: Self) -> Self;
 }
 
 impl MathExt for f32 {
@@ -61,5 +62,9 @@ impl MathExt for f32 {
 
     fn exp(self) -> f32 {
         unsafe { core::intrinsics::expf32(self) }
+    }
+
+    fn clamp(self, low: Self, high: Self) -> f32 {
+        self.max(low).min(high)
     }
 }
