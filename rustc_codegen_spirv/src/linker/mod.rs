@@ -9,6 +9,7 @@ mod import_export_link;
 mod inline;
 mod mem2reg;
 mod simple_passes;
+mod structurizer;
 mod ty;
 mod zombies;
 
@@ -200,6 +201,20 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
     if opts.dce {
         let _timer = timer("link_dce");
         dce::dce(&mut output);
+    }
+
+    {
+        let _timer = timer("link_block_ordering_pass_and_mem2reg");
+        let mut pointer_to_pointee = HashMap::new();
+        let mut constants = HashMap::new();
+        for func in &mut output.functions {
+            structurizer::structurize(
+                output.header.as_mut().unwrap(),
+                &pointer_to_pointee,
+                &constants,
+                func,
+            );
+        }
     }
 
     {
