@@ -143,7 +143,7 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
 
     {
         let _timer = timer("link_remove_zombies");
-        zombies::remove_zombies(&mut output);
+        zombies::remove_zombies(sess, &mut output);
     }
 
     if opts.inline {
