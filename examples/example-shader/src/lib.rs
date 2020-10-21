@@ -42,10 +42,6 @@ fn clamp(a: f32, b: f32, c: f32) -> f32 {
     a.max(b).min(c)
 }
 
-fn lerp(a: Vec3, b: Vec3, c: f32) -> Vec3 {
-    a + (b - a) * c
-}
-
 #[inline]
 fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
     // Scale, bias and saturate x to 0..1 range
@@ -120,8 +116,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let sun_e = sun_intensity(sun_direction.dot(up));
     let mut lin =
         (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * (Vec3::splat(1.0) - fex)).pow(1.5);
-    lin *= lerp(
-        Vec3::splat(1.0),
+    lin *= Vec3::splat(1.0).lerp(
         (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex).pow(0.5),
         clamp(builtin_powf32(1.0 - up.dot(sun_direction), 5.0), 0.0, 1.0),
     );
