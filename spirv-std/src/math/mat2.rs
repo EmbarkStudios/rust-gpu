@@ -9,7 +9,6 @@ pub fn mat2(x_axis: Vec2, y_axis: Vec2) -> Mat2 {
 
 /// A 2x2 column major matrix.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug)]
-#[repr(C)]
 pub struct Mat2(pub Vec4);
 
 impl Default for Mat2 {

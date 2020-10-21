@@ -4,7 +4,7 @@ use core::ops::*;
 
 /// A 3-dimensional vector without SIMD support.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]
-#[repr(C)]
+#[repr(simd)]
 pub struct Vec3(pub f32, pub f32, pub f32);
 
 /// Creates a `Vec3`.

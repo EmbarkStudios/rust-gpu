@@ -146,7 +146,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 }
 
 #[spirv(entry = "fragment")]
-pub fn main_fs(input: Input<f32x4>, mut output: Output<f32x4>) {
+pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
     let color = input.load();
     let mut dir = Vec3::new(color.0, color.1, 0.0);
 
@@ -170,15 +170,15 @@ pub fn main_fs(input: Input<f32x4>, mut output: Output<f32x4>) {
     let dir = (ws_pos - eye_pos).normalize();
     let k = sky(dir, sun_pos);
 
-    output.store(f32x4(k.0, k.1, k.2, 0.0))
+    output.store(k.extend(0.0))
 }
 
 #[spirv(entry = "vertex")]
 pub fn main_vs(
-    in_pos: Input<f32x4>,
-    in_color: Input<f32x4>,
-    #[spirv(builtin = "position")] mut out_pos: Output<f32x4>,
-    mut out_color: Output<f32x4>,
+    in_pos: Input<Vec4>,
+    in_color: Input<Vec4>,
+    #[spirv(builtin = "position")] mut out_pos: Output<Vec4>,
+    mut out_color: Output<Vec4>,
 ) {
     out_pos.store(in_pos.load());
     out_color.store(in_pos.load());

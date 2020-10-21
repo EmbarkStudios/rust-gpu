@@ -8,7 +8,7 @@ use core::{f32, ops::*};
 /// This type is 16 byte aligned unless the `scalar-math` feature is enabed.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]
 // if compiling with simd enabled assume alignment needs to match the simd type
-#[repr(C)]
+#[repr(simd)]
 pub struct Vec4(pub f32, pub f32, pub f32, pub f32);
 
 /// Creates a `Vec4`.
