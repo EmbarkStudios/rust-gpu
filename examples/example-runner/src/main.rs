@@ -631,10 +631,10 @@ impl Drop for ExampleBase {
                 .destroy_swapchain(self.swapchain, None);
             self.device.destroy_device(None);
             self.surface_loader.destroy_surface(self.surface, None);
-            if let Some(debug_utils) = self.debug_utils_loader.take() {
-                if let Some(call_back) = self.debug_call_back.take() {
-                    debug_utils.destroy_debug_utils_messenger(call_back, None);
-                }
+            if let Some((debug_utils, call_back)) =
+                Option::zip(self.debug_utils_loader.take(), self.debug_call_back.take())
+            {
+                debug_utils.destroy_debug_utils_messenger(call_back, None);
             }
             self.instance.destroy_instance(None);
         }
