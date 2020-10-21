@@ -28,7 +28,7 @@ const SUN_INTENSITY_FALLOFF_STEEPNESS: f32 = 1.5;
 const TONEMAP_WEIGHTING: Vec3 = Vec3::splat(9.50);
 const TURBIDITY: f32 = 2.0;
 
-//! Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
+/// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
 fn acos_approx(v: f32) -> f32 {
     let x = absf32(v);
     let mut res = -0.155972 * x + 1.56467; // p(x)
