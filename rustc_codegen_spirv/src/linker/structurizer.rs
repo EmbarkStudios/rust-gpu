@@ -7,7 +7,7 @@ use rspirv::{
     dr::{Block, Function, Instruction, ModuleHeader, Operand},
     spirv::SelectionControl,
 };
-use std::collections::{hash_map, HashMap, HashSet, VecDeque};
+use std::collections::VecDeque;
 
 pub fn structurize(header: &mut ModuleHeader, func: &mut Function) {
     insert_selection_merge_on_conditional_branch(header, &mut func.blocks);
