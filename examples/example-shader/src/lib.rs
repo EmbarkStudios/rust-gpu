@@ -34,10 +34,11 @@ fn acos_approx(v: f32) -> f32 {
     let mut res = -0.155972 * x + 1.56467; // p(x)
     res *= (1.0f32 - x).sqrt();
 
-    let mask = (v >= 0.0) as u32 as f32;
-
-    // can't use if-statement so do oldskool shader masking instead to avoid conditional
-    (res * mask) + ((1.0f32 - mask) * (PI - res))
+    if v >= 0.0 {
+        res
+    } else {
+        PI - res
+    }
 }
 
 /// renamed because of cross-compilation issues with spirv-cross/ moltenvk
