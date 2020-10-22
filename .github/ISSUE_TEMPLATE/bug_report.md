@@ -13,7 +13,7 @@ labels: 't: bug'
 ### Example & Steps To Reproduce
 <!-- 
 Describe what actually happened, including any relevant examples (smaller
-the better, or error messages)
+the better), error messages, or the relevant SPIR-V binary. 
 -->
 
 1.
