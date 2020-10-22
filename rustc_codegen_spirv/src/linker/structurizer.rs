@@ -88,9 +88,7 @@ pub fn insert_selection_merge_on_conditional_branch(
             }
         }
     }
-
-    let mut merge_blocks = Vec::new();
-
+    
     // Find convergence point.
     for (bi, ii) in branch_conditional_ops {
         let out = outgoing_edges(&blocks[bi]);
@@ -153,6 +151,5 @@ pub fn insert_selection_merge_on_conditional_branch(
         let block = &mut blocks[bi];
         let merge_inst = Instruction::new(Op::SelectionMerge, None, None, selection_merge_operands);
         block.instructions.insert(ii, merge_inst);
-        merge_blocks.push(bi);
     }
 }
