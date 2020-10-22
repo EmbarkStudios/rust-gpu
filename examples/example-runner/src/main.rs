@@ -11,7 +11,6 @@ use ash::util::*;
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::{vk, Device, Entry, Instance};
 use std::borrow::Cow;
-use std::cell::RefCell;
 use std::default::Default;
 use std::ffi::{CStr, CString};
 use std::io::Cursor;
@@ -167,8 +166,7 @@ pub struct ExampleBase {
     pub device: Device,
     pub surface_loader: Surface,
     pub swapchain_loader: Swapchain,
-    pub window: winit::Window,
-    pub events_loop: RefCell<winit::EventsLoop>,
+    pub window: winit::window::Window,
 
     pub debug_utils_loader: Option<DebugUtils>,
     pub debug_call_back: Option<vk::DebugUtilsMessengerEXT>,
@@ -202,33 +200,42 @@ pub struct ExampleBase {
 }
 
 impl ExampleBase {
-    pub fn render_loop<F: Fn()>(&self, f: F) {
-        use winit::*;
-        self.events_loop.borrow_mut().run_forever(|event| {
-            f();
-            match event {
-                Event::WindowEvent { event, .. } => match event {
-                    WindowEvent::KeyboardInput { input, .. } => {
-                        if let Some(VirtualKeyCode::Escape) = input.virtual_keycode {
-                            ControlFlow::Break
-                        } else {
-                            ControlFlow::Continue
-                        }
-                    }
-                    WindowEvent::CloseRequested => winit::ControlFlow::Break,
-                    _ => ControlFlow::Continue,
-                },
-                _ => ControlFlow::Continue,
+    pub fn render_loop<T, F: Fn(&Self) + 'static>(
+        self,
+        events_loop: winit::event_loop::EventLoop<T>,
+        f: F,
+    ) -> ! {
+        use winit::event::*;
+        use winit::event_loop::*;
+        events_loop.run(move |event, _window_target, control_flow| match event {
+            Event::RedrawEventsCleared { .. } => {
+                f(&self);
             }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput { input, .. } => {
+                    if let Some(VirtualKeyCode::Escape) = input.virtual_keycode {
+                        *control_flow = ControlFlow::Exit
+                    } else {
+                        *control_flow = ControlFlow::Wait
+                    }
+                }
+                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                _ => *control_flow = ControlFlow::Wait,
+            },
+            _ => *control_flow = ControlFlow::Wait,
         });
     }
 
-    pub fn new(window_width: u32, window_height: u32, options: &Options) -> Self {
+    pub fn new(
+        window_width: u32,
+        window_height: u32,
+        options: &Options,
+    ) -> (Self, winit::event_loop::EventLoop<()>) {
         unsafe {
-            let events_loop = winit::EventsLoop::new();
-            let window = winit::WindowBuilder::new()
+            let events_loop = winit::event_loop::EventLoop::new();
+            let window = winit::window::WindowBuilder::new()
                 .with_title("Ash - Example")
-                .with_dimensions(winit::dpi::LogicalSize::new(
+                .with_inner_size(winit::dpi::LogicalSize::new(
                     f64::from(window_width),
                     f64::from(window_height),
                 ))
@@ -573,8 +580,7 @@ impl ExampleBase {
                 .create_semaphore(&semaphore_create_info, None)
                 .unwrap();
 
-            ExampleBase {
-                events_loop: RefCell::new(events_loop),
+            let result = ExampleBase {
                 entry,
                 instance,
                 device,
@@ -603,7 +609,8 @@ impl ExampleBase {
                 debug_call_back,
                 debug_utils_loader,
                 depth_image_memory,
-            }
+            };
+            (result, events_loop)
         }
     }
 }
@@ -661,7 +668,7 @@ fn main() {
     let options = Options::from_args();
 
     unsafe {
-        let base = ExampleBase::new(1920, 1080, &options);
+        let (base, events_loop) = ExampleBase::new(1920, 1080, &options);
         let renderpass_attachments = [
             vk::AttachmentDescription {
                 format: base.surface_format.format,
@@ -996,7 +1003,7 @@ fn main() {
 
         let graphic_pipeline = graphics_pipelines[0];
 
-        base.render_loop(|| {
+        base.render_loop(events_loop, move |base| {
             let (present_index, _) = base
                 .swapchain_loader
                 .acquire_next_image(
@@ -1088,20 +1095,5 @@ fn main() {
                 .queue_present(base.present_queue, &present_info)
                 .unwrap();
         });
-
-        base.device.device_wait_idle().unwrap();
-        for pipeline in graphics_pipelines {
-            base.device.destroy_pipeline(pipeline, None);
-        }
-        base.device.destroy_pipeline_layout(pipeline_layout, None);
-        base.device.destroy_shader_module(shader_module, None);
-        base.device.free_memory(index_buffer_memory, None);
-        base.device.destroy_buffer(index_buffer, None);
-        base.device.free_memory(vertex_input_buffer_memory, None);
-        base.device.destroy_buffer(vertex_input_buffer, None);
-        for framebuffer in framebuffers {
-            base.device.destroy_framebuffer(framebuffer, None);
-        }
-        base.device.destroy_render_pass(renderpass, None);
     }
 }

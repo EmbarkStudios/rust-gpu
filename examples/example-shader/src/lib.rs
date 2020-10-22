@@ -38,7 +38,8 @@ fn acos_approx(v: f32) -> f32 {
     (res * mask) + ((1.0f32 - mask) * (PI - res))
 }
 
-fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
+/// renamed because of cross-compilation issues with spirv-cross/ moltenvk
+fn my_smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
     // Scale, bias and saturate x to 0..1 range
     let x = ((x - edge0) / (edge1 - edge0)).clamp(0.0, 1.0);
     // Evaluate polynomial
@@ -122,7 +123,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     // Composition + solar disc
     let sun_angular_diameter_cos = SUN_ANGULAR_DIAMETER_DEGREES.cos();
-    let sundisk = smoothstep(
+    let sundisk = my_smoothstep(
         sun_angular_diameter_cos,
         sun_angular_diameter_cos + 0.00002,
         cos_theta,
