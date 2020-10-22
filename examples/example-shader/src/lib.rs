@@ -7,7 +7,7 @@
 
 use core::f32::consts::PI;
 use core::panic::PanicInfo;
-use spirv_std::{f32x4, Input, Mat4, MathExt, Output, Vec3, Vec4};
+use spirv_std::{Input, Mat4, MathExt, Output, Vec3, Vec4};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const LUMINANCE: f32 = 1.0;
@@ -43,7 +43,7 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
     // Scale, bias and saturate x to 0..1 range
     let x = ((x - edge0) / (edge1 - edge0)).clamp(0.0, 1.0);
     // Evaluate polynomial
-    return x * x * (3.0 - 2.0 * x);
+    x * x * (3.0 - 2.0 * x)
 }
 
 fn total_rayleigh(lambda: Vec3) -> Vec3 {
@@ -77,14 +77,14 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
 }
 
 fn uncharted2_tonemap(w: Vec3) -> Vec3 {
-    let a = Vec3::splat(0.15); // Shoulder strength
-    let b = Vec3::splat(0.50); // Linear strength
-    let c = Vec3::splat(0.10); // Linear angle
-    let d = Vec3::splat(0.20); // Toe strength
-    let e = Vec3::splat(0.02); // Toe numerator
-    let f = Vec3::splat(0.30); // Toe denominator
+    const A: Vec3 = Vec3::splat(0.15); // Shoulder strength
+    const B: Vec3 = Vec3::splat(0.50); // Linear strength
+    const C: Vec3 = Vec3::splat(0.10); // Linear angle
+    const D: Vec3 = Vec3::splat(0.20); // Toe strength
+    const E: Vec3 = Vec3::splat(0.02); // Toe numerator
+    const F: Vec3 = Vec3::splat(0.30); // Toe denominator
 
-    ((w * (a * w + c * b) + d * e) / (w * (a * w + b) + d * f)) - e / f
+    ((w * (A * w + C * B) + D * E) / (w * (A * w + B) + D * F)) - E / F
 }
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
@@ -174,7 +174,7 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
 #[spirv(entry = "vertex")]
 pub fn main_vs(
     in_pos: Input<Vec4>,
-    in_color: Input<Vec4>,
+    _in_color: Input<Vec4>,
     #[spirv(builtin = "position")] mut out_pos: Output<Vec4>,
     mut out_color: Output<Vec4>,
 ) {
