@@ -21,9 +21,16 @@ the better, or error messages)
 3.
 
 ## System Info
+<!--
+Helpful commands:
+- Rustc version: `rustc -V`
+- SPIR-V version: `spirv-val --version`
+-->
+
  - Rust: [e.g. 1.49.0-nightly (1eaadebb3 2020-10-21)]
  - OS: [e.g. macOS 10.15.7]
  - GPU: [e.g. Intel(R) UHD Graphics 630]
+ - SPIR-V: [e.g. v2020.3 unknown hash, 2020-06-12T01:06:18]
 
 
 ## Backtrace
