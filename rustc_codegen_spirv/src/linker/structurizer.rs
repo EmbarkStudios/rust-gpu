@@ -88,7 +88,7 @@ pub fn insert_selection_merge_on_conditional_branch(
             }
         }
     }
-    
+
     // Find convergence point.
     for (bi, ii) in branch_conditional_ops {
         let out = outgoing_edges(&blocks[bi]);
