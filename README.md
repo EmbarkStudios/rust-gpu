@@ -57,15 +57,13 @@ If we do this project right, one wouldn't necessarily need an entire team of ren
 
 The scope of this overall project is quite broad, but is in multiple stages
 
-- A `rustc` compiler backend to generate [SPIR-V], plugging in via `-Z codegen-backend`. 
+- `rustc` compiler backend to generate [SPIR-V], plugging in via `-Z codegen-backend`. 
   - This is the same mechanism that [rustc_codegen_cranelift](https://github.com/bjorn3/rustc_codegen_cranelift) and [rustc_codegen_gcc](https://github.com/antoyo/rustc_codegen_gcc) use.
   - Currently only [SPIR-V] support is planned, [Vulkan](https://en.wikipedia.org/wiki/Vulkan_(API))'s open compiler target
   - Possible a future version could suppport [DXIL](https://github.com/microsoft/DirectXShaderCompiler/blob/master/docs/DXIL.rst) (the target for DirectX) or [WGSL](https://github.com/gpuweb/gpuweb/tree/main/wgsl) (the WebGPU shading language that's bijective with SPIR-V)
-- First target: Vulkan graphics shaders (vertex, fragment, etc.). 
-  - Vulkan compute (what SPIR-V calls GLCompute) is also on the roadmap
-  - As well as OpenCL compute (what SPIR-V calls Kernel).
+- Focus on Vulkan graphics shaders first, then after Vulkan compute shaders
 - [Cargo](https://github.com/rust-lang/cargo/) and [crates.io](https://crates.io) support to develop and publish SPIR-V crates
-- An high-level render graph to take advantage of this to make it easy for users to develop and use rendering effects.
+- High-level render graph to take advantage of this, make it easy for users to develop and use rendering effects.
 
 An in-depth exploration of our roadmap and milestones can be found [here](https://github.com/EmbarkStudios/rust-gpu/issues/47).
 
