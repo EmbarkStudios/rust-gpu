@@ -10,7 +10,7 @@ This is a very early stage project to make Rust a first-class language and ecosy
 
 Compiling and running very simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
 
-However, many things aren't implemented yet: for example, branching (e.g. if-statements) isn't supported yet! That means that while being technically usable, this project is far from being production-ready.
+However, many things aren't implemented yet: for example, loops and switches aren't supported yet! That means that while being technically usable, this project is far from being production-ready.
 
 ### Example
 
