@@ -172,12 +172,12 @@ pub fn fs(screen_pos: Vec2) -> Vec4 {
         Vec4::new(0.0, -0.14834046, -0.98893654, 0.0),
     );
 
-    let cs_pos = Vec4::new(screen_pos.x(), -screen_pos.y(), 1.0, 1.0);
-    let ws_pos = {
-        let p = clip_to_world.mul_vec4(cs_pos);
+    let clip_pos = screen_pos.extend(1.0).extend(1.0);
+    let world_pos = {
+        let p = clip_to_world.mul_vec4(clip_pos);
         p.truncate() / p.w()
     };
-    let dir = (ws_pos - eye_pos).normalize();
+    let dir = (world_pos - eye_pos).normalize();
 
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
@@ -187,22 +187,27 @@ pub fn fs(screen_pos: Vec2) -> Vec4 {
 
 #[allow(unused_attributes)]
 #[spirv(fragment)]
-pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
-    let v = input.load();
-    let color = fs(Vec2::new(v.x(), v.y()));
-    output.store(color)
+pub fn main_fs(in_pos: Input<Vec2>, mut output: Output<Vec4>) {
+    let color = fs(in_pos.load());
+    output.store(color);
 }
 
 #[allow(unused_attributes)]
 #[spirv(vertex)]
 pub fn main_vs(
-    in_pos: Input<Vec4>,
-    _in_color: Input<Vec4>,
-    #[spirv(position)] mut out_pos: Output<Vec4>,
-    mut out_color: Output<Vec4>,
+    #[spirv(vertex_index)] vert_idx: Input<i32>,
+    #[spirv(position)] mut gl_pos: Output<Vec4>,
+    mut out_pos: Output<Vec2>,
 ) {
-    out_pos.store(in_pos.load());
-    out_color.store(in_pos.load());
+    let vert_idx = vert_idx.load();
+
+    // Create a "full screen triangle" by mapping the vertex index.
+    // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
+    let uv = Vec2::new(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
+    let pos = 2.0 * uv - Vec2::one();
+
+    gl_pos.store(pos.extend(0.0).extend(1.0));
+    out_pos.store(pos);
 }
 
 #[cfg(all(not(test), target_arch = "spirv"))]
