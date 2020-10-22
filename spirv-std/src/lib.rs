@@ -1,12 +1,10 @@
 #![no_std]
-#![feature(register_attr, repr_simd, core_intrinsics, lang_items)]
+#![feature(register_attr, repr_simd, core_intrinsics)]
 #![register_attr(spirv)]
 
 pub mod math;
 pub use crate::math::MathExt;
 pub use crate::math::*;
-#[cfg(target_arch = "spirv")]
-use core::panic::PanicInfo;
 
 macro_rules! pointer_addrspace_write {
     (false) => {};
@@ -68,16 +66,6 @@ pointer_addrspace!("physical_storage_buffer", PhysicalStorageBuffer, true);
 #[derive(Debug, Clone, Copy)]
 #[repr(simd)]
 pub struct f32x4(pub f32, pub f32, pub f32, pub f32);
-
-#[cfg(target_arch = "spirv")]
-#[panic_handler]
-fn panic(_: &PanicInfo) -> ! {
-    loop {}
-}
-
-#[cfg(target_arch = "spirv")]
-#[lang = "eh_personality"]
-extern "C" fn rust_eh_personality() {}
 
 /// libcore requires a few external symbols to be defined:
 /// https://github.com/rust-lang/rust/blob/c2bc344eb23d8c1d18e803b3f1e631cf99926fbb/library/core/src/lib.rs#L23-L27
