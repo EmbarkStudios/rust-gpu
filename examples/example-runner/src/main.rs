@@ -207,24 +207,22 @@ impl ExampleBase {
     ) -> ! {
         use winit::event::*;
         use winit::event_loop::*;
-        events_loop.run(move |event, _window_target, control_flow| {
-            match event {
-                Event::RedrawEventsCleared { ..} => {
-                    f(&self);
-                },
-                Event::WindowEvent { event, .. } => match event {
-                    WindowEvent::KeyboardInput { input, .. } => {
-                        if let Some(VirtualKeyCode::Escape) = input.virtual_keycode {
-                            *control_flow = ControlFlow::Exit
-                        } else {
-                            *control_flow = ControlFlow::Wait
-                        }
-                    }
-                    WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                    _ => *control_flow = ControlFlow::Wait,
-                },
-                _ => *control_flow = ControlFlow::Wait,
+        events_loop.run(move |event, _window_target, control_flow| match event {
+            Event::RedrawEventsCleared { .. } => {
+                f(&self);
             }
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::KeyboardInput { input, .. } => {
+                    if let Some(VirtualKeyCode::Escape) = input.virtual_keycode {
+                        *control_flow = ControlFlow::Exit
+                    } else {
+                        *control_flow = ControlFlow::Wait
+                    }
+                }
+                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                _ => *control_flow = ControlFlow::Wait,
+            },
+            _ => *control_flow = ControlFlow::Wait,
         });
     }
 
