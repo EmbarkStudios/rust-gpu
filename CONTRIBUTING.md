@@ -56,7 +56,7 @@ A proposal to make a significant internal changes or small public facing changes
 
   An MCP should generally be a short (1-2 paragraphs) high level overview of the change you would want to make, the motivation behind the change, and potential solutions. There is a [major change issue template][mcp-template] you can use for convenience.
 
-[mcp-template]: #
+[mcp-template]: https://github.com/rust-lang/rust/issues/new?labels=mcp%3A proposed&template=mcp.md
 
   Examples of what would require an MCP:
 
@@ -109,4 +109,3 @@ Unless otherwise specified, all Embark open source projects are licensed under a
 ## Code of Conduct
 
 Please note that our projects are released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md) to ensure that they are welcoming places for everyone to contribute. By participating in any Embark open source project, you agree to abide by these terms.
-
