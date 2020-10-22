@@ -6,6 +6,7 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
+#[cfg(not(test))]
 use core::panic::PanicInfo;
 use spirv_std::{Input, Mat4, MathExt, Output, Vec3, Vec4};
 
@@ -41,7 +42,7 @@ fn acos_approx(v: f32) -> f32 {
 
 fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
     // Scale, bias and saturate x to 0..1 range
-    let x = ((x - edge0) / (edge1 - edge0)).clamp(0.0, 1.0);
+    let x = ((x - edge0) / (edge1 - edge0)).clamp_(0.0, 1.0);
     // Evaluate polynomial
     x * x * (3.0 - 2.0 * x)
 }
@@ -89,7 +90,7 @@ fn uncharted2_tonemap(w: Vec3) -> Vec3 {
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
-    let sunfade = 1.0 - (1.0 - (sun_position.1 / 450000.0).exp()).clamp(0.0, 1.0);
+    let sunfade = 1.0 - (1.0 - (sun_position.1 / 450000.0).exp()).clamp_(0.0, 1.0);
     let rayleigh_coefficient = RAYLEIGH - (1.0 * (1.0 - sunfade));
     let beta_r = total_rayleigh(PRIMARIES) * rayleigh_coefficient;
 
@@ -118,7 +119,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
             .pow(1.5);
     lin *= Vec3::splat(1.0).lerp(
         (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex).pow(0.5),
-        ((1.0 - up.dot(sun_direction)).pow(5.0)).clamp(0.0, 1.0),
+        ((1.0 - up.dot(sun_direction)).pow(5.0)).clamp_(0.0, 1.0),
     );
 
     // Composition + solar disc
@@ -182,10 +183,12 @@ pub fn main_vs(
     out_color.store(in_pos.load());
 }
 
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(_: &PanicInfo) -> ! {
     loop {}
 }
 
+#[cfg(not(test))]
 #[lang = "eh_personality"]
 extern "C" fn rust_eh_personality() {}
