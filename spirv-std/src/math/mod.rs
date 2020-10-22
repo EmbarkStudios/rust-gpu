@@ -24,7 +24,7 @@ pub trait MathExt {
     fn floor(self) -> Self;
     fn ceil(self) -> Self;
     fn exp(self) -> Self;
-    fn clamp(self, low: Self, high: Self) -> Self;
+    fn saturate(self) -> Self;
 }
 
 impl MathExt for f32 {
@@ -64,7 +64,7 @@ impl MathExt for f32 {
         unsafe { core::intrinsics::expf32(self) }
     }
 
-    fn clamp(self, low: Self, high: Self) -> f32 {
-        self.max(low).min(high)
+    fn saturate(self) -> f32 {
+        self.max(0.0).min(1.0)
     }
 }

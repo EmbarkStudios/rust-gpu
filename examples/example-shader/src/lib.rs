@@ -1,12 +1,14 @@
 //! Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
 
 #![no_std]
+#![feature(lang_items)]
 #![feature(register_attr)]
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
+#[cfg(not(test))]
 use core::panic::PanicInfo;
-use spirv_std::{f32x4, Input, Mat4, MathExt, Output, Vec3, Vec4};
+use spirv_std::{Input, Mat4, MathExt, Output, Vec3, Vec4};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const LUMINANCE: f32 = 1.0;
@@ -41,9 +43,9 @@ fn acos_approx(v: f32) -> f32 {
 /// renamed because of cross-compilation issues with spirv-cross/ moltenvk
 fn my_smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
     // Scale, bias and saturate x to 0..1 range
-    let x = ((x - edge0) / (edge1 - edge0)).clamp(0.0, 1.0);
+    let x = ((x - edge0) / (edge1 - edge0)).saturate();
     // Evaluate polynomial
-    return x * x * (3.0 - 2.0 * x);
+    x * x * (3.0 - 2.0 * x)
 }
 
 fn total_rayleigh(lambda: Vec3) -> Vec3 {
@@ -77,19 +79,19 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
 }
 
 fn uncharted2_tonemap(w: Vec3) -> Vec3 {
-    let a = Vec3::splat(0.15); // Shoulder strength
-    let b = Vec3::splat(0.50); // Linear strength
-    let c = Vec3::splat(0.10); // Linear angle
-    let d = Vec3::splat(0.20); // Toe strength
-    let e = Vec3::splat(0.02); // Toe numerator
-    let f = Vec3::splat(0.30); // Toe denominator
+    const A: Vec3 = Vec3::splat(0.15); // Shoulder strength
+    const B: Vec3 = Vec3::splat(0.50); // Linear strength
+    const C: Vec3 = Vec3::splat(0.10); // Linear angle
+    const D: Vec3 = Vec3::splat(0.20); // Toe strength
+    const E: Vec3 = Vec3::splat(0.02); // Toe numerator
+    const F: Vec3 = Vec3::splat(0.30); // Toe denominator
 
-    ((w * (a * w + c * b) + d * e) / (w * (a * w + b) + d * f)) - e / f
+    ((w * (A * w + C * B) + D * E) / (w * (A * w + B) + D * F)) - E / F
 }
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
-    let sunfade = 1.0 - (1.0 - (sun_position.1 / 450000.0).exp()).clamp(0.0, 1.0);
+    let sunfade = 1.0 - (1.0 - (sun_position.1 / 450000.0).exp()).saturate();
     let rayleigh_coefficient = RAYLEIGH - (1.0 * (1.0 - sunfade));
     let beta_r = total_rayleigh(PRIMARIES) * rayleigh_coefficient;
 
@@ -118,7 +120,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
             .pow(1.5);
     lin *= Vec3::splat(1.0).lerp(
         (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex).pow(0.5),
-        ((1.0 - up.dot(sun_direction)).pow(5.0)).clamp(0.0, 1.0),
+        ((1.0 - up.dot(sun_direction)).pow(5.0)).saturate(),
     );
 
     // Composition + solar disc
@@ -174,7 +176,7 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
 #[spirv(entry = "vertex")]
 pub fn main_vs(
     in_pos: Input<Vec4>,
-    in_color: Input<Vec4>,
+    _in_color: Input<Vec4>,
     #[spirv(builtin = "position")] mut out_pos: Output<Vec4>,
     mut out_color: Output<Vec4>,
 ) {
@@ -182,7 +184,12 @@ pub fn main_vs(
     out_color.store(in_pos.load());
 }
 
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(_: &PanicInfo) -> ! {
     loop {}
 }
+
+#[cfg(not(test))]
+#[lang = "eh_personality"]
+extern "C" fn rust_eh_personality() {}
