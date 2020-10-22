@@ -1,13 +1,10 @@
 //! Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
 
 #![no_std]
-#![feature(lang_items)]
 #![feature(register_attr)]
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
-#[cfg(not(test))]
-use core::panic::PanicInfo;
 use spirv_std::{Input, Mat4, MathExt, Output, Vec3, Vec4};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
@@ -184,13 +181,3 @@ pub fn main_vs(
     out_pos.store(in_pos.load());
     out_color.store(in_pos.load());
 }
-
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(_: &PanicInfo) -> ! {
-    loop {}
-}
-
-#[cfg(not(test))]
-#[lang = "eh_personality"]
-extern "C" fn rust_eh_personality() {}
