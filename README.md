@@ -47,7 +47,7 @@ Our hope with this project is that we push the industry forward by bringing an e
 
 ### Why Embark?
 
-At Embark, we've been building our own new game engine from the ground up in Rust. We have previous experience in-house developing the [RLSL](https://github.com/MaikKlein/rlsl) prototype, and we have a team of excellent rendering engineers that are familiar with the problems in current shading languages both from games, game engines and other industries. So, we believe we are a uniquely positioned to attempt solving this problem. 
+At Embark, we've been building our own new game engine from the ground up in Rust. We have previous experience in-house developing the [RLSL](https://github.com/MaikKlein/rlsl) prototype, and we have a team of excellent rendering engineers that are familiar with the problems in current shading languages both from games, game engines and other industries. So, we believe we are uniquely positioned to attempt solving this problem. 
 
 We want to streamline our own internal development with a single great language, build an open ecosystem and community, facilitate code-sharing between GPU and CPU, and most importantly: to enable our (future) users to very rapidly build great looking and engaging experiences.
 
