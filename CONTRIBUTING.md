@@ -56,7 +56,7 @@ A proposal to make a significant internal changes or small public facing changes
 
   An MCP should generally be a short (1-2 paragraphs) high level overview of the change you would want to make, the motivation behind the change, and potential solutions. There is a [major change issue template][mcp-template] you can use for convenience.
 
-[mcp-template]: https://github.com/rust-lang/rust/issues/new?labels=mcp%3A proposed&template=mcp.md
+[mcp-template]: https://github.com/rust-lang/rust/issues/new?labels=mcp%3A%20proposed&template=mcp.md
 
   Examples of what would require an MCP:
 
