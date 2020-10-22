@@ -1,6 +1,7 @@
 //! Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
 
 #![no_std]
+#![feature(lang_items)]
 #![feature(register_attr)]
 #![register_attr(spirv)]
 
@@ -185,3 +186,6 @@ pub fn main_vs(
 fn panic(_: &PanicInfo) -> ! {
     loop {}
 }
+
+#[lang = "eh_personality"]
+extern "C" fn rust_eh_personality() {}
