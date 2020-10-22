@@ -41,9 +41,9 @@ See [source](examples/example-shader/src/lib.rs) for full details.
 
 Historically in games GPU programming has been done through writing either HLSL, or to a lesser extent GLSL. These are simple programming languages that have evolved along with rendering APIs over the years. However, as game engines have evolved, these languages have failed to provide mechanisms for dealing with large codebases, and have generally stayed behind the curve compared to other programming languages.
 
-In part this is because it's a niche language for a niche market, and in part this has been because the industry as a whole has sunk quite a lot of time and effort into the status quo. While over-all better alternatives to both languages exist, none of them are in a place to replace HLSL or GLSL. Either because they're vendor locked, or because they don't suppor the traditional graphics pipeline. Examples of this include CUDA and OpenCL. And while attempts have been made to create language in this space, none of them have gained any notable traction in the gamedev community.
+In part this is because it's a niche language for a niche market, and in part this has been because the industry as a whole has sunk quite a lot of time and effort into the status quo. While over-all better alternatives to both languages exist, none of them are in a place to replace HLSL or GLSL. Either because they are vendor locked, or because they don't support the traditional graphics pipeline. Examples of this include CUDA and OpenCL. And while attempts have been made to create language in this space, none of them have gained any notable traction in the gamedev community.
 
-Our hope with this project is that we push the industry forward by bringing an existing low-level, safe and high performance language to the GPU; that language being Rust. And with it come some additional benefits that can't be overlooked: a package/module system that's one of the industry's best, built in safety against race-conditions or out of bounds memory access etc. 
+Our hope with this project is that we push the industry forward by bringing an existing, low-level, safe, and high performance language to the GPU; namely Rust. And with it come some additional benefits that can't be overlooked: a package/module system that's one of the industry's best, built in safety against race-conditions or out of bounds memory access, a wide range of tools and utilities to improve programmer workflows, and many others!
 
 ### Why Embark?
 
@@ -55,7 +55,7 @@ If we do this project right, one wouldn't necessarily need a team of rendering e
 
 This project will involve a few things if we want to get the experience right, and it's quite broad. Initial stages will involve mostly just setting up the backend, however the project will be broader then that.
 
-- Currently only SPIR-V support is planned (the open compiler target for Vulkan) but it's not unlikely that in future versions this will / should support DXIL (the target for DirectX) or WHLSL (the WebGPU shading language that's bijective with SPIR-V)
+- Currently only [SPIR-V](https://en.wikipedia.org/wiki/Standard_Portable_Intermediate_Representation) support is planned (the open compiler target for [Vulkan](https://en.wikipedia.org/wiki/Vulkan_(API)) but it's not unlikely that in future versions this will / should support [DXIL](https://github.com/microsoft/DirectXShaderCompiler/blob/master/docs/DXIL.rst) (the target for DirectX) or [WGSL](https://github.com/gpuweb/gpuweb/tree/main/wgsl) (the WebGPU shading language that's bijective with SPIR-V)
 - The first and primary target will be Vulkan shaders (vertex, fragment, etc.). However, Vulkan compute (what SPIR-V calls GLCompute) is also on the roadmap, as well as OpenCL compute (what SPIR-V calls Kernel).
 - Implement a `rustc` compiler backend, plugging in via `-Z codegen-backend`. This is the same mechanism that [rustc_codegen_cranelift](https://github.com/bjorn3/rustc_codegen_cranelift) and [rustc_codegen_gcc](https://github.com/antoyo/rustc_codegen_gcc) use.
 - [crates.io](https://crates.io) support to be able to publish SPIR-V crates
@@ -65,7 +65,7 @@ An in-depth exploration of our roadmap and milestones can be found [here](https:
 
 ## Process
 
-We use this repo as a monorepo for everything related to the project: crates, tools, shaders, examples, tests, and design documents. This way, we can use issues and PRs covering everything in the same place, cross-reference stuff within the repo, as well as with other GitHub repos (rspirv/Rust).
+We use this repo as a monorepo for everything related to the project: crates, tools, shaders, examples, tests, and design documents. This way, we can use issues and PRs covering everything in the same place, cross-reference stuff within the repo, as well as with other GitHub repos such as [rspirv](https://github.com/gfx-rs/rspirv) and [Rust](https://github.com/rust-lang/rust) itself.
 
 We meet weekly over a Discord call to discuss design and triage issues. Each meeting has an [issue](https://github.com/EmbarkStudios/rust-gpu/issues?q=label%3Ameeting+) with agenda, links and minutes.
 
@@ -87,7 +87,7 @@ There are a few different components to this repo:
 1. Install the prerequisites using the provided setup script. From the root of the project, run:
 
     MacOS, Linux:
-    ```
+    ```shell
     sh setup.sh
     ```
     
