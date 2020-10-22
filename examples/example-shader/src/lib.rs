@@ -141,6 +141,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     color.pow(1.0 / (1.2 + (1.2 * sunfade)))
 }
 
+#[allow(unused_attributes)]
 #[spirv(entry = "fragment")]
 pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
     let dir: Vec3 = input.load().truncate();
@@ -168,6 +169,7 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
     output.store(color.extend(0.0))
 }
 
+#[allow(unused_attributes)]
 #[spirv(entry = "vertex")]
 pub fn main_vs(
     in_pos: Input<Vec4>,
