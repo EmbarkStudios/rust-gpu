@@ -27,7 +27,7 @@ the better, or error messages)
 
 
 ## Backtrace
-<!-- If relevant, please include a backtrace of from the error below. -->
+<!-- If relevant, please include a backtrace of the error below. -->
 
 <details><summary>Backtrace</summary>
 <p>
