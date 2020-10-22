@@ -62,6 +62,7 @@ A proposal to make a significant internal changes or small public facing changes
 
   - Changing the compiler architecture.
   - Adding support for an existing Rust language or feature.
+  - Small additions (e.g. new methods) to `spirv-std` types.
   - Proposing an RFC.
 
   Examples of what would **not** require an MCP:
@@ -77,7 +78,7 @@ A proposal to make significant public facing changes to the compiler or standard
 
 Examples of what would require an RFC:
 
-- Additions to `spirv-std`.
+- Major additions to `spirv-std`, such as new APIs, or breaking changes to existing ones.
 
 #### Life-cycle
 
