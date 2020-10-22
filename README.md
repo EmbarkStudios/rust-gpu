@@ -49,7 +49,7 @@ Our hope with this project is that we push the industry forward by bringing an e
 
 At Embark, we've been building our own new game engine from the ground up in Rust. We have previous experience in-house developing the [RLSL](https://github.com/MaikKlein/rlsl) prototype, and we have a team of excellent rendering engineers that are familiar with the problems in current shading languages both from games, game engines and other industries. So, we believe we are uniquely positioned to attempt solving this problem. 
 
-We want to streamline our own internal development with a single great language, build an open ecosystem and community, facilitate code-sharing between GPU and CPU, and most importantly: to enable our (future) users to very rapidly build great looking and engaging experiences.
+We want to streamline our own internal development with a single great language, build an open source graphics ecosystem and community, facilitate code-sharing between GPU and CPU, and most importantly: to enable our (future) users, and fellow developers, to more rapidly build great looking and engaging experiences.
 
 If we do this project right, one wouldn't necessarily need an entire team of rendering engineers to build a good looking game, instead one would simply use a few of the existing open-source crates that provide the graphical effects needed to create the experience you're after. Instead of sharing and copy'n'pasting snippets of TAA code on forum posts, one could simply find and use the right crates from [crates.io](https://crates.io).
 
