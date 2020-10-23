@@ -2,7 +2,9 @@ use super::Builder;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
-use rspirv::spirv::{AddressingModel, Capability, MemorySemantics, Op, Scope, StorageClass, Word};
+use rspirv::spirv::{
+    AddressingModel, Capability, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word,
+};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -50,20 +52,6 @@ macro_rules! simple_uni_op {
                 .with_type(val.ty)
         }
     };
-}
-
-fn ordering_to_semantics(ordering: AtomicOrdering) -> MemorySemantics {
-    use AtomicOrdering::*;
-    // TODO: Someone verify/fix this, I don't know atomics well
-    match ordering {
-        NotAtomic => MemorySemantics::NONE,
-        Unordered => MemorySemantics::NONE,
-        Monotonic => MemorySemantics::NONE,
-        Acquire => MemorySemantics::ACQUIRE,
-        Release => MemorySemantics::RELEASE,
-        AcquireRelease => MemorySemantics::ACQUIRE_RELEASE,
-        SequentiallyConsistent => MemorySemantics::SEQUENTIALLY_CONSISTENT,
-    }
 }
 
 fn memset_fill_u16(b: u8) -> u16 {
@@ -116,6 +104,42 @@ fn memset_dynamic_scalar(
 }
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
+    fn ordering_to_semantics_def(&self, ordering: AtomicOrdering) -> SpirvValue {
+        let mut invalid_seq_cst = false;
+        let semantics = match ordering {
+            AtomicOrdering::NotAtomic => MemorySemantics::NONE,
+            AtomicOrdering::Unordered => MemorySemantics::NONE,
+            AtomicOrdering::Monotonic => MemorySemantics::NONE,
+            // Note: rustc currently has AtomicOrdering::Consume commented out, if it ever becomes
+            // uncommented, it should be MakeVisible | Acquire.
+            AtomicOrdering::Acquire => MemorySemantics::MAKE_VISIBLE | MemorySemantics::ACQUIRE,
+            AtomicOrdering::Release => MemorySemantics::MAKE_AVAILABLE | MemorySemantics::RELEASE,
+            AtomicOrdering::AcquireRelease => {
+                MemorySemantics::MAKE_AVAILABLE
+                    | MemorySemantics::MAKE_VISIBLE
+                    | MemorySemantics::ACQUIRE_RELEASE
+            }
+            AtomicOrdering::SequentiallyConsistent => {
+                let emit = self.emit();
+                let memory_model = emit.module_ref().memory_model.as_ref().unwrap();
+                if memory_model.operands[1].unwrap_memory_model() == MemoryModel::Vulkan {
+                    invalid_seq_cst = true;
+                }
+                MemorySemantics::MAKE_AVAILABLE
+                    | MemorySemantics::MAKE_VISIBLE
+                    | MemorySemantics::SEQUENTIALLY_CONSISTENT
+            }
+        };
+        let semantics = self.constant_u32(semantics.bits());
+        if invalid_seq_cst {
+            self.zombie(
+                semantics.def,
+                "Cannot use AtomicOrdering=SequentiallyConsistent on Vulkan memory model. Check if AcquireRelease fits your needs.",
+            );
+        }
+        semantics
+    }
+
     fn memset_const_pattern(&self, ty: &SpirvType, fill_byte: u8) -> Word {
         match *ty {
             SpirvType::Void => self.fatal("memset invalid on void pattern"),
@@ -760,7 +784,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
-        let semantics = self.constant_u32(ordering_to_semantics(order).bits());
+        let semantics = self.ordering_to_semantics_def(order);
         let result = self
             .emit()
             .atomic_load(ty, None, ptr.def, memory.def, semantics.def)
@@ -896,7 +920,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
-        let semantics = self.constant_u32(ordering_to_semantics(order).bits());
+        let semantics = self.ordering_to_semantics_def(order);
         self.validate_atomic(val.ty, ptr.def);
         self.emit()
             .atomic_store(ptr.def, memory.def, semantics.def, val.def)
@@ -1610,8 +1634,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.validate_atomic(dst_pointee_ty, dst.def);
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
-        let semantics_equal = self.constant_u32(ordering_to_semantics(order).bits());
-        let semantics_unequal = self.constant_u32(ordering_to_semantics(failure_order).bits());
+        let semantics_equal = self.ordering_to_semantics_def(order);
+        let semantics_unequal = self.ordering_to_semantics_def(failure_order);
         // Note: OpAtomicCompareExchangeWeak is deprecated, and has the same semantics
         self.emit()
             .atomic_compare_exchange(
@@ -1649,7 +1673,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.validate_atomic(dst_pointee_ty, dst.def);
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32).def;
-        let semantics = self.constant_u32(ordering_to_semantics(order).bits()).def;
+        let semantics = self.ordering_to_semantics_def(order).def;
         let mut emit = self.emit();
         use AtomicRmwBinOp::*;
         match op {
@@ -1673,7 +1697,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // Ignore sync scope (it only has "single thread" and "cross thread")
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32).def;
-        let semantics = self.constant_u32(ordering_to_semantics(order).bits()).def;
+        let semantics = self.ordering_to_semantics_def(order).def;
         self.emit().memory_barrier(memory, semantics).unwrap();
     }
 
