@@ -2,7 +2,9 @@ use super::Builder;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
-use rspirv::spirv::{AddressingModel, Capability, MemorySemantics, Op, Scope, StorageClass, Word};
+use rspirv::spirv::{
+    AddressingModel, Capability, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word,
+};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -50,20 +52,6 @@ macro_rules! simple_uni_op {
                 .with_type(val.ty)
         }
     };
-}
-
-fn ordering_to_semantics(ordering: AtomicOrdering) -> MemorySemantics {
-    use AtomicOrdering::*;
-    // TODO: Someone verify/fix this, I don't know atomics well
-    match ordering {
-        NotAtomic => MemorySemantics::NONE,
-        Unordered => MemorySemantics::NONE,
-        Monotonic => MemorySemantics::NONE,
-        Acquire => MemorySemantics::ACQUIRE,
-        Release => MemorySemantics::RELEASE,
-        AcquireRelease => MemorySemantics::ACQUIRE_RELEASE,
-        SequentiallyConsistent => MemorySemantics::SEQUENTIALLY_CONSISTENT,
-    }
 }
 
 fn memset_fill_u16(b: u8) -> u16 {
@@ -116,6 +104,42 @@ fn memset_dynamic_scalar(
 }
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
+    fn ordering_to_semantics_def(&self, ordering: AtomicOrdering) -> SpirvValue {
+        let mut invalid_seq_cst = false;
+        let semantics = match ordering {
+            AtomicOrdering::NotAtomic => MemorySemantics::NONE,
+            AtomicOrdering::Unordered => MemorySemantics::NONE,
+            AtomicOrdering::Monotonic => MemorySemantics::NONE,
+            // Note: rustc currently has AtomicOrdering::Consume commented out, if it ever becomes
+            // uncommented, it should be MakeVisible | Acquire.
+            AtomicOrdering::Acquire => MemorySemantics::MAKE_VISIBLE | MemorySemantics::ACQUIRE,
+            AtomicOrdering::Release => MemorySemantics::MAKE_AVAILABLE | MemorySemantics::RELEASE,
+            AtomicOrdering::AcquireRelease => {
+                MemorySemantics::MAKE_AVAILABLE
+                    | MemorySemantics::MAKE_VISIBLE
+                    | MemorySemantics::ACQUIRE_RELEASE
+            }
+            AtomicOrdering::SequentiallyConsistent => {
+                let emit = self.emit();
+                let memory_model = emit.module_ref().memory_model.as_ref().unwrap();
+                if memory_model.operands[1].unwrap_memory_model() == MemoryModel::Vulkan {
+                    invalid_seq_cst = true;
+                }
+                MemorySemantics::MAKE_AVAILABLE
+                    | MemorySemantics::MAKE_VISIBLE
+                    | MemorySemantics::SEQUENTIALLY_CONSISTENT
+            }
+        };
+        let semantics = self.constant_u32(semantics.bits());
+        if invalid_seq_cst {
+            self.zombie(
+                semantics.def,
+                "Cannot use AtomicOrdering=SequentiallyConsistent on Vulkan memory model. Check if AcquireRelease fits your needs.",
+            );
+        }
+        semantics
+    }
+
     fn memset_const_pattern(&self, ty: &SpirvType, fill_byte: u8) -> Word {
         match *ty {
             SpirvType::Void => self.fatal("memset invalid on void pattern"),
@@ -547,9 +571,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     simple_op! {fmul, f_mul}
     simple_op! {fmul_fast, f_mul} // fast=normal
     simple_op! {udiv, u_div}
-    simple_op! {exactudiv, u_div} // ignore
+    // Note: exactudiv is UB when there's a remainder, so it's valid to implement as a normal div.
+    // TODO: Can we take advantage of the UB and emit something else?
+    simple_op! {exactudiv, u_div}
     simple_op! {sdiv, s_div}
-    simple_op! {exactsdiv, s_div} // ignore
+    // Same note and TODO as exactudiv
+    simple_op! {exactsdiv, s_div}
     simple_op! {fdiv, f_div}
     simple_op! {fdiv_fast, f_div} // fast=normal
     simple_op! {urem, u_mod}
@@ -636,11 +663,20 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         rhs: Self::Value,
     ) -> (Self::Value, Self::Value) {
         let fals = self.constant_bool(false);
-        match oop {
+        let result = match oop {
             OverflowOp::Add => (self.add(lhs, rhs), fals),
             OverflowOp::Sub => (self.sub(lhs, rhs), fals),
             OverflowOp::Mul => (self.mul(lhs, rhs), fals),
-        }
+        };
+        self.zombie(
+            result.1.def,
+            match oop {
+                OverflowOp::Add => "checked add is not supported yet",
+                OverflowOp::Sub => "checked sub is not supported yet",
+                OverflowOp::Mul => "checked mul is not supported yet",
+            },
+        );
+        result
     }
 
     fn from_immediate(&mut self, val: Self::Value) -> Self::Value {
@@ -698,11 +734,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn dynamic_alloca(&mut self, ty: Self::Type, align: Align) -> Self::Value {
-        self.alloca(ty, align)
+        let result = self.alloca(ty, align);
+        self.err("dynamic alloca is not supported yet");
+        result
     }
 
     fn array_alloca(&mut self, _ty: Self::Type, _len: Self::Value, _align: Align) -> Self::Value {
-        self.fatal("TODO: array_alloca not supported yet")
+        self.fatal("array alloca not supported yet")
     }
 
     fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
@@ -727,8 +765,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn volatile_load(&mut self, ptr: Self::Value) -> Self::Value {
-        // TODO: Can we do something here?
-        self.load(ptr, Align::from_bytes(0).unwrap())
+        // TODO: Implement this
+        let result = self.load(ptr, Align::from_bytes(0).unwrap());
+        self.zombie(result.def, "volatile load is not supported yet");
+        result
     }
 
     fn atomic_load(&mut self, ptr: Self::Value, order: AtomicOrdering, _size: Size) -> Self::Value {
@@ -744,7 +784,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
-        let semantics = self.constant_u32(ordering_to_semantics(order).bits());
+        let semantics = self.ordering_to_semantics_def(order);
         let result = self
             .emit()
             .atomic_load(ty, None, ptr.def, memory.def, semantics.def)
@@ -818,36 +858,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
 
         self
-        /*
-        let zero = self.const_usize(0);
-        let count = self.const_usize(count);
-        let start = dest.project_index(&mut self, zero).llval;
-        let end = dest.project_index(&mut self, count).llval;
-
-        let mut header_bx = self.build_sibling_block("repeat_loop_header");
-        let mut body_bx = self.build_sibling_block("repeat_loop_body");
-        let next_bx = self.build_sibling_block("repeat_loop_next");
-
-        self.br(header_bx.llbb());
-        let current = header_bx.phi(start.ty, &[start], &[self.llbb()]);
-
-        let keep_going = header_bx.icmp(IntPredicate::IntNE, current, end);
-        header_bx.cond_br(keep_going, body_bx.llbb(), next_bx.llbb());
-
-        let align = dest
-            .align
-            .restrict_for_offset(dest.layout.field(self.cx(), 0).size);
-        cg_elem.val.store(
-            &mut body_bx,
-            PlaceRef::new_sized_aligned(current, cg_elem.layout, align),
-        );
-
-        let next = body_bx.inbounds_gep(current, &[self.const_usize(1)]);
-        body_bx.br(header_bx.llbb());
-        header_bx.add_incoming_to_phi(current, next, body_bx.llbb());
-
-        next_bx
-        */
     }
 
     fn range_metadata(&mut self, _load: Self::Value, _range: Range<u128>) {
@@ -879,8 +889,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         val: Self::Value,
         ptr: Self::Value,
         align: Align,
-        _flags: MemFlags,
+        flags: MemFlags,
     ) -> Self::Value {
+        if flags != MemFlags::empty() {
+            self.err(&format!(
+                "store_with_flags is not supported yet: {:?}",
+                flags
+            ));
+        }
         self.store(val, ptr, align)
     }
 
@@ -904,7 +920,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
-        let semantics = self.constant_u32(ordering_to_semantics(order).bits());
+        let semantics = self.ordering_to_semantics_def(order);
         self.validate_atomic(val.ty, ptr.def);
         self.emit()
             .atomic_store(ptr.def, memory.def, semantics.def, val.def)
@@ -1369,8 +1385,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         src: Self::Value,
         _src_align: Align,
         size: Self::Value,
-        _flags: MemFlags,
+        flags: MemFlags,
     ) {
+        if flags != MemFlags::empty() {
+            self.err(&format!(
+                "memcpy with mem flags is not supported yet: {:?}",
+                flags
+            ));
+        }
         let const_size = self.builder.lookup_const_u64(size);
         if const_size == Some(0) {
             // Nothing to do!
@@ -1417,8 +1439,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         fill_byte: Self::Value,
         size: Self::Value,
         _align: Align,
-        _flags: MemFlags,
+        flags: MemFlags,
     ) {
+        if flags != MemFlags::empty() {
+            self.err(&format!(
+                "memset with mem flags is not supported yet: {:?}",
+                flags
+            ));
+        }
         let elem_ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee, .. } => pointee,
             _ => self.fatal(&format!(
@@ -1606,8 +1634,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.validate_atomic(dst_pointee_ty, dst.def);
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
-        let semantics_equal = self.constant_u32(ordering_to_semantics(order).bits());
-        let semantics_unequal = self.constant_u32(ordering_to_semantics(failure_order).bits());
+        let semantics_equal = self.ordering_to_semantics_def(order);
+        let semantics_unequal = self.ordering_to_semantics_def(failure_order);
         // Note: OpAtomicCompareExchangeWeak is deprecated, and has the same semantics
         self.emit()
             .atomic_compare_exchange(
@@ -1645,7 +1673,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.validate_atomic(dst_pointee_ty, dst.def);
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32).def;
-        let semantics = self.constant_u32(ordering_to_semantics(order).bits()).def;
+        let semantics = self.ordering_to_semantics_def(order).def;
         let mut emit = self.emit();
         use AtomicRmwBinOp::*;
         match op {
@@ -1669,7 +1697,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // Ignore sync scope (it only has "single thread" and "cross thread")
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32).def;
-        let semantics = self.constant_u32(ordering_to_semantics(order).bits()).def;
+        let semantics = self.ordering_to_semantics_def(order).def;
         self.emit().memory_barrier(memory, semantics).unwrap();
     }
 

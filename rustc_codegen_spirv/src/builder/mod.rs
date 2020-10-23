@@ -71,6 +71,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             self.tcx.sess.struct_err(msg)
         }
     }
+    */
 
     pub fn err(&self, msg: &str) {
         if let Some(current_span) = self.current_span {
@@ -79,7 +80,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             self.tcx.sess.err(msg)
         }
     }
-    */
 
     pub fn fatal(&self, msg: &str) -> ! {
         if let Some(current_span) = self.current_span {
@@ -347,7 +347,8 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         _inputs: Vec<Self::Value>,
         _span: Span,
     ) -> bool {
-        todo!()
+        self.err("LLVM asm not supported");
+        true
     }
 
     fn codegen_inline_asm(
@@ -357,7 +358,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         _options: InlineAsmOptions,
         _line_spans: &[Span],
     ) {
-        todo!()
+        self.err("asm not supported")
     }
 }
 impl<'a, 'tcx> StaticBuilderMethods for Builder<'a, 'tcx> {

@@ -1,4 +1,8 @@
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 name: Continuous integration
 
@@ -28,10 +32,12 @@ jobs:
         # Runs separately to add spir-v tools to Powershell's Path.
         run: echo "$HOME/spirv-tools/install/bin" >> $env:GITHUB_PATH
       - run: rustup component add rust-src rustc-dev llvm-tools-preview
-      - run: cargo test --workspace --exclude example-runner
+      - run: cargo build -p example-runner
       # See: https://github.com/EmbarkStudios/rust-gpu/issues/84
+      - if: ${{ runner.os == 'macOS' }}
+        run: cargo test --workspace --exclude example-runner
       - if: ${{ runner.os != 'macOS' }}
-        run: cargo test --workspace example-runner
+        run: cargo test --workspace
   lint:
     name: Lint
     runs-on: ubuntu-latest

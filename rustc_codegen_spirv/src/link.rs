@@ -347,16 +347,23 @@ fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
 }
 
 pub fn read_metadata(rlib: &Path) -> Result<MetadataRef, String> {
-    for entry in Archive::new(File::open(rlib).unwrap()).entries().unwrap() {
-        let mut entry = entry.unwrap();
-        if entry.path().unwrap() == Path::new(".metadata") {
-            let mut bytes = Vec::new();
-            entry.read_to_end(&mut bytes).unwrap();
-            let buf: OwningRef<Vec<u8>, [u8]> = OwningRef::new(bytes);
-            return Ok(rustc_erase_owner!(buf.map_owner_box()));
+    fn read_metadata_internal(rlib: &Path) -> Result<Option<MetadataRef>, std::io::Error> {
+        for entry in Archive::new(File::open(rlib)?).entries()? {
+            let mut entry = entry?;
+            if entry.path()? == Path::new(".metadata") {
+                let mut bytes = Vec::new();
+                entry.read_to_end(&mut bytes)?;
+                let buf: OwningRef<Vec<u8>, [u8]> = OwningRef::new(bytes);
+                return Ok(Some(rustc_erase_owner!(buf.map_owner_box())));
+            }
         }
+        Ok(None)
     }
-    Err(format!("No .metadata file in rlib: {:?}", rlib))
+    match read_metadata_internal(rlib) {
+        Ok(Some(m)) => Ok(m),
+        Ok(None) => Err(format!("No .metadata file in rlib: {:?}", rlib)),
+        Err(io) => Err(format!("Failed to read rlib at {:?}: {}", rlib, io)),
+    }
 }
 
 /// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc's
