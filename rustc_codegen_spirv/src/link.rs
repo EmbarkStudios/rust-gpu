@@ -154,7 +154,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: &[u32], filename: &Path) {
     let result = optimizer.optimize(
         spv_binary,
         &mut |data: &[u32]| {
-            write_result = Some(std::fs::write(filename, crate::slice_u32_to_u8(&data)));
+            write_result = Some(std::fs::write(filename, crate::slice_u32_to_u8(data)));
         },
         Some(&opts),
     );
@@ -167,7 +167,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: &[u32], filename: &Path) {
         Ok(_) => {
             write_result.unwrap().unwrap();
         }
-        _ => {
+        Err(_) => {
             let mut err =
                 sess.struct_warn("invalid arguments supplied to spirv-opt, leaving as unoptimized");
             err.note(&format!("module {:?}", filename));

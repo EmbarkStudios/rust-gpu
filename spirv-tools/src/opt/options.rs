@@ -33,6 +33,12 @@ impl Options {
     }
 }
 
+impl Default for Options {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Drop for Options {
     #[inline]
     fn drop(&mut self) {

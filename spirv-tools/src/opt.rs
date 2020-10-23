@@ -49,7 +49,7 @@ impl Optimizer {
             extern "C" fn callback(data: *const u32, len: usize, ctx: *mut std::ffi::c_void) {
                 unsafe {
                     let optimized_binary = std::slice::from_raw_parts(data, len);
-                    let ctx: &mut Ctx<'_> = std::mem::transmute(ctx);
+                    let ctx: &mut Ctx<'_> = &mut *(ctx as *mut Ctx);
 
                     ctx.cb.optimized(optimized_binary);
                 }
@@ -92,7 +92,7 @@ impl Optimizer {
             options,
         )?;
 
-        buffer.ok_or_else(|| RunResult::OptimizerFailed)
+        buffer.ok_or(RunResult::OptimizerFailed)
     }
 
     /// Register a single pass with the the optimizer.
