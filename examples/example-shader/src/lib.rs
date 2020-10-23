@@ -91,14 +91,12 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
 fn tonemap(col: Vec3) -> Vec3 {
     // see https://www.desmos.com/calculator/0eo9pzo1at
     const A: f32 = 2.35;
-    const B: f32 = 2.88266653353;
-    const C: f32 = 789.74593178;
+    const B: f32 = 2.8826666;
+    const C: f32 = 789.7459;
     const D: f32 = 0.935;
 
     let z = pow(col, A);
-    let tonemapped = z / (pow(z, D) * B + Vec3::splat(C));
-
-    tonemapped
+    z / (pow(z, D) * B + Vec3::splat(C))
 }
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
