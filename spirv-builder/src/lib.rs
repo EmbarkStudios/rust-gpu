@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test;
+
 mod depfile;
 
 use raw_string::{RawStr, RawString};
@@ -37,7 +40,7 @@ impl SpirvBuilder {
     }
 
     /// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to true.
-    pub fn print_metadata(&mut self, v: bool) -> &mut Self {
+    pub fn print_metadata(mut self, v: bool) -> Self {
         self.print_metadata = v;
         self
     }
