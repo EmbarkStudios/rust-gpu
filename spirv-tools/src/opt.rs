@@ -26,7 +26,7 @@ impl Optimizer {
     #[inline]
     pub fn new(target: spirv_tools_sys::shared::TargetEnv) -> Self {
         Self {
-            inner: unsafe { opt::create_optimizer(target) },
+            inner: unsafe { opt::optimizer_create(target) },
         }
     }
 
@@ -60,7 +60,7 @@ impl Optimizer {
                 None => std::ptr::null(),
             };
 
-            let result = opt::run_optimizer(
+            let result = opt::optimizer_run(
                 self.inner,
                 input.as_ptr(),
                 input.len(),
@@ -98,7 +98,7 @@ impl Optimizer {
     /// Register a single pass with the the optimizer.
     #[inline]
     pub fn register_pass(&mut self, pass: Passes) -> &mut Self {
-        unsafe { opt::register_pass(self.inner, pass) }
+        unsafe { opt::optimizer_register_pass(self.inner, pass) }
         self
     }
 
@@ -107,7 +107,7 @@ impl Optimizer {
     /// from time to time.
     #[inline]
     pub fn register_performance_passes(&mut self) -> &mut Self {
-        unsafe { opt::register_performance_passes(self.inner) }
+        unsafe { opt::optimizer_register_performance_passes(self.inner) }
         self
     }
 
@@ -116,7 +116,7 @@ impl Optimizer {
     /// from time to time.
     #[inline]
     pub fn register_size_passes(&mut self) -> &mut Self {
-        unsafe { opt::register_size_passes(self.inner) }
+        unsafe { opt::optimizer_register_size_passes(self.inner) }
         self
     }
 
@@ -125,7 +125,7 @@ impl Optimizer {
     /// change from time to time.
     #[inline]
     pub fn register_vulkan_to_webgpu_passes(&mut self) -> &mut Self {
-        unsafe { opt::register_vulkan_to_webgpu_passes(self.inner) }
+        unsafe { opt::optimizer_register_vulkan_to_webgpu_passes(self.inner) }
         self
     }
 
@@ -134,7 +134,7 @@ impl Optimizer {
     /// change from time to time.
     #[inline]
     pub fn register_webgpu_to_vulkan_passes(&mut self) -> &mut Self {
-        unsafe { opt::register_webgpu_to_vulkan_passes(self.inner) }
+        unsafe { opt::optimizer_register_webgpu_to_vulkan_passes(self.inner) }
         self
     }
 
@@ -148,7 +148,7 @@ impl Optimizer {
     /// from time to time.
     #[inline]
     pub fn register_legalization_passes(&mut self) -> &mut Self {
-        unsafe { opt::register_legalization_passes(self.inner) }
+        unsafe { opt::optimizer_register_legalization_passes(self.inner) }
         self
     }
 }
@@ -156,6 +156,6 @@ impl Optimizer {
 impl Drop for Optimizer {
     #[inline]
     fn drop(&mut self) {
-        unsafe { opt::destroy_optimizer(self.inner) }
+        unsafe { opt::optimizer_destroy(self.inner) }
     }
 }

@@ -1,27 +1,31 @@
 use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
-use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
-use rustc_codegen_ssa::back::write::CodegenContext;
-use rustc_codegen_ssa::CodegenResults;
-use rustc_data_structures::owning_ref::OwningRef;
-use rustc_data_structures::rustc_erase_owner;
-use rustc_data_structures::sync::MetadataRef;
-use rustc_errors::{DiagnosticBuilder, FatalError};
-use rustc_middle::bug;
-use rustc_middle::dep_graph::WorkProduct;
-use rustc_middle::middle::cstore::NativeLib;
-use rustc_middle::middle::dependency_format::Linkage;
-use rustc_session::config::{CrateType, Lto, OutputFilenames, OutputType};
-use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
-use rustc_session::utils::NativeLibKind;
-use rustc_session::Session;
-use std::collections::HashSet;
-use std::env;
-use std::ffi::{CString, OsStr};
-use std::fs::File;
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::sync::Arc;
+use rustc_codegen_ssa::{
+    back::{
+        lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared},
+        write::CodegenContext,
+    },
+    CodegenResults,
+};
+use rustc_data_structures::{owning_ref::OwningRef, rustc_erase_owner, sync::MetadataRef};
+use rustc_errors::FatalError;
+use rustc_middle::{
+    bug, dep_graph::WorkProduct, middle::cstore::NativeLib, middle::dependency_format::Linkage,
+};
+use rustc_session::{
+    config::{CrateType, Lto, OutputFilenames, OutputType},
+    output::{check_file_is_writeable, invalid_output_for_target, out_filename},
+    utils::NativeLibKind,
+    Session,
+};
+use std::{
+    collections::HashSet,
+    env,
+    ffi::{CString, OsStr},
+    fs::File,
+    io::{Read, Write},
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tar::{Archive, Builder, Header};
 
 pub fn link<'a>(
@@ -124,19 +128,33 @@ fn link_exe(
         codegen_results,
     );
 
-    let spv_binary = do_link(sess, &objects, &rlibs, out_filename, legalize);
+    let spv_binary = do_link(sess, &objects, &rlibs, legalize);
 
-    if env::var("SPIRV_OPT").is_ok() {
+    let spv_binary = if env::var("SPIRV_OPT").is_ok() {
         let _timer = sess.timer("link_spirv_opt");
-        do_spirv_opt(sess, &spv_binary, out_filename);
-    }
+        do_spirv_opt(sess, spv_binary, out_filename)
+    } else {
+        spv_binary
+    };
 
     if env::var("NO_SPIRV_VAL").is_err() {
-        do_spirv_val(sess, out_filename);
+        do_spirv_val(sess, &spv_binary, out_filename);
+    }
+
+    {
+        let save_modules_timer = sess.timer("link_save_modules");
+        if let Err(e) = std::fs::write(out_filename, crate::slice_u32_to_u8(&spv_binary)) {
+            let mut err = sess.struct_err("failed to serialize spirv-binary to disk");
+            err.note(&format!("module {:?}", out_filename));
+            err.note(&format!("I/O error: {:#}", e));
+            err.emit();
+        }
+
+        drop(save_modules_timer);
     }
 }
 
-fn do_spirv_opt(sess: &Session, spv_binary: &[u32], filename: &Path) {
+fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u32> {
     use spirv_tools::{opt, shared};
 
     // This is the same default target environment that spirv-opt uses
@@ -147,14 +165,17 @@ fn do_spirv_opt(sess: &Session, spv_binary: &[u32], filename: &Path) {
         .register_pass(opt::Passes::EliminateDeadConstant)
         .register_pass(opt::Passes::StripDebugInfo);
 
-    let mut write_result = None;
     let mut opts = opt::Options::new();
+
+    // We run the validator separately
     opts.run_validator(false);
 
+    let mut optimized_binary = None;
+
     let result = optimizer.optimize(
-        spv_binary,
+        &spv_binary,
         &mut |data: &[u32]| {
-            write_result = Some(std::fs::write(filename, crate::slice_u32_to_u8(data)));
+            optimized_binary = Some(data.to_vec());
         },
         Some(&opts),
     );
@@ -163,75 +184,29 @@ fn do_spirv_opt(sess: &Session, spv_binary: &[u32], filename: &Path) {
         Err(opt::RunResult::OptimizerFailed) => {
             let mut err = sess.struct_warn("spirv-opt failed, leaving as unoptimized");
             err.note(&format!("module {:?}", filename));
+            spv_binary
         }
-        Ok(_) => {
-            write_result.unwrap().unwrap();
-        }
+        Ok(_) => optimized_binary.unwrap(),
         Err(_) => {
             let mut err =
                 sess.struct_warn("invalid arguments supplied to spirv-opt, leaving as unoptimized");
             err.note(&format!("module {:?}", filename));
+            spv_binary
         }
     }
 }
 
-fn do_spirv_val(sess: &Session, filename: &Path) {
-    output_spirv_tool(
-        sess,
-        "spirv-val",
-        |cmd| cmd.arg(&filename),
-        |status| {
-            let mut err = sess.struct_err(&format!("spirv-val failed with {}", status));
-            err.note(&format!("module {:?}", filename));
-            err
-        },
-    );
-}
+fn do_spirv_val(sess: &Session, spv_binary: &[u32], filename: &Path) {
+    use spirv_tools::{shared, val};
 
-/// Runs a given SPIR-V `tool`, configured with `builder`, erroring if not found
-/// or returns a non-zero exit code. All errors will be emitted using the
-/// diagnostics builder provided by `diagnostics.`
-fn output_spirv_tool<'a, F, D>(
-    sess: &Session,
-    tool: &str,
-    builder: F,
-    diagnostics: D,
-) -> Option<std::process::Output>
-where
-    F: FnOnce(&mut Command) -> &mut Command,
-    D: FnOnce(std::process::ExitStatus) -> DiagnosticBuilder<'a>,
-{
-    let mut cmd = Command::new(tool);
-    (builder)(&mut cmd);
+    // This is the same default target environment that spirv-val uses
+    let validator = val::Validator::new(shared::TargetEnv::Universal_1_5);
+    let opts = val::ValidatorOptions::default();
 
-    let output = match cmd.output() {
-        Ok(output) => output,
-        Err(_) => {
-            let mut err =
-                sess.struct_err(&format!("Couldn't find `{}` SPIR-V tool in PATH.", tool));
-            err.note(
-                "Please ensure that you have `spirv-tools` installed on \
-                      your system and available in your PATH.",
-            );
-            err.emit();
-            return None;
-        }
-    };
-
-    if output.status.success() {
-        Some(output)
-    } else {
-        let mut diagnostics = (diagnostics)(output.status);
-
-        if !output.stdout.is_empty() {
-            diagnostics.note(&String::from_utf8(output.stdout).unwrap());
-        }
-        if !output.stderr.is_empty() {
-            diagnostics.note(&String::from_utf8(output.stderr).unwrap());
-        }
-
-        diagnostics.emit();
-        None
+    if validator.validate(spv_binary, &opts).is_err() {
+        let mut err = sess.struct_err("error occurred during validation");
+        err.note(&format!("module {:?}", filename));
+        err.emit();
     }
 }
 
@@ -385,13 +360,13 @@ pub fn read_metadata(rlib: &Path) -> Result<MetadataRef, String> {
 
 /// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc's
 /// shenanigans to collect all the object files we need to link.
-fn do_link(
-    sess: &Session,
-    objects: &[PathBuf],
-    rlibs: &[PathBuf],
-    out_filename: &Path,
-    legalize: bool,
-) -> Vec<u32> {
+fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: bool) -> Vec<u32> {
+    fn load(bytes: &[u8]) -> rspirv::dr::Module {
+        let mut loader = rspirv::dr::Loader::new();
+        rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
+        loader.module()
+    }
+
     let load_modules_timer = sess.timer("link_load_modules");
     let mut modules = Vec::new();
     // `objects` are the plain obj files we need to link - usually produced by the final crate.
@@ -438,9 +413,9 @@ fn do_link(
         mem2reg: legalize,
         structurize: env::var("NO_STRUCTURIZE").is_err(),
     };
+
     let link_result = linker::link(Some(sess), &mut module_refs, &options);
 
-    let save_modules_timer = sess.timer("link_save_modules");
     let assembled = match link_result {
         Ok(v) => v,
         Err(err) => {
@@ -463,20 +438,7 @@ fn do_link(
 
     // And finally write out the linked binary.
     use rspirv::binary::Assemble;
-    let spv_binary = assembled.assemble();
-    File::create(out_filename)
-        .unwrap()
-        .write_all(crate::slice_u32_to_u8(&spv_binary))
-        .unwrap();
-    drop(save_modules_timer);
-
-    fn load(bytes: &[u8]) -> rspirv::dr::Module {
-        let mut loader = rspirv::dr::Loader::new();
-        rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
-        loader.module()
-    }
-
-    spv_binary
+    assembled.assemble()
 }
 
 /// As of right now, this is essentially a no-op, just plumbing through all the files.

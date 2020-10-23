@@ -170,6 +170,8 @@ fn opt(build: &mut Build) {
 }
 
 fn val(build: &mut Build) {
+    build.file("src/c/val.cpp");
+
     add_sources(
         build,
         "spirv-tools/source/val",
@@ -230,7 +232,11 @@ fn main() {
     );
 
     shared(&mut build);
-    val(&mut build);
+
+    // Some opt code requires val as well
+    if cfg!(any(feature = "opt", feature = "val")) {
+        val(&mut build);
+    }
 
     if cfg!(feature = "opt") {
         opt(&mut build);
@@ -239,7 +245,10 @@ fn main() {
     if build.get_compiler().is_like_msvc() {
         build.flag("/std:c++11");
     } else {
-        build.flag("-std=c++11");
+        build
+            .flag("-std=c++11")
+            .flag("-fno-exceptions")
+            .flag("-fno-rtti");
     }
 
     build.cpp(true);

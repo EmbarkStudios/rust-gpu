@@ -77,24 +77,17 @@ enum RunResult {
 typedef void (*optimized_callback)(const uint32_t* data, size_t len, void* ctx);
 
 extern "C" {
-    SPIRV_TOOLS_EXPORT Optimus* create_optimizer(spv_target_env target_env) {
-        spvtools::Optimizer* optimizer = new spvtools::Optimizer(target_env);
-
-        // auto print_msg_to_stderr = [](spv_message_level_t, const char*,
-        //                         const spv_position_t&, const char* m) {
-        //     fprintf(stderr, "error: %s\n", m);
-        // };
-
-        //optimizer->SetMessageConsumer(print_msg_to_stderr);
+    SPIRV_TOOLS_EXPORT Optimus* optimizer_create(spv_target_env target_env) {
+        auto* optimizer = new spvtools::Optimizer(target_env);
 
         return (Optimus*)optimizer;
     }
 
-    SPIRV_TOOLS_EXPORT void destroy_optimizer(Optimus* optimizer) {
+    SPIRV_TOOLS_EXPORT void optimizer_destroy(Optimus* optimizer) {
         delete (spvtools::Optimizer*)optimizer;
     }
 
-    SPIRV_TOOLS_EXPORT RunResult run_optimizer(
+    SPIRV_TOOLS_EXPORT RunResult optimizer_run(
         const Optimus* optimizer,
         const uint32_t* input_ptr,
         size_t input_size,
@@ -129,7 +122,7 @@ extern "C" {
         return RunResult::OptimizerSucceeded;
     }
 
-    SPIRV_TOOLS_EXPORT void register_pass(Optimus* optimizer, Passes pass) {
+    SPIRV_TOOLS_EXPORT void optimizer_register_pass(Optimus* optimizer, Passes pass) {
         #define PASTEB(a, b) a ## b
         #define PASTEA(a, b) PASTEB(a, b)
         #define PASS(name) \
@@ -202,23 +195,23 @@ extern "C" {
         }
     }
 
-    SPIRV_TOOLS_EXPORT void register_performance_passes(Optimus* optimizer) {
+    SPIRV_TOOLS_EXPORT void optimizer_register_performance_passes(Optimus* optimizer) {
         ((spvtools::Optimizer*)optimizer)->RegisterPerformancePasses();
     }
 
-    SPIRV_TOOLS_EXPORT void register_size_passes(Optimus* optimizer) {
+    SPIRV_TOOLS_EXPORT void optimizer_register_size_passes(Optimus* optimizer) {
         ((spvtools::Optimizer*)optimizer)->RegisterSizePasses();
     }
 
-    SPIRV_TOOLS_EXPORT void register_vulkan_to_webgpu_passes(Optimus* optimizer) {
+    SPIRV_TOOLS_EXPORT void optimizer_register_vulkan_to_webgpu_passes(Optimus* optimizer) {
         ((spvtools::Optimizer*)optimizer)->RegisterVulkanToWebGPUPasses();
     }
 
-    SPIRV_TOOLS_EXPORT void register_webgpu_to_vulkan_passes(Optimus* optimizer) {
+    SPIRV_TOOLS_EXPORT void optimizer_register_webgpu_to_vulkan_passes(Optimus* optimizer) {
         ((spvtools::Optimizer*)optimizer)->RegisterWebGPUToVulkanPasses();
     }
 
-    SPIRV_TOOLS_EXPORT void register_legalization_passes(Optimus* optimizer) {
+    SPIRV_TOOLS_EXPORT void optimizer_register_legalization_passes(Optimus* optimizer) {
         ((spvtools::Optimizer*)optimizer)->RegisterLegalizationPasses();
     }
 }

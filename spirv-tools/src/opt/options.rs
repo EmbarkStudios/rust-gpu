@@ -8,7 +8,7 @@ impl Options {
     #[inline]
     pub fn new() -> Self {
         Self {
-            inner: unsafe { opt::create_optimizer_options() },
+            inner: unsafe { opt::optimizer_options_create() },
         }
     }
 
@@ -34,6 +34,7 @@ impl Options {
 }
 
 impl Default for Options {
+    #[inline]
     fn default() -> Self {
         Self::new()
     }
@@ -42,6 +43,6 @@ impl Default for Options {
 impl Drop for Options {
     #[inline]
     fn drop(&mut self) {
-        unsafe { opt::destroy_optimizer_options(self.inner) }
+        unsafe { opt::optimizer_options_destroy(self.inner) }
     }
 }

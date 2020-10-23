@@ -8,11 +8,6 @@ pub struct OptimizerOptions {
     _unused: [u8; 0],
 }
 
-#[repr(C)]
-pub struct ValidatorOptions {
-    _unused: [u8; 0],
-}
-
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
 pub enum Passes {
@@ -517,10 +512,10 @@ pub enum RunResult {
 }
 
 extern "C" {
-    pub fn create_optimizer(env: crate::shared::TargetEnv) -> *mut Optimizer;
-    pub fn destroy_optimizer(opt: *mut Optimizer);
+    pub fn optimizer_create(env: crate::shared::TargetEnv) -> *mut Optimizer;
+    pub fn optimizer_destroy(opt: *mut Optimizer);
 
-    pub fn run_optimizer(
+    pub fn optimizer_run(
         opt: *const Optimizer,
         input_ptr: *const u32,
         input_size: usize,
@@ -533,11 +528,11 @@ extern "C" {
     /// options object. The object remains valid until it is passed into
     /// |spvOptimizerOptionsDestroy|.
     #[link_name = "spvOptimizerOptionsCreate"]
-    pub fn create_optimizer_options() -> *mut OptimizerOptions;
+    pub fn optimizer_options_create() -> *mut OptimizerOptions;
 
     /// Destroys the given optimizer options object.
     #[link_name = "spvOptimizerOptionsDestroy"]
-    pub fn destroy_optimizer_options(options: *mut OptimizerOptions);
+    pub fn optimizer_options_destroy(options: *mut OptimizerOptions);
 
     /// Records whether or not the optimizer should run the validator before
     /// optimizing.  If |val| is true, the validator will be run.
@@ -549,7 +544,7 @@ extern "C" {
     #[link_name = "spvOptimizerOptionsSetValidatorOptions"]
     pub fn optimizer_options_set_validator_options(
         options: *mut OptimizerOptions,
-        validator_opts: *mut ValidatorOptions,
+        validator_opts: *mut crate::val::ValidatorOptions,
     );
 
     /// Records the maximum possible value for the id bound.
@@ -568,27 +563,27 @@ extern "C" {
         preserve: bool,
     );
 
-    pub fn register_pass(opt: *mut Optimizer, which: Passes);
+    pub fn optimizer_register_pass(opt: *mut Optimizer, which: Passes);
 
     /// Registers passes that attempt to improve performance of generated code.
     /// This sequence of passes is subject to constant review and will change
     /// from time to time.
-    pub fn register_performance_passes(opt: *mut Optimizer);
+    pub fn optimizer_register_performance_passes(opt: *mut Optimizer);
 
     /// Registers passes that attempt to improve the size of generated code.
     /// This sequence of passes is subject to constant review and will change
     /// from time to time.
-    pub fn register_size_passes(opt: *mut Optimizer);
+    pub fn optimizer_register_size_passes(opt: *mut Optimizer);
 
     /// Registers passes that have been prescribed for converting from Vulkan to
     /// WebGPU. This sequence of passes is subject to constant review and will
     /// change from time to time.
-    pub fn register_vulkan_to_webgpu_passes(opt: *mut Optimizer);
+    pub fn optimizer_register_vulkan_to_webgpu_passes(opt: *mut Optimizer);
 
     /// Registers passes that have been prescribed for converting from WebGPU to
     /// Vulkan. This sequence of passes is subject to constant review and will
     /// change from time to time.
-    pub fn register_webgpu_to_vulkan_passes(opt: *mut Optimizer);
+    pub fn optimizer_register_webgpu_to_vulkan_passes(opt: *mut Optimizer);
 
     /// Registers passes that attempt to legalize the generated code.
     ///
@@ -598,7 +593,7 @@ extern "C" {
     ///
     /// This sequence of passes is subject to constant review and will change
     /// from time to time.
-    pub fn register_legalization_passes(opt: *mut Optimizer);
+    pub fn optimizer_register_legalization_passes(opt: *mut Optimizer);
 
 // Some passes take arguments, so we create those separately on a
 // case-by-case basis

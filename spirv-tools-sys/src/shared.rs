@@ -64,3 +64,15 @@ pub enum TargetEnv {
     /// Vulkan 1.2 latest revision.
     Vulkan_1_2,
 }
+
+#[cfg(feature = "tools")]
+#[repr(C)]
+pub struct Tool {
+    _unused: [u8; 0],
+}
+
+#[cfg(feature = "tools")]
+extern "C" {
+    pub fn tool_create(env: TargetEnv) -> *mut Tool;
+    pub fn tool_destroy(opt: *mut Tool);
+}
