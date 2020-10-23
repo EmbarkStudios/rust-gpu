@@ -110,6 +110,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             AtomicOrdering::NotAtomic => MemorySemantics::NONE,
             AtomicOrdering::Unordered => MemorySemantics::NONE,
             AtomicOrdering::Monotonic => MemorySemantics::NONE,
+            // Note: rustc currently has AtomicOrdering::Consume commented out, if it ever becomes
+            // uncommented, it should be MakeVisible | Acquire.
             AtomicOrdering::Acquire => MemorySemantics::MAKE_VISIBLE | MemorySemantics::ACQUIRE,
             AtomicOrdering::Release => MemorySemantics::MAKE_AVAILABLE | MemorySemantics::RELEASE,
             AtomicOrdering::AcquireRelease => {
