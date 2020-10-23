@@ -361,16 +361,19 @@ impl ExampleBase {
             let surface_formats = surface_loader
                 .get_physical_device_surface_formats(pdevice, surface)
                 .unwrap();
-            let surface_format = surface_formats
+            println!("{:#?}", surface_formats);
+            let acceptable_formats = {
+                [
+                    vk::Format::R8G8B8_SRGB,
+                    vk::Format::B8G8R8_SRGB,
+                    vk::Format::R8G8B8A8_SRGB,
+                    vk::Format::B8G8R8A8_SRGB,
+                    vk::Format::A8B8G8R8_SRGB_PACK32,
+                ]
+            };
+            let surface_format = *surface_formats
                 .iter()
-                .map(|sfmt| match sfmt.format {
-                    vk::Format::UNDEFINED => vk::SurfaceFormatKHR {
-                        format: vk::Format::B8G8R8_UNORM,
-                        color_space: sfmt.color_space,
-                    },
-                    _ => *sfmt,
-                })
-                .next()
+                .find(|sfmt| acceptable_formats.contains(&sfmt.format))
                 .expect("Unable to find suitable surface format.");
             let surface_capabilities = surface_loader
                 .get_physical_device_surface_capabilities(pdevice, surface)
