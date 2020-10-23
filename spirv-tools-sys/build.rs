@@ -242,9 +242,7 @@ fn main() {
         opt(&mut build);
     }
 
-    if build.get_compiler().is_like_msvc() {
-        build.flag("/std:c++11");
-    } else {
+    if !build.get_compiler().is_like_msvc() {
         build
             .flag("-std=c++11")
             .flag("-fno-exceptions")
