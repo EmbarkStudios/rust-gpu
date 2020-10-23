@@ -547,9 +547,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     simple_op! {fmul, f_mul}
     simple_op! {fmul_fast, f_mul} // fast=normal
     simple_op! {udiv, u_div}
-    simple_op! {exactudiv, u_div} // ignore
     simple_op! {sdiv, s_div}
-    simple_op! {exactsdiv, s_div} // ignore
     simple_op! {fdiv, f_div}
     simple_op! {fdiv_fast, f_div} // fast=normal
     simple_op! {urem, u_mod}
@@ -567,6 +565,18 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     simple_op! {unchecked_umul, i_mul} // already unchecked by default
     simple_uni_op! {neg, s_negate}
     simple_uni_op! {fneg, f_negate}
+
+    fn exactudiv(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
+        let result = self.udiv(lhs, rhs);
+        self.zombie(result.def, "exactudiv is not supported yet");
+        result
+    }
+
+    fn exactsdiv(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
+        let result = self.sdiv(lhs, rhs);
+        self.zombie(result.def, "exactsdiv is not supported yet");
+        result
+    }
 
     fn and(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
         assert_ty_eq!(self, lhs.ty, rhs.ty);
@@ -636,11 +646,20 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         rhs: Self::Value,
     ) -> (Self::Value, Self::Value) {
         let fals = self.constant_bool(false);
-        match oop {
+        let result = match oop {
             OverflowOp::Add => (self.add(lhs, rhs), fals),
             OverflowOp::Sub => (self.sub(lhs, rhs), fals),
             OverflowOp::Mul => (self.mul(lhs, rhs), fals),
-        }
+        };
+        self.zombie(
+            result.1.def,
+            match oop {
+                OverflowOp::Add => "checked add is not supported yet",
+                OverflowOp::Sub => "checked sub is not supported yet",
+                OverflowOp::Mul => "checked mul is not supported yet",
+            },
+        );
+        result
     }
 
     fn from_immediate(&mut self, val: Self::Value) -> Self::Value {
@@ -698,11 +717,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn dynamic_alloca(&mut self, ty: Self::Type, align: Align) -> Self::Value {
-        self.alloca(ty, align)
+        let result = self.alloca(ty, align);
+        self.err("dynamic alloca is not supported yet");
+        result
     }
 
     fn array_alloca(&mut self, _ty: Self::Type, _len: Self::Value, _align: Align) -> Self::Value {
-        self.fatal("TODO: array_alloca not supported yet")
+        self.fatal("array alloca not supported yet")
     }
 
     fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
@@ -727,8 +748,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn volatile_load(&mut self, ptr: Self::Value) -> Self::Value {
-        // TODO: Can we do something here?
-        self.load(ptr, Align::from_bytes(0).unwrap())
+        // TODO: Implement this
+        let result = self.load(ptr, Align::from_bytes(0).unwrap());
+        self.zombie(result.def, "volatile load is not supported yet");
+        result
     }
 
     fn atomic_load(&mut self, ptr: Self::Value, order: AtomicOrdering, _size: Size) -> Self::Value {
@@ -818,36 +841,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
 
         self
-        /*
-        let zero = self.const_usize(0);
-        let count = self.const_usize(count);
-        let start = dest.project_index(&mut self, zero).llval;
-        let end = dest.project_index(&mut self, count).llval;
-
-        let mut header_bx = self.build_sibling_block("repeat_loop_header");
-        let mut body_bx = self.build_sibling_block("repeat_loop_body");
-        let next_bx = self.build_sibling_block("repeat_loop_next");
-
-        self.br(header_bx.llbb());
-        let current = header_bx.phi(start.ty, &[start], &[self.llbb()]);
-
-        let keep_going = header_bx.icmp(IntPredicate::IntNE, current, end);
-        header_bx.cond_br(keep_going, body_bx.llbb(), next_bx.llbb());
-
-        let align = dest
-            .align
-            .restrict_for_offset(dest.layout.field(self.cx(), 0).size);
-        cg_elem.val.store(
-            &mut body_bx,
-            PlaceRef::new_sized_aligned(current, cg_elem.layout, align),
-        );
-
-        let next = body_bx.inbounds_gep(current, &[self.const_usize(1)]);
-        body_bx.br(header_bx.llbb());
-        header_bx.add_incoming_to_phi(current, next, body_bx.llbb());
-
-        next_bx
-        */
     }
 
     fn range_metadata(&mut self, _load: Self::Value, _range: Range<u128>) {
@@ -879,8 +872,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         val: Self::Value,
         ptr: Self::Value,
         align: Align,
-        _flags: MemFlags,
+        flags: MemFlags,
     ) -> Self::Value {
+        if flags != MemFlags::empty() {
+            self.err(&format!(
+                "store_with_flags is not supported yet: {:?}",
+                flags
+            ));
+        }
         self.store(val, ptr, align)
     }
 
@@ -1369,8 +1368,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         src: Self::Value,
         _src_align: Align,
         size: Self::Value,
-        _flags: MemFlags,
+        flags: MemFlags,
     ) {
+        if flags != MemFlags::empty() {
+            self.err(&format!(
+                "memcpy with mem flags is not supported yet: {:?}",
+                flags
+            ));
+        }
         let const_size = self.builder.lookup_const_u64(size);
         if const_size == Some(0) {
             // Nothing to do!
@@ -1417,8 +1422,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         fill_byte: Self::Value,
         size: Self::Value,
         _align: Align,
-        _flags: MemFlags,
+        flags: MemFlags,
     ) {
+        if flags != MemFlags::empty() {
+            self.err(&format!(
+                "memset with mem flags is not supported yet: {:?}",
+                flags
+            ));
+        }
         let elem_ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee, .. } => pointee,
             _ => self.fatal(&format!(
