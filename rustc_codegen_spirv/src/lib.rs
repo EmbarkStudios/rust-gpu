@@ -1,12 +1,16 @@
 #![feature(rustc_private)]
 #![feature(once_cell)]
 #![deny(clippy::unimplemented, clippy::ok_expect, clippy::mem_forget)]
+// Our standard Clippy lints that we use in Embark projects, we opt out of a few that are not appropriate for the specific crate (yet)
 #![warn(
     clippy::all,
     clippy::doc_markdown,
     clippy::dbg_macro,
+    //clippy::todo,
     clippy::empty_enum,
+    //clippy::enum_glob_use,
     clippy::pub_enum_variant_names,
+    clippy::mem_forget,
     clippy::use_self,
     clippy::filter_map_next,
     clippy::needless_continue,
@@ -15,6 +19,7 @@
     clippy::if_let_mutex,
     clippy::mismatched_target_os,
     clippy::await_holding_lock,
+    //clippy::match_on_vec_items,
     clippy::imprecise_flops,
     clippy::suboptimal_flops,
     clippy::lossy_float_literal,
