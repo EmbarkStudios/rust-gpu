@@ -87,23 +87,35 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 
             sym::saturating_add => {
                 assert_eq!(arg_tys[0], arg_tys[1]);
-                match &arg_tys[0].kind() {
+                let result = match &arg_tys[0].kind() {
                     TyKind::Int(_) | TyKind::Uint(_) => {
                         self.add(args[0].immediate(), args[1].immediate())
                     }
                     TyKind::Float(_) => self.fadd(args[0].immediate(), args[1].immediate()),
-                    other => self.fatal(&format!("Unimplemented intrinsic type: {:#?}", other)),
-                }
+                    other => self.fatal(&format!(
+                        "Unimplemented saturating_add intrinsic type: {:#?}",
+                        other
+                    )),
+                };
+                // TODO: Implement this
+                self.zombie(result.def, "saturating_add is not implemented yet");
+                result
             }
             sym::saturating_sub => {
                 assert_eq!(arg_tys[0], arg_tys[1]);
-                match &arg_tys[0].kind() {
+                let result = match &arg_tys[0].kind() {
                     TyKind::Int(_) | TyKind::Uint(_) => {
                         self.sub(args[0].immediate(), args[1].immediate())
                     }
                     TyKind::Float(_) => self.fsub(args[0].immediate(), args[1].immediate()),
-                    other => self.fatal(&format!("Unimplemented intrinsic type: {:#?}", other)),
-                }
+                    other => self.fatal(&format!(
+                        "Unimplemented saturating_sub intrinsic type: {:#?}",
+                        other
+                    )),
+                };
+                // TODO: Implement this
+                self.zombie(result.def, "saturating_sub is not implemented yet");
+                result
             }
 
             // TODO: Configure these to be ocl vs. gl ext instructions, etc.
