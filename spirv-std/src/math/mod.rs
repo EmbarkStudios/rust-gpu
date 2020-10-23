@@ -1,4 +1,4 @@
-//! This math library is heavily borrowed from https://github.com/bitshifter/glam-rs
+//! This math library is heavily borrowed from [glam](https://github.com/bitshifter/glam-rs)
 //! In the future we hope to be able to use it directly!
 
 pub mod mat2;
