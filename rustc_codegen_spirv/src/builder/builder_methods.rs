@@ -547,7 +547,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     simple_op! {fmul, f_mul}
     simple_op! {fmul_fast, f_mul} // fast=normal
     simple_op! {udiv, u_div}
+    // Note: exactudiv is UB when there's a remainder, so it's valid to implement as a normal div.
+    // TODO: Can we take advantage of the UB and emit something else?
+    simple_op! {exactudiv, u_div}
     simple_op! {sdiv, s_div}
+    // Same note and TODO as exactudiv
+    simple_op! {exactsdiv, s_div}
     simple_op! {fdiv, f_div}
     simple_op! {fdiv_fast, f_div} // fast=normal
     simple_op! {urem, u_mod}
@@ -565,18 +570,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     simple_op! {unchecked_umul, i_mul} // already unchecked by default
     simple_uni_op! {neg, s_negate}
     simple_uni_op! {fneg, f_negate}
-
-    fn exactudiv(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
-        let result = self.udiv(lhs, rhs);
-        self.zombie(result.def, "exactudiv is not supported yet");
-        result
-    }
-
-    fn exactsdiv(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
-        let result = self.sdiv(lhs, rhs);
-        self.zombie(result.def, "exactsdiv is not supported yet");
-        result
-    }
 
     fn and(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
         assert_ty_eq!(self, lhs.ty, rhs.ty);
