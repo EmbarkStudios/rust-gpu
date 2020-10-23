@@ -361,7 +361,6 @@ impl ExampleBase {
             let surface_formats = surface_loader
                 .get_physical_device_surface_formats(pdevice, surface)
                 .unwrap();
-            println!("{:#?}", surface_formats);
             let acceptable_formats = {
                 [
                     vk::Format::R8G8B8_SRGB,

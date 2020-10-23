@@ -10,7 +10,6 @@ use glam::{const_vec3, Mat4, Vec2, Vec3, Vec4};
 use spirv_std::{Input, MathExt, Output};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
-const LUMINANCE: f32 = 1.0;
 const MIE_COEFFICIENT: f32 = 0.005;
 const MIE_DIRECTIONAL_G: f32 = 0.8;
 const MIE_K_COEFFICIENT: Vec3 = const_vec3!([0.686, 0.678, 0.666]);
@@ -24,7 +23,6 @@ const REFRACTIVE_INDEX: f32 = 1.0003;
 const SUN_ANGULAR_DIAMETER_DEGREES: f32 = 0.0093333;
 const SUN_INTENSITY_FACTOR: f32 = 1000.0;
 const SUN_INTENSITY_FALLOFF_STEEPNESS: f32 = 1.5;
-const TONEMAP_WEIGHTING: Vec3 = const_vec3!([9.50; 3]);
 const TURBIDITY: f32 = 2.0;
 
 // TODO: add this to glam? Rust std has it on f32/f64
@@ -90,15 +88,17 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
         )
 }
 
-fn uncharted2_tonemap(w: Vec3) -> Vec3 {
-    const A: Vec3 = const_vec3!([0.15; 3]); // Shoulder strength
-    const B: Vec3 = const_vec3!([0.50; 3]); // Linear strength
-    const C: Vec3 = const_vec3!([0.10; 3]); // Linear angle
-    const D: Vec3 = const_vec3!([0.20; 3]); // Toe strength
-    const E: Vec3 = const_vec3!([0.02; 3]); // Toe numerator
-    const F: Vec3 = const_vec3!([0.30; 3]); // Toe denominator
+fn tonemap(col: Vec3) -> Vec3 {
+    // see https://www.desmos.com/calculator/0eo9pzo1at
+    const A: f32 = 2.35;
+    const B: f32 = 2.88266653353;
+    const C: f32 = 789.74593178;
+    const D: f32 = 0.935;
 
-    ((w * (A * w + C * B) + D * E) / (w * (A * w + B) + D * F)) - E / F
+    let z = pow(col, A);
+    let tonemapped = z / (pow(z, D) * B + Vec3::splat(C));
+
+    tonemapped
 }
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
@@ -149,16 +149,11 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     );
     let mut l0 = 0.1 * fex;
     l0 += sun_e * 19000.0 * fex * sundisk;
-    let mut tex_color = lin + l0;
-    tex_color *= Vec3::splat(0.04);
-    tex_color += Vec3::new(0.0, 0.001, 0.0025) * 0.3;
+    let tex_color = lin + l0;
 
     // Tonemapping
-    let white_scale = 1.0 / uncharted2_tonemap(TONEMAP_WEIGHTING);
-    let curr = uncharted2_tonemap(((2.0 / LUMINANCE.pow(4.0)).log2()) * tex_color);
-    let color = curr * white_scale;
-
-    pow(color, 1.0 / (1.2 + (1.2 * sunfade)))
+    let color = tex_color.min(Vec3::splat(1024.0));
+    tonemap(color)
 }
 
 pub fn fs(screen_pos: Vec2) -> Vec4 {
