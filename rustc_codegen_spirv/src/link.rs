@@ -124,37 +124,54 @@ fn link_exe(
         codegen_results,
     );
 
-    do_link(sess, &objects, &rlibs, out_filename, legalize);
+    let spv_binary = do_link(sess, &objects, &rlibs, out_filename, legalize);
 
     if env::var("SPIRV_OPT").is_ok() {
         let _timer = sess.timer("link_spirv_opt");
-        do_spirv_opt(sess, out_filename);
+        do_spirv_opt(sess, &spv_binary, out_filename);
     }
+
     if env::var("NO_SPIRV_VAL").is_err() {
         do_spirv_val(sess, out_filename);
     }
 }
 
-fn do_spirv_opt(sess: &Session, filename: &Path) {
-    let tmp = filename.with_extension("opt.spv");
-    let output = output_spirv_tool(
-        sess,
-        "spirv-opt",
-        |cmd| {
-            cmd.args(&["-Os", "--eliminate-dead-const", "--strip-debug"])
-                .arg(&filename)
-                .arg("-o")
-                .arg(&tmp)
+fn do_spirv_opt(sess: &Session, spv_binary: &[u32], filename: &Path) {
+    use spirv_tools::{opt, shared};
+
+    // This is the same default target environment that spirv-opt uses
+    let mut optimizer = opt::Optimizer::new(shared::TargetEnv::Universal_1_5);
+
+    optimizer
+        .register_size_passes()
+        .register_pass(opt::Passes::EliminateDeadConstant)
+        .register_pass(opt::Passes::StripDebugInfo);
+
+    let mut write_result = None;
+    let mut opts = opt::Options::new();
+    opts.run_validator(false);
+
+    let result = optimizer.optimize(
+        spv_binary,
+        &mut |data: &[u32]| {
+            write_result = Some(std::fs::write(filename, crate::slice_u32_to_u8(&data)));
         },
-        |_| {
-            let mut err = sess.struct_warn("spirv-opt failed, leaving as unoptimized");
-            err.note(&format!("module {:?}", filename));
-            err
-        },
+        Some(&opts),
     );
 
-    if output.is_some() {
-        std::fs::rename(tmp, filename).unwrap();
+    match result {
+        Err(opt::RunResult::OptimizerFailed) => {
+            let mut err = sess.struct_warn("spirv-opt failed, leaving as unoptimized");
+            err.note(&format!("module {:?}", filename));
+        }
+        Ok(_) => {
+            write_result.unwrap().unwrap();
+        }
+        _ => {
+            let mut err =
+                sess.struct_warn("invalid arguments supplied to spirv-opt, leaving as unoptimized");
+            err.note(&format!("module {:?}", filename));
+        }
     }
 }
 
@@ -374,7 +391,7 @@ fn do_link(
     rlibs: &[PathBuf],
     out_filename: &Path,
     legalize: bool,
-) {
+) -> Vec<u32> {
     let load_modules_timer = sess.timer("link_load_modules");
     let mut modules = Vec::new();
     // `objects` are the plain obj files we need to link - usually produced by the final crate.
@@ -446,9 +463,10 @@ fn do_link(
 
     // And finally write out the linked binary.
     use rspirv::binary::Assemble;
+    let spv_binary = assembled.assemble();
     File::create(out_filename)
         .unwrap()
-        .write_all(crate::slice_u32_to_u8(&assembled.assemble()))
+        .write_all(crate::slice_u32_to_u8(&spv_binary))
         .unwrap();
     drop(save_modules_timer);
 
@@ -457,6 +475,8 @@ fn do_link(
         rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
         loader.module()
     }
+
+    spv_binary
 }
 
 /// As of right now, this is essentially a no-op, just plumbing through all the files.
