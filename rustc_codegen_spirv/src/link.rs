@@ -137,7 +137,7 @@ fn link_exe(
 
 fn do_spirv_opt(sess: &Session, filename: &Path) {
     let tmp = filename.with_extension("opt.spv");
-    let output = output_spriv_tool(
+    let output = output_spirv_tool(
         sess,
         "spirv-opt",
         |cmd| {
@@ -159,7 +159,7 @@ fn do_spirv_opt(sess: &Session, filename: &Path) {
 }
 
 fn do_spirv_val(sess: &Session, filename: &Path) {
-    output_spriv_tool(
+    output_spirv_tool(
         sess,
         "spirv-val",
         |cmd| cmd.arg(&filename),
@@ -174,7 +174,7 @@ fn do_spirv_val(sess: &Session, filename: &Path) {
 /// Runs a given SPIR-V `tool`, configured with `builder`, erroring if not found
 /// or returns a non-zero exit code. All errors will be emitted using the
 /// diagnostics builder provided by `diagnostics.`
-fn output_spriv_tool<'a, F, D>(
+fn output_spirv_tool<'a, F, D>(
     sess: &Session,
     tool: &str,
     builder: F,
@@ -191,7 +191,7 @@ where
         Ok(output) => output,
         Err(_) => {
             let mut err =
-                sess.struct_err(&format!("Couldn't find `{}` SPRI-V tool in PATH.", tool));
+                sess.struct_err(&format!("Couldn't find `{}` SPIR-V tool in PATH.", tool));
             err.note(
                 "Please ensure that you have `spirv-tools` installed on \
                       your system and available in your PATH.",
