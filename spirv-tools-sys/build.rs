@@ -242,11 +242,45 @@ fn main() {
         opt(&mut build);
     }
 
-    if !build.get_compiler().is_like_msvc() {
+    let compiler = build.get_compiler();
+
+    if compiler.is_like_gnu() {
         build
+            .flag("-Wall")
+            .flag("-Wextra")
+            .flag("-Wnon-virtual-dtor")
+            .flag("-Wno-missing-field-initializers")
+            .flag("-Werror")
             .flag("-std=c++11")
             .flag("-fno-exceptions")
-            .flag("-fno-rtti");
+            .flag("-fno-rtti")
+            .flag("-Wno-long-long")
+            .flag("-Wshadow")
+            .flag("-Wundef")
+            .flag("-Wconversion")
+            .flag("-Wno-sign-conversion")
+            .flag("-std=gnu++11")
+            .flag("-Wno-error=switch");
+    } else if compiler.is_like_clang() {
+        build
+            .flag("-Wextra-semi")
+            .flag("-Wall")
+            .flag("-Wextra")
+            .flag("-Wnon-virtual-dtor")
+            .flag("-Wno-missing-field-initializers")
+            .flag("-Wno-self-assign")
+            .flag("-Werror")
+            .flag("-std=c++11")
+            .flag("-fno-exceptions")
+            .flag("-fno-rtti")
+            .flag("-Wno-long-long")
+            .flag("-Wshadow")
+            .flag("-Wundef")
+            .flag("-Wconversion")
+            .flag("-Wno-sign-conversion")
+            .flag("-ftemplate-depth=1024")
+            .flag("-std=gnu++11")
+            .flag("-Wno-error=switch");
     }
 
     build.cpp(true);
