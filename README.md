@@ -40,28 +40,28 @@ See [source](examples/example-shader/src/lib.rs) for full details.
 
 ## Background
 
-Historically in games GPU programming has been done through writing either HLSL, or to a lesser extent GLSL. These are simple programming languages that have evolved along with rendering APIs over the years. However, as game engines have evolved, these languages have failed to provide mechanisms for dealing with large codebases, and have generally stayed behind the curve compared to other programming languages.
+Historically in games, GPU programming has been done through writing either HLSL or to a lesser extent GLSL. These are simple programming languages that have evolved along with rendering APIs over the years. However, as game engines have evolved, these languages have failed to provide mechanisms for dealing with large codebases, and have generally stayed behind the curve compared to other programming languages.
 
-In part this is because it's a niche language for a niche market, and in part this has been because the industry as a whole has sunk quite a lot of time and effort into the status quo. While over-all better alternatives to both languages exist, none of them are in a place to replace HLSL or GLSL. Either because they are vendor locked, or because they don't support the traditional graphics pipeline. Examples of this include CUDA and OpenCL. And while attempts have been made to create language in this space, none of them have gained any notable traction in the gamedev community.
+In part, this is because it's a niche language for a niche market, and in part, this has been because the industry as a whole has sunk quite a lot of time and effort into the status quo. While over-all better alternatives to both languages exist, none of them are in a place to replace HLSL or GLSL. Either because they are vendor locked, or because they don't support the traditional graphics pipeline. Examples of this include CUDA and OpenCL. And while attempts have been made to create language in this space, none of them have gained any notable traction in the gamedev community.
 
-Our hope with this project is that we push the industry forward by bringing an existing, low-level, safe, and high performance language to the GPU; namely [Rust](https://rust-lang.org). And with it come some additional benefits that can't be overlooked: a package/module system that's one of the industry's best, built in safety against race-conditions or out of bounds memory access, a wide range of tools and utilities to improve programmer workflows, and many others!
+Our hope with this project is that we push the industry forward by bringing an existing, low-level, safe, and high-performance language to the GPU; namely [Rust](https://rust-lang.org). And with it come some additional benefits that can't be overlooked: a package/module system that's one of the industry's best, built-in safety against race-conditions or out of bounds memory access, a wide range of tools and utilities to improve programmer workflows, and many others!
 
 ### Why Embark?
 
-At Embark, we've been building our own new game engine from the ground up in Rust. We have previous experience in-house developing the [RLSL](https://github.com/MaikKlein/rlsl) prototype, and we have a team of excellent rendering engineers that are familiar with the problems in current shading languages both from games, game engines and other industries. So, we believe we are uniquely positioned to attempt solving this problem. 
+At Embark, we've been building our own new game engine from the ground up in Rust. We have previous experience in-house developing the [RLSL](https://github.com/MaikKlein/rlsl) prototype, and we have a team of excellent rendering engineers that are familiar with the problems in current shading languages both from games, game engines, and other industries. So, we believe we are uniquely positioned to attempt to solve this problem. 
 
-We want to streamline our own internal development with a single great language, build an open source graphics ecosystem and community, facilitate code-sharing between GPU and CPU, and most importantly: to enable our (future) users, and fellow developers, to more rapidly build great looking and engaging experiences.
+We want to streamline our own internal development with a single great language, build an open-source graphics ecosystem and community, facilitate code-sharing between GPU and CPU, and most importantly: to enable our (future) users, and fellow developers, to more rapidly build great looking and engaging experiences.
 
-If we do this project right, one wouldn't necessarily need an entire team of rendering engineers to build a good looking game, instead one would simply use a few of the existing open-source crates that provide the graphical effects needed to create the experience you're after. Instead of sharing and copy'n'pasting snippets of TAA code on forum posts, one could simply find and use the right crates from [crates.io](https://crates.io).
+If we do this project right, one wouldn't necessarily need an entire team of rendering engineers to build a good-looking game, instead one would simply use a few of the existing open-source crates that provide the graphical effects needed to create the experience you're after. Instead of sharing and copy 'n' pasting snippets of TAA code on forum posts, one could simply find and use the right crates from [crates.io](https://crates.io).
 
 ## Project scope
 
-The scope of this overall project is quite broad, but is in multiple stages
+The scope of this overall project is quite broad but is in multiple stages
 
 - `rustc` compiler backend to generate [SPIR-V], plugging in via `-Z codegen-backend`. 
   - This is the same mechanism that [rustc_codegen_cranelift](https://github.com/bjorn3/rustc_codegen_cranelift) and [rustc_codegen_gcc](https://github.com/antoyo/rustc_codegen_gcc) use.
-  - Currently only [SPIR-V] support is planned, [Vulkan](https://en.wikipedia.org/wiki/Vulkan_(API))'s open compiler target
-  - Possible a future version could suppport [DXIL](https://github.com/microsoft/DirectXShaderCompiler/blob/master/docs/DXIL.rst) (the target for DirectX) or [WGSL](https://github.com/gpuweb/gpuweb/tree/main/wgsl) (the WebGPU shading language that's bijective with SPIR-V)
+  - Currently, only [SPIR-V] support is planned, [Vulkan](https://en.wikipedia.org/wiki/Vulkan_(API))'s open compiler target
+  - Possible a future version could support [DXIL](https://github.com/microsoft/DirectXShaderCompiler/blob/master/docs/DXIL.rst) (the target for DirectX) or [WGSL](https://github.com/gpuweb/gpuweb/tree/main/wgsl) (the WebGPU shading language that's bijective with SPIR-V)
 - Focus on Vulkan graphics shaders first, then after Vulkan compute shaders
 - [Cargo](https://github.com/rust-lang/cargo/) and [crates.io](https://crates.io) support to develop and publish SPIR-V crates
 - High-level render graph to take advantage of this, make it easy for users to develop and use rendering effects.
