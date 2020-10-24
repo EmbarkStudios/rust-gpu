@@ -200,8 +200,8 @@ pub struct ExampleBase {
 }
 
 impl ExampleBase {
-    pub fn render_loop<T, F: Fn(&Self) + 'static>(
-        self,
+    pub fn render_loop<T, F: Fn(&mut Self) + 'static>(
+        mut self,
         events_loop: winit::event_loop::EventLoop<T>,
         f: F,
     ) -> ! {
@@ -209,7 +209,7 @@ impl ExampleBase {
         use winit::event_loop::*;
         events_loop.run(move |event, _window_target, control_flow| match event {
             Event::RedrawEventsCleared { .. } => {
-                f(&self);
+                f(&mut self);
             }
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::KeyboardInput { input, .. } => {
@@ -224,6 +224,243 @@ impl ExampleBase {
             },
             _ => *control_flow = ControlFlow::Wait,
         });
+    }
+
+    /// Swap chain needs to be recreated every time the window is resized.
+    /// The implementation is based on the Vulkan tutorial of swap chain recreation:
+    /// - https://vulkan-tutorial.com/Drawing_a_triangle/Swap_chain_recreation
+    pub fn recreate_swap_chain(&mut self) -> () {
+        unsafe {
+            self.device.device_wait_idle().unwrap();
+
+            let surface_capabilities = self
+                .surface_loader
+                .get_physical_device_surface_capabilities(self.pdevice, self.surface)
+                .unwrap();
+            let mut desired_image_count = surface_capabilities.min_image_count + 1;
+            if surface_capabilities.max_image_count > 0
+                && desired_image_count > surface_capabilities.max_image_count
+            {
+                desired_image_count = surface_capabilities.max_image_count;
+            }
+
+            self.surface_resolution = match surface_capabilities.current_extent.width {
+                std::u32::MAX => vk::Extent2D {
+                    width: self.window.outer_size().width,
+                    height: self.window.outer_size().height,
+                },
+                _ => surface_capabilities.current_extent,
+            };
+            let pre_transform = if surface_capabilities
+                .supported_transforms
+                .contains(vk::SurfaceTransformFlagsKHR::IDENTITY)
+            {
+                vk::SurfaceTransformFlagsKHR::IDENTITY
+            } else {
+                surface_capabilities.current_transform
+            };
+            let present_modes = self
+                .surface_loader
+                .get_physical_device_surface_present_modes(self.pdevice, self.surface)
+                .unwrap();
+            let present_mode = present_modes
+                .iter()
+                .cloned()
+                .find(|&mode| mode == vk::PresentModeKHR::MAILBOX)
+                .unwrap_or(vk::PresentModeKHR::FIFO);
+            self.swapchain_loader = Swapchain::new(&self.instance, &self.device);
+
+            let swapchain_create_info = vk::SwapchainCreateInfoKHR::builder()
+                .surface(self.surface)
+                .min_image_count(desired_image_count)
+                .image_color_space(self.surface_format.color_space)
+                .image_format(self.surface_format.format)
+                .image_extent(self.surface_resolution)
+                .image_usage(vk::ImageUsageFlags::COLOR_ATTACHMENT)
+                .image_sharing_mode(vk::SharingMode::EXCLUSIVE)
+                .pre_transform(pre_transform)
+                .composite_alpha(vk::CompositeAlphaFlagsKHR::OPAQUE)
+                .present_mode(present_mode)
+                .clipped(true)
+                .image_array_layers(1);
+
+            self.swapchain = self
+                .swapchain_loader
+                .create_swapchain(&swapchain_create_info, None)
+                .unwrap();
+
+            let pool_create_info = vk::CommandPoolCreateInfo::builder()
+                .flags(vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER)
+                .queue_family_index(self.queue_family_index);
+
+            self.pool = self
+                .device
+                .create_command_pool(&pool_create_info, None)
+                .unwrap();
+
+            let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
+                .command_buffer_count(2)
+                .command_pool(self.pool)
+                .level(vk::CommandBufferLevel::PRIMARY);
+
+            let command_buffers = self
+                .device
+                .allocate_command_buffers(&command_buffer_allocate_info)
+                .unwrap();
+            self.setup_command_buffer = command_buffers[0];
+            self.draw_command_buffer = command_buffers[1];
+
+            self.present_images = self
+                .swapchain_loader
+                .get_swapchain_images(self.swapchain)
+                .unwrap();
+            self.present_image_views = self
+                .present_images
+                .iter()
+                .map(|&image| {
+                    let create_view_info = vk::ImageViewCreateInfo::builder()
+                        .view_type(vk::ImageViewType::TYPE_2D)
+                        .format(self.surface_format.format)
+                        .components(vk::ComponentMapping {
+                            r: vk::ComponentSwizzle::R,
+                            g: vk::ComponentSwizzle::G,
+                            b: vk::ComponentSwizzle::B,
+                            a: vk::ComponentSwizzle::A,
+                        })
+                        .subresource_range(vk::ImageSubresourceRange {
+                            aspect_mask: vk::ImageAspectFlags::COLOR,
+                            base_mip_level: 0,
+                            level_count: 1,
+                            base_array_layer: 0,
+                            layer_count: 1,
+                        })
+                        .image(image);
+                    self.device
+                        .create_image_view(&create_view_info, None)
+                        .unwrap()
+                })
+                .collect();
+            self.device_memory_properties = self
+                .instance
+                .get_physical_device_memory_properties(self.pdevice);
+            let depth_image_create_info = vk::ImageCreateInfo::builder()
+                .image_type(vk::ImageType::TYPE_2D)
+                .format(vk::Format::D16_UNORM)
+                .extent(vk::Extent3D {
+                    width: self.surface_resolution.width,
+                    height: self.surface_resolution.height,
+                    depth: 1,
+                })
+                .mip_levels(1)
+                .array_layers(1)
+                .samples(vk::SampleCountFlags::TYPE_1)
+                .tiling(vk::ImageTiling::OPTIMAL)
+                .usage(vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT)
+                .sharing_mode(vk::SharingMode::EXCLUSIVE);
+
+            self.depth_image = self
+                .device
+                .create_image(&depth_image_create_info, None)
+                .unwrap();
+            let depth_image_memory_req =
+                self.device.get_image_memory_requirements(self.depth_image);
+            let depth_image_memory_index = find_memorytype_index(
+                &depth_image_memory_req,
+                &self.device_memory_properties,
+                vk::MemoryPropertyFlags::DEVICE_LOCAL,
+            )
+            .expect("Unable to find suitable memory index for depth image.");
+
+            let depth_image_allocate_info = vk::MemoryAllocateInfo::builder()
+                .allocation_size(depth_image_memory_req.size)
+                .memory_type_index(depth_image_memory_index);
+
+            self.depth_image_memory = self
+                .device
+                .allocate_memory(&depth_image_allocate_info, None)
+                .unwrap();
+
+            self.device
+                .bind_image_memory(self.depth_image, self.depth_image_memory, 0)
+                .expect("Unable to bind depth image memory");
+
+            let fence_create_info =
+                vk::FenceCreateInfo::builder().flags(vk::FenceCreateFlags::SIGNALED);
+
+            self.draw_commands_reuse_fence = self
+                .device
+                .create_fence(&fence_create_info, None)
+                .expect("Create fence failed.");
+            self.setup_commands_reuse_fence = self
+                .device
+                .create_fence(&fence_create_info, None)
+                .expect("Create fence failed.");
+
+            record_submit_commandbuffer(
+                &self.device,
+                self.setup_command_buffer,
+                self.setup_commands_reuse_fence,
+                self.present_queue,
+                &[],
+                &[],
+                &[],
+                |device, setup_command_buffer| {
+                    let layout_transition_barriers = vk::ImageMemoryBarrier::builder()
+                        .image(self.depth_image)
+                        .dst_access_mask(
+                            vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ
+                                | vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE,
+                        )
+                        .new_layout(vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                        .old_layout(vk::ImageLayout::UNDEFINED)
+                        .subresource_range(
+                            vk::ImageSubresourceRange::builder()
+                                .aspect_mask(vk::ImageAspectFlags::DEPTH)
+                                .layer_count(1)
+                                .level_count(1)
+                                .build(),
+                        );
+
+                    device.cmd_pipeline_barrier(
+                        setup_command_buffer,
+                        vk::PipelineStageFlags::BOTTOM_OF_PIPE,
+                        vk::PipelineStageFlags::LATE_FRAGMENT_TESTS,
+                        vk::DependencyFlags::empty(),
+                        &[],
+                        &[],
+                        &[layout_transition_barriers.build()],
+                    );
+                },
+            );
+
+            let depth_image_view_info = vk::ImageViewCreateInfo::builder()
+                .subresource_range(
+                    vk::ImageSubresourceRange::builder()
+                        .aspect_mask(vk::ImageAspectFlags::DEPTH)
+                        .level_count(1)
+                        .layer_count(1)
+                        .build(),
+                )
+                .image(self.depth_image)
+                .format(depth_image_create_info.format)
+                .view_type(vk::ImageViewType::TYPE_2D);
+
+            self.depth_image_view = self
+                .device
+                .create_image_view(&depth_image_view_info, None)
+                .unwrap();
+
+            let semaphore_create_info = vk::SemaphoreCreateInfo::default();
+
+            self.present_complete_semaphore = self
+                .device
+                .create_semaphore(&semaphore_create_info, None)
+                .unwrap();
+            self.rendering_complete_semaphore = self
+                .device
+                .create_semaphore(&semaphore_create_info, None)
+                .unwrap();
+        }
     }
 
     pub fn new(
@@ -1004,15 +1241,19 @@ fn main() {
         let graphic_pipeline = graphics_pipelines[0];
 
         base.render_loop(events_loop, move |base| {
-            let (present_index, _) = base
-                .swapchain_loader
-                .acquire_next_image(
-                    base.swapchain,
-                    std::u64::MAX,
-                    base.present_complete_semaphore,
-                    vk::Fence::null(),
-                )
-                .unwrap();
+            let (present_index, _) = match base.swapchain_loader.acquire_next_image(
+                base.swapchain,
+                std::u64::MAX,
+                base.present_complete_semaphore,
+                vk::Fence::null(),
+            ) {
+                Ok(res) => res,
+                Err(vk::Result::ERROR_OUT_OF_DATE_KHR) | Err(vk::Result::SUBOPTIMAL_KHR) => {
+                    base.recreate_swap_chain();
+                    return;
+                }
+                Err(err) => panic!("Unkown error: {:?}", err),
+            };
             let clear_values = [
                 vk::ClearValue {
                     color: vk::ClearColorValue {
@@ -1091,9 +1332,17 @@ fn main() {
                 .swapchains(&swapchains)
                 .image_indices(&image_indices);
 
-            base.swapchain_loader
+            match base
+                .swapchain_loader
                 .queue_present(base.present_queue, &present_info)
-                .unwrap();
+            {
+                Ok(res) => res,
+                Err(vk::Result::ERROR_OUT_OF_DATE_KHR) | Err(vk::Result::SUBOPTIMAL_KHR) => {
+                    base.recreate_swap_chain();
+                    return;
+                }
+                Err(err) => panic!("Unkown error: {:?}", err),
+            };
         });
     }
 }
