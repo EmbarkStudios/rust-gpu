@@ -248,7 +248,7 @@ fn main() {
     {
         "linux" => "SPIRV_LINUX",
         "windows" => "SPIRV_WINDOWS",
-        "darwin" => "SPIRV_MAC",
+        "macos" => "SPIRV_MAC",
         android if android.starts_with("android") => "SPIRV_ANDROID",
         "freebsd" => "SPIRV_FREEBSD",
         other => panic!("unsupported target os '{}'", other),
