@@ -38,38 +38,38 @@ impl Vec2 {
 
     /// Creates a new `Vec2`.
     #[inline]
-    pub fn new(x: f32, y: f32) -> Vec2 {
-        Vec2(x, y)
+    pub fn new(x: f32, y: f32) -> Self {
+        Self(x, y)
     }
 
     /// Creates a `Vec2` with all elements set to `0.0`.
     #[inline]
-    pub fn zero() -> Vec2 {
+    pub fn zero() -> Self {
         Self::splat(0.0)
     }
 
     /// Creates a `Vec2` with all elements set to `1.0`.
     #[inline]
-    pub fn one() -> Vec2 {
+    pub fn one() -> Self {
         Self::splat(1.0)
     }
 
     /// Creates a `Vec2` with values `[x: 1.0, y: 0.0]`.
     #[inline]
-    pub fn unit_x() -> Vec2 {
+    pub fn unit_x() -> Self {
         Self::new(1.0, 0.0)
     }
 
     /// Creates a `Vec2` with values `[x: 0.0, y: 1.0]`.
     #[inline]
-    pub fn unit_y() -> Vec2 {
+    pub fn unit_y() -> Self {
         Self::new(0.0, 1.0)
     }
 
     /// Creates a `Vec2` with all elements set to `v`.
     #[inline]
-    pub fn splat(v: f32) -> Vec2 {
-        Vec2(v, v)
+    pub fn splat(v: f32) -> Self {
+        Self(v, v)
     }
 
     /// Creates a `Vec3` from `self` and the given `z` value.
@@ -116,7 +116,7 @@ impl Vec2 {
 
     /// Computes the dot product of `self` and `other`.
     #[inline]
-    pub fn dot(self, other: Vec2) -> f32 {
+    pub fn dot(self, other: Self) -> f32 {
         (self.0 * other.0) + (self.1 * other.1)
     }
 
@@ -153,7 +153,7 @@ impl Vec2 {
     ///
     /// For valid results, `self` must _not_ be of length zero.
     #[inline]
-    pub fn normalize(self) -> Vec2 {
+    pub fn normalize(self) -> Self {
         self * self.length_recip()
     }
 
@@ -163,8 +163,8 @@ impl Vec2 {
     /// `[x: min(x1, x2), y: min(y1, y2)]`,
     /// taking the minimum of each element individually.
     #[inline]
-    pub fn min(self, other: Vec2) -> Vec2 {
-        Vec2(self.0.min(other.0), self.1.min(other.1))
+    pub fn min(self, other: Self) -> Self {
+        Self(self.0.min(other.0), self.1.min(other.1))
     }
 
     /// Returns the vertical maximum of `self` and `other`.
@@ -173,8 +173,8 @@ impl Vec2 {
     /// `[x: max(x1, x2), y: max(y1, y2)]`,
     /// taking the maximum of each element individually.
     #[inline]
-    pub fn max(self, other: Vec2) -> Vec2 {
-        Vec2(self.0.max(other.0), self.1.max(other.1))
+    pub fn max(self, other: Self) -> Self {
+        Self(self.0.max(other.0), self.1.max(other.1))
     }
 
     /// Returns the horizontal minimum of `self`'s elements.
@@ -255,7 +255,7 @@ impl Vec2 {
 
     /// The perpendicular dot product of the vector and `other`.
     #[inline]
-    pub fn perp_dot(self, other: Vec2) -> f32 {
+    pub fn perp_dot(self, other: Self) -> f32 {
         (self.0 * other.1) - (self.1 * other.0)
     }
 }
@@ -263,14 +263,14 @@ impl Vec2 {
 impl Div<Vec2> for Vec2 {
     type Output = Self;
     #[inline]
-    fn div(self, other: Vec2) -> Self {
+    fn div(self, other: Self) -> Self {
         Self(self.0 / other.0, self.1 / other.1)
     }
 }
 
 impl DivAssign<Vec2> for Vec2 {
     #[inline]
-    fn div_assign(&mut self, other: Vec2) {
+    fn div_assign(&mut self, other: Self) {
         self.0 /= other.0;
         self.1 /= other.1;
     }
@@ -303,14 +303,14 @@ impl Div<Vec2> for f32 {
 impl Mul<Vec2> for Vec2 {
     type Output = Self;
     #[inline]
-    fn mul(self, other: Vec2) -> Self {
+    fn mul(self, other: Self) -> Self {
         Self(self.0 * other.0, self.1 * other.1)
     }
 }
 
 impl MulAssign<Vec2> for Vec2 {
     #[inline]
-    fn mul_assign(&mut self, other: Vec2) {
+    fn mul_assign(&mut self, other: Self) {
         self.0 *= other.0;
         self.1 *= other.1;
     }
@@ -359,14 +359,14 @@ impl AddAssign for Vec2 {
 impl Sub for Vec2 {
     type Output = Self;
     #[inline]
-    fn sub(self, other: Vec2) -> Self {
+    fn sub(self, other: Self) -> Self {
         Self(self.0 - other.0, self.1 - other.1)
     }
 }
 
 impl SubAssign for Vec2 {
     #[inline]
-    fn sub_assign(&mut self, other: Vec2) {
+    fn sub_assign(&mut self, other: Self) {
         self.0 -= other.0;
         self.1 -= other.1;
     }

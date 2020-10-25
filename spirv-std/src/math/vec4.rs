@@ -27,37 +27,37 @@ impl Vec4 {
     /// Creates a `Vec4` with all elements set to `0.0`.
     #[inline]
     pub const fn zero() -> Self {
-        Vec4::splat(0.0)
+        Self::splat(0.0)
     }
 
     /// Creates a `Vec4` with all elements set to `1.0`.
     #[inline]
     pub const fn one() -> Self {
-        Vec4::splat(1.0)
+        Self::splat(1.0)
     }
 
     /// Creates a `Vec4` with values `[x: 1.0, y: 0.0, z: 0.0, w: 0.0]`.
     #[inline]
     pub const fn unit_x() -> Self {
-        Vec4::new(1.0, 0.0, 0.0, 0.0)
+        Self::new(1.0, 0.0, 0.0, 0.0)
     }
 
     /// Creates a `Vec4` with values `[x: 0.0, y: 1.0, z: 0.0, w: 0.0]`.
     #[inline]
     pub const fn unit_y() -> Self {
-        Vec4::new(0.0, 1.0, 0.0, 0.0)
+        Self::new(0.0, 1.0, 0.0, 0.0)
     }
 
     /// Creates a `Vec4` with values `[x: 0.0, y: 0.0, z: 1.0, w: 0.0]`.
     #[inline]
     pub const fn unit_z() -> Self {
-        Vec4::new(0.0, 0.0, 1.0, 0.0)
+        Self::new(0.0, 0.0, 1.0, 0.0)
     }
 
     /// Creates a `Vec4` with values `[x: 0.0, y: 0.0, z: 0.0, w: 1.0]`.
     #[inline]
     pub const fn unit_w() -> Self {
-        Vec4::new(0.0, 0.0, 0.0, 1.0)
+        Self::new(0.0, 0.0, 0.0, 1.0)
     }
 
     /// Creates a `Vec4` with all elements set to `v`.

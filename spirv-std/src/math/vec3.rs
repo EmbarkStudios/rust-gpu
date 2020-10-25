@@ -155,7 +155,7 @@ impl Vec3 {
     #[allow(dead_code)]
     pub(crate) fn dot_as_vec3(self, other: Self) -> Self {
         let dot = self.dot(other);
-        Vec3::new(dot, dot, dot)
+        Self::new(dot, dot, dot)
     }
 
     /// Computes the cross product of `self` and `other`.
