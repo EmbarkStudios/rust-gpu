@@ -170,8 +170,6 @@ fn opt(build: &mut Build) {
 }
 
 fn val(build: &mut Build) {
-    build.file("src/c/val.cpp");
-
     add_sources(
         build,
         "spirv-tools/source/val",
@@ -242,6 +240,22 @@ fn main() {
         opt(&mut build);
     }
 
+    build.define("SPIRV_CHECK_CONTEXT", None);
+
+    let target_def = match std::env::var("CARGO_CFG_TARGET_OS")
+        .expect("CARGO_CFG_TARGET_OS not set")
+        .as_str()
+    {
+        "linux" => "SPIRV_LINUX",
+        "windows" => "SPIRV_WINDOWS",
+        "darwin" => "SPIRV_MAC",
+        android if android.starts_with("android") => "SPIRV_ANDROID",
+        "freebsd" => "SPIRV_FREEBSD",
+        other => panic!("unsupported target os '{}'", other),
+    };
+
+    build.define(target_def, None);
+
     let compiler = build.get_compiler();
 
     if compiler.is_like_gnu() {
@@ -259,8 +273,7 @@ fn main() {
             .flag("-Wundef")
             .flag("-Wconversion")
             .flag("-Wno-sign-conversion")
-            .flag("-std=gnu++11")
-            .flag("-Wno-error=switch");
+            .flag("-std=gnu++11");
     } else if compiler.is_like_clang() {
         build
             .flag("-Wextra-semi")
@@ -279,8 +292,7 @@ fn main() {
             .flag("-Wconversion")
             .flag("-Wno-sign-conversion")
             .flag("-ftemplate-depth=1024")
-            .flag("-std=gnu++11")
-            .flag("-Wno-error=switch");
+            .flag("-std=gnu++11");
     }
 
     build.cpp(true);

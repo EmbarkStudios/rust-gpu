@@ -23,21 +23,13 @@ fn main() {
     fs::create_dir_all("generated").expect("unable to create 'generated'");
 
     python(&[
-        "spirv-tools/utils/generate_grammar_tables.py",
-        "--spirv-core-grammar=spirv-headers/include/spirv/unified1/spirv.core.grammar.json",
-        "--extinst-debuginfo-grammar=spirv-headers/include/spirv/unified1/extinst.debuginfo.grammar.json",
-        "--extinst-cldebuginfo100-grammar=spirv-headers/include/spirv/unified1/extinst.opencl.debuginfo.100.grammar.json",
-        "--extension-enum-output=generated/extension_enum.inc",
-        "--enum-string-mapping-output=generated/enum_string_mapping.inc",
-    ]).expect("failed to generate enum includes from spirv-headers");
-
-    python(&[
         "spirv-tools/utils/update_build_version.py",
         "spirv-tools",
         "generated/build-version.inc",
     ])
     .expect("failed to generate build version from spirv-headers");
 
+    enum_string_mapping("unified1");
     core_table("unified1");
     glsl_table("unified1");
     opencl_table("unified1");
@@ -51,6 +43,17 @@ fn main() {
     vendor_table("opencl.debuginfo.100", Some("CLDEBUG100_"));
 
     registry_table();
+}
+
+fn enum_string_mapping(version: &str) {
+    python(&[
+        "spirv-tools/utils/generate_grammar_tables.py".to_owned(),
+        format!("--spirv-core-grammar=spirv-headers/include/spirv/{}/spirv.core.grammar.json", version),
+        "--extinst-debuginfo-grammar=spirv-headers/include/spirv/unified1/extinst.debuginfo.grammar.json".to_owned(),
+        "--extinst-cldebuginfo100-grammar=spirv-headers/include/spirv/unified1/extinst.opencl.debuginfo.100.grammar.json".to_owned(),
+        "--extension-enum-output=generated/extension_enum.inc".to_owned(),
+        "--enum-string-mapping-output=generated/enum_string_mapping.inc".to_owned(),
+    ]).expect("failed to generate enum includes from spirv-headers");
 }
 
 fn vendor_table(which: &str, prefix: Option<&str>) {

@@ -1,3 +1,5 @@
+use crate::shared;
+
 #[repr(C)]
 pub struct ValidatorOptions {
     _unused: [u8; 0],
@@ -18,12 +20,17 @@ pub enum ValidatorLimits {
 }
 
 extern "C" {
+    /// Validates a raw SPIR-V binary for correctness. Any errors will be written
+    /// into *diagnostic if diagnostic is non-null, otherwise the context's message
+    /// consumer will be used.
+    #[link_name = "spvValidateBinary"]
     pub fn validate(
-        tool: *const crate::shared::Tool,
+        tool: *const shared::ToolContext,
         binary: *const u32,
         size: usize,
         options: *const ValidatorOptions,
-    ) -> bool;
+        diagnostic: *mut *mut shared::Diagnostic,
+    ) -> crate::shared::SpirvResult;
 
     /// Creates a Validator options object with default options. Returns a valid
     /// options object. The object remains valid until it is passed into
