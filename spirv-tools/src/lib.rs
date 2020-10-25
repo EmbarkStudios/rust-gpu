@@ -3,6 +3,9 @@ pub mod opt;
 #[cfg(feature = "val")]
 pub mod val;
 
+#[cfg(feature = "as")]
+pub mod assembler;
+
 pub use spirv_tools_sys::shared;
 
 pub mod error;
