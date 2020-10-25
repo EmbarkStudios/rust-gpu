@@ -240,7 +240,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 if self.kernel_mode {
                     self.cl_op(CLOp::copysign, [args[0].immediate(), args[1].immediate()])
                 } else {
-                    self.fatal("TODO: Shader copysign not supported yet")
+                    self.gl_op(GLOp::FSign, [args[0].immediate(), args[1].immediate()])
                 }
             }
             sym::floorf32 | sym::floorf64 => {
