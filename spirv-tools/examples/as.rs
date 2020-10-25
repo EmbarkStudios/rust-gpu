@@ -47,7 +47,7 @@ fn main() {
                 use std::io::Write;
                 std::io::stdout()
                     .lock()
-                    .write(binary.as_ref())
+                    .write_all(binary.as_ref())
                     .expect("failed to write binary to stdout");
             } else {
                 std::fs::write(args.output, &binary).expect("failed to write binary");
