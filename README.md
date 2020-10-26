@@ -76,6 +76,10 @@ We meet weekly over a Discord call to discuss design and triage issues. Each mee
 
 We have a [#rust-gpu Discord channel](https://discord.gg/dAuKfZS) for fast discussion and collaboration.
 
+## Backwards compatibility, breaking changes and deprecation
+
+Right now because the project is in a very early state of development, we might introduce temporary changes as stop-gap measures, or implement features or APIs that might not work exactly in a way we end up liking. Therefore it is expected that some (if not most) of the user facing code will change and evolve over time. At the moment this means that we make no guarantees about backwards compatibility and have no formal deprecation model in place. Effectively meaning that currently we only support building from source with the latest `main` branch in our repository. We appreciate our early adopters and would ask them to evolve their code along with ours.
+
 ## Structure
 
 There are a few different components to this repo:
