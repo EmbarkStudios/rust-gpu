@@ -1,6 +1,16 @@
-use spirv_tools_sys::{shared, val};
+#[cfg(not(feature = "use-installed"))]
+pub(crate) mod compiled;
+#[cfg(feature = "use-installed")]
+mod tool;
 
-pub struct ValidatorOptsBuilder {
+#[cfg(not(feature = "use-installed"))]
+pub use compiled::Validator;
+
+#[cfg(feature = "use-installed")]
+pub use tool::Optimizer;
+
+#[derive(Default, Clone)]
+pub struct ValidatorOptions {
     /// Record whether or not the validator should relax the rules on types for
     /// stores to structs.  When relaxed, it will allow a type mismatch as long as
     /// the types are structs with the same layout.  Two structs have the same layout
@@ -38,7 +48,7 @@ pub struct ValidatorOptsBuilder {
     ///
     /// This is enabled by default when targeting Vulkan 1.1 or later.
     /// Relaxed layout is more permissive than the default rules in Vulkan 1.0.
-    pub relax_block_layout: bool,
+    pub relax_block_layout: Option<bool>,
     /// Records whether the validator should use standard block layout rules for
     /// uniform blocks.
     pub uniform_buffer_standard_layout: bool,
@@ -62,74 +72,6 @@ pub struct ValidatorOptsBuilder {
     /// Records whether or not the validator should skip validating standard
     /// uniform/storage block layout.
     pub skip_block_layout: bool,
-}
-
-impl ValidatorOptsBuilder {
-    pub fn into_opts(self) -> ValidatorOptions {
-        self.into_opts_with_limits(std::iter::empty())
-    }
-
-    pub fn into_opts_with_limits(
-        self,
-        limits: impl Iterator<Item = (val::ValidatorLimits, u32)>,
-    ) -> ValidatorOptions {
-        unsafe {
-            let vopts = val::validator_options_create();
-
-            // AFAICT this is the only one that _may_ default to true, so
-            // we always set it
-            val::validator_options_set_relax_block_layout(vopts, self.relax_block_layout);
-
-            if self.relax_store_struct {
-                val::validator_options_set_relax_store_struct(vopts, self.relax_store_struct);
-            }
-
-            if self.relax_logical_pointer {
-                val::validator_options_set_relax_logical_pointer(vopts, self.relax_logical_pointer);
-            }
-
-            if self.before_legalization {
-                val::validator_options_set_before_legalization(vopts, self.before_legalization);
-            }
-
-            if self.uniform_buffer_standard_layout {
-                val::validator_options_set_uniform_buffer_standard_layout(
-                    vopts,
-                    self.uniform_buffer_standard_layout,
-                );
-            }
-
-            if self.scalar_block_layout {
-                val::validator_options_set_scalar_block_layout(vopts, self.scalar_block_layout);
-            }
-
-            if self.skip_block_layout {
-                val::validator_options_set_skip_block_layout(vopts, self.skip_block_layout);
-            }
-
-            for (limit, val) in limits {
-                val::validator_options_set_limit(vopts, limit, val);
-            }
-
-            ValidatorOptions { inner: vopts }
-        }
-    }
-}
-
-pub struct ValidatorOptions {
-    inner: *mut val::ValidatorOptions,
-}
-
-impl Default for ValidatorOptions {
-    fn default() -> Self {
-        Self {
-            inner: unsafe { val::validator_options_create() },
-        }
-    }
-}
-
-impl Drop for ValidatorOptions {
-    fn drop(&mut self) {
-        unsafe { val::validator_options_destroy(self.inner) }
-    }
+    /// Applies a maximum to one or more Universal limits
+    pub max_limits: Vec<(spirv_tools_sys::val::ValidatorLimits, u32)>,
 }

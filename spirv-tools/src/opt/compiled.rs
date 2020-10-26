@@ -20,8 +20,8 @@ impl From<super::Options> for Options {
                 opt::optimizer_options_set_validator_options(inner, vopts.inner);
             }
 
-            if let Some(max_bounds) = o.max_id_bounds {
-                opt::optimizer_options_set_max_id_bound(inner, max_bounds);
+            if let Some(max_bound) = o.max_id_bound {
+                opt::optimizer_options_set_max_id_bound(inner, max_bound);
             }
 
             if o.preserve_bindings {
@@ -34,13 +34,6 @@ impl From<super::Options> for Options {
 
             Self { inner }
         }
-    }
-}
-
-impl Default for Options {
-    #[inline]
-    fn default() -> Self {
-        Self::new()
     }
 }
 

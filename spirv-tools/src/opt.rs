@@ -12,7 +12,7 @@ pub use tool::Optimizer;
 pub use spirv_tools_sys::opt::Passes;
 
 /// Options for specifying the behavior of the optimizer
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Options {
     /// Records the validator options that should be passed to the validator,
     /// the validator will run with the options before optimizer.

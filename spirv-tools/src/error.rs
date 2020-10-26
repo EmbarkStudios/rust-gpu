@@ -106,8 +106,33 @@ impl<'a> Message<'a> {
         }
     }
 
-    pub(crate) fn parse(_s: &str) -> Self {
-        unimplemented!()
+    pub(crate) fn parse(s: &'a str) -> Option<Self> {
+        s.find(": ")
+        .and_then(|i| {
+            let level = match &s[..i] {
+                "error" => MessageLevel::Error,
+                "warning" => MessageLevel::Warning,
+                "info" => MessageLevel::Info,
+                _ => return None,
+            };
+
+            Some((level, i))
+        }).and_then(|(level, i)| {
+            s[i + 7..].find(": ").and_then(|i2| {
+                s[i + 7..i + 7 + i2].parse::<usize>().ok().map(|index| (index, i2))
+            }).map(|(index, i2)| {
+                (level, index, i + 7 + i2 + 2)
+            })
+        }).map(|(level, index, last)| {
+            Self {
+                level,
+                index,
+                message: std::borrow::Cow::Borrowed(&s[last..]),
+                source: std::borrow::Cow::Borrowed(""),
+                line: 0,
+                column: 0,
+            }
+        })
     }
 }
 
