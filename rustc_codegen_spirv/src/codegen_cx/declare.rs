@@ -2,14 +2,10 @@ use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attr, SpirvAttribute};
-use rspirv::dr::Operand;
-use rspirv::spirv::{
-    Decoration, ExecutionMode, ExecutionModel, FunctionControl, LinkageType, StorageClass, Word,
-};
+use crate::symbols::{parse_attrs, SpirvAttribute};
+use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
-use rustc_hir::Param;
 use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
@@ -18,9 +14,7 @@ use rustc_middle::ty::{Instance, ParamEnv, Ty, TypeFoldable};
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
-use rustc_target::abi::call::PassMode;
 use rustc_target::abi::{Align, LayoutOf};
-use std::collections::HashMap;
 
 fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
     let mut control = FunctionControl::NONE;
@@ -156,194 +150,6 @@ impl<'tcx> CodegenCx<'tcx> {
         self.zombie_with_span(result.def, span, "Globals are not supported yet");
         result
     }
-
-    // Entry points declare their "interface" (all uniforms, inputs, outputs, etc.) as parameters. spir-v uses globals
-    // to declare the interface. So, we need to generate a lil stub for the "real" main that collects all those global
-    // variables and calls the user-defined main function.
-    fn shader_entry_stub(
-        &self,
-        entry_func: SpirvValue,
-        hir_params: &[Param<'_>],
-        name: String,
-        execution_model: ExecutionModel,
-    ) {
-        let void = SpirvType::Void.def(self);
-        let fn_void_void = SpirvType::Function {
-            return_type: void,
-            arguments: vec![],
-        }
-        .def(self);
-        let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
-            SpirvType::Function {
-                return_type,
-                arguments,
-            } => (return_type, arguments),
-            other => self.tcx.sess.fatal(&format!(
-                "Invalid entry_stub type: {}",
-                other.debug(entry_func.ty, self)
-            )),
-        };
-        let mut emit = self.emit_global();
-        let mut decoration_locations = HashMap::new();
-        // Create OpVariables before OpFunction so they're global instead of local vars.
-        let arguments = entry_func_args
-            .iter()
-            .zip(hir_params)
-            .map(|(&arg, hir_param)| {
-                let storage_class = match self.lookup_type(arg) {
-                    SpirvType::Pointer { storage_class, .. } => storage_class,
-                    other => self.tcx.sess.fatal(&format!(
-                        "Invalid entry arg type {}",
-                        other.debug(arg, self)
-                    )),
-                };
-                let mut has_location = match storage_class {
-                    StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant => {
-                        true
-                    }
-                    _ => false,
-                };
-                // Note: this *declares* the variable too.
-                let variable = emit.variable(arg, None, storage_class, None);
-                for attr in hir_param.attrs {
-                    if let Some(SpirvAttribute::Builtin(builtin)) = parse_attr(self, attr) {
-                        emit.decorate(
-                            variable,
-                            Decoration::BuiltIn,
-                            std::iter::once(Operand::BuiltIn(builtin)),
-                        );
-                        has_location = false;
-                    }
-                }
-                // Assign locations from left to right, incrementing each storage class
-                // individually.
-                // TODO: Is this right for UniformConstant? Do they share locations with
-                // input/outpus?
-                if has_location {
-                    let location = decoration_locations
-                        .entry(storage_class)
-                        .or_insert_with(|| 0);
-                    emit.decorate(
-                        variable,
-                        Decoration::Location,
-                        std::iter::once(Operand::LiteralInt32(*location)),
-                    );
-                    *location += 1;
-                }
-                variable
-            })
-            .collect::<Vec<_>>();
-        let fn_id = emit
-            .begin_function(void, None, FunctionControl::NONE, fn_void_void)
-            .unwrap();
-        emit.begin_block(None).unwrap();
-        emit.function_call(
-            entry_func_return,
-            None,
-            entry_func.def,
-            arguments.iter().copied(),
-        )
-        .unwrap();
-        emit.ret().unwrap();
-        emit.end_function().unwrap();
-
-        let interface = arguments;
-        emit.entry_point(execution_model, fn_id, name, interface);
-        if execution_model == ExecutionModel::Fragment {
-            // TODO: Make this configurable.
-            emit.execution_mode(fn_id, ExecutionMode::OriginUpperLeft, &[]);
-        }
-    }
-
-    // Kernel mode takes its interface as function parameters(??)
-    // OpEntryPoints cannot be OpLinkage, so write out a stub to call through.
-    fn kernel_entry_stub(
-        &self,
-        entry_func: SpirvValue,
-        name: String,
-        execution_model: ExecutionModel,
-    ) {
-        let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
-            SpirvType::Function {
-                return_type,
-                arguments,
-            } => (return_type, arguments),
-            other => self.tcx.sess.fatal(&format!(
-                "Invalid kernel_entry_stub type: {}",
-                other.debug(entry_func.ty, self)
-            )),
-        };
-        let mut emit = self.emit_global();
-        let fn_id = emit
-            .begin_function(
-                entry_func_return,
-                None,
-                FunctionControl::NONE,
-                entry_func.ty,
-            )
-            .unwrap();
-        let arguments = entry_func_args
-            .iter()
-            .map(|&ty| emit.function_parameter(ty).unwrap())
-            .collect::<Vec<_>>();
-        emit.begin_block(None).unwrap();
-        let call_result = emit
-            .function_call(entry_func_return, None, entry_func.def, arguments)
-            .unwrap();
-        if self.lookup_type(entry_func_return) == SpirvType::Void {
-            emit.ret().unwrap();
-        } else {
-            emit.ret_value(call_result).unwrap();
-        }
-        emit.end_function().unwrap();
-
-        emit.entry_point(execution_model, fn_id, name, &[]);
-    }
-
-    fn entry_stub(
-        &self,
-        instance: &Instance<'_>,
-        fn_abi: &FnAbi<'_, Ty<'_>>,
-        entry_func: SpirvValue,
-        name: String,
-        execution_model: ExecutionModel,
-    ) {
-        let local_id = match instance.def_id().as_local() {
-            Some(id) => id,
-            None => {
-                self.tcx
-                    .sess
-                    .err(&format!("Cannot declare {} as an entry point", name));
-                return;
-            }
-        };
-        let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(local_id);
-        let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
-        for (abi, arg) in fn_abi.args.iter().zip(body.params) {
-            if let PassMode::Direct(_) = abi.mode {
-            } else {
-                self.tcx.sess.span_err(
-                    arg.span,
-                    &format!("PassMode {:?} invalid for entry point parameter", abi.mode),
-                )
-            }
-        }
-        if let PassMode::Ignore = fn_abi.ret.mode {
-        } else {
-            self.tcx.sess.span_err(
-                self.tcx.hir().span(fn_hir_id),
-                &format!(
-                    "PassMode {:?} invalid for entry point return type",
-                    fn_abi.ret.mode
-                ),
-            )
-        }
-        if execution_model == ExecutionModel::Kernel {
-            self.kernel_entry_stub(entry_func, name, execution_model);
-        } else {
-            self.shader_entry_stub(entry_func, body.params, name, execution_model);
-        }
-    }
 }
 
 impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
@@ -403,16 +209,16 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         let declared =
             self.declare_fn_ext(symbol_name, Some(&human_name), linkage2, spv_attrs, &fn_abi);
 
-        for attr in self.tcx.get_attrs(instance.def_id()) {
-            match parse_attr(self, attr) {
-                Some(SpirvAttribute::Entry(execution_model)) => self.entry_stub(
+        for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
+            match attr {
+                SpirvAttribute::Entry(execution_model) => self.entry_stub(
                     &instance,
                     &fn_abi,
                     declared,
                     human_name.clone(),
                     execution_model,
                 ),
-                Some(SpirvAttribute::ReallyUnsafeIgnoreBitcasts) => {
+                SpirvAttribute::ReallyUnsafeIgnoreBitcasts => {
                     self.really_unsafe_ignore_bitcasts
                         .borrow_mut()
                         .insert(declared);

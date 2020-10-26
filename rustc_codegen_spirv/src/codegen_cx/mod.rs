@@ -1,5 +1,6 @@
 mod constant;
 mod declare;
+mod entry;
 mod type_;
 
 use crate::builder::ExtInst;

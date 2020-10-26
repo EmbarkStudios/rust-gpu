@@ -4,7 +4,7 @@ use super::val;
 fn hello_world() {
     val(r#"
 #[allow(unused_attributes)]
-#[spirv(entry = "fragment")]
+#[spirv(fragment)]
 pub fn main() {
 }
 "#);
