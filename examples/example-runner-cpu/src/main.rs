@@ -6,6 +6,9 @@ use std::time::Instant;
 fn color_u32_from_vec4(v: Vec4) -> u32 {
     let convert = |f: f32| -> u32 { (f.min(1.0).max(0.0) * 255.0).round() as u32 };
 
+    // this later will also do linear -> sRGB gamma correction for output,
+    // but currently our shader output is in sRGB so no conversion needed
+
     convert(v.z()) | convert(v.y()) << 8 | convert(v.x()) << 16 | convert(v.w()) << 24
 }
 
