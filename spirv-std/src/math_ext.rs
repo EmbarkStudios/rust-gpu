@@ -11,6 +11,7 @@ pub trait MathExt {
     fn ceil(self) -> Self;
     fn exp(self) -> Self;
     fn saturate(self) -> Self;
+    
     fn signum(self) -> Self;
     fn copysign(self, sign: Self) -> Self;
 
@@ -79,6 +80,9 @@ impl MathExt for f32 {
     }
 
     fn copysign(self, sign: f32) -> f32 {
-        unsafe { core::intrinsics::copysignf32(self, sign) }
+        // TODO: replace temporary implementation with intrinsic once backend supports it https://github.com/EmbarkStudios/rust-gpu/issues/148
+        //unsafe { core::intrinsics::copysignf32(self, sign) }
+
+        f32::from_bits((self.to_bits() & (u32::max_value() >> 1)) | (sign.to_bits() & (1 << 31)))
     }
 }
