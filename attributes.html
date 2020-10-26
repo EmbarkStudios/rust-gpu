@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Rust GPU Dev Guide</title>
+        <title>Attribute syntax - Rust GPU Dev Guide</title>
         
         
 
@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html" class="active"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -163,62 +163,45 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
-<p>Welcome to the Rust-GPU dev guide! This documentation is meant for documenting
-how to use and develop on Rust-GPU.</p>
-<h2><a class="header" href="#getting-started" id="getting-started">Getting started</a></h2>
-<ol>
-<li>
-<p>Clone the repository.</p>
-</li>
-<li>
-<p>Install the prerequisites using the provided setup script. From the root of the project, run:</p>
-<p>MacOS, Linux:</p>
-<pre><code class="language-shell">sh setup.sh
-</code></pre>
-<p>Windows:</p>
-<pre><code>setup.bat
-</code></pre>
-<p>The setup script installs nightly Rust (required for now, see <a href="https://github.com/EmbarkStudios/rust-gpu/issues/78">#78</a> for tracking issue).</p>
-</li>
-<li>
-<p>Install <a href="https://github.com/KhronosGroup/SPIRV-Tools#downloads">SPIRV-Tools</a> and add it to your PATH (for now, eventually we will automatically build and link it instead of calling executables)</p>
-</li>
-<li>
-<p>Next, look at the <a href="examples">examples</a> folder. There are two projects here: <a href="examples/example-shader">examples/example-shader</a> and <a href="examples/example-runner">examples/example-runner</a>. The example-shader project is a &quot;GPU crate&quot;, one that will be compiled to a SPIR-V module. The example-runner project is a normal, CPU crate that uses vulkan to consume the example-shader SPIR-V module to display a shader.</p>
-<p>Run the example:</p>
-<pre><code class="language-shell">cargo run --bin example-runner
-</code></pre>
-<p>This will build <code>rustc_codegen_spirv</code>, the compiler, then use that compiler to build <code>example-shader</code> into a SPIR-V module, then finally, build a vulkan sample app (taken from <a href="https://github.com/MaikKlein/ash/blob/master/examples/src/bin/triangle.rs">ash's examples</a>) using the built SPIR-V module to display the shader in a window.</p>
-<p>All of this is orchestrated by the <a href="spirv-builder">spirv-builder</a> crate, which is used in example-runner's <code>build.rs</code> file. Please look at that file, as well as both example projects in general, to see how to set up your own shaders!</p>
-</li>
-</ol>
-<p>Be aware that this project is in a very early phase - if the above doesn't work, please <a href="https://github.com/EmbarkStudios/rust-gpu/issues">file an issue</a>!</p>
-<h2><a class="header" href="#getting-started-for-power-users-who-dont-want-to-use-spirv-builder" id="getting-started-for-power-users-who-dont-want-to-use-spirv-builder">Getting started, for power users who don't want to use spirv-builder.</a></h2>
-<p>If you would like to build the compiler, <code>rustc_codegen_spirv</code> is the relevant folder. Install the prerequisites, as above, then, <code>cd rustc_codegen_spirv &amp;&amp; cargo build</code>. This produces an .so file, located at <code>./target/debug/librustc_codegen_spirv.so</code> (or <code>.dll</code>/<code>.dylib</code> depending on your platform).</p>
-<p>This file is a dynamically loaded backend for rustc - you may tell rustc to use it as a backend through the <code>-Z codegen-backend=...</code> flag. To pass this to rustc through cargo, set the environment variable <code>RUSTFLAGS=&quot;-Z codegen-backend=$PATH_TO_FILE&quot;</code>.</p>
-<p>Then, when building a GPU crate, we need to configure some flags when we call cargo. First, we need to build libcore
-ourselves - we obviously have no SPIR-V libcore installed on our system! Use the flag <code>-Z build-std=core</code>. Then, we need
-to tell rustc to generate SPIR-V instead of x86 code: <code>--target spirv-unknown-unknown</code>.</p>
-<p>Overall, building your own SPIR-V crate looks like:</p>
-<pre><code class="language-shell">export RUSTFLAGS=&quot;-Zcodegen-backend=$THIS_REPO/target/debug/librustc_codegen_spirv.so&quot;
-cargo build -Z build-std=core --target spirv-unknown-unknown --release
-</code></pre>
-<p>(with an appropriate path for <code>$THIS_REPO</code>, and replacing <code>export</code> with <code>set</code> if you're on windows as well as the proper dll name)</p>
-<p>This will produce a <code>target/spirv-unknown-unknown/release/crate_name.spv</code> file.</p>
-<p>To create a GPU crate, look at the <a href="examples/example-shader">examples/example-shader</a> crate. In short, reference the <code>spirv-std</code> crate, and use intrinsics defined there to create your shader.</p>
-<p>This is all a little convoluted, hence the <a href="spirv-builder">spirv-builder</a> crate handles a lot of this.</p>
+                        <h1><a class="header" href="#attribute-syntax" id="attribute-syntax">Attribute syntax</a></h1>
+<p>rust-gpu introduces a number of SPIR-V related attributes to express behavior specific to SPIR-V not exposed in the base rust language.</p>
+<p>There are a few different categories of attributes:</p>
+<h2><a class="header" href="#entry-points" id="entry-points">Entry points</a></h2>
+<p>When declaring an entry point to your shader, SPIR-V needs to know what type of function it is. For example, it could be a fragment shader, or vertex shader. Specifying this attribute is also the way rust-gpu knows that you would like to export a function as an entry point, no other functions are exported.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
+fn main() { }
+</code></pre></pre>
+<p>Common values are <code>#[spirv(fragment)]</code> and <code>#[spirv(vertex)]</code>. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.ExecutionModel.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
+<h2><a class="header" href="#builtins" id="builtins">Builtins</a></h2>
+<p>When declaring inputs and outputs, sometimes you want to declare it as a &quot;builtin&quot;. This means many things, but one example is <code>gl_Position</code> from glsl - the GPU assigns inherent meaning to the variable and uses it for placing the vertex in clip space. The equivalent in rust-gpu is called <code>position</code>.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust:">#[spirv(fragment)]
+fn main(
+    #[spirv(position)] mut out_pos: Output&lt;Vec4&gt;,
+) { }
+</code></pre></pre>
+<p>Common values are <code>#[spirv(position)]</code>, <code>#[spirv(vertex_id)]</code>, and many more. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.BuiltIn.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
+<h2><a class="header" href="#descriptor-set-and-binding" id="descriptor-set-and-binding">Descriptor set and binding</a></h2>
+<p>A SPIR-V shader must declare where uniform variables are located with explicit indices that match up with CPU-side code. This can be done with the <code>descriptor_set</code> and <code>binding</code> attributes. Note that <code>descriptor_set = 0</code> is reserved for future use, and cannot be used.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust:">#[spirv(fragment)]
+fn main(
+    #[spirv(descriptor_set = 2, binding = 5)] mut var: Uniform&lt;Vec4&gt;,
+) { }
+</code></pre></pre>
+<p>Both descriptor_set and binding take an integer argument that specifies the uniform's index.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-
-                        
-                            <a rel="next" href="attributes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
+                        
+
                         
 
                         <div style="clear: both"></div>
@@ -228,11 +211,11 @@ cargo build -Z build-std=core --target spirv-unknown-unknown --release
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-
-                
-                    <a rel="next" href="attributes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="prev" href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
+                
+
                 
             </nav>
 

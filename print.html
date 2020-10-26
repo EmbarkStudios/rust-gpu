@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -210,6 +210,34 @@ cargo build -Z build-std=core --target spirv-unknown-unknown --release
 <p>This will produce a <code>target/spirv-unknown-unknown/release/crate_name.spv</code> file.</p>
 <p>To create a GPU crate, look at the <a href="examples/example-shader">examples/example-shader</a> crate. In short, reference the <code>spirv-std</code> crate, and use intrinsics defined there to create your shader.</p>
 <p>This is all a little convoluted, hence the <a href="spirv-builder">spirv-builder</a> crate handles a lot of this.</p>
+<h1><a class="header" href="#attribute-syntax" id="attribute-syntax">Attribute syntax</a></h1>
+<p>rust-gpu introduces a number of SPIR-V related attributes to express behavior specific to SPIR-V not exposed in the base rust language.</p>
+<p>There are a few different categories of attributes:</p>
+<h2><a class="header" href="#entry-points" id="entry-points">Entry points</a></h2>
+<p>When declaring an entry point to your shader, SPIR-V needs to know what type of function it is. For example, it could be a fragment shader, or vertex shader. Specifying this attribute is also the way rust-gpu knows that you would like to export a function as an entry point, no other functions are exported.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
+fn main() { }
+</code></pre></pre>
+<p>Common values are <code>#[spirv(fragment)]</code> and <code>#[spirv(vertex)]</code>. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.ExecutionModel.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
+<h2><a class="header" href="#builtins" id="builtins">Builtins</a></h2>
+<p>When declaring inputs and outputs, sometimes you want to declare it as a &quot;builtin&quot;. This means many things, but one example is <code>gl_Position</code> from glsl - the GPU assigns inherent meaning to the variable and uses it for placing the vertex in clip space. The equivalent in rust-gpu is called <code>position</code>.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust:">#[spirv(fragment)]
+fn main(
+    #[spirv(position)] mut out_pos: Output&lt;Vec4&gt;,
+) { }
+</code></pre></pre>
+<p>Common values are <code>#[spirv(position)]</code>, <code>#[spirv(vertex_id)]</code>, and many more. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.BuiltIn.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
+<h2><a class="header" href="#descriptor-set-and-binding" id="descriptor-set-and-binding">Descriptor set and binding</a></h2>
+<p>A SPIR-V shader must declare where uniform variables are located with explicit indices that match up with CPU-side code. This can be done with the <code>descriptor_set</code> and <code>binding</code> attributes. Note that <code>descriptor_set = 0</code> is reserved for future use, and cannot be used.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust:">#[spirv(fragment)]
+fn main(
+    #[spirv(descriptor_set = 2, binding = 5)] mut var: Uniform&lt;Vec4&gt;,
+) { }
+</code></pre></pre>
+<p>Both descriptor_set and binding take an integer argument that specifies the uniform's index.</p>
 
                     </main>
 
