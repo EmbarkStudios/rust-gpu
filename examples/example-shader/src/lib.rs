@@ -6,7 +6,7 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
-use spirv_std::{Input, Mat4, MathExt, Output, Vec3, Vec4};
+use spirv_std::{Input, Mat4, MathExt, Output, Vec2, Vec3, Vec4};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const LUMINANCE: f32 = 1.0;
@@ -143,11 +143,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     color.pow(1.0 / (1.2 + (1.2 * sunfade)))
 }
 
-#[allow(unused_attributes)]
-#[spirv(entry = "fragment")]
-pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
-    let dir: Vec3 = input.load().truncate();
-
+pub fn main_fs_test(screen_pos: Vec2) -> Vec4 {
     // hard-code information because we can't bind buffers at the moment
     let eye_pos = Vec3(0.0, 0.0997, 0.2);
     let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
@@ -158,7 +154,7 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
         w_axis: Vec4(0.0, -0.14834046, -0.98893654, 0.0),
     };
 
-    let cs_pos = Vec4(dir.0, -dir.1, 1.0, 1.0);
+    let cs_pos = Vec4(screen_pos.0, -screen_pos.1, 1.0, 1.0);
     let ws_pos = {
         let p = clip_to_world.mul_vec4(cs_pos);
         p.truncate() / p.3
@@ -168,7 +164,41 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
 
-    output.store(color.extend(0.0))
+    //    let color = dir;
+
+    color.extend(1.0)
+}
+
+pub fn fs(screen_pos: Vec2) -> Vec4 {
+    // hard-code information because we can't bind buffers at the moment
+    let eye_pos = Vec3(0.0, 0.0997, 0.2);
+    let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
+    let clip_to_world = Mat4 {
+        x_axis: Vec4(-0.5522849, 0.0, 0.0, 0.0),
+        y_axis: Vec4(0.0, 0.4096309, -0.061444636, 0.0),
+        z_axis: Vec4(0.0, 99.99999, 199.99998, 999.99994),
+        w_axis: Vec4(0.0, -0.14834046, -0.98893654, 0.0),
+    };
+
+    let cs_pos = Vec4(screen_pos.0, -screen_pos.1, 1.0, 1.0);
+    let ws_pos = {
+        let p = clip_to_world.mul_vec4(cs_pos);
+        p.truncate() / p.3
+    };
+    let dir = (ws_pos - eye_pos).normalize();
+
+    // evaluate Preetham sky model
+    let color = sky(dir, sun_pos);
+
+    color.extend(1.0)
+}
+
+#[allow(unused_attributes)]
+#[spirv(entry = "fragment")]
+pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
+    let v = input.load();
+    let color = fs(Vec2::new(v.0, v.1));
+    output.store(color)
 }
 
 #[allow(unused_attributes)]
