@@ -5,7 +5,7 @@ use core::{f32, ops::*};
 /// A 2-dimensional vector.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]
 #[repr(simd)]
-pub struct Vec2(pub(crate) f32, pub(crate) f32);
+pub struct Vec2(pub f32, pub f32);
 
 /// Creates a `Vec2`.
 #[inline]
