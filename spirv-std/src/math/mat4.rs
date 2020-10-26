@@ -34,7 +34,7 @@ impl Mat4 {
     /// Creates a 4x4 matrix with all elements set to `0.0`.
     #[inline]
     pub const fn zero() -> Self {
-        Mat4 {
+        Self {
             x_axis: Vec4::zero(),
             y_axis: Vec4::zero(),
             z_axis: Vec4::zero(),
@@ -45,7 +45,7 @@ impl Mat4 {
     /// Creates a 4x4 identity matrix.
     #[inline]
     pub const fn identity() -> Self {
-        Mat4 {
+        Self {
             x_axis: Vec4::new(1.0, 0.0, 0.0, 0.0),
             y_axis: Vec4::new(0.0, 1.0, 0.0, 0.0),
             z_axis: Vec4::new(0.0, 0.0, 1.0, 0.0),
@@ -69,7 +69,7 @@ impl Mat4 {
     /// returned matrix.
     #[inline]
     pub fn from_cols_array(m: &[f32; 16]) -> Self {
-        Mat4 {
+        Self {
             x_axis: Vec4::new(m[0], m[1], m[2], m[3]),
             y_axis: Vec4::new(m[4], m[5], m[6], m[7]),
             z_axis: Vec4::new(m[8], m[9], m[10], m[11]),
@@ -89,7 +89,7 @@ impl Mat4 {
     /// the returned matrix.
     #[inline]
     pub fn from_cols_array_2d(m: &[[f32; 4]; 4]) -> Self {
-        Mat4 {
+        Self {
             x_axis: m[0].into(),
             y_axis: m[1].into(),
             z_axis: m[2].into(),

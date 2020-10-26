@@ -42,7 +42,7 @@ impl Mat2 {
     /// returned matrix.
     #[inline]
     pub fn from_cols_array(m: &[f32; 4]) -> Self {
-        Mat2(Vec4::new(m[0], m[1], m[2], m[3]))
+        Self(Vec4::new(m[0], m[1], m[2], m[3]))
     }
 
     /// Creates a `[f32; 4]` storing data in column major order.
@@ -57,7 +57,7 @@ impl Mat2 {
     /// the returned matrix.
     #[inline]
     pub fn from_cols_array_2d(m: &[[f32; 2]; 2]) -> Self {
-        Mat2(Vec4::new(m[0][0], m[0][1], m[1][0], m[1][1]))
+        Self(Vec4::new(m[0][0], m[0][1], m[1][0], m[1][1]))
     }
 
     /// Creates a `[[f32; 2]; 2]` storing data in column major order.
@@ -167,7 +167,7 @@ impl Mat2 {
     pub fn mul_mat2(&self, other: &Self) -> Self {
         // TODO: SSE2
         let (x0, y0, x1, y1) = other.0.into();
-        Mat2::from_cols(
+        Self::from_cols(
             self.mul_vec2(Vec2::new(x0, y0)),
             self.mul_vec2(Vec2::new(x1, y1)),
         )
@@ -176,20 +176,20 @@ impl Mat2 {
     /// Adds two 2x2 matrices.
     #[inline]
     pub fn add_mat2(&self, other: &Self) -> Self {
-        Mat2(self.0 + other.0)
+        Self(self.0 + other.0)
     }
 
     /// Subtracts two 2x2 matrices.
     #[inline]
     pub fn sub_mat2(&self, other: &Self) -> Self {
-        Mat2(self.0 - other.0)
+        Self(self.0 - other.0)
     }
 
     /// Multiplies a 2x2 matrix by a scalar.
     #[inline]
     pub fn mul_scalar(&self, other: f32) -> Self {
         let s = Vec4::splat(other);
-        Mat2(self.0 * s)
+        Self(self.0 * s)
     }
 }
 
