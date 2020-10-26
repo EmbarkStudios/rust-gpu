@@ -139,10 +139,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 other.debug(arg, self)
             )),
         };
-        let mut has_location = match storage_class {
-            StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant => true,
-            _ => false,
-        };
+        let mut has_location = matches!(
+            storage_class,
+            StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
+        );
         // Note: this *declares* the variable too.
         let variable = self.emit_global().variable(arg, None, storage_class, None);
         for attr in parse_attrs(self, hir_param.attrs) {
