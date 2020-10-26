@@ -31,7 +31,7 @@ fn main() {
         .map(|i| {
             let screen_pos = vec2(
                 (i % WIDTH) as f32 / WIDTH as f32 * 2.0 - 1.0,
-                (i / HEIGHT) as f32 / HEIGHT as f32 * 2.0 - 1.0,
+                (i / WIDTH) as f32 / HEIGHT as f32 * 2.0 - 1.0,
             );
 
             // evaluate the fragment shader for the specific pixel
