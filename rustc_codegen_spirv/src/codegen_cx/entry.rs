@@ -102,13 +102,23 @@ impl<'tcx> CodegenCx<'tcx> {
             entry_func_return,
             None,
             entry_func.def,
-            arguments.iter().copied(),
+            arguments.iter().map(|&(a, _)| a),
         )
         .unwrap();
         emit.ret().unwrap();
         emit.end_function().unwrap();
 
-        let interface = arguments;
+        let interface: Vec<_> = if emit.version().unwrap() > (1, 3) {
+            // SPIR-V >= v1.4 includes all OpVariables in the interface.
+            arguments.into_iter().map(|(a, _)| a).collect()
+        } else {
+            // SPIR-V <= v1.3 only includes Input and Output in the interface.
+            arguments
+                .into_iter()
+                .filter(|&(_, s)| s == StorageClass::Input || s == StorageClass::Output)
+                .map(|(a, _)| a)
+                .collect()
+        };
         emit.entry_point(execution_model, fn_id, name, interface);
         if execution_model == ExecutionModel::Fragment {
             // TODO: Make this configurable.
@@ -121,7 +131,7 @@ impl<'tcx> CodegenCx<'tcx> {
         arg: Word,
         hir_param: &Param<'tcx>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
-    ) -> Word {
+    ) -> (Word, StorageClass) {
         let storage_class = match self.lookup_type(arg) {
             SpirvType::Pointer { storage_class, .. } => storage_class,
             other => self.tcx.sess.fatal(&format!(
@@ -136,13 +146,32 @@ impl<'tcx> CodegenCx<'tcx> {
         // Note: this *declares* the variable too.
         let variable = self.emit_global().variable(arg, None, storage_class, None);
         for attr in parse_attrs(self, hir_param.attrs) {
-            if let SpirvAttribute::Builtin(builtin) = attr {
-                self.emit_global().decorate(
-                    variable,
-                    Decoration::BuiltIn,
-                    std::iter::once(Operand::BuiltIn(builtin)),
-                );
-                has_location = false;
+            match attr {
+                SpirvAttribute::Builtin(builtin) => {
+                    self.emit_global().decorate(
+                        variable,
+                        Decoration::BuiltIn,
+                        std::iter::once(Operand::BuiltIn(builtin)),
+                    );
+                    has_location = false;
+                }
+                SpirvAttribute::DescriptorSet(index) => {
+                    self.emit_global().decorate(
+                        variable,
+                        Decoration::DescriptorSet,
+                        std::iter::once(Operand::LiteralInt32(index)),
+                    );
+                    has_location = false;
+                }
+                SpirvAttribute::Binding(index) => {
+                    self.emit_global().decorate(
+                        variable,
+                        Decoration::Binding,
+                        std::iter::once(Operand::LiteralInt32(index)),
+                    );
+                    has_location = false;
+                }
+                _ => {}
             }
         }
         // Assign locations from left to right, incrementing each storage class
@@ -160,7 +189,7 @@ impl<'tcx> CodegenCx<'tcx> {
             );
             *location += 1;
         }
-        variable
+        (variable, storage_class)
     }
 
     // Kernel mode takes its interface as function parameters(??)

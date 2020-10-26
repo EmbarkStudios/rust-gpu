@@ -1,6 +1,6 @@
 use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::{BuiltIn, ExecutionModel, StorageClass};
-use rustc_ast::ast::{AttrKind, Attribute};
+use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_span::symbol::Symbol;
 use std::collections::HashMap;
 
@@ -13,6 +13,8 @@ pub struct Symbols {
     pub spirv: Symbol,
     pub spirv_std: Symbol,
     pub kernel: Symbol,
+    descriptor_set: Symbol,
+    binding: Symbol,
     attributes: HashMap<Symbol, SpirvAttribute>,
 }
 
@@ -209,6 +211,8 @@ impl Symbols {
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
             kernel: Symbol::intern("kernel"),
+            descriptor_set: Symbol::intern("descriptor_set"),
+            binding: Symbol::intern("binding"),
             attributes,
         }
     }
@@ -219,6 +223,8 @@ pub enum SpirvAttribute {
     Builtin(BuiltIn),
     StorageClass(StorageClass),
     Entry(ExecutionModel),
+    DescriptorSet(u32),
+    Binding(u32),
     ReallyUnsafeIgnoreBitcasts,
 }
 
@@ -252,27 +258,63 @@ pub fn parse_attrs(
             Vec::new()
         };
         args.into_iter().filter_map(move |ref arg| {
-            let name = match arg.ident() {
-                Some(i) => i,
-                None => {
-                    cx.tcx.sess.span_err(
-                        arg.span(),
-                        "#[spirv(..)] attribute argument must be single identifier",
-                    );
-                    return None;
+            if arg.has_name(cx.sym.descriptor_set) {
+                match parse_attr_int_value(cx, arg) {
+                    Some(x) => Some(SpirvAttribute::DescriptorSet(x)),
+                    None => None,
                 }
-            };
-            match cx.sym.attributes.get(&name.name) {
-                Some(a) => Some(a.clone()),
-                None => {
-                    cx.tcx
-                        .sess
-                        .span_err(name.span, "unknown argument to spirv attribute");
-                    None
+            } else if arg.has_name(cx.sym.binding) {
+                match parse_attr_int_value(cx, arg) {
+                    Some(x) => Some(SpirvAttribute::Binding(x)),
+                    None => None,
+                }
+            } else {
+                let name = match arg.ident() {
+                    Some(i) => i,
+                    None => {
+                        cx.tcx.sess.span_err(
+                            arg.span(),
+                            "#[spirv(..)] attribute argument must be single identifier",
+                        );
+                        return None;
+                    }
+                };
+                match cx.sym.attributes.get(&name.name) {
+                    Some(a) => Some(a.clone()),
+                    None => {
+                        cx.tcx
+                            .sess
+                            .span_err(name.span, "unknown argument to spirv attribute");
+                        None
+                    }
                 }
             }
         })
     });
     // lifetimes are hard :(
     result.collect::<Vec<_>>().into_iter()
+}
+
+fn parse_attr_int_value(cx: &CodegenCx<'_>, arg: &NestedMetaItem) -> Option<u32> {
+    let arg = match arg.meta_item() {
+        Some(arg) => arg,
+        None => {
+            cx.tcx
+                .sess
+                .span_err(arg.span(), "attribute must have value");
+            return None;
+        }
+    };
+    match arg.name_value_literal() {
+        Some(&Lit {
+            kind: LitKind::Int(x, LitIntType::Unsuffixed),
+            ..
+        }) if x <= u32::MAX as u128 => Some(x as u32),
+        _ => {
+            cx.tcx
+                .sess
+                .span_err(arg.span, "attribute value must be integer");
+            None
+        }
+    }
 }
