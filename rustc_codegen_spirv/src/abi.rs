@@ -3,7 +3,7 @@
 
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attr, SpirvAttribute};
+use crate::symbols::{parse_attrs, SpirvAttribute};
 use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
@@ -538,8 +538,8 @@ fn dig_scalar_pointee_adt<'tcx>(
 // TODO: Enforce this is only used in spirv-std.
 fn get_storage_class<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Option<StorageClass> {
     if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
-        for attr in cx.tcx.get_attrs(adt.did) {
-            if let Some(SpirvAttribute::StorageClass(storage_class)) = parse_attr(cx, attr) {
+        for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
+            if let SpirvAttribute::StorageClass(storage_class) = attr {
                 return Some(storage_class);
             }
         }
