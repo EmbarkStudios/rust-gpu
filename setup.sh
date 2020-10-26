@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-rustup toolchain install nightly --component rust-src rustc-dev llvm-tools-preview
+rustup component add rust-src rustc-dev llvm-tools-preview
