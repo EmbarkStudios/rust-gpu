@@ -37,9 +37,8 @@
     nonstandard_style
 )]
 
-pub mod math;
-pub use crate::math::MathExt;
-pub use crate::math::*;
+mod math_ext;
+pub use math_ext::MathExt;
 
 macro_rules! pointer_addrspace_write {
     (false) => {};
