@@ -1,4 +1,5 @@
 #include "spirv-tools/optimizer.hpp"
+#include <cstring>
 
 struct Optimus;
 
@@ -64,17 +65,13 @@ enum Passes {
     AmdExtToKhr,
 };
 
-enum RunResult {
-    InvalidInputBuffer,
-    InvalidInputSize,
-    InvalidOutputBuffer,
-    InvalidOutputSize,
-    InvalidCallback,
-    OptimizerFailed,
-    OptimizerSucceeded,
-};
-
-typedef void (*optimized_callback)(const uint32_t* data, size_t len, void* ctx);
+typedef void (*message_callback)(
+    spv_message_level_t level,
+    const char* source,
+    const spv_position_t* position,
+    const char* message,
+    void* ctx
+);
 
 extern "C" {
     SPIRV_TOOLS_EXPORT Optimus* optimizer_create(spv_target_env target_env) {
@@ -87,25 +84,47 @@ extern "C" {
         delete (spvtools::Optimizer*)optimizer;
     }
 
-    SPIRV_TOOLS_EXPORT RunResult optimizer_run(
+    SPIRV_TOOLS_EXPORT spv_result_t optimizer_run(
         const Optimus* optimizer,
         const uint32_t* input_ptr,
         size_t input_size,
-        optimized_callback callback,
+        spv_binary* out_binary,
+        message_callback msg_callback,
         void* ctx,
         const spv_optimizer_options options
     ) {
         if (input_ptr == nullptr) {
-            return RunResult::InvalidInputBuffer;
+            return SPV_ERROR_INVALID_POINTER;
         }
 
-        if (callback == nullptr) {
-            return RunResult::InvalidCallback;
+        if (out_binary == nullptr) {
+            return SPV_ERROR_INVALID_POINTER;
+        }
+
+        auto op = (spvtools::Optimizer*)optimizer;
+
+        if (msg_callback) {
+            op->SetMessageConsumer([msg_callback, ctx](
+                spv_message_level_t level,
+                const char* source,
+                const spv_position_t& position,
+                const char* message) {
+                msg_callback(level, source, &position, message, ctx);
+            });
+        } else {
+            // The optimizer keeps the message consumer as state, so if no
+            // callback is passed to us, we insert a noop callback to ensure
+            // we don't use the state from a previous optimizer run
+            op->SetMessageConsumer([](
+                spv_message_level_t,
+                const char*,
+                const spv_position_t&,
+                const char*)
+                {}
+            );
         }
 
         auto output_buff = std::vector<uint32_t>();
-
-        auto op = (spvtools::Optimizer*)optimizer;
         bool success = false;
         if (options == nullptr) {
             success = op->Run(input_ptr, input_size, &output_buff);
@@ -114,12 +133,24 @@ extern "C" {
         }
 
         if (!success) {
-            return RunResult::OptimizerFailed;
+            return SPV_ERROR_INTERNAL;
         }
 
-        callback(output_buff.data(), output_buff.size(), ctx);
+        uint32_t* data = new uint32_t[output_buff.size()];
+        if (data == nullptr) {
+            return SPV_ERROR_OUT_OF_MEMORY;
+        }
 
-        return RunResult::OptimizerSucceeded;
+        spv_binary binary = new spv_binary_t();
+        if (binary == nullptr) {
+            delete[] data;
+            return SPV_ERROR_OUT_OF_MEMORY;
+        }
+
+        memcpy(data, output_buff.data(), output_buff.size());
+        *out_binary = binary;
+
+        return SPV_SUCCESS;
     }
 
     SPIRV_TOOLS_EXPORT void optimizer_register_pass(Optimus* optimizer, Passes pass) {

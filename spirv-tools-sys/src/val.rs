@@ -29,7 +29,7 @@ extern "C" {
         binary: *const u32,
         size: usize,
         options: *const ValidatorOptions,
-        diagnostic: *mut *mut shared::Diagnostic,
+        diagnostic: *mut *mut crate::diagnostics::Diagnostic,
     ) -> crate::shared::SpirvResult;
 
     /// Creates a Validator options object with default options. Returns a valid

@@ -219,6 +219,11 @@ fn val(build: &mut Build) {
 }
 
 fn main() {
+    if std::env::var("CARGO_FEATURE_USE_INSTALLED").is_ok() {
+        println!("use-installed feature on, skipping compilation of C++ code");
+        return;
+    }
+
     let mut build = Build::new();
 
     add_includes(&mut build, "spirv-tools", &["", "include"]);
@@ -230,15 +235,8 @@ fn main() {
     );
 
     shared(&mut build);
-
-    // Some opt code requires val as well
-    if cfg!(any(feature = "opt", feature = "val")) {
-        val(&mut build);
-    }
-
-    if cfg!(feature = "opt") {
-        opt(&mut build);
-    }
+    val(&mut build);
+    opt(&mut build);
 
     build.define("SPIRV_CHECK_CONTEXT", None);
 

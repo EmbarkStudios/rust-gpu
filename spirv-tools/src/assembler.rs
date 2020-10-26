@@ -1,34 +1,5 @@
 use spirv_tools_sys::{assembler, shared};
 
-pub struct Binary {
-    inner: *mut assembler::Binary,
-}
-
-impl AsRef<[u32]> for Binary {
-    fn as_ref(&self) -> &[u32] {
-        unsafe { std::slice::from_raw_parts((*self.inner).code, (*self.inner).size) }
-    }
-}
-
-impl AsRef<[u8]> for Binary {
-    fn as_ref(&self) -> &[u8] {
-        unsafe {
-            std::slice::from_raw_parts(
-                (*self.inner).code as *const u8,
-                (*self.inner).size * std::mem::size_of::<u32>(),
-            )
-        }
-    }
-}
-
-impl Drop for Binary {
-    fn drop(&mut self) {
-        unsafe {
-            assembler::binary_destroy(self.inner);
-        }
-    }
-}
-
 #[derive(Copy, Clone, Default)]
 pub struct AssemblerOptions {
     /// Numeric IDs in the binary will have the same values as in the source.
@@ -66,7 +37,7 @@ impl Assembler {
         &self,
         text: &str,
         options: AssemblerOptions,
-    ) -> Result<Binary, crate::error::Error> {
+    ) -> Result<crate::shared::Binary, crate::error::Error> {
         unsafe {
             let mut binary = std::ptr::null_mut();
             let mut diagnostic = std::ptr::null_mut();
@@ -99,7 +70,7 @@ impl Assembler {
                         });
                     }
 
-                    Ok(Binary { inner: binary })
+                    Ok(crate::shared::Binary::new(binary))
                 }
                 other => Err(crate::error::Error {
                     inner: other,

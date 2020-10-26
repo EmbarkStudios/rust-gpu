@@ -1,4 +1,6 @@
-use spirv_tools_sys::shared;
+use spirv_tools_sys::{diagnostics, shared};
+
+pub use diagnostics::MessageLevel;
 
 #[derive(Debug, PartialEq)]
 pub struct Error {
@@ -35,11 +37,11 @@ pub struct Diagnostic {
     pub is_text: bool,
 }
 
-impl std::convert::TryFrom<*mut shared::Diagnostic> for Diagnostic {
+impl std::convert::TryFrom<*mut diagnostics::Diagnostic> for Diagnostic {
     type Error = shared::SpirvResult;
 
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    fn try_from(diag: *mut shared::Diagnostic) -> Result<Self, Self::Error> {
+    fn try_from(diag: *mut diagnostics::Diagnostic) -> Result<Self, Self::Error> {
         unsafe {
             if diag.is_null() {
                 return Err(shared::SpirvResult::Success);
@@ -57,8 +59,67 @@ impl std::convert::TryFrom<*mut shared::Diagnostic> for Diagnostic {
                 is_text: (*diag).is_text_source,
             };
 
-            shared::diagnostic_destroy(diag);
+            diagnostics::diagnostic_destroy(diag);
             Ok(res)
         }
+    }
+}
+
+pub struct Message<'a> {
+    pub level: MessageLevel,
+    pub source: std::borrow::Cow<'a, str>,
+    pub line: usize,
+    pub column: usize,
+    pub index: usize,
+    pub message: std::borrow::Cow<'a, str>,
+}
+
+impl<'a> Message<'a> {
+    pub(crate) fn from_parts(
+        level: MessageLevel,
+        source: *const std::os::raw::c_char,
+        source_pos: *const diagnostics::Position,
+        msg: *const std::os::raw::c_char,
+    ) -> Self {
+        unsafe {
+            let source = std::ffi::CStr::from_ptr(source).to_string_lossy();
+            let message = std::ffi::CStr::from_ptr(msg).to_string_lossy();
+
+            let (line, column, index) = if source_pos.is_null() {
+                (0, 0, 0)
+            } else {
+                (
+                    (*source_pos).line,
+                    (*source_pos).column,
+                    (*source_pos).index,
+                )
+            };
+
+            Self {
+                level,
+                source,
+                line,
+                column,
+                index,
+                message,
+            }
+        }
+    }
+
+    pub(crate) fn parse(_s: &str) -> Self {
+        unimplemented!()
+    }
+}
+
+pub trait MessageCallback {
+    fn on_message(&mut self, msg: Message<'_>);
+}
+
+impl<F> MessageCallback for F
+where
+    F: FnMut(Message<'_>),
+{
+    fn on_message(&mut self, msg: Message<'_>) {
+        self(msg)
     }
 }

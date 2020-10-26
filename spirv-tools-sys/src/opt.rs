@@ -499,18 +499,6 @@ pub enum Passes {
     AmdExtToKhr,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-#[repr(C)]
-pub enum RunResult {
-    InvalidInputBuffer,
-    InvalidInputSize,
-    InvalidOutputBuffer,
-    InvalidOutputSize,
-    InvalidCallback,
-    OptimizerFailed,
-    OptimizerSucceeded,
-}
-
 extern "C" {
     pub fn optimizer_create(env: crate::shared::TargetEnv) -> *mut Optimizer;
     pub fn optimizer_destroy(opt: *mut Optimizer);
@@ -519,10 +507,11 @@ extern "C" {
         opt: *const Optimizer,
         input_ptr: *const u32,
         input_size: usize,
-        callback: extern "C" fn(*const u32, usize, *mut std::ffi::c_void),
-        ctx: *mut std::ffi::c_void,
+        binary: *mut *mut crate::shared::Binary,
+        message_callback: crate::diagnostics::MessageCallback,
+        message_ctx: *mut std::ffi::c_void,
         options: *const OptimizerOptions,
-    ) -> RunResult;
+    ) -> crate::shared::SpirvResult;
 
     /// Creates an optimizer options object with default options. Returns a valid
     /// options object. The object remains valid until it is passed into

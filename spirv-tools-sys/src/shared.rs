@@ -202,27 +202,17 @@ impl fmt::Display for SpirvResult {
 
 impl std::error::Error for SpirvResult {}
 
-#[cfg(feature = "tools")]
+#[repr(C)]
+pub struct Binary {
+    pub code: *const u32,
+    pub size: usize,
+}
+
 #[repr(C)]
 pub struct ToolContext {
     _unused: [u8; 0],
 }
 
-#[repr(C)]
-pub struct Position {
-    pub line: usize,
-    pub column: usize,
-    pub index: usize,
-}
-
-#[repr(C)]
-pub struct Diagnostic {
-    pub position: Position,
-    pub error: *const std::os::raw::c_char,
-    pub is_text_source: bool,
-}
-
-#[cfg(feature = "tools")]
 extern "C" {
     /// Creates a context object for most of the SPIRV-Tools API.
     /// Returns null if env is invalid.
@@ -235,8 +225,8 @@ extern "C" {
     #[link_name = "spvContextDestroy"]
     pub fn context_destroy(opt: *mut ToolContext);
 
-    /// Destroys a diagnostic object.  This is a no-op if diagnostic is a null
+    /// Frees a binary stream from memory. This is a no-op if binary is a null
     /// pointer.
-    #[link_name = "spvDiagnosticDestroy"]
-    pub fn diagnostic_destroy(diag: *mut Diagnostic);
+    #[link_name = "spvBinaryDestroy"]
+    pub fn binary_destroy(binary: *mut Binary);
 }

@@ -155,41 +155,41 @@ fn link_exe(
 }
 
 fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u32> {
-    use spirv_tools::{opt, shared};
+    use spirv_tools::{error, opt};
 
-    // This is the same default target environment that spirv-opt uses
-    let mut optimizer = opt::Optimizer::new(shared::TargetEnv::Universal_1_5);
+    let mut optimizer = opt::Optimizer::new(spirv_tools::TargetEnv::default());
 
     optimizer
         .register_size_passes()
         .register_pass(opt::Passes::EliminateDeadConstant)
         .register_pass(opt::Passes::StripDebugInfo);
 
-    let mut opts = opt::Options::new();
-
-    // We run the validator separately
-    opts.run_validator(false);
-
-    let mut optimized_binary = None;
-
     let result = optimizer.optimize(
         &spv_binary,
-        &mut |data: &[u32]| {
-            optimized_binary = Some(data.to_vec());
+        &mut |msg: error::Message<'_>| {
+            use error::MessageLevel as Level;
+
+            // TODO: Adds spans here? Not sure how useful with binary, but maybe?
+
+            let mut err = match msg.level {
+                Level::Fatal | Level::InternalError => sess.struct_fatal(&msg.message),
+                Level::Error => sess.struct_err(&msg.message),
+                Level::Warning => sess.struct_warn(&msg.message),
+                Level::Info | Level::Debug => sess.struct_note_without_error(&msg.message),
+            };
+
+            err.note(&format!("module {:?}", filename));
+            err.emit();
         },
-        Some(&opts),
+        // We currently run the validator separately after optimization or even
+        // if we don't run optimization, the default options don't run the validator
+        None,
     );
 
     match result {
-        Err(opt::RunResult::OptimizerFailed) => {
-            let mut err = sess.struct_warn("spirv-opt failed, leaving as unoptimized");
-            err.note(&format!("module {:?}", filename));
-            spv_binary
-        }
-        Ok(_) => optimized_binary.unwrap(),
+        Ok(binary) => binary.as_ref().to_vec(),
         Err(_) => {
-            let mut err =
-                sess.struct_warn("invalid arguments supplied to spirv-opt, leaving as unoptimized");
+            let mut err = sess.struct_warn("spirv-opt failed, leaving as unoptimized");
             err.note(&format!("module {:?}", filename));
             spv_binary
         }
@@ -199,8 +199,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
 fn do_spirv_val(sess: &Session, spv_binary: &[u32], filename: &Path) {
     use spirv_tools::{shared, val};
 
-    // This is the same default target environment that spirv-val uses
-    let validator = val::Validator::new(shared::TargetEnv::Universal_1_5);
+    let validator = val::Validator::new(spirv_tools::TargetEnv::default());
     let opts = val::ValidatorOptions::default();
 
     if validator.validate(spv_binary, &opts).is_err() {
