@@ -11,7 +11,7 @@ pub trait MathExt {
     fn ceil(self) -> Self;
     fn exp(self) -> Self;
     fn saturate(self) -> Self;
-    
+
     fn signum(self) -> Self;
     fn copysign(self, sign: Self) -> Self;
 
