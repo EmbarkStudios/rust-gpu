@@ -1,6 +1,6 @@
+use glam::{vec2, Vec4};
 use minifb::{Key, Window, WindowOptions};
 use rayon::prelude::*;
-use spirv_std::{vec2, Vec4};
 use std::time::Instant;
 
 fn color_u32_from_vec4(v: Vec4) -> u32 {

@@ -6,25 +6,38 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
-use spirv_std::{Input, Mat4, MathExt, Output, Vec2, Vec3, Vec4};
+use glam::{const_vec3, Mat4, Vec2, Vec3, Vec4};
+use spirv_std::{Input, MathExt, Output};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const LUMINANCE: f32 = 1.0;
 const MIE_COEFFICIENT: f32 = 0.005;
 const MIE_DIRECTIONAL_G: f32 = 0.8;
-const MIE_K_COEFFICIENT: Vec3 = Vec3::new(0.686, 0.678, 0.666);
+const MIE_K_COEFFICIENT: Vec3 = const_vec3!([0.686, 0.678, 0.666]);
 const MIE_V: f32 = 4.0;
 const MIE_ZENITH_LENGTH: f32 = 1.25e3;
 const NUM_MOLECULES: f32 = 2.542e25f32;
-const PRIMARIES: Vec3 = Vec3::new(6.8e-7f32, 5.5e-7f32, 4.5e-7f32);
+const PRIMARIES: Vec3 = const_vec3!([6.8e-7f32, 5.5e-7f32, 4.5e-7f32]);
 const RAYLEIGH: f32 = 1.0;
 const RAYLEIGH_ZENITH_LENGTH: f32 = 8.4e3;
 const REFRACTIVE_INDEX: f32 = 1.0003;
 const SUN_ANGULAR_DIAMETER_DEGREES: f32 = 0.0093333;
 const SUN_INTENSITY_FACTOR: f32 = 1000.0;
 const SUN_INTENSITY_FALLOFF_STEEPNESS: f32 = 1.5;
-const TONEMAP_WEIGHTING: Vec3 = Vec3::splat(9.50);
+const TONEMAP_WEIGHTING: Vec3 = const_vec3!([9.50; 3]);
 const TURBIDITY: f32 = 2.0;
+
+// TODO: add this to glam? Rust std has it on f32/f64
+fn pow(v: Vec3, power: f32) -> Vec3 {
+    let v: [f32; 3] = v.into();
+    Vec3::new(v[0].pow(power), v[1].pow(power), v[2].pow(power))
+}
+
+// TODO: add this to glam? Rust std has it on f32/f64
+fn exp(v: Vec3) -> Vec3 {
+    let v: [f32; 3] = v.into();
+    Vec3::new(v[0].exp(), v[1].exp(), v[2].exp())
+}
 
 /// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
 fn acos_approx(v: f32) -> f32 {
@@ -51,12 +64,12 @@ fn total_rayleigh(lambda: Vec3) -> Vec3 {
     (8.0 * PI.pow(3.0)
         * (REFRACTIVE_INDEX.pow(2.0) - 1.0).pow(2.0)
         * (6.0 + 3.0 * DEPOLARIZATION_FACTOR))
-        / (3.0 * NUM_MOLECULES * lambda.pow(4.0) * (6.0 - 7.0 * DEPOLARIZATION_FACTOR))
+        / (3.0 * NUM_MOLECULES * pow(lambda, 4.0) * (6.0 - 7.0 * DEPOLARIZATION_FACTOR))
 }
 
 fn total_mie(lambda: Vec3, k: Vec3, t: f32) -> Vec3 {
     let c = 0.2 * t * 10e-18;
-    0.434 * c * PI * ((2.0 * PI) / lambda).pow(MIE_V - 2.0) * k
+    0.434 * c * PI * pow((2.0 * PI) / lambda, MIE_V - 2.0) * k
 }
 
 fn rayleigh_phase(cos_theta: f32) -> f32 {
@@ -78,19 +91,19 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
 }
 
 fn uncharted2_tonemap(w: Vec3) -> Vec3 {
-    const A: Vec3 = Vec3::splat(0.15); // Shoulder strength
-    const B: Vec3 = Vec3::splat(0.50); // Linear strength
-    const C: Vec3 = Vec3::splat(0.10); // Linear angle
-    const D: Vec3 = Vec3::splat(0.20); // Toe strength
-    const E: Vec3 = Vec3::splat(0.02); // Toe numerator
-    const F: Vec3 = Vec3::splat(0.30); // Toe denominator
+    const A: Vec3 = const_vec3!([0.15; 3]); // Shoulder strength
+    const B: Vec3 = const_vec3!([0.50; 3]); // Linear strength
+    const C: Vec3 = const_vec3!([0.10; 3]); // Linear angle
+    const D: Vec3 = const_vec3!([0.20; 3]); // Toe strength
+    const E: Vec3 = const_vec3!([0.02; 3]); // Toe numerator
+    const F: Vec3 = const_vec3!([0.30; 3]); // Toe denominator
 
     ((w * (A * w + C * B) + D * E) / (w * (A * w + B) + D * F)) - E / F
 }
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
-    let sunfade = 1.0 - (1.0 - (sun_position.1 / 450000.0).exp()).saturate();
+    let sunfade = 1.0 - (1.0 - (sun_position.y() / 450000.0).exp()).saturate();
     let rayleigh_coefficient = RAYLEIGH - (1.0 * (1.0 - sunfade));
     let beta_r = total_rayleigh(PRIMARIES) * rayleigh_coefficient;
 
@@ -105,7 +118,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let s_m = MIE_ZENITH_LENGTH / denom;
 
     // Combined extinction factor
-    let fex = (-(beta_r * s_r + beta_m * s_m)).exp();
+    let fex = exp(-(beta_r * s_r + beta_m * s_m));
 
     // In-scattering
     let sun_direction = sun_position.normalize();
@@ -114,11 +127,16 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     let beta_m_theta = beta_m * henyey_greenstein_phase(cos_theta, MIE_DIRECTIONAL_G);
     let sun_e = sun_intensity(sun_direction.dot(up));
-    let mut lin =
-        (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * (Vec3::splat(1.0) - fex))
-            .pow(1.5);
+    let mut lin = pow(
+        sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * (Vec3::splat(1.0) - fex),
+        1.5,
+    );
+
     lin *= Vec3::splat(1.0).lerp(
-        (sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex).pow(0.5),
+        pow(
+            sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex,
+            0.5,
+        ),
         ((1.0 - up.dot(sun_direction)).pow(5.0)).saturate(),
     );
 
@@ -140,50 +158,24 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let curr = uncharted2_tonemap(((2.0 / LUMINANCE.pow(4.0)).log2()) * tex_color);
     let color = curr * white_scale;
 
-    color.pow(1.0 / (1.2 + (1.2 * sunfade)))
-}
-
-pub fn main_fs_test(screen_pos: Vec2) -> Vec4 {
-    // hard-code information because we can't bind buffers at the moment
-    let eye_pos = Vec3(0.0, 0.0997, 0.2);
-    let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
-    let clip_to_world = Mat4 {
-        x_axis: Vec4(-0.5522849, 0.0, 0.0, 0.0),
-        y_axis: Vec4(0.0, 0.4096309, -0.061444636, 0.0),
-        z_axis: Vec4(0.0, 99.99999, 199.99998, 999.99994),
-        w_axis: Vec4(0.0, -0.14834046, -0.98893654, 0.0),
-    };
-
-    let cs_pos = Vec4(screen_pos.0, -screen_pos.1, 1.0, 1.0);
-    let ws_pos = {
-        let p = clip_to_world.mul_vec4(cs_pos);
-        p.truncate() / p.3
-    };
-    let dir = (ws_pos - eye_pos).normalize();
-
-    // evaluate Preetham sky model
-    let color = sky(dir, sun_pos);
-
-    //    let color = dir;
-
-    color.extend(1.0)
+    pow(color, 1.0 / (1.2 + (1.2 * sunfade)))
 }
 
 pub fn fs(screen_pos: Vec2) -> Vec4 {
     // hard-code information because we can't bind buffers at the moment
-    let eye_pos = Vec3(0.0, 0.0997, 0.2);
+    let eye_pos = Vec3::new(0.0, 0.0997, 0.2);
     let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
-    let clip_to_world = Mat4 {
-        x_axis: Vec4(-0.5522849, 0.0, 0.0, 0.0),
-        y_axis: Vec4(0.0, 0.4096309, -0.061444636, 0.0),
-        z_axis: Vec4(0.0, 99.99999, 199.99998, 999.99994),
-        w_axis: Vec4(0.0, -0.14834046, -0.98893654, 0.0),
-    };
+    let clip_to_world = Mat4::from_cols(
+        Vec4::new(-0.5522849, 0.0, 0.0, 0.0),
+        Vec4::new(0.0, 0.4096309, -0.061444636, 0.0),
+        Vec4::new(0.0, 99.99999, 199.99998, 999.99994),
+        Vec4::new(0.0, -0.14834046, -0.98893654, 0.0),
+    );
 
-    let cs_pos = Vec4(screen_pos.0, -screen_pos.1, 1.0, 1.0);
+    let cs_pos = Vec4::new(screen_pos.x(), -screen_pos.y(), 1.0, 1.0);
     let ws_pos = {
         let p = clip_to_world.mul_vec4(cs_pos);
-        p.truncate() / p.3
+        p.truncate() / p.w()
     };
     let dir = (ws_pos - eye_pos).normalize();
 
@@ -197,7 +189,7 @@ pub fn fs(screen_pos: Vec2) -> Vec4 {
 #[spirv(fragment)]
 pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
     let v = input.load();
-    let color = fs(Vec2::new(v.0, v.1));
+    let color = fs(Vec2::new(v.x(), v.y()));
     output.store(color)
 }
 
