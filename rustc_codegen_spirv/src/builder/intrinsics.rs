@@ -2,6 +2,7 @@ use super::Builder;
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::SpirvValueExt;
 use crate::codegen_cx::CodegenCx;
+use crate::spirv_type::SpirvType;
 use rspirv::spirv::{CLOp, GLOp};
 use rustc_codegen_ssa::mir::operand::OperandRef;
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -240,7 +241,33 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 if self.kernel_mode {
                     self.cl_op(CLOp::copysign, [args[0].immediate(), args[1].immediate()])
                 } else {
-                    self.fatal("TODO: Shader copysign not supported yet https://github.com/EmbarkStudios/rust-gpu/issues/148")
+                    let arg0 = args[0].immediate();
+                    let arg1 = args[1].immediate();
+                    let width = match self.lookup_type(arg0.ty) {
+                        SpirvType::Float(width) => width,
+                        other => panic!(
+                            "copysign must have float argument, not {}",
+                            other.debug(arg0.ty, self)
+                        ),
+                    };
+                    let int_ty = SpirvType::Integer(width, false).def(self);
+                    let (mask_sign, mask_value) = match width {
+                        32 => (
+                            self.constant_u32(1 << 31),
+                            self.constant_u32(u32::max_value() >> 1),
+                        ),
+                        64 => (
+                            self.constant_u64(1 << 63),
+                            self.constant_u64(u64::max_value() >> 1),
+                        ),
+                        _ => panic!("bitcast not supported for width {}", width),
+                    };
+                    let arg0_int = self.bitcast(arg0, int_ty);
+                    let arg1_int = self.bitcast(arg1, int_ty);
+                    let arg0_and = self.and(arg0_int, mask_value);
+                    let arg1_and = self.and(arg1_int, mask_sign);
+                    let result_int = self.or(arg0_and, arg1_and);
+                    self.bitcast(result_int, arg0.ty)
                 }
             }
             sym::floorf32 | sym::floorf64 => {
