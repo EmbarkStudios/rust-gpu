@@ -91,19 +91,17 @@ There are a few different components to this repo:
 - [spirv-std](spirv-std) for GPU intrinsics, types, and other library items used by GPU crates.
 - [spirv-builder](spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
 
-## Getting started
-
-We welcome community contributions to this project. If you would like to get started, be sure to checkout the [`rust-gpu` dev guide][gpu-guide] and our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
-
-[gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
-
 ## Contributing
 
 [![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4-ff69b4.svg)](../CODE_OF_CONDUCT.md)
 
 We welcome community contributions to this project.
 
-Please read our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
+If you would like to get started, be sure to checkout the [`rust-gpu` dev
+guide][gpu-guide] and our [Contributor Guide](CONTRIBUTING.md) for more
+information on how to get started.
+
+[gpu-guide]: https://embarkstudios.github.io/rust-gpu/
 
 ## License
 
