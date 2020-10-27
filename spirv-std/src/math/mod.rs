@@ -27,44 +27,45 @@ pub trait MathExt {
     fn saturate(self) -> Self;
 }
 
+#[allow(clippy::use_self)]
 impl MathExt for f32 {
-    fn pow(self, factor: f32) -> f32 {
+    fn pow(self, factor: Self) -> Self {
         unsafe { core::intrinsics::powf32(self, factor) }
     }
 
-    fn sqrt(self) -> f32 {
+    fn sqrt(self) -> Self {
         unsafe { core::intrinsics::sqrtf32(self) }
     }
 
-    fn log2(self) -> f32 {
+    fn log2(self) -> Self {
         unsafe { core::intrinsics::log2f32(self) }
     }
 
-    fn abs(self) -> f32 {
+    fn abs(self) -> Self {
         unsafe { core::intrinsics::fabsf32(self) }
     }
 
-    fn cos(self) -> f32 {
+    fn cos(self) -> Self {
         unsafe { core::intrinsics::cosf32(self) }
     }
 
-    fn round(self) -> f32 {
+    fn round(self) -> Self {
         unsafe { core::intrinsics::roundf32(self) }
     }
 
-    fn floor(self) -> f32 {
+    fn floor(self) -> Self {
         unsafe { core::intrinsics::floorf32(self) }
     }
 
-    fn ceil(self) -> f32 {
+    fn ceil(self) -> Self {
         unsafe { core::intrinsics::ceilf32(self) }
     }
 
-    fn exp(self) -> f32 {
+    fn exp(self) -> Self {
         unsafe { core::intrinsics::expf32(self) }
     }
 
-    fn saturate(self) -> f32 {
+    fn saturate(self) -> Self {
         self.max(0.0).min(1.0)
     }
 }

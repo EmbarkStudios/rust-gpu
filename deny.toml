@@ -1,0 +1,84 @@
+# This section is considered when running `cargo deny check advisories`
+# More documentation for the advisories section can be found here:
+# https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html
+[advisories]
+vulnerability = "deny"
+unmaintained = "warn"
+yanked = "warn"
+notice = "warn"
+ignore = [
+    # net2 is deprecated in favor of socket2
+    # but hyper, mio, miow crates are still using net2
+    "RUSTSEC-2020-0016",
+]
+
+# This section is considered when running `cargo deny check bans`.
+# More documentation about the 'bans' section can be found here:
+# https://embarkstudios.github.io/cargo-deny/checks/bans/cfg.html
+[bans]
+# Lint level for when multiple versions of the same crate are detected
+multiple-versions = "deny"
+# Lint level for when a crate version requirement is `*`
+wildcards = "allow"
+highlight = "all"
+# List of crates to deny
+deny = [
+    # Each entry the name of a crate and a version range. If version is
+    # not specified, all versions will be matched.
+    #{ name = "ansi_term", version = "=0.11.0" },
+]
+# Certain crates/versions that will be skipped when doing duplicate detection.
+skip = [
+    #{ name = "ansi_term", version = "=0.11.0" },
+]
+# Similarly to `skip` allows you to skip certain crates during duplicate 
+# detection. Unlike skip, it also includes the entire tree of transitive 
+# dependencies starting at the specified crate, up to a certain depth, which is
+# by default infinite
+skip-tree = [
+    # we don't really care if our example brings in some duplicate dependencies, for now
+    { name = "example-runner", version = "*", depth = 20 },
+    { name = "example-runner-cpu", version = "*", depth = 20 },
+]
+
+
+
+
+[licenses]
+unlicensed = "deny"
+# List of explictly allowed licenses
+# See https://spdx.org/licenses/ for list of possible licenses
+# [possible values: any SPDX 3.7 short identifier (+ optional exception)].
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC"
+]
+# Allow 1 or more licenses on a per-crate basis, so that particular licenses
+# aren't accepted for every possible crate as with the normal allow list
+exceptions = [
+    # allow permissive but non-standard and non-ideal license, only used in one of our examples, not in our own code
+    # https://tldrlegal.com/license/do-what-the-f*ck-you-want-to-public-license-(wtfpl)
+    { allow = ["WTFPL"], name = "xkb" },
+    { allow = ["WTFPL"], name = "xkbcommon-sys" },
+]
+copyleft = "deny"
+
+
+
+# This section is considered when running `cargo deny check sources`.
+# More documentation about the 'sources' section can be found here:
+# https://embarkstudios.github.io/cargo-deny/checks/sources/cfg.html
+[sources]
+# Lint level for what to happen when a crate from a crate registry that is not
+# in the allow list is encountered
+unknown-registry = "warn"
+# Lint level for what to happen when a crate from a git repository that is not
+# in the allow list is encountered
+unknown-git = "allow"
+
+[sources.allow-org]
+github = ["EmbarkStudios"]

@@ -62,7 +62,7 @@ impl Mat3 {
     /// returned matrix.
     #[inline]
     pub fn from_cols_array(m: &[f32; 9]) -> Self {
-        Mat3 {
+        Self {
             x_axis: Vec3::new(m[0], m[1], m[2]),
             y_axis: Vec3::new(m[3], m[4], m[5]),
             z_axis: Vec3::new(m[6], m[7], m[8]),
@@ -84,7 +84,7 @@ impl Mat3 {
     /// returned matrix.
     #[inline]
     pub fn from_cols_array_2d(m: &[[f32; 3]; 3]) -> Self {
-        Mat3 {
+        Self {
             x_axis: m[0].into(),
             y_axis: m[1].into(),
             z_axis: m[2].into(),
@@ -217,7 +217,7 @@ impl Mat3 {
         let det = self.z_axis.dot_as_vec3(tmp2);
         let inv_det = det.recip();
         // TODO: Work out if it's possible to get rid of the transpose
-        Mat3::from_cols(tmp0 * inv_det, tmp1 * inv_det, tmp2 * inv_det).transpose()
+        Self::from_cols(tmp0 * inv_det, tmp1 * inv_det, tmp2 * inv_det).transpose()
     }
 
     /// Multiplies two 3x3 matrices.

@@ -17,6 +17,8 @@ jobs:
       spirv_tools_version: "20200928"
     steps:
       - uses: actions/checkout@v2
+      - if: ${{ runner.os == 'Linux' }}
+        run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
       - if: ${{ runner.os != 'Windows' }}
         run: brew install spirv-tools
       # Currently SPIR-V tools aren't available in any package manager
@@ -43,6 +45,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
       - run: rustup component add rustfmt clippy rust-src rustc-dev llvm-tools-preview
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --exclude example-runner --all-targets -- -D warnings
+  cargo-deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: EmbarkStudios/cargo-deny-action@v1
