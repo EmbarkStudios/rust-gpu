@@ -1,10 +1,11 @@
 # 🐉 Rust GPU
 
-[![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
-[![API Documentation](https://img.shields.io/badge/docs-main-blue)](https://embarkstudios.github.io/rust-gpu/api/rustc_codegen_spirv)
-[![dependency status](https://deps.rs/repo/github/EmbarkStudios/rust-gpu/status.svg)](https://deps.rs/repo/github/EmbarkStudios/rust-gpu)
-[![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](http://embark.dev)
+[![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](http://embark.games)
 [![Embark](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
+[![Crates.io](https://img.shields.io/crates/v/rust-gpu.svg)](https://crates.io/crates/rust-gpu)
+[![Docs](https://docs.rs/rust-gpu/badge.svg)](https://docs.rs/rust-gpu)
+[![dependency status](https://deps.rs/repo/github/EmbarkStudios/rust-gpu/status.svg)](https://deps.rs/repo/github/EmbarkStudios/rust-gpu)
+[![Build status](https://github.com/EmbarkStudios/rust-gpu/workflows/Continuous%20integration/badge.svg?branch=main)](https://github.com/EmbarkStudios/rust-gpu/actions)
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
