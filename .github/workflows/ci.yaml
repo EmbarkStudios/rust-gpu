@@ -52,7 +52,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
-      - run: brew install spirv-tools
+      - run: |
+          mkdir "${HOME}/spirv-tools"
+          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1305/20201026-063148/install.tgz | tar -xz -C "${HOME}/spirv-tools"
+          echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - run: rustup component add rustfmt clippy rust-src rustc-dev llvm-tools-preview
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
