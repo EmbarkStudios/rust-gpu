@@ -7,9 +7,17 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 wgpu = "0.6.0"
-wgpu-subscriber = "0.1.0"
 futures = { version = "0.3", default-features = false, features = ["std", "executor"] }
 winit = { version = "0.22.1", features = ["web-sys"] }
 
 [build-dependencies]
 spirv-builder = { path = "../../spirv-builder" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+wgpu-subscriber = "0.1.0"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = "=0.3.39"
+console_error_panic_hook = "0.1.6"
+console_log = "0.2.0"
+wasm-bindgen-futures = "0.4.18"
