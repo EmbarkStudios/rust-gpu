@@ -1,9 +1,21 @@
 mod basic;
 
 use lazy_static::lazy_static;
+use rustc_codegen_spirv::rspirv;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+
+// https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
+#[derive(PartialEq, Eq)]
+#[doc(hidden)]
+pub struct PrettyString<'a>(pub &'a str);
+/// Make diff to display string as multi-line string
+impl<'a> std::fmt::Debug for PrettyString<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.0)
+    }
+}
 
 // Tests need to run serially, since they write project files to disk and whatnot. We don't want to
 // create a new temp dir for every test, though, since then every test would need to build libcore.
@@ -37,8 +49,6 @@ use spirv_std::*;
 fn panic(_: &PanicInfo) -> ! {
     loop {}
 }
-#[lang = "eh_personality"]
-extern "C" fn rust_eh_personality() {}
 "#;
 
 fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {
@@ -62,8 +72,74 @@ fn build(src: &str) -> PathBuf {
         .expect("Failed to build test")
 }
 
+fn read_module(path: &Path) -> Result<rspirv::dr::Module, Box<dyn Error>> {
+    let bytes = std::fs::read(path)?;
+    let mut loader = rspirv::dr::Loader::new();
+    rspirv::binary::parse_bytes(&bytes, &mut loader)?;
+    Ok(loader.module())
+}
+
 fn val(src: &str) {
     let _lock = GLOBAL_MUTEX.lock().unwrap();
     // spirv-val is included in building
     build(src);
+}
+
+fn assert_str_eq(expected: &str, result: &str) {
+    let expected = expected
+        .split('\n')
+        .map(|l| l.trim())
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let result = result
+        .split('\n')
+        .map(|l| l.trim().replace("  ", " ")) // rspirv outputs multiple spaces between operands
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    pretty_assertions::assert_eq!(PrettyString(&expected), PrettyString(&result))
+}
+
+fn dis_fn(src: &str, func: &str, expect: &str) {
+    let _lock = GLOBAL_MUTEX.lock().unwrap();
+    let module = read_module(&build(src)).unwrap();
+    let id = module
+        .debugs
+        .iter()
+        .find(|inst| inst.operands[1].unwrap_literal_string() == func)
+        .expect("No function with that name found")
+        .operands[0]
+        .unwrap_id_ref();
+    let mut func = module
+        .functions
+        .into_iter()
+        .find(|f| f.def_id().unwrap() == id)
+        .unwrap();
+    // Compact to make IDs more stable
+    compact_ids(&mut func);
+    use rspirv::binary::Disassemble;
+    assert_str_eq(expect, &func.disassemble())
+}
+
+fn compact_ids(module: &mut rspirv::dr::Function) -> u32 {
+    let mut remap = std::collections::HashMap::new();
+    let mut insert = |current_id: &mut u32| {
+        let len = remap.len();
+        *current_id = *remap.entry(*current_id).or_insert_with(|| len as u32 + 1)
+    };
+    module.all_inst_iter_mut().for_each(|inst| {
+        if let Some(ref mut result_id) = &mut inst.result_id {
+            insert(result_id)
+        }
+        if let Some(ref mut result_type) = &mut inst.result_type {
+            insert(result_type)
+        }
+        inst.operands.iter_mut().for_each(|op| {
+            if let Some(w) = op.id_ref_any_mut() {
+                insert(w)
+            }
+        })
+    });
+    remap.len() as u32 + 1
 }
