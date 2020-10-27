@@ -136,7 +136,7 @@ impl<'tcx> CodegenCx<'tcx> {
         self.zombie_values.borrow_mut().insert(word, reason);
     }
 
-    fn is_system_crate(&self) -> bool {
+    pub fn is_system_crate(&self) -> bool {
         self.tcx
             .sess
             .contains_name(self.tcx.hir().krate_attrs(), sym::compiler_builtins)
