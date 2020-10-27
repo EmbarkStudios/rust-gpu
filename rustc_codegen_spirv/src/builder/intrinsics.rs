@@ -260,7 +260,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                             self.constant_u64(1 << 63),
                             self.constant_u64(u64::max_value() >> 1),
                         ),
-                        _ => panic!("bitcast not supported for width {}", width),
+                        _ => panic!("copysign not supported for width {}", width),
                     };
                     let arg0_int = self.bitcast(arg0, int_ty);
                     let arg1_int = self.bitcast(arg1, int_ty);
