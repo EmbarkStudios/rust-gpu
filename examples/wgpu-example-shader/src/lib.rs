@@ -10,16 +10,16 @@ use core::panic::PanicInfo;
 use spirv_std::{Input, Output, Vec4};
 
 #[allow(unused_attributes)]
-#[spirv(entry = "fragment")]
+#[spirv(fragment)]
 pub fn main_fs(mut output: Output<Vec4>) {
     output.store(Vec4::new(1.0, 0.0, 0.0, 1.0))
 }
 
 #[allow(unused_attributes)]
-#[spirv(entry = "vertex")]
+#[spirv(vertex)]
 pub fn main_vs(
-    #[spirv(builtin = "vertex_index")] vert_id: Input<i32>,
-    #[spirv(builtin = "position")] mut out_pos: Output<Vec4>,
+    #[spirv(vertex_index)] vert_id: Input<i32>,
+    #[spirv(position)] mut out_pos: Output<Vec4>,
 ) {
     let vert_id = vert_id.load();
     out_pos.store(Vec4::new(
