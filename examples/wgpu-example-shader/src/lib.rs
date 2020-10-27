@@ -7,7 +7,8 @@
 
 #[cfg(not(test))]
 use core::panic::PanicInfo;
-use spirv_std::{Input, Output, Vec4};
+use spirv_std::{Input, Output};
+use glam::Vec4;
 
 #[allow(unused_attributes)]
 #[spirv(fragment)]
