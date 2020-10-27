@@ -97,6 +97,14 @@ We welcome community contributions to this project. If you would like to get sta
 
 [gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
 
+## Contributing
+
+[![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4-ff69b4.svg)](../CODE_OF_CONDUCT.md)
+
+We welcome community contributions to this project.
+
+Please read our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
+
 ## License
 
 Licensed under either of
