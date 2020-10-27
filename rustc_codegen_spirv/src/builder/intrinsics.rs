@@ -241,13 +241,13 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 if self.kernel_mode {
                     self.cl_op(CLOp::copysign, [args[0].immediate(), args[1].immediate()])
                 } else {
-                    let arg0 = args[0].immediate();
-                    let arg1 = args[1].immediate();
-                    let width = match self.lookup_type(arg0.ty) {
+                    let val = args[0].immediate();
+                    let sign = args[1].immediate();
+                    let width = match self.lookup_type(val.ty) {
                         SpirvType::Float(width) => width,
-                        other => panic!(
+                        other => bug!(
                             "copysign must have float argument, not {}",
-                            other.debug(arg0.ty, self)
+                            other.debug(val.ty, self)
                         ),
                     };
                     let int_ty = SpirvType::Integer(width, false).def(self);
@@ -260,14 +260,14 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                             self.constant_u64(1 << 63),
                             self.constant_u64(u64::max_value() >> 1),
                         ),
-                        _ => panic!("copysign not supported for width {}", width),
+                        _ => bug!("copysign must have width 32 or 64, not {}", width),
                     };
-                    let arg0_int = self.bitcast(arg0, int_ty);
-                    let arg1_int = self.bitcast(arg1, int_ty);
-                    let arg0_and = self.and(arg0_int, mask_value);
-                    let arg1_and = self.and(arg1_int, mask_sign);
-                    let result_int = self.or(arg0_and, arg1_and);
-                    self.bitcast(result_int, arg0.ty)
+                    let val_bits = self.bitcast(val, int_ty);
+                    let sign_bits = self.bitcast(sign, int_ty);
+                    let val_masked = self.and(val_bits, mask_value);
+                    let sign_masked = self.and(sign_bits, mask_sign);
+                    let result_bits = self.or(val_masked, sign_masked);
+                    self.bitcast(result_bits, val.ty)
                 }
             }
             sym::floorf32 | sym::floorf64 => {
