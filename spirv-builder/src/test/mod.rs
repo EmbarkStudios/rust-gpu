@@ -8,7 +8,6 @@ use std::sync::Mutex;
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
-#[doc(hidden)]
 pub struct PrettyString<'a>(pub &'a str);
 /// Make diff to display string as multi-line string
 impl<'a> std::fmt::Debug for PrettyString<'a> {
