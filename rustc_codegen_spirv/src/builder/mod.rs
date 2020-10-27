@@ -17,6 +17,7 @@ use rustc_codegen_ssa::traits::{
     CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen, InlineAsmOperandRef,
     StaticBuilderMethods,
 };
+use rustc_errors::DiagnosticBuilder;
 use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::mir::coverage::{
     CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionIndex, Op,
@@ -63,7 +64,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    /*
     pub fn struct_err(&self, msg: &str) -> DiagnosticBuilder<'_> {
         if let Some(current_span) = self.current_span {
             self.tcx.sess.struct_span_err(current_span, msg)
@@ -71,7 +71,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             self.tcx.sess.struct_err(msg)
         }
     }
-    */
 
     pub fn err(&self, msg: &str) {
         if let Some(current_span) = self.current_span {

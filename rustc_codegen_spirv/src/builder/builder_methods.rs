@@ -318,7 +318,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    fn zombie_bitcast_ptr(&self, def: Word) {
+    fn zombie_bitcast_ptr(&self, def: Word, from_ty: Word, to_ty: Word) {
         let is_logical = self
             .emit()
             .module_ref()
@@ -328,7 +328,14 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 inst.operands[0].unwrap_addressing_model() == AddressingModel::Logical
             });
         if is_logical {
-            self.zombie(def, "OpBitcast on ptr without AddressingModel != Logical")
+            if self.is_system_crate() {
+                self.zombie(def, "OpBitcast on ptr without AddressingModel != Logical")
+            } else {
+                self.struct_err("Cannot cast between pointer types")
+                    .note(&format!("from: {}", self.debug_type(from_ty)))
+                    .note(&format!("to: {}", self.debug_type(to_ty)))
+                    .emit()
+            }
         }
     }
 
@@ -1111,7 +1118,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             let val_is_ptr = matches!(self.lookup_type(val.ty), SpirvType::Pointer{..});
             let dest_is_ptr = matches!(self.lookup_type(dest_ty), SpirvType::Pointer{..});
             if val_is_ptr || dest_is_ptr {
-                self.zombie_bitcast_ptr(result.def);
+                self.zombie_bitcast_ptr(result.def, val.ty, dest_ty);
             }
             result
         }
@@ -1207,7 +1214,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .bitcast(dest_ty, None, val.def)
                 .unwrap()
                 .with_type(dest_ty);
-            self.zombie_bitcast_ptr(result.def);
+            self.zombie_bitcast_ptr(result.def, val.ty, dest_ty);
             result
         }
     }
