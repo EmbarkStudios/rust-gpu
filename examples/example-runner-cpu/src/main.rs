@@ -38,7 +38,7 @@ fn main() {
             );
 
             // evaluate the fragment shader for the specific pixel
-            let color = example_shader::fs(screen_pos);
+            let color = sky_shader::fs(screen_pos);
 
             color_u32_from_vec4(color)
         })

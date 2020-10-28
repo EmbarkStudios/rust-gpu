@@ -619,7 +619,7 @@ fn main() {
             })
             .collect();
 
-        let mut spv_file = Cursor::new(&include_bytes!(env!("example_shader.spv"))[..]);
+        let mut spv_file = Cursor::new(&include_bytes!(env!("sky_shader.spv"))[..]);
         let code = read_spv(&mut spv_file).expect("Failed to read spv file");
         let shader_info = vk::ShaderModuleCreateInfo::builder().code(&code);
 

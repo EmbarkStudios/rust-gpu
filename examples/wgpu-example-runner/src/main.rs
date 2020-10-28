@@ -31,7 +31,7 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
         .expect("Failed to create device");
 
     // Load the shaders from disk
-    let module = device.create_shader_module(wgpu::include_spirv!(env!("wgpu_example_shader.spv")));
+    let module = device.create_shader_module(wgpu::include_spirv!(env!("sky_shader.spv")));
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
