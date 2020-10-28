@@ -106,7 +106,10 @@ fn dis_fn(src: &str, func: &str, expect: &str) {
     let id = module
         .debugs
         .iter()
-        .find(|inst| inst.operands[1].unwrap_literal_string() == func)
+        .find(|inst| {
+            inst.class.opcode == rspirv::spirv::Op::Name
+                && inst.operands[1].unwrap_literal_string() == func
+        })
         .expect("No function with that name found")
         .operands[0]
         .unwrap_id_ref();

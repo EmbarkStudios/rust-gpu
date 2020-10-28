@@ -1,14 +1,10 @@
-//! Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
-
-#![no_std]
+#![cfg_attr(target_arch = "spirv", no_std)]
 #![feature(lang_items)]
 #![feature(register_attr)]
 #![register_attr(spirv)]
 
-#[cfg(not(test))]
-use core::panic::PanicInfo;
-use spirv_std::{Input, Output};
 use glam::Vec4;
+use spirv_std::{Input, Output};
 
 #[allow(unused_attributes)]
 #[spirv(fragment)]
@@ -31,12 +27,12 @@ pub fn main_vs(
     ));
 }
 
-#[cfg(not(test))]
+#[cfg(all(not(test), target_arch = "spirv"))]
 #[panic_handler]
-fn panic(_: &PanicInfo) -> ! {
+fn panic(_: &core::panic::PanicInfo) -> ! {
     loop {}
 }
 
-#[cfg(not(test))]
+#[cfg(all(not(test), target_arch = "spirv"))]
 #[lang = "eh_personality"]
 extern "C" fn rust_eh_personality() {}

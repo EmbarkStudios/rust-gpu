@@ -223,15 +223,6 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
         output.header.as_mut().unwrap().bound = simple_passes::compact_ids(&mut output);
     };
 
-    output.debugs.push(Instruction::new(
-        Op::ModuleProcessed,
-        None,
-        None,
-        vec![Operand::LiteralString(
-            "Linked by rspirv-linker".to_string(),
-        )],
-    ));
-
     // output the module
     Ok(output)
 }
