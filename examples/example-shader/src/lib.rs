@@ -147,11 +147,8 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     );
     let mut l0 = 0.1 * fex;
     l0 += sun_e * 19000.0 * fex * sundisk;
-    let tex_color = lin + l0;
 
-    // Tonemapping
-    let color = tex_color.min(Vec3::splat(1024.0));
-    tonemap(color)
+    lin + l0
 }
 
 pub fn fs(screen_pos: Vec2) -> Vec4 {
@@ -175,7 +172,10 @@ pub fn fs(screen_pos: Vec2) -> Vec4 {
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
 
-    color.extend(1.0)
+    // Tonemapping
+    let color = color.max(Vec3::splat(0.0)).min(Vec3::splat(1024.0));
+
+    tonemap(color).extend(1.0)
 }
 
 #[allow(unused_attributes)]
@@ -189,7 +189,7 @@ pub fn main_fs(in_pos: Input<Vec2>, mut output: Output<Vec4>) {
 #[spirv(vertex)]
 pub fn main_vs(
     #[spirv(vertex_index)] vert_idx: Input<i32>,
-    #[spirv(position)] mut gl_pos: Output<Vec4>,
+    #[spirv(position)] mut builtin_pos: Output<Vec4>,
     mut out_pos: Output<Vec2>,
 ) {
     let vert_idx = vert_idx.load();
@@ -199,7 +199,7 @@ pub fn main_vs(
     let uv = Vec2::new(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
     let pos = 2.0 * uv - Vec2::one();
 
-    gl_pos.store(pos.extend(0.0).extend(1.0));
+    builtin_pos.store(pos.extend(0.0).extend(1.0));
     out_pos.store(pos);
 }
 
