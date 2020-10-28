@@ -63,11 +63,29 @@ pub struct CodegenCx<'tcx> {
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         let sym = Box::new(Symbols::new());
-        let kernel_mode = tcx.sess.target_features.contains(&sym.kernel);
+        let mut kernel_mode = false;
+        let mut spirv_version = None;
+        for &feature in &tcx.sess.target_features {
+            if feature == sym.kernel {
+                kernel_mode = true;
+            } else if feature == sym.spirv10 {
+                spirv_version = Some((1, 0));
+            } else if feature == sym.spirv11 {
+                spirv_version = Some((1, 1));
+            } else if feature == sym.spirv12 {
+                spirv_version = Some((1, 2));
+            } else if feature == sym.spirv13 {
+                spirv_version = Some((1, 3));
+            } else if feature == sym.spirv14 {
+                spirv_version = Some((1, 4));
+            } else if feature == sym.spirv15 {
+                spirv_version = Some((1, 5));
+            }
+        }
         Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(kernel_mode),
+            builder: BuilderSpirv::new(spirv_version, kernel_mode),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),

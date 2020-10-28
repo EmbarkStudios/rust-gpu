@@ -138,8 +138,7 @@ fn standard() -> Result<()> {
     );
 
     let result = assemble_and_link(&[&a, &b])?;
-    let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
-        %1 = OpTypeFloat 32
+    let expect = r#"%1 = OpTypeFloat 32
         %2 = OpVariable %1 Input
         %3 = OpConstant %1 42.0
         %4 = OpVariable %1 Uniform %3"#;
@@ -158,8 +157,7 @@ fn not_a_lib_extra_exports() -> Result<()> {
     );
 
     let result = assemble_and_link(&[&a])?;
-    let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
-        %1 = OpTypeFloat 32
+    let expect = r#"%1 = OpTypeFloat 32
         %2 = OpVariable %1 Uniform"#;
     without_header_eq(result, expect);
     Ok(())
@@ -178,8 +176,7 @@ fn lib_extra_exports() -> Result<()> {
 
     let result = assemble_and_link(&[&a])?;
 
-    let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
-        OpDecorate %1 LinkageAttributes "foo" Export
+    let expect = r#"OpDecorate %1 LinkageAttributes "foo" Export
         %2 = OpTypeFloat 32
         %1 = OpVariable %2 Uniform"#;
     without_header_eq(result, expect);
@@ -363,8 +360,7 @@ fn func_ctrl() -> Result<()> {
 
     let result = assemble_and_link(&[&a, &b])?;
 
-    let expect = r#"OpModuleProcessed "Linked by rspirv-linker"
-            %1 = OpTypeVoid
+    let expect = r#"%1 = OpTypeVoid
             %2 = OpTypeFunction %1
             %3 = OpTypeFloat 32
             %4 = OpVariable %3 Uniform
@@ -417,7 +413,6 @@ fn use_exported_func_param_attr() -> Result<()> {
     let result = assemble_and_link(&[&a, &b])?;
 
     let expect = r#"OpCapability Kernel
-        OpModuleProcessed "Linked by rspirv-linker"
         OpDecorate %1 FuncParamAttr Zext
         %1 = OpDecorationGroup
         OpGroupDecorate %1 %2
@@ -487,7 +482,6 @@ fn names_and_decorations() -> Result<()> {
     let expect = r#"OpCapability Kernel
         OpName %1 "foo"
         OpName %2 "param"
-        OpModuleProcessed "Linked by rspirv-linker"
         OpDecorate %3 Restrict
         OpDecorate %4 NonWritable
         %3 = OpDecorationGroup

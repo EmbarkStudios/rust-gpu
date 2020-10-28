@@ -71,10 +71,11 @@ pub struct BuilderSpirv {
 }
 
 impl BuilderSpirv {
-    pub fn new(kernel_mode: bool) -> Self {
+    pub fn new(version: Option<(u8, u8)>, kernel_mode: bool) -> Self {
         let mut builder = Builder::new();
-        // intel-compute-runtime only supports v1.3
-        builder.set_version(1, 3);
+        // Default to spir-v 1.3
+        let version = version.unwrap_or((1, 3));
+        builder.set_version(version.0, version.1);
         if kernel_mode {
             builder.capability(Capability::Kernel);
         } else {
@@ -82,6 +83,9 @@ impl BuilderSpirv {
             builder.capability(Capability::Shader);
             builder.capability(Capability::VulkanMemoryModel);
             builder.capability(Capability::VariablePointers);
+            if version < (1, 3) {
+                builder.extension("SPV_KHR_variable_pointers");
+            }
         }
         // The linker will always be ran on this module
         builder.capability(Capability::Linkage);
