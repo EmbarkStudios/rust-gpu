@@ -30,12 +30,14 @@ impl Error for SpirvBuilderError {}
 pub struct SpirvBuilder {
     path_to_crate: PathBuf,
     print_metadata: bool,
+    spirv_version: Option<(u8, u8)>,
 }
 impl SpirvBuilder {
     pub fn new(path_to_crate: impl AsRef<Path>) -> Self {
         Self {
             path_to_crate: path_to_crate.as_ref().to_owned(),
             print_metadata: true,
+            spirv_version: None,
         }
     }
 
@@ -45,11 +47,20 @@ impl SpirvBuilder {
         self
     }
 
+    pub fn spirv_version(mut self, major: u8, minor: u8) -> Self {
+        self.spirv_version = Some((major, minor));
+        self
+    }
+
     /// Builds the module. Returns the path to the built spir-v file. If print_metadata is true,
     /// you usually don't have to inspect the path, as the environment variable will already be
     /// set.
     pub fn build(self) -> Result<PathBuf, SpirvBuilderError> {
-        let spirv_module = invoke_rustc(self.path_to_crate.as_ref(), self.print_metadata)?;
+        let spirv_module = invoke_rustc(
+            self.path_to_crate.as_ref(),
+            self.print_metadata,
+            self.spirv_version,
+        )?;
         let env_var = spirv_module.file_name().unwrap().to_str().unwrap();
         if self.print_metadata {
             println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
@@ -90,7 +101,11 @@ fn find_rustc_codegen_spirv() -> PathBuf {
     panic!("Could not find {} in library path", filename);
 }
 
-fn invoke_rustc(path_to_crate: &Path, print_metadata: bool) -> Result<PathBuf, SpirvBuilderError> {
+fn invoke_rustc(
+    path_to_crate: &Path,
+    print_metadata: bool,
+    spirv_version: Option<(u8, u8)>,
+) -> Result<PathBuf, SpirvBuilderError> {
     // Okay, this is a little bonkers: in a normal world, we'd have the user clone
     // rustc_codegen_spirv and pass in the path to it, and then we'd invoke cargo to build it, grab
     // the resulting .so, and pass it into -Z codegen-backend. But that's really gross: the user
@@ -100,7 +115,15 @@ fn invoke_rustc(path_to_crate: &Path, print_metadata: bool) -> Result<PathBuf, S
     // rustc expects a full path, instead of a filename looked up via LD_LIBRARY_PATH, so we need
     // to copy cargo's understanding of library lookup and find the library and its full path.
     let rustc_codegen_spirv = find_rustc_codegen_spirv();
-    let rustflags = format!("-Z codegen-backend={}", rustc_codegen_spirv.display());
+    let spirv_version_feture = match spirv_version {
+        None => "".to_string(),
+        Some((major, minor)) => format!(" -C target-feature=+spirv{}.{}", major, minor),
+    };
+    let rustflags = format!(
+        "-Z codegen-backend={}{}",
+        rustc_codegen_spirv.display(),
+        spirv_version_feture
+    );
     let build = Command::new("cargo")
         .args(&[
             "build",
