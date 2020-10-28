@@ -84,9 +84,11 @@ impl BuilderSpirv {
         if kernel_mode {
             builder.capability(Capability::Kernel);
         } else {
-            builder.extension("SPV_KHR_vulkan_memory_model");
             builder.capability(Capability::Shader);
             if memory_model == MemoryModel::Vulkan {
+                if version < (1, 5) {
+                    builder.extension("SPV_KHR_vulkan_memory_model");
+                }
                 builder.capability(Capability::VulkanMemoryModel);
             }
             builder.capability(Capability::VariablePointers);
