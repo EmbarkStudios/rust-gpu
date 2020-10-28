@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Messages","A visitor wrapper that ensures any strings named \"message\" are formatted using `fmt::Display`"]]});

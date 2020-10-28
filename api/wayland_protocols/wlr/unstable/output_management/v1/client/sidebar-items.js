@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["zwlr_output_configuration_head_v1","head configuration"],["zwlr_output_configuration_v1","output configuration"],["zwlr_output_head_v1","output device"],["zwlr_output_manager_v1","output device configuration manager"],["zwlr_output_mode_v1","output mode"]]});

@@ -1,0 +1,40 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `wayland_cursor` crate."><meta name="keywords" content="rust, rustlang, rust-lang, wayland_cursor"><title>wayland_cursor - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../wayland_cursor/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate wayland_cursor</p><div class="block version"><p>Version 0.27.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all wayland_cursor's items</p></a><div class="block items"><ul><li><a href="#structs">Structs</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "wayland_cursor", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/wayland_cursor/lib.rs.html#1-396" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">wayland_cursor</a></span></h1><div class="docblock"><p>Wayland cursor utilities</p>
+<p>This crate aims to reimplement the functionality of the <code>libwayland-cursor</code> library in Rust.</p>
+<p>It allows you to load cursors from the system and display them correctly.</p>
+<p>First of all, you need to create a <code>CursorTheme</code>,
+which represents the full cursor theme.</p>
+<p>From this theme, using the <code>get_cursor</code> method, you can load a specific <code>Cursor</code>,
+which can contain several images if the cursor is animated. It also provides you with the
+means of querying which frame of the animation should be displayed at
+what time, as well as handles to the buffers containing these frames, to
+attach them to a wayland surface.</p>
+<h1 id="example" class="section-header"><a href="#example">Example</a></h1>
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="kw">use</span> <span class="ident">wayland_cursor</span>::<span class="ident">CursorTheme</span>;
+
+<span class="kw">let</span> <span class="ident">cursor_theme</span> <span class="op">=</span> <span class="ident">CursorTheme</span>::<span class="ident">load</span>(<span class="number">32</span>, <span class="ident">wl_shm</span>);
+<span class="kw">let</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="ident">cursor_theme</span>.<span class="ident">get_cursor</span>(<span class="string">&quot;wait&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;Cursor not provided by theme&quot;</span>);
+
+<span class="kw">let</span> <span class="ident">start_time</span> <span class="op">=</span> <span class="ident">Instant</span>::<span class="ident">now</span>();
+<span class="kw">loop</span> {
+    <span class="comment">// Obtain which frame we should show, and for how long.</span>
+    <span class="kw">let</span> <span class="ident">millis</span> <span class="op">=</span> <span class="ident">start_time</span>.<span class="ident">elapsed</span>().<span class="ident">as_millis</span>();
+    <span class="kw">let</span> <span class="ident">fr_info</span> <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">frame_and_duration</span>(<span class="ident">millis</span> <span class="kw">as</span> <span class="ident">u32</span>);
+
+    <span class="comment">// Here, we obtain the right cursor frame...</span>
+    <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">cursor</span>[<span class="ident">fr_info</span>.<span class="ident">frame_index</span>];
+    <span class="comment">// and attach it to a wl_surface.</span>
+    <span class="ident">cursor_surface</span>.<span class="ident">attach</span>(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>), <span class="number">0</span>, <span class="number">0</span>);
+    <span class="ident">cursor_surface</span>.<span class="ident">commit</span>();
+
+    <span class="ident">sleep</span>(<span class="ident">fr_info</span>.<span class="ident">frame_duration</span>);
+}</pre></div>
+</div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.Cursor.html" title="wayland_cursor::Cursor struct">Cursor</a></td><td class="docblock-short"><p>A cursor from a theme. Can contain several images if animated.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.CursorImageBuffer.html" title="wayland_cursor::CursorImageBuffer struct">CursorImageBuffer</a></td><td class="docblock-short"><p>A buffer containing a cursor image.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.CursorTheme.html" title="wayland_cursor::CursorTheme struct">CursorTheme</a></td><td class="docblock-short"><p>Represents a cursor theme loaded from the system.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.FrameAndDuration.html" title="wayland_cursor::FrameAndDuration struct">FrameAndDuration</a></td><td class="docblock-short"><p>Which frame to show, and for how long.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "wayland_cursor";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

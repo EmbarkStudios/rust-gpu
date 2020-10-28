@@ -1,0 +1,108 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `dpi` mod in crate `winit`."><meta name="keywords" content="rust, rustlang, rust-lang, dpi"><title>winit::dpi - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../winit/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><p class="location">Module dpi</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class="location"><a href="../index.html">winit</a></p><script>window.sidebarCurrent = {name: "dpi", ty: "mod", relpath: "../"};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/winit/dpi.rs.html#1-501" title="goto source code">[src]</a></span><span class="in-band">Module <a href="../index.html">winit</a>::<wbr><a class="mod" href="">dpi</a></span></h1><div class="docblock"><p>UI scaling is important, so read the docs for this module if you don't want to be confused.</p>
+<h2 id="why-should-i-care-about-ui-scaling" class="section-header"><a href="#why-should-i-care-about-ui-scaling">Why should I care about UI scaling?</a></h2>
+<p>Modern computer screens don't have a consistent relationship between resolution and size.
+1920x1080 is a common resolution for both desktop and mobile screens, despite mobile screens
+normally being less than a quarter the size of their desktop counterparts. What's more, neither
+desktop nor mobile screens are consistent resolutions within their own size classes - common
+mobile screens range from below 720p to above 1440p, and desktop screens range from 720p to 5K
+and beyond.</p>
+<p>Given that, it's a mistake to assume that 2D content will only be displayed on screens with
+a consistent pixel density. If you were to render a 96-pixel-square image on a 1080p screen,
+then render the same image on a similarly-sized 4K screen, the 4K rendition would only take up
+about a quarter of the physical space as it did on the 1080p screen. That issue is especially
+problematic with text rendering, where quarter-sized text becomes a significant legibility
+problem.</p>
+<p>Failure to account for the scale factor can create a significantly degraded user experience.
+Most notably, it can make users feel like they have bad eyesight, which will potentially cause
+them to think about growing elderly, resulting in them having an existential crisis. Once users
+enter that state, they will no longer be focused on your application.</p>
+<h2 id="how-should-i-handle-it" class="section-header"><a href="#how-should-i-handle-it">How should I handle it?</a></h2>
+<p>The solution to this problem is to account for the device's <em>scale factor</em>. The scale factor is
+the factor UI elements should be scaled by to be consistent with the rest of the user's system -
+for example, a button that's normally 50 pixels across would be 100 pixels across on a device
+with a scale factor of <code>2.0</code>, or 75 pixels across with a scale factor of <code>1.5</code>.</p>
+<p>Many UI systems, such as CSS, expose DPI-dependent units like <a href="https://en.wikipedia.org/wiki/Point_(typography)">points</a> or <a href="https://en.wikipedia.org/wiki/Pica_(typography)">picas</a>. That's
+usually a mistake, since there's no consistent mapping between the scale factor and the screen's
+actual DPI. Unless you're printing to a physical medium, you should work in scaled pixels rather
+than any DPI-dependent units.</p>
+<h3 id="position-and-size-types" class="section-header"><a href="#position-and-size-types">Position and Size types</a></h3>
+<p>Winit's <code>Physical(Position|Size)</code> types correspond with the actual pixels on the device, and the
+<code>Logical(Position|Size)</code> types correspond to the physical pixels divided by the scale factor.
+All of Winit's functions return physical types, but can take either logical or physical
+coordinates as input, allowing you to use the most convenient coordinate system for your
+particular application.</p>
+<p>Winit's position and size types types are generic over their exact pixel type, <code>P</code>, to allow the
+API to have integer precision where appropriate (e.g. most window manipulation functions) and
+floating precision when necessary (e.g. logical sizes for fractional scale factors and touch
+input). If <code>P</code> is a floating-point type, please do not cast the values with <code>as {int}</code>. Doing so
+will truncate the fractional part of the float, rather than properly round to the nearest
+integer. Use the provided <code>cast</code> function or <code>From</code>/<code>Into</code> conversions, which handle the
+rounding properly. Note that precision loss will still occur when rounding from a float to an
+int, although rounding lessens the problem.</p>
+<h3 id="events" class="section-header"><a href="#events">Events</a></h3>
+<p>Winit will dispatch a <a href="../../winit/event/enum.WindowEvent.html#variant.ScaleFactorChanged"><code>ScaleFactorChanged</code></a>
+event whenever a window's scale factor has changed. This can happen if the user drags their
+window from a standard-resolution monitor to a high-DPI monitor, or if the user changes their
+DPI settings. This gives you a chance to rescale your application's UI elements and adjust how
+the platform changes the window's size to reflect the new scale factor. If a window hasn't
+received a <a href="../../winit/event/enum.WindowEvent.html#variant.ScaleFactorChanged"><code>ScaleFactorChanged</code></a> event,
+then its scale factor is <code>1.0</code>.</p>
+<h2 id="how-is-the-scale-factor-calculated" class="section-header"><a href="#how-is-the-scale-factor-calculated">How is the scale factor calculated?</a></h2>
+<p>Scale factor is calculated differently on different platforms:</p>
+<ul>
+<li>
+<p><strong>Windows:</strong> On Windows 8 and 10, per-monitor scaling is readily configured by users from the
+display settings. While users are free to select any option they want, they're only given a
+selection of &quot;nice&quot; scale factors, i.e. 1.0, 1.25, 1.5... on Windows 7, the scale factor is
+global and changing it requires logging out. See <a href="https://docs.microsoft.com/en-us/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows">this article</a> for technical
+details.</p>
+</li>
+<li>
+<p><strong>macOS:</strong> &quot;retina displays&quot; have a scale factor of 2.0. Otherwise, the scale factor is 1.0.
+Intermediate scale factors are never used. It's possible for any display to use that 2.0 scale
+factor, given the use of the command line.</p>
+</li>
+<li>
+<p><strong>X11:</strong> Many man-hours have been spent trying to figure out how to handle DPI in X11. Winit
+currently uses a three-pronged approach:</p>
+<ul>
+<li>Use the value in the <code>WINIT_X11_SCALE_FACTOR</code> environment variable, if present.</li>
+<li>If not present, use the value set in <code>Xft.dpi</code> in Xresources.</li>
+<li>Otherwise, calcuate the scale factor based on the millimeter monitor dimensions provided by XRandR.</li>
+</ul>
+<p>If <code>WINIT_X11_SCALE_FACTOR</code> is set to <code>randr</code>, it'll ignore the <code>Xft.dpi</code> field and use the
+XRandR scaling method. Generally speaking, you should try to configure the standard system
+variables to do what you want before resorting to <code>WINIT_X11_SCALE_FACTOR</code>.</p>
+</li>
+<li>
+<p><strong>Wayland:</strong> On Wayland, scale factors are set per-screen by the server, and are always
+integers (most often 1 or 2).</p>
+</li>
+<li>
+<p><strong>iOS:</strong> Scale factors are set by Apple to the value that best suits the device, and range
+from <code>1.0</code> to <code>3.0</code>. See <a href="https://developer.apple.com/library/archive/documentation/DeviceInformation/Reference/iOSDeviceCompatibility/Displays/Displays.html">this article</a> and <a href="https://developer.apple.com/design/human-interface-guidelines/macos/icons-and-images/image-size-and-resolution/">this article</a> for more
+information.</p>
+</li>
+<li>
+<p><strong>Android:</strong> Scale factors are set by the manufacturer to the value that best suits the
+device, and range from <code>1.0</code> to <code>4.0</code>. See <a href="https://developer.android.com/training/multiscreen/screendensities">this article</a> for more information.</p>
+</li>
+<li>
+<p><strong>Web:</strong> The scale factor is the ratio between CSS pixels and the physical device pixels.</p>
+</li>
+</ul>
+</div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.LogicalPosition.html" title="winit::dpi::LogicalPosition struct">LogicalPosition</a></td><td class="docblock-short"><p>A position represented in logical pixels.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.LogicalSize.html" title="winit::dpi::LogicalSize struct">LogicalSize</a></td><td class="docblock-short"><p>A size represented in logical pixels.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.PhysicalPosition.html" title="winit::dpi::PhysicalPosition struct">PhysicalPosition</a></td><td class="docblock-short"><p>A position represented in physical pixels.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.PhysicalSize.html" title="winit::dpi::PhysicalSize struct">PhysicalSize</a></td><td class="docblock-short"><p>A size represented in physical pixels.</p>
+</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="enum" href="enum.Position.html" title="winit::dpi::Position enum">Position</a></td><td class="docblock-short"><p>A position that's either physical or logical.</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.Size.html" title="winit::dpi::Size enum">Size</a></td><td class="docblock-short"><p>A size that's either physical or logical.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.Pixel.html" title="winit::dpi::Pixel trait">Pixel</a></td><td class="docblock-short"></td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="module-item"><td><a class="fn" href="fn.validate_scale_factor.html" title="winit::dpi::validate_scale_factor fn">validate_scale_factor</a></td><td class="docblock-short"><p>Checks that the scale factor is a normal positive <code>f64</code>.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "winit";</script><script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>

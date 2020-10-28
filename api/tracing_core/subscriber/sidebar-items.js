@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Interest","Indicates a `Subscriber`'s interest in a particular callsite."]],"trait":[["Subscriber","Trait representing the functions required to collect trace data."]]});

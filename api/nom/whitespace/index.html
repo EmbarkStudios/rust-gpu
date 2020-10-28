@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `whitespace` mod in crate `nom`."><meta name="keywords" content="rust, rustlang, rust-lang, whitespace"><title>nom::whitespace - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../nom/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><p class="location">Module whitespace</p><div class="sidebar-elems"><p class="location"><a href="../index.html">nom</a></p><script>window.sidebarCurrent = {name: "whitespace", ty: "mod", relpath: "../"};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/nom/whitespace.rs.html#1-1077" title="goto source code">[src]</a></span><span class="in-band">Module <a href="../index.html">nom</a>::<wbr><a class="mod" href="">whitespace</a></span></h1><div class="docblock"><p>Support for whitespace delimited formats</p>
+<p>a lot of textual formats allows spaces and other
+types of separators between tokens. Handling it
+manually with nom means wrapping all parsers
+like this:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="macro">named</span><span class="macro">!</span>(<span class="ident">token</span>, <span class="macro">delimited</span><span class="macro">!</span>(<span class="ident">space</span>, <span class="ident">tk</span>, <span class="ident">space</span>));</pre></div>
+<p>To ease the development of such parsers, you
+can use the whitespace parsing facility, which works
+as follows:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">named</span><span class="macro">!</span>(<span class="ident">tuple</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>], (<span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">&gt;</span>,
+  <span class="macro">ws</span><span class="macro">!</span>(<span class="macro">tuple</span><span class="macro">!</span>( <span class="macro">take</span><span class="macro">!</span>(<span class="number">3</span>), <span class="macro">tag</span><span class="macro">!</span>(<span class="string">&quot;de&quot;</span>) ))
+);
+
+<span class="macro">assert_eq</span><span class="macro">!</span>(
+  <span class="ident">tuple</span>(<span class="kw-2">&amp;</span><span class="string">b&quot; \t abc de fg&quot;</span>[..]),
+ <span class="prelude-val">Ok</span>((<span class="kw-2">&amp;</span><span class="string">b&quot;fg&quot;</span>[..], (<span class="kw-2">&amp;</span><span class="string">b&quot;abc&quot;</span>[..], <span class="kw-2">&amp;</span><span class="string">b&quot;de&quot;</span>[..])))
+);</pre></div>
+<p>The <code>ws!</code> combinator will modify the parser to
+intersperse space parsers everywhere. By default,
+it will consume the following characters: <code>&quot; \t\r\n&quot;</code>.</p>
+<p>If you want to modify that behaviour, you can make
+your own whitespace wrapper. As an example, if
+you don't want to consume ends of lines, only
+spaces and tabs, you can do it like this:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">named</span><span class="macro">!</span>(<span class="kw">pub</span> <span class="ident">space</span>, <span class="macro">eat_separator</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="string">b&quot; \t&quot;</span>[..]));
+
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">sp</span> (
+  (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span>:<span class="ident">expr</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">args</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> (
+    {
+      <span class="kw">use</span> <span class="ident">nom</span>::<span class="prelude-val">Err</span>;
+
+      <span class="kw">match</span> <span class="macro">sep</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span>, <span class="ident">space</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">args</span>)<span class="kw-2">*</span>) {
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
+        <span class="prelude-val">Ok</span>((<span class="ident">i1</span>,<span class="ident">o</span>))    <span class="op">=</span><span class="op">&gt;</span> {
+          <span class="kw">match</span> <span class="ident">space</span>(<span class="ident">i1</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="prelude-val">Err</span>::<span class="ident">convert</span>(<span class="ident">e</span>)),
+            <span class="prelude-val">Ok</span>((<span class="ident">i2</span>,<span class="kw">_</span>))    <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((<span class="ident">i2</span>, <span class="ident">o</span>))
+          }
+        }
+      }
+    }
+  )
+);
+
+<span class="macro">named</span><span class="macro">!</span>(<span class="ident">tuple</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>], (<span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">&gt;</span>,
+  <span class="macro">sp</span><span class="macro">!</span>(<span class="macro">tuple</span><span class="macro">!</span>( <span class="macro">take</span><span class="macro">!</span>(<span class="number">3</span>), <span class="macro">tag</span><span class="macro">!</span>(<span class="string">&quot;de&quot;</span>) ))
+);
+
+<span class="macro">assert_eq</span><span class="macro">!</span>(
+  <span class="ident">tuple</span>(<span class="kw-2">&amp;</span><span class="string">b&quot; \t abc de fg&quot;</span>[..]),
+ <span class="prelude-val">Ok</span>((<span class="kw-2">&amp;</span><span class="string">b&quot;fg&quot;</span>[..], (<span class="kw-2">&amp;</span><span class="string">b&quot;abc&quot;</span>[..], <span class="kw-2">&amp;</span><span class="string">b&quot;de&quot;</span>[..])))
+);</pre></div>
+<p>This combinator works by replacing each combinator with
+a version that supports wrapping with separator parsers.
+It will not support the combinators you wrote in your
+own code. You can still manually wrap them with the separator
+you want, or you can copy the macros defined in src/whitespace.rs
+and modify them to support a new combinator:</p>
+<ul>
+<li>copy the combinator's code here, add the _sep suffix</li>
+<li>add the <code>$separator:expr</code> as second argument</li>
+<li>wrap any sub parsers with sep!($separator, $submac!($($args)*))</li>
+<li>reference it in the definition of <code>sep!</code> as follows:</li>
+</ul>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+ (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span>:<span class="ident">expr</span>,  <span class="macro-nonterminal">$</span><span class="macro-nonterminal">separator</span>:<span class="ident">path</span>, <span class="ident">my_combinator</span> <span class="op">!</span> ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) ) <span class="op">=</span><span class="op">&gt;</span> {
+   <span class="macro">wrap_sep</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span>,
+     <span class="macro-nonterminal">$</span><span class="macro-nonterminal">separator</span>,
+     <span class="macro">my_combinator_sep</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">separator</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>)<span class="kw-2">*</span>)
+   )
+ };</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "nom";</script><script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>

@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["zwp_primary_selection_device_manager_v1","X primary selection emulation"],["zwp_primary_selection_device_v1",""],["zwp_primary_selection_offer_v1","offer to transfer primary selection contents"],["zwp_primary_selection_source_v1","offer to replace the contents of the primary selection"]]});

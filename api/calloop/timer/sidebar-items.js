@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Timeout","A timeout, as returned by `Timer::set_timeout`."],["Timer","A Timer event source"],["TimerHandle","An handle to a timer, used to set or cancel timeouts"]]});

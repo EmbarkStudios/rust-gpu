@@ -1,0 +1,135 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `rusttype` crate."><meta name="keywords" content="rust, rustlang, rust-lang, rusttype"><title>rusttype - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../rusttype/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate rusttype</p><div class="block version"><p>Version 0.7.9</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all rusttype's items</p></a><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "rusttype", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/rusttype/lib.rs.html#1-91" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">rusttype</a></span></h1><div class="docblock"><p>RustType is a pure Rust alternative to libraries like FreeType.</p>
+<p>The current capabilities of RustType:</p>
+<ul>
+<li>Reading TrueType formatted fonts and font collections. This includes
+<code>*.ttf</code> as well as a subset of <code>*.otf</code> font files.</li>
+<li>Retrieving glyph shapes and commonly used properties for a font and its
+glyphs.</li>
+<li>Laying out glyphs horizontally using horizontal and vertical metrics, and
+glyph-pair-specific kerning.</li>
+<li>Rasterising glyphs with sub-pixel positioning using an accurate analytical
+algorithm (not based on sampling).</li>
+<li>Managing a font cache on the GPU with the <code>gpu_cache</code> module. This keeps
+recently used glyph renderings in a dynamic cache in GPU memory to
+minimise texture uploads per-frame. It also allows you keep the draw call
+count for text very low, as all glyphs are kept in one GPU texture.</li>
+</ul>
+<p>Notable things that RustType does not support <em>yet</em>:</p>
+<ul>
+<li>OpenType formatted fonts that are not just TrueType fonts (OpenType is a
+superset of TrueType). Notably there is no support yet for cubic Bezier
+curves used in glyphs.</li>
+<li>Font hinting.</li>
+<li>Ligatures of any kind.</li>
+<li>Some less common TrueType sub-formats.</li>
+<li>Right-to-left and vertical text layout.</li>
+</ul>
+<h1 id="getting-started" class="section-header"><a href="#getting-started">Getting Started</a></h1>
+<p>To hit the ground running with RustType, look at the <code>simple.rs</code> example
+supplied with the crate. It demonstrates loading a font file, rasterising an
+arbitrary string, and displaying the result as ASCII art. If you prefer to
+just look at the documentation, the entry point for loading fonts is
+<code>FontCollection</code>, from which you can access individual fonts, then their
+glyphs.</p>
+<h1 id="glyphs" class="section-header"><a href="#glyphs">Glyphs</a></h1>
+<p>The glyph API uses wrapper structs to augment a glyph with information such
+as scaling and positioning, making relevant methods that make use of this
+information available as appropriate. For example, given a <code>Glyph</code> <code>glyph</code>
+obtained directly from a <code>Font</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="comment">// One of the few things you can do with an unsized, positionless glyph is get its id.</span>
+<span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">glyph</span>.<span class="ident">id</span>();
+<span class="kw">let</span> <span class="ident">glyph</span> <span class="op">=</span> <span class="ident">glyph</span>.<span class="ident">scaled</span>(<span class="ident">Scale</span>::<span class="ident">uniform</span>(<span class="number">10.0</span>));
+<span class="comment">// Now glyph is a ScaledGlyph, you can do more with it, as well as what you can do with Glyph.</span>
+<span class="comment">// For example, you can access the correctly scaled horizontal metrics for the glyph.</span>
+<span class="kw">let</span> <span class="ident">h_metrics</span> <span class="op">=</span> <span class="ident">glyph</span>.<span class="ident">h_metrics</span>();
+<span class="kw">let</span> <span class="ident">glyph</span> <span class="op">=</span> <span class="ident">glyph</span>.<span class="ident">positioned</span>(<span class="ident">point</span>(<span class="number">5.0</span>, <span class="number">3.0</span>));
+<span class="comment">// Now glyph is a PositionedGlyph, and you can do even more with it, e.g. drawing.</span>
+<span class="ident">glyph</span>.<span class="ident">draw</span>(<span class="op">|</span><span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">v</span><span class="op">|</span> {}); <span class="comment">// In this case the pixel values are not used.</span></pre></div>
+<h1 id="unicode-terminology" class="section-header"><a href="#unicode-terminology">Unicode terminology</a></h1>
+<p>This crate uses terminology for computerised typography as specified by the
+Unicode standard. If you are not sure of the differences between a code
+point, a character, and a glyph, you may want to check the <a href="http://unicode.org/glossary/">official Unicode
+glossary</a>, or alternatively, here's my take on
+it from a practical perspective:</p>
+<ul>
+<li>A character is what you would conventionally call a single symbol,
+independent of its appearance or representation in a particular font.
+Examples include <code>a</code>, <code>A</code>, <code>ä</code>, <code>å</code>, <code>1</code>, <code>*</code>, <code>Ω</code>, etc.</li>
+<li>A Unicode code point is the particular number that the Unicode standard
+associates with a particular character. Note however that code points also
+exist for things not conventionally thought of as characters by
+themselves, but can be combined to form characters, such as diacritics
+like accents. These &quot;characters&quot; are known in Unicode as &quot;combining
+characters&quot;. E.g., a diaeresis (<code>¨</code>) has the code point U+0308. If this
+code point follows the code point U+0055 (the letter <code>u</code>), this sequence
+represents the character <code>ü</code>. Note that there is also a single codepoint
+for <code>ü</code>, U+00FC. This means that what visually looks like the same string
+can have multiple different Unicode representations. Some fonts will have
+glyphs (see below) for one sequence of codepoints, but not another that
+has the same meaning. To deal with this problem it is recommended to use
+Unicode normalisation, as provided by, for example, the
+<a href="http://crates.io/crates/unicode-normalization">unicode-normalization</a>
+crate, to convert to code point sequences that work with the font in
+question. Typically a font is more likely to support a single code point
+vs. a sequence with the same meaning, so the best normalisation to use is
+&quot;canonical recomposition&quot;, known as NFC in the normalisation crate.</li>
+<li>A glyph is a particular font's shape to draw the character for a
+particular Unicode code point. This will have its own identifying number
+unique to the font, its ID.</li>
+</ul>
+</div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.Codepoint.html" title="rusttype::Codepoint struct">Codepoint</a></td><td class="docblock-short"><p>Represents a Unicode code point.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Contour.html" title="rusttype::Contour struct">Contour</a></td><td class="docblock-short"><p>A closed loop consisting of a sequence of <code>Segment</code>s.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Curve.html" title="rusttype::Curve struct">Curve</a></td><td class="docblock-short"><p>A quadratic Bezier curve, starting at <code>p[0]</code>, ending at <code>p[2]</code>, with control
+point <code>p[1]</code>.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Font.html" title="rusttype::Font struct">Font</a></td><td class="docblock-short"><p>A single font. This may or may not own the font data.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.FontCollection.html" title="rusttype::FontCollection struct">FontCollection</a></td><td class="docblock-short"><p>A collection of fonts read straight from a font file's data. The data in the
+collection is not validated. This structure may or may not own the font
+data.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Glyph.html" title="rusttype::Glyph struct">Glyph</a></td><td class="docblock-short"><p>A single glyph of a font. this may either be a thin wrapper referring to the
+font and the glyph id, or it may be a standalone glyph that owns the data
+needed by it.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.GlyphId.html" title="rusttype::GlyphId struct">GlyphId</a></td><td class="docblock-short"><p>Represents a glyph identifier for a particular font. This identifier will
+not necessarily correspond to the correct glyph in a font other than the
+one that it was obtained from.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.GlyphIter.html" title="rusttype::GlyphIter struct">GlyphIter</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.HMetrics.html" title="rusttype::HMetrics struct">HMetrics</a></td><td class="docblock-short"><p>The &quot;horizontal metrics&quot; of a glyph. This is useful for calculating the
+horizontal offset of a glyph from the previous one in a string when laying a
+string out horizontally.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.IntoFontsIter.html" title="rusttype::IntoFontsIter struct">IntoFontsIter</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.LayoutIter.html" title="rusttype::LayoutIter struct">LayoutIter</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.Line.html" title="rusttype::Line struct">Line</a></td><td class="docblock-short"><p>A straight line between two points, <code>p[0]</code> and <code>p[1]</code></p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Point.html" title="rusttype::Point struct">Point</a></td><td class="docblock-short"><p>A point in 2-dimensional space, with each dimension of type <code>N</code>.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.PositionedGlyph.html" title="rusttype::PositionedGlyph struct">PositionedGlyph</a></td><td class="docblock-short"><p>A glyph augmented with positioning and scaling information. You can query
+such a glyph for information that depends on the scale and position of the
+glyph.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Rect.html" title="rusttype::Rect struct">Rect</a></td><td class="docblock-short"><p>A rectangle, with top-left corner at <code>min</code>, and bottom-right corner at
+<code>max</code>.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Scale.html" title="rusttype::Scale struct">Scale</a></td><td class="docblock-short"><p>Defines the size of a rendered face of a font, in pixels, horizontally and
+vertically. A vertical scale of <code>y</code> pixels means that the distance betwen
+the ascent and descent lines (see <code>VMetrics</code>) of the face will be <code>y</code>
+pixels. If <code>x</code> and <code>y</code> are equal the scaling is uniform. Non-uniform scaling
+by a factor <em>f</em> in the horizontal direction is achieved by setting <code>x</code> equal
+to <em>f</em> times <code>y</code>.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ScaledGlyph.html" title="rusttype::ScaledGlyph struct">ScaledGlyph</a></td><td class="docblock-short"><p>A glyph augmented with scaling information. You can query such a glyph for
+information that depends on the scale of the glyph.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.SharedGlyphData.html" title="rusttype::SharedGlyphData struct">SharedGlyphData</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.VMetrics.html" title="rusttype::VMetrics struct">VMetrics</a></td><td class="docblock-short"><p>The &quot;vertical metrics&quot; of a font at a particular scale. This is useful for
+calculating the amount of vertical space to give a line of text, and for
+computing the vertical offset between successive lines.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Vector.html" title="rusttype::Vector struct">Vector</a></td><td class="docblock-short"><p>A vector in 2-dimensional space, with each dimension of type <code>N</code>.</p>
+</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="enum" href="enum.Error.html" title="rusttype::Error enum">Error</a></td><td class="docblock-short"><p>The type for errors returned by rusttype.</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.Segment.html" title="rusttype::Segment enum">Segment</a></td><td class="docblock-short"><p>Part of a <code>Contour</code>, either a <code>Line</code> or a <code>Curve</code>.</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.SharedBytes.html" title="rusttype::SharedBytes enum">SharedBytes</a></td><td class="docblock-short"><p><code>SharedBytes</code> handles the lifetime of font data used in RustType. The data
+is either a shared reference to externally owned data, or managed by
+reference counting. <code>SharedBytes</code> can be conveniently used with <code>From</code> and
+<code>Into</code>, and dereferences to the contained bytes.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.IntoGlyphId.html" title="rusttype::IntoGlyphId trait">IntoGlyphId</a></td><td class="docblock-short"><p>A trait for types that can be converted into a <code>GlyphId</code>, in the context of
+a specific font.</p>
+</td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="module-item"><td><a class="fn" href="fn.point.html" title="rusttype::point fn">point</a></td><td class="docblock-short"><p>A convenience function for generating <code>Point</code>s.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.vector.html" title="rusttype::vector fn">vector</a></td><td class="docblock-short"><p>A convenience function for generating <code>Vector</code>s.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "rusttype";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

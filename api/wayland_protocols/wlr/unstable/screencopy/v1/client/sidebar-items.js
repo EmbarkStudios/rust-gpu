@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["zwlr_screencopy_frame_v1","a frame ready for copy"],["zwlr_screencopy_manager_v1","manager to inform clients and begin capturing"]]});

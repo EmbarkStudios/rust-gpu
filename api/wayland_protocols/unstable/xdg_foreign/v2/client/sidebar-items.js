@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["zxdg_exported_v2","an exported surface handle"],["zxdg_exporter_v2","interface for exporting surfaces"],["zxdg_imported_v2","an imported surface handle"],["zxdg_importer_v2","interface for importing surfaces"]]});

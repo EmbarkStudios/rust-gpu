@@ -1,0 +1,61 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `wl_surface` mod in crate `wayland_client`."><meta name="keywords" content="rust, rustlang, rust-lang, wl_surface"><title>wayland_client::protocol::wl_surface - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wayland_client/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><p class="location">Module wl_surface</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#constants">Constants</a></li><li><a href="#statics">Statics</a></li><li><a href="#traits">Traits</a></li></ul></div><p class="location"><a href="../../index.html">wayland_client</a>::<wbr><a href="../index.html">protocol</a></p><script>window.sidebarCurrent = {name: "wl_surface", ty: "mod", relpath: "../"};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../../src/wayland_client/home/runner/work/rust-gpu/rust-gpu/target/debug/build/wayland-client-d906b3376856ac52/out/wayland_api.rs.html#5416-6139" title="goto source code">[src]</a></span><span class="in-band">Module <a href="../../index.html">wayland_client</a>::<wbr><a href="../index.html">protocol</a>::<wbr><a class="mod" href="">wl_surface</a></span></h1><div class="docblock"><p>an onscreen surface</p>
+<p>A surface is a rectangular area that is displayed on the screen.
+It has a location, size and pixel contents.</p>
+<p>The size of a surface (and relative positions on it) is described
+in surface-local coordinates, which may differ from the buffer
+coordinates of the pixel content, in case a buffer_transform
+or a buffer_scale is used.</p>
+<p>A surface without a &quot;role&quot; is fairly useless: a compositor does
+not know where, when or how to present it. The role is the
+purpose of a wl_surface. Examples of roles are a cursor for a
+pointer (as set by wl_pointer.set_cursor), a drag icon
+(wl_data_device.start_drag), a sub-surface
+(wl_subcompositor.get_subsurface), and a window as defined by a
+shell protocol (e.g. wl_shell.get_shell_surface).</p>
+<p>A surface can have only one role at a time. Initially a
+wl_surface does not have a role. Once a wl_surface is given a
+role, it is set permanently for the whole lifetime of the
+wl_surface object. Giving the current role again is allowed,
+unless explicitly forbidden by the relevant interface
+specification.</p>
+<p>Surface roles are given by requests in other interfaces such as
+wl_pointer.set_cursor. The request should explicitly mention
+that this request gives a role to a wl_surface. Often, this
+request also creates a new protocol object that represents the
+role and adds additional functionality to wl_surface. When a
+client wants to destroy a wl_surface, they must destroy this 'role
+object' before the wl_surface.</p>
+<p>Destroying the role object does not remove the role from the
+wl_surface, but it may stop the wl_surface from &quot;playing the role&quot;.
+For instance, if a wl_subsurface object is destroyed, the wl_surface
+it was created for will be unmapped and forget its position and
+z-order. It is allowed to create a wl_subsurface for the same
+wl_surface again, but it is not allowed to use the wl_surface as
+a cursor (cursor is a different role than sub-surface, and role
+switching is not allowed).</p>
+</div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.WlSurface.html" title="wayland_client::protocol::wl_surface::WlSurface struct">WlSurface</a></td><td class="docblock-short"></td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="enum" href="enum.Error.html" title="wayland_client::protocol::wl_surface::Error enum">Error</a></td><td class="docblock-short"><p>wl_surface error values</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.Event.html" title="wayland_client::protocol::wl_surface::Event enum">Event</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="enum" href="enum.Request.html" title="wayland_client::protocol::wl_surface::Request enum">Request</a></td><td class="docblock-short"></td></tr></table><h2 id="constants" class="section-header"><a href="#constants">Constants</a></h2>
+<table><tr class="module-item"><td><a class="constant" href="constant.EVT_ENTER_SINCE.html" title="wayland_client::protocol::wl_surface::EVT_ENTER_SINCE constant">EVT_ENTER_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this event</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.EVT_LEAVE_SINCE.html" title="wayland_client::protocol::wl_surface::EVT_LEAVE_SINCE constant">EVT_LEAVE_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this event</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_ATTACH_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_ATTACH_SINCE constant">REQ_ATTACH_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_COMMIT_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_COMMIT_SINCE constant">REQ_COMMIT_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_DAMAGE_BUFFER_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_DAMAGE_BUFFER_SINCE constant">REQ_DAMAGE_BUFFER_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_DAMAGE_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_DAMAGE_SINCE constant">REQ_DAMAGE_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_DESTROY_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_DESTROY_SINCE constant">REQ_DESTROY_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_FRAME_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_FRAME_SINCE constant">REQ_FRAME_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_SET_BUFFER_SCALE_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_SET_BUFFER_SCALE_SINCE constant">REQ_SET_BUFFER_SCALE_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_SET_BUFFER_TRANSFORM_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_SET_BUFFER_TRANSFORM_SINCE constant">REQ_SET_BUFFER_TRANSFORM_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_SET_INPUT_REGION_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_SET_INPUT_REGION_SINCE constant">REQ_SET_INPUT_REGION_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_SET_OPAQUE_REGION_SINCE.html" title="wayland_client::protocol::wl_surface::REQ_SET_OPAQUE_REGION_SINCE constant">REQ_SET_OPAQUE_REGION_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr></table><h2 id="statics" class="section-header"><a href="#statics">Statics</a></h2>
+<table><tr class="module-item"><td><a class="static" href="static.wl_surface_events.html" title="wayland_client::protocol::wl_surface::wl_surface_events static">wl_surface_events</a></td><td class="docblock-short"><p>C-representation of the messages of this interface, for interop</p>
+</td></tr><tr class="module-item"><td><a class="static" href="static.wl_surface_interface.html" title="wayland_client::protocol::wl_surface::wl_surface_interface static">wl_surface_interface</a></td><td class="docblock-short"><p>C representation of this interface, for interop</p>
+</td></tr><tr class="module-item"><td><a class="static" href="static.wl_surface_requests.html" title="wayland_client::protocol::wl_surface::wl_surface_requests static">wl_surface_requests</a></td><td class="docblock-short"><p>C-representation of the messages of this interface, for interop</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.EventHandler.html" title="wayland_client::protocol::wl_surface::EventHandler trait">EventHandler</a></td><td class="docblock-short"><p>An interface for handling events.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "wayland_client";</script><script src="../../../main.js"></script><script defer src="../../../search-index.js"></script></body></html>

@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["parse_xcursor","Parse an XCursor file into its images."]],"struct":[["Image","A struct representing an image. Pixels are in ARGB format, with each byte representing a single channel."]]});

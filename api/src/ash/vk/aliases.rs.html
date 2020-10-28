@@ -1,0 +1,348 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ash-0.31.0/src/vk/aliases.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>aliases.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../ash/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vk</span>::<span class="ident">bitflags</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vk</span>::<span class="ident">definitions</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vk</span>::<span class="ident">enums</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">GeometryFlagsNV</span> <span class="op">=</span> <span class="ident">GeometryFlagsKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">GeometryInstanceFlagsNV</span> <span class="op">=</span> <span class="ident">GeometryInstanceFlagsKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BuildAccelerationStructureFlagsNV</span> <span class="op">=</span> <span class="ident">BuildAccelerationStructureFlagsKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorUpdateTemplateCreateFlagsKHR</span> <span class="op">=</span> <span class="ident">DescriptorUpdateTemplateCreateFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SemaphoreWaitFlagsKHR</span> <span class="op">=</span> <span class="ident">SemaphoreWaitFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PeerMemoryFeatureFlagsKHR</span> <span class="op">=</span> <span class="ident">PeerMemoryFeatureFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MemoryAllocateFlagsKHR</span> <span class="op">=</span> <span class="ident">MemoryAllocateFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CommandPoolTrimFlagsKHR</span> <span class="op">=</span> <span class="ident">CommandPoolTrimFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalMemoryHandleTypeFlagsKHR</span> <span class="op">=</span> <span class="ident">ExternalMemoryHandleTypeFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalMemoryFeatureFlagsKHR</span> <span class="op">=</span> <span class="ident">ExternalMemoryFeatureFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalSemaphoreHandleTypeFlagsKHR</span> <span class="op">=</span> <span class="ident">ExternalSemaphoreHandleTypeFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalSemaphoreFeatureFlagsKHR</span> <span class="op">=</span> <span class="ident">ExternalSemaphoreFeatureFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SemaphoreImportFlagsKHR</span> <span class="op">=</span> <span class="ident">SemaphoreImportFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalFenceHandleTypeFlagsKHR</span> <span class="op">=</span> <span class="ident">ExternalFenceHandleTypeFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalFenceFeatureFlagsKHR</span> <span class="op">=</span> <span class="ident">ExternalFenceFeatureFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">FenceImportFlagsKHR</span> <span class="op">=</span> <span class="ident">FenceImportFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorBindingFlagsEXT</span> <span class="op">=</span> <span class="ident">DescriptorBindingFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ResolveModeFlagsKHR</span> <span class="op">=</span> <span class="ident">ResolveModeFlags</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorUpdateTemplateKHR</span> <span class="op">=</span> <span class="ident">DescriptorUpdateTemplate</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SamplerYcbcrConversionKHR</span> <span class="op">=</span> <span class="ident">SamplerYcbcrConversion</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AccelerationStructureNV</span> <span class="op">=</span> <span class="ident">AccelerationStructureKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorUpdateTemplateTypeKHR</span> <span class="op">=</span> <span class="ident">DescriptorUpdateTemplateType</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PointClippingBehaviorKHR</span> <span class="op">=</span> <span class="ident">PointClippingBehavior</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SemaphoreTypeKHR</span> <span class="op">=</span> <span class="ident">SemaphoreType</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CopyAccelerationStructureModeNV</span> <span class="op">=</span> <span class="ident">CopyAccelerationStructureModeKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AccelerationStructureTypeNV</span> <span class="op">=</span> <span class="ident">AccelerationStructureTypeKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">GeometryTypeNV</span> <span class="op">=</span> <span class="ident">GeometryTypeKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RayTracingShaderGroupTypeNV</span> <span class="op">=</span> <span class="ident">RayTracingShaderGroupTypeKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AccelerationStructureMemoryRequirementsTypeNV</span> <span class="op">=</span>
+    <span class="ident">AccelerationStructureMemoryRequirementsTypeKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TessellationDomainOriginKHR</span> <span class="op">=</span> <span class="ident">TessellationDomainOrigin</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SamplerYcbcrModelConversionKHR</span> <span class="op">=</span> <span class="ident">SamplerYcbcrModelConversion</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SamplerYcbcrRangeKHR</span> <span class="op">=</span> <span class="ident">SamplerYcbcrRange</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ChromaLocationKHR</span> <span class="op">=</span> <span class="ident">ChromaLocation</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SamplerReductionModeEXT</span> <span class="op">=</span> <span class="ident">SamplerReductionMode</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ShaderFloatControlsIndependenceKHR</span> <span class="op">=</span> <span class="ident">ShaderFloatControlsIndependence</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DriverIdKHR</span> <span class="op">=</span> <span class="ident">DriverId</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceFeatures2KHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceFeatures2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceProperties2KHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceProperties2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">FormatProperties2KHR</span> <span class="op">=</span> <span class="ident">FormatProperties2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageFormatProperties2KHR</span> <span class="op">=</span> <span class="ident">ImageFormatProperties2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceImageFormatInfo2KHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceImageFormatInfo2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">QueueFamilyProperties2KHR</span> <span class="op">=</span> <span class="ident">QueueFamilyProperties2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceMemoryProperties2KHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceMemoryProperties2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SparseImageFormatProperties2KHR</span> <span class="op">=</span> <span class="ident">SparseImageFormatProperties2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceSparseImageFormatInfo2KHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceSparseImageFormatInfo2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ConformanceVersionKHR</span> <span class="op">=</span> <span class="ident">ConformanceVersion</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceDriverPropertiesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceDriverProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceVariablePointersFeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceVariablePointersFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceVariablePointerFeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceVariablePointersFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceVariablePointerFeatures</span> <span class="op">=</span> <span class="ident">PhysicalDeviceVariablePointersFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalMemoryPropertiesKHR</span> <span class="op">=</span> <span class="ident">ExternalMemoryProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceExternalImageFormatInfoKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceExternalImageFormatInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalImageFormatPropertiesKHR</span> <span class="op">=</span> <span class="ident">ExternalImageFormatProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceExternalBufferInfoKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceExternalBufferInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalBufferPropertiesKHR</span> <span class="op">=</span> <span class="ident">ExternalBufferProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceIDPropertiesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceIDProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalMemoryImageCreateInfoKHR</span> <span class="op">=</span> <span class="ident">ExternalMemoryImageCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalMemoryBufferCreateInfoKHR</span> <span class="op">=</span> <span class="ident">ExternalMemoryBufferCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExportMemoryAllocateInfoKHR</span> <span class="op">=</span> <span class="ident">ExportMemoryAllocateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceExternalSemaphoreInfoKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceExternalSemaphoreInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalSemaphorePropertiesKHR</span> <span class="op">=</span> <span class="ident">ExternalSemaphoreProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExportSemaphoreCreateInfoKHR</span> <span class="op">=</span> <span class="ident">ExportSemaphoreCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceExternalFenceInfoKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceExternalFenceInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExternalFencePropertiesKHR</span> <span class="op">=</span> <span class="ident">ExternalFenceProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ExportFenceCreateInfoKHR</span> <span class="op">=</span> <span class="ident">ExportFenceCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceMultiviewFeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceMultiviewFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceMultiviewPropertiesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceMultiviewProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RenderPassMultiviewCreateInfoKHR</span> <span class="op">=</span> <span class="ident">RenderPassMultiviewCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceGroupPropertiesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceGroupProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MemoryAllocateFlagsInfoKHR</span> <span class="op">=</span> <span class="ident">MemoryAllocateFlagsInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BindBufferMemoryInfoKHR</span> <span class="op">=</span> <span class="ident">BindBufferMemoryInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BindBufferMemoryDeviceGroupInfoKHR</span> <span class="op">=</span> <span class="ident">BindBufferMemoryDeviceGroupInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BindImageMemoryInfoKHR</span> <span class="op">=</span> <span class="ident">BindImageMemoryInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BindImageMemoryDeviceGroupInfoKHR</span> <span class="op">=</span> <span class="ident">BindImageMemoryDeviceGroupInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DeviceGroupRenderPassBeginInfoKHR</span> <span class="op">=</span> <span class="ident">DeviceGroupRenderPassBeginInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DeviceGroupCommandBufferBeginInfoKHR</span> <span class="op">=</span> <span class="ident">DeviceGroupCommandBufferBeginInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DeviceGroupSubmitInfoKHR</span> <span class="op">=</span> <span class="ident">DeviceGroupSubmitInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DeviceGroupBindSparseInfoKHR</span> <span class="op">=</span> <span class="ident">DeviceGroupBindSparseInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DeviceGroupDeviceCreateInfoKHR</span> <span class="op">=</span> <span class="ident">DeviceGroupDeviceCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorUpdateTemplateEntryKHR</span> <span class="op">=</span> <span class="ident">DescriptorUpdateTemplateEntry</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorUpdateTemplateCreateInfoKHR</span> <span class="op">=</span> <span class="ident">DescriptorUpdateTemplateCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">InputAttachmentAspectReferenceKHR</span> <span class="op">=</span> <span class="ident">InputAttachmentAspectReference</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RenderPassInputAttachmentAspectCreateInfoKHR</span> <span class="op">=</span> <span class="ident">RenderPassInputAttachmentAspectCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDevice16BitStorageFeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDevice16BitStorageFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceShaderSubgroupExtendedTypesFeaturesKHR</span> <span class="op">=</span>
+    <span class="ident">PhysicalDeviceShaderSubgroupExtendedTypesFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BufferMemoryRequirementsInfo2KHR</span> <span class="op">=</span> <span class="ident">BufferMemoryRequirementsInfo2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageMemoryRequirementsInfo2KHR</span> <span class="op">=</span> <span class="ident">ImageMemoryRequirementsInfo2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageSparseMemoryRequirementsInfo2KHR</span> <span class="op">=</span> <span class="ident">ImageSparseMemoryRequirementsInfo2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MemoryRequirements2KHR</span> <span class="op">=</span> <span class="ident">MemoryRequirements2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SparseImageMemoryRequirements2KHR</span> <span class="op">=</span> <span class="ident">SparseImageMemoryRequirements2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDevicePointClippingPropertiesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDevicePointClippingProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MemoryDedicatedRequirementsKHR</span> <span class="op">=</span> <span class="ident">MemoryDedicatedRequirements</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MemoryDedicatedAllocateInfoKHR</span> <span class="op">=</span> <span class="ident">MemoryDedicatedAllocateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageViewUsageCreateInfoKHR</span> <span class="op">=</span> <span class="ident">ImageViewUsageCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PipelineTessellationDomainOriginStateCreateInfoKHR</span> <span class="op">=</span>
+    <span class="ident">PipelineTessellationDomainOriginStateCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SamplerYcbcrConversionInfoKHR</span> <span class="op">=</span> <span class="ident">SamplerYcbcrConversionInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SamplerYcbcrConversionCreateInfoKHR</span> <span class="op">=</span> <span class="ident">SamplerYcbcrConversionCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BindImagePlaneMemoryInfoKHR</span> <span class="op">=</span> <span class="ident">BindImagePlaneMemoryInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImagePlaneMemoryRequirementsInfoKHR</span> <span class="op">=</span> <span class="ident">ImagePlaneMemoryRequirementsInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceSamplerYcbcrConversionFeaturesKHR</span> <span class="op">=</span>
+    <span class="ident">PhysicalDeviceSamplerYcbcrConversionFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SamplerYcbcrConversionImageFormatPropertiesKHR</span> <span class="op">=</span>
+    <span class="ident">SamplerYcbcrConversionImageFormatProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceSamplerFilterMinmaxPropertiesEXT</span> <span class="op">=</span>
+    <span class="ident">PhysicalDeviceSamplerFilterMinmaxProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SamplerReductionModeCreateInfoEXT</span> <span class="op">=</span> <span class="ident">SamplerReductionModeCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageFormatListCreateInfoKHR</span> <span class="op">=</span> <span class="ident">ImageFormatListCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceMaintenance3PropertiesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceMaintenance3Properties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorSetLayoutSupportKHR</span> <span class="op">=</span> <span class="ident">DescriptorSetLayoutSupport</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceShaderDrawParameterFeatures</span> <span class="op">=</span> <span class="ident">PhysicalDeviceShaderDrawParametersFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceShaderFloat16Int8FeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceShaderFloat16Int8Features</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceFloat16Int8FeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceShaderFloat16Int8Features</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceFloatControlsPropertiesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceFloatControlsProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceHostQueryResetFeaturesEXT</span> <span class="op">=</span> <span class="ident">PhysicalDeviceHostQueryResetFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceDescriptorIndexingFeaturesEXT</span> <span class="op">=</span> <span class="ident">PhysicalDeviceDescriptorIndexingFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceDescriptorIndexingPropertiesEXT</span> <span class="op">=</span> <span class="ident">PhysicalDeviceDescriptorIndexingProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorSetLayoutBindingFlagsCreateInfoEXT</span> <span class="op">=</span> <span class="ident">DescriptorSetLayoutBindingFlagsCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorSetVariableDescriptorCountAllocateInfoEXT</span> <span class="op">=</span>
+    <span class="ident">DescriptorSetVariableDescriptorCountAllocateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DescriptorSetVariableDescriptorCountLayoutSupportEXT</span> <span class="op">=</span>
+    <span class="ident">DescriptorSetVariableDescriptorCountLayoutSupport</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AttachmentDescription2KHR</span> <span class="op">=</span> <span class="ident">AttachmentDescription2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AttachmentReference2KHR</span> <span class="op">=</span> <span class="ident">AttachmentReference2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SubpassDescription2KHR</span> <span class="op">=</span> <span class="ident">SubpassDescription2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SubpassDependency2KHR</span> <span class="op">=</span> <span class="ident">SubpassDependency2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RenderPassCreateInfo2KHR</span> <span class="op">=</span> <span class="ident">RenderPassCreateInfo2</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SubpassBeginInfoKHR</span> <span class="op">=</span> <span class="ident">SubpassBeginInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SubpassEndInfoKHR</span> <span class="op">=</span> <span class="ident">SubpassEndInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceTimelineSemaphoreFeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceTimelineSemaphoreFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceTimelineSemaphorePropertiesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceTimelineSemaphoreProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SemaphoreTypeCreateInfoKHR</span> <span class="op">=</span> <span class="ident">SemaphoreTypeCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TimelineSemaphoreSubmitInfoKHR</span> <span class="op">=</span> <span class="ident">TimelineSemaphoreSubmitInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SemaphoreWaitInfoKHR</span> <span class="op">=</span> <span class="ident">SemaphoreWaitInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SemaphoreSignalInfoKHR</span> <span class="op">=</span> <span class="ident">SemaphoreSignalInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDevice8BitStorageFeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDevice8BitStorageFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceVulkanMemoryModelFeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceVulkanMemoryModelFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceShaderAtomicInt64FeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceShaderAtomicInt64Features</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceDepthStencilResolvePropertiesKHR</span> <span class="op">=</span>
+    <span class="ident">PhysicalDeviceDepthStencilResolveProperties</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SubpassDescriptionDepthStencilResolveKHR</span> <span class="op">=</span> <span class="ident">SubpassDescriptionDepthStencilResolve</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BindAccelerationStructureMemoryInfoNV</span> <span class="op">=</span> <span class="ident">BindAccelerationStructureMemoryInfoKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">WriteDescriptorSetAccelerationStructureNV</span> <span class="op">=</span> <span class="ident">WriteDescriptorSetAccelerationStructureKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageStencilUsageCreateInfoEXT</span> <span class="op">=</span> <span class="ident">ImageStencilUsageCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceScalarBlockLayoutFeaturesEXT</span> <span class="op">=</span> <span class="ident">PhysicalDeviceScalarBlockLayoutFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceUniformBufferStandardLayoutFeaturesKHR</span> <span class="op">=</span>
+    <span class="ident">PhysicalDeviceUniformBufferStandardLayoutFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceBufferDeviceAddressFeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceBufferDeviceAddressFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceBufferAddressFeaturesEXT</span> <span class="op">=</span> <span class="ident">PhysicalDeviceBufferDeviceAddressFeaturesEXT</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BufferDeviceAddressInfoKHR</span> <span class="op">=</span> <span class="ident">BufferDeviceAddressInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BufferDeviceAddressInfoEXT</span> <span class="op">=</span> <span class="ident">BufferDeviceAddressInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BufferOpaqueCaptureAddressCreateInfoKHR</span> <span class="op">=</span> <span class="ident">BufferOpaqueCaptureAddressCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceImagelessFramebufferFeaturesKHR</span> <span class="op">=</span> <span class="ident">PhysicalDeviceImagelessFramebufferFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">FramebufferAttachmentsCreateInfoKHR</span> <span class="op">=</span> <span class="ident">FramebufferAttachmentsCreateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">FramebufferAttachmentImageInfoKHR</span> <span class="op">=</span> <span class="ident">FramebufferAttachmentImageInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RenderPassAttachmentBeginInfoKHR</span> <span class="op">=</span> <span class="ident">RenderPassAttachmentBeginInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">QueryPoolCreateInfoINTEL</span> <span class="op">=</span> <span class="ident">QueryPoolPerformanceQueryCreateInfoINTEL</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PhysicalDeviceSeparateDepthStencilLayoutsFeaturesKHR</span> <span class="op">=</span>
+    <span class="ident">PhysicalDeviceSeparateDepthStencilLayoutsFeatures</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AttachmentReferenceStencilLayoutKHR</span> <span class="op">=</span> <span class="ident">AttachmentReferenceStencilLayout</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AttachmentDescriptionStencilLayoutKHR</span> <span class="op">=</span> <span class="ident">AttachmentDescriptionStencilLayout</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MemoryOpaqueCaptureAddressAllocateInfoKHR</span> <span class="op">=</span> <span class="ident">MemoryOpaqueCaptureAddressAllocateInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DeviceMemoryOpaqueCaptureAddressInfoKHR</span> <span class="op">=</span> <span class="ident">DeviceMemoryOpaqueCaptureAddressInfo</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AabbPositionsNV</span> <span class="op">=</span> <span class="ident">AabbPositionsKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TransformMatrixNV</span> <span class="op">=</span> <span class="ident">TransformMatrixKHR</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AccelerationStructureInstanceNV</span> <span class="op">=</span> <span class="ident">AccelerationStructureInstanceKHR</span>;
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "ash";</script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

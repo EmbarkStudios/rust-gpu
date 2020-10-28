@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["wl_display",""],["wl_event_queue",""],["wl_proxy",""]],"fn":[["is_lib_available",""]],"struct":[["WAYLAND_CLIENT_HANDLE",""],["WAYLAND_CLIENT_OPTION",""],["WaylandClient",""]]});

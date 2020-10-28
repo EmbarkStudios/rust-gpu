@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Capability",""],["EntryPoint",""],["ExecutionMode",""],["ExecutionModeId",""],["ExtInst",""],["ExtInstImport",""],["Extension",""],["Function",""],["FunctionCall",""],["FunctionEnd",""],["FunctionParameter",""],["MemoryModel",""]]});

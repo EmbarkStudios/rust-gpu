@@ -1,0 +1,121 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `wayland_client` crate."><meta name="keywords" content="rust, rustlang, rust-lang, wayland_client"><title>wayland_client - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../wayland_client/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate wayland_client</p><div class="block version"><p>Version 0.23.6</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all wayland_client's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "wayland_client", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/wayland_client/lib.rs.html#1-300" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">wayland_client</a></span></h1><div class="docblock"><p>Client-side Wayland connector</p>
+<h2 id="overview" class="section-header"><a href="#overview">Overview</a></h2>
+<p>This crate provides the interfaces and machinery to safely create
+client applications for the Wayland protocol. It is a rust wrapper
+around the <code>libwayland-client.so</code> C library.</p>
+<p>The Wayland protocol revolves around the creation of various objects
+and the exchange of messages associated to these objects. The initial
+object is always the <code>Display</code>, that you get at initialization of the
+connection, exposed by this crate as <code>Display::connect_to_env()</code>.</p>
+<h2 id="protocol-and-messages-handling-model" class="section-header"><a href="#protocol-and-messages-handling-model">Protocol and messages handling model</a></h2>
+<p>The protocol being bi-directional, you can send and receive messages.
+Sending messages is done via methods of Rust objects corresponding to the wayland protocol
+objects, receiving and handling them is done by providing implementations.</p>
+<h3 id="proxies" class="section-header"><a href="#proxies">Proxies</a></h3>
+<p>The underlying representation of Wayland protocol objects in this crate is <code>Proxy&lt;I&gt;</code>,
+where <code>I</code> is the type of the considered Rust object. An object's interface (think &quot;class&quot;
+in an object-oriented context) defines which messages it can send and receive.</p>
+<p>These proxies are used to send messages to the server (in the Wayland context,
+these are called &quot;requests&quot;). You usually don't use them directly, and instead call
+methods on the Rust objects themselves, which invoke the appropriate <code>Proxy</code> methods.
+It is also possible to directly use the <code>Proxy::&lt;I&gt;::send(..)</code> method, but
+this should only be done carefully: using it improperly can mess the protocol
+state and cause protocol errors, which are fatal to the connection (the server
+will kill you).</p>
+<p>There is not a 1 to 1 mapping between Rust object instances and protocol
+objects. Rather, you can think of the Rust objects as <code>Rc</code>-like handles to a
+Wayland object. Multiple instances of a Rust object can exist referring to the same
+protocol object.</p>
+<p>Similarly, the lifetimes of the protocol objects and the Rust objects are
+not tightly tied. As protocol objects are created and destroyed by protocol
+messages, it can happen that an object gets destroyed while one or more
+Rust objects still refer to it. In such case, these Rust objects will be disabled
+and the <code>alive()</code> method on the underlying <code>Proxy&lt;I&gt;</code> will start to return <code>false</code>.
+Trying to send messages with them will also fail.</p>
+<h3 id="implementations-2" class="section-header"><a href="#implementations-2">Implementations</a></h3>
+<p>To receive and process messages from the server to you (in Wayland context they are
+called &quot;events&quot;), you need to provide an <code>Implementation</code> for each Wayland object
+created in the protocol session. Whenever a new protocol object is created, you will
+receive a <code>NewProxy&lt;I&gt;</code> object. Providing an implementation via its <code>implement()</code> method
+will turn it into a regular Rust object.</p>
+<p><strong>All objects must be implemented</strong>, even if it is an implementation doing nothing.
+Failure to do so (by dropping the <code>NewProxy&lt;I&gt;</code> for example) can cause future fatal
+errors if the server tries to send an event to this object.</p>
+<p>An implementation is a struct implementing the <code>EventHandler</code> trait for the interface
+of the considered object. Alternatively, an <code>FnMut(I::Event, I)</code> closure can be
+used with the <code>implement_closure()</code> method, where <code>I</code> is the interface
+of the considered object.</p>
+<h2 id="event-queues" class="section-header"><a href="#event-queues">Event Queues</a></h2>
+<p>The Wayland client machinery provides the possibility to have one or more event queues
+handling the processing of received messages. All Wayland objects are associated to an
+event queue, which controls when its events are dispatched.</p>
+<p>Events received from the server are stored in an internal buffer, and processed (by calling
+the appropriate implementations) when the associated event queue is dispatched.</p>
+<p>A default event queue is created at the same time as the initial <code>Display</code>, and by default
+whenever a Wayland object is created, it inherits the queue of its parent (the object that sent
+or receive the message that created the new object). It means that if you only plan to use the
+default event queue, you don't need to worry about assigning objects to their queues.</p>
+<p>See the documentation of <code>EventQueue</code> for details about dispatching and integrating the event
+queue into the event loop of your application. See the <code>Proxy::make_wrapper()</code> method for
+details about assigning objects to event queues.</p>
+<h2 id="dynamic-linking-with-libwayland-clientso" class="section-header"><a href="#dynamic-linking-with-libwayland-clientso">Dynamic linking with <code>libwayland-client.so</code></a></h2>
+<p>If you need to gracefully handle the case of a system on which Wayland is not installed (by
+fallbacking to X11 for example), you can do so by activating the <code>dlopen</code> cargo feature.</p>
+<p>When this is done, the library will be loaded a runtime rather than directly linked. And trying
+to create a <code>Display</code> on a system that does not have this library will return a <code>NoWaylandLib</code>
+error.</p>
+<h2 id="auxiliary-libraries" class="section-header"><a href="#auxiliary-libraries">Auxiliary libraries</a></h2>
+<p>Two auxiliary libraries are also available behind cargo features:</p>
+<ul>
+<li>the <code>cursor</code> feature will try to load <code>libwayland-cursor.so</code>, a library helping with loading
+system themed cursor textures, to integrate your app in the system theme.</li>
+<li>the <code>egl</code> feature will try to load <code>libwayland-egl.so</code>, a library allowing the creation of
+OpenGL surface from Wayland surfaces.</li>
+</ul>
+<p>Both of them will also be loaded at runtime if the <code>dlopen</code> feature was provided. See their
+respective submodules for details about their use.</p>
+<h3 id="event-loop-integration" class="section-header"><a href="#event-loop-integration">Event Loop integration</a></h3>
+<p>The <code>eventloop</code> cargo feature adds the necessary implementations to use an <code>EventQueue</code>
+as a <code>calloop</code> event source. If you want to use it, here are a few points to take into
+account:</p>
+<ul>
+<li>The <code>EventQueue</code> will not call its associated callback, but rather manage all the
+event dispatching internally. As a result, there is no point registering it to
+<code>calloop</code> with anything other than a dummy callback.</li>
+<li>You still need to call <code>Display::flush()</code> yourself between <code>calloop</code>s dispatches,
+or in the <code>EventLoop::run()</code> callback of <code>calloop</code>.</li>
+</ul>
+</div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="cursor/index.html" title="wayland_client::cursor mod">cursor</a></td><td class="docblock-short"><p>Cursor utilities</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="egl/index.html" title="wayland_client::egl mod">egl</a></td><td class="docblock-short"><p>EGL utilities</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="protocol/index.html" title="wayland_client::protocol mod">protocol</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="sinks/index.html" title="wayland_client::sinks mod">sinks</a></td><td class="docblock-short"><p>Message sinks</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="sys/index.html" title="wayland_client::sys mod">sys</a></td><td class="docblock-short"><p>C-associated types</p>
+</td></tr></table><h2 id="macros" class="section-header"><a href="#macros">Macros</a></h2>
+<table><tr class="module-item"><td><a class="macro" href="macro.event_enum.html" title="wayland_client::event_enum macro">event_enum</a></td><td class="docblock-short"><p>Generate an enum joining several objects events</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.global_filter.html" title="wayland_client::global_filter macro">global_filter</a></td><td class="docblock-short"><p>Convenience macro to create a <code>GlobalManager</code> callback</p>
+</td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.AnonymousObject.html" title="wayland_client::AnonymousObject struct">AnonymousObject</a></td><td class="docblock-short"><p>Anonymous interface</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Display.html" title="wayland_client::Display struct">Display</a></td><td class="docblock-short"><p>A connection to a wayland server</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.EventQueue.html" title="wayland_client::EventQueue struct">EventQueue</a></td><td class="docblock-short"><p>An event queue for protocol messages</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.GlobalManager.html" title="wayland_client::GlobalManager struct">GlobalManager</a></td><td class="docblock-short"><p>An utility to manage global objects</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.NewProxy.html" title="wayland_client::NewProxy struct">NewProxy</a></td><td class="docblock-short"><p>A newly-created proxy that needs implementation</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ProtocolError.html" title="wayland_client::ProtocolError struct">ProtocolError</a></td><td class="docblock-short"><p>A protocol error</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Proxy.html" title="wayland_client::Proxy struct">Proxy</a></td><td class="docblock-short"><p>An handle to a wayland proxy</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.QueueToken.html" title="wayland_client::QueueToken struct">QueueToken</a></td><td class="docblock-short"><p>A token representing this event queue</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ReadEventsGuard.html" title="wayland_client::ReadEventsGuard struct">ReadEventsGuard</a></td><td class="docblock-short"><p>A guard over a read intention.</p>
+</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="enum" href="enum.ConnectError.html" title="wayland_client::ConnectError enum">ConnectError</a></td><td class="docblock-short"><p>Enum representing the possible reasons why connecting to the wayland server failed</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.GlobalError.html" title="wayland_client::GlobalError enum">GlobalError</a></td><td class="docblock-short"><p>An error that occurred trying to bind a global</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.GlobalEvent.html" title="wayland_client::GlobalEvent enum">GlobalEvent</a></td><td class="docblock-short"><p>Event provided to the user callback of GlobalManager</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.NoMessage.html" title="wayland_client::NoMessage enum">NoMessage</a></td><td class="docblock-short"><p>An empty enum representing a MessageGroup with no messages</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.ProxyMap.html" title="wayland_client::ProxyMap enum">ProxyMap</a></td><td class="docblock-short"><p>This type only exists for type-level compatibility
+with the rust implementation.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.GlobalImplementor.html" title="wayland_client::GlobalImplementor trait">GlobalImplementor</a></td><td class="docblock-short"><p>A trait for implementation of the global advertisement</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.HandledBy.html" title="wayland_client::HandledBy trait">HandledBy</a></td><td class="docblock-short"><p>Provides a callback function to handle events of the implementing interface via <code>T</code>.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.Interface.html" title="wayland_client::Interface trait">Interface</a></td><td class="docblock-short"><p>The description of a wayland interface</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.MessageGroup.html" title="wayland_client::MessageGroup trait">MessageGroup</a></td><td class="docblock-short"><p>A group of messages</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "wayland_client";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

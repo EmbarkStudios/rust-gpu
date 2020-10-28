@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["rand_chacha"] = [{"text":"impl BlockRngCore for ChaCha20Core","synthetic":false,"types":[]},{"text":"impl BlockRngCore for ChaCha12Core","synthetic":false,"types":[]},{"text":"impl BlockRngCore for ChaCha8Core","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

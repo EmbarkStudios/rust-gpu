@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["make_spirv","Treat the given byte slice as a SPIR-V module."]],"struct":[["BufferInitDescriptor","Describes a [`Buffer`] when allocating."],["StagingBelt","Staging belt is a machine that uploads data."]],"trait":[["DeviceExt","Utility methods not meant to be in the main API."]]});

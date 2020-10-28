@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `derive_more` crate."><meta name="keywords" content="rust, rustlang, rust-lang, derive_more"><title>derive_more - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../derive_more/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate derive_more</p><div class="block version"><p>Version 0.15.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all derive_more's items</p></a><p class="location"></p><script>window.sidebarCurrent = {name: "derive_more", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/derive_more/lib.rs.html#1-306" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">derive_more</a></span></h1><div class="docblock"><h1 id="derive_more" class="section-header"><a href="#derive_more"><code>derive_more</code></a></h1>
+<p>Rust has lots of builtin traits that are implemented for its basic types, such as <a href="https://doc.rust-lang.org/std/ops/trait.Add.html"><code>Add</code></a>,
+<a href="https://doc.rust-lang.org/std/ops/trait.Not.html"><code>Not</code></a> or <a href="https://doc.rust-lang.org/core/convert/trait.From.html"><code>From</code></a>.
+However, when wrapping these types inside your own structs or enums you lose the
+implementations of these traits and are required to recreate them.
+This is especially annoying when your own structures are very simple, such as when using the
+commonly advised newtype pattern (e.g. <code>MyInt(i32)</code>).</p>
+<p>This library tries to remove these annoyances and the corresponding boilerplate code.
+It does this by allowing you to derive lots of commonly used traits for both structs and enums.</p>
+<h2 id="example-code" class="section-header"><a href="#example-code">Example code</a></h2>
+<p>By using this library the following code just works:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">derive_more</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">From</span>, <span class="ident">Add</span>)]</span>
+<span class="kw">struct</span> <span class="ident">MyInt</span>(<span class="ident">i32</span>);
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">From</span>, <span class="ident">Into</span>, <span class="ident">Constructor</span>, <span class="ident">Mul</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Point2D</span> {
+    <span class="ident">x</span>: <span class="ident">i32</span>,
+    <span class="ident">y</span>: <span class="ident">i32</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">From</span>, <span class="ident">Add</span>)]</span>
+<span class="kw">enum</span> <span class="ident">MyEnum</span> {
+    <span class="ident">Int</span>(<span class="ident">i32</span>),
+    <span class="ident">UnsignedInt</span>(<span class="ident">u32</span>),
+    <span class="ident">Nothing</span>,
+}
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="ident">my_11</span> <span class="op">=</span> <span class="ident">MyInt</span>(<span class="number">5</span>) <span class="op">+</span> <span class="number">6</span>.<span class="ident">into</span>();
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">MyInt</span>(<span class="number">11</span>), <span class="ident">MyInt</span>(<span class="number">5</span>) <span class="op">+</span> <span class="number">6</span>.<span class="ident">into</span>());
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Point2D</span> { <span class="ident">x</span>: <span class="number">5</span>, <span class="ident">y</span>: <span class="number">6</span> } <span class="op">*</span> <span class="number">10</span>, (<span class="number">50</span>, <span class="number">60</span>).<span class="ident">into</span>());
+    <span class="macro">assert_eq</span><span class="macro">!</span>((<span class="number">5</span>, <span class="number">6</span>), <span class="ident">Point2D</span> { <span class="ident">x</span>: <span class="number">5</span>, <span class="ident">y</span>: <span class="number">6</span> }.<span class="ident">into</span>());
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Point2D</span> { <span class="ident">x</span>: <span class="number">5</span>, <span class="ident">y</span>: <span class="number">6</span> }, <span class="ident">Point2D</span>::<span class="ident">new</span>(<span class="number">5</span>, <span class="number">6</span>));
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">MyEnum</span>::<span class="ident">Int</span>(<span class="number">15</span>), (<span class="ident">MyEnum</span>::<span class="ident">Int</span>(<span class="number">8</span>) <span class="op">+</span> <span class="number">7</span>.<span class="ident">into</span>()).<span class="ident">unwrap</span>())
+}</pre></div>
+<h2 id="the-derivable-traits" class="section-header"><a href="#the-derivable-traits">The derivable traits</a></h2>
+<p>Below are all the traits that you can derive using this library.
+Some trait derivations are so similar that the further documentation will only show a single one
+of them.
+You can recognize these by the &quot;-like&quot; suffix in their name.
+The trait name before that will be the only one that is used throughout the further
+documentation.</p>
+<p><strong>NOTE</strong>: You still have to derive each trait separately. So <code>#[derive(Mul)]</code> doesn't
+automatically derive <code>Div</code> as well. To derive both you should do <code>#[derive(Mul, Div)]</code></p>
+<h3 id="conversion-traits" class="section-header"><a href="#conversion-traits">Conversion traits</a></h3>
+<p>These are traits that are used to convert automatically between types.</p>
+<ol>
+<li><a href="https://doc.rust-lang.org/core/convert/trait.From.html"><code>From</code></a></li>
+<li><a href="https://doc.rust-lang.org/core/convert/trait.Into.html"><code>Into</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/str/trait.FromStr.html"><code>FromStr</code></a></li>
+<li><a href="https://doc.rust-lang.org/core/convert/trait.TryInto.html"><code>TryInto</code></a></li>
+</ol>
+<h3 id="formatting-traits" class="section-header"><a href="#formatting-traits">Formatting traits</a></h3>
+<p>These traits are used for converting a struct to a string in different ways.</p>
+<ol>
+<li><code>Display</code>-like, contains <a href="https://doc.rust-lang.org/std/fmt/trait.Display.html"><code>Display</code></a>, <a href="https://doc.rust-lang.org/std/fmt/trait.Binary.html"><code>Binary</code></a>, <a href="https://doc.rust-lang.org/std/fmt/trait.Octal.html"><code>Octal</code></a>, <a href="https://doc.rust-lang.org/std/fmt/trait.LowerHex.html"><code>LowerHex</code></a>, <a href="https://doc.rust-lang.org/std/fmt/trait.UpperHex.html"><code>UpperHex</code></a>,
+<a href="https://doc.rust-lang.org/std/fmt/trait.LowerExp.html"><code>LowerExp</code></a>, <a href="https://doc.rust-lang.org/std/fmt/trait.UpperExp.html"><code>UpperExp</code></a>, <a href="https://doc.rust-lang.org/std/fmt/trait.Pointer.html"><code>Pointer</code></a></li>
+</ol>
+<h3 id="operators" class="section-header"><a href="#operators">Operators</a></h3>
+<p>These are traits that can be used for operator overloading.</p>
+<ol>
+<li><a href="https://doc.rust-lang.org/std/ops/trait.Index.html"><code>Index</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/ops/trait.Deref.html"><code>Deref</code></a></li>
+<li><code>Not</code>-like, contains <a href="https://doc.rust-lang.org/std/ops/trait.Not.html"><code>Not</code></a> and <a href="https://doc.rust-lang.org/std/ops/trait.Neg.html"><code>Neg</code></a></li>
+<li><code>Add</code>-like, contains <a href="https://doc.rust-lang.org/std/ops/trait.Add.html"><code>Add</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.Sub.html"><code>Sub</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.BitAnd.html"><code>BitAnd</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.BitOr.html"><code>BitOr</code></a> and <a href="https://doc.rust-lang.org/std/ops/trait.BitXor.html"><code>BitXor</code></a></li>
+<li><code>Mul</code>-like, contains <a href="https://doc.rust-lang.org/std/ops/trait.Mul.html"><code>Mul</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.Div.html"><code>Div</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.Rem.html"><code>Rem</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.Shr.html"><code>Shr</code></a> and <a href="https://doc.rust-lang.org/std/ops/trait.Shl.html"><code>Shl</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/ops/trait.IndexMut.html"><code>IndexMut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/ops/trait.DerefMut.html"><code>DerefMut</code></a></li>
+<li><code>AddAssign</code>-like, contains <a href="https://doc.rust-lang.org/std/ops/trait.AddAssign.html"><code>AddAssign</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.SubAssign.html"><code>SubAssign</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.BitAndAssign.html"><code>BitAndAssign</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.BitOrAssign.html"><code>BitOrAssign</code></a>
+and <a href="https://doc.rust-lang.org/std/ops/trait.BitXorAssign.html"><code>BitXorAssign</code></a></li>
+<li><code>MulAssign</code>-like, contains <a href="https://doc.rust-lang.org/std/ops/trait.MulAssign.html"><code>MulAssign</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.DivAssign.html"><code>DivAssign</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.RemAssign.html"><code>RemAssign</code></a>, <a href="https://doc.rust-lang.org/std/ops/trait.ShrAssign.html"><code>ShrAssign</code></a> and
+<a href="https://doc.rust-lang.org/std/ops/trait.ShlAssign.html"><code>ShlAssign</code></a></li>
+</ol>
+<h3 id="static-methods" class="section-header"><a href="#static-methods">Static methods</a></h3>
+<p>These don't derive traits, but derive static methods instead.</p>
+<ol>
+<li><code>Constructor</code>, this derives a <code>new</code> method that can be used as a constructor. This is very
+basic if you need more customization for your constructor, check out the <a href="https://github.com/nrc/derive-new"><code>derive-new</code></a> crate.</li>
+</ol>
+<h2 id="generated-code" class="section-header"><a href="#generated-code">Generated code</a></h2>
+<p>It is important to understand what code gets generated when using one of the derives from this
+crate.
+That is why the links below explain what code gets generated for a trait for each group from
+before.</p>
+<ol>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/from.html"><code>#[derive(From)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/into.html"><code>#[derive(Into)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/from_str.html"><code>#[derive(FromStr)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/try_into.html"><code>#[derive(TryInto)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/display.html"><code>#[derive(Display)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/index_op.html"><code>#[derive(Index)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/deref.html"><code>#[derive(Deref)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/not.html"><code>#[derive(Not)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/add.html"><code>#[derive(Add)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/mul.html"><code>#[derive(Mul)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/index_mut.html"><code>#[derive(IndexMut)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/deref_mut.html"><code>#[derive(DerefMut)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/add_assign.html"><code>#[derive(AddAssign)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/mul_assign.html"><code>#[derive(MulAssign)]</code></a></li>
+<li><a href="https://jeltef.github.io/derive_more/derive_more/constructor.html"><code>#[derive(Constructor)]</code></a></li>
+</ol>
+<p>If you want to be sure what code is generated for your specific type I recommend using the
+<a href="https://github.com/dtolnay/cargo-expand"><code>cargo-expand</code></a> utility.
+This will show you your code with all macros and derives expanded.</p>
+<h2 id="installation" class="section-header"><a href="#installation">Installation</a></h2>
+<p>This library requires Rust 1.15 or higher, so this needs to be installed.
+Then add the following to <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[dependencies]
+derive_more = &quot;0.13.0&quot;
+</code></pre>
+<p>And this to the top of your Rust file:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">derive_more</span>;</pre></div>
+<p>This crate support <code>no_std</code> through the <code>no_std</code> feature. So use the following
+instead if you want to use it in a <code>no_std</code> environment.</p>
+<pre><code class="language-toml"># Example Cargo.toml
+[dependencies]
+derive_more = {version = &quot;0.13.0&quot;, default-features = false, features=[&quot;no_std&quot;]}
+</code></pre>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "derive_more";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

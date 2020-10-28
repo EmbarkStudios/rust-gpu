@@ -1,0 +1,77 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `zwp_linux_dmabuf_v1` mod in crate `wayland_protocols`."><meta name="keywords" content="rust, rustlang, rust-lang, zwp_linux_dmabuf_v1"><title>wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1 - Rust</title><link rel="stylesheet" type="text/css" href="../../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../../ayu.css" disabled ><script src="../../../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../../../wayland_protocols/index.html'><div class='logo-container rust-logo'><img src='../../../../../../rust-logo.png' alt='logo'></div></a><p class="location">Module zwp_linux_dmabuf_v1</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#constants">Constants</a></li><li><a href="#statics">Statics</a></li><li><a href="#traits">Traits</a></li></ul></div><p class="location"><a href="../../../../../index.html">wayland_protocols</a>::<wbr><a href="../../../../index.html">unstable</a>::<wbr><a href="../../../index.html">linux_dmabuf</a>::<wbr><a href="../../index.html">v1</a>::<wbr><a href="../index.html">client</a></p><script>window.sidebarCurrent = {name: "zwp_linux_dmabuf_v1", ty: "mod", relpath: "../"};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../../../../../settings.html"><img src="../../../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../../../../../src/wayland_protocols/home/runner/work/rust-gpu/rust-gpu/target/debug/build/wayland-protocols-736e5bd063d56210/out/linux-dmabuf-v1_client_api.rs.html#12-380" title="goto source code">[src]</a></span><span class="in-band">Module <a href="../../../../../index.html">wayland_protocols</a>::<wbr><a href="../../../../index.html">unstable</a>::<wbr><a href="../../../index.html">linux_dmabuf</a>::<wbr><a href="../../index.html">v1</a>::<wbr><a href="../index.html">client</a>::<wbr><a class="mod" href="">zwp_linux_dmabuf_v1</a></span></h1><div class="docblock"><p>factory for creating dmabuf-based wl_buffers</p>
+<p>Following the interfaces from:
+https://www.khronos.org/registry/egl/extensions/EXT/EGL_EXT_image_dma_buf_import.txt
+and the Linux DRM sub-system's AddFb2 ioctl.</p>
+<p>This interface offers ways to create generic dmabuf-based
+wl_buffers. Immediately after a client binds to this interface,
+the set of supported formats and format modifiers is sent with
+'format' and 'modifier' events.</p>
+<p>The following are required from clients:</p>
+<ul>
+<li>
+<p>Clients must ensure that either all data in the dma-buf is
+coherent for all subsequent read access or that coherency is
+correctly handled by the underlying kernel-side dma-buf
+implementation.</p>
+</li>
+<li>
+<p>Don't make any more attachments after sending the buffer to the
+compositor. Making more attachments later increases the risk of
+the compositor not being able to use (re-import) an existing
+dmabuf-based wl_buffer.</p>
+</li>
+</ul>
+<p>The underlying graphics stack must ensure the following:</p>
+<ul>
+<li>The dmabuf file descriptors relayed to the server will stay valid
+for the whole lifetime of the wl_buffer. This means the server may
+at any time use those fds to import the dmabuf into any kernel
+sub-system that might accept it.</li>
+</ul>
+<p>To create a wl_buffer from one or more dmabufs, a client creates a
+zwp_linux_dmabuf_params_v1 object with a zwp_linux_dmabuf_v1.create_params
+request. All planes required by the intended format are added with
+the 'add' request. Finally, a 'create' or 'create_immed' request is
+issued, which has the following outcome depending on the import success.</p>
+<p>The 'create' request,</p>
+<ul>
+<li>on success, triggers a 'created' event which provides the final
+wl_buffer to the client.</li>
+<li>on failure, triggers a 'failed' event to convey that the server
+cannot use the dmabufs received from the client.</li>
+</ul>
+<p>For the 'create_immed' request,</p>
+<ul>
+<li>on success, the server immediately imports the added dmabufs to
+create a wl_buffer. No event is sent from the server in this case.</li>
+<li>on failure, the server can choose to either:</li>
+<li>terminate the client by raising a fatal error.</li>
+<li>mark the wl_buffer as failed, and send a 'failed' event to the
+client. If the client uses a failed wl_buffer as an argument to any
+request, the behaviour is compositor implementation-defined.</li>
+</ul>
+<p>Warning! The protocol described in this file is experimental and
+backward incompatible changes may be made. Backward compatible changes
+may be added together with the corresponding interface version bump.
+Backward incompatible changes are done by bumping the version number in
+the protocol and interface names and resetting the interface version.
+Once the protocol is to be declared stable, the 'z' prefix and the
+version number in the protocol and interface names are removed and the
+interface version number is reset.</p>
+</div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.ZwpLinuxDmabufV1.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::ZwpLinuxDmabufV1 struct">ZwpLinuxDmabufV1</a></td><td class="docblock-short"></td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="enum" href="enum.Event.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::Event enum">Event</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="enum" href="enum.Request.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::Request enum">Request</a></td><td class="docblock-short"></td></tr></table><h2 id="constants" class="section-header"><a href="#constants">Constants</a></h2>
+<table><tr class="module-item"><td><a class="constant" href="constant.EVT_FORMAT_SINCE.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::EVT_FORMAT_SINCE constant">EVT_FORMAT_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this event</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.EVT_MODIFIER_SINCE.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::EVT_MODIFIER_SINCE constant">EVT_MODIFIER_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this event</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_CREATE_PARAMS_SINCE.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::REQ_CREATE_PARAMS_SINCE constant">REQ_CREATE_PARAMS_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr><tr class="module-item"><td><a class="constant" href="constant.REQ_DESTROY_SINCE.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::REQ_DESTROY_SINCE constant">REQ_DESTROY_SINCE</a></td><td class="docblock-short"><p>The minimal object version supporting this request</p>
+</td></tr></table><h2 id="statics" class="section-header"><a href="#statics">Statics</a></h2>
+<table><tr class="module-item"><td><a class="static" href="static.zwp_linux_dmabuf_v1_events.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::zwp_linux_dmabuf_v1_events static">zwp_linux_dmabuf_v1_events</a></td><td class="docblock-short"><p>C-representation of the messages of this interface, for interop</p>
+</td></tr><tr class="module-item"><td><a class="static" href="static.zwp_linux_dmabuf_v1_interface.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::zwp_linux_dmabuf_v1_interface static">zwp_linux_dmabuf_v1_interface</a></td><td class="docblock-short"><p>C representation of this interface, for interop</p>
+</td></tr><tr class="module-item"><td><a class="static" href="static.zwp_linux_dmabuf_v1_requests.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::zwp_linux_dmabuf_v1_requests static">zwp_linux_dmabuf_v1_requests</a></td><td class="docblock-short"><p>C-representation of the messages of this interface, for interop</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.EventHandler.html" title="wayland_protocols::unstable::linux_dmabuf::v1::client::zwp_linux_dmabuf_v1::EventHandler trait">EventHandler</a></td><td class="docblock-short"><p>An interface for handling events.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../../../../";window.currentCrate = "wayland_protocols";</script><script src="../../../../../../main.js"></script><script defer src="../../../../../../search-index.js"></script></body></html>

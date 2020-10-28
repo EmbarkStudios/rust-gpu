@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `pin_project` crate."><meta name="keywords" content="rust, rustlang, rust-lang, pin_project"><title>pin_project - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../pin_project/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate pin_project</p><div class="block version"><p>Version 0.4.27</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all pin_project's items</p></a><div class="block items"><ul><li><a href="#traits">Traits</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "pin_project", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/pin_project/lib.rs.html#1-254" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">pin_project</a></span></h1><div class="docblock"><p>A crate for safe and ergonomic <a href="https://doc.rust-lang.org/nightly/std/pin/index.html#projections-and-structural-pinning">pin-projection</a>.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p><a href="attr.pin_project.html"><code>#[pin_project]</code></a> attribute creates projection types
+covering all the fields of struct or enum.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">pin_project</span>::<span class="ident">pin_project</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">pin</span>::<span class="ident">Pin</span>;
+
+<span class="attribute">#[<span class="ident">pin_project</span>]</span>
+<span class="kw">struct</span> <span class="ident">Struct</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">pin</span>]</span>
+    <span class="ident">pinned</span>: <span class="ident">T</span>,
+    <span class="ident">unpinned</span>: <span class="ident">U</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> <span class="ident">Struct</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">method</span>(<span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>) {
+        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">project</span>();
+        <span class="kw">let</span> <span class="kw">_</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">this</span>.<span class="ident">pinned</span>; <span class="comment">// Pinned reference to the field</span>
+        <span class="kw">let</span> <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">U</span> <span class="op">=</span> <span class="ident">this</span>.<span class="ident">unpinned</span>; <span class="comment">// Normal reference to the field</span>
+    }
+}</pre></div>
+<p><a href="https://github.com/taiki-e/pin-project/blob/master/examples/struct-default-expanded.rs"><em>code like this will be generated</em></a></p>
+<p>See <a href="attr.pin_project.html"><code>#[pin_project]</code></a> attribute for more details, and
+see <a href="https://github.com/taiki-e/pin-project/blob/master/examples/README.md">examples</a> directory for more examples and generated code.</p>
+</div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.UnsafeUnpin.html" title="pin_project::UnsafeUnpin trait">UnsafeUnpin</a></td><td class="docblock-short"><p>A trait used for custom implementations of <a href="https://doc.rust-lang.org/nightly/core/marker/trait.Unpin.html" title="Unpin"><code>Unpin</code></a>.
+This trait is used in conjunction with the <code>UnsafeUnpin</code>
+argument to <a href="attr.pin_project.html"><code>#[pin_project]</code></a></p>
+</td></tr></table><h2 id="attributes" class="section-header"><a href="#attributes">Attribute Macros</a></h2>
+<table><tr class="module-item"><td><a class="attr" href="attr.pin_project.html" title="pin_project::pin_project attr">pin_project</a></td><td class="docblock-short"><p>An attribute that creates projection types covering all the fields of
+struct or enum.</p>
+</td></tr><tr class="module-item"><td><a class="attr" href="attr.pinned_drop.html" title="pin_project::pinned_drop attr">pinned_drop</a></td><td class="docblock-short"><p>An attribute for annotating an impl block that implements <a href="https://doc.rust-lang.org/nightly/core/ops/drop/trait.Drop.html" title="Drop"><code>Drop</code></a>.</p>
+</td></tr><tr class="module-item"><td><a class="attr" href="attr.project.html" title="pin_project::project attr">project</a></td><td class="docblock-short"><p>(deprecated) An attribute to provide way to refer to the projected type returned by
+<code>project</code> method.</p>
+</td></tr><tr class="module-item"><td><a class="attr" href="attr.project_ref.html" title="pin_project::project_ref attr">project_ref</a></td><td class="docblock-short"><p>(deprecated) An attribute to provide way to refer to the projected type returned by
+<code>project_ref</code> method.</p>
+</td></tr><tr class="module-item"><td><a class="attr" href="attr.project_replace.html" title="pin_project::project_replace attr">project_replace</a></td><td class="docblock-short"><p>(deprecated) An attribute to provide way to refer to the projected type returned by
+<code>project_replace</code> method.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "pin_project";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

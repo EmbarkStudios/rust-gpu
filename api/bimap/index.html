@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `bimap` crate."><meta name="keywords" content="rust, rustlang, rust-lang, bimap"><title>bimap - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../bimap/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate bimap</p><div class="block version"><p>Version 0.5.2</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all bimap's items</p></a><div class="block items"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li><li><a href="#enums">Enums</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "bimap", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/bimap/lib.rs.html#1-284" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">bimap</a></span></h1><div class="docblock"><p>A fast two-way bijective map.</p>
+<p>A bimap is a <a href="https://en.wikipedia.org/wiki/Bijection">bijective map</a> between values of type <code>L</code>, called left values,
+and values of type <code>R</code>, called right values. This means every left value is
+associated with exactly one right value and vice versa. Compare this to a
+<a href="https://doc.rust-lang.org/std/collections/struct.HashMap.html"><code>HashMap</code></a> or <a href="https://doc.rust-lang.org/std/collections/struct.BTreeMap.html"><code>BTreeMap</code></a>, where every key is associated with exactly one
+value but a value can be associated with more than one key.</p>
+<p>This crate provides two kinds of bimap: a <a href="../bimap/hash/struct.BiHashMap.html" title="BiHashMap"><code>BiHashMap</code></a> and a
+<a href="../bimap/btree/struct.BiBTreeMap.html" title="BiBTreeMap"><code>BiBTreeMap</code></a>. Internally, each one is composed of two maps, one for the
+left-to-right direction and one for right-to-left. As such, the big-O
+performance of the <code>get</code>, <code>remove</code>, <code>insert</code>, and <code>contains</code> methods are the
+same as those of the backing map.</p>
+<p>For convenience, the type definition <a href="../bimap/type.BiMap.html" title="BiMap"><code>BiMap</code></a> corresponds to a <code>BiHashMap</code>.
+If you're using this crate without the standard library, it instead
+corresponds to a <code>BiBTreeMap</code>.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">bimap</span>::<span class="ident">BiMap</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">elements</span> <span class="op">=</span> <span class="ident">BiMap</span>::<span class="ident">new</span>();
+
+<span class="comment">// insert chemicals and their corresponding symbols</span>
+<span class="ident">elements</span>.<span class="ident">insert</span>(<span class="string">&quot;hydrogen&quot;</span>, <span class="string">&quot;H&quot;</span>);
+<span class="ident">elements</span>.<span class="ident">insert</span>(<span class="string">&quot;carbon&quot;</span>, <span class="string">&quot;C&quot;</span>);
+<span class="ident">elements</span>.<span class="ident">insert</span>(<span class="string">&quot;bromine&quot;</span>, <span class="string">&quot;Br&quot;</span>);
+<span class="ident">elements</span>.<span class="ident">insert</span>(<span class="string">&quot;neodymium&quot;</span>, <span class="string">&quot;Nd&quot;</span>);
+
+<span class="comment">// retrieve chemical symbol by name (left to right)</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">elements</span>.<span class="ident">get_by_left</span>(<span class="kw-2">&amp;</span><span class="string">&quot;bromine&quot;</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">&quot;Br&quot;</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">elements</span>.<span class="ident">get_by_left</span>(<span class="kw-2">&amp;</span><span class="string">&quot;oxygen&quot;</span>), <span class="prelude-val">None</span>);
+
+<span class="comment">// retrieve name by chemical symbol (right to left)</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">elements</span>.<span class="ident">get_by_right</span>(<span class="kw-2">&amp;</span><span class="string">&quot;C&quot;</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">&quot;carbon&quot;</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">elements</span>.<span class="ident">get_by_right</span>(<span class="kw-2">&amp;</span><span class="string">&quot;Al&quot;</span>), <span class="prelude-val">None</span>);
+
+<span class="comment">// check membership</span>
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">elements</span>.<span class="ident">contains_left</span>(<span class="kw-2">&amp;</span><span class="string">&quot;hydrogen&quot;</span>));
+<span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">elements</span>.<span class="ident">contains_right</span>(<span class="kw-2">&amp;</span><span class="string">&quot;He&quot;</span>));
+
+<span class="comment">// remove elements</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="ident">elements</span>.<span class="ident">remove_by_left</span>(<span class="kw-2">&amp;</span><span class="string">&quot;neodymium&quot;</span>),
+    <span class="prelude-val">Some</span>((<span class="string">&quot;neodymium&quot;</span>, <span class="string">&quot;Nd&quot;</span>))
+);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">elements</span>.<span class="ident">remove_by_right</span>(<span class="kw-2">&amp;</span><span class="string">&quot;Nd&quot;</span>), <span class="prelude-val">None</span>);
+
+<span class="comment">// iterate over elements</span>
+<span class="kw">for</span> (<span class="ident">left</span>, <span class="ident">right</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">elements</span> {
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;the chemical symbol for {} is {}&quot;</span>, <span class="ident">left</span>, <span class="ident">right</span>);
+}</pre></div>
+<h2 id="insertion-and-overwriting" class="section-header"><a href="#insertion-and-overwriting">Insertion and overwriting</a></h2>
+<p>Consider the following example:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">bimap</span>::<span class="ident">BiMap</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bimap</span> <span class="op">=</span> <span class="ident">BiMap</span>::<span class="ident">new</span>();
+<span class="ident">bimap</span>.<span class="ident">insert</span>(<span class="string">&#39;a&#39;</span>, <span class="number">1</span>);
+<span class="ident">bimap</span>.<span class="ident">insert</span>(<span class="string">&#39;b&#39;</span>, <span class="number">1</span>); <span class="comment">// what to do here?</span></pre></div>
+<p>In order to maintain the bijection, the bimap cannot have both left-right
+pairs <code>('a', 1)</code> and <code>('b', 1)</code>. Otherwise, the right-value <code>1</code> would have
+two left values associated with it. Either we should allow the call to
+<code>insert</code> to go through and overwrite <code>('a', 1)</code>, or not let <code>('b', 1)</code> be
+inserted at all. This crate allows for both possibilities. To insert with
+overwriting, use <a href="../bimap/hash/struct.BiHashMap.html#method.insert"><code>insert</code></a>, and to insert without overwriting, use
+<a href="../bimap/hash/struct.BiHashMap.html#method.insert_no_overwrite"><code>insert_no_overwrite</code></a>. The return type of <code>insert</code> is the <code>enum</code>
+<a href="../bimap/enum.Overwritten.html" title="Overwritten"><code>Overwritten</code></a>, which indicates what values, if any, were overwritten; the
+return type of <code>insert_no_overwrite</code> is a <code>Result</code> indicating if the
+insertion was successful.</p>
+<p>This is especially important when dealing with types that can be equal while
+having different data. Unlike a <code>HashMap</code> or <code>BTreeMap</code>, which <a href="https://doc.rust-lang.org/std/collections/index.html#insert-and-complex-keys">doesn't
+update an equal key upon insertion</a>, a bimap updates both the left values
+and the right values.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">bimap</span>::{<span class="ident">BiMap</span>, <span class="ident">Overwritten</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">Ordering</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Foo</span> {
+    <span class="ident">important</span>: <span class="ident">char</span>,
+    <span class="ident">unimportant</span>: <span class="ident">u32</span>,
+}
+
+<span class="comment">// equality only depends on the important data</span>
+<span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Foo</span> {
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Foo</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">important</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">important</span>
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">Foo</span> {}
+
+<span class="kw">impl</span> <span class="ident">PartialOrd</span> <span class="kw">for</span> <span class="ident">Foo</span> {
+    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Foo</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">cmp</span>(<span class="ident">other</span>))
+    }
+}
+
+<span class="comment">// ordering only depends on the important data</span>
+<span class="kw">impl</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">Foo</span> {
+    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Foo</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ordering</span> {
+        <span class="self">self</span>.<span class="ident">important</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">important</span>)
+    }
+}
+
+<span class="comment">// hash only depends on the important data</span>
+<span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">Foo</span> {
+    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) {
+        <span class="self">self</span>.<span class="ident">important</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
+    }
+}
+
+<span class="comment">// create two Foos that are equal but have different data</span>
+<span class="kw">let</span> <span class="ident">foo1</span> <span class="op">=</span> <span class="ident">Foo</span> {
+    <span class="ident">important</span>: <span class="string">&#39;a&#39;</span>,
+    <span class="ident">unimportant</span>: <span class="number">1</span>,
+};
+<span class="kw">let</span> <span class="ident">foo2</span> <span class="op">=</span> <span class="ident">Foo</span> {
+    <span class="ident">important</span>: <span class="string">&#39;a&#39;</span>,
+    <span class="ident">unimportant</span>: <span class="number">2</span>,
+};
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">foo1</span>, <span class="ident">foo2</span>);
+
+<span class="comment">// insert both Foos into a bimap</span>
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bimap</span> <span class="op">=</span> <span class="ident">BiMap</span>::<span class="ident">new</span>();
+<span class="ident">bimap</span>.<span class="ident">insert</span>(<span class="ident">foo1</span>, <span class="number">99</span>);
+<span class="kw">let</span> <span class="ident">overwritten</span> <span class="op">=</span> <span class="ident">bimap</span>.<span class="ident">insert</span>(<span class="ident">foo2</span>, <span class="number">100</span>);
+
+<span class="comment">// foo1 is overwritten and returned</span>
+<span class="kw">match</span> <span class="ident">overwritten</span> {
+    <span class="ident">Overwritten</span>::<span class="ident">Left</span>(<span class="ident">foo</span>, <span class="number">99</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">foo</span>.<span class="ident">unimportant</span>, <span class="ident">foo1</span>.<span class="ident">unimportant</span>),
+    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+};
+
+<span class="comment">// foo2 is in the bimap</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="ident">bimap</span>.<span class="ident">get_by_right</span>(<span class="kw-2">&amp;</span><span class="number">100</span>).<span class="ident">unwrap</span>().<span class="ident">unimportant</span>,
+    <span class="ident">foo2</span>.<span class="ident">unimportant</span>
+);</pre></div>
+<p>Note that the <code>FromIterator</code> and <code>Extend</code> implementations for both
+<code>BiHashMap</code> and <code>BiBTreeMap</code> use the <code>insert</code> method internally, meaning
+that values from the original iterator/collection can be silently
+overwritten.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">bimap</span>::<span class="ident">BiMap</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">FromIterator</span>;
+
+<span class="comment">// note that both &#39;b&#39; and &#39;c&#39; have the right-value 2</span>
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bimap</span> <span class="op">=</span> <span class="ident">BiMap</span>::<span class="ident">from_iter</span>(<span class="macro">vec</span><span class="macro">!</span>[(<span class="string">&#39;a&#39;</span>, <span class="number">1</span>), (<span class="string">&#39;b&#39;</span>, <span class="number">2</span>), (<span class="string">&#39;c&#39;</span>, <span class="number">2</span>)]);
+
+<span class="comment">// (&#39;b&#39;, 2) was overwritten by (&#39;c&#39;, 2)</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">bimap</span>.<span class="ident">len</span>(), <span class="number">2</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">bimap</span>.<span class="ident">get_by_left</span>(<span class="kw-2">&amp;</span><span class="string">&#39;b&#39;</span>), <span class="prelude-val">None</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">bimap</span>.<span class="ident">get_by_left</span>(<span class="kw-2">&amp;</span><span class="string">&#39;c&#39;</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">2</span>));</pre></div>
+<h2 id="no_std-compatibility" class="section-header"><a href="#no_std-compatibility"><code>no_std</code> compatibility</a></h2>
+<p>This crate can be used without the standard library when the <code>std</code> feature
+is disabled. If you choose to do this, only <code>BiBTreeMap</code> is available, not
+<code>BiHashMap</code>.</p>
+<h2 id="serde-compatibility" class="section-header"><a href="#serde-compatibility">serde compatibility</a></h2>
+<p>When the <code>serde</code> feature is enabled, implementations of <code>Serialize</code> and
+<code>Deserialize</code> are provided for <a href="../bimap/hash/struct.BiHashMap.html" title="BiHashMap"><code>BiHashMap</code></a> and <a href="../bimap/btree/struct.BiBTreeMap.html" title="BiBTreeMap"><code>BiBTreeMap</code></a>, allowing
+them to be serialized or deserialized painlessly. See the [<code>serde</code>] module
+for examples and more information.</p>
+</div><h2 id="reexports" class="section-header"><a href="#reexports">Re-exports</a></h2>
+<table><tr><td><code>pub use btree::<a class="struct" href="../bimap/btree/struct.BiBTreeMap.html" title="struct bimap::btree::BiBTreeMap">BiBTreeMap</a>;</code></td></tr><tr><td><code>pub use hash::<a class="struct" href="../bimap/hash/struct.BiHashMap.html" title="struct bimap::hash::BiHashMap">BiHashMap</a>;</code></td></tr></table><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="btree/index.html" title="bimap::btree mod">btree</a></td><td class="docblock-short"><p>A bimap backed by two <code>BTreeMap</code>s.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="hash/index.html" title="bimap::hash mod">hash</a></td><td class="docblock-short"><p>A bimap backed by two <code>HashMap</code>s.</p>
+</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="enum" href="enum.Overwritten.html" title="bimap::Overwritten enum">Overwritten</a></td><td class="docblock-short"><p>The previous left-right pairs, if any, that were overwritten by a call to
+the <a href="../bimap/hash/struct.BiHashMap.html#method.insert"><code>insert</code></a> method of a bimap.</p>
+</td></tr></table><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+<table><tr class="module-item"><td><a class="type" href="type.BiMap.html" title="bimap::BiMap type">BiMap</a></td><td class="docblock-short"><p>Type definition for convenience and compatibility with older versions of
+this crate.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "bimap";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

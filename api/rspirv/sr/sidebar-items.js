@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Constant","Represents a SPIR-V constant."],["Decoration","SPIR-V decorations."],["Type",""]],"mod":[["autogen_instructions",""],["autogen_ops",""],["module",""],["storage",""]],"struct":[["StructMember",""]]});

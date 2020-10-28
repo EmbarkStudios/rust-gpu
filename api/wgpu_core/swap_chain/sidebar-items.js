@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["DESIRED_NUM_FRAMES",""]],"enum":[["CreateSwapChainError",""],["SwapChainError",""]],"struct":[["InvalidSwapChain",""],["SwapChain",""],["SwapChainOutput",""]]});

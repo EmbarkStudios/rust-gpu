@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["zwp_pointer_gesture_pinch_v1","a pinch gesture object"],["zwp_pointer_gesture_swipe_v1","a swipe gesture object"],["zwp_pointer_gestures_v1","touchpad gestures"]]});

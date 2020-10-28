@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Subpixel","subpixel geometry information"],["Transform","transform from framebuffer to output"]],"struct":[["Mode","A possible mode for an output"],["OutputInfo","Compiled information about an output"],["OutputMgr","An utility tracking the available outputs and their capabilities"]]});

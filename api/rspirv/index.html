@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `rspirv` crate."><meta name="keywords" content="rust, rustlang, rust-lang, rspirv"><title>rspirv - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../rspirv/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate rspirv</p><div class="block version"><p>Version 0.7.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all rspirv's items</p></a><div class="block items"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "rspirv", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/rspirv/lib.rs.html#1-91" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">rspirv</a></span></h1><div class="docblock"><p>Library APIs for SPIR-V module processing functionalities.</p>
+<p>This library provides:</p>
+<ul>
+<li>The whole SPIR-V <a href="grammar/index.html">grammar</a> (instruction layouts
+and their operands)</li>
+<li>A <a href="dr/index.html">data representation</a> of SPIR-V modules and its
+loader and builder</li>
+<li>A <a href="sr/index.html">structured representation</a> of SPIR-V modules
+(under developing)</li>
+<li>SPIR-V <a href="binary/index.html">binary</a> module decoding and parsing
+functionalities</li>
+</ul>
+<p>The data representation (DR) focuses on presenting the data within a
+SPIR-V module; it uses plain vectors to hold data of SPIR-V instructions,
+following the instructions' layouts defined in the grammar. DR has little
+structure; only bare structures need for representing modules, functions,
+and blocks are adopted.</p>
+<p>The structured representation (SR) focuses on presenting the structure
+within a SPIR-V module; it tries to links as much information as possible.
+Types, values, instructions, decorations and so on have their dedicated
+structs. The purpose of SR is to facilitate SPIR-V analysis and
+transformations.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Building a SPIR-V module, assembling it, parsing it, and then
+disassembling it:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">rspirv</span>;
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">spirv_headers</span> <span class="kw">as</span> <span class="ident">spirv</span>;
+
+<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">Assemble</span>;
+<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">Disassemble</span>;
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="comment">// Building</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Builder</span>::<span class="ident">new</span>();
+    <span class="ident">b</span>.<span class="ident">memory_model</span>(<span class="ident">spirv</span>::<span class="ident">AddressingModel</span>::<span class="ident">Logical</span>, <span class="ident">spirv</span>::<span class="ident">MemoryModel</span>::<span class="ident">GLSL450</span>);
+    <span class="kw">let</span> <span class="ident">void</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_void</span>();
+    <span class="kw">let</span> <span class="ident">voidf</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_function</span>(<span class="ident">void</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">void</span>]);
+    <span class="ident">b</span>.<span class="ident">begin_function</span>(<span class="ident">void</span>,
+                     <span class="prelude-val">None</span>,
+                     (<span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">DONT_INLINE</span> <span class="op">|</span>
+                      <span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">CONST</span>),
+                     <span class="ident">voidf</span>)
+     .<span class="ident">unwrap</span>();
+    <span class="ident">b</span>.<span class="ident">begin_block</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
+    <span class="ident">b</span>.<span class="ident">ret</span>().<span class="ident">unwrap</span>();
+    <span class="ident">b</span>.<span class="ident">end_function</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">module</span>();
+
+    <span class="comment">// Assembling</span>
+    <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">module</span>.<span class="ident">assemble</span>();
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">code</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">20</span>);  <span class="comment">// Module header contains 5 words</span>
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">spirv</span>::<span class="ident">MAGIC_NUMBER</span>, <span class="ident">code</span>[<span class="number">0</span>]);
+
+    <span class="comment">// Parsing</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Loader</span>::<span class="ident">new</span>();
+    <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">parse_words</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">loader</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">loader</span>.<span class="ident">module</span>();
+
+    <span class="comment">// Disassembling</span>
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">module</span>.<span class="ident">disassemble</span>(),
+               <span class="string">&quot;; SPIR-V\n\
+                ; Version: 1.5\n\
+                ; Generator: rspirv\n\
+                ; Bound: 5\n\
+                OpMemoryModel Logical GLSL450\n\
+                %1 = OpTypeVoid\n\
+                %2 = OpTypeFunction %1 %1\n\
+                %3 = OpFunction  %1  DontInline|Const %2\n\
+                %4 = OpLabel\n\
+                OpReturn\n\
+                OpFunctionEnd&quot;</span>);
+}</pre></div>
+</div><h2 id="reexports" class="section-header"><a href="#reexports">Re-exports</a></h2>
+<table><tr><td><code>pub extern crate <a class="mod" href="../spirv_headers/index.html" title="mod spirv_headers">spirv_headers</a> as spirv;</code></td></tr></table><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="binary/index.html" title="rspirv::binary mod">binary</a></td><td class="docblock-short"><p>Module for SPIR-V binary processing.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="dr/index.html" title="rspirv::dr mod">dr</a></td><td class="docblock-short"><p>Data representation of various SPIR-V language constructs.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="grammar/index.html" title="rspirv::grammar mod">grammar</a></td><td class="docblock-short"><p>The module containing the whole SPIR-V syntax grammar.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="lift/index.html" title="rspirv::lift mod">lift</a></td><td class="docblock-short"><p>Infrastructure of lifting the data representation (DR) into structured
+representation (SR).</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="sr/index.html" title="rspirv::sr mod">sr</a></td><td class="docblock-short"><p><strong>S</strong>tructured <strong>r</strong>epresentation of various SPIR-V language constructs.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "rspirv";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

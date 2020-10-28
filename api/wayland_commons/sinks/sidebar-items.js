@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["message_iterator","Create a new message iterator and an associated sink."]],"struct":[["MsgIter","A message iterator"],["Sink","The sink end of an message iterator."]]});

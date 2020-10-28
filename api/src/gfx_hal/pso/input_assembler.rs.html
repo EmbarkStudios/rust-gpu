@@ -1,0 +1,296 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-hal-0.6.0/src/pso/input_assembler.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>input_assembler.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../gfx_hal/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! Input Assembler (IA) stage description.</span>
+<span class="doccomment">//! The input assembler collects raw vertex and index data.</span>
+
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">format</span>, <span class="ident">IndexType</span>};
+
+<span class="doccomment">/// Shader binding location.</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Location</span> <span class="op">=</span> <span class="ident">u32</span>;
+<span class="doccomment">/// Index of a vertex buffer.</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BufferIndex</span> <span class="op">=</span> <span class="ident">u32</span>;
+<span class="doccomment">/// Offset of an attribute from the start of the buffer, in bytes</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ElemOffset</span> <span class="op">=</span> <span class="ident">u32</span>;
+<span class="doccomment">/// Offset between attribute values, in bytes</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ElemStride</span> <span class="op">=</span> <span class="ident">u32</span>;
+<span class="doccomment">/// Number of instances between each advancement of the vertex buffer.</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">InstanceRate</span> <span class="op">=</span> <span class="ident">u8</span>;
+<span class="doccomment">/// Number of vertices in a patch</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PatchSize</span> <span class="op">=</span> <span class="ident">u8</span>;
+
+<span class="doccomment">/// The rate at which to advance input data to shaders for the given buffer</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">VertexInputRate</span> {
+    <span class="doccomment">/// Advance the buffer after every vertex</span>
+    <span class="ident">Vertex</span>,
+    <span class="doccomment">/// Advance the buffer after every instance</span>
+    <span class="ident">Instance</span>(<span class="ident">InstanceRate</span>),
+}
+
+<span class="kw">impl</span> <span class="ident">VertexInputRate</span> {
+    <span class="doccomment">/// Get the numeric representation of the rate</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_uint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="ident">VertexInputRate</span>::<span class="ident">Vertex</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+            <span class="ident">VertexInputRate</span>::<span class="ident">Instance</span>(<span class="ident">divisor</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">divisor</span>,
+        }
+    }
+}
+
+<span class="doccomment">/// A struct element descriptor.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Element</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Element format</span>
+    <span class="kw">pub</span> <span class="ident">format</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Offset from the beginning of the container, in bytes</span>
+    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">ElemOffset</span>,
+}
+
+<span class="doccomment">/// Vertex buffer description. Notably, completely separate from resource `Descriptor`s</span>
+<span class="doccomment">/// used in `DescriptorSet`s.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VertexBufferDesc</span> {
+    <span class="doccomment">/// Binding number of this vertex buffer. This binding number is</span>
+    <span class="doccomment">/// used only for vertex buffers, and is completely separate from</span>
+    <span class="doccomment">/// `Descriptor` and `DescriptorSet` bind points.</span>
+    <span class="kw">pub</span> <span class="ident">binding</span>: <span class="ident">BufferIndex</span>,
+    <span class="doccomment">/// Total container size, in bytes.</span>
+    <span class="doccomment">/// Specifies the byte distance between two consecutive elements.</span>
+    <span class="kw">pub</span> <span class="ident">stride</span>: <span class="ident">ElemStride</span>,
+    <span class="doccomment">/// The rate at which to advance data for the given buffer</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// i.e. the rate at which data passed to shaders will get advanced by</span>
+    <span class="doccomment">/// `stride` bytes</span>
+    <span class="kw">pub</span> <span class="ident">rate</span>: <span class="ident">VertexInputRate</span>,
+}
+
+<span class="doccomment">/// Vertex attribute description. Notably, completely separate from resource `Descriptor`s</span>
+<span class="doccomment">/// used in `DescriptorSet`s.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AttributeDesc</span> {
+    <span class="doccomment">/// Attribute binding location in the shader. Attribute locations are</span>
+    <span class="doccomment">/// shared between all vertex buffers in a pipeline, meaning that even if the</span>
+    <span class="doccomment">/// data for this attribute comes from a different vertex buffer, it still cannot</span>
+    <span class="doccomment">/// share the same location with another attribute.</span>
+    <span class="kw">pub</span> <span class="ident">location</span>: <span class="ident">Location</span>,
+    <span class="doccomment">/// Binding number of the associated vertex buffer.</span>
+    <span class="kw">pub</span> <span class="ident">binding</span>: <span class="ident">BufferIndex</span>,
+    <span class="doccomment">/// Attribute element description.</span>
+    <span class="kw">pub</span> <span class="ident">element</span>: <span class="ident">Element</span><span class="op">&lt;</span><span class="ident">format</span>::<span class="ident">Format</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// Describes the type of geometric primitives,</span>
+<span class="doccomment">/// created from vertex data.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u8</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Primitive</span> {
+    <span class="doccomment">/// Each vertex represents a single point.</span>
+    <span class="ident">PointList</span>,
+    <span class="doccomment">/// Each pair of vertices represent a single line segment. For example, with `[a, b, c, d,</span>
+    <span class="doccomment">/// e]`, `a` and `b` form a line, `c` and `d` form a line, and `e` is discarded.</span>
+    <span class="ident">LineList</span>,
+    <span class="doccomment">/// Every two consecutive vertices represent a single line segment. Visually forms a &quot;path&quot; of</span>
+    <span class="doccomment">/// lines, as they are all connected. For example, with `[a, b, c]`, `a` and `b` form a line</span>
+    <span class="doccomment">/// line, and `b` and `c` form a line.</span>
+    <span class="ident">LineStrip</span>,
+    <span class="doccomment">/// Each triplet of vertices represent a single triangle. For example, with `[a, b, c, d, e]`,</span>
+    <span class="doccomment">/// `a`, `b`, and `c` form a triangle, `d` and `e` are discarded.</span>
+    <span class="ident">TriangleList</span>,
+    <span class="doccomment">/// Every three consecutive vertices represent a single triangle. For example, with `[a, b, c,</span>
+    <span class="doccomment">/// d]`, `a`, `b`, and `c` form a triangle, and `b`, `c`, and `d` form a triangle.</span>
+    <span class="ident">TriangleStrip</span>,
+    <span class="doccomment">/// Patch list,</span>
+    <span class="doccomment">/// used with shaders capable of producing primitives on their own (tessellation)</span>
+    <span class="ident">PatchList</span>(<span class="ident">PatchSize</span>),
+}
+
+<span class="doccomment">/// All the information needed to create an input assembler.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InputAssemblerDesc</span> {
+    <span class="doccomment">/// Type of the primitive</span>
+    <span class="kw">pub</span> <span class="ident">primitive</span>: <span class="ident">Primitive</span>,
+    <span class="doccomment">/// When adjacency information is enabled, every even-numbered vertex</span>
+    <span class="doccomment">/// (every other starting from the first) represents an additional</span>
+    <span class="doccomment">/// vertex for the primitive, while odd-numbered vertices (every other starting from the</span>
+    <span class="doccomment">/// second) represent adjacent vertices.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// For example, with `[a, b, c, d, e, f, g, h]`, `[a, c,</span>
+    <span class="doccomment">/// e, g]` form a triangle strip, and `[b, d, f, h]` are the adjacent vertices, where `b`, `d`,</span>
+    <span class="doccomment">/// and `f` are adjacent to the first triangle in the strip, and `d`, `f`, and `h` are adjacent</span>
+    <span class="doccomment">/// to the second.</span>
+    <span class="kw">pub</span> <span class="ident">with_adjacency</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Describes whether or not primitive restart is supported for</span>
+    <span class="doccomment">/// an input assembler. Primitive restart is a feature that</span>
+    <span class="doccomment">/// allows a mark to be placed in an index buffer where it is</span>
+    <span class="doccomment">/// is &quot;broken&quot; into multiple pieces of geometry.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See &lt;https://www.khronos.org/opengl/wiki/Vertex_Rendering#Primitive_Restart&gt;</span>
+    <span class="doccomment">/// for more detail.</span>
+    <span class="kw">pub</span> <span class="ident">restart_index</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IndexType</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">InputAssemblerDesc</span> {
+    <span class="doccomment">/// Create a new IA descriptor without primitive restart or adjucency.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">primitive</span>: <span class="ident">Primitive</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">InputAssemblerDesc</span> {
+            <span class="ident">primitive</span>,
+            <span class="ident">with_adjacency</span>: <span class="bool-val">false</span>,
+            <span class="ident">restart_index</span>: <span class="prelude-val">None</span>,
+        }
+    }
+}
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "gfx_hal";</script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

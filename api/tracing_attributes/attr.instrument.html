@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `instrument` attr in crate `tracing_attributes`."><meta name="keywords" content="rust, rustlang, rust-lang, instrument"><title>tracing_attributes::instrument - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc attr"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../tracing_attributes/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo.svg' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="index.html">tracing_attributes</a></p><script>window.sidebarCurrent = {name: "instrument", ty: "attr", relpath: ""};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/tracing_attributes/lib.rs.html#257-300" title="goto source code">[src]</a></span><span class="in-band">Attribute Macro <a href="index.html">tracing_attributes</a>::<wbr><a class="attr" href="">instrument</a></span></h1><pre class="rust attr">#[instrument]</pre><div class="docblock"><p>Instruments a function to create and enter a <code>tracing</code> <a href="https://docs.rs/tracing/latest/tracing/span/index.html">span</a> every time
+the function is called.</p>
+<p>The generated span's name will be the name of the function. Any arguments
+to that function will be recorded as fields using <a href="https://doc.rust-lang.org/std/fmt/trait.Debug.html"><code>fmt::Debug</code></a>. To skip
+recording a function's or method's argument, pass the argument's name
+to the <code>skip</code> argument on the <code>#[instrument]</code> macro. For example,
+<code>skip</code> can be used when an argument to an instrumented function does
+not implement <a href="https://doc.rust-lang.org/std/fmt/trait.Debug.html"><code>fmt::Debug</code></a>, or to exclude an argument with a verbose
+or costly Debug implementation. Note that:</p>
+<ul>
+<li>multiple argument names can be passed to <code>skip</code>.</li>
+<li>arguments passed to <code>skip</code> do <em>not</em> need to implement <code>fmt::Debug</code>.</li>
+</ul>
+<p>You can also pass additional fields (key-value pairs with arbitrary data)
+to the generated span. This is achieved using the <code>fields</code> argument on the
+<code>#[instrument]</code> macro. You can use a string, integer or boolean literal as
+a value for each field. The name of the field must be a single valid Rust
+identifier, nested (dotted) field names are not supported.</p>
+<p>Note that overlap between the names of fields and (non-skipped) arguments
+will result in a compile error.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Instrumenting a function:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">instrument</span>]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">my_function</span>(<span class="ident">my_arg</span>: <span class="ident">usize</span>) {
+    <span class="comment">// This event will be recorded inside a span named `my_function` with the</span>
+    <span class="comment">// field `my_arg`.</span>
+    <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;inside my_function!&quot;</span>);
+    <span class="comment">// ...</span>
+}</pre></div>
+<p>Setting the level for the generated span:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">level</span> <span class="op">=</span> <span class="string">&quot;debug&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">my_function</span>() {
+    <span class="comment">// ...</span>
+}</pre></div>
+<p>Overriding the generated span's name:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;my_name&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">my_function</span>() {
+    <span class="comment">// ...</span>
+}</pre></div>
+<p>Overriding the generated span's target:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;my_target&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">my_function</span>() {
+    <span class="comment">// ...</span>
+}</pre></div>
+<p>To skip recording an argument, pass the argument's name to the <code>skip</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">struct</span> <span class="ident">NonDebug</span>;
+
+<span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="ident">non_debug</span>))]</span>
+<span class="kw">fn</span> <span class="ident">my_function</span>(<span class="ident">arg</span>: <span class="ident">usize</span>, <span class="ident">non_debug</span>: <span class="ident">NonDebug</span>) {
+    <span class="comment">// ...</span>
+}</pre></div>
+<p>To add an additional context to the span, you can pass key-value pairs to <code>fields</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">fields</span>(<span class="ident">foo</span><span class="op">=</span><span class="string">&quot;bar&quot;</span>, <span class="ident">id</span><span class="op">=</span><span class="number">1</span>, <span class="ident">show</span><span class="op">=</span><span class="bool-val">true</span>))]</span>
+<span class="kw">fn</span> <span class="ident">my_function</span>(<span class="ident">arg</span>: <span class="ident">usize</span>) {
+    <span class="comment">// ...</span>
+}</pre></div>
+<p>If the function returns a <code>Result&lt;T, E&gt;</code> and <code>E</code> implements <code>std::fmt::Display</code>, you can add
+<code>err</code> to emit error events when the function returns <code>Err</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">err</span>)]</span>
+<span class="kw">fn</span> <span class="ident">my_function</span>(<span class="ident">arg</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="prelude-val">Ok</span>(())
+}</pre></div>
+<p>If <code>tracing_futures</code> is specified as a dependency in <code>Cargo.toml</code>,
+<code>async fn</code>s may also be instrumented:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">instrument</span>]</span>
+<span class="kw">pub</span> <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">my_function</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), ()<span class="op">&gt;</span> {
+    <span class="comment">// ...</span>
+}</pre></div>
+<p>It also works with <a href="https://crates.io/crates/async-trait">async-trait</a>
+(a crate that allows defining async functions in traits,
+something not currently possible in Rust),
+and hopefully most libraries that exhibit similar behaviors:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">async_trait</span>::<span class="ident">async_trait</span>;
+
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Foo</span> {
+    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">foo</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">arg</span>: <span class="ident">usize</span>);
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">FooImpl</span>(<span class="ident">usize</span>);
+
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">impl</span> <span class="ident">Foo</span> <span class="kw">for</span> <span class="ident">FooImpl</span> {
+    <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">fields</span>(<span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>, <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>()))]</span>
+    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">foo</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">arg</span>: <span class="ident">usize</span>) {}
+}</pre></div>
+<p>An interesting note on this subject is that references to the <code>Self</code>
+type inside the <code>fields</code> argument are only allowed when the instrumented
+function is a method aka. the function receives <code>self</code> as an argument.
+For example, this <em>will not work</em> because it doesn't receive <code>self</code>:</p>
+
+<div class='information'><div class='tooltip compile_fail'>ⓘ<span class='tooltiptext'>This example deliberately fails to compile</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail">
+<span class="kw">use</span> <span class="ident">async_trait</span>::<span class="ident">async_trait</span>;
+
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Bar</span> {
+    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">bar</span>();
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">BarImpl</span>(<span class="ident">usize</span>);
+
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">impl</span> <span class="ident">Bar</span> <span class="kw">for</span> <span class="ident">BarImpl</span> {
+    <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">fields</span>(<span class="ident">tmp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>()))]</span>
+    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">bar</span>() {}
+}</pre></div>
+<p>Instead, you should manually rewrite any <code>Self</code> types as the type for
+which you implement the trait: <code>#[instrument(fields(tmp = std::any::type_name::&lt;Bar&gt;()))]</code>.</p>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "tracing_attributes";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

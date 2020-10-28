@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["zwlr_data_control_device_v1","manage a data device for a seat"],["zwlr_data_control_manager_v1","manager to control data devices"],["zwlr_data_control_offer_v1","offer to transfer data"],["zwlr_data_control_source_v1","offer to transfer data"]]});

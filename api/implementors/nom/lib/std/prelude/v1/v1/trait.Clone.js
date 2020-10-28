@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["nom"] = [{"text":"impl&lt;I:&nbsp;Clone&gt; Clone for VerboseError&lt;I&gt;","synthetic":false,"types":[]},{"text":"impl Clone for VerboseErrorKind","synthetic":false,"types":[]},{"text":"impl Clone for ErrorKind","synthetic":false,"types":[]},{"text":"impl Clone for Needed","synthetic":false,"types":[]},{"text":"impl&lt;E:&nbsp;Clone&gt; Clone for Err&lt;E&gt;","synthetic":false,"types":[]},{"text":"impl Clone for Endianness","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

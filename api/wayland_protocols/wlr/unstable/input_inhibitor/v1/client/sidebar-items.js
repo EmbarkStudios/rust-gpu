@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["zwlr_input_inhibit_manager_v1","inhibits input events to other clients"],["zwlr_input_inhibitor_v1","inhibits input to other clients"]]});

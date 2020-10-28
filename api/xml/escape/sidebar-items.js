@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["escape_str_attribute","Performs escaping of common XML characters inside an attribute value."],["escape_str_pcdata","Performs escaping of common XML characters inside PCDATA."]]});

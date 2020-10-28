@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Barrier","A memory barrier type for either buffers or images."]],"struct":[["Dependencies","Barrier dependency flags."],["Properties","Memory property flags."],["Requirements","Memory requirements for a certain resource (buffer/image)."],["Segment","A linear segment within a memory block."]]});

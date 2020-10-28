@@ -1,0 +1,311 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `Subscriber` trait in crate `tracing`."><meta name="keywords" content="rust, rustlang, rust-lang, Subscriber"><title>tracing::subscriber::Subscriber - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc trait"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../tracing/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png' alt='logo'></div></a><p class="location">Trait Subscriber</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#required-methods">Required Methods</a><div class="sidebar-links"><a href="#tymethod.enabled">enabled</a><a href="#tymethod.enter">enter</a><a href="#tymethod.event">event</a><a href="#tymethod.exit">exit</a><a href="#tymethod.new_span">new_span</a><a href="#tymethod.record">record</a><a href="#tymethod.record_follows_from">record_follows_from</a></div><a class="sidebar-title" href="#provided-methods">Provided Methods</a><div class="sidebar-links"><a href="#method.clone_span">clone_span</a><a href="#method.current_span">current_span</a><a href="#method.downcast_raw">downcast_raw</a><a href="#method.drop_span">drop_span</a><a href="#method.max_level_hint">max_level_hint</a><a href="#method.register_callsite">register_callsite</a><a href="#method.try_close">try_close</a></div><a class="sidebar-title" href="#implementations">Methods</a><div class="sidebar-links"><a href="#method.downcast_ref">downcast_ref</a><a href="#method.is">is</a></div><a class="sidebar-title" href="#implementors">Implementors</a></div><p class="location"><a href="../index.html">tracing</a>::<wbr><a href="index.html">subscriber</a></p><script>window.sidebarCurrent = {name: "Subscriber", ty: "trait", relpath: ""};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/tracing_core/subscriber.rs.html#70-455" title="goto source code">[src]</a></span><span class="in-band">Trait <a href="../index.html">tracing</a>::<wbr><a href="index.html">subscriber</a>::<wbr><a class="trait" href="">Subscriber</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><pre class="rust trait">pub trait Subscriber: 'static {
+    fn <a href="#tymethod.enabled" class="fnname">enabled</a>(&amp;self, metadata: &amp;<a class="struct" href="../../tracing/struct.Metadata.html" title="struct tracing::Metadata">Metadata</a>&lt;'_&gt;) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+<div class="item-spacer"></div>    fn <a href="#tymethod.new_span" class="fnname">new_span</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Attributes.html" title="struct tracing::span::Attributes">Attributes</a>&lt;'_&gt;) -&gt; <a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>;
+<div class="item-spacer"></div>    fn <a href="#tymethod.record" class="fnname">record</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>, values: &amp;<a class="struct" href="../../tracing/span/struct.Record.html" title="struct tracing::span::Record">Record</a>&lt;'_&gt;);
+<div class="item-spacer"></div>    fn <a href="#tymethod.record_follows_from" class="fnname">record_follows_from</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>, follows: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>);
+<div class="item-spacer"></div>    fn <a href="#tymethod.event" class="fnname">event</a>(&amp;self, event: &amp;<a class="struct" href="../../tracing/event/struct.Event.html" title="struct tracing::event::Event">Event</a>&lt;'_&gt;);
+<div class="item-spacer"></div>    fn <a href="#tymethod.enter" class="fnname">enter</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>);
+<div class="item-spacer"></div>    fn <a href="#tymethod.exit" class="fnname">exit</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>);
+
+    fn <a href="#method.register_callsite" class="fnname">register_callsite</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;metadata: &amp;'static <a class="struct" href="../../tracing/struct.Metadata.html" title="struct tracing::Metadata">Metadata</a>&lt;'static&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="struct" href="../../tracing/subscriber/struct.Interest.html" title="struct tracing::subscriber::Interest">Interest</a> { ... }
+<div class="item-spacer"></div>    fn <a href="#method.max_level_hint" class="fnname">max_level_hint</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../../tracing/level_filters/struct.LevelFilter.html" title="struct tracing::level_filters::LevelFilter">LevelFilter</a>&gt; { ... }
+<div class="item-spacer"></div>    fn <a href="#method.clone_span" class="fnname">clone_span</a>(&amp;self, id: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>) -&gt; <a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a> { ... }
+<div class="item-spacer"></div>    fn <a href="#method.drop_span" class="fnname">drop_span</a>(&amp;self, _id: <a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>) { ... }
+<div class="item-spacer"></div>    fn <a href="#method.try_close" class="fnname">try_close</a>(&amp;self, id: <a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a> { ... }
+<div class="item-spacer"></div>    fn <a href="#method.current_span" class="fnname">current_span</a>(&amp;self) -&gt; <a class="struct" href="../../tracing_core/span/struct.Current.html" title="struct tracing_core::span::Current">Current</a> { ... }
+<div class="item-spacer"></div>    unsafe fn <a href="#method.downcast_raw" class="fnname">downcast_raw</a>(&amp;self, id: <a class="struct" href="https://doc.rust-lang.org/nightly/core/any/struct.TypeId.html" title="struct core::any::TypeId">TypeId</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.pointer.html">*const </a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt; { ... }
+}</pre></div><div class="docblock"><p>Trait representing the functions required to collect trace data.</p>
+<p>Crates that provide implementations of methods for collecting or recording
+trace data should implement the <code>Subscriber</code> interface. This trait is
+intended to represent fundamental primitives for collecting trace events and
+spans — other libraries may offer utility functions and types to make
+subscriber implementations more modular or improve the ergonomics of writing
+subscribers.</p>
+<p>A subscriber is responsible for the following:</p>
+<ul>
+<li>Registering new spans as they are created, and providing them with span
+IDs. Implicitly, this means the subscriber may determine the strategy for
+determining span equality.</li>
+<li>Recording the attachment of field values and follows-from annotations to
+spans.</li>
+<li>Filtering spans and events, and determining when those filters must be
+invalidated.</li>
+<li>Observing spans as they are entered, exited, and closed, and events as
+they occur.</li>
+</ul>
+<p>When a span is entered or exited, the subscriber is provided only with the
+<a href="../span/struct.Id.html">ID</a> with which it tagged that span when it was created. This means
+that it is up to the subscriber to determine whether and how span <em>data</em> —
+the fields and metadata describing the span — should be stored. The
+<a href="trait.Subscriber.html#method.new_span"><code>new_span</code></a> function is called when a new span is created, and at that
+point, the subscriber <em>may</em> choose to store the associated data if it will
+be referenced again. However, if the data has already been recorded and will
+not be needed by the implementations of <code>enter</code> and <code>exit</code>, the subscriber
+may freely discard that data without allocating space to store it.</p>
+<h2 id="overriding-default-impls" class="section-header"><a href="#overriding-default-impls">Overriding default impls</a></h2>
+<p>Some trait methods on <code>Subscriber</code> have default implementations, either in
+order to reduce the surface area of implementing <code>Subscriber</code>, or for
+backward-compatibility reasons. However, many subscribers will likely want
+to override these default implementations.</p>
+<p>The following methods are likely of interest:</p>
+<ul>
+<li><a href="trait.Subscriber.html#method.register_callsite"><code>register_callsite</code></a> is called once for each callsite from which a span
+event may originate, and returns an <a href="struct.Interest.html"><code>Interest</code></a> value describing whether or
+not the subscriber wishes to see events or spans from that callsite. By
+default, it calls <a href="trait.Subscriber.html#method.enabled"><code>enabled</code></a>, and returns <code>Interest::always()</code> if
+<code>enabled</code> returns true, or <code>Interest::never()</code> if enabled returns false.
+However, if the subscriber's interest can change dynamically at runtime,
+it may want to override this function to return <code>Interest::sometimes()</code>.
+Additionally, subscribers which wish to perform a behaviour once for each
+callsite, such as allocating storage for data related to that callsite,
+can perform it in <code>register_callsite</code>.</li>
+<li><a href="trait.Subscriber.html#method.clone_span"><code>clone_span</code></a> is called every time a span ID is cloned, and <a href="trait.Subscriber.html#method.try_close"><code>try_close</code></a>
+is called when a span ID is dropped. By default, these functions do
+nothing. However, they can be used to implement reference counting for
+spans, allowing subscribers to free storage for span data and to determine
+when a span has <em>closed</em> permanently (rather than being exited).
+Subscribers which store per-span data or which need to track span closures
+should override these functions together.</li>
+</ul>
+</div><h2 id="required-methods" class="small-section-header">Required methods<a href="#required-methods" class="anchor"></a></h2><div class="methods"><h3 id="tymethod.enabled" class="method"><code>fn <a href="#tymethod.enabled" class="fnname">enabled</a>(&amp;self, metadata: &amp;<a class="struct" href="../../tracing/struct.Metadata.html" title="struct tracing::Metadata">Metadata</a>&lt;'_&gt;) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code></h3><div class="docblock"><p>Returns true if a span or event with the specified <a href="../metadata/struct.Metadata.html">metadata</a> would be
+recorded.</p>
+<p>By default, it is assumed that this filter needs only be evaluated once
+for each callsite, so it is called by <a href="#method.register_callsite"><code>register_callsite</code></a> when each
+callsite is registered. The result is used to determine if the subscriber
+is always <a href="struct.Interest.html">interested</a> or never interested in that callsite. This is intended
+primarily as an optimization, so that expensive filters (such as those
+involving string search, et cetera) need not be re-evaluated.</p>
+<p>However, if the subscriber's interest in a particular span or event may
+change, or depends on contexts only determined dynamically at runtime,
+then the <code>register_callsite</code> method should be overridden to return
+<a href="struct.Interest.html#method.sometimes"><code>Interest::sometimes</code></a>. In that case, this function will be called every
+time that span or event occurs.</p>
+</div><h3 id="tymethod.new_span" class="method"><code>fn <a href="#tymethod.new_span" class="fnname">new_span</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Attributes.html" title="struct tracing::span::Attributes">Attributes</a>&lt;'_&gt;) -&gt; <a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a></code></h3><div class="docblock"><p>Visit the construction of a new span, returning a new <a href="../span/struct.Id.html">span ID</a> for the
+span being constructed.</p>
+<p>The provided <a href="../span/struct.Attributes.html"><code>Attributes</code></a> contains any field values that were provided
+when the span was created. The subscriber may pass a <a href="../field/trait.Visit.html">visitor</a> to the
+<code>Attributes</code>' <a href="../span/struct.Attributes.html#method.record"><code>record</code> method</a> to record these values.</p>
+<p>IDs are used to uniquely identify spans and events within the context of a
+subscriber, so span equality will be based on the returned ID. Thus, if
+the subscriber wishes for all spans with the same metadata to be
+considered equal, it should return the same ID every time it is given a
+particular set of metadata. Similarly, if it wishes for two separate
+instances of a span with the same metadata to <em>not</em> be equal, it should
+return a distinct ID every time this function is called, regardless of
+the metadata.</p>
+<p>Note that the subscriber is free to assign span IDs based on whatever
+scheme it sees fit. Any guarantees about uniqueness, ordering, or ID
+reuse are left up to the subscriber implementation to determine.</p>
+</div><h3 id="tymethod.record" class="method"><code>fn <a href="#tymethod.record" class="fnname">record</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>, values: &amp;<a class="struct" href="../../tracing/span/struct.Record.html" title="struct tracing::span::Record">Record</a>&lt;'_&gt;)</code></h3><div class="docblock"><p>Record a set of values on a span.</p>
+<p>This method will be invoked when value is recorded on a span.
+Recording multiple values for the same field is possible,
+but the actual behaviour is defined by the subscriber implementation.</p>
+<p>Keep in mind that a span might not provide a value
+for each field it declares.</p>
+<p>The subscriber is expected to provide a <a href="../field/trait.Visit.html">visitor</a> to the <code>Record</code>'s
+<a href="../span/struct.Record.html#method.record"><code>record</code> method</a> in order to record the added values.</p>
+<h1 id="example" class="section-header"><a href="#example">Example</a></h1>
+<p>&quot;foo = 3&quot; will be recorded when <a href="../span/struct.Attributes.html#method.record"><code>record</code></a> is called on the
+<code>Attributes</code> passed to <code>new_span</code>.
+Since values are not provided for the <code>bar</code> and <code>baz</code> fields,
+the span's <code>Metadata</code> will indicate that it <em>has</em> those fields,
+but values for them won't be recorded at this time.</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">tracing</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">span</span> <span class="op">=</span> <span class="macro">span</span><span class="macro">!</span>(<span class="string">&quot;my_span&quot;</span>, <span class="ident">foo</span> <span class="op">=</span> <span class="number">3</span>, <span class="ident">bar</span>, <span class="ident">baz</span>);
+
+<span class="comment">// `Subscriber::record` will be called with a `Record`</span>
+<span class="comment">// containing &quot;bar = false&quot;</span>
+<span class="ident">span</span>.<span class="ident">record</span>(<span class="string">&quot;bar&quot;</span>, <span class="kw-2">&amp;</span><span class="bool-val">false</span>);
+
+<span class="comment">// `Subscriber::record` will be called with a `Record`</span>
+<span class="comment">// containing &quot;baz = &quot;a string&quot;&quot;</span>
+<span class="ident">span</span>.<span class="ident">record</span>(<span class="string">&quot;baz&quot;</span>, <span class="kw-2">&amp;</span><span class="string">&quot;a string&quot;</span>);</pre></div>
+</div><h3 id="tymethod.record_follows_from" class="method"><code>fn <a href="#tymethod.record_follows_from" class="fnname">record_follows_from</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>, follows: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>)</code></h3><div class="docblock"><p>Adds an indication that <code>span</code> follows from the span with the id
+<code>follows</code>.</p>
+<p>This relationship differs somewhat from the parent-child relationship: a
+span may have any number of prior spans, rather than a single one; and
+spans are not considered to be executing <em>inside</em> of the spans they
+follow from. This means that a span may close even if subsequent spans
+that follow from it are still open, and time spent inside of a
+subsequent span should not be included in the time its precedents were
+executing. This is used to model causal relationships such as when a
+single future spawns several related background tasks, et cetera.</p>
+<p>If the subscriber has spans corresponding to the given IDs, it should
+record this relationship in whatever way it deems necessary. Otherwise,
+if one or both of the given span IDs do not correspond to spans that the
+subscriber knows about, or if a cyclical relationship would be created
+(i.e., some span <em>a</em> which proceeds some other span <em>b</em> may not also
+follow from <em>b</em>), it may silently do nothing.</p>
+</div><h3 id="tymethod.event" class="method"><code>fn <a href="#tymethod.event" class="fnname">event</a>(&amp;self, event: &amp;<a class="struct" href="../../tracing/event/struct.Event.html" title="struct tracing::event::Event">Event</a>&lt;'_&gt;)</code></h3><div class="docblock"><p>Records that an <a href="../event/struct.Event.html"><code>Event</code></a> has occurred.</p>
+<p>This method will be invoked when an Event is constructed by
+the <code>Event</code>'s <a href="../event/struct.Event.html#method.dispatch"><code>dispatch</code> method</a>. For example, this happens internally
+when an event macro from <code>tracing</code> is called.</p>
+<p>The key difference between this method and <code>record</code> is that <code>record</code> is
+called when a value is recorded for a field defined by a span,
+while <code>event</code> is called when a new event occurs.</p>
+<p>The provided <code>Event</code> struct contains any field values attached to the
+event. The subscriber may pass a <a href="../field/trait.Visit.html">visitor</a> to the <code>Event</code>'s
+<a href="../event/struct.Event.html#method.record"><code>record</code> method</a> to record these values.</p>
+</div><h3 id="tymethod.enter" class="method"><code>fn <a href="#tymethod.enter" class="fnname">enter</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>)</code></h3><div class="docblock"><p>Records that a span has been entered.</p>
+<p>When entering a span, this method is called to notify the subscriber
+that the span has been entered. The subscriber is provided with the
+<a href="../span/struct.Id.html">span ID</a> of the entered span, and should update any internal state
+tracking the current span accordingly.</p>
+</div><h3 id="tymethod.exit" class="method"><code>fn <a href="#tymethod.exit" class="fnname">exit</a>(&amp;self, span: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>)</code></h3><div class="docblock"><p>Records that a span has been exited.</p>
+<p>When exiting a span, this method is called to notify the subscriber
+that the span has been exited. The subscriber is provided with the
+<a href="../span/struct.Id.html">span ID</a> of the exited span, and should update any internal state
+tracking the current span accordingly.</p>
+<p>Exiting a span does not imply that the span will not be re-entered.</p>
+</div></div><span class="loading-content">Loading content...</span><h2 id="provided-methods" class="small-section-header">Provided methods<a href="#provided-methods" class="anchor"></a></h2><div class="methods"><h3 id="method.register_callsite" class="method"><code>fn <a href="#method.register_callsite" class="fnname">register_callsite</a>(&amp;self, metadata: &amp;'static <a class="struct" href="../../tracing/struct.Metadata.html" title="struct tracing::Metadata">Metadata</a>&lt;'static&gt;) -&gt; <a class="struct" href="../../tracing/subscriber/struct.Interest.html" title="struct tracing::subscriber::Interest">Interest</a></code></h3><div class="docblock"><p>Registers a new callsite with this subscriber, returning whether or not
+the subscriber is interested in being notified about the callsite.</p>
+<p>By default, this function assumes that the subscriber's <a href="#method.enabled">filter</a>
+represents an unchanging view of its interest in the callsite. However,
+if this is not the case, subscribers may override this function to
+indicate different interests, or to implement behaviour that should run
+once for every callsite.</p>
+<p>This function is guaranteed to be called at least once per callsite on
+every active subscriber. The subscriber may store the keys to fields it
+cares about in order to reduce the cost of accessing fields by name,
+preallocate storage for that callsite, or perform any other actions it
+wishes to perform once for each callsite.</p>
+<p>The subscriber should then return an <a href="struct.Interest.html"><code>Interest</code></a>, indicating
+whether it is interested in being notified about that callsite in the
+future. This may be <code>Always</code> indicating that the subscriber always
+wishes to be notified about the callsite, and its filter need not be
+re-evaluated; <code>Sometimes</code>, indicating that the subscriber may sometimes
+care about the callsite but not always (such as when sampling), or
+<code>Never</code>, indicating that the subscriber never wishes to be notified about
+that callsite. If all active subscribers return <code>Never</code>, a callsite will
+never be enabled unless a new subscriber expresses interest in it.</p>
+<p><code>Subscriber</code>s which require their filters to be run every time an event
+occurs or a span is entered/exited should return <code>Interest::sometimes</code>.
+If a subscriber returns <code>Interest::sometimes</code>, then its' <a href="#method.enabled"><code>enabled</code></a> method
+will be called every time an event or span is created from that callsite.</p>
+<p>For example, suppose a sampling subscriber is implemented by
+incrementing a counter every time <code>enabled</code> is called and only returning
+<code>true</code> when the counter is divisible by a specified sampling rate. If
+that subscriber returns <code>Interest::always</code> from <code>register_callsite</code>, then
+the filter will not be re-evaluated once it has been applied to a given
+set of metadata. Thus, the counter will not be incremented, and the span
+or event that corresponds to the metadata will never be <code>enabled</code>.</p>
+<p><code>Subscriber</code>s that need to change their filters occasionally should call
+<a href="../callsite/fn.rebuild_interest_cache.html"><code>rebuild_interest_cache</code></a> to re-evaluate <code>register_callsite</code> for all
+callsites.</p>
+<p>Similarly, if a <code>Subscriber</code> has a filtering strategy that can be
+changed dynamically at runtime, it would need to re-evaluate that filter
+if the cached results have changed.</p>
+<p>A subscriber which manages fanout to multiple other subscribers
+should proxy this decision to all of its child subscribers,
+returning <code>Interest::never</code> only if <em>all</em> such children return
+<code>Interest::never</code>. If the set of subscribers to which spans are
+broadcast may change dynamically, the subscriber should also never
+return <code>Interest::Never</code>, as a new subscriber may be added that <em>is</em>
+interested.</p>
+<h1 id="notes" class="section-header"><a href="#notes">Notes</a></h1>
+<p>This function may be called again when a new subscriber is created or
+when the registry is invalidated.</p>
+<p>If a subscriber returns <code>Interest::never</code> for a particular callsite, it
+<em>may</em> still see spans and events originating from that callsite, if
+another subscriber expressed interest in it.</p>
+</div><h3 id="method.max_level_hint" class="method"><code>fn <a href="#method.max_level_hint" class="fnname">max_level_hint</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../../tracing/level_filters/struct.LevelFilter.html" title="struct tracing::level_filters::LevelFilter">LevelFilter</a>&gt;</code></h3><div class="docblock"><p>Returns the highest <a href="../struct.Level.html">verbosity level</a> that this <code>Subscriber</code> will
+enable, or <code>None</code>, if the subscriber does not implement level-based
+filtering or chooses not to implement this method.</p>
+<p>If this method returns a <a href="../struct.Level.html"><code>Level</code></a>, it will be used as a hint to
+determine the most verbose level that will be enabled. This will allow
+spans and events which are more verbose than that level to be skipped
+more efficiently. Subscribers which perform filtering are strongly
+encouraged to provide an implementation of this method.</p>
+<p>If the maximum level the subscriber will enable can change over the
+course of its lifetime, it is free to return a different value from
+multiple invocations of this method. However, note that changes in the
+maximum level will <strong>only</strong> be reflected after the callsite <a href="struct.Interest.html"><code>Interest</code></a>
+cache is rebuilt, by calling the <a href="../callsite/fn.rebuild_interest_cache.html"><code>callsite::rebuild_interest_cache</code></a>
+function. Therefore, if the subscriber will change the value returned by
+this method, it is responsible for ensuring that
+<a href="../callsite/fn.rebuild_interest_cache.html"><code>rebuild_interest_cache</code></a> is called after the value of the max
+level changes.</p>
+</div><h3 id="method.clone_span" class="method"><code>fn <a href="#method.clone_span" class="fnname">clone_span</a>(&amp;self, id: &amp;<a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>) -&gt; <a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a></code></h3><div class="docblock"><p>Notifies the subscriber that a <a href="../span/struct.Id.html">span ID</a> has been cloned.</p>
+<p>This function is guaranteed to only be called with span IDs that were
+returned by this subscriber's <code>new_span</code> function.</p>
+<p>Note that the default implementation of this function this is just the
+identity function, passing through the identifier. However, it can be
+used in conjunction with <a href="trait.Subscriber.html#method.try_close"><code>try_close</code></a> to track the number of handles
+capable of <code>enter</code>ing a span. When all the handles have been dropped
+(i.e., <code>try_close</code> has been called one more time than <code>clone_span</code> for a
+given ID), the subscriber may assume that the span will not be entered
+again. It is then free to deallocate storage for data associated with
+that span, write data from that span to IO, and so on.</p>
+<p>For more unsafe situations, however, if <code>id</code> is itself a pointer of some
+kind this can be used as a hook to &quot;clone&quot; the pointer, depending on
+what that means for the specified pointer.</p>
+</div><h3 id="method.drop_span" class="method"><code>fn <a href="#method.drop_span" class="fnname">drop_span</a>(&amp;self, _id: <a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>)</code></h3><div class="stability"><div class="stab deprecated"><span class="emoji">👎</span> Deprecated since 0.1.2: <p>use <code>Subscriber::try_close</code> instead</p>
+</div></div><div class="docblock"><p><strong>This method is deprecated.</strong></p>
+<p>Using <code>drop_span</code> may result in subscribers composed using
+<code>tracing-subscriber</code> crate's <code>Layer</code> trait from observing close events.
+Use <a href="trait.Subscriber.html#method.try_close"><code>try_close</code></a> instead.</p>
+<p>The default implementation of this function does nothing.</p>
+</div><h3 id="method.try_close" class="method"><code>fn <a href="#method.try_close" class="fnname">try_close</a>(&amp;self, id: <a class="struct" href="../../tracing/span/struct.Id.html" title="struct tracing::span::Id">Id</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code></h3><div class="docblock"><p>Notifies the subscriber that a [<code>span ID</code>] has been dropped, and returns
+<code>true</code> if there are now 0 IDs that refer to that span.</p>
+<p>Higher-level libraries providing functionality for composing multiple
+subscriber implementations may use this return value to notify any
+&quot;layered&quot; subscribers that this subscriber considers the span closed.</p>
+<p>The default implementation of this method calls the subscriber's
+<a href="trait.Subscriber.html#method.drop_span"><code>drop_span</code></a> method and returns <code>false</code>. This means that, unless the
+subscriber overrides the default implementation, close notifications
+will never be sent to any layered subscribers. In general, if the
+subscriber tracks reference counts, this method should be implemented,
+rather than <code>drop_span</code>.</p>
+<p>This function is guaranteed to only be called with span IDs that were
+returned by this subscriber's <code>new_span</code> function.</p>
+<p>It's guaranteed that if this function has been called once more than the
+number of times <code>clone_span</code> was called with the same <code>id</code>, then no more
+handles that can enter the span with that <code>id</code> exist. This means that it
+can be used in conjunction with <a href="trait.Subscriber.html#method.clone_span"><code>clone_span</code></a> to track the number of
+handles capable of <code>enter</code>ing a span. When all the handles have been
+dropped (i.e., <code>try_close</code> has been called one more time than
+<code>clone_span</code> for a given ID), the subscriber may assume that the span
+will not be entered again, and should return <code>true</code>. It is then free to
+deallocate storage for data associated with that span, write data from
+that span to IO, and so on.</p>
+<p><strong>Note</strong>: since this function is called when spans are dropped,
+implementations should ensure that they are unwind-safe. Panicking from
+inside of a <code>try_close</code> function may cause a double panic, if the span
+was dropped due to a thread unwinding.</p>
+</div><h3 id="method.current_span" class="method"><code>fn <a href="#method.current_span" class="fnname">current_span</a>(&amp;self) -&gt; <a class="struct" href="../../tracing_core/span/struct.Current.html" title="struct tracing_core::span::Current">Current</a></code></h3><div class="docblock"><p>Returns a type representing this subscriber's view of the current span.</p>
+<p>If subscribers track a current span, they should override this function
+to return <a href="../span/struct.Current.html#tymethod.new"><code>Current::new</code></a> if the thread from which this method is
+called is inside a span, or <a href="../span/struct.Current.html#tymethod.none"><code>Current::none</code></a> if the thread is not
+inside a span.</p>
+<p>By default, this returns a value indicating that the subscriber
+does <strong>not</strong> track what span is current. If the subscriber does not
+implement a current span, it should not override this method.</p>
+</div><h3 id="method.downcast_raw" class="method"><code>unsafe fn <a href="#method.downcast_raw" class="fnname">downcast_raw</a>(&amp;self, id: <a class="struct" href="https://doc.rust-lang.org/nightly/core/any/struct.TypeId.html" title="struct core::any::TypeId">TypeId</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.pointer.html">*const </a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt;</code></h3><div class="docblock"><p>If <code>self</code> is the same type as the provided <code>TypeId</code>, returns an untyped
+<code>*const</code> pointer to that type. Otherwise, returns <code>None</code>.</p>
+<p>If you wish to downcast a <code>Subscriber</code>, it is strongly advised to use
+the safe API provided by <a href="#method.downcast_ref"><code>downcast_ref</code></a> instead.</p>
+<p>This API is required for <code>downcast_raw</code> to be a trait method; a method
+signature like <a href="#method.downcast_ref"><code>downcast_ref</code></a> (with a generic type parameter) is not
+object-safe, and thus cannot be a trait method for <code>Subscriber</code>. This
+means that if we only exposed <code>downcast_ref</code>, <code>Subscriber</code>
+implementations could not override the downcasting behavior</p>
+<p>This method may be overridden by &quot;fan out&quot; or &quot;chained&quot; subscriber
+implementations which consist of multiple composed types. Such
+subscribers might allow <code>downcast_raw</code> by returning references to those
+component if they contain components with the given <code>TypeId</code>.</p>
+<h1 id="safety" class="section-header"><a href="#safety">Safety</a></h1>
+<p>The <a href="#method.downcast_ref"><code>downcast_ref</code></a> method expects that the pointer returned by
+<code>downcast_raw</code> is non-null and points to a valid instance of the type
+with the provided <code>TypeId</code>. Failure to ensure this will result in
+undefined behaviour, so implementing <code>downcast_raw</code> is unsafe.</p>
+</div></div><span class="loading-content">Loading content...</span><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><h3 id="impl" class="impl"><code class="in-band">impl dyn <a class="trait" href="../../tracing/subscriber/trait.Subscriber.html" title="trait tracing::subscriber::Subscriber">Subscriber</a> + 'static</code><a href="#impl" class="anchor"></a><a class="srclink" href="../../src/tracing_core/subscriber.rs.html#457-475" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.is" class="method"><code>pub fn <a href="#method.is" class="fnname">is</a>&lt;T&gt;(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a> <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: <a class="trait" href="https://doc.rust-lang.org/nightly/core/any/trait.Any.html" title="trait core::any::Any">Any</a>,&nbsp;</span></code><a class="srclink" href="../../src/tracing_core/subscriber.rs.html#459-461" title="goto source code">[src]</a></h4><div class="docblock"><p>Returns <code>true</code> if this <code>Subscriber</code> is the same type as <code>T</code>.</p>
+</div><h4 id="method.downcast_ref" class="method"><code>pub fn <a href="#method.downcast_ref" class="fnname">downcast_ref</a>&lt;T&gt;(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;</a>T&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: <a class="trait" href="https://doc.rust-lang.org/nightly/core/any/trait.Any.html" title="trait core::any::Any">Any</a>,&nbsp;</span></code><a class="srclink" href="../../src/tracing_core/subscriber.rs.html#465-474" title="goto source code">[src]</a></h4><div class="docblock"><p>Returns some reference to this <code>Subscriber</code> value if it is of type <code>T</code>,
+or <code>None</code> if it isn't.</p>
+</div></div><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor"></a></h2><div class="item-list" id="implementors-list"></div><span class="loading-content">Loading content...</span><script type="text/javascript" src="../../implementors/tracing_core/subscriber/trait.Subscriber.js" async></script></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "tracing";</script><script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>

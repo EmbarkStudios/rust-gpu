@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["clearenv","Clear the environment of all name-value pairs."]]});

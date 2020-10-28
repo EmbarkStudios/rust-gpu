@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ConversionError","Error that may occur during the convesion from the data representation of a module into a structured representation."],["InstructionError","Error lifting a data representation of an instruction."],["OperandError","Error lifting a data representation of an operand into the structured representation."]],"struct":[["LiftContext",""]]});

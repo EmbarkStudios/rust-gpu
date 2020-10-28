@@ -1,0 +1,1 @@
+initSidebarItems({"macro":[["scoped_thread_local","The macro. See the module level documentation for the description and examples."]],"struct":[["ScopedKey","Type representing a thread local storage key corresponding to a reference to the type parameter `T`."]]});

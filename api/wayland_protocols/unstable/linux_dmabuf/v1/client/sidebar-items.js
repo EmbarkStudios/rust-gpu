@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["zwp_linux_buffer_params_v1","parameters for creating a dmabuf-based wl_buffer"],["zwp_linux_dmabuf_v1","factory for creating dmabuf-based wl_buffers"]]});

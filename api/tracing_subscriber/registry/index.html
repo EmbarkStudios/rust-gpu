@@ -1,0 +1,55 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `registry` mod in crate `tracing_subscriber`."><meta name="keywords" content="rust, rustlang, rust-lang, registry"><title>tracing_subscriber::registry - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../tracing_subscriber/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png' alt='logo'></div></a><p class="location">Module registry</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></div><p class="location"><a href="../index.html">tracing_subscriber</a></p><script>window.sidebarCurrent = {name: "registry", ty: "mod", relpath: "../"};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/tracing_subscriber/registry/mod.rs.html#1-336" title="goto source code">[src]</a></span><span class="in-band">Module <a href="../index.html">tracing_subscriber</a>::<wbr><a class="mod" href="">registry</a></span></h1><div class="docblock"><p>Storage for span data shared by multiple <a href="../layer/trait.Layer.html"><code>Layer</code></a>s.</p>
+<h2 id="using-the-span-registry" class="section-header"><a href="#using-the-span-registry">Using the Span Registry</a></h2>
+<p>This module provides the <a href="struct.Registry.html"><code>Registry</code></a> type, a <a href="https://docs.rs/tracing-core/latest/tracing_core/subscriber/trait.Subscriber.html"><code>Subscriber</code></a> implementation
+which tracks per-span data and exposes it to <a href="../layer/trait.Layer.html"><code>Layer</code></a>s. When a <code>Registry</code>
+is used as the base <code>Subscriber</code> of a <code>Layer</code> stack, the
+<a href="../layer/struct.Context.html"><code>layer::Context</code></a> type will provide methods allowing <code>Layer</code>s to
+<a href="../layer/struct.Context.html#method.span">look up span data</a> stored in the registry. While <a href="struct.Registry.html"><code>Registry</code></a> is a
+reasonable default for storing spans and events, other stores that implement
+<a href="trait.LookupSpan.html"><code>LookupSpan</code></a> and <a href="https://docs.rs/tracing-core/latest/tracing_core/subscriber/trait.Subscriber.html"><code>Subscriber</code></a> themselves (with <a href="trait.SpanData.html"><code>SpanData</code></a> implemented
+by the per-span data they store) can be used as a drop-in replacement.</p>
+<p>For example, we might create a <code>Registry</code> and add multiple <code>Layer</code>s like so:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">tracing_subscriber</span>::{<span class="ident">registry</span>::<span class="ident">Registry</span>, <span class="ident">Layer</span>, <span class="ident">prelude</span>::<span class="kw-2">*</span>};
+
+<span class="kw">let</span> <span class="ident">subscriber</span> <span class="op">=</span> <span class="ident">Registry</span>::<span class="ident">default</span>()
+    .<span class="ident">with</span>(<span class="ident">FooLayer</span>::<span class="ident">new</span>())
+    .<span class="ident">with</span>(<span class="ident">BarLayer</span>::<span class="ident">new</span>());</pre></div>
+<p>If a type implementing <code>Layer</code> depends on the functionality of a <code>Registry</code>
+implementation, it should bound its <code>Subscriber</code> type parameter with the
+<a href="trait.LookupSpan.html"><code>LookupSpan</code></a> trait, like so:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">tracing_subscriber</span>::{<span class="ident">registry</span>, <span class="ident">Layer</span>};
+<span class="kw">use</span> <span class="ident">tracing_core</span>::<span class="ident">Subscriber</span>;
+
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MyLayer</span> {
+    <span class="comment">// ...</span>
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="ident">Layer</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MyLayer</span>
+<span class="kw">where</span>
+    <span class="ident">S</span>: <span class="ident">Subscriber</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">registry</span>::<span class="ident">LookupSpan</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+{
+    <span class="comment">// ...</span>
+}</pre></div>
+<p>When this bound is added, the <code>Layer</code> implementation will be guaranteed
+access to the <a href="../layer/struct.Context.html"><code>Context</code></a> methods, such as <a href="../layer/struct.Context.html#method.span"><code>Context::span</code></a>, that
+require the root subscriber to be a registry.</p>
+</div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.Data.html" title="tracing_subscriber::registry::Data struct">Data</a></td><td class="docblock-short"><p>Span data stored in a <a href="struct.Registry.html"><code>Registry</code></a>.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Extensions.html" title="tracing_subscriber::registry::Extensions struct">Extensions</a></td><td class="docblock-short"><p>An immutable, read-only reference to a Span's extensions.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ExtensionsMut.html" title="tracing_subscriber::registry::ExtensionsMut struct">ExtensionsMut</a></td><td class="docblock-short"><p>An mutable reference to a Span's extensions.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.FromRoot.html" title="tracing_subscriber::registry::FromRoot struct">FromRoot</a></td><td class="docblock-short"><p>An iterator over a span's parents, starting with the root of the trace
+tree.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Parents.html" title="tracing_subscriber::registry::Parents struct">Parents</a></td><td class="docblock-short"><p>An iterator over the parents of a span.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Registry.html" title="tracing_subscriber::registry::Registry struct">Registry</a></td><td class="docblock-short"><p>A shared, reusable store for spans.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.SpanRef.html" title="tracing_subscriber::registry::SpanRef struct">SpanRef</a></td><td class="docblock-short"><p>A reference to <a href="trait.SpanData.html">span data</a> and the associated <a href="trait.LookupSpan.html">registry</a>.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.LookupSpan.html" title="tracing_subscriber::registry::LookupSpan trait">LookupSpan</a></td><td class="docblock-short"><p>Provides access to stored span data.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.SpanData.html" title="tracing_subscriber::registry::SpanData trait">SpanData</a></td><td class="docblock-short"><p>A stored representation of data associated with a span.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "tracing_subscriber";</script><script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>

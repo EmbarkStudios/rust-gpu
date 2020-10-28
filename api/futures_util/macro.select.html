@@ -1,0 +1,129 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `select` macro in crate `futures_util`."><meta name="keywords" content="rust, rustlang, rust-lang, select"><title>futures_util::select - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc macro"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../futures_util/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="index.html">futures_util</a></p><script>window.sidebarCurrent = {name: "select", ty: "macro", relpath: ""};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/futures_util/async_await/select_mod.rs.html#323-330" title="goto source code">[src]</a></span><span class="in-band">Macro <a href="index.html">futures_util</a>::<wbr><a class="macro" href="">select</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><div class="example-wrap"><pre class="rust macro">
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">select</span> {
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tokens</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> { ... };
+}</pre></div>
+</div><div class="docblock"><p>Polls multiple futures and streams simultaneously, executing the branch
+for the future that finishes first. If multiple futures are ready,
+one will be pseudo-randomly selected at runtime. Futures directly
+passed to <code>select!</code> must be <code>Unpin</code> and implement <code>FusedFuture</code>.</p>
+<p>If an expression which yields a <code>Future</code> is passed to <code>select!</code>
+(e.g. an <code>async fn</code> call) instead of a <code>Future</code> by name the <code>Unpin</code>
+requirement is relaxed, since the macro will pin the resulting <code>Future</code>
+on the stack. However the <code>Future</code> returned by the expression must
+still implement <code>FusedFuture</code>.</p>
+<p>Futures and streams which are not already fused can be fused using the
+<code>.fuse()</code> method. Note, though, that fusing a future or stream directly
+in the call to <code>select!</code> will not be enough to prevent it from being
+polled after completion if the <code>select!</code> call is in a loop, so when
+<code>select!</code>ing in a loop, users should take care to <code>fuse()</code> outside of
+the loop.</p>
+<p><code>select!</code> can be used as an expression and will return the return
+value of the selected branch. For this reason the return type of every
+branch in a <code>select!</code> must be the same.</p>
+<p>This macro is only usable inside of async functions, closures, and blocks.
+It is also gated behind the <code>async-await</code> feature of this library, which is
+activated by default.</p>
+<p>Note that <code>select!</code> relies on <code>proc-macro-hack</code>, and may require to set the
+compiler's recursion limit very high, e.g. <code>#![recursion_limit=&quot;1024&quot;]</code>.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>;
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">select</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">future</span>::<span class="ident">ready</span>(<span class="number">4</span>);
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">future</span>::<span class="ident">pending</span>::<span class="op">&lt;</span>()<span class="op">&gt;</span>();
+
+<span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">select</span><span class="macro">!</span> {
+    <span class="ident">a_res</span> <span class="op">=</span> <span class="ident">a</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a_res</span> <span class="op">+</span> <span class="number">1</span>,
+    <span class="kw">_</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+};
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">res</span>, <span class="number">5</span>);</pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>;
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">stream</span>::{<span class="self">self</span>, <span class="ident">StreamExt</span>};
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">select</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">st</span> <span class="op">=</span> <span class="ident">stream</span>::<span class="ident">iter</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">2</span>]).<span class="ident">fuse</span>();
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fut</span> <span class="op">=</span> <span class="ident">future</span>::<span class="ident">pending</span>::<span class="op">&lt;</span>()<span class="op">&gt;</span>();
+
+<span class="macro">select</span><span class="macro">!</span> {
+    <span class="ident">x</span> <span class="op">=</span> <span class="ident">st</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="number">2</span>), <span class="ident">x</span>),
+    <span class="kw">_</span> <span class="op">=</span> <span class="ident">fut</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(),
+};</pre></div>
+<p>As described earlier, <code>select</code> can directly select on expressions
+which return <code>Future</code>s - even if those do not implement <code>Unpin</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">FutureExt</span>;
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">select</span>;
+
+<span class="comment">// Calling the following async fn returns a Future which does not</span>
+<span class="comment">// implement Unpin</span>
+<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">async_identity_fn</span>(<span class="ident">arg</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="ident">arg</span>
+}
+
+<span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">select</span><span class="macro">!</span> {
+    <span class="ident">a_res</span> <span class="op">=</span> <span class="ident">async_identity_fn</span>(<span class="number">62</span>).<span class="ident">fuse</span>() <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a_res</span> <span class="op">+</span> <span class="number">1</span>,
+    <span class="ident">b_res</span> <span class="op">=</span> <span class="ident">async_identity_fn</span>(<span class="number">13</span>).<span class="ident">fuse</span>() <span class="op">=</span><span class="op">&gt;</span> <span class="ident">b_res</span>,
+};
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">res</span> <span class="op">=</span><span class="op">=</span> <span class="number">63</span> <span class="op">|</span><span class="op">|</span> <span class="ident">res</span> <span class="op">=</span><span class="op">=</span> <span class="number">13</span>);</pre></div>
+<p>If a similar async function is called outside of <code>select</code> to produce
+a <code>Future</code>, the <code>Future</code> must be pinned in order to be able to pass
+it to <code>select</code>. This can be achieved via <code>Box::pin</code> for pinning a
+<code>Future</code> on the heap or the <code>pin_mut!</code> macro for pinning a <code>Future</code>
+on the stack.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">FutureExt</span>;
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">select</span>;
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">pin_mut</span>;
+
+<span class="comment">// Calling the following async fn returns a Future which does not</span>
+<span class="comment">// implement Unpin</span>
+<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">async_identity_fn</span>(<span class="ident">arg</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="ident">arg</span>
+}
+
+<span class="kw">let</span> <span class="ident">fut_1</span> <span class="op">=</span> <span class="ident">async_identity_fn</span>(<span class="number">1</span>).<span class="ident">fuse</span>();
+<span class="kw">let</span> <span class="ident">fut_2</span> <span class="op">=</span> <span class="ident">async_identity_fn</span>(<span class="number">2</span>).<span class="ident">fuse</span>();
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fut_1</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="ident">fut_1</span>); <span class="comment">// Pins the Future on the heap</span>
+<span class="macro">pin_mut</span><span class="macro">!</span>(<span class="ident">fut_2</span>); <span class="comment">// Pins the Future on the stack</span>
+
+<span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">select</span><span class="macro">!</span> {
+    <span class="ident">a_res</span> <span class="op">=</span> <span class="ident">fut_1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a_res</span>,
+    <span class="ident">b_res</span> <span class="op">=</span> <span class="ident">fut_2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">b_res</span>,
+};
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">res</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">res</span> <span class="op">=</span><span class="op">=</span> <span class="number">2</span>);</pre></div>
+<p><code>select</code> also accepts a <code>complete</code> branch and a <code>default</code> branch.
+<code>complete</code> will run if all futures and streams have already been
+exhausted. <code>default</code> will run if no futures or streams are
+immediately ready. <code>complete</code> takes priority over <code>default</code> in
+the case where all futures have completed.
+A motivating use-case for passing <code>Future</code>s by name as well as for
+<code>complete</code> blocks is to call <code>select!</code> in a loop, which is
+demonstrated in the following example:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>;
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">select</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a_fut</span> <span class="op">=</span> <span class="ident">future</span>::<span class="ident">ready</span>(<span class="number">4</span>);
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b_fut</span> <span class="op">=</span> <span class="ident">future</span>::<span class="ident">ready</span>(<span class="number">6</span>);
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span> <span class="op">=</span> <span class="number">0</span>;
+
+<span class="kw">loop</span> {
+    <span class="macro">select</span><span class="macro">!</span> {
+        <span class="ident">a</span> <span class="op">=</span> <span class="ident">a_fut</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">total</span> <span class="op">+</span><span class="op">=</span> <span class="ident">a</span>,
+        <span class="ident">b</span> <span class="op">=</span> <span class="ident">b_fut</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">total</span> <span class="op">+</span><span class="op">=</span> <span class="ident">b</span>,
+        <span class="ident">complete</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
+        <span class="ident">default</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(), <span class="comment">// never runs (futures run first, then complete)</span>
+    };
+}
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">total</span>, <span class="number">10</span>);</pre></div>
+<p>Note that the futures that have been matched over can still be mutated
+from inside the <code>select!</code> block's branches. This can be used to implement
+more complex behavior such as timer resets or writing into the head of
+a stream.</p>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "futures_util";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

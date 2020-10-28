@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Error","Indicates that an error occurred when reloading a layer."],["Handle","Allows reloading the state of an associated `Layer`."],["Layer","Wraps a `Layer`, allowing it to be reloaded dynamically at runtime."]]});

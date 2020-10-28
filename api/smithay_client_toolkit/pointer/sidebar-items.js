@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["AutoPointer","A pointer wrapper to gracefully handle a missing `libwayland-cursor`"],["AutoThemer","Wrapper to gracefully handle a missing `libwayland-cursor`"]],"struct":[["ThemeManager","Wrapper managing a system theme for pointer images"],["ThemedPointer","Wrapper of a themed pointer"]]});

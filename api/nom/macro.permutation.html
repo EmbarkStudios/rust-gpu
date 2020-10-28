@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `permutation` macro in crate `nom`."><meta name="keywords" content="rust, rustlang, rust-lang, permutation"><title>nom::permutation - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc macro"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../nom/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="index.html">nom</a></p><script>window.sidebarCurrent = {name: "permutation", ty: "macro", relpath: ""};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/nom/branch/macros.rs.html#458-497" title="goto source code">[src]</a></span><span class="in-band">Macro <a href="index.html">nom</a>::<wbr><a class="macro" href="">permutation</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><div class="example-wrap"><pre class="rust macro">
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">permutation</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">i</span>:<span class="ident">expr</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> { ... };
+}</pre></div>
+</div><div class="docblock"><p><code>permutation!(I -&gt; IResult&lt;I,A&gt;, I -&gt; IResult&lt;I,B&gt;, ... I -&gt; IResult&lt;I,X&gt; ) =&gt; I -&gt; IResult&lt;I, (A,B,...X)&gt;</code>
+applies its sub parsers in a sequence, but independent from their order
+this parser will only succeed if all of its sub parsers succeed</p>
+<p>the tuple of results is in the same order as the parsers are declared</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">named</span><span class="macro">!</span>(<span class="ident">perm</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="kw-2">&amp;</span>[<span class="ident">u8</span>])<span class="op">&gt;</span>,
+  <span class="macro">permutation</span><span class="macro">!</span>(<span class="macro">tag</span><span class="macro">!</span>(<span class="string">&quot;abcd&quot;</span>), <span class="macro">tag</span><span class="macro">!</span>(<span class="string">&quot;efg&quot;</span>), <span class="macro">tag</span><span class="macro">!</span>(<span class="string">&quot;hi&quot;</span>))
+);
+
+<span class="comment">// whatever the order, if the parser succeeds, each</span>
+<span class="comment">// tag should have matched correctly</span>
+<span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="string">b&quot;abcd&quot;</span>[..], <span class="kw-2">&amp;</span><span class="string">b&quot;efg&quot;</span>[..], <span class="kw-2">&amp;</span><span class="string">b&quot;hi&quot;</span>[..]);
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="string">b&quot;abcdefghijk&quot;</span>[..];
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">a</span>), <span class="prelude-val">Ok</span>((<span class="kw-2">&amp;</span><span class="string">b&quot;jk&quot;</span>[..], <span class="ident">expected</span>)));
+<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="string">b&quot;efgabcdhijkl&quot;</span>[..];
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">b</span>), <span class="prelude-val">Ok</span>((<span class="kw-2">&amp;</span><span class="string">b&quot;jkl&quot;</span>[..], <span class="ident">expected</span>)));
+<span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="string">b&quot;hiefgabcdjklm&quot;</span>[..];
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">c</span>), <span class="prelude-val">Ok</span>((<span class="kw-2">&amp;</span><span class="string">b&quot;jklm&quot;</span>[..], <span class="ident">expected</span>)));
+
+<span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="string">b&quot;efgxyzabcdefghi&quot;</span>[..];
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">d</span>), <span class="prelude-val">Err</span>(<span class="prelude-val">Err</span>::<span class="ident">Error</span>(<span class="macro">error_node_position</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;efgxyzabcdefghi&quot;</span>[..], <span class="ident">ErrorKind</span>::<span class="ident">Permutation</span>,
+  <span class="macro">error_position</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;xyzabcdefghi&quot;</span>[..], <span class="ident">ErrorKind</span>::<span class="ident">Permutation</span>)))));
+
+<span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="string">b&quot;efgabc&quot;</span>[..];
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">e</span>), <span class="prelude-val">Err</span>(<span class="prelude-val">Err</span>::<span class="ident">Incomplete</span>(<span class="ident">Needed</span>::<span class="ident">Size</span>(<span class="number">4</span>))));</pre></div>
+<p>If one of the child parsers is followed by a <code>?</code>, that parser is now
+optional:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">named</span><span class="macro">!</span>(<span class="ident">perm</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span>, (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>)<span class="op">&gt;</span>,
+  <span class="macro">permutation</span><span class="macro">!</span>(<span class="macro">tag</span><span class="macro">!</span>(<span class="string">&quot;abcd&quot;</span>)<span class="question-mark">?</span>, <span class="macro">tag</span><span class="macro">!</span>(<span class="string">&quot;efg&quot;</span>), <span class="macro">tag</span><span class="macro">!</span>(<span class="string">&quot;hi&quot;</span>))
+);
+
+<span class="comment">// whatever the order, if the parser succeeds, each</span>
+<span class="comment">// tag should have matched correctly</span>
+<span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> (<span class="prelude-val">Some</span>(<span class="string">&quot;abcd&quot;</span>), <span class="string">&quot;efg&quot;</span>, <span class="string">&quot;hi&quot;</span>);
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="string">&quot;abcdefghijk&quot;</span>;
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">a</span>), <span class="prelude-val">Ok</span>((<span class="string">&quot;jk&quot;</span>, <span class="ident">expected</span>)));
+<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="string">&quot;efgabcdhijkl&quot;</span>;
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">b</span>), <span class="prelude-val">Ok</span>((<span class="string">&quot;jkl&quot;</span>, <span class="ident">expected</span>)));
+<span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="string">&quot;hiefgabcdjklm&quot;</span>;
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">c</span>), <span class="prelude-val">Ok</span>((<span class="string">&quot;jklm&quot;</span>, <span class="ident">expected</span>)));
+
+<span class="comment">// if `abcd` is missing:</span>
+<span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> (<span class="prelude-val">None</span>, <span class="string">&quot;efg&quot;</span>, <span class="string">&quot;hi&quot;</span>);
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="string">&quot;efghijk&quot;</span>;
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">a</span>), <span class="prelude-val">Ok</span>((<span class="string">&quot;jk&quot;</span>, <span class="ident">expected</span>)));
+<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="string">&quot;efghijkl&quot;</span>;
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">b</span>), <span class="prelude-val">Ok</span>((<span class="string">&quot;jkl&quot;</span>, <span class="ident">expected</span>)));
+<span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="string">&quot;hiefgjklm&quot;</span>;
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">c</span>), <span class="prelude-val">Ok</span>((<span class="string">&quot;jklm&quot;</span>, <span class="ident">expected</span>)));
+
+<span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="string">&quot;efgabc&quot;</span>;
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">perm</span>(<span class="ident">e</span>), <span class="prelude-val">Err</span>(<span class="prelude-val">Err</span>::<span class="ident">Incomplete</span>(<span class="ident">Needed</span>::<span class="ident">Size</span>(<span class="number">4</span>))));</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "nom";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

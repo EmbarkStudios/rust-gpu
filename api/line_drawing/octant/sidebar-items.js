@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Octant","A simple octant struct for transforming line points."]]});

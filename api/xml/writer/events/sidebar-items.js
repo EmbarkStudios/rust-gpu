@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["XmlEvent","A part of an XML output stream."]],"struct":[["EndElementBuilder",""],["StartElementBuilder","A builder for a starting element event."]]});

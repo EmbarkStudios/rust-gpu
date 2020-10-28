@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["zwlr_output_power_manager_v1","manager to create per-output power management"],["zwlr_output_power_v1","adjust power management mode for an output"]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"macro":[["offset_of","Calculates the offset of the specified field from the start of the struct."],["raw_field","Computes a const raw pointer to the given field of the given base pointer to the given parent type."],["span_of","Produces a range instance representing the sub-slice containing the specified member."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Alt","A visitor wrapper that ensures any `fmt::Debug` fields are formatted using the alternate (`:#`) formatter."]]});

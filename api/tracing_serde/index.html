@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `tracing_serde` crate."><meta name="keywords" content="rust, rustlang, rust-lang, tracing_serde"><title>tracing_serde - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../tracing_serde/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png' alt='logo'></div></a><p class="location">Crate tracing_serde</p><div class="block version"><p>Version 0.1.2</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all tracing_serde's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "tracing_serde", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/tracing_serde/lib.rs.html#1-518" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">tracing_serde</a></span></h1><div class="docblock"><h1 id="tracing-serde" class="section-header"><a href="#tracing-serde">tracing-serde</a></h1>
+<p>An adapter for serializing <a href="https://crates.io/crates/tracing"><code>tracing</code></a> types using <a href="https://crates.io/crates/serde"><code>serde</code></a>.</p>
+<p><a href="https://docs.rs/tracing-serde"><img src="https://docs.rs/tracing-serde/badge.svg" alt="Documentation" /></a>
+<a href="https://tracing-rs.netlify.com/tracing_serde"><img src="https://img.shields.io/badge/docs-master-blue" alt="Documentation (master)" /></a></p>
+<h2 id="overview" class="section-header"><a href="#overview">Overview</a></h2>
+<p><a href="https://crates.io/crates/tracing"><code>tracing</code></a> is a framework for instrumenting Rust programs to collect
+scoped, structured, and async-aware diagnostics.<code>tracing-serde</code> enables
+serializing <code>tracing</code> types using <a href="https://crates.io/crates/serde"><code>serde</code></a>.</p>
+<p>Traditional logging is based on human-readable text messages.
+<code>tracing</code> gives us machine-readable structured diagnostic
+information. This lets us interact with diagnostic data
+programmatically. With <code>tracing-serde</code>, you can implement a
+<code>Subscriber</code> to serialize your <code>tracing</code> types and make use of the
+existing ecosystem of <code>serde</code> serializers to talk with distributed
+tracing systems.</p>
+<p>Serializing diagnostic information allows us to do more with our logged
+values. For instance, when working with logging data in JSON gives us
+pretty-print when we're debugging in development and you can emit JSON
+and tracing data to monitor your services in production.</p>
+<p>The <code>tracing</code> crate provides the APIs necessary for instrumenting
+libraries and applications to emit trace data.</p>
+<p><em>Compiler support: <a href="#supported-rust-versions">requires <code>rustc</code> 1.40+</a></em></p>
+<h2 id="usage" class="section-header"><a href="#usage">Usage</a></h2>
+<p>First, add this to your <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[dependencies]
+tracing = &quot;0.1&quot;
+tracing-serde = &quot;0.1&quot;
+</code></pre>
+<p>Next, add this to your crate:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">tracing_serde</span>::<span class="ident">AsSerde</span>;</pre></div>
+<p>Please read the <a href="https://docs.rs/tracing/latest/tracing/index.html"><code>tracing</code> documentation</a>
+for more information on how to create trace data.</p>
+<p>This crate provides the <code>as_serde</code> function, via the <code>AsSerde</code> trait,
+which enables serializing the <code>Attributes</code>, <code>Event</code>, <code>Id</code>, <code>Metadata</code>,
+and <code>Record</code> <code>tracing</code> values.</p>
+<p>For the full example, please see the <a href="../examples">examples</a> folder.</p>
+<p>Implement a <code>Subscriber</code> to format the serialization of <code>tracing</code>
+types how you'd like.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">tracing_serde</span>::<span class="ident">AsSerde</span>;
+<span class="kw">use</span> <span class="ident">serde_json</span>::<span class="ident">json</span>;
+
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">JsonSubscriber</span> {
+    <span class="ident">next_id</span>: <span class="ident">AtomicUsize</span>, <span class="comment">// you need to assign span IDs, so you need a counter</span>
+}
+
+<span class="kw">impl</span> <span class="ident">Subscriber</span> <span class="kw">for</span> <span class="ident">JsonSubscriber</span> {
+
+    <span class="kw">fn</span> <span class="ident">new_span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="ident">Attributes</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Id</span> {
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_id</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">Relaxed</span>);
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">from_u64</span>(<span class="ident">id</span> <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="macro">json</span><span class="macro">!</span>({
+        <span class="string">&quot;new_span&quot;</span>: {
+            <span class="string">&quot;attributes&quot;</span>: <span class="ident">attrs</span>.<span class="ident">as_serde</span>(),
+            <span class="string">&quot;id&quot;</span>: <span class="ident">id</span>.<span class="ident">as_serde</span>(),
+        }});
+        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">json</span>);
+        <span class="ident">id</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) {
+        <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="macro">json</span><span class="macro">!</span>({
+           <span class="string">&quot;event&quot;</span>: <span class="ident">event</span>.<span class="ident">as_serde</span>(),
+        });
+        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">json</span>);
+    }
+
+    <span class="comment">// ...</span>
+}</pre></div>
+<p>After you implement your <code>Subscriber</code>, you can use your <code>tracing</code>
+subscriber (<code>JsonSubscriber</code> in the above example) to record serialized
+trace data.</p>
+<h2 id="supported-rust-versions" class="section-header"><a href="#supported-rust-versions">Supported Rust Versions</a></h2>
+<p>Tracing is built against the latest stable release. The minimum supported
+version is 1.40. The current Tracing version is not guaranteed to build on
+Rust versions earlier than the minimum supported version.</p>
+<p>Tracing follows the same compiler support policies as the rest of the Tokio
+project. The current stable Rust compiler and the three most recent minor
+versions before it will always be supported. For example, if the current
+stable compiler version is 1.45, the minimum supported version will not be
+increased past 1.42, three minor versions prior. Increasing the minimum
+supported compiler version is not considered a semver breaking change as
+long as doing so complies with this policy.</p>
+</div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="fields/index.html" title="tracing_serde::fields mod">fields</a></td><td class="docblock-short"><p>Support for serializing fields as <code>serde</code> structs or maps.</p>
+</td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.SerdeMapVisitor.html" title="tracing_serde::SerdeMapVisitor struct">SerdeMapVisitor</a></td><td class="docblock-short"><p>Implements <code>tracing_core::field::Visit</code> for some <code>serde::ser::SerializeMap</code>.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.SerdeStructVisitor.html" title="tracing_serde::SerdeStructVisitor struct">SerdeStructVisitor</a></td><td class="docblock-short"><p>Implements <code>tracing_core::field::Visit</code> for some <code>serde::ser::SerializeStruct</code>.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.SerializeAttributes.html" title="tracing_serde::SerializeAttributes struct">SerializeAttributes</a></td><td class="docblock-short"><p>Implements <code>serde::Serialize</code> to write <code>Attributes</code> data to a serializer.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.SerializeEvent.html" title="tracing_serde::SerializeEvent struct">SerializeEvent</a></td><td class="docblock-short"><p>Implements <code>serde::Serialize</code> to write <code>Event</code> data to a serializer.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.SerializeField.html" title="tracing_serde::SerializeField struct">SerializeField</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.SerializeFieldSet.html" title="tracing_serde::SerializeFieldSet struct">SerializeFieldSet</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.SerializeId.html" title="tracing_serde::SerializeId struct">SerializeId</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.SerializeLevel.html" title="tracing_serde::SerializeLevel struct">SerializeLevel</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.SerializeMetadata.html" title="tracing_serde::SerializeMetadata struct">SerializeMetadata</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.SerializeRecord.html" title="tracing_serde::SerializeRecord struct">SerializeRecord</a></td><td class="docblock-short"><p>Implements <code>serde::Serialize</code> to write <code>Record</code> data to a serializer.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.AsSerde.html" title="tracing_serde::AsSerde trait">AsSerde</a></td><td class="docblock-short"></td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "tracing_serde";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

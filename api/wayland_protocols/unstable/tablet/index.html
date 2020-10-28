@@ -1,0 +1,70 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `tablet` mod in crate `wayland_protocols`."><meta name="keywords" content="rust, rustlang, rust-lang, tablet"><title>wayland_protocols::unstable::tablet - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wayland_protocols/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><p class="location">Module tablet</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li></ul></div><p class="location"><a href="../../index.html">wayland_protocols</a>::<wbr><a href="../index.html">unstable</a></p><script>window.sidebarCurrent = {name: "tablet", ty: "mod", relpath: "../"};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../../src/wayland_protocols/unstable.rs.html#194-283" title="goto source code">[src]</a></span><span class="in-band">Module <a href="../../index.html">wayland_protocols</a>::<wbr><a href="../index.html">unstable</a>::<wbr><a class="mod" href="">tablet</a></span></h1><div class="docblock"><p>Wayland protocol for graphics tablets</p>
+<p>This description provides a high-level overview of the interplay between
+the interfaces defined this protocol. For details, see the protocol
+specification.</p>
+<p>More than one tablet may exist, and device-specifics matter. Tablets are
+not represented by a single virtual device like wl_pointer. A client
+binds to the tablet manager object which is just a proxy object. From
+that, the client requests wp_tablet_manager.get_tablet_seat(wl_seat)
+and that returns the actual interface that has all the tablets. With
+this indirection, we can avoid merging wp_tablet into the actual Wayland
+protocol, a long-term benefit.</p>
+<p>The wp_tablet_seat sends a &quot;tablet added&quot; event for each tablet
+connected. That event is followed by descriptive events about the
+hardware; currently that includes events for name, vid/pid and
+a wp_tablet.path event that describes a local path. This path can be
+used to uniquely identify a tablet or get more information through
+libwacom. Emulated or nested tablets can skip any of those, e.g. a
+virtual tablet may not have a vid/pid. The sequence of descriptive
+events is terminated by a wp_tablet.done event to signal that a client
+may now finalize any initialization for that tablet.</p>
+<p>Events from tablets require a tool in proximity. Tools are also managed
+by the tablet seat; a &quot;tool added&quot; event is sent whenever a tool is new
+to the compositor. That event is followed by a number of descriptive
+events about the hardware; currently that includes capabilities,
+hardware id and serial number, and tool type. Similar to the tablet
+interface, a wp_tablet_tool.done event is sent to terminate that initial
+sequence.</p>
+<p>Any event from a tool happens on the wp_tablet_tool interface. When the
+tool gets into proximity of the tablet, a proximity_in event is sent on
+the wp_tablet_tool interface, listing the tablet and the surface. That
+event is followed by a motion event with the coordinates. After that,
+it's the usual motion, axis, button, etc. events. The protocol's
+serialisation means events are grouped by wp_tablet_tool.frame events.</p>
+<p>Two special events (that don't exist in X) are down and up. They signal
+&quot;tip touching the surface&quot;. For tablets without real proximity
+detection, the sequence is: proximity_in, motion, down, frame.</p>
+<p>When the tool leaves proximity, a proximity_out event is sent. If any
+button is still down, a button release event is sent before this
+proximity event. These button events are sent in the same frame as the
+proximity event to signal to the client that the buttons were held when
+the tool left proximity.</p>
+<p>If the tool moves out of the surface but stays in proximity (i.e.
+between windows), compositor-specific grab policies apply. This usually
+means that the proximity-out is delayed until all buttons are released.</p>
+<p>Moving a tool physically from one tablet to the other has no real effect
+on the protocol, since we already have the tool object from the &quot;tool
+added&quot; event. All the information is already there and the proximity
+events on both tablets are all a client needs to reconstruct what
+happened.</p>
+<p>Some extra axes are normalized, i.e. the client knows the range as
+specified in the protocol (e.g. [0, 65535]), the granularity however is
+unknown. The current normalized axes are pressure, distance, and slider.</p>
+<p>Other extra axes are in physical units as specified in the protocol.
+The current extra axes with physical units are tilt, rotation and
+wheel rotation.</p>
+<p>Since tablets work independently of the pointer controlled by the mouse,
+the focus handling is independent too and controlled by proximity.
+The wp_tablet_tool.set_cursor request sets a tool-specific cursor.
+This cursor surface may be the same as the mouse cursor, and it may be
+the same across tools but it is possible to be more fine-grained. For
+example, a client may set different cursors for the pen and eraser.</p>
+<p>Tools are generally independent of tablets and it is
+compositor-specific policy when a tool can be removed. Common approaches
+will likely include some form of removing a tool when all tablets the
+tool was used on are removed.</p>
+</div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="v1/index.html" title="wayland_protocols::unstable::tablet::v1 mod">v1</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="v2/index.html" title="wayland_protocols::unstable::tablet::v2 mod">v2</a></td><td class="docblock-short"></td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "wayland_protocols";</script><script src="../../../main.js"></script><script defer src="../../../search-index.js"></script></body></html>

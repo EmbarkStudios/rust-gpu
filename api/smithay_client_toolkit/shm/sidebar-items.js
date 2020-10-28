@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Format","pixel formats"]],"struct":[["DoubleMemPool","A Double memory pool, for convenient double-buffering"],["MemPool","A wrapper handling an SHM memory pool backed by a shared memory file"],["ShmHandler","A handler for the `wl_shm` global"]],"trait":[["ShmHandling","An interface trait to forward the shm handler capability"]]});

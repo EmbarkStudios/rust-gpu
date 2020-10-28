@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `futures` crate."><meta name="keywords" content="rust, rustlang, rust-lang, futures"><title>futures - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../futures/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate futures</p><div class="block version"><p>Version 0.3.6</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all futures's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "futures", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/futures/lib.rs.html#1-550" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">futures</a></span></h1><div class="docblock"><p>Abstractions for asynchronous programming.</p>
+<p>This crate provides a number of core abstractions for writing asynchronous
+code:</p>
+<ul>
+<li><a href="../futures/prelude/trait.Future.html">Futures</a> are single eventual values produced by
+asynchronous computations. Some programming languages (e.g. JavaScript)
+call this concept &quot;promise&quot;.</li>
+<li><a href="../futures/stream/trait.Stream.html">Streams</a> represent a series of values
+produced asynchronously.</li>
+<li><a href="../futures/sink/trait.Sink.html">Sinks</a> provide support for asynchronous writing of
+data.</li>
+<li><a href="../futures/executor/index.html">Executors</a> are responsible for running asynchronous
+tasks.</li>
+</ul>
+<p>The crate also contains abstractions for <a href="../futures/io/index.html">asynchronous I/O</a> and
+<a href="../futures/channel/index.html">cross-task communication</a>.</p>
+<p>Underlying all of this is the <em>task system</em>, which is a form of lightweight
+threading. Large asynchronous computations are built up using futures,
+streams and sinks, and then spawned as independent tasks that are run to
+completion, but <em>do not block</em> the thread running them.</p>
+<p>The following example describes how the task system context is built and used
+within macros and keywords such as async and await!.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="ident">pool</span> <span class="op">=</span> <span class="ident">ThreadPool</span>::<span class="ident">new</span>().<span class="ident">expect</span>(<span class="string">&quot;Failed to build pool&quot;</span>);
+    <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">mpsc</span>::<span class="ident">unbounded</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>();
+
+    <span class="comment">// Create a future by an async block, where async is responsible for an</span>
+    <span class="comment">// implementation of Future. At this point no executor has been provided</span>
+    <span class="comment">// to this future, so it will not be running.</span>
+    <span class="kw">let</span> <span class="ident">fut_values</span> <span class="op">=</span> <span class="ident">async</span> {
+        <span class="comment">// Create another async block, again where the Future implementation</span>
+        <span class="comment">// is generated by async. Since this is inside of a parent async block,</span>
+        <span class="comment">// it will be provided with the executor of the parent block when the parent</span>
+        <span class="comment">// block is executed.</span>
+        <span class="comment">//</span>
+        <span class="comment">// This executor chaining is done by Future::poll whose second argument</span>
+        <span class="comment">// is a std::task::Context. This represents our executor, and the Future</span>
+        <span class="comment">// implemented by this async block can be polled using the parent async</span>
+        <span class="comment">// block&#39;s executor.</span>
+        <span class="kw">let</span> <span class="ident">fut_tx_result</span> <span class="op">=</span> <span class="ident">async</span> <span class="kw">move</span> {
+            (<span class="number">0</span>..<span class="number">100</span>).<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> {
+                <span class="ident">tx</span>.<span class="ident">unbounded_send</span>(<span class="ident">v</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to send&quot;</span>);
+            })
+        };
+
+        <span class="comment">// Use the provided thread pool to spawn the generated future</span>
+        <span class="comment">// responsible for transmission</span>
+        <span class="ident">pool</span>.<span class="ident">spawn_ok</span>(<span class="ident">fut_tx_result</span>);
+
+        <span class="kw">let</span> <span class="ident">fut_values</span> <span class="op">=</span> <span class="ident">rx</span>
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span> <span class="op">*</span> <span class="number">2</span>)
+            .<span class="ident">collect</span>();
+
+        <span class="comment">// Use the executor provided to this async block to wait for the</span>
+        <span class="comment">// future to complete.</span>
+        <span class="ident">fut_values</span>.<span class="ident">await</span>
+    };
+
+    <span class="comment">// Actually execute the above future, which will invoke Future::poll and</span>
+    <span class="comment">// subsequenty chain appropriate Future::poll and methods needing executors</span>
+    <span class="comment">// to drive all futures. Eventually fut_values will be driven to completion.</span>
+    <span class="kw">let</span> <span class="ident">values</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">executor</span>::<span class="ident">block_on</span>(<span class="ident">fut_values</span>);
+
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Values={:?}&quot;</span>, <span class="ident">values</span>);
+}</pre></div>
+<p>The majority of examples and code snippets in this crate assume that they are
+inside an async block as written above.</p>
+</div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="channel/index.html" title="futures::channel mod">channel</a></td><td class="docblock-short"><p>Cross-task communication.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="executor/index.html" title="futures::executor mod">executor</a></td><td class="docblock-short"><p>Task execution.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="future/index.html" title="futures::future mod">future</a></td><td class="docblock-short"><p>Asynchronous values.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="io/index.html" title="futures::io mod">io</a></td><td class="docblock-short"><p>Asynchronous I/O.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="lock/index.html" title="futures::lock mod">lock</a></td><td class="docblock-short"><p>Futures-powered synchronization primitives.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="never/index.html" title="futures::never mod">never</a></td><td class="docblock-short"><p>This module contains the <code>Never</code> type.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="prelude/index.html" title="futures::prelude mod">prelude</a></td><td class="docblock-short"><p>A &quot;prelude&quot; for crates using the <code>futures</code> crate.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="sink/index.html" title="futures::sink mod">sink</a></td><td class="docblock-short"><p>Asynchronous sinks.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="stream/index.html" title="futures::stream mod">stream</a></td><td class="docblock-short"><p>Asynchronous streams.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="task/index.html" title="futures::task mod">task</a></td><td class="docblock-short"><p>Tools for working with tasks.</p>
+</td></tr></table><h2 id="macros" class="section-header"><a href="#macros">Macros</a></h2>
+<table><tr class="module-item"><td><a class="macro" href="macro.join.html" title="futures::join macro">join</a></td><td class="docblock-short"><p>Polls multiple futures simultaneously, returning a tuple
+of all results once complete.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.pending.html" title="futures::pending macro">pending</a></td><td class="docblock-short"><p>A macro which yields to the event loop once.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.pin_mut.html" title="futures::pin_mut macro">pin_mut</a></td><td class="docblock-short"><p>Pins a value on the stack.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.poll.html" title="futures::poll macro">poll</a></td><td class="docblock-short"><p>A macro which returns the result of polling a future once within the
+current <code>async</code> context.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.ready.html" title="futures::ready macro">ready</a></td><td class="docblock-short"><p>Extracts the successful type of a <code>Poll&lt;T&gt;</code>.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.select.html" title="futures::select macro">select</a></td><td class="docblock-short"><p>Polls multiple futures and streams simultaneously, executing the branch
+for the future that finishes first. If multiple futures are ready,
+one will be pseudo-randomly selected at runtime. Futures directly
+passed to <code>select!</code> must be <code>Unpin</code> and implement <code>FusedFuture</code>.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.select_biased.html" title="futures::select_biased macro">select_biased</a></td><td class="docblock-short"><p>Polls multiple futures and streams simultaneously, executing the branch
+for the future that finishes first. Unlike <a href="macro.select.html"><code>select!</code></a>, if multiple futures are ready,
+one will be selected in order of declaration. Futures directly
+passed to <code>select_biased!</code> must be <code>Unpin</code> and implement <code>FusedFuture</code>.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.try_join.html" title="futures::try_join macro">try_join</a></td><td class="docblock-short"><p>Polls multiple futures simultaneously, resolving to a <a href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="Result"><code>Result</code></a> containing
+either a tuple of the successful outputs or an error.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "futures";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

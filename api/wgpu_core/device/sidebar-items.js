@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["MAX_ANISOTROPY",""],["MAX_COLOR_TARGETS",""],["MAX_MIP_LEVELS",""],["MAX_VERTEX_BUFFERS",""],["SHADER_STAGE_COUNT",""]],"enum":[["CreateDeviceError",""],["DeviceError",""],["HostMap",""]],"fn":[["all_buffer_stages",""],["all_image_stages",""]],"struct":[["Device",""],["ImplicitPipelineIds",""],["InvalidDevice",""]]});

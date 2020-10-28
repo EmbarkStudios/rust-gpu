@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ExternalError","An error whose cause it outside Winit's control."]],"struct":[["NotSupportedError","The error type for when the requested operation is not supported by the backend."],["OsError","The error type for when the OS cannot perform the requested operation."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["QueueFamilyId","Identifier for a queue family of a physical device."],["QueueGroup","Bare-metal queue group."]],"trait":[["QueueFamily","General information about a queue family, available upon adapter discovery."]]});

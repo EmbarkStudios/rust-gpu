@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["xdg_popup","short-lived, popup surfaces for menus"],["xdg_positioner","child surface positioner"],["xdg_surface","desktop user interface surface base interface"],["xdg_toplevel","toplevel surface"],["xdg_wm_base","create desktop-style surfaces"]]});

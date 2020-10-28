@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["create_surface","Create a surface from a raw surface handle."],["enumerate_required_extensions","Query the required instance extensions for creating a surface from a window handle."]]});

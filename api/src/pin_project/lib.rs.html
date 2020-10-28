@@ -1,0 +1,514 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/pin-project-0.4.27/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../pin_project/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! A crate for safe and ergonomic [pin-projection].</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Examples</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`#[pin_project]`][`pin_project`] attribute creates projection types</span>
+<span class="doccomment">//! covering all the fields of struct or enum.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```rust</span>
+<span class="doccomment">//! use pin_project::pin_project;</span>
+<span class="doccomment">//! use std::pin::Pin;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! #[pin_project]</span>
+<span class="doccomment">//! struct Struct&lt;T, U&gt; {</span>
+<span class="doccomment">//!     #[pin]</span>
+<span class="doccomment">//!     pinned: T,</span>
+<span class="doccomment">//!     unpinned: U,</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! impl&lt;T, U&gt; Struct&lt;T, U&gt; {</span>
+<span class="doccomment">//!     fn method(self: Pin&lt;&amp;mut Self&gt;) {</span>
+<span class="doccomment">//!         let this = self.project();</span>
+<span class="doccomment">//!         let _: Pin&lt;&amp;mut T&gt; = this.pinned; // Pinned reference to the field</span>
+<span class="doccomment">//!         let _: &amp;mut U = this.unpinned; // Normal reference to the field</span>
+<span class="doccomment">//!     }</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [*code like this will be generated*][struct-default-expanded]</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! See [`#[pin_project]`][`pin_project`] attribute for more details, and</span>
+<span class="doccomment">//! see [examples] directory for more examples and generated code.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`pin_project`]: attr.pin_project.html</span>
+<span class="doccomment">//! [examples]: https://github.com/taiki-e/pin-project/blob/master/examples/README.md</span>
+<span class="doccomment">//! [pin-projection]: https://doc.rust-lang.org/nightly/std/pin/index.html#projections-and-structural-pinning</span>
+<span class="doccomment">//! [struct-default-expanded]: https://github.com/taiki-e/pin-project/blob/master/examples/struct-default-expanded.rs</span>
+
+<span class="attribute">#![<span class="ident">no_std</span>]</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.rs/pin-project/0.4.27&quot;</span>)]</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">test</span>(
+    <span class="ident">no_crate_inject</span>,
+    <span class="ident">attr</span>(<span class="ident">deny</span>(<span class="ident">warnings</span>, <span class="ident">rust_2018_idioms</span>, <span class="ident">single_use_lifetimes</span>), <span class="ident">allow</span>(<span class="ident">dead_code</span>))
+))]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>, <span class="ident">rust_2018_idioms</span>, <span class="ident">single_use_lifetimes</span>, <span class="ident">unreachable_pub</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy</span>::<span class="ident">all</span>, <span class="ident">clippy</span>::<span class="ident">default_trait_access</span>)]</span>
+<span class="comment">// mem::take and #[non_exhaustive] requires Rust 1.40</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">mem_replace_with_default</span>, <span class="ident">clippy</span>::<span class="ident">manual_non_exhaustive</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">needless_doctest_main</span>)]</span>
+
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pin_project_internal</span>::<span class="ident">pin_project</span>;
+
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pin_project_internal</span>::<span class="ident">pinned_drop</span>;
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pin_project_internal</span>::<span class="ident">project</span>;
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pin_project_internal</span>::<span class="ident">project_ref</span>;
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pin_project_internal</span>::<span class="ident">project_replace</span>;
+
+<span class="doccomment">/// A trait used for custom implementations of [`Unpin`].</span>
+<span class="doccomment">/// This trait is used in conjunction with the `UnsafeUnpin`</span>
+<span class="doccomment">/// argument to [`#[pin_project]`][`pin_project`]</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The Rust [`Unpin`] trait is safe to implement - by itself,</span>
+<span class="doccomment">/// implementing it cannot lead to undefined behavior. Undefined</span>
+<span class="doccomment">/// behavior can only occur when other unsafe code is used.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// It turns out that using pin projections, which requires unsafe code,</span>
+<span class="doccomment">/// imposes additional requirements on an [`Unpin`] impl. Normally, all of this</span>
+<span class="doccomment">/// unsafety is contained within this crate, ensuring that it&#39;s impossible for</span>
+<span class="doccomment">/// you to violate any of the guarantees required by pin projection.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// However, things change if you want to provide a custom [`Unpin`] impl</span>
+<span class="doccomment">/// for your `#[pin_project]` type. As stated in [the Rust</span>
+<span class="doccomment">/// documentation][pin-projection], you must be sure to only implement [`Unpin`]</span>
+<span class="doccomment">/// when all of your `#[pin]` fields (i.e. structurally pinned fields) are also</span>
+<span class="doccomment">/// [`Unpin`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// To help highlight this unsafety, the `UnsafeUnpin` trait is provided.</span>
+<span class="doccomment">/// Implementing this trait is logically equivalent to implementing [`Unpin`] -</span>
+<span class="doccomment">/// this crate will generate an [`Unpin`] impl for your type that &#39;forwards&#39; to</span>
+<span class="doccomment">/// your `UnsafeUnpin` impl. However, this trait is `unsafe` - since your type</span>
+<span class="doccomment">/// uses structural pinning (otherwise, you wouldn&#39;t be using this crate!),</span>
+<span class="doccomment">/// you must be sure that your `UnsafeUnpin` impls follows all of</span>
+<span class="doccomment">/// the requirements for an [`Unpin`] impl of a structurally-pinned type.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Note that if you specify `#[pin_project(UnsafeUnpin)]`, but do *not*</span>
+<span class="doccomment">/// provide an impl of `UnsafeUnpin`, your type will never implement [`Unpin`].</span>
+<span class="doccomment">/// This is effectively the same thing as adding a [`PhantomPinned`] to your</span>
+<span class="doccomment">/// type.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Since this trait is `unsafe`, impls of it will be detected by the</span>
+<span class="doccomment">/// `unsafe_code` lint, and by tools like [`cargo geiger`][cargo-geiger].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// An `UnsafeUnpin` impl which, in addition to requiring that structurally</span>
+<span class="doccomment">/// pinned fields be [`Unpin`], imposes an additional requirement:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```rust</span>
+<span class="doccomment">/// use pin_project::{pin_project, UnsafeUnpin};</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// #[pin_project(UnsafeUnpin)]</span>
+<span class="doccomment">/// struct Foo&lt;K, V&gt; {</span>
+<span class="doccomment">///     #[pin]</span>
+<span class="doccomment">///     field_1: K,</span>
+<span class="doccomment">///     field_2: V,</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// unsafe impl&lt;K, V&gt; UnsafeUnpin for Foo&lt;K, V&gt; where K: Unpin + Clone {}</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`PhantomPinned`]: core::marker::PhantomPinned</span>
+<span class="doccomment">/// [`pin_project`]: attr.pin_project.html</span>
+<span class="doccomment">/// [pin-projection]: https://doc.rust-lang.org/nightly/std/pin/index.html#projections-and-structural-pinning</span>
+<span class="doccomment">/// [cargo-geiger]: https://github.com/rust-secure-code/cargo-geiger</span>
+<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">trait</span> <span class="ident">UnsafeUnpin</span> {}
+
+<span class="comment">// Not public API.</span>
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">__private</span> {
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core</span>::{
+        <span class="ident">marker</span>::{<span class="ident">PhantomData</span>, <span class="ident">PhantomPinned</span>, <span class="ident">Unpin</span>},
+        <span class="ident">mem</span>::<span class="ident">ManuallyDrop</span>,
+        <span class="ident">ops</span>::<span class="ident">Drop</span>,
+        <span class="ident">pin</span>::<span class="ident">Pin</span>,
+        <span class="ident">ptr</span>,
+    };
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">UnsafeUnpin</span>;
+
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pin_project_internal</span>::<span class="ident">__PinProjectInternalDerive</span>;
+
+    <span class="comment">// Implementing `PinnedDrop::drop` is safe, but calling it is not safe.</span>
+    <span class="comment">// This is because destructors can be called multiple times in safe code and</span>
+    <span class="comment">// [double dropping is unsound](https://github.com/rust-lang/rust/pull/62360).</span>
+    <span class="comment">//</span>
+    <span class="comment">// Ideally, it would be desirable to be able to forbid manual calls in</span>
+    <span class="comment">// the same way as [`Drop::drop`], but the library cannot do it. So, by using</span>
+    <span class="comment">// macros and replacing them with private traits, we prevent users from</span>
+    <span class="comment">// calling `PinnedDrop::drop`.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Users can implement [`Drop`] safely using `#[pinned_drop]` and can drop a</span>
+    <span class="comment">// type that implements `PinnedDrop` using the [`drop`] function safely.</span>
+    <span class="comment">// **Do not call or implement this trait directly.**</span>
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PinnedDrop</span> {
+        <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">drop</span>(<span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>);
+    }
+
+    <span class="comment">// This is an internal helper struct used by `pin-project-internal`.</span>
+    <span class="comment">// This allows us to force an error if the user tries to provide</span>
+    <span class="comment">// a regular `Unpin` impl when they specify the `UnsafeUnpin` argument.</span>
+    <span class="comment">// This is why we need Wrapper:</span>
+    <span class="comment">//</span>
+    <span class="comment">// Supposed we have the following code:</span>
+    <span class="comment">//</span>
+    <span class="comment">// ```rust</span>
+    <span class="comment">// #[pin_project(UnsafeUnpin)]</span>
+    <span class="comment">// struct MyStruct&lt;T&gt; {</span>
+    <span class="comment">//     #[pin] field: T</span>
+    <span class="comment">// }</span>
+    <span class="comment">//</span>
+    <span class="comment">// impl&lt;T&gt; Unpin for MyStruct&lt;T&gt; where MyStruct&lt;T&gt;: UnsafeUnpin {} // generated by pin-project-internal</span>
+    <span class="comment">// impl&lt;T&gt; Unpin for MyStruct&lt;T&gt; where T: Copy // written by the user</span>
+    <span class="comment">// ```</span>
+    <span class="comment">//</span>
+    <span class="comment">// We want this code to be rejected - the user is completely bypassing</span>
+    <span class="comment">// `UnsafeUnpin`, and providing an unsound Unpin impl in safe code!</span>
+    <span class="comment">//</span>
+    <span class="comment">// Unfortunately, the Rust compiler will accept the above code.</span>
+    <span class="comment">// Because MyStruct is declared in the same crate as the user-provided impl,</span>
+    <span class="comment">// the compiler will notice that `MyStruct&lt;T&gt;: UnsafeUnpin` never holds.</span>
+    <span class="comment">//</span>
+    <span class="comment">// The solution is to introduce the `Wrapper` struct, which is defined</span>
+    <span class="comment">// in the `pin-project` crate.</span>
+    <span class="comment">//</span>
+    <span class="comment">// We now have code that looks like this:</span>
+    <span class="comment">//</span>
+    <span class="comment">// ```rust</span>
+    <span class="comment">// impl&lt;T&gt; Unpin for MyStruct&lt;T&gt; where Wrapper&lt;MyStruct&lt;T&gt;&gt;: UnsafeUnpin {} // generated by pin-project-internal</span>
+    <span class="comment">// impl&lt;T&gt; Unpin for MyStruct&lt;T&gt; where T: Copy // written by the user</span>
+    <span class="comment">// ```</span>
+    <span class="comment">//</span>
+    <span class="comment">// We also have `unsafe impl&lt;T&gt; UnsafeUnpin for Wrapper&lt;T&gt; where T: UnsafeUnpin {}`</span>
+    <span class="comment">// in the `pin-project` crate.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Now, our generated impl has a bound involving a type defined in another</span>
+    <span class="comment">// crate - Wrapper. This will cause rust to conservatively assume that</span>
+    <span class="comment">// `Wrapper&lt;MyStruct&lt;T&gt;&gt;: UnsafeUnpin` holds, in the interest of preserving</span>
+    <span class="comment">// forwards compatibility (in case such an impl is added for Wrapper&lt;T&gt; in</span>
+    <span class="comment">// a new version of the crate).</span>
+    <span class="comment">//</span>
+    <span class="comment">// This will cause rust to reject any other `Unpin` impls for MyStruct&lt;T&gt;,</span>
+    <span class="comment">// since it will assume that our generated impl could potentially apply in</span>
+    <span class="comment">// any situation.</span>
+    <span class="comment">//</span>
+    <span class="comment">// This achieves the desired effect - when the user writes</span>
+    <span class="comment">// `#[pin_project(UnsafeUnpin)]`, the user must either provide no impl of</span>
+    <span class="comment">// `UnsafeUnpin` (which is equivalent to making the type never implement</span>
+    <span class="comment">// Unpin), or provide an impl of `UnsafeUnpin`. It is impossible for them to</span>
+    <span class="comment">// provide an impl of `Unpin`</span>
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Wrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> ()<span class="op">&gt;</span>, <span class="ident">T</span>);
+
+    <span class="kw">unsafe</span> <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">UnsafeUnpin</span> <span class="kw">for</span> <span class="ident">Wrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">UnsafeUnpin</span> {}
+
+    <span class="comment">// This is an internal helper struct used by `pin-project-internal`.</span>
+    <span class="comment">//</span>
+    <span class="comment">// See https://github.com/taiki-e/pin-project/pull/53 for more details.</span>
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AlwaysUnpin</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> ()<span class="op">&gt;</span>, <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
+
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Unpin</span> <span class="kw">for</span> <span class="ident">AlwaysUnpin</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span> {}
+
+    <span class="comment">// This is an internal helper used to ensure a value is dropped.</span>
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnsafeDropInPlaceGuard</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>);
+
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">UnsafeDropInPlaceGuard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+            <span class="kw">unsafe</span> {
+                <span class="ident">ptr</span>::<span class="ident">drop_in_place</span>(<span class="self">self</span>.<span class="number">0</span>);
+            }
+        }
+    }
+
+    <span class="comment">// This is an internal helper used to ensure a value is overwritten without</span>
+    <span class="comment">// its destructor being called.</span>
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnsafeOverwriteGuard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">ManuallyDrop</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">target</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>,
+    }
+
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">UnsafeOverwriteGuard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+            <span class="kw">unsafe</span> {
+                <span class="ident">ptr</span>::<span class="ident">write</span>(<span class="self">self</span>.<span class="ident">target</span>, <span class="ident">ptr</span>::<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">value</span>));
+            }
+        }
+    }
+}
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "pin_project";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

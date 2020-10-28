@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["blocking_message_iterator","Create a blokcing message iterator"],["message_iterator","Create a new message iterator and an associated sink."]],"struct":[["BlockingMsgIter","A message iterator linked to an event queue"],["MsgIter","A message iterator"],["Sink","The sink end of an message iterator."]]});

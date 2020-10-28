@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["SERVER_ID_LIMIT","Limit separating server-created from client-created objects IDs in the namespace"]],"struct":[["Object","The representation of a protocol object"],["ObjectMap","A holder for the object store of a connection"]],"trait":[["ObjectMetadata","A trait representing the metadata a wayland implementation may attach to an object."]]});

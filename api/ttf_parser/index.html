@@ -1,0 +1,61 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `ttf_parser` crate."><meta name="keywords" content="rust, rustlang, rust-lang, ttf_parser"><title>ttf_parser - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../ttf_parser/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate ttf_parser</p><div class="block version"><p>Version 0.6.2</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all ttf_parser's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "ttf_parser", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/ttf_parser/lib.rs.html#1-1556" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">ttf_parser</a></span></h1><div class="docblock"><p>A high-level, safe, zero-allocation TrueType font parser.</p>
+<h2 id="features" class="section-header"><a href="#features">Features</a></h2>
+<ul>
+<li>A high-level API, for people who doesn't know how TrueType works internally.
+Basically, no direct access to font tables.</li>
+<li>Zero heap allocations.</li>
+<li>Zero unsafe.</li>
+<li>Zero dependencies.</li>
+<li><code>no_std</code>/WASM compatible.</li>
+<li>Fast.</li>
+<li>Stateless. All parsing methods are immutable methods.</li>
+<li>Simple and maintainable code (no magic numbers).</li>
+</ul>
+<h2 id="safety" class="section-header"><a href="#safety">Safety</a></h2>
+<ul>
+<li>The library must not panic. Any panic considered as a critical bug and should be reported.</li>
+<li>The library forbids the unsafe code.</li>
+<li>No heap allocations, so crash due to OOM is not possible.</li>
+<li>All recursive methods have a depth limit.</li>
+<li>Technically, should use less than 64KiB of stack in worst case scenario.</li>
+<li>Most of arithmetic operations are checked.</li>
+<li>Most of numeric casts are checked.</li>
+</ul>
+<h2 id="error-handling" class="section-header"><a href="#error-handling">Error handling</a></h2>
+<p><code>ttf-parser</code> is designed to parse well-formed fonts, so it does not have an <code>Error</code> enum.
+It doesn't mean that it will crash or panic on malformed fonts, only that the
+error handling will boil down to <code>Option::None</code>. So you will not get a detailed cause of an error.
+By doing so we can simplify an API quite a lot since otherwise, we will have to use
+<code>Result&lt;Option&lt;T&gt;, Error&gt;</code>.</p>
+</div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="kern/index.html" title="ttf_parser::kern mod">kern</a></td><td class="docblock-short"><p>A kerning table implementation.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="name_id/index.html" title="ttf_parser::name_id mod">name_id</a></td><td class="docblock-short"><p>A list of <a href="https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids">name ID</a>'s.</p>
+</td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.Class.html" title="ttf_parser::Class struct">Class</a></td><td class="docblock-short"><p>A value of <a href="https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#class-definition-table">Class Definition Table</a>.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Font.html" title="ttf_parser::Font struct">Font</a></td><td class="docblock-short"><p>A font data handle.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.GlyphId.html" title="ttf_parser::GlyphId struct">GlyphId</a></td><td class="docblock-short"><p>A type-safe wrapper for glyph ID.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.LineMetrics.html" title="ttf_parser::LineMetrics struct">LineMetrics</a></td><td class="docblock-short"><p>A line metrics.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Name.html" title="ttf_parser::Name struct">Name</a></td><td class="docblock-short"><p>A <a href="https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-records">Name Record</a>.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Names.html" title="ttf_parser::Names struct">Names</a></td><td class="docblock-short"><p>An iterator over font's names.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.RasterGlyphImage.html" title="ttf_parser::RasterGlyphImage struct">RasterGlyphImage</a></td><td class="docblock-short"><p>A glyph's raster image.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Rect.html" title="ttf_parser::Rect struct">Rect</a></td><td class="docblock-short"><p>A rectangle.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ScriptMetrics.html" title="ttf_parser::ScriptMetrics struct">ScriptMetrics</a></td><td class="docblock-short"><p>A script metrics used by subscript and superscript.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Tag.html" title="ttf_parser::Tag struct">Tag</a></td><td class="docblock-short"><p>A 4-byte tag.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Variation.html" title="ttf_parser::Variation struct">Variation</a></td><td class="docblock-short"><p>A font variation value.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.VariationAxes.html" title="ttf_parser::VariationAxes struct">VariationAxes</a></td><td class="docblock-short"><p>An iterator over variation axes.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.VariationAxis.html" title="ttf_parser::VariationAxis struct">VariationAxis</a></td><td class="docblock-short"><p>A <a href="https://docs.microsoft.com/en-us/typography/opentype/spec/fvar#variationaxisrecord">variation axis</a>.</p>
+</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="enum" href="enum.GlyphClass.html" title="ttf_parser::GlyphClass enum">GlyphClass</a></td><td class="docblock-short"><p>A <a href="https://docs.microsoft.com/en-us/typography/opentype/spec/gdef#glyph-class-definition-table">glyph class</a>.</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.PlatformId.html" title="ttf_parser::PlatformId enum">PlatformId</a></td><td class="docblock-short"><p>A <a href="https://docs.microsoft.com/en-us/typography/opentype/spec/name#platform-ids">platform ID</a>.</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.RasterImageFormat.html" title="ttf_parser::RasterImageFormat enum">RasterImageFormat</a></td><td class="docblock-short"><p>A glyph raster image format.</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.TableName.html" title="ttf_parser::TableName enum">TableName</a></td><td class="docblock-short"><p>A table name.</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.Weight.html" title="ttf_parser::Weight enum">Weight</a></td><td class="docblock-short"><p>A font <a href="https://docs.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass">weight</a>.</p>
+</td></tr><tr class="module-item"><td><a class="enum" href="enum.Width.html" title="ttf_parser::Width enum">Width</a></td><td class="docblock-short"><p>A font <a href="https://docs.microsoft.com/en-us/typography/opentype/spec/os2#uswidthclass">width</a>.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.OutlineBuilder.html" title="ttf_parser::OutlineBuilder trait">OutlineBuilder</a></td><td class="docblock-short"><p>A trait for glyph outline construction.</p>
+</td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="module-item"><td><a class="fn" href="fn.fonts_in_collection.html" title="ttf_parser::fonts_in_collection fn">fonts_in_collection</a></td><td class="docblock-short"><p>Returns the number of fonts stored in a TrueType font collection.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "ttf_parser";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>
