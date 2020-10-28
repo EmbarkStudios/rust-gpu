@@ -138,7 +138,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         );
     }
     let feature_flag = if target_features.is_empty() {
-        "".to_string()
+        String::new()
     } else {
         format!(" -C target-feature={}", target_features.join(","))
     };
