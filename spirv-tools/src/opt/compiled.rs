@@ -62,7 +62,7 @@ impl Optimizer {
         input: &[u32],
         msg_callback: &mut MC,
         options: Option<super::Options>,
-    ) -> Result<crate::shared::Binary, crate::Error> {
+    ) -> Result<crate::binary::Binary, crate::Error> {
         unsafe {
             struct Ctx<'a> {
                 cb: &'a mut dyn error::MessageCallback,
@@ -122,7 +122,7 @@ impl Optimizer {
                         });
                     }
 
-                    Ok(crate::shared::Binary::new(binary))
+                    Ok(crate::binary::Binary::External(crate::binary::external::ExternalBinary::new(binary)))
                 }
                 other => Err(error::Error {
                     inner: other,
@@ -157,23 +157,23 @@ impl Optimizer {
         self
     }
 
-    /// Registers passes that have been prescribed for converting from Vulkan to
-    /// WebGPU. This sequence of passes is subject to constant review and will
-    /// change from time to time.
-    #[inline]
-    pub fn register_vulkan_to_webgpu_passes(&mut self) -> &mut Self {
-        unsafe { opt::optimizer_register_vulkan_to_webgpu_passes(self.inner) }
-        self
-    }
+    // /// Registers passes that have been prescribed for converting from Vulkan to
+    // /// WebGPU. This sequence of passes is subject to constant review and will
+    // /// change from time to time.
+    // #[inline]
+    // pub fn register_vulkan_to_webgpu_passes(&mut self) -> &mut Self {
+    //     unsafe { opt::optimizer_register_vulkan_to_webgpu_passes(self.inner) }
+    //     self
+    // }
 
-    /// Registers passes that have been prescribed for converting from WebGPU to
-    /// Vulkan. This sequence of passes is subject to constant review and will
-    /// change from time to time.
-    #[inline]
-    pub fn register_webgpu_to_vulkan_passes(&mut self) -> &mut Self {
-        unsafe { opt::optimizer_register_webgpu_to_vulkan_passes(self.inner) }
-        self
-    }
+    // /// Registers passes that have been prescribed for converting from WebGPU to
+    // /// Vulkan. This sequence of passes is subject to constant review and will
+    // /// change from time to time.
+    // #[inline]
+    // pub fn register_webgpu_to_vulkan_passes(&mut self) -> &mut Self {
+    //     unsafe { opt::optimizer_register_webgpu_to_vulkan_passes(self.inner) }
+    //     self
+    // }
 
     /// Registers passes that attempt to legalize the generated code.
     ///
@@ -184,9 +184,15 @@ impl Optimizer {
     /// This sequence of passes is subject to constant review and will change
     /// from time to time.
     #[inline]
-    pub fn register_legalization_passes(&mut self) -> &mut Self {
-        unsafe { opt::optimizer_register_legalization_passes(self.inner) }
+    pub fn register_hlsl_legalization_passes(&mut self) -> &mut Self {
+        unsafe { opt::optimizer_register_hlsl_legalization_passes(self.inner) }
         self
+    }
+}
+
+impl Default for Optimizer {
+    fn default() -> Self {
+        Self::new(crate::TargetEnv::default())
     }
 }
 

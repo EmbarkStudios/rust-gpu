@@ -582,7 +582,7 @@ extern "C" {
     ///
     /// This sequence of passes is subject to constant review and will change
     /// from time to time.
-    pub fn optimizer_register_legalization_passes(opt: *mut Optimizer);
+    pub fn optimizer_register_hlsl_legalization_passes(opt: *mut Optimizer);
 
 // Some passes take arguments, so we create those separately on a
 // case-by-case basis

@@ -155,9 +155,15 @@ fn link_exe(
 }
 
 fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u32> {
-    use spirv_tools::{error, opt};
+    use spirv_tools::{error, opt::{
+        self,
+        Optimizer,
+    }};
 
-    let mut optimizer = opt::Optimizer::new(spirv_tools::TargetEnv::default());
+    #[cfg(feature = "use-compiled-tools")]
+    let mut optimizer = opt::compiled::CompiledOptimizer;
+    #[cfg(all(feature = "use-installed-tools", not(feature = "use-compiled-tools")))]
+    let mut optimizer = opt::tool::ToolOptimizer;
 
     optimizer
         .register_size_passes()

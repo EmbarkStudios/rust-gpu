@@ -1,4 +1,4 @@
-use crate::error::Diagnostic;
+use crate::error::Message;
 use std::process::{Command, Stdio};
 
 pub enum CmdError {
@@ -11,20 +11,47 @@ pub enum CmdError {
     /// diagnostics
     ToolErrors {
         exit_code: i32,
-        /// Diagnostics that were parsed from the output
-        diagnostics: Vec<Diagnostic>,
+        /// Messages that were parsed from the output
+        messages: Vec<Message>,
     },
 }
 
 impl From<CmdError> for crate::error::Error {
-    fn from(ce: CmdError) -> Self {}
+    fn from(ce: CmdError) -> Self {
+        use crate::SpirvResult;
+
+        match ce {
+            CmdError::BinaryNotFound(e) => {
+                Self {
+                    inner: SpirvResult::Unsupported,
+                    diagnostic: Some(format!("failed spawn executable: {}", e).into()),
+                }
+            }
+            CmdError::Io(e) => {
+                Self {
+                    inner: SpirvResult::EndOfStream,
+                    diagnostic: Some(format!("i/o error occurred communicating with executable: {}", e).into()),
+                }
+            }
+            CmdError::ToolErrors { exit_code: _, messages } => {
+                // The C API just puts the last message as the diagnostic, so just do the
+                // same for now
+                let diagnostic = messages.into_iter().last().map(crate::error::Diagnostic::from);
+
+                Self {
+                    inner: SpirvResult::InternalError, // this isn't really correct
+                    diagnostic,
+                }
+            }
+        }
+    }
 }
 
 pub struct CmdOutput {
     /// The output the command is actually supposed to give back
     pub binary: Vec<u8>,
     /// Warning or Info level diagnostics that were gathered during execution
-    pub diagnostics: Vec<Diagnostic>,
+    pub messages: Vec<Message>,
 }
 
 #[derive(PartialEq, Copy, Clone)]
@@ -36,7 +63,7 @@ pub enum Output {
 }
 
 pub fn exec(
-    cmd: Command,
+    mut cmd: Command,
     input: Option<&[u8]>,
     retrieve_output: Output,
 ) -> Result<CmdOutput, CmdError> {
@@ -77,43 +104,31 @@ pub fn exec(
 
             return Err(CmdError::ToolErrors {
                 exit_code: -1,
-                diagnostics: vec![Diagnostic {
-                    line: 0,
-                    column: 0,
-                    index: 0,
-                    message,
-                    is_text: false,
-                }],
+                messages: vec![Message::fatal(message)],
             });
         }
     };
 
     // stderr should only ever contain error+ level diagnostics
     if code != 0 {
-        let diagnostics: Vec<_> = match String::from_utf8(output.stderr) {
+        let messages: Vec<_> = match String::from_utf8(output.stderr) {
             Ok(errors) => errors
                 .lines()
-                .filter_map(|line| crate::error::Message::parse(line).map(Diagnostic::from))
+                .filter_map(|line| crate::error::Message::parse(line))
                 .collect(),
-            Err(e) => vec![Diagnostic {
-                line: 0,
-                column: 0,
-                index: 0,
-                message: format!(
-                    "unable to read stderr ({}) but process exited with code {}",
-                    e, code
-                ),
-                is_text: false,
-            }],
+            Err(e) => vec![Message::fatal(format!(
+                "unable to read stderr ({}) but process exited with code {}",
+                e, code
+            ))],
         };
 
         return Err(CmdError::ToolErrors {
             exit_code: code,
-            diagnostics,
+            messages,
         });
     }
 
-    fn split<'a>(haystack: &'a [u8], needle: u8) -> impl Iterator<Item = &'a [u8]> + 'a {
+    fn split(haystack: &[u8], needle: u8) -> impl Iterator<Item = &[u8]> {
         struct Split<'a> {
             haystack: &'a [u8],
             needle: u8,
@@ -142,16 +157,15 @@ pub fn exec(
 
     // Since we are retrieving the results via stdout, but it can also contain
     // diagnostic messages, we need to be careful
-    let mut diagnostics = Vec::new();
+    let mut messages = Vec::new();
     let mut binary = Vec::with_capacity(if retrieve_output { 1024 } else { 0 });
 
-    let mut iter = split(&output.stdout, b'\n');
-    let mut maybe_diagnostic = true;
-    for line in iter {
-        if maybe_diagnostic {
+    let mut maybe_msg = true;
+    for line in split(&output.stdout, b'\n') {
+        if maybe_msg {
             if let Some(s) = std::str::from_utf8(line).ok() {
                 if let Some(msg) = crate::error::Message::parse(s) {
-                    diagnostics.push(Diagnostic::from(msg));
+                    messages.push(msg);
                     continue;
                 }
             }
@@ -160,11 +174,12 @@ pub fn exec(
         if retrieve_output {
             binary.extend_from_slice(line);
         }
-        maybe_diagnostic = false;
+
+        maybe_msg = false;
     }
 
     Ok(CmdOutput {
         binary,
-        diagnostics,
+        messages,
     })
 }

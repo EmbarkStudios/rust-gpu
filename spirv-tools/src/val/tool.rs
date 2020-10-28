@@ -19,35 +19,7 @@ impl Validator {
         cmd.arg("--target-env").arg(self.target_env.to_string());
 
         if let Some(opts) = options {
-            if opts.relax_logical_pointer {
-                cmd.arg("--relax-logical-pointer");
-            }
-
-            if let Some(true) = opts.relax_block_layout {
-                cmd.arg("--relax-block-layout");
-            }
-
-            if opts.uniform_buffer_standard_layout {
-                cmd.arg("--uniform-buffer-standard-layout");
-            }
-
-            if opts.scalar_block_layout {
-                cmd.arg("--scalar-block-layout");
-            }
-
-            if opts.skip_block_layout {
-                cmd.arg("--skip-block-layout");
-            }
-
-            if opts.relax_struct_store {
-                cmd.arg("--relax-struct-store");
-            }
-
-            if opts.before_legalization {
-                cmd.arg("--before-hlsl-legalization");
-            }
-
-            add_limits(&mut cmd, &opts.max_limits);
+            add_options(&mut cmd, opts);
         }
 
         let input = crate::util::from_binary(binary);
@@ -57,7 +29,38 @@ impl Validator {
     }
 }
 
-#[inline]
+pub(crate) fn add_options(cmd: &mut Command, opts: super::ValidatorOptions) {
+    if opts.relax_logical_pointer {
+        cmd.arg("--relax-logical-pointer");
+    }
+
+    if let Some(true) = opts.relax_block_layout {
+        cmd.arg("--relax-block-layout");
+    }
+
+    if opts.uniform_buffer_standard_layout {
+        cmd.arg("--uniform-buffer-standard-layout");
+    }
+
+    if opts.scalar_block_layout {
+        cmd.arg("--scalar-block-layout");
+    }
+
+    if opts.skip_block_layout {
+        cmd.arg("--skip-block-layout");
+    }
+
+    if opts.relax_struct_store {
+        cmd.arg("--relax-struct-store");
+    }
+
+    if opts.before_legalization {
+        cmd.arg("--before-hlsl-legalization");
+    }
+
+    add_limits(cmd, &opts.max_limits);
+}
+
 fn add_limits(cmd: &mut Command, limits: &[(spirv_tools_sys::val::ValidatorLimits, u32)]) {
     use spirv_tools_sys::val::ValidatorLimits;
 

@@ -15,7 +15,7 @@ impl From<super::ValidatorOptions> for Options {
                 val::validator_options_set_relax_block_layout(inner, relax);
             }
 
-            if vo.relax_store_struct {
+            if vo.relax_struct_store {
                 val::validator_options_set_relax_store_struct(inner, true);
             }
 
@@ -54,18 +54,20 @@ impl Drop for Options {
     }
 }
 
-pub struct Validator {
+pub struct CompiledValidator {
     inner: *mut shared::ToolContext,
 }
 
-impl Validator {
-    pub fn new(target_env: shared::TargetEnv) -> Self {
+use super::Validator;
+
+impl Validator for CompiledValidator {
+    fn with_env(target_env: crate::TargetEnv) -> Self {
         Self {
             inner: unsafe { shared::context_create(target_env) },
         }
     }
 
-    pub fn validate(
+    fn validate(
         &self,
         binary: &[u32],
         options: Option<super::ValidatorOptions>,
@@ -95,14 +97,20 @@ impl Validator {
                 shared::SpirvResult::Success => Ok(()),
                 other => Err(crate::error::Error {
                     inner: other,
-                    diagnostics: vec![diagnostic],
+                    diagnostic,
                 }),
             }
         }
     }
 }
 
-impl Drop for Validator {
+impl Default for CompiledValidator {
+    fn default() -> Self {
+        Self::with_env(crate::TargetEnv::default())
+    }
+}
+
+impl Drop for CompiledValidator {
     fn drop(&mut self) {
         unsafe { shared::context_destroy(self.inner) }
     }

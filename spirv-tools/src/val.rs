@@ -1,13 +1,7 @@
-#[cfg(not(feature = "use-installed"))]
-pub(crate) mod compiled;
+#[cfg(feature = "use-compiled")]
+pub mod compiled;
 #[cfg(feature = "use-installed")]
-mod tool;
-
-#[cfg(not(feature = "use-installed"))]
-pub use compiled::Validator;
-
-#[cfg(feature = "use-installed")]
-pub use tool::Optimizer;
+pub mod tool;
 
 #[derive(Default, Clone)]
 pub struct ValidatorOptions {
@@ -74,4 +68,13 @@ pub struct ValidatorOptions {
     pub skip_block_layout: bool,
     /// Applies a maximum to one or more Universal limits
     pub max_limits: Vec<(spirv_tools_sys::val::ValidatorLimits, u32)>,
+}
+
+pub trait Validator: Default {
+    fn with_env(target_env: crate::TargetEnv) -> Self;
+    fn validate(
+        &self,
+        binary: &[u32],
+        options: Option<ValidatorOptions>,
+    ) -> Result<(), crate::error::Error>;
 }

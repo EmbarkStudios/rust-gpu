@@ -1,10 +1,10 @@
 pub mod assembler;
 pub mod opt;
-pub mod shared;
+pub mod binary;
 pub mod val;
 
 pub mod error;
-pub use error::Error;
+pub use error::{Error, SpirvResult};
 
 pub use spirv_tools_sys::shared::TargetEnv;
 

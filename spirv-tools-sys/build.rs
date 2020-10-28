@@ -219,7 +219,7 @@ fn val(build: &mut Build) {
 }
 
 fn main() {
-    if std::env::var("CARGO_FEATURE_USE_INSTALLED").is_ok() {
+    if std::env::var("CARGO_FEATURE_USE_INSTALLED").is_ok() && std::env::var("CARGO_FEATURE_USE_COMPILED").is_err() {
         println!("use-installed feature on, skipping compilation of C++ code");
         return;
     }

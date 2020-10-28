@@ -242,7 +242,7 @@ extern "C" {
         ((spvtools::Optimizer*)optimizer)->RegisterWebGPUToVulkanPasses();
     }
 
-    SPIRV_TOOLS_EXPORT void optimizer_register_legalization_passes(Optimus* optimizer) {
+    SPIRV_TOOLS_EXPORT void optimizer_register_hlsl_legalization_passes(Optimus* optimizer) {
         ((spvtools::Optimizer*)optimizer)->RegisterLegalizationPasses();
     }
 }

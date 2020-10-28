@@ -13,9 +13,18 @@ repository = "https://github.com/EmbarkStudios/rust-gpu"
 crate-type = ["dylib"]
 
 [features]
+# By default, the use-compiled-tools is enabled, as doesn't require additional
+# setup steps for the user. This does however mean that you will need to disable
+# default features and explicitly enable `use-installed-tools` if you are using
+# this in an environment with spirv-tools in PATH, and you don't want to take
+# the compile time cost
+default = ["use-compiled-tools"]
 # If enabled, uses spirv-tools binaries installed in PATH, instead of
 # compiling and linking the spirv-tools C++ code
 use-installed-tools = ["spirv-tools/use-installed"]
+# If enabled will compile and link the C++ code for the spirv tools, the compiled
+# version is preferred if both this and `use-installed-tools` are enabled
+use-compiled-tools = ["spirv-tools/use-compiled"]
 
 [dependencies]
 bimap = "0.5"

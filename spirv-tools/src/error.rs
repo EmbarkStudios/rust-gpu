@@ -1,29 +1,25 @@
 use spirv_tools_sys::{diagnostics, shared};
 
+pub use shared::SpirvResult;
 pub use diagnostics::MessageLevel;
 
 #[derive(Debug, PartialEq)]
 pub struct Error {
     pub inner: shared::SpirvResult,
-    pub diagnostics: Vec<Diagnostic>,
+    pub diagnostic: Option<Diagnostic>,
 }
 
 use std::fmt;
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_fmt(format_args!("{}", self.inner))?;
-
-        if !self.diagnostics.is_empty() {
-            for diag in &self.diagnostics {
-                f.write_fmt(format_args!(
-                    "\n{}:{}:{} - {}",
-                    self.inner, diag.line, diag.column, diag.message
-                ))?
-            }
+        match &self.diagnostic {
+            Some(diag) => f.write_fmt(format_args!(
+                "{}:{}:{} - {}",
+                self.inner, diag.line, diag.column, diag.message
+            )),
+            None => f.write_fmt(format_args!("{}", self.inner)),
         }
-
-        Ok(())
     }
 }
 
@@ -70,28 +66,51 @@ impl std::convert::TryFrom<*mut diagnostics::Diagnostic> for Diagnostic {
     }
 }
 
-impl<'a> From<Message<'a>> for Diagnostic {
-    fn from(msg: Message<'a>) -> Self {
+impl From<String> for Diagnostic{
+    fn from(message: String) -> Self {
+        Self {
+            line: 0,
+            column: 0,
+            index: 0,
+            is_text: false,
+            message,
+        }
+    }
+}
+
+impl From<Message> for Diagnostic {
+    fn from(msg: Message) -> Self {
         Self {
             line: msg.line,
             column: msg.column,
             index: msg.index,
-            message: msg.message.to_string(),
+            message: msg.message,
             is_text: false,
         }
     }
 }
 
-pub struct Message<'a> {
+pub struct Message {
     pub level: MessageLevel,
-    pub source: std::borrow::Cow<'a, str>,
+    pub source: Option<String>,
     pub line: usize,
     pub column: usize,
     pub index: usize,
-    pub message: std::borrow::Cow<'a, str>,
+    pub message: String,
 }
 
-impl<'a> Message<'a> {
+impl Message {
+    pub(crate) fn fatal(message: String) -> Self {
+        Self {
+            level: MessageLevel::Fatal,
+            source: None,
+            line: 0,
+            column: 0,
+            index: 0,
+            message,
+        }
+    }
+
     pub(crate) fn from_parts(
         level: MessageLevel,
         source: *const std::os::raw::c_char,
@@ -114,16 +133,16 @@ impl<'a> Message<'a> {
 
             Self {
                 level,
-                source,
+                source: if source.is_empty() { None } else { Some(source.into_owned()) },
                 line,
                 column,
                 index,
-                message,
+                message: message.into_owned(),
             }
         }
     }
 
-    pub(crate) fn parse(s: &'a str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         s.find(": ")
             .and_then(|i| {
                 let level = match &s[..i] {
@@ -149,8 +168,8 @@ impl<'a> Message<'a> {
             .map(|(level, index, last)| Self {
                 level,
                 index,
-                message: std::borrow::Cow::Borrowed(&s[last..]),
-                source: std::borrow::Cow::Borrowed(""),
+                message: s[last..].to_owned(),
+                source: None,
                 line: 0,
                 column: 0,
             })
@@ -158,14 +177,14 @@ impl<'a> Message<'a> {
 }
 
 pub trait MessageCallback {
-    fn on_message(&mut self, msg: Message<'_>);
+    fn on_message(&mut self, msg: Message);
 }
 
 impl<F> MessageCallback for F
 where
-    F: FnMut(Message<'_>),
+    F: FnMut(Message),
 {
-    fn on_message(&mut self, msg: Message<'_>) {
+    fn on_message(&mut self, msg: Message) {
         self(msg)
     }
 }

@@ -11,7 +11,7 @@ pub fn to_binary(bytes: &[u8]) -> Result<&[u32], crate::Error> {
     if bytes.len() % std::mem::size_of::<u32>() != 0 {
         return Err(crate::Error {
             inner: spirv_tools_sys::shared::SpirvResult::InvalidBinary,
-            diagnostics: vec![],
+            diagnostic: None,
         });
     }
 

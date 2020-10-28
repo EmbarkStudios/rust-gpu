@@ -13,14 +13,14 @@ struct Args {
     preserve_ids: bool,
     /// Use specified environment.
     #[structopt(long = "target-env", parse(try_from_str))]
-    target_env: Option<spirv_tools::shared::TargetEnv>,
+    target_env: Option<spirv_tools::TargetEnv>,
     /// The input file. Use '-' for stdin.
     #[structopt(name = "FILE")]
     input: String,
 }
 
 fn main() {
-    use spirv_tools::assembler;
+    use spirv_tools::assembler::{self, Assembler};
 
     let args = Args::from_args();
 
@@ -39,7 +39,7 @@ fn main() {
         preserve_numeric_ids: args.preserve_ids,
     };
 
-    let assembler = assembler::Assembler::new(args.target_env.unwrap_or_default());
+    let assembler = assembler::compiled::CompiledAssembler::default();
 
     match assembler.assemble(&contents, assembler_opts) {
         Ok(binary) => {

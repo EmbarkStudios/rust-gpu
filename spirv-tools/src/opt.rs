@@ -1,13 +1,7 @@
-#[cfg(not(feature = "use-installed"))]
-mod compiled;
+#[cfg(feature = "use-compiled")]
+pub mod compiled;
 #[cfg(feature = "use-installed")]
-mod tool;
-
-#[cfg(not(feature = "use-installed"))]
-pub use compiled::Optimizer;
-
-#[cfg(feature = "use-installed")]
-pub use tool::Optimizer;
+pub mod tool;
 
 pub use spirv_tools_sys::opt::Passes;
 
@@ -24,4 +18,35 @@ pub struct Options {
     /// Records whether all specialization constants within the module
     /// should be preserved.
     pub preserve_spec_constants: bool,
+}
+
+pub trait Optimizer {
+    fn with_env(target_env: crate::TargetEnv) -> Self;
+    
+    fn optimize<MC: crate::error::MessageCallback>(
+        &self,
+        input: &[u32],
+        msg_callback: &mut MC,
+        options: Option<Options>,
+    ) -> Result<crate::binary::Binary, crate::Error>;
+
+    /// Register a single pass with the the optimizer.
+    fn register_pass(&mut self, pass: Passes) -> &mut Self;
+    /// Registers passes that attempt to improve performance of generated code.
+    /// This sequence of passes is subject to constant review and will change
+    /// from time to time.
+    fn register_performance_passes(&mut self) -> &mut Self;
+    /// Registers passes that attempt to improve the size of generated code.
+    /// This sequence of passes is subject to constant review and will change
+    /// from time to time.
+    fn register_size_passes(&mut self) -> &mut Self;
+    /// Registers passes that attempt to legalize the generated code.
+    ///
+    /// Note: this recipe is specially designed for legalizing SPIR-V. It should be
+    /// used by compilers after translating HLSL source code literally. It should
+    /// *not* be used by general workloads for performance or size improvement.
+    ///
+    /// This sequence of passes is subject to constant review and will change
+    /// from time to time.
+    fn register_hlsl_legalization_passes(&mut self) -> &mut Self;
 }
