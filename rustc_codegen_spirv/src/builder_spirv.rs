@@ -71,17 +71,24 @@ pub struct BuilderSpirv {
 }
 
 impl BuilderSpirv {
-    pub fn new(version: Option<(u8, u8)>, kernel_mode: bool) -> Self {
+    pub fn new(
+        version: Option<(u8, u8)>,
+        memory_model: Option<MemoryModel>,
+        kernel_mode: bool,
+    ) -> Self {
         let mut builder = Builder::new();
         // Default to spir-v 1.3
         let version = version.unwrap_or((1, 3));
         builder.set_version(version.0, version.1);
+        let memory_model = memory_model.unwrap_or(MemoryModel::Vulkan);
         if kernel_mode {
             builder.capability(Capability::Kernel);
         } else {
             builder.extension("SPV_KHR_vulkan_memory_model");
             builder.capability(Capability::Shader);
-            builder.capability(Capability::VulkanMemoryModel);
+            if memory_model == MemoryModel::Vulkan {
+                builder.capability(Capability::VulkanMemoryModel);
+            }
             builder.capability(Capability::VariablePointers);
             if version < (1, 3) {
                 builder.extension("SPV_KHR_variable_pointers");
@@ -98,7 +105,7 @@ impl BuilderSpirv {
             builder.capability(Capability::Addresses);
             builder.memory_model(AddressingModel::Physical32, MemoryModel::OpenCL);
         } else {
-            builder.memory_model(AddressingModel::Logical, MemoryModel::Vulkan);
+            builder.memory_model(AddressingModel::Logical, memory_model);
         }
         Self {
             builder: RefCell::new(builder),

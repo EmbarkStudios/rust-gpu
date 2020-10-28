@@ -27,10 +27,17 @@ impl fmt::Display for SpirvBuilderError {
 
 impl Error for SpirvBuilderError {}
 
+pub enum MemoryModel {
+    Simple,
+    Vulkan,
+    GLSL450,
+}
+
 pub struct SpirvBuilder {
     path_to_crate: PathBuf,
     print_metadata: bool,
     spirv_version: Option<(u8, u8)>,
+    memory_model: Option<MemoryModel>,
 }
 impl SpirvBuilder {
     pub fn new(path_to_crate: impl AsRef<Path>) -> Self {
@@ -38,6 +45,7 @@ impl SpirvBuilder {
             path_to_crate: path_to_crate.as_ref().to_owned(),
             print_metadata: true,
             spirv_version: None,
+            memory_model: None,
         }
     }
 
@@ -47,8 +55,15 @@ impl SpirvBuilder {
         self
     }
 
+    /// Sets the SPIR-V binary version to use. Defaults to v1.3.
     pub fn spirv_version(mut self, major: u8, minor: u8) -> Self {
         self.spirv_version = Some((major, minor));
+        self
+    }
+
+    /// Sets the SPIR-V memory model. Defaults to Vulkan.
+    pub fn memory_model(mut self, memory_model: MemoryModel) -> Self {
+        self.memory_model = Some(memory_model);
         self
     }
 
@@ -56,11 +71,7 @@ impl SpirvBuilder {
     /// you usually don't have to inspect the path, as the environment variable will already be
     /// set.
     pub fn build(self) -> Result<PathBuf, SpirvBuilderError> {
-        let spirv_module = invoke_rustc(
-            self.path_to_crate.as_ref(),
-            self.print_metadata,
-            self.spirv_version,
-        )?;
+        let spirv_module = invoke_rustc(&self)?;
         let env_var = spirv_module.file_name().unwrap().to_str().unwrap();
         if self.print_metadata {
             println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
@@ -101,11 +112,7 @@ fn find_rustc_codegen_spirv() -> PathBuf {
     panic!("Could not find {} in library path", filename);
 }
 
-fn invoke_rustc(
-    path_to_crate: &Path,
-    print_metadata: bool,
-    spirv_version: Option<(u8, u8)>,
-) -> Result<PathBuf, SpirvBuilderError> {
+fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // Okay, this is a little bonkers: in a normal world, we'd have the user clone
     // rustc_codegen_spirv and pass in the path to it, and then we'd invoke cargo to build it, grab
     // the resulting .so, and pass it into -Z codegen-backend. But that's really gross: the user
@@ -115,14 +122,30 @@ fn invoke_rustc(
     // rustc expects a full path, instead of a filename looked up via LD_LIBRARY_PATH, so we need
     // to copy cargo's understanding of library lookup and find the library and its full path.
     let rustc_codegen_spirv = find_rustc_codegen_spirv();
-    let spirv_version_feture = match spirv_version {
-        None => "".to_string(),
-        Some((major, minor)) => format!(" -C target-feature=+spirv{}.{}", major, minor),
+    let mut target_features = Vec::new();
+    // these must match codegen_cx/mod.rs
+    if let Some((major, minor)) = builder.spirv_version {
+        target_features.push(format!("+spirv{}.{}", major, minor));
+    }
+    if let Some(memory_model) = &builder.memory_model {
+        target_features.push(
+            match memory_model {
+                MemoryModel::Simple => "+simple",
+                MemoryModel::Vulkan => "+vulkan",
+                MemoryModel::GLSL450 => "+glsl450",
+            }
+            .to_string(),
+        );
+    }
+    let feature_flag = if target_features.is_empty() {
+        "".to_string()
+    } else {
+        format!(" -C target-feature={}", target_features.join(","))
     };
     let rustflags = format!(
         "-Z codegen-backend={}{}",
         rustc_codegen_spirv.display(),
-        spirv_version_feture
+        feature_flag,
     );
     let build = Command::new("cargo")
         .args(&[
@@ -135,14 +158,14 @@ fn invoke_rustc(
             "--release",
         ])
         .stderr(Stdio::inherit())
-        .current_dir(path_to_crate)
+        .current_dir(&builder.path_to_crate)
         .env("RUSTFLAGS", rustflags)
         .output()
         .expect("failed to execute cargo build");
     if build.status.success() {
         let stdout = String::from_utf8(build.stdout).unwrap();
         let artifact = get_last_artifact(&stdout);
-        if print_metadata {
+        if builder.print_metadata {
             print_deps_of(&artifact);
         }
         Ok(artifact)
