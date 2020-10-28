@@ -3,16 +3,20 @@
 #![feature(register_attr)]
 #![register_attr(spirv)]
 
+#[cfg(not(test))]
+use core::panic::PanicInfo;
 extern crate spirv_std;
 
-#[cfg(all(not(test), target_arch = "spirv"))]
-#[panic_handler]
-fn panic(_: &core::panic::PanicInfo) -> ! {
-    loop {}
+use spirv_std::Input;
+
+#[spirv(gl_compute, local_size_x=64)]
+pub fn main_cs(y: Input<f32>) {
+    
 }
 
-#[spirv(entry = "gl_compute")]
-fn main() {
-
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(_: &PanicInfo) -> ! {
+    loop {}
 }
 

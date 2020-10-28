@@ -1,7 +1,7 @@
 use super::CodegenCx;
 use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, SpirvAttribute};
+use crate::symbols::{parse_attrs, SpirvAttribute, Entry};
 use rspirv::dr::Operand;
 use rspirv::spirv::{
     Decoration, ExecutionMode, ExecutionModel, FunctionControl, StorageClass, Word,
@@ -22,7 +22,7 @@ impl<'tcx> CodegenCx<'tcx> {
         fn_abi: &FnAbi<'_, Ty<'_>>,
         entry_func: SpirvValue,
         name: String,
-        execution_model: ExecutionModel,
+        entry: Entry,
     ) {
         let local_id = match instance.def_id().as_local() {
             Some(id) => id,
@@ -54,10 +54,11 @@ impl<'tcx> CodegenCx<'tcx> {
                 ),
             )
         }
-        if execution_model == ExecutionModel::Kernel {
-            self.kernel_entry_stub(entry_func, name, execution_model);
-        } else {
-            self.shader_entry_stub(entry_func, body.params, name, execution_model);
+        
+        match entry {
+            Entry::Shader { execution_model } => self.shader_entry_stub(entry_func, body.params, name, execution_model),
+            Entry::GLCompute { local_size } => self.gl_compute_entry_stub(entry_func, name, local_size),
+            Entry::Kernel => self.kernel_entry_stub(entry_func, name),
         }
     }
 
@@ -204,7 +205,6 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         entry_func: SpirvValue,
         name: String,
-        execution_model: ExecutionModel,
     ) {
         let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
             SpirvType::Function {
@@ -240,6 +240,50 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         emit.end_function().unwrap();
 
-        emit.entry_point(execution_model, fn_id, name, &[]);
+        emit.entry_point(ExecutionModel::Kernel, fn_id, name, &[]);
+    }
+   
+    fn gl_compute_entry_stub(
+        &self,
+        entry_func: SpirvValue,
+        name: String,
+        local_size: [u32; 3],
+    ) {
+        let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
+            SpirvType::Function {
+                return_type,
+                arguments,
+            } => (return_type, arguments),
+            other => self.tcx.sess.fatal(&format!(
+                "Invalid compute_entry_stub type: {}",
+                other.debug(entry_func.ty, self)
+            )),
+        };
+        let mut emit = self.emit_global();
+        let fn_id = emit
+            .begin_function(
+                entry_func_return,
+                None,
+                FunctionControl::NONE,
+                entry_func.ty,
+            )
+            .unwrap();
+        let arguments = entry_func_args
+            .iter()
+            .map(|&ty| emit.function_parameter(ty).unwrap())
+            .collect::<Vec<_>>();
+        emit.begin_block(None).unwrap();
+        let call_result = emit
+            .function_call(entry_func_return, None, entry_func.def, arguments)
+            .unwrap();
+        if self.lookup_type(entry_func_return) == SpirvType::Void {
+            emit.ret().unwrap();
+        } else {
+            emit.ret_value(call_result).unwrap();
+        }
+        emit.end_function().unwrap();
+
+        emit.entry_point(ExecutionModel::GLCompute, fn_id, name, &[]);
+        emit.execution_mode(fn_id, ExecutionMode::LocalSize, local_size);
     }
 }

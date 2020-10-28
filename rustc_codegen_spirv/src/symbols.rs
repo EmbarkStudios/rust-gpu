@@ -190,7 +190,7 @@ impl Symbols {
             .map(|&(a, b)| (a, SpirvAttribute::StorageClass(b)));
         let execution_models = EXECUTION_MODELS
             .iter()
-            .map(|&(a, b)| (a, SpirvAttribute::Entry(b)));
+            .map(|&(a, b)| (a, SpirvAttribute::ExecutionModel(b)));
         let custom = std::iter::once((
             "really_unsafe_ignore_bitcasts",
             SpirvAttribute::ReallyUnsafeIgnoreBitcasts,
@@ -219,14 +219,119 @@ impl Symbols {
 }
 
 #[derive(Debug, Clone)]
+pub enum Entry {
+    Shader { execution_model: ExecutionModel },
+    Kernel,
+    GLCompute { local_size: [u32; 3] },
+}
+
+#[derive(Debug, Clone)]
 pub enum SpirvAttribute {
     Builtin(BuiltIn),
     StorageClass(StorageClass),
-    Entry(ExecutionModel),
+    ExecutionModel(ExecutionModel),
     DescriptorSet(u32),
     Binding(u32),
     ReallyUnsafeIgnoreBitcasts,
 }
+
+
+
+// Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused
+// reporting already happens even before we get here :(
+/// Returns empty if this attribute is not a spirv attribute, or if it's malformed (and an error is
+/// reported).
+pub fn parse_entry_attrs(
+    cx: &CodegenCx<'_>,
+    attrs: &[Attribute],
+) -> impl Iterator<Item = Option<Entry>> {
+    fn lookup_execution_model(name: impl AsRef<str>) -> Option<&'static ExecutionModel> {
+        let name = name.as_ref();
+        EXECUTION_MODELS.iter()
+            .find(|(n, _)| n == &name)
+            .map(|(_, e)| e)   
+    }
+
+    attrs.into_iter()
+        .filter_map(|attr| {
+            let is_spirv = match attr.kind {
+                AttrKind::Normal(ref item) => {
+                    // TODO: We ignore the rest of the path. Is this right?
+                    let last = item.path.segments.last();
+                    last.map_or(false, |seg| seg.ident.name == cx.sym.spirv)
+                }
+                AttrKind::DocComment(..) => false,
+            };
+            if is_spirv {
+                let args = attr.meta_item_list();
+                if args.is_none() {
+                    cx.tcx.sess.span_err(
+                        attr.span,
+                        "#[spirv(..)] attribute must have at least one argument",
+                    );
+                }
+                args
+            }
+            else {
+                None
+            }
+        })
+        .map(|args| {
+            match args.as_slice() {
+                [] => unreachable!(),
+                [arg] => {
+                    let name = arg.name_or_empty()
+                        .as_str();
+                    lookup_execution_model(&*name)
+                        .map(|execution_model| {
+                        match execution_model {
+                            ExecutionModel::GLCompute => Entry::GLCompute { local_size: [1, 1, 1] },
+                            ExecutionModel::Kernel => Entry::Kernel,
+                            &execution_model => Entry::Shader { execution_model },
+                        }
+                    })
+                }, 
+                args => {
+                    let name = args[0].name_or_empty()
+                        .as_str();
+                    lookup_execution_model(&*name)
+                        .map(|execution_model| {
+                        match execution_model {
+                            ExecutionModel::GLCompute => {
+                                let mut local_size = [1, 1, 1];
+                                args[1..]
+                                    .iter()
+                                    .for_each(|arg| {
+                                        let name = &*arg.name_or_empty()
+                                            .as_str();
+                                        match name {
+                                            "local_size_x" | "local_size_y" | "local_size_z" => {
+                                                parse_attr_int_value(cx, arg)
+                                                    .map(|x| {
+                                                        match name {
+                                                            "local_size_x" => { local_size[0] = x; },
+                                                            "local_size_y" => { local_size[1] = x; },
+                                                            "local_size_z" => { local_size[2] = x; },
+                                                            _ => unreachable!(),
+                                                        }
+                                                    });
+                                            },
+                                            _ => () //TODO: Error here?
+                                        }
+                                    });
+                                
+                                Entry::GLCompute { local_size }
+                            },
+                            //TODO: Report unsupported arguments here?
+                            ExecutionModel::Kernel => Entry::Kernel,
+                            &execution_model => Entry::Shader { execution_model },
+                        } 
+                    })
+                },
+            }
+        }).collect::<Vec<_>>().into_iter()
+}
+
 
 // Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused
 // reporting already happens even before we get here :(

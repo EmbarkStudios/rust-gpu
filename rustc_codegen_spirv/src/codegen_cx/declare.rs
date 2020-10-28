@@ -2,7 +2,7 @@ use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, SpirvAttribute};
+use crate::symbols::{parse_entry_attrs};
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
@@ -209,14 +209,34 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         let declared =
             self.declare_fn_ext(symbol_name, Some(&human_name), linkage2, spv_attrs, &fn_abi);
 
+        parse_entry_attrs(self, self.tcx.get_attrs(instance.def_id()))
+            .for_each(|entry| {
+                match entry { 
+                    Some(entry) => {
+                        self.entry_stub(
+                            &instance,
+                            &fn_abi,
+                            declared,
+                            human_name.clone(),
+                            entry
+                        )
+                    },
+                    None => {
+                        self.really_unsafe_ignore_bitcasts
+                            .borrow_mut()
+                            .insert(declared);
+                    },
+                }
+            });
+        /*
         for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
             match attr {
-                SpirvAttribute::Entry(execution_model) => self.entry_stub(
+                SpirvAttribute::Entry(entry) => self.entry_stub(
                     &instance,
                     &fn_abi,
                     declared,
                     human_name.clone(),
-                    execution_model,
+                    entry,
                 ),
                 SpirvAttribute::ReallyUnsafeIgnoreBitcasts => {
                     self.really_unsafe_ignore_bitcasts
@@ -225,7 +245,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
                 }
                 _ => {}
             }
-        }
+        }*/
 
         self.instances.borrow_mut().insert(instance, declared);
     }
