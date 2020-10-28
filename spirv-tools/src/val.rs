@@ -21,7 +21,7 @@ pub struct ValidatorOptions {
     ///
     /// 2) the decorations that affect the memory layout are identical for both
     /// types.  Other decorations are not relevant.
-    pub relax_store_struct: bool,
+    pub relax_struct_store: bool,
     /// Records whether or not the validator should relax the rules on pointer usage
     /// in logical addressing mode.
     ///

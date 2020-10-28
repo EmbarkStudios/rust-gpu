@@ -187,7 +187,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
     );
 
     match result {
-        Ok(binary) => binary.as_ref().to_vec(),
+        Ok(binary) => Vec::from(binary.as_ref()),
         Err(_) => {
             let mut err = sess.struct_warn("spirv-opt failed, leaving as unoptimized");
             err.note(&format!("module {:?}", filename));
@@ -197,12 +197,11 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
 }
 
 fn do_spirv_val(sess: &Session, spv_binary: &[u32], filename: &Path) {
-    use spirv_tools::{shared, val};
+    use spirv_tools::val;
 
     let validator = val::Validator::new(spirv_tools::TargetEnv::default());
-    let opts = val::ValidatorOptions::default();
 
-    if validator.validate(spv_binary, &opts).is_err() {
+    if validator.validate(spv_binary, None).is_err() {
         let mut err = sess.struct_err("error occurred during validation");
         err.note(&format!("module {:?}", filename));
         err.emit();

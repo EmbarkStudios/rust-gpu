@@ -8,15 +8,15 @@ pub struct ValidatorOptions {
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
 pub enum ValidatorLimits {
-    MaxStructMembers,
-    MaxStructDepth,
-    MaxLocalVariables,
-    MaxGlobalVariables,
-    MaxSwitchBranches,
-    MaxFunctionArgs,
-    MaxControlFlowNestingDepth,
-    MaxAccessChainIndexes,
-    MaxIdBound,
+    StructMembers,
+    StructDepth,
+    LocalVariables,
+    GlobalVariables,
+    SwitchBranches,
+    FunctionArgs,
+    ControlFlowNestingDepth,
+    AccessChainIndexes,
+    IdBound,
 }
 
 extern "C" {

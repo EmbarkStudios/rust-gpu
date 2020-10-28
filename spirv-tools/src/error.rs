@@ -5,20 +5,25 @@ pub use diagnostics::MessageLevel;
 #[derive(Debug, PartialEq)]
 pub struct Error {
     pub inner: shared::SpirvResult,
-    pub diagnostic: Option<Diagnostic>,
+    pub diagnostics: Vec<Diagnostic>,
 }
 
 use std::fmt;
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.diagnostic {
-            Some(diag) => f.write_fmt(format_args!(
-                "{}:{}:{} - {}",
-                self.inner, diag.line, diag.column, diag.message
-            )),
-            None => f.write_fmt(format_args!("{}", self.inner)),
+        f.write_fmt(format_args!("{}", self.inner))?;
+
+        if !self.diagnostics.is_empty() {
+            for diag in &self.diagnostics {
+                f.write_fmt(format_args!(
+                    "\n{}:{}:{} - {}",
+                    self.inner, diag.line, diag.column, diag.message
+                ))?
+            }
         }
+
+        Ok(())
     }
 }
 
@@ -61,6 +66,18 @@ impl std::convert::TryFrom<*mut diagnostics::Diagnostic> for Diagnostic {
 
             diagnostics::diagnostic_destroy(diag);
             Ok(res)
+        }
+    }
+}
+
+impl<'a> From<Message<'a>> for Diagnostic {
+    fn from(msg: Message<'a>) -> Self {
+        Self {
+            line: msg.line,
+            column: msg.column,
+            index: msg.index,
+            message: msg.message.to_string(),
+            is_text: false,
         }
     }
 }
@@ -108,31 +125,35 @@ impl<'a> Message<'a> {
 
     pub(crate) fn parse(s: &'a str) -> Option<Self> {
         s.find(": ")
-        .and_then(|i| {
-            let level = match &s[..i] {
-                "error" => MessageLevel::Error,
-                "warning" => MessageLevel::Warning,
-                "info" => MessageLevel::Info,
-                _ => return None,
-            };
+            .and_then(|i| {
+                let level = match &s[..i] {
+                    "error" => MessageLevel::Error,
+                    "warning" => MessageLevel::Warning,
+                    "info" => MessageLevel::Info,
+                    _ => return None,
+                };
 
-            Some((level, i))
-        }).and_then(|(level, i)| {
-            s[i + 7..].find(": ").and_then(|i2| {
-                s[i + 7..i + 7 + i2].parse::<usize>().ok().map(|index| (index, i2))
-            }).map(|(index, i2)| {
-                (level, index, i + 7 + i2 + 2)
+                Some((level, i))
             })
-        }).map(|(level, index, last)| {
-            Self {
+            .and_then(|(level, i)| {
+                s[i + 7..]
+                    .find(": ")
+                    .and_then(|i2| {
+                        s[i + 7..i + 7 + i2]
+                            .parse::<usize>()
+                            .ok()
+                            .map(|index| (index, i2))
+                    })
+                    .map(|(index, i2)| (level, index, i + 7 + i2 + 2))
+            })
+            .map(|(level, index, last)| Self {
                 level,
                 index,
                 message: std::borrow::Cow::Borrowed(&s[last..]),
                 source: std::borrow::Cow::Borrowed(""),
                 line: 0,
                 column: 0,
-            }
-        })
+            })
     }
 }
 

@@ -43,9 +43,7 @@ impl From<super::ValidatorOptions> for Options {
                 val::validator_options_set_limit(inner, limit, val);
             }
 
-            Self {
-                inner
-            }
+            Self { inner }
         }
     }
 }
@@ -97,7 +95,7 @@ impl Validator {
                 shared::SpirvResult::Success => Ok(()),
                 other => Err(crate::error::Error {
                     inner: other,
-                    diagnostic,
+                    diagnostics: vec![diagnostic],
                 }),
             }
         }

@@ -60,13 +60,13 @@ impl Assembler {
                     if binary.is_null() {
                         return Err(crate::error::Error {
                             inner: shared::SpirvResult::InternalError,
-                            diagnostic: Some(crate::error::Diagnostic {
+                            diagnostics: vec![crate::error::Diagnostic {
                                 line: 0,
                                 column: 0,
                                 index: 0,
                                 message: "spirv assemble indicated success but did not return a valid binary".to_owned(),
                                 is_text: true,
-                            }),
+                            }],
                         });
                     }
 
@@ -74,7 +74,7 @@ impl Assembler {
                 }
                 other => Err(crate::error::Error {
                     inner: other,
-                    diagnostic,
+                    diagnostics: vec![diagnostic],
                 }),
             }
         }
