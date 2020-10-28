@@ -1,7 +1,7 @@
 use spirv_tools_sys::{diagnostics, shared};
 
-pub use shared::SpirvResult;
 pub use diagnostics::MessageLevel;
+pub use shared::SpirvResult;
 
 #[derive(Debug, PartialEq)]
 pub struct Error {
@@ -66,7 +66,7 @@ impl std::convert::TryFrom<*mut diagnostics::Diagnostic> for Diagnostic {
     }
 }
 
-impl From<String> for Diagnostic{
+impl From<String> for Diagnostic {
     fn from(message: String) -> Self {
         Self {
             line: 0,
@@ -90,6 +90,7 @@ impl From<Message> for Diagnostic {
     }
 }
 
+#[derive(Debug)]
 pub struct Message {
     pub level: MessageLevel,
     pub source: Option<String>,
@@ -100,6 +101,7 @@ pub struct Message {
 }
 
 impl Message {
+    #[cfg(feature = "use-installed")]
     pub(crate) fn fatal(message: String) -> Self {
         Self {
             level: MessageLevel::Fatal,
@@ -133,7 +135,11 @@ impl Message {
 
             Self {
                 level,
-                source: if source.is_empty() { None } else { Some(source.into_owned()) },
+                source: if source.is_empty() {
+                    None
+                } else {
+                    Some(source.into_owned())
+                },
                 line,
                 column,
                 index,
@@ -142,6 +148,7 @@ impl Message {
         }
     }
 
+    #[cfg(feature = "use-installed")]
     pub(crate) fn parse(s: &str) -> Option<Self> {
         s.find(": ")
             .and_then(|i| {

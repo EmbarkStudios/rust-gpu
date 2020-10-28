@@ -21,22 +21,26 @@ impl From<CmdError> for crate::error::Error {
         use crate::SpirvResult;
 
         match ce {
-            CmdError::BinaryNotFound(e) => {
-                Self {
-                    inner: SpirvResult::Unsupported,
-                    diagnostic: Some(format!("failed spawn executable: {}", e).into()),
-                }
-            }
-            CmdError::Io(e) => {
-                Self {
-                    inner: SpirvResult::EndOfStream,
-                    diagnostic: Some(format!("i/o error occurred communicating with executable: {}", e).into()),
-                }
-            }
-            CmdError::ToolErrors { exit_code: _, messages } => {
+            CmdError::BinaryNotFound(e) => Self {
+                inner: SpirvResult::Unsupported,
+                diagnostic: Some(format!("failed spawn executable: {}", e).into()),
+            },
+            CmdError::Io(e) => Self {
+                inner: SpirvResult::EndOfStream,
+                diagnostic: Some(
+                    format!("i/o error occurred communicating with executable: {}", e).into(),
+                ),
+            },
+            CmdError::ToolErrors {
+                exit_code: _,
+                messages,
+            } => {
                 // The C API just puts the last message as the diagnostic, so just do the
                 // same for now
-                let diagnostic = messages.into_iter().last().map(crate::error::Diagnostic::from);
+                let diagnostic = messages
+                    .into_iter()
+                    .last()
+                    .map(crate::error::Diagnostic::from);
 
                 Self {
                     inner: SpirvResult::InternalError, // this isn't really correct
@@ -172,14 +176,17 @@ pub fn exec(
         }
 
         if retrieve_output {
+            // Handle case where there is a '\n' in the stream, but it's not the
+            // end of an output message
+            if !maybe_msg || messages.is_empty() && !binary.is_empty() {
+                binary.push(b'\n');
+            }
+
             binary.extend_from_slice(line);
         }
 
         maybe_msg = false;
     }
 
-    Ok(CmdOutput {
-        binary,
-        messages,
-    })
+    Ok(CmdOutput { binary, messages })
 }

@@ -34,3 +34,17 @@ pub trait Assembler: Default {
         options: AssemblerOptions,
     ) -> Result<crate::binary::Binary, crate::error::Error>;
 }
+
+pub fn create(te: Option<crate::TargetEnv>) -> impl Assembler {
+    let target_env = te.unwrap_or_default();
+
+    #[cfg(feature = "use-compiled")]
+    {
+        compiled::CompiledAssembler::with_env(target_env)
+    }
+
+    #[cfg(all(feature = "use-installed", not(feature = "use-compiled")))]
+    {
+        tool::ToolAssembler::with_env(target_env)
+    }
+}

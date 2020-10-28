@@ -22,7 +22,7 @@ pub struct Options {
 
 pub trait Optimizer {
     fn with_env(target_env: crate::TargetEnv) -> Self;
-    
+
     fn optimize<MC: crate::error::MessageCallback>(
         &self,
         input: &[u32],
@@ -49,4 +49,18 @@ pub trait Optimizer {
     /// This sequence of passes is subject to constant review and will change
     /// from time to time.
     fn register_hlsl_legalization_passes(&mut self) -> &mut Self;
+}
+
+pub fn create(te: Option<crate::TargetEnv>) -> impl Optimizer {
+    let target_env = te.unwrap_or_default();
+
+    #[cfg(feature = "use-compiled")]
+    {
+        compiled::CompiledOptimizer::with_env(target_env)
+    }
+
+    #[cfg(all(feature = "use-installed", not(feature = "use-compiled")))]
+    {
+        tool::ToolOptimizer::with_env(target_env)
+    }
 }

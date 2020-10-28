@@ -44,7 +44,8 @@ impl Assembler for CompiledAssembler {
                         });
                     }
 
-                    Ok(crate::binary::Binary::External(crate::binary::external::ExternalBinary::new(binary)))
+                    let bin = crate::binary::external::ExternalBinary::new(binary);
+                    Ok(crate::binary::Binary::External(bin))
                 }
                 other => Err(crate::error::Error {
                     inner: other,

@@ -13,9 +13,9 @@ impl<'a> std::fmt::Debug for PrettyString<'a> {
 }
 
 fn assemble_spirv(spirv: &str) -> Result<Vec<u8>> {
-    use spirv_tools::assembler;
+    use spirv_tools::assembler::{self, Assembler};
 
-    let assembler = assembler::Assembler::new(spirv_tools::default_target_env());
+    let assembler = assembler::create(None);
 
     let spv_binary = assembler.assemble(spirv, assembler::AssemblerOptions::default())?;
 
@@ -25,10 +25,12 @@ fn assemble_spirv(spirv: &str) -> Result<Vec<u8>> {
 
 #[allow(unused)]
 fn validate(spirv: &[u32]) {
-    let validator = spirv_tools::val::Validator::new(spirv_tools::default_target_env());
+    use spirv_tools::val::{self, Validator};
+
+    let validator = val::create(None);
 
     validator
-        .validate(spirv, &spirv_tools::val::ValidatorOptions::default())
+        .validate(spirv, None)
         .expect("validation error occurred");
 }
 

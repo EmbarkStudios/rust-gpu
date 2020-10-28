@@ -155,15 +155,12 @@ fn link_exe(
 }
 
 fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u32> {
-    use spirv_tools::{error, opt::{
-        self,
-        Optimizer,
-    }};
+    use spirv_tools::{
+        error,
+        opt::{self, Optimizer},
+    };
 
-    #[cfg(feature = "use-compiled-tools")]
-    let mut optimizer = opt::compiled::CompiledOptimizer;
-    #[cfg(all(feature = "use-installed-tools", not(feature = "use-compiled-tools")))]
-    let mut optimizer = opt::tool::ToolOptimizer;
+    let mut optimizer = opt::create(None);
 
     optimizer
         .register_size_passes()
@@ -172,7 +169,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
 
     let result = optimizer.optimize(
         &spv_binary,
-        &mut |msg: error::Message<'_>| {
+        &mut |msg: error::Message| {
             use error::MessageLevel as Level;
 
             // TODO: Adds spans here? Not sure how useful with binary, but maybe?
@@ -203,9 +200,9 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
 }
 
 fn do_spirv_val(sess: &Session, spv_binary: &[u32], filename: &Path) {
-    use spirv_tools::val;
+    use spirv_tools::val::{self, Validator};
 
-    let validator = val::Validator::new(spirv_tools::TargetEnv::default());
+    let validator = val::create(None);
 
     if validator.validate(spv_binary, None).is_err() {
         let mut err = sess.struct_err("error occurred during validation");

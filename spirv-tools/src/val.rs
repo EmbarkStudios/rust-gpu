@@ -78,3 +78,17 @@ pub trait Validator: Default {
         options: Option<ValidatorOptions>,
     ) -> Result<(), crate::error::Error>;
 }
+
+pub fn create(te: Option<crate::TargetEnv>) -> impl Validator {
+    let target_env = te.unwrap_or_default();
+
+    #[cfg(feature = "use-compiled")]
+    {
+        compiled::CompiledValidator::with_env(target_env)
+    }
+
+    #[cfg(all(feature = "use-installed", not(feature = "use-compiled")))]
+    {
+        tool::ToolValidator::with_env(target_env)
+    }
+}

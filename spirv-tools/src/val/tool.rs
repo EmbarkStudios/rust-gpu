@@ -1,15 +1,18 @@
 use std::process::Command;
 
-pub struct Validator {
+#[derive(Default)]
+pub struct ToolValidator {
     target_env: crate::TargetEnv,
 }
 
-impl Validator {
-    pub fn new(target_env: crate::TargetEnv) -> Self {
+use super::Validator;
+
+impl Validator for ToolValidator {
+    fn with_env(target_env: crate::TargetEnv) -> Self {
         Self { target_env }
     }
 
-    pub fn validate(
+    fn validate(
         &self,
         binary: &[u32],
         options: Option<super::ValidatorOptions>,

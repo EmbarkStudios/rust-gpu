@@ -15,7 +15,10 @@ use super::Optimizer;
 
 impl Optimizer for ToolOptimizer {
     fn with_env(target_env: crate::TargetEnv) -> Self {
-        Self { target_env, ..Default::default() }
+        Self {
+            target_env,
+            ..Default::default()
+        }
     }
 
     fn optimize<MC: error::MessageCallback>(
@@ -27,8 +30,12 @@ impl Optimizer for ToolOptimizer {
         let mut cmd = std::process::Command::new("spirv-opt");
         cmd.arg("--target-env").arg(self.target_env.to_string());
 
-        cmd.args(self.passes.iter().filter_map(|p| pass_to_string(*p).map(|s| format!("--{}", s))));
-        
+        cmd.args(
+            self.passes
+                .iter()
+                .filter_map(|p| pass_to_string(*p).map(|s| format!("--{}", s))),
+        );
+
         if self.use_perf_passes {
             cmd.arg("-O");
         }
@@ -58,6 +65,8 @@ impl Optimizer for ToolOptimizer {
                 crate::val::tool::add_options(&mut cmd, vopts);
             }
         }
+
+        cmd.arg("-o").arg("-");
 
         let input = crate::util::from_binary(input);
 

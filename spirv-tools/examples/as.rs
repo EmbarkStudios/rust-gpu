@@ -39,7 +39,8 @@ fn main() {
         preserve_numeric_ids: args.preserve_ids,
     };
 
-    let assembler = assembler::compiled::CompiledAssembler::default();
+    let assembler =
+        assembler::compiled::CompiledAssembler::with_env(args.target_env.unwrap_or_default());
 
     match assembler.assemble(&contents, assembler_opts) {
         Ok(binary) => {

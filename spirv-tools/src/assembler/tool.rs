@@ -6,9 +6,7 @@ use super::Assembler;
 
 impl Assembler for ToolAssembler {
     fn with_env(target_env: crate::TargetEnv) -> Self {
-        Self {
-            target_env,
-        }
+        Self { target_env }
     }
 
     fn assemble(
@@ -25,7 +23,8 @@ impl Assembler for ToolAssembler {
 
         cmd.arg("-o").arg("-");
 
-        let cmd_output = crate::cmd::exec(cmd, Some(text.as_bytes()), crate::cmd::Output::Retrieve)?;
+        let cmd_output =
+            crate::cmd::exec(cmd, Some(text.as_bytes()), crate::cmd::Output::Retrieve)?;
 
         use std::convert::TryFrom;
         crate::binary::Binary::try_from(cmd_output.binary)

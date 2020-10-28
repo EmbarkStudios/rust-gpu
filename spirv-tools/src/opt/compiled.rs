@@ -44,20 +44,20 @@ impl Drop for Options {
     }
 }
 
-pub struct Optimizer {
+pub struct CompiledOptimizer {
     inner: *mut opt::Optimizer,
 }
 
-impl Optimizer {
-    #[inline]
-    pub fn new(target: crate::TargetEnv) -> Self {
+use super::Optimizer;
+
+impl Optimizer for CompiledOptimizer {
+    fn with_env(target: crate::TargetEnv) -> Self {
         Self {
             inner: unsafe { opt::optimizer_create(target) },
         }
     }
 
-    #[inline]
-    pub fn optimize<MC: error::MessageCallback>(
+    fn optimize<MC: error::MessageCallback>(
         &self,
         input: &[u32],
         msg_callback: &mut MC,
@@ -122,7 +122,9 @@ impl Optimizer {
                         });
                     }
 
-                    Ok(crate::binary::Binary::External(crate::binary::external::ExternalBinary::new(binary)))
+                    Ok(crate::binary::Binary::External(
+                        crate::binary::external::ExternalBinary::new(binary),
+                    ))
                 }
                 other => Err(error::Error {
                     inner: other,
@@ -134,7 +136,7 @@ impl Optimizer {
 
     /// Register a single pass with the the optimizer.
     #[inline]
-    pub fn register_pass(&mut self, pass: super::Passes) -> &mut Self {
+    fn register_pass(&mut self, pass: super::Passes) -> &mut Self {
         unsafe { opt::optimizer_register_pass(self.inner, pass) }
         self
     }
@@ -143,7 +145,7 @@ impl Optimizer {
     /// This sequence of passes is subject to constant review and will change
     /// from time to time.
     #[inline]
-    pub fn register_performance_passes(&mut self) -> &mut Self {
+    fn register_performance_passes(&mut self) -> &mut Self {
         unsafe { opt::optimizer_register_performance_passes(self.inner) }
         self
     }
@@ -152,7 +154,7 @@ impl Optimizer {
     /// This sequence of passes is subject to constant review and will change
     /// from time to time.
     #[inline]
-    pub fn register_size_passes(&mut self) -> &mut Self {
+    fn register_size_passes(&mut self) -> &mut Self {
         unsafe { opt::optimizer_register_size_passes(self.inner) }
         self
     }
@@ -184,19 +186,19 @@ impl Optimizer {
     /// This sequence of passes is subject to constant review and will change
     /// from time to time.
     #[inline]
-    pub fn register_hlsl_legalization_passes(&mut self) -> &mut Self {
+    fn register_hlsl_legalization_passes(&mut self) -> &mut Self {
         unsafe { opt::optimizer_register_hlsl_legalization_passes(self.inner) }
         self
     }
 }
 
-impl Default for Optimizer {
+impl Default for CompiledOptimizer {
     fn default() -> Self {
-        Self::new(crate::TargetEnv::default())
+        Self::with_env(crate::TargetEnv::default())
     }
 }
 
-impl Drop for Optimizer {
+impl Drop for CompiledOptimizer {
     #[inline]
     fn drop(&mut self) {
         unsafe { opt::optimizer_destroy(self.inner) }
