@@ -5,6 +5,9 @@
 
 use spirv_std::{Input, Output, Vec4};
 
+#[cfg(all(not(target_arch = "spirv"), feature = "build-spirv"))]
+pub const COMPILED_SHADER: &'static [u8] = include_bytes!(env!("wgpu_example_shader.spv"));
+
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main_fs(mut output: Output<Vec4>) {
