@@ -11,7 +11,14 @@ jobs:
     name: Test
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macOS-latest, ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macOS-latest
+            target: x86_64-apple-darwin
     runs-on: ${{ matrix.os }}
     env:
       spirv_tools_version: "20200928"
@@ -52,7 +59,7 @@ jobs:
       # Fetch dependencies in a separate step to clearly show how long each part
       # of the testing takes
       - name: cargo fetch
-        run: cargo fetch
+        run: cargo fetch --target ${{ matrix.target }}
       - name: Run tests
         shell: bash
         run: .github/workflows/test.sh
