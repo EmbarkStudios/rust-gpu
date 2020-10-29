@@ -11,40 +11,25 @@ jobs:
     name: Test
     strategy:
       matrix:
-        os: [macOS-latest, ubuntu-latest, windows-latest]
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-          - os: macOS-latest
-            target: x86_64-apple-darwin
+        os: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     env:
       spirv_tools_version: "20200928"
     steps:
-      # Note that we are explicitly NOT checking out submodules, to validate
-      # that we haven't accidentally enabled spirv-tools native compilation
-      # and regressed CI times
       - uses: actions/checkout@v2
-        with:
-          submodules: "false"
       # Ubuntu does have `brew install spirv-tools`, but it installs from
       # source and so takes >8 minutes.
       - if: ${{ runner.os == 'Linux' }}
-        name: Linux - Install native dependencies
         run: |
           sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
           mkdir "${HOME}/spirv-tools"
           curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1305/20201026-063148/install.tgz | tar -xz -C "${HOME}/spirv-tools"
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - if: ${{ runner.os == 'macOS' }}
-        name: Mac - Install spirv-tools
         run: brew install spirv-tools
       # Currently SPIR-V tools aren't available in any package manager
       # on Windows that put the tools in the path.
       - if: ${{ runner.os == 'Windows' }}
-        name: Windows - Install spirv-tools
         shell: bash
         run: |
           tmparch=$(mktemp)
@@ -54,42 +39,25 @@ jobs:
       - if: ${{ runner.os == 'Windows' }}
         # Runs separately to add spir-v tools to Powershell's Path.
         run: echo "$HOME/spirv-tools/install/bin" >> $env:GITHUB_PATH
-      - name: Install rustup components
-        run: rustup component add rust-src rustc-dev llvm-tools-preview
-      # Fetch dependencies in a separate step to clearly show how long each part
-      # of the testing takes
-      - name: cargo fetch
-        run: cargo fetch --target ${{ matrix.target }}
-      - name: Run tests
-        shell: bash
-        run: .github/workflows/test.sh
-
+      - run: rustup component add rust-src rustc-dev llvm-tools-preview
+      # See: https://github.com/EmbarkStudios/rust-gpu/issues/84
+      - if: ${{ runner.os == 'macOS' }}
+        run: cargo test --workspace --exclude example-runner
+      - if: ${{ runner.os != 'macOS' }}
+        run: cargo test --workspace
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      # Note that we are explicitly NOT checking out submodules, to validate
-      # that we haven't accidentally enabled spirv-tools native compilation
-      # and regressed CI times
       - uses: actions/checkout@v2
-        with:
-          submodules: "false"
-      - name: Install native dependencies
-        run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
-      - name: Install spirv-tools
-        run: |
+      - run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
+      - run: |
           mkdir "${HOME}/spirv-tools"
           curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1305/20201026-063148/install.tgz | tar -xz -C "${HOME}/spirv-tools"
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
-      - name: Install rustup components
-        run: rustup component add rustfmt clippy rust-src rustc-dev llvm-tools-preview
-      - name: Rustfmt
-        run: cargo fmt --all -- --check
-      - name: cargo fetch
-        run: cargo fetch
-      - name: Clippy
-        run: .github/workflows/clippy.sh
-
+      - run: rustup component add rustfmt clippy rust-src rustc-dev llvm-tools-preview
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
   cargo-deny:
     runs-on: ubuntu-latest
     steps:
