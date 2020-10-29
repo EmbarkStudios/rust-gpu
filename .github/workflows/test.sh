@@ -45,11 +45,11 @@ cargo_test spirv-builder
 # Examples
 # See: https://github.com/EmbarkStudios/rust-gpu/issues/84
 if [[ -z "${CI}" && "$os" != "macOS" ]]; then
-    cargo_test examples/example-runner
+    cargo_test examples/runners/ash
 fi
 
-cargo_test examples/wgpu-example-runner
+cargo_test examples/runners/wgpu
 
-cargo_test_no_features examples/example-runner-cpu
-cargo_test_no_features examples/example-shader
-cargo_test_no_features examples/wgpu-example-shader
+cargo_test_no_features examples/runners/cpu
+cargo_test_no_features examples/shaders/sky-shader
+cargo_test_no_features examples/shaders/simplest-shader
