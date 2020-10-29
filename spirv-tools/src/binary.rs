@@ -69,7 +69,7 @@ impl AsRef<[u32]> for Binary {
             Self::OwnedU8(v) => {
                 // If you hit a panic here it's because try_from wasn't used ;)
                 crate::util::to_binary(&v).unwrap()
-            },
+            }
         }
     }
 }

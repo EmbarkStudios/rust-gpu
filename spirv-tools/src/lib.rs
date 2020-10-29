@@ -1,6 +1,6 @@
 pub mod assembler;
-pub mod opt;
 pub mod binary;
+pub mod opt;
 pub mod val;
 
 pub mod error;
