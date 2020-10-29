@@ -1,7 +1,7 @@
-#[cfg(feature = "use-compiled")]
+#[cfg(feature = "use-compiled-tools")]
 pub mod compiled;
 
-#[cfg(feature = "use-installed")]
+#[cfg(feature = "use-installed-tools")]
 pub mod tool;
 
 #[derive(Copy, Clone, Default)]
@@ -38,12 +38,12 @@ pub trait Assembler: Default {
 pub fn create(te: Option<crate::TargetEnv>) -> impl Assembler {
     let target_env = te.unwrap_or_default();
 
-    #[cfg(feature = "use-compiled")]
+    #[cfg(feature = "use-compiled-tools")]
     {
         compiled::CompiledAssembler::with_env(target_env)
     }
 
-    #[cfg(all(feature = "use-installed", not(feature = "use-compiled")))]
+    #[cfg(all(feature = "use-installed-tools", not(feature = "use-compiled-tools")))]
     {
         tool::ToolAssembler::with_env(target_env)
     }

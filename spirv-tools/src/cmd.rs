@@ -77,7 +77,7 @@ pub fn exec(
 
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
-    let mut child = cmd.spawn().map_err(|e| CmdError::BinaryNotFound(e))?;
+    let mut child = cmd.spawn().map_err(CmdError::BinaryNotFound)?;
 
     if let Some(input) = input {
         use std::io::Write;
@@ -87,10 +87,10 @@ pub fn exec(
             .take()
             .unwrap()
             .write_all(input)
-            .map_err(|e| CmdError::Io(e))?;
+            .map_err(CmdError::Io)?;
     }
 
-    let output = child.wait_with_output().map_err(|e| CmdError::Io(e))?;
+    let output = child.wait_with_output().map_err(CmdError::Io)?;
 
     let code = match output.status.code() {
         Some(code) => code,
@@ -167,7 +167,7 @@ pub fn exec(
     let mut maybe_msg = true;
     for line in split(&output.stdout, b'\n') {
         if maybe_msg {
-            if let Some(s) = std::str::from_utf8(line).ok() {
+            if let Ok(s) = std::str::from_utf8(line) {
                 if let Some(msg) = crate::error::Message::parse(s) {
                     messages.push(msg);
                     continue;

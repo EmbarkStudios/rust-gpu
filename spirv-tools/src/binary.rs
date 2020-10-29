@@ -1,4 +1,4 @@
-#[cfg(feature = "use-compiled")]
+#[cfg(feature = "use-compiled-tools")]
 pub mod external {
     use spirv_tools_sys::shared;
 
@@ -39,7 +39,7 @@ pub mod external {
 }
 
 pub enum Binary {
-    #[cfg(feature = "use-compiled")]
+    #[cfg(feature = "use-compiled-tools")]
     External(self::external::ExternalBinary),
     OwnedU32(Vec<u32>),
     OwnedU8(Vec<u8>),
@@ -50,10 +50,10 @@ impl std::convert::TryFrom<Vec<u8>> for Binary {
 
     fn try_from(v: Vec<u8>) -> Result<Self, Self::Error> {
         if v.len() % std::mem::size_of::<u32>() != 0 {
-            return Err(crate::Error {
+            Err(crate::Error {
                 inner: spirv_tools_sys::shared::SpirvResult::InvalidBinary,
                 diagnostic: None,
-            });
+            })
         } else {
             Ok(Binary::OwnedU8(v))
         }
@@ -63,7 +63,7 @@ impl std::convert::TryFrom<Vec<u8>> for Binary {
 impl AsRef<[u32]> for Binary {
     fn as_ref(&self) -> &[u32] {
         match self {
-            #[cfg(feature = "use-compiled")]
+            #[cfg(feature = "use-compiled-tools")]
             Self::External(bin) => bin.as_ref(),
             Self::OwnedU32(v) => &v,
             Self::OwnedU8(v) => {
@@ -77,7 +77,7 @@ impl AsRef<[u32]> for Binary {
 impl AsRef<[u8]> for Binary {
     fn as_ref(&self) -> &[u8] {
         match self {
-            #[cfg(feature = "use-compiled")]
+            #[cfg(feature = "use-compiled-tools")]
             Self::External(bin) => bin.as_ref(),
             Self::OwnedU32(v) => crate::util::from_binary(&v),
             Self::OwnedU8(v) => &v,

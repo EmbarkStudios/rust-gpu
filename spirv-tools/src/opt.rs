@@ -1,6 +1,6 @@
-#[cfg(feature = "use-compiled")]
+#[cfg(feature = "use-compiled-tools")]
 pub mod compiled;
-#[cfg(feature = "use-installed")]
+#[cfg(feature = "use-installed-tools")]
 pub mod tool;
 
 pub use spirv_tools_sys::opt::Passes;
@@ -54,12 +54,12 @@ pub trait Optimizer {
 pub fn create(te: Option<crate::TargetEnv>) -> impl Optimizer {
     let target_env = te.unwrap_or_default();
 
-    #[cfg(feature = "use-compiled")]
+    #[cfg(feature = "use-compiled-tools")]
     {
         compiled::CompiledOptimizer::with_env(target_env)
     }
 
-    #[cfg(all(feature = "use-installed", not(feature = "use-compiled")))]
+    #[cfg(all(feature = "use-installed-tools", not(feature = "use-compiled-tools")))]
     {
         tool::ToolOptimizer::with_env(target_env)
     }

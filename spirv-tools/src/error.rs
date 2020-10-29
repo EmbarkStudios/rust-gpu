@@ -38,6 +38,7 @@ pub struct Diagnostic {
     pub is_text: bool,
 }
 
+#[cfg(feature = "use-compiled-tools")]
 impl std::convert::TryFrom<*mut diagnostics::Diagnostic> for Diagnostic {
     type Error = shared::SpirvResult;
 
@@ -101,7 +102,7 @@ pub struct Message {
 }
 
 impl Message {
-    #[cfg(feature = "use-installed")]
+    #[cfg(feature = "use-installed-tools")]
     pub(crate) fn fatal(message: String) -> Self {
         Self {
             level: MessageLevel::Fatal,
@@ -113,6 +114,7 @@ impl Message {
         }
     }
 
+    #[cfg(feature = "use-compiled-tools")]
     pub(crate) fn from_parts(
         level: MessageLevel,
         source: *const std::os::raw::c_char,
@@ -148,7 +150,7 @@ impl Message {
         }
     }
 
-    #[cfg(feature = "use-installed")]
+    #[cfg(feature = "use-installed-tools")]
     pub(crate) fn parse(s: &str) -> Option<Self> {
         s.find(": ")
             .and_then(|i| {

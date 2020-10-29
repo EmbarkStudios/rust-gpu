@@ -1,6 +1,6 @@
-#[cfg(feature = "use-compiled")]
+#[cfg(feature = "use-compiled-tools")]
 pub mod compiled;
-#[cfg(feature = "use-installed")]
+#[cfg(feature = "use-installed-tools")]
 pub mod tool;
 
 #[derive(Default, Clone)]
@@ -82,12 +82,12 @@ pub trait Validator: Default {
 pub fn create(te: Option<crate::TargetEnv>) -> impl Validator {
     let target_env = te.unwrap_or_default();
 
-    #[cfg(feature = "use-compiled")]
+    #[cfg(feature = "use-compiled-tools")]
     {
         compiled::CompiledValidator::with_env(target_env)
     }
 
-    #[cfg(all(feature = "use-installed", not(feature = "use-compiled")))]
+    #[cfg(all(feature = "use-installed-tools", not(feature = "use-compiled-tools")))]
     {
         tool::ToolValidator::with_env(target_env)
     }

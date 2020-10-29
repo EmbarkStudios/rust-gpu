@@ -219,10 +219,10 @@ fn val(build: &mut Build) {
 }
 
 fn main() {
-    if std::env::var("CARGO_FEATURE_USE_INSTALLED").is_ok()
-        && std::env::var("CARGO_FEATURE_USE_COMPILED").is_err()
+    if std::env::var("CARGO_FEATURE_USE_INSTALLED_TOOLS").is_ok()
+        && std::env::var("CARGO_FEATURE_USE_COMPILED_TOOLS").is_err()
     {
-        println!("use-installed feature on, skipping compilation of C++ code");
+        println!("cargo:warning=use-installed-tools feature on, skipping compilation of C++ code");
         return;
     }
 
