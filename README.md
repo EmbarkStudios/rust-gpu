@@ -16,7 +16,7 @@ However, many things aren't implemented yet: for example, loops and switches are
 
 ### Example
 
-![Sky shader](assets/sky.jpg)
+![Sky shader](docs/assets/sky.jpg)
 
 ```rust
 #[spirv(entry = "fragment")]
