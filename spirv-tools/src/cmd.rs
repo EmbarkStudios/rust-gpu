@@ -77,24 +77,26 @@ pub fn exec(
     input: Option<&[u8]>,
     retrieve_output: Output,
 ) -> Result<CmdOutput, CmdError> {
-    if input.is_some() {
-        cmd.stdin(Stdio::piped());
-    }
-
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
-    let mut child = cmd.spawn().map_err(CmdError::BinaryNotFound)?;
+    // Create a temp dir for the input and/or output of the tool
+    let temp_dir = tempfile::tempdir().map_err(CmdError::Io)?;
 
-    if let Some(input) = input {
-        use std::io::Write;
-
-        child
-            .stdin
-            .take()
-            .unwrap()
-            .write_all(input)
-            .map_err(CmdError::Io)?;
+    // Output
+    let output_path = temp_dir.path().join("output");
+    if retrieve_output == Output::Retrieve {
+        cmd.arg("-o").arg(&output_path);
     }
+
+    // Input
+    if let Some(input) = input {
+        let input_path = temp_dir.path().join("input");
+        std::fs::write(&input_path, input).map_err(CmdError::Io)?;
+
+        cmd.arg(&input_path);
+    }
+
+    let child = cmd.spawn().map_err(CmdError::BinaryNotFound)?;
 
     let output = child.wait_with_output().map_err(CmdError::Io)?;
 
@@ -163,35 +165,24 @@ pub fn exec(
         Split { haystack, needle }
     }
 
-    let retrieve_output = retrieve_output == Output::Retrieve;
+    let binary = match retrieve_output {
+        Output::Retrieve => std::fs::read(&output_path).map_err(CmdError::Io)?,
+        Output::Ignore => Vec::new(),
+    };
 
     // Since we are retrieving the results via stdout, but it can also contain
     // diagnostic messages, we need to be careful
     let mut messages = Vec::new();
-    let mut binary = Vec::with_capacity(if retrieve_output { 1024 } else { 0 });
 
-    let mut maybe_msg = true;
     for line in split(&output.stdout, b'\n') {
-        if maybe_msg {
-            if let Ok(s) = std::str::from_utf8(line) {
-                if let Some(msg) = crate::error::Message::parse(s) {
-                    messages.push(msg);
-                    continue;
-                }
+        if let Ok(s) = std::str::from_utf8(line) {
+            if let Some(msg) = crate::error::Message::parse(s) {
+                messages.push(msg);
+                continue;
             }
         }
 
-        if retrieve_output {
-            // Handle case where there is a '\n' in the stream, but it's not the
-            // end of an output message
-            if !maybe_msg || messages.is_empty() && !binary.is_empty() {
-                binary.push(b'\n');
-            }
-
-            binary.extend_from_slice(line);
-        }
-
-        maybe_msg = false;
+        break;
     }
 
     Ok(CmdOutput { binary, messages })

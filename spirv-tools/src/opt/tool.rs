@@ -66,8 +66,6 @@ impl Optimizer for ToolOptimizer {
             }
         }
 
-        cmd.arg("-o").arg("-");
-
         let input = crate::util::from_binary(input);
 
         let cmd_output = crate::cmd::exec(cmd, Some(input), crate::cmd::Output::Retrieve)?;
