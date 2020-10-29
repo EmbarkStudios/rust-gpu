@@ -26,6 +26,16 @@ pub enum LinkerError {
     MultipleExports(String),
     #[error("Types mismatch for {:?}", .name)]
     TypeMismatch { name: String },
+    #[error("spirv-tools error {:#}", .0)]
+    #[cfg(test)]
+    SpirvTool(spirv_tools::Error),
+}
+
+#[cfg(test)]
+impl From<spirv_tools::Error> for LinkerError {
+    fn from(err: spirv_tools::Error) -> Self {
+        Self::SpirvTool(err)
+    }
 }
 
 pub type Result<T> = std::result::Result<T, LinkerError>;
