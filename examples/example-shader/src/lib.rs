@@ -8,7 +8,7 @@
 use core::f32::consts::PI;
 use spirv_std::{Input, Mat4, MathExt, Output, Vec2, Vec3, Vec4};
 
-#[cfg(not(target_arch = "spirv"))]
+#[cfg(all(not(target_arch = "spirv"), not(feature = "no-spirv-build")))]
 pub const COMPILED_SHADER: &'static [u8] = include_bytes!(env!("example_shader.spv"));
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
