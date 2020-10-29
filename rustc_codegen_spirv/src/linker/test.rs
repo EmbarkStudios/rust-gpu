@@ -229,8 +229,6 @@ fn type_mismatch() -> Result<()> {
         result.err(),
         Some(LinkerError::TypeMismatch {
             name: "foo".to_string(),
-            import_type: "f32".to_string(),
-            export_type: "u32".to_string(),
         })
     );
     Ok(())
