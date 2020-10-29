@@ -80,9 +80,6 @@ impl MathExt for f32 {
     }
 
     fn copysign(self, sign: f32) -> f32 {
-        // TODO: replace temporary implementation with intrinsic once backend supports it https://github.com/EmbarkStudios/rust-gpu/issues/148
-        //unsafe { core::intrinsics::copysignf32(self, sign) }
-
-        f32::from_bits((self.to_bits() & (u32::max_value() >> 1)) | (sign.to_bits() & (1 << 31)))
+        unsafe { core::intrinsics::copysignf32(self, sign) }
     }
 }
