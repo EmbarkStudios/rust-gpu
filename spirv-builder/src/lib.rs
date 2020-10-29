@@ -159,7 +159,6 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
             "build-std=core",
             "--target",
             "spirv-unknown-unknown",
-            "--no-default-features",
             "--release",
         ])
         .stderr(Stdio::inherit())
