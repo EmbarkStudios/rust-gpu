@@ -855,7 +855,7 @@ fn main() {
         base.device
             .bind_buffer_memory(vertex_input_buffer, vertex_input_buffer_memory, 0)
             .unwrap();
-        let mut spv_file = Cursor::new(&include_bytes!(env!("example_shader.spv"))[..]);
+        let mut spv_file = Cursor::new(example_shader::COMPILED_SHADER);
         let code = read_spv(&mut spv_file).expect("Failed to read spv file");
         let shader_info = vk::ShaderModuleCreateInfo::builder().code(&code);
 

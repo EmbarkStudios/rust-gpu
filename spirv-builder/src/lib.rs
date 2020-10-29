@@ -71,6 +71,10 @@ impl SpirvBuilder {
     /// you usually don't have to inspect the path, as the environment variable will already be
     /// set.
     pub fn build(self) -> Result<PathBuf, SpirvBuilderError> {
+        if std::env::var("TARGETING_SPIRV").is_ok() {
+            return Ok(PathBuf::new());
+        }
+
         let spirv_module = invoke_rustc(&self)?;
         let env_var = spirv_module.file_name().unwrap().to_str().unwrap();
         if self.print_metadata {
@@ -155,11 +159,13 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
             "build-std=core",
             "--target",
             "spirv-unknown-unknown",
+            "--no-default-features",
             "--release",
         ])
         .stderr(Stdio::inherit())
         .current_dir(&builder.path_to_crate)
         .env("RUSTFLAGS", rustflags)
+        .env("TARGETING_SPIRV", "1")
         .output()
         .expect("failed to execute cargo build");
     if build.status.success() {
