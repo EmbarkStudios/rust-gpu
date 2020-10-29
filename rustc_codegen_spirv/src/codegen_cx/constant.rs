@@ -11,7 +11,6 @@ use rustc_middle::ty::layout::TyAndLayout;
 use rustc_mir::interpret::Scalar;
 use rustc_span::symbol::Symbol;
 use rustc_target::abi::{self, AddressSpace, HasDataLayout, LayoutOf, Primitive, Size};
-use std::ops::Range;
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn constant_u8(&self, val: u8) -> SpirvValue {
@@ -405,7 +404,6 @@ impl<'tcx> CodegenCx<'tcx> {
                     "create_const_alloc must consume all bytes of an Allocation after an unsized struct"
                 );
                 }
-                Self::assert_uninit(alloc, base, *offset, occupied_spaces);
                 self.constant_composite(ty, values)
             }
             SpirvType::Opaque { name } => self.tcx.sess.fatal(&format!(
@@ -507,22 +505,5 @@ impl<'tcx> CodegenCx<'tcx> {
         let &((), alloc_id) = alloc.relocations().get(&Size::from_bytes(off)).unwrap();
         *offset += Size::from_bytes(len);
         Pointer::new_with_tag(alloc_id, Size::from_bytes(inner_offset), ())
-    }
-
-    fn assert_uninit(
-        alloc: &Allocation,
-        start: Size,
-        end: Size,
-        occupied_ranges: Vec<Range<Size>>,
-    ) {
-        // Range<Size> doesn't impl Iterator, so manually do it.
-        let mut index = start;
-        while index < end {
-            assert_eq!(
-                occupied_ranges.iter().any(|range| range.contains(&index)),
-                alloc.init_mask().get(index)
-            );
-            index += Size::from_bytes(1);
-        }
     }
 }
