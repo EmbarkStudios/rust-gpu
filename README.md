@@ -1,10 +1,9 @@
 # 🐉 Rust GPU
 
-[![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
-[![API Documentation](https://img.shields.io/badge/docs-main-blue)](https://embarkstudios.github.io/rust-gpu/api/rustc_codegen_spirv)
-[![dependency status](https://deps.rs/repo/github/EmbarkStudios/rust-gpu/status.svg)](https://deps.rs/repo/github/EmbarkStudios/rust-gpu)
-[![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](http://embark.dev)
+[![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](https://embark.dev)
 [![Embark](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
+[![dependency status](https://deps.rs/repo/github/EmbarkStudios/rust-gpu/status.svg)](https://deps.rs/repo/github/EmbarkStudios/rust-gpu)
+[![Build status](https://github.com/EmbarkStudios/rust-gpu/workflows/Continuous%20integration/badge.svg?branch=main)](https://github.com/EmbarkStudios/rust-gpu/actions)
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
@@ -90,11 +89,15 @@ There are a few different components to this repo:
 - [spirv-std](spirv-std) for GPU intrinsics, types, and other library items used by GPU crates.
 - [spirv-builder](spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
 
-## Getting started
+## Contributing
 
-We welcome community contributions to this project. If you would like to get started, be sure to checkout the [`rust-gpu` dev guide][gpu-guide] and our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
+[![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4-ff69b4.svg)](CODE_OF_CONDUCT.md)
 
-[gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
+We welcome community contributions to this project.
+
+If you would like to get started, be sure to checkout the [`rust-gpu` dev guide][gpu-guide] and our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
+
+[gpu-guide]: https://embarkstudios.github.io/rust-gpu/
 
 ## License
 
