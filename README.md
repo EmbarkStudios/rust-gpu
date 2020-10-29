@@ -97,7 +97,7 @@ We welcome community contributions to this project.
 
 If you would like to get started, be sure to checkout the [`rust-gpu` dev guide][gpu-guide] and our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
 
-[gpu-guide]: https://embarkstudios.github.io/rust-gpu/
+[gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
 
 ## License
 
