@@ -1,4 +1,5 @@
 mod basic;
+mod control_flow;
 
 use lazy_static::lazy_static;
 use rustc_codegen_spirv::rspirv;
