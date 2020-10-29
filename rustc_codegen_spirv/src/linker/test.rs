@@ -12,54 +12,26 @@ impl<'a> std::fmt::Debug for PrettyString<'a> {
     }
 }
 
-fn assemble_spirv(spirv: &str) -> Vec<u8> {
-    use std::process::Command;
-    use tempfile::tempdir;
+fn assemble_spirv(spirv: &str) -> Result<Vec<u8>> {
+    use spirv_tools::assembler::{self, Assembler};
 
-    let temp = tempdir().expect("Unable to create temp dir");
-    let input = temp.path().join("code.txt");
-    let output = temp.path().join("code.spv");
+    let assembler = assembler::create(None);
 
-    std::fs::write(&input, spirv).unwrap();
+    let spv_binary = assembler.assemble(spirv, assembler::AssemblerOptions::default())?;
 
-    let process = Command::new("spirv-as")
-        .arg(input.to_str().unwrap())
-        .arg("-o")
-        .arg(output.to_str().unwrap())
-        .output()
-        .expect("failed to execute process");
-
-    println!("status: {}", process.status);
-    println!("stdout: {}", String::from_utf8_lossy(&process.stdout));
-    println!("stderr: {}", String::from_utf8_lossy(&process.stderr));
-
-    assert!(process.status.success());
-
-    std::fs::read(&output).unwrap()
+    let contents: &[u8] = spv_binary.as_ref();
+    Ok(contents.to_vec())
 }
 
 #[allow(unused)]
 fn validate(spirv: &[u32]) {
-    use std::process::Command;
-    use tempfile::tempdir;
+    use spirv_tools::val::{self, Validator};
 
-    let temp = tempdir().expect("Unable to create temp dir");
-    let input = temp.path().join("code.spv");
+    let validator = val::create(None);
 
-    let spirv = unsafe { std::slice::from_raw_parts(spirv.as_ptr() as *const u8, spirv.len() * 4) };
-
-    std::fs::write(&input, spirv).unwrap();
-
-    let process = Command::new("spirv-val.exe")
-        .arg(input.to_str().unwrap())
-        .output()
-        .expect("failed to execute process");
-
-    println!("status: {}", process.status);
-    println!("stdout: {}", String::from_utf8_lossy(&process.stdout));
-    println!("stderr: {}", String::from_utf8_lossy(&process.stderr));
-
-    assert!(process.status.success());
+    validator
+        .validate(spirv, None)
+        .expect("validation error occurred");
 }
 
 fn load(bytes: &[u8]) -> Module {
@@ -126,7 +98,7 @@ fn standard() -> Result<()> {
         %2 = OpTypeFloat 32
         %1 = OpVariable %2 Uniform
         %3 = OpVariable %2 Input"#,
-    );
+    )?;
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -135,7 +107,7 @@ fn standard() -> Result<()> {
         %3 = OpConstant %2 42
         %1 = OpVariable %2 Uniform %3
         "#,
-    );
+    )?;
 
     let result = assemble_and_link(&[&a, &b])?;
     let expect = r#"%1 = OpTypeFloat 32
@@ -154,7 +126,7 @@ fn not_a_lib_extra_exports() -> Result<()> {
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform"#,
-    );
+    )?;
 
     let result = assemble_and_link(&[&a])?;
     let expect = r#"%1 = OpTypeFloat 32
@@ -191,9 +163,9 @@ fn unresolved_symbol() -> Result<()> {
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform"#,
-    );
+    )?;
 
-    let b = assemble_spirv("OpCapability Linkage");
+    let b = assemble_spirv("OpCapability Linkage")?;
 
     let result = assemble_and_link(&[&a, &b]);
 
@@ -213,7 +185,7 @@ fn type_mismatch() -> Result<()> {
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
             %3 = OpVariable %2 Input"#,
-    );
+    )?;
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -222,7 +194,7 @@ fn type_mismatch() -> Result<()> {
             %3 = OpConstant %2 42
             %1 = OpVariable %2 Uniform %3
         "#,
-    );
+    )?;
 
     let result = assemble_and_link(&[&a, &b]);
     assert_eq!(
@@ -242,7 +214,7 @@ fn multiple_definitions() -> Result<()> {
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
             %3 = OpVariable %2 Input"#,
-    );
+    )?;
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -251,7 +223,7 @@ fn multiple_definitions() -> Result<()> {
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 42
             %1 = OpVariable %2 Uniform %3"#,
-    );
+    )?;
 
     let c = assemble_spirv(
         r#"OpCapability Linkage
@@ -259,7 +231,7 @@ fn multiple_definitions() -> Result<()> {
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 -1
             %1 = OpVariable %2 Uniform %3"#,
-    );
+    )?;
 
     let result = assemble_and_link(&[&a, &b, &c]);
     assert_eq!(
@@ -277,7 +249,7 @@ fn multiple_definitions_different_types() -> Result<()> {
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
             %3 = OpVariable %2 Input"#,
-    );
+    )?;
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -286,7 +258,7 @@ fn multiple_definitions_different_types() -> Result<()> {
             %2 = OpTypeInt 32 0
             %3 = OpConstant %2 42
             %1 = OpVariable %2 Uniform %3"#,
-    );
+    )?;
 
     let c = assemble_spirv(
         r#"OpCapability Linkage
@@ -294,7 +266,7 @@ fn multiple_definitions_different_types() -> Result<()> {
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 12
             %1 = OpVariable %2 Uniform %3"#,
-    );
+    )?;
 
     let result = assemble_and_link(&[&a, &b, &c]);
     assert_eq!(
@@ -343,7 +315,7 @@ fn func_ctrl() -> Result<()> {
             %5 = OpVariable %4 Uniform
             %1 = OpFunction %2 None %3
             OpFunctionEnd"#,
-    );
+    )?;
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -354,7 +326,7 @@ fn func_ctrl() -> Result<()> {
             %4 = OpLabel
             OpReturn
             OpFunctionEnd"#,
-    );
+    )?;
 
     let result = assemble_and_link(&[&a, &b])?;
 
@@ -390,7 +362,7 @@ fn use_exported_func_param_attr() -> Result<()> {
             %4 = OpFunctionParameter %6
             OpFunctionEnd
             "#,
-    );
+    )?;
 
     let b = assemble_spirv(
         r#"OpCapability Kernel
@@ -406,7 +378,7 @@ fn use_exported_func_param_attr() -> Result<()> {
             OpReturn
             OpFunctionEnd
             "#,
-    );
+    )?;
 
     let result = assemble_and_link(&[&a, &b])?;
 
@@ -454,7 +426,7 @@ fn names_and_decorations() -> Result<()> {
             %4 = OpFunctionParameter %9
             OpFunctionEnd
             "#,
-    );
+    )?;
 
     let b = assemble_spirv(
         r#"OpCapability Kernel
@@ -473,7 +445,7 @@ fn names_and_decorations() -> Result<()> {
             OpReturn
             OpFunctionEnd
             "#,
-    );
+    )?;
 
     let result = assemble_and_link(&[&a, &b])?;
 
