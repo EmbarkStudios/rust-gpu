@@ -1,31 +1,26 @@
 use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
-use rustc_codegen_ssa::{
-    back::{
-        lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared},
-        write::CodegenContext,
-    },
-    CodegenResults,
-};
-use rustc_data_structures::{owning_ref::OwningRef, rustc_erase_owner, sync::MetadataRef};
+use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
+use rustc_codegen_ssa::back::write::CodegenContext;
+use rustc_codegen_ssa::CodegenResults;
+use rustc_data_structures::owning_ref::OwningRef;
+use rustc_data_structures::rustc_erase_owner;
+use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::FatalError;
-use rustc_middle::{
-    bug, dep_graph::WorkProduct, middle::cstore::NativeLib, middle::dependency_format::Linkage,
-};
-use rustc_session::{
-    config::{CrateType, Lto, OutputFilenames, OutputType},
-    output::{check_file_is_writeable, invalid_output_for_target, out_filename},
-    utils::NativeLibKind,
-    Session,
-};
-use std::{
-    collections::HashSet,
-    env,
-    ffi::{CString, OsStr},
-    fs::File,
-    io::{Read, Write},
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use rustc_middle::bug;
+use rustc_middle::dep_graph::WorkProduct;
+use rustc_middle::middle::cstore::NativeLib;
+use rustc_middle::middle::dependency_format::Linkage;
+use rustc_session::config::{CrateType, Lto, OutputFilenames, OutputType};
+use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
+use rustc_session::utils::NativeLibKind;
+use rustc_session::Session;
+use std::collections::HashSet;
+use std::env;
+use std::ffi::{CString, OsStr};
+use std::fs::File;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use tar::{Archive, Builder, Header};
 
 pub fn link<'a>(
