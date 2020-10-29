@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ex
+set -e
 
 if [[ -z "${CI}" ]]; then
     FEAT="use-compiled-tools"

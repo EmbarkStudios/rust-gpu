@@ -53,19 +53,8 @@ jobs:
       # of the testing takes
       - name: cargo fetch
         run: cargo fetch
-      # See: https://github.com/EmbarkStudios/rust-gpu/issues/84
-      - if: ${{ runner.os == 'macOS' }}
-        name: Mac build tests
-        run: cargo test --exclude example-runner --no-run
-      - if: ${{ runner.os == 'macOS' }}
-        name: Mac run tests
-        run: cargo test --exclude example-runner
-      - if: ${{ runner.os != 'macOS' }}
-        name: Build tests
-        run: cargo test --no-run
-      - if: ${{ runner.os != 'macOS' }}
-        name: Run tests
-        run: cargo test
+      - name: Run tests
+        run: .github/workflows/test.sh
 
   lint:
     name: Lint
@@ -91,7 +80,7 @@ jobs:
       - name: cargo fetch
         run: cargo fetch
       - name: Clippy
-        run: .github/workflows/run_clippy.sh
+        run: .github/workflows/clippy.sh
 
   cargo-deny:
     runs-on: ubuntu-latest
