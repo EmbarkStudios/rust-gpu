@@ -1,5 +1,4 @@
-use super::ty::trans_aggregate_type;
-use super::{print_type, DefAnalyzer, LinkerError, Result};
+use super::{LinkerError, Result};
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
 use std::collections::{HashMap, HashSet};
@@ -15,7 +14,8 @@ pub fn run(module: &mut Module) -> Result<()> {
 fn find_import_export_pairs_and_killed_params(
     module: &Module,
 ) -> Result<(HashMap<u32, u32>, HashSet<u32>)> {
-    let defs = DefAnalyzer::new(module);
+    let type_map = get_type_map(module);
+    let fn_parameters = fn_parameters(module);
 
     // Map from name -> (definition, type)
     let mut exports = HashMap::new();
@@ -29,7 +29,7 @@ fn find_import_export_pairs_and_killed_params(
             Some((id, name, LinkageType::Export)) => (id, name),
             _ => continue,
         };
-        let type_id = get_type_for_link(&defs, id);
+        let type_id = *type_map.get(&id).expect("Unexpected op");
         if exports.insert(name, (id, type_id)).is_some() {
             return Err(LinkerError::MultipleExports(name.to_string()));
         }
@@ -46,12 +46,14 @@ fn find_import_export_pairs_and_killed_params(
             }
             Some(&x) => x,
         };
-        let import_type = get_type_for_link(&defs, import_id);
+        let import_type = *type_map.get(&import_id).expect("Unexpected op");
         // Make sure the import/export pair has the same type.
-        check_tys_equal(&defs, name, import_type, export_type)?;
+        check_tys_equal(name, import_type, export_type)?;
         rewrite_rules.insert(import_id, export_id);
-        for param in fn_parameters(module, &defs, import_id) {
-            killed_parameters.insert(param);
+        if let Some(params) = fn_parameters.get(&import_id) {
+            for &param in params {
+                killed_parameters.insert(param);
+            }
         }
     }
 
@@ -71,64 +73,36 @@ fn get_linkage_inst(inst: &Instruction) -> Option<(Word, &str, LinkageType)> {
     }
 }
 
-fn get_type_for_link(defs: &DefAnalyzer<'_>, id: Word) -> Word {
-    let def_inst = defs
-        .def(id)
-        .unwrap_or_else(|| panic!("Need a matching op for ID {}", id));
-
-    match def_inst.class.opcode {
-        Op::Variable => def_inst.result_type.unwrap(),
-        // Note: the result_type of OpFunction is the return type, not the function type. The
-        // function type is in operands[1].
-        Op::Function => def_inst.operands[1].unwrap_id_ref(),
-        _ => panic!("Unexpected op"),
-    }
+fn get_type_map(module: &Module) -> HashMap<Word, Word> {
+    let vars = module
+        .types_global_values
+        .iter()
+        .filter(|i| i.class.opcode == Op::Variable)
+        .map(|i| (i.result_id.unwrap(), i.result_type.unwrap()));
+    let fns = module.functions.iter().map(|i| {
+        let d = i.def.as_ref().unwrap();
+        (d.result_id.unwrap(), d.operands[1].unwrap_id_ref())
+    });
+    vars.chain(fns).collect()
 }
 
-fn fn_parameters<'a>(
-    module: &'a Module,
-    defs: &DefAnalyzer<'_>,
-    id: Word,
-) -> impl IntoIterator<Item = Word> + 'a {
-    let def_inst = defs
-        .def(id)
-        .unwrap_or_else(|| panic!("Need a matching op for ID {}", id));
-
-    match def_inst.class.opcode {
-        Op::Variable => &[],
-        Op::Function => {
-            &module
-                .functions
-                .iter()
-                .find(|f| f.def.as_ref().unwrap().result_id == def_inst.result_id)
-                .unwrap()
-                .parameters as &[Instruction]
-        }
-        _ => panic!("Unexpected op"),
-    }
-    .iter()
-    .map(|p| p.result_id.unwrap())
+fn fn_parameters(module: &Module) -> HashMap<Word, Vec<Word>> {
+    module
+        .functions
+        .iter()
+        .map(|f| {
+            let params = f.parameters.iter().map(|i| i.result_id.unwrap()).collect();
+            (f.def_id().unwrap(), params)
+        })
+        .collect()
 }
 
-fn check_tys_equal(
-    defs: &DefAnalyzer<'_>,
-    name: &str,
-    import_type_id: Word,
-    export_type_id: Word,
-) -> Result<()> {
-    let import_type = defs.def(import_type_id).unwrap();
-    let export_type = defs.def(export_type_id).unwrap();
-
-    let imp = trans_aggregate_type(defs, import_type);
-    let exp = trans_aggregate_type(defs, export_type);
-
-    if imp == exp {
+fn check_tys_equal(name: &str, import_type: Word, export_type: Word) -> Result<()> {
+    if import_type == export_type {
         Ok(())
     } else {
         Err(LinkerError::TypeMismatch {
             name: name.to_string(),
-            import_type: print_type(defs, import_type),
-            export_type: print_type(defs, export_type),
         })
     }
 }
