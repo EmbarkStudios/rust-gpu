@@ -16,7 +16,12 @@ jobs:
     env:
       spirv_tools_version: "20200928"
     steps:
+      # Note that we are explicitly NOT checking out submodules, to validate
+      # that we haven't accidentally enabled spirv-tools native compilation
+      # and regressed CI times
       - uses: actions/checkout@v2
+        with:
+          submodules: "false"
       # Ubuntu does have `brew install spirv-tools`, but it installs from
       # source and so takes >8 minutes.
       - if: ${{ runner.os == 'Linux' }}
@@ -61,11 +66,17 @@ jobs:
       - if: ${{ runner.os != 'macOS' }}
         name: Run tests
         run: cargo test
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
+      # Note that we are explicitly NOT checking out submodules, to validate
+      # that we haven't accidentally enabled spirv-tools native compilation
+      # and regressed CI times
       - uses: actions/checkout@v2
+        with:
+          submodules: "false"
       - name: Install native dependencies
         run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
       - name: Install spirv-tools
