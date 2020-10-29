@@ -191,8 +191,9 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
 
     match result {
         Ok(binary) => Vec::from(binary.as_ref()),
-        Err(_) => {
-            let mut err = sess.struct_warn("spirv-opt failed, leaving as unoptimized");
+        Err(e) => {
+            let mut err = sess.struct_warn(&e.to_string());
+            err.note("spirv-opt failed, leaving as unoptimized");
             err.note(&format!("module {:?}", filename));
             spv_binary
         }
@@ -204,8 +205,9 @@ fn do_spirv_val(sess: &Session, spv_binary: &[u32], filename: &Path) {
 
     let validator = val::create(None);
 
-    if validator.validate(spv_binary, None).is_err() {
-        let mut err = sess.struct_err("error occurred during validation");
+    if let Err(e) = validator.validate(spv_binary, None) {
+        let mut err = sess.struct_err(&e.to_string());
+        err.note("spirv-val failed");
         err.note(&format!("module {:?}", filename));
         err.emit();
     }
