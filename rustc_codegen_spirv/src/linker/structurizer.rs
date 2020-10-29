@@ -337,7 +337,7 @@ fn block_is_parent_of(parent: Word, child: Word, blocks: &[Block]) -> bool {
     false
 }
 
-// Returns the idx of the branch that loops and the idx to the block that branches to the orignial block.
+// Returns the idx of the branch that loops and the idx to the block that branches to the original block.
 fn get_looping_branch_from_block(
     blocks: &[Block],
     cf_info: &ControlFlowInfo,
