@@ -32,7 +32,7 @@ impl From<CmdError> for crate::error::Error {
                 ),
             },
             CmdError::ToolErrors {
-                exit_code: _,
+                exit_code,
                 messages,
             } => {
                 // The C API just puts the last message as the diagnostic, so just do the
@@ -40,11 +40,12 @@ impl From<CmdError> for crate::error::Error {
                 let diagnostic = messages
                     .into_iter()
                     .last()
-                    .map(crate::error::Diagnostic::from);
+                    .map(crate::error::Diagnostic::from)
+                    .unwrap_or_else(|| crate::error::Diagnostic::from(format!("tool exited with code {} and no output", exit_code)));
 
                 Self {
                     inner: SpirvResult::InternalError, // this isn't really correct
-                    diagnostic,
+                    diagnostic: Some(diagnostic),
                 }
             }
         }
