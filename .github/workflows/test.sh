@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-if [[ -z "${CI}" ]]; then
-    FEAT="use-compiled-tools"
-else
-    FEAT="use-installed-tools"
-fi
+FEAT="use-compiled-tools"
+# if [[ -z "${CI}" ]]; then
+#     FEAT="use-compiled-tools"
+# else
+#     FEAT="use-installed-tools"
+# fi
 
 os=$1
 
