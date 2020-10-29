@@ -3,19 +3,16 @@ mod test;
 
 mod capability_computation;
 mod dce;
-mod def_analyzer;
 mod duplicates;
 mod import_export_link;
 mod inline;
 mod mem2reg;
 mod simple_passes;
 mod structurizer;
-mod ty;
 mod zombies;
 
-use def_analyzer::DefAnalyzer;
 use rspirv::binary::Consumer;
-use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
+use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader};
 use rspirv::spirv::{Op, Word};
 use rustc_session::Session;
 use std::collections::HashMap;
@@ -27,12 +24,8 @@ pub enum LinkerError {
     UnresolvedSymbol(String),
     #[error("Multiple exports found for {:?}", .0)]
     MultipleExports(String),
-    #[error("Types mismatch for {:?}, imported with type {:?}, exported with type {:?}", .name, .import_type, .export_type)]
-    TypeMismatch {
-        name: String,
-        import_type: String,
-        export_type: String,
-    },
+    #[error("Types mismatch for {:?}", .name)]
+    TypeMismatch { name: String },
 }
 
 pub type Result<T> = std::result::Result<T, LinkerError>;
@@ -49,18 +42,6 @@ fn id(header: &mut ModuleHeader) -> Word {
     let result = header.bound;
     header.bound += 1;
     result
-}
-
-fn print_type(defs: &DefAnalyzer<'_>, ty: &Instruction) -> String {
-    format!("{}", ty::trans_aggregate_type(defs, ty).unwrap())
-}
-
-fn extract_literal_int_as_u64(op: &Operand) -> u64 {
-    match op {
-        Operand::LiteralInt32(v) => (*v).into(),
-        Operand::LiteralInt64(v) => *v,
-        _ => panic!("Unexpected literal int"),
-    }
 }
 
 fn apply_rewrite_rules(rewrite_rules: &HashMap<Word, Word>, blocks: &mut [Block]) {
@@ -127,12 +108,6 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
         output
     };
 
-    // find import / export pairs
-    {
-        let _timer = timer("link_find_pairs");
-        import_export_link::run(&mut output)?;
-    }
-
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     {
         let _timer = timer("link_remove_duplicates");
@@ -141,6 +116,12 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
         duplicates::remove_duplicate_ext_inst_imports(&mut output);
         duplicates::remove_duplicate_types(&mut output);
         // jb-todo: strip identical OpDecoration / OpDecorationGroups
+    }
+
+    // find import / export pairs
+    {
+        let _timer = timer("link_find_pairs");
+        import_export_link::run(&mut output)?;
     }
 
     {
