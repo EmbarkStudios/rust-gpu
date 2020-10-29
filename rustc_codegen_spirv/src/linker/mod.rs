@@ -134,6 +134,16 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
         inline::inline(&mut output);
     }
 
+    if opts.dce {
+        let _timer = timer("link_dce");
+        dce::dce(&mut output);
+    }
+
+    if opts.structurize {
+        let _timer = timer("link_structurize");
+        structurizer::structurize(sess, &mut output);
+    }
+
     {
         let _timer = timer("link_block_ordering_pass_and_mem2reg");
         let mut pointer_to_pointee = HashMap::new();
@@ -178,18 +188,6 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
     {
         let _timer = timer("link_sort_globals");
         simple_passes::sort_globals(&mut output);
-    }
-
-    if opts.dce {
-        let _timer = timer("link_dce");
-        dce::dce(&mut output);
-    }
-
-    if opts.structurize {
-        let _timer = timer("link_structurize");
-        for func in &mut output.functions {
-            structurizer::structurize(sess, output.header.as_mut().unwrap(), func);
-        }
     }
 
     {
