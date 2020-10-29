@@ -37,7 +37,7 @@ how to use and develop on Rust-GPU.
     cargo run --bin example-runner-wgpu
     ```
 
-    This will build `rustc_codegen_spirv`, the compiler, then use that compiler to build `example-shader` into a SPIR-V module, then finally, build a `wgpu` sample app (modified from [`wgpu`'s examples](https://github.com/gfx-rs/wgpu-rs/tree/master/examples/hello-triangle)) using the built SPIR-V module to display the shader in a window.
+    This will build `rustc_codegen_spirv`, the compiler, then use that compiler to build [`sky-shader`](examples/shaders/sky-shader) into a SPIR-V module, then finally, build a `wgpu` sample app (modified from [`wgpu`'s examples](https://github.com/gfx-rs/wgpu-rs/tree/master/examples/hello-triangle)) using the built SPIR-V module to display the shader in a window.
 
     All of this is orchestrated by the [spirv-builder](spirv-builder) crate, which is used in each of the example runners' [`build.rs` files](examples/runners/wgpu/build.rs). Please look at that file, as well as both example projects in general, to see how to set up your own shaders!
 
@@ -62,7 +62,7 @@ cargo build -Z build-std=core --target spirv-unknown-unknown --release
 
 This will produce a `target/spirv-unknown-unknown/release/crate_name.spv` file.
 
-To create a GPU crate, look at the [examples/example-shader](examples/example-shader) crate. In short, reference the `spirv-std` crate, and use intrinsics defined there to create your shader.
+To create a GPU crate, look at the crates in [examples/shaders](examples/shaders). In short, reference the `spirv-std` crate, and use intrinsics defined there to create your shader.
 
 This is all a little convoluted, hence the [spirv-builder](spirv-builder) crate handles a lot of this.
 

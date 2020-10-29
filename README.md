@@ -37,7 +37,7 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
 }
 ```
 
-See [source](examples/example-shader/src/lib.rs) for full details.
+See [source](examples/shaders/sky-shader/src/lib.rs) for full details.
 
 ## Background
 
