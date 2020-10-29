@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ansi_term-0.12.1/src/display.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>display.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ansi_term-0.11.0/src/display.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>display.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../ansi_term/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -280,23 +280,6 @@
 <span id="277">277</span>
 <span id="278">278</span>
 <span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
-<span id="283">283</span>
-<span id="284">284</span>
-<span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
-<span id="296">296</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
@@ -309,9 +292,9 @@
 <span class="kw">use</span> <span class="ident">write</span>::<span class="ident">AnyWrite</span>;
 
 
-<span class="doccomment">/// An `ANSIGenericString` includes a generic string type and a `Style` to</span>
-<span class="doccomment">/// display that string.  `ANSIString` and `ANSIByteString` are aliases for</span>
-<span class="doccomment">/// this type on `str` and `\[u8]`, respectively.</span>
+<span class="doccomment">/// An `ANSIGenericString` includes a generic string type and a `Style` to</span>
+<span class="doccomment">/// display that string.  `ANSIString` and `ANSIByteString` are aliases for</span>
+<span class="doccomment">/// this type on `str` and `[u8]`, respectively.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>
 <span class="kw">where</span> <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">ToOwned</span><span class="op">&gt;</span>::<span class="ident">Owned</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span> {
@@ -320,17 +303,17 @@
 }
 
 
-<span class="doccomment">/// Cloning an `ANSIGenericString` will clone its underlying string.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use ansi_term::ANSIString;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let plain_string = ANSIString::from(&quot;a plain string&quot;);</span>
-<span class="doccomment">/// let clone_string = plain_string.clone();</span>
-<span class="doccomment">/// assert_eq!(clone_string, plain_string);</span>
-<span class="doccomment">/// ```</span>
+<span class="doccomment">/// Cloning an `ANSIGenericString` will clone its underlying string.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ### Examples</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use ansi_term::ANSIString;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let plain_string = ANSIString::from(&quot;a plain string&quot;);</span>
+<span class="doccomment">/// let clone_string = plain_string.clone();</span>
+<span class="doccomment">/// assert_eq!(clone_string, plain_string);</span>
+<span class="doccomment">/// ```</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>
 <span class="kw">where</span> <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">ToOwned</span><span class="op">&gt;</span>::<span class="ident">Owned</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span> {
     <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span> {
@@ -341,55 +324,55 @@
     }
 }
 
-<span class="comment">// You might think that the hand-written Clone impl above is the same as the</span>
-<span class="comment">// one that gets generated with #[derive]. But it’s not *quite* the same!</span>
-<span class="comment">//</span>
-<span class="comment">// `str` is not Clone, and the derived Clone implementation puts a Clone</span>
-<span class="comment">// constraint on the S type parameter (generated using --pretty=expanded):</span>
-<span class="comment">//</span>
-<span class="comment">//                  ↓_________________↓</span>
-<span class="comment">//     impl &lt;&#39;a, S: ::std::clone::Clone + &#39;a + ToOwned + ?Sized&gt; ::std::clone::Clone</span>
-<span class="comment">//     for ANSIGenericString&lt;&#39;a, S&gt; where</span>
-<span class="comment">//     &lt;S as ToOwned&gt;::Owned: fmt::Debug { ... }</span>
-<span class="comment">//</span>
-<span class="comment">// This resulted in compile errors when you tried to derive Clone on a type</span>
-<span class="comment">// that used it:</span>
-<span class="comment">//</span>
-<span class="comment">//     #[derive(PartialEq, Debug, Clone, Default)]</span>
-<span class="comment">//     pub struct TextCellContents(Vec&lt;ANSIString&lt;&#39;static&gt;&gt;);</span>
-<span class="comment">//                                 ^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-<span class="comment">//     error[E0277]: the trait `std::clone::Clone` is not implemented for `str`</span>
-<span class="comment">//</span>
-<span class="comment">// The hand-written impl above can ignore that constraint and still compile.</span>
+<span class="comment">// You might think that the hand-written Clone impl above is the same as the</span>
+<span class="comment">// one that gets generated with #[derive]. But it’s not *quite* the same!</span>
+<span class="comment">//</span>
+<span class="comment">// `str` is not Clone, and the derived Clone implementation puts a Clone</span>
+<span class="comment">// constraint on the S type parameter (generated using --pretty=expanded):</span>
+<span class="comment">//</span>
+<span class="comment">//                  ↓_________________↓</span>
+<span class="comment">//     impl &lt;&#39;a, S: ::std::clone::Clone + &#39;a + ToOwned + ?Sized&gt; ::std::clone::Clone</span>
+<span class="comment">//     for ANSIGenericString&lt;&#39;a, S&gt; where</span>
+<span class="comment">//     &lt;S as ToOwned&gt;::Owned: fmt::Debug { ... }</span>
+<span class="comment">//</span>
+<span class="comment">// This resulted in compile errors when you tried to derive Clone on a type</span>
+<span class="comment">// that used it:</span>
+<span class="comment">//</span>
+<span class="comment">//     #[derive(PartialEq, Debug, Clone, Default)]</span>
+<span class="comment">//     pub struct TextCellContents(Vec&lt;ANSIString&lt;&#39;static&gt;&gt;);</span>
+<span class="comment">//                                 ^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="comment">//     error[E0277]: the trait `std::clone::Clone` is not implemented for `str`</span>
+<span class="comment">//</span>
+<span class="comment">// The hand-written impl above can ignore that constraint and still compile.</span>
 
 
 
-<span class="doccomment">/// An ANSI String is a string coupled with the `Style` to display it</span>
-<span class="doccomment">/// in a terminal.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Although not technically a string itself, it can be turned into</span>
-<span class="doccomment">/// one with the `to_string` method.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use ansi_term::ANSIString;</span>
-<span class="doccomment">/// use ansi_term::Colour::Red;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let red_string = Red.paint(&quot;a red string&quot;);</span>
-<span class="doccomment">/// println!(&quot;{}&quot;, red_string);</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use ansi_term::ANSIString;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let plain_string = ANSIString::from(&quot;a plain string&quot;);</span>
-<span class="doccomment">/// assert_eq!(&amp;*plain_string, &quot;a plain string&quot;);</span>
-<span class="doccomment">/// ```</span>
+<span class="doccomment">/// An ANSI String is a string coupled with the `Style` to display it</span>
+<span class="doccomment">/// in a terminal.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Although not technically a string itself, it can be turned into</span>
+<span class="doccomment">/// one with the `to_string` method.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ### Examples</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```no_run</span>
+<span class="doccomment">/// use ansi_term::ANSIString;</span>
+<span class="doccomment">/// use ansi_term::Colour::Red;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let red_string = Red.paint(&quot;a red string&quot;);</span>
+<span class="doccomment">/// println!(&quot;{}&quot;, red_string);</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use ansi_term::ANSIString;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let plain_string = ANSIString::from(&quot;a plain string&quot;);</span>
+<span class="doccomment">/// assert_eq!(&amp;*plain_string, &quot;a plain string&quot;);</span>
+<span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ANSIString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">str</span><span class="op">&gt;</span>;
 
-<span class="doccomment">/// An `ANSIByteString` represents a formatted series of bytes.  Use</span>
-<span class="doccomment">/// `ANSIByteString` when styling text with an unknown encoding.</span>
+<span class="doccomment">/// An `ANSIByteString` represents a formatted series of bytes.  Use</span>
+<span class="doccomment">/// `ANSIByteString` when styling text with an unknown encoding.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ANSIByteString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">u8</span>]<span class="op">&gt;</span>;
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>
@@ -403,20 +386,6 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>
-    <span class="kw">where</span> <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">ToOwned</span><span class="op">&gt;</span>::<span class="ident">Owned</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span> {
-
-    <span class="doccomment">/// Directly access the style</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">style_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Style</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">style</span>
-    }
-
-    <span class="doccomment">/// Directly access the style mutably</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">style_ref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Style</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">style</span>
-    }
-}
-
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>
 <span class="kw">where</span> <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">ToOwned</span><span class="op">&gt;</span>::<span class="ident">Owned</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span> {
     <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">S</span>;
@@ -427,40 +396,38 @@
 }
 
 
-<span class="doccomment">/// A set of `ANSIGenericString`s collected together, in order to be</span>
-<span class="doccomment">/// written with a minimum of control characters.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="doccomment">/// A set of `ANSIGenericString`s collected together, in order to be</span>
+<span class="doccomment">/// written with a minimum of control characters.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ANSIGenericStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>
     (<span class="kw">pub</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>])
-    <span class="kw">where</span> <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">ToOwned</span><span class="op">&gt;</span>::<span class="ident">Owned</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span>, <span class="ident">S</span>: <span class="ident">PartialEq</span>;
+    <span class="kw">where</span> <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">ToOwned</span><span class="op">&gt;</span>::<span class="ident">Owned</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span>;
 
-<span class="doccomment">/// A set of `ANSIString`s collected together, in order to be written with a</span>
-<span class="doccomment">/// minimum of control characters.</span>
+<span class="doccomment">/// A set of `ANSIString`s collected together, in order to be written with a</span>
+<span class="doccomment">/// minimum of control characters.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ANSIStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ANSIGenericStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">str</span><span class="op">&gt;</span>;
 
-<span class="doccomment">/// A function to construct an `ANSIStrings` instance.</span>
+<span class="doccomment">/// A function to construct an `ANSIStrings` instance.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ANSIStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">arg</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">ANSIString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ANSIStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">ANSIGenericStrings</span>(<span class="ident">arg</span>)
 }
 
-<span class="doccomment">/// A set of `ANSIByteString`s collected together, in order to be</span>
-<span class="doccomment">/// written with a minimum of control characters.</span>
+<span class="doccomment">/// A set of `ANSIByteString`s collected together, in order to be</span>
+<span class="doccomment">/// written with a minimum of control characters.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ANSIByteStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ANSIGenericStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">u8</span>]<span class="op">&gt;</span>;
 
-<span class="doccomment">/// A function to construct an `ANSIByteStrings` instance.</span>
+<span class="doccomment">/// A function to construct an `ANSIByteStrings` instance.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ANSIByteStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">arg</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">ANSIByteString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ANSIByteStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">ANSIGenericStrings</span>(<span class="ident">arg</span>)
 }
 
 
-<span class="comment">// ---- paint functions ----</span>
+<span class="comment">// ---- paint functions ----</span>
 
 <span class="kw">impl</span> <span class="ident">Style</span> {
 
-    <span class="doccomment">/// Paints the given text with this colour, returning an ANSI string.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="doccomment">/// Paints the given text with this colour, returning an ANSI string.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">paint</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">input</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>
     <span class="kw">where</span> <span class="ident">I</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>,
           <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">ToOwned</span><span class="op">&gt;</span>::<span class="ident">Owned</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span> {
@@ -474,15 +441,14 @@
 
 <span class="kw">impl</span> <span class="ident">Colour</span> {
 
-    <span class="doccomment">/// Paints the given text with this colour, returning an ANSI string.</span>
-    <span class="doccomment">/// This is a short-cut so you don’t have to use `Blue.normal()` just</span>
-    <span class="doccomment">/// to get blue text.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use ansi_term::Colour::Blue;</span>
-    <span class="doccomment">/// println!(&quot;{}&quot;, Blue.paint(&quot;da ba dee&quot;));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="doccomment">/// Paints the given text with this colour, returning an ANSI string.</span>
+    <span class="doccomment">/// This is a short-cut so you don’t have to use `Blue.normal()` just</span>
+    <span class="doccomment">/// to get blue text.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use ansi_term::Colour::Blue;</span>
+    <span class="doccomment">/// println!(&quot;{}&quot;, Blue.paint(&quot;da ba dee&quot;));</span>
+    <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">paint</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">input</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ANSIGenericString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>
     <span class="kw">where</span> <span class="ident">I</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>,
           <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">ToOwned</span><span class="op">&gt;</span>::<span class="ident">Owned</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span> {
@@ -494,7 +460,7 @@
 }
 
 
-<span class="comment">// ---- writers for individual ANSI strings ----</span>
+<span class="comment">// ---- writers for individual ANSI strings ----</span>
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ANSIString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
@@ -504,8 +470,8 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ANSIByteString</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Write an `ANSIByteString` to an `io::Write`.  This writes the escape</span>
-    <span class="doccomment">/// sequences for the associated `Style` around the bytes.</span>
+    <span class="doccomment">/// Write an `ANSIByteString` to an `io::Write`.  This writes the escape</span>
+    <span class="doccomment">/// sequences for the associated `Style` around the bytes.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_to</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">io</span>::<span class="ident">Write</span> <span class="op">=</span> <span class="ident">w</span>;
         <span class="self">self</span>.<span class="ident">write_to_any</span>(<span class="ident">w</span>)
@@ -522,7 +488,7 @@
 }
 
 
-<span class="comment">// ---- writers for combined ANSI strings ----</span>
+<span class="comment">// ---- writers for combined ANSI strings ----</span>
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ANSIStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
@@ -532,16 +498,16 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ANSIByteStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Write `ANSIByteStrings` to an `io::Write`.  This writes the minimal</span>
-    <span class="doccomment">/// escape sequences for the associated `Style`s around each set of</span>
-    <span class="doccomment">/// bytes.</span>
+    <span class="doccomment">/// Write `ANSIByteStrings` to an `io::Write`.  This writes the minimal</span>
+    <span class="doccomment">/// escape sequences for the associated `Style`s around each set of</span>
+    <span class="doccomment">/// bytes.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_to</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">io</span>::<span class="ident">Write</span> <span class="op">=</span> <span class="ident">w</span>;
         <span class="self">self</span>.<span class="ident">write_to_any</span>(<span class="ident">w</span>)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">+</span> <span class="ident">PartialEq</span><span class="op">&gt;</span> <span class="ident">ANSIGenericStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">ToOwned</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">ANSIGenericStrings</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">S</span><span class="op">&gt;</span>
 <span class="kw">where</span> <span class="op">&lt;</span><span class="ident">S</span> <span class="kw">as</span> <span class="ident">ToOwned</span><span class="op">&gt;</span>::<span class="ident">Owned</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">S</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">write_to_any</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">AnyWrite</span><span class="op">&lt;</span><span class="ident">wstr</span><span class="op">=</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">W</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="self">self</span>::<span class="ident">Difference</span>::<span class="kw-2">*</span>;
@@ -564,9 +530,9 @@
             <span class="ident">w</span>.<span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="ident">window</span>[<span class="number">1</span>].<span class="ident">string</span>)<span class="question-mark">?</span>;
         }
 
-        <span class="comment">// Write the final reset string after all of the ANSIStrings have been</span>
-        <span class="comment">// written, *except* if the last one has no styles, because it would</span>
-        <span class="comment">// have already been written by this point.</span>
+        <span class="comment">// Write the final reset string after all of the ANSIStrings have been</span>
+        <span class="comment">// written, *except* if the last one has no styles, because it would</span>
+        <span class="comment">// have already been written by this point.</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">last</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">last</span>() {
             <span class="kw">if</span> <span class="op">!</span><span class="ident">last</span>.<span class="ident">style</span>.<span class="ident">is_plain</span>() {
                 <span class="macro">write</span><span class="macro">!</span>(<span class="ident">w</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">RESET</span>)<span class="question-mark">?</span>;
@@ -578,7 +544,7 @@
 }
 
 
-<span class="comment">// ---- tests ----</span>
+<span class="comment">// ---- tests ----</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
