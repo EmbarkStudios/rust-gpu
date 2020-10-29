@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["print_dispatched_message","Print the dispatched message to stderr in a following format:"],["print_send_message","Print the send message to stderr in a following format:"]]});

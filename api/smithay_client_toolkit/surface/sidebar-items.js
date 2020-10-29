@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["get_dpi_factor","Returns the current dpi factor of a surface."],["get_outputs","Returns a list of outputs the surface is displayed on."]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["Sink","A `Sink` is a value into which other values can be sent, asynchronously."]]});

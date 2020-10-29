@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["compile",""]],"struct":[["Key",""],["Keymap",""],["Layouts",""],["Leds",""],["Mods",""]]});

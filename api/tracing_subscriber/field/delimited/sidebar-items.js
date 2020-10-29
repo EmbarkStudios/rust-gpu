@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Delimited","A `MakeVisitor` wrapper that wraps a visitor that writes formatted output so that a delimiter is inserted between writing formatted field values."],["VisitDelimited","A visitor wrapper that inserts a delimiter after the wrapped visitor formats a field value."]]});

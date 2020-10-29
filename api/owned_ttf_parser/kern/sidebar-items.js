@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["state_machine","A State Table for Contextual Kerning implementation."]],"struct":[["Subtable","A kerning subtable."],["Subtables","An iterator over kerning subtables."]]});

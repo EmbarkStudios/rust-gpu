@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["DlError",""]],"macro":[["dlopen_external_library",""],["external_library",""],["ffi_dispatch",""],["ffi_dispatch_static",""],["link_external_library",""]],"struct":[["Library","A loaded dynamic library."],["Symbol","Symbol from a library."]]});

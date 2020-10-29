@@ -1,0 +1,268 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `spirv-tools-sys/src/val.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>val.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../spirv_tools_sys/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">shared</span>;
+
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ValidatorOptions</span> {
+    <span class="ident">_unused</span>: [<span class="ident">u8</span>; <span class="number">0</span>],
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ValidatorLimits</span> {
+    <span class="ident">StructMembers</span>,
+    <span class="ident">StructDepth</span>,
+    <span class="ident">LocalVariables</span>,
+    <span class="ident">GlobalVariables</span>,
+    <span class="ident">SwitchBranches</span>,
+    <span class="ident">FunctionArgs</span>,
+    <span class="ident">ControlFlowNestingDepth</span>,
+    <span class="ident">AccessChainIndexes</span>,
+    <span class="ident">IdBound</span>,
+}
+
+<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
+    <span class="doccomment">/// Validates a raw SPIR-V binary for correctness. Any errors will be written</span>
+    <span class="doccomment">/// into *diagnostic if diagnostic is non-null, otherwise the context&#39;s message</span>
+    <span class="doccomment">/// consumer will be used.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidateBinary&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate</span>(
+        <span class="ident">tool</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">shared</span>::<span class="ident">ToolContext</span>,
+        <span class="ident">binary</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u32</span>,
+        <span class="ident">size</span>: <span class="ident">usize</span>,
+        <span class="ident">options</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ValidatorOptions</span>,
+        <span class="ident">diagnostic</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">crate</span>::<span class="ident">diagnostics</span>::<span class="ident">Diagnostic</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">shared</span>::<span class="ident">SpirvResult</span>;
+
+    <span class="doccomment">/// Creates a Validator options object with default options. Returns a valid</span>
+    <span class="doccomment">/// options object. The object remains valid until it is passed into</span>
+    <span class="doccomment">/// spvValidatorOptionsDestroy.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsCreate&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_create</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>;
+
+    <span class="doccomment">/// Destroys the given Validator options object.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsDestroy&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_destroy</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>);
+
+    <span class="doccomment">/// Records the maximum Universal Limit that is considered valid in the given</span>
+    <span class="doccomment">/// Validator options object. &lt;options&gt; argument must be a valid options object.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsSetUniversalLimit&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_set_limit</span>(
+        <span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>,
+        <span class="ident">limit_type</span>: <span class="ident">ValidatorLimits</span>,
+        <span class="ident">limit</span>: <span class="ident">u32</span>,
+    );
+
+    <span class="doccomment">/// Record whether or not the validator should relax the rules on types for</span>
+    <span class="doccomment">/// stores to structs.  When relaxed, it will allow a type mismatch as long as</span>
+    <span class="doccomment">/// the types are structs with the same layout.  Two structs have the same layout</span>
+    <span class="doccomment">/// if</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// 1) the members of the structs are either the same type or are structs with</span>
+    <span class="doccomment">/// same layout, and</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// 2) the decorations that affect the memory layout are identical for both</span>
+    <span class="doccomment">/// types.  Other decorations are not relevant.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsSetRelaxStoreStruct&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_set_relax_store_struct</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>, <span class="ident">toggle</span>: <span class="ident">bool</span>);
+
+    <span class="doccomment">/// Records whether or not the validator should relax the rules on pointer usage</span>
+    <span class="doccomment">/// in logical addressing mode.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// When relaxed, it will allow the following usage cases of pointers:</span>
+    <span class="doccomment">/// 1) OpVariable allocating an object whose type is a pointer type</span>
+    <span class="doccomment">/// 2) OpReturnValue returning a pointer value</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsSetRelaxLogicalPointer&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_set_relax_logical_pointer</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>, <span class="ident">toggle</span>: <span class="ident">bool</span>);
+
+    <span class="doccomment">/// Records whether or not the validator should relax the rules because it is</span>
+    <span class="doccomment">/// expected that the optimizations will make the code legal.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// When relaxed, it will allow the following:</span>
+    <span class="doccomment">/// 1) It will allow relaxed logical pointers.  Setting this option will also</span>
+    <span class="doccomment">///    set that option.</span>
+    <span class="doccomment">/// 2) Pointers that are pass as parameters to function calls do not have to</span>
+    <span class="doccomment">///    match the storage class of the formal parameter.</span>
+    <span class="doccomment">/// 3) Pointers that are actaul parameters on function calls do not have to point</span>
+    <span class="doccomment">///    to the same type pointed as the formal parameter.  The types just need to</span>
+    <span class="doccomment">///    logically match.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsSetBeforeHlslLegalization&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_set_before_legalization</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>, <span class="ident">toggle</span>: <span class="ident">bool</span>);
+
+    <span class="doccomment">/// Records whether the validator should use &quot;relaxed&quot; block layout rules.</span>
+    <span class="doccomment">/// Relaxed layout rules are described by Vulkan extension</span>
+    <span class="doccomment">/// VK_KHR_relaxed_block_layout, and they affect uniform blocks, storage blocks,</span>
+    <span class="doccomment">/// and push constants.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is enabled by default when targeting Vulkan 1.1 or later.</span>
+    <span class="doccomment">/// Relaxed layout is more permissive than the default rules in Vulkan 1.0.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsSetRelaxBlockLayout&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_set_relax_block_layout</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>, <span class="ident">toggle</span>: <span class="ident">bool</span>);
+
+    <span class="doccomment">/// Records whether the validator should use standard block layout rules for</span>
+    <span class="doccomment">/// uniform blocks.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsSetUniformBufferStandardLayout&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_set_uniform_buffer_standard_layout</span>(
+        <span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>,
+        <span class="ident">toggle</span>: <span class="ident">bool</span>,
+    );
+
+    <span class="doccomment">/// Records whether the validator should use &quot;scalar&quot; block layout rules.</span>
+    <span class="doccomment">/// Scalar layout rules are more permissive than relaxed block layout.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See Vulkan extnesion VK_EXT_scalar_block_layout.  The scalar alignment is</span>
+    <span class="doccomment">/// defined as follows:</span>
+    <span class="doccomment">/// - scalar alignment of a scalar is the scalar size</span>
+    <span class="doccomment">/// - scalar alignment of a vector is the scalar alignment of its component</span>
+    <span class="doccomment">/// - scalar alignment of a matrix is the scalar alignment of its component</span>
+    <span class="doccomment">/// - scalar alignment of an array is the scalar alignment of its element</span>
+    <span class="doccomment">/// - scalar alignment of a struct is the max scalar alignment among its</span>
+    <span class="doccomment">///   members</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// For a struct in Uniform, StorageClass, or PushConstant:</span>
+    <span class="doccomment">/// - a member Offset must be a multiple of the member&#39;s scalar alignment</span>
+    <span class="doccomment">/// - ArrayStride or MatrixStride must be a multiple of the array or matrix</span>
+    <span class="doccomment">///   scalar alignment</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsSetScalarBlockLayout&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_set_scalar_block_layout</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>, <span class="ident">toggle</span>: <span class="ident">bool</span>);
+
+    <span class="doccomment">/// Records whether or not the validator should skip validating standard</span>
+    <span class="doccomment">/// uniform/storage block layout.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidatorOptionsSetSkipBlockLayout&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_options_set_skip_block_layout</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ValidatorOptions</span>, <span class="ident">toggle</span>: <span class="ident">bool</span>);
+}
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "spirv_tools_sys";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

@@ -491,26 +491,6 @@
 <span id="488">488</span>
 <span id="489">489</span>
 <span id="490">490</span>
-<span id="491">491</span>
-<span id="492">492</span>
-<span id="493">493</span>
-<span id="494">494</span>
-<span id="495">495</span>
-<span id="496">496</span>
-<span id="497">497</span>
-<span id="498">498</span>
-<span id="499">499</span>
-<span id="500">500</span>
-<span id="501">501</span>
-<span id="502">502</span>
-<span id="503">503</span>
-<span id="504">504</span>
-<span id="505">505</span>
-<span id="506">506</span>
-<span id="507">507</span>
-<span id="508">508</span>
-<span id="509">509</span>
-<span id="510">510</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">linker</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">back</span>::<span class="ident">lto</span>::{<span class="ident">LtoModuleCodegen</span>, <span class="ident">SerializedModule</span>, <span class="ident">ThinModule</span>, <span class="ident">ThinShared</span>};
@@ -519,7 +499,7 @@
 <span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">owning_ref</span>::<span class="ident">OwningRef</span>;
 <span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">rustc_erase_owner</span>;
 <span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">sync</span>::<span class="ident">MetadataRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_errors</span>::{<span class="ident">DiagnosticBuilder</span>, <span class="ident">FatalError</span>};
+<span class="kw">use</span> <span class="ident">rustc_errors</span>::<span class="ident">FatalError</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">dep_graph</span>::<span class="ident">WorkProduct</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">middle</span>::<span class="ident">cstore</span>::<span class="ident">NativeLib</span>;
@@ -534,7 +514,6 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="ident">Read</span>, <span class="ident">Write</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">Command</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 <span class="kw">use</span> <span class="ident">tar</span>::{<span class="ident">Archive</span>, <span class="ident">Builder</span>, <span class="ident">Header</span>};
 
@@ -638,97 +617,88 @@
         <span class="ident">codegen_results</span>,
     );
 
-    <span class="ident">do_link</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">objects</span>, <span class="kw-2">&amp;</span><span class="ident">rlibs</span>, <span class="ident">out_filename</span>, <span class="ident">legalize</span>);
+    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="ident">do_link</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">objects</span>, <span class="kw-2">&amp;</span><span class="ident">rlibs</span>, <span class="ident">legalize</span>);
 
-    <span class="kw">if</span> <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;SPIRV_OPT&quot;</span>).<span class="ident">is_ok</span>() {
+    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;SPIRV_OPT&quot;</span>).<span class="ident">is_ok</span>() {
         <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_spirv_opt&quot;</span>);
-        <span class="ident">do_spirv_opt</span>(<span class="ident">sess</span>, <span class="ident">out_filename</span>);
-    }
-    <span class="kw">if</span> <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;NO_SPIRV_VAL&quot;</span>).<span class="ident">is_err</span>() {
-        <span class="ident">do_spirv_val</span>(<span class="ident">sess</span>, <span class="ident">out_filename</span>);
-    }
-}
-
-<span class="kw">fn</span> <span class="ident">do_spirv_opt</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) {
-    <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">filename</span>.<span class="ident">with_extension</span>(<span class="string">&quot;opt.spv&quot;</span>);
-    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">output_spirv_tool</span>(
-        <span class="ident">sess</span>,
-        <span class="string">&quot;spirv-opt&quot;</span>,
-        <span class="op">|</span><span class="ident">cmd</span><span class="op">|</span> {
-            <span class="ident">cmd</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;-Os&quot;</span>, <span class="string">&quot;--eliminate-dead-const&quot;</span>, <span class="string">&quot;--strip-debug&quot;</span>])
-                .<span class="ident">arg</span>(<span class="kw-2">&amp;</span><span class="ident">filename</span>)
-                .<span class="ident">arg</span>(<span class="string">&quot;-o&quot;</span>)
-                .<span class="ident">arg</span>(<span class="kw-2">&amp;</span><span class="ident">tmp</span>)
-        },
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_warn</span>(<span class="string">&quot;spirv-opt failed, leaving as unoptimized&quot;</span>);
-            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module {:?}&quot;</span>, <span class="ident">filename</span>));
-            <span class="ident">err</span>
-        },
-    );
-
-    <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_some</span>() {
-        <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">rename</span>(<span class="ident">tmp</span>, <span class="ident">filename</span>).<span class="ident">unwrap</span>();
-    }
-}
-
-<span class="kw">fn</span> <span class="ident">do_spirv_val</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) {
-    <span class="ident">output_spirv_tool</span>(
-        <span class="ident">sess</span>,
-        <span class="string">&quot;spirv-val&quot;</span>,
-        <span class="op">|</span><span class="ident">cmd</span><span class="op">|</span> <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="kw-2">&amp;</span><span class="ident">filename</span>),
-        <span class="op">|</span><span class="ident">status</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;spirv-val failed with {}&quot;</span>, <span class="ident">status</span>));
-            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module {:?}&quot;</span>, <span class="ident">filename</span>));
-            <span class="ident">err</span>
-        },
-    );
-}
-
-<span class="doccomment">/// Runs a given SPIR-V `tool`, configured with `builder`, erroring if not found</span>
-<span class="doccomment">/// or returns a non-zero exit code. All errors will be emitted using the</span>
-<span class="doccomment">/// diagnostics builder provided by `diagnostics.`</span>
-<span class="kw">fn</span> <span class="ident">output_spirv_tool</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">F</span>, <span class="ident">D</span><span class="op">&gt;</span>(
-    <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
-    <span class="ident">tool</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">builder</span>: <span class="ident">F</span>,
-    <span class="ident">diagnostics</span>: <span class="ident">D</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">Output</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Command</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Command</span>,
-    <span class="ident">D</span>: <span class="ident">FnOnce</span>(<span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">ExitStatus</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DiagnosticBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-{
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">new</span>(<span class="ident">tool</span>);
-    (<span class="ident">builder</span>)(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cmd</span>);
-
-    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">cmd</span>.<span class="ident">output</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">output</span>,
-        <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span>
-                <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Couldn&#39;t find `{}` SPIR-V tool in PATH.&quot;</span>, <span class="ident">tool</span>));
-            <span class="ident">err</span>.<span class="ident">note</span>(
-                <span class="string">&quot;Please ensure that you have `spirv-tools` installed on \
-                      your system and available in your PATH.&quot;</span>,
-            );
-            <span class="ident">err</span>.<span class="ident">emit</span>();
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
-        }
+        <span class="ident">do_spirv_opt</span>(<span class="ident">sess</span>, <span class="ident">spv_binary</span>, <span class="ident">out_filename</span>)
+    } <span class="kw">else</span> {
+        <span class="ident">spv_binary</span>
     };
 
-    <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">status</span>.<span class="ident">success</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">output</span>)
-    } <span class="kw">else</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">diagnostics</span> <span class="op">=</span> (<span class="ident">diagnostics</span>)(<span class="ident">output</span>.<span class="ident">status</span>);
+    <span class="kw">if</span> <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;NO_SPIRV_VAL&quot;</span>).<span class="ident">is_err</span>() {
+        <span class="ident">do_spirv_val</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">spv_binary</span>, <span class="ident">out_filename</span>);
+    }
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">output</span>.<span class="ident">stdout</span>.<span class="ident">is_empty</span>() {
-            <span class="ident">diagnostics</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">output</span>.<span class="ident">stdout</span>).<span class="ident">unwrap</span>());
-        }
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">output</span>.<span class="ident">stderr</span>.<span class="ident">is_empty</span>() {
-            <span class="ident">diagnostics</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">output</span>.<span class="ident">stderr</span>).<span class="ident">unwrap</span>());
+    {
+        <span class="kw">let</span> <span class="ident">save_modules_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_save_modules&quot;</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">write</span>(<span class="ident">out_filename</span>, <span class="kw">crate</span>::<span class="ident">slice_u32_to_u8</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>)) {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="string">&quot;failed to serialize spirv-binary to disk&quot;</span>);
+            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module {:?}&quot;</span>, <span class="ident">out_filename</span>));
+            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;I/O error: {:#}&quot;</span>, <span class="ident">e</span>));
+            <span class="ident">err</span>.<span class="ident">emit</span>();
         }
 
-        <span class="ident">diagnostics</span>.<span class="ident">emit</span>();
-        <span class="prelude-val">None</span>
+        <span class="ident">drop</span>(<span class="ident">save_modules_timer</span>);
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">do_spirv_opt</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">spv_binary</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+    <span class="kw">use</span> <span class="ident">spirv_tools</span>::{
+        <span class="ident">error</span>,
+        <span class="ident">opt</span>::{<span class="self">self</span>, <span class="ident">Optimizer</span>},
+    };
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">optimizer</span> <span class="op">=</span> <span class="ident">opt</span>::<span class="ident">create</span>(<span class="prelude-val">None</span>);
+
+    <span class="ident">optimizer</span>
+        .<span class="ident">register_size_passes</span>()
+        .<span class="ident">register_pass</span>(<span class="ident">opt</span>::<span class="ident">Passes</span>::<span class="ident">EliminateDeadConstant</span>)
+        .<span class="ident">register_pass</span>(<span class="ident">opt</span>::<span class="ident">Passes</span>::<span class="ident">StripDebugInfo</span>);
+
+    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">optimizer</span>.<span class="ident">optimize</span>(
+        <span class="kw-2">&amp;</span><span class="ident">spv_binary</span>,
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">|</span><span class="ident">msg</span>: <span class="ident">error</span>::<span class="ident">Message</span><span class="op">|</span> {
+            <span class="kw">use</span> <span class="ident">error</span>::<span class="ident">MessageLevel</span> <span class="kw">as</span> <span class="ident">Level</span>;
+
+            <span class="comment">// TODO: Adds spans here? Not sure how useful with binary, but maybe?</span>
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">level</span> {
+                <span class="ident">Level</span>::<span class="ident">Fatal</span> <span class="op">|</span> <span class="ident">Level</span>::<span class="ident">InternalError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_fatal</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level</span>::<span class="ident">Error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level</span>::<span class="ident">Warning</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_warn</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level</span>::<span class="ident">Info</span> <span class="op">|</span> <span class="ident">Level</span>::<span class="ident">Debug</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_note_without_error</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+            };
+
+            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module {:?}&quot;</span>, <span class="ident">filename</span>));
+            <span class="ident">err</span>.<span class="ident">emit</span>();
+        },
+        <span class="comment">// We currently run the validator separately after optimization or even</span>
+        <span class="comment">// if we don&#39;t run optimization, the default options don&#39;t run the validator</span>
+        <span class="prelude-val">None</span>,
+    );
+
+    <span class="kw">match</span> <span class="ident">result</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">binary</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span>::<span class="ident">from</span>(<span class="ident">binary</span>.<span class="ident">as_ref</span>()),
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_warn</span>(<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="ident">to_string</span>());
+            <span class="ident">err</span>.<span class="ident">note</span>(<span class="string">&quot;spirv-opt failed, leaving as unoptimized&quot;</span>);
+            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module {:?}&quot;</span>, <span class="ident">filename</span>));
+            <span class="ident">spv_binary</span>
+        }
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">do_spirv_val</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">spv_binary</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>], <span class="ident">filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) {
+    <span class="kw">use</span> <span class="ident">spirv_tools</span>::<span class="ident">val</span>::{<span class="self">self</span>, <span class="ident">Validator</span>};
+
+    <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">val</span>::<span class="ident">create</span>(<span class="prelude-val">None</span>);
+
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">validator</span>.<span class="ident">validate</span>(<span class="ident">spv_binary</span>, <span class="prelude-val">None</span>) {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="ident">to_string</span>());
+        <span class="ident">err</span>.<span class="ident">note</span>(<span class="string">&quot;spirv-val failed&quot;</span>);
+        <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module {:?}&quot;</span>, <span class="ident">filename</span>));
+        <span class="ident">err</span>.<span class="ident">emit</span>();
     }
 }
 
@@ -882,13 +852,13 @@
 
 <span class="doccomment">/// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc&#39;s</span>
 <span class="doccomment">/// shenanigans to collect all the object files we need to link.</span>
-<span class="kw">fn</span> <span class="ident">do_link</span>(
-    <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
-    <span class="ident">objects</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>],
-    <span class="ident">rlibs</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>],
-    <span class="ident">out_filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
-    <span class="ident">legalize</span>: <span class="ident">bool</span>,
-) {
+<span class="kw">fn</span> <span class="ident">do_link</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">objects</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>], <span class="ident">rlibs</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>], <span class="ident">legalize</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Module</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Loader</span>::<span class="ident">new</span>();
+        <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">parse_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">loader</span>).<span class="ident">unwrap</span>();
+        <span class="ident">loader</span>.<span class="ident">module</span>()
+    }
+
     <span class="kw">let</span> <span class="ident">load_modules_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_load_modules&quot;</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modules</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
     <span class="comment">// `objects` are the plain obj files we need to link - usually produced by the final crate.</span>
@@ -935,9 +905,9 @@
         <span class="ident">mem2reg</span>: <span class="ident">legalize</span>,
         <span class="ident">structurize</span>: <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;NO_STRUCTURIZE&quot;</span>).<span class="ident">is_err</span>(),
     };
+
     <span class="kw">let</span> <span class="ident">link_result</span> <span class="op">=</span> <span class="ident">linker</span>::<span class="ident">link</span>(<span class="prelude-val">Some</span>(<span class="ident">sess</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module_refs</span>, <span class="kw-2">&amp;</span><span class="ident">options</span>);
 
-    <span class="kw">let</span> <span class="ident">save_modules_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_save_modules&quot;</span>);
     <span class="kw">let</span> <span class="ident">assembled</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">link_result</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
         <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -960,17 +930,7 @@
 
     <span class="comment">// And finally write out the linked binary.</span>
     <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">Assemble</span>;
-    <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">out_filename</span>)
-        .<span class="ident">unwrap</span>()
-        .<span class="ident">write_all</span>(<span class="kw">crate</span>::<span class="ident">slice_u32_to_u8</span>(<span class="kw-2">&amp;</span><span class="ident">assembled</span>.<span class="ident">assemble</span>()))
-        .<span class="ident">unwrap</span>();
-    <span class="ident">drop</span>(<span class="ident">save_modules_timer</span>);
-
-    <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Module</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Loader</span>::<span class="ident">new</span>();
-        <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">parse_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">loader</span>).<span class="ident">unwrap</span>();
-        <span class="ident">loader</span>.<span class="ident">module</span>()
-    }
+    <span class="ident">assembled</span>.<span class="ident">assemble</span>()
 }
 
 <span class="doccomment">/// As of right now, this is essentially a no-op, just plumbing through all the files.</span>

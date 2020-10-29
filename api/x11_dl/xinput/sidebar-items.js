@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["_XAnyClassinfo",""]],"struct":[["XDevice",""],["XDeviceControl",""],["XDeviceInfo",""],["XDeviceState",""],["XDeviceTimeCoord",""],["XExtensionVersion",""],["XFeedbackControl",""],["XFeedbackState",""],["XInput",""],["XInputClass",""],["XInputClassInfo",""]],"type":[["XAnyClassPtr",""]]});

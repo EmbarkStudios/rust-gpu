@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["EventLoopExtDesktop","Additional methods on `EventLoop` that are specific to desktop platforms."]]});

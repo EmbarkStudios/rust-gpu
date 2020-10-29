@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-0.15.44/src/token.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>token.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.46/src/token.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>token.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -962,6 +962,34 @@
 <span id="959">959</span>
 <span id="960">960</span>
 <span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Tokens representing Rust punctuation, keywords, and delimiters.</span>
 <span class="doccomment">//!</span>
@@ -977,7 +1005,7 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [`ItemStatic`]: ../struct.ItemStatic.html</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ```edition2018</span>
+<span class="doccomment">//! ```</span>
 <span class="doccomment">//! # use syn::{Attribute, Expr, Ident, Token, Type, Visibility};</span>
 <span class="doccomment">//! #</span>
 <span class="doccomment">//! pub struct ItemStatic {</span>
@@ -1005,7 +1033,7 @@
 <span class="doccomment">//! [`bracketed!`]: ../macro.bracketed.html</span>
 <span class="doccomment">//! [`braced!`]: ../macro.braced.html</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ```edition2018</span>
+<span class="doccomment">//! ```</span>
 <span class="doccomment">//! use syn::{Attribute, Result};</span>
 <span class="doccomment">//! use syn::parse::{Parse, ParseStream};</span>
 <span class="doccomment">//! #</span>
@@ -1050,10 +1078,32 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [Peeking]: ../parse/struct.ParseBuffer.html#method.peek</span>
 <span class="doccomment">//! [Parsing]: ../parse/struct.ParseBuffer.html#method.parse</span>
-<span class="doccomment">//! [Printing]: https://docs.rs/quote/0.6/quote/trait.ToTokens.html</span>
-<span class="doccomment">//! [`Span`]: https://docs.rs/proc-macro2/0.4/proc_macro2/struct.Span.html</span>
+<span class="doccomment">//! [Printing]: https://docs.rs/quote/1.0/quote/trait.ToTokens.html</span>
+<span class="doccomment">//! [`Span`]: https://docs.rs/proc-macro2/1.0/proc_macro2/struct.Span.html</span>
 
-<span class="kw">use</span> <span class="ident">std</span>;
+<span class="kw">use</span> <span class="self">self</span>::<span class="ident">private</span>::<span class="ident">WithSpan</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">buffer</span>::<span class="ident">Cursor</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="prelude-ty">Result</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">lifetime</span>::<span class="ident">Lifetime</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">lit</span>::{<span class="ident">Lit</span>, <span class="ident">LitBool</span>, <span class="ident">LitByte</span>, <span class="ident">LitByteStr</span>, <span class="ident">LitChar</span>, <span class="ident">LitFloat</span>, <span class="ident">LitInt</span>, <span class="ident">LitStr</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">lookahead</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">span</span>::<span class="ident">IntoSpans</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">Ident</span>;
+<span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">Span</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">TokenStream</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">proc_macro2</span>::{<span class="ident">Delimiter</span>, <span class="ident">Literal</span>, <span class="ident">Punct</span>, <span class="ident">TokenTree</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">quote</span>::{<span class="ident">ToTokens</span>, <span class="ident">TokenStreamExt</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;extra-traits&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;extra-traits&quot;</span>)]</span>
@@ -1061,33 +1111,6 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;extra-traits&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">Delimiter</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">Ident</span>;
-<span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">Span</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">TokenStream</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;printing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">quote</span>::{<span class="ident">ToTokens</span>, <span class="ident">TokenStreamExt</span>};
-
-<span class="kw">use</span> <span class="self">self</span>::<span class="ident">private</span>::<span class="ident">WithSpan</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">buffer</span>::<span class="ident">Cursor</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">error</span>::<span class="prelude-ty">Result</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">lifetime</span>::<span class="ident">Lifetime</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">lit</span>::{<span class="ident">Lit</span>, <span class="ident">LitBool</span>, <span class="ident">LitByte</span>, <span class="ident">LitByteStr</span>, <span class="ident">LitChar</span>, <span class="ident">LitFloat</span>, <span class="ident">LitInt</span>, <span class="ident">LitStr</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">lookahead</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
-<span class="kw">use</span> <span class="ident">span</span>::<span class="ident">IntoSpans</span>;
 
 <span class="doccomment">/// Marker trait for types that represent single tokens.</span>
 <span class="doccomment">///</span>
@@ -1120,21 +1143,20 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">private</span>::<span class="ident">Sealed</span> <span class="kw">for</span> <span class="ident">Ident</span> {}
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
 <span class="kw">fn</span> <span class="ident">peek_impl</span>(<span class="ident">cursor</span>: <span class="ident">Cursor</span>, <span class="ident">peek</span>: <span class="kw">fn</span>(<span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">parse</span>::<span class="ident">Unexpected</span>;
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">Cell</span>;
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
 
     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">Span</span>::<span class="ident">call_site</span>();
-    <span class="kw">let</span> <span class="ident">unexpected</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">Cell</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
-    <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> ::<span class="ident">private</span>::<span class="ident">new_parse_buffer</span>(<span class="ident">scope</span>, <span class="ident">cursor</span>, <span class="ident">unexpected</span>);
+    <span class="kw">let</span> <span class="ident">unexpected</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">Cell</span>::<span class="ident">new</span>(<span class="ident">Unexpected</span>::<span class="prelude-val">None</span>));
+    <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">parse</span>::<span class="ident">new_parse_buffer</span>(<span class="ident">scope</span>, <span class="ident">cursor</span>, <span class="ident">unexpected</span>);
     <span class="ident">peek</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>)
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_token</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">display</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">display</span>:<span class="ident">tt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
         <span class="kw">impl</span> <span class="ident">Token</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="kw">fn</span> <span class="ident">peek</span>(<span class="ident">cursor</span>: <span class="ident">Cursor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
@@ -1154,24 +1176,38 @@
     };
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="macro">impl_token</span><span class="macro">!</span>(<span class="ident">Lifetime</span> <span class="string">&quot;lifetime&quot;</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="macro">impl_token</span><span class="macro">!</span>(<span class="ident">Lit</span> <span class="string">&quot;literal&quot;</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="macro">impl_token</span><span class="macro">!</span>(<span class="ident">LitStr</span> <span class="string">&quot;string literal&quot;</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="macro">impl_token</span><span class="macro">!</span>(<span class="ident">LitByteStr</span> <span class="string">&quot;byte string literal&quot;</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="macro">impl_token</span><span class="macro">!</span>(<span class="ident">LitByte</span> <span class="string">&quot;byte literal&quot;</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="macro">impl_token</span><span class="macro">!</span>(<span class="ident">LitChar</span> <span class="string">&quot;character literal&quot;</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="macro">impl_token</span><span class="macro">!</span>(<span class="ident">LitInt</span> <span class="string">&quot;integer literal&quot;</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="macro">impl_token</span><span class="macro">!</span>(<span class="ident">LitFloat</span> <span class="string">&quot;floating point literal&quot;</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;derive&quot;</span>))]</span>
-<span class="macro">impl_token</span><span class="macro">!</span>(<span class="ident">LitBool</span> <span class="string">&quot;boolean literal&quot;</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;lifetime&quot;</span> <span class="ident">Lifetime</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;literal&quot;</span> <span class="ident">Lit</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;string literal&quot;</span> <span class="ident">LitStr</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;byte string literal&quot;</span> <span class="ident">LitByteStr</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;byte literal&quot;</span> <span class="ident">LitByte</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;character literal&quot;</span> <span class="ident">LitChar</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;integer literal&quot;</span> <span class="ident">LitInt</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;floating point literal&quot;</span> <span class="ident">LitFloat</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;boolean literal&quot;</span> <span class="ident">LitBool</span>);
+<span class="macro">impl_token</span><span class="macro">!</span>(<span class="string">&quot;group token&quot;</span> <span class="ident">proc_macro2</span>::<span class="ident">Group</span>);
+
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_low_level_token</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">display</span>:<span class="ident">tt</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">get</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
+        <span class="kw">impl</span> <span class="ident">Token</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span> {
+            <span class="kw">fn</span> <span class="ident">peek</span>(<span class="ident">cursor</span>: <span class="ident">Cursor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+                <span class="ident">cursor</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">get</span>().<span class="ident">is_some</span>()
+            }
+
+            <span class="kw">fn</span> <span class="ident">display</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">display</span>
+            }
+        }
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
+        <span class="kw">impl</span> <span class="ident">private</span>::<span class="ident">Sealed</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span> {}
+    };
+}
+
+<span class="macro">impl_low_level_token</span><span class="macro">!</span>(<span class="string">&quot;punctuation token&quot;</span> <span class="ident">Punct</span> <span class="ident">punct</span>);
+<span class="macro">impl_low_level_token</span><span class="macro">!</span>(<span class="string">&quot;literal&quot;</span> <span class="ident">Literal</span> <span class="ident">literal</span>);
+<span class="macro">impl_low_level_token</span><span class="macro">!</span>(<span class="string">&quot;token&quot;</span> <span class="ident">TokenTree</span> <span class="ident">token_tree</span>);
 
 <span class="comment">// Not public API.</span>
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
@@ -1198,11 +1234,10 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">define_keywords</span> {
     ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">token</span>:<span class="ident">tt</span> <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> <span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">doc</span>:<span class="ident">meta</span>]</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> {
         $(
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;clone-impls&quot;</span>, <span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>))]</span>
             <span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">doc</span>]</span>
             <span class="doccomment">///</span>
-            <span class="doccomment">/// Don&#39;t try to remember the name of this type -- use the [`Token!`]</span>
-            <span class="doccomment">/// macro instead.</span>
+            <span class="doccomment">/// Don&#39;t try to remember the name of this type &amp;mdash; use the</span>
+            <span class="doccomment">/// [`Token!`] macro instead.</span>
             <span class="doccomment">///</span>
             <span class="doccomment">/// [`Token!`]: crate::token</span>
             <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
@@ -1222,6 +1257,16 @@
                     <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                         <span class="ident">span</span>: <span class="ident">Span</span>::<span class="ident">call_site</span>(),
                     }
+                }
+            }
+
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;clone-impls&quot;</span>)]</span>
+            <span class="kw">impl</span> <span class="ident">Copy</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;clone-impls&quot;</span>)]</span>
+            <span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+                <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                    <span class="kw-2">*</span><span class="self">self</span>
                 }
             }
 
@@ -1303,12 +1348,11 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">define_punctuation_structs</span> {
     ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">token</span>:<span class="ident">tt</span> <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span><span class="op">/</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">len</span>:<span class="ident">tt</span> <span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">doc</span>:<span class="ident">meta</span>]</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> {
         $(
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;clone-impls&quot;</span>, <span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>))]</span>
             <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
             <span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">doc</span>]</span>
             <span class="doccomment">///</span>
-            <span class="doccomment">/// Don&#39;t try to remember the name of this type -- use the [`Token!`]</span>
-            <span class="doccomment">/// macro instead.</span>
+            <span class="doccomment">/// Don&#39;t try to remember the name of this type &amp;mdash; use the</span>
+            <span class="doccomment">/// [`Token!`] macro instead.</span>
             <span class="doccomment">///</span>
             <span class="doccomment">/// [`Token!`]: crate::token</span>
             <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
@@ -1328,6 +1372,16 @@
                     <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                         <span class="ident">spans</span>: [<span class="ident">Span</span>::<span class="ident">call_site</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">len</span>],
                     }
+                }
+            }
+
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;clone-impls&quot;</span>)]</span>
+            <span class="kw">impl</span> <span class="ident">Copy</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;clone-impls&quot;</span>)]</span>
+            <span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+                <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                    <span class="kw-2">*</span><span class="self">self</span>
                 }
             }
 
@@ -1401,7 +1455,6 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">define_delimiters</span> {
     ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">token</span>:<span class="ident">tt</span> <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> <span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">doc</span>:<span class="ident">meta</span>]</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> {
         $(
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;clone-impls&quot;</span>, <span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>))]</span>
             <span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">doc</span>]</span>
             <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                 <span class="kw">pub</span> <span class="ident">span</span>: <span class="ident">Span</span>,
@@ -1420,6 +1473,16 @@
                     <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                         <span class="ident">span</span>: <span class="ident">Span</span>::<span class="ident">call_site</span>(),
                     }
+                }
+            }
+
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;clone-impls&quot;</span>)]</span>
+            <span class="kw">impl</span> <span class="ident">Copy</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;clone-impls&quot;</span>)]</span>
+            <span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+                <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                    <span class="kw-2">*</span><span class="self">self</span>
                 }
             }
 
@@ -1560,6 +1623,7 @@
     <span class="string">&quot;as&quot;</span>          <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">As</span>           <span class="doccomment">/// `as`</span>
     <span class="string">&quot;async&quot;</span>       <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Async</span>        <span class="doccomment">/// `async`</span>
     <span class="string">&quot;auto&quot;</span>        <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Auto</span>         <span class="doccomment">/// `auto`</span>
+    <span class="string">&quot;await&quot;</span>       <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Await</span>        <span class="doccomment">/// `await`</span>
     <span class="string">&quot;become&quot;</span>      <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Become</span>       <span class="doccomment">/// `become`</span>
     <span class="string">&quot;box&quot;</span>         <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Box</span>          <span class="doccomment">/// `box`</span>
     <span class="string">&quot;break&quot;</span>       <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Break</span>        <span class="doccomment">/// `break`</span>
@@ -1571,7 +1635,6 @@
     <span class="string">&quot;dyn&quot;</span>         <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Dyn</span>          <span class="doccomment">/// `dyn`</span>
     <span class="string">&quot;else&quot;</span>        <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Else</span>         <span class="doccomment">/// `else`</span>
     <span class="string">&quot;enum&quot;</span>        <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Enum</span>         <span class="doccomment">/// `enum`</span>
-    <span class="string">&quot;existential&quot;</span> <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Existential</span>  <span class="doccomment">/// `existential`</span>
     <span class="string">&quot;extern&quot;</span>      <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Extern</span>       <span class="doccomment">/// `extern`</span>
     <span class="string">&quot;final&quot;</span>       <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Final</span>        <span class="doccomment">/// `final`</span>
     <span class="string">&quot;fn&quot;</span>          <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Fn</span>           <span class="doccomment">/// `fn`</span>
@@ -1667,7 +1730,7 @@
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">export_token_macro</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">dollar</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">await_rule</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="doccomment">/// A type-macro that expands to the name of the Rust type representation of a</span>
         <span class="doccomment">/// given token.</span>
         <span class="doccomment">///</span>
@@ -1682,6 +1745,7 @@
             (<span class="kw">as</span>)          <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">As</span> };
             (<span class="ident">async</span>)       <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Async</span> };
             (<span class="ident">auto</span>)        <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Auto</span> };
+            $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">await_rule</span> <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Await</span> };)<span class="op">*</span>
             (<span class="kw">become</span>)      <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Become</span> };
             (<span class="kw">box</span>)         <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Box</span> };
             (<span class="kw">break</span>)       <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Break</span> };
@@ -1693,7 +1757,6 @@
             (<span class="ident">dyn</span>)         <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Dyn</span> };
             (<span class="kw">else</span>)        <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Else</span> };
             (<span class="kw">enum</span>)        <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Enum</span> };
-            (<span class="ident">existential</span>) <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Existential</span> };
             (<span class="kw">extern</span>)      <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Extern</span> };
             (<span class="kw">final</span>)       <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Final</span> };
             (<span class="kw">fn</span>)          <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Fn</span> };
@@ -1744,6 +1807,7 @@
             (,)           <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Comma</span> };
             (<span class="op">/</span>)           <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Div</span> };
             (<span class="op">/</span><span class="op">=</span>)          <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">DivEq</span> };
+            ($)           <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Dollar</span> };
             (.)           <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Dot</span> };
             (..)          <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Dot2</span> };
             (...)         <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Dot3</span> };
@@ -1776,35 +1840,27 @@
             (<span class="op">-</span><span class="op">=</span>)          <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">SubEq</span> };
             (~)           <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Tilde</span> };
             (<span class="kw">_</span>)           <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Underscore</span> };
-            $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">dollar</span>     <span class="op">=</span><span class="op">&gt;</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">token</span>::<span class="ident">Dollar</span> };)<span class="op">*</span>
         }
     };
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_match_trailing_dollar</span>)]</span>
-<span class="macro">export_token_macro</span><span class="macro">!</span>[($)];
-
-<span class="comment">// Old rustc does not support ($) =&gt; {...} as a macro rule.</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">syn_can_match_trailing_dollar</span>))]</span>
+<span class="comment">// Old rustc does not permit `await` appearing anywhere in the source file.</span>
+<span class="comment">// https://github.com/rust-lang/rust/issues/57919</span>
+<span class="comment">// We put the Token![await] rule in a place that is not lexed by old rustc.</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">syn_omit_await_from_token_macro</span>))]</span>
+<span class="macro">include</span><span class="macro">!</span>(<span class="string">&quot;await.rs&quot;</span>); <span class="comment">// export_token_macro![(await)];</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_omit_await_from_token_macro</span>)]</span>
 <span class="macro">export_token_macro</span><span class="macro">!</span>[];
-
-<span class="comment">// Old names. TODO: remove these re-exports in a breaking change.</span>
-<span class="comment">// https://github.com/dtolnay/syn/issues/486</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">SelfType</span> <span class="kw">as</span> <span class="ident">CapSelf</span>;
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">SelfValue</span> <span class="kw">as</span> <span class="ident">Self_</span>;
 
 <span class="comment">// Not public API.</span>
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">parsing</span> {
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">buffer</span>::<span class="ident">Cursor</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::{<span class="ident">Error</span>, <span class="prelude-ty">Result</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">parse</span>::<span class="ident">ParseStream</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">span</span>::<span class="ident">FromSpans</span>;
     <span class="kw">use</span> <span class="ident">proc_macro2</span>::{<span class="ident">Spacing</span>, <span class="ident">Span</span>};
-
-    <span class="kw">use</span> <span class="ident">buffer</span>::<span class="ident">Cursor</span>;
-    <span class="kw">use</span> <span class="ident">error</span>::{<span class="ident">Error</span>, <span class="prelude-ty">Result</span>};
-    <span class="kw">use</span> <span class="ident">parse</span>::<span class="ident">ParseStream</span>;
-    <span class="kw">use</span> <span class="ident">span</span>::<span class="ident">FromSpans</span>;
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keyword</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>, <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span> {
         <span class="ident">input</span>.<span class="ident">step</span>(<span class="op">|</span><span class="ident">cursor</span><span class="op">|</span> {
@@ -1826,7 +1882,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">punct</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">FromSpans</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>, <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">spans</span> <span class="op">=</span> [<span class="ident">input</span>.<span class="ident">cursor</span>().<span class="ident">span</span>(); <span class="number">3</span>];
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">spans</span> <span class="op">=</span> [<span class="ident">input</span>.<span class="ident">span</span>(); <span class="number">3</span>];
         <span class="ident">punct_helper</span>(<span class="ident">input</span>, <span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">spans</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">S</span>::<span class="ident">from_spans</span>(<span class="kw-2">&amp;</span><span class="ident">spans</span>))
     }

@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["BoxMakeWriter","A writer that erases the specific `io::Write` and `Makewriter` types being used."],["TestWriter","A writer intended to support `libtest`'s output capturing for use in unit tests."]],"trait":[["MakeWriter","A type that can create `io::Write` instances."]]});

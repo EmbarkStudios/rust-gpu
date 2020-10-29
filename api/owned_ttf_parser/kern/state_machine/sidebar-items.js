@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["class","Predefined classes."],["state","Predefined states."]],"struct":[["Entry","A state machine entry."],["Machine","A state machine."],["State","A type-safe wrapper for a state machine state."],["ValueOffset","A type-safe wrapper for a kerning value offset."]]});

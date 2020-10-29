@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["ALT",""],["CAPS",""],["CTRL",""],["LOGO",""],["NUM",""],["SHIFT",""]]});

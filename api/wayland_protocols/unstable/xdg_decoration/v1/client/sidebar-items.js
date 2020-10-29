@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["zxdg_decoration_manager_v1","window decoration manager"],["zxdg_toplevel_decoration_v1","decoration object for a toplevel surface"]]});

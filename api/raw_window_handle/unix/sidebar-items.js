@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["WaylandHandle","Raw window handle for Wayland."],["XcbHandle","Raw window handle for Xcb."],["XlibHandle","Raw window handle for Xlib."]]});

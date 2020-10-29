@@ -1,7 +1,0 @@
-(function() {var implementors = {};
-implementors["ab_glyph_rasterizer"] = [{"text":"impl AddAssign&lt;Point&gt; for Point","synthetic":false,"types":[]}];
-implementors["chrono"] = [{"text":"impl AddAssign&lt;Duration&gt; for NaiveDate","synthetic":false,"types":[]},{"text":"impl AddAssign&lt;Duration&gt; for NaiveDateTime","synthetic":false,"types":[]},{"text":"impl AddAssign&lt;Duration&gt; for NaiveTime","synthetic":false,"types":[]}];
-implementors["gfx_descriptor"] = [{"text":"impl AddAssign&lt;DescriptorCounts&gt; for DescriptorCounts","synthetic":false,"types":[]}];
-implementors["ordered_float"] = [{"text":"impl&lt;T:&nbsp;Float + AddAssign&gt; AddAssign&lt;NotNan&lt;T&gt;&gt; for NotNan&lt;T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;T:&nbsp;Float + AddAssign&gt; AddAssign&lt;T&gt; for NotNan&lt;T&gt;","synthetic":false,"types":[]}];
-implementors["spirv_std"] = [{"text":"impl AddAssign&lt;Vec2&gt; for Vec2","synthetic":false,"types":[]},{"text":"impl AddAssign&lt;Vec3&gt; for Vec3","synthetic":false,"types":[]},{"text":"impl AddAssign&lt;Vec4&gt; for Vec4","synthetic":false,"types":[]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

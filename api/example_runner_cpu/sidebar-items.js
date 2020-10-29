@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["color_u32_from_vec4",""],["main",""]]});

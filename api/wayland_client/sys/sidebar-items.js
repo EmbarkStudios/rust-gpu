@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["client","Bindings to the client library `libwayland-client.so`"],["common","Various types and functions that are used by both the client and the server libraries."]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["CAPS",""],["NUM",""],["SCROLL",""]]});

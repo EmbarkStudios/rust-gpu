@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["DescriptorPool","A descriptor pool is a collection of memory from which descriptor sets are allocated."]]});

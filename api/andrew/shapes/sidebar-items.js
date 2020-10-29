@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["rectangle","A module that contains functions and objects relating to rectangles"]]});

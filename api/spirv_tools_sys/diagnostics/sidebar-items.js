@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["MessageLevel",""]],"fn":[["diagnostic_destroy","Destroys a diagnostic object.  This is a no-op if diagnostic is a null pointer."]],"struct":[["Diagnostic",""],["Position",""]],"type":[["MessageCallback",""]]});

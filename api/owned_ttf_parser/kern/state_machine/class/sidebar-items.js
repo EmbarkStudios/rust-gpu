@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["DELETED_GLYPH",""],["END_OF_LINE",""],["END_OF_TEXT",""],["LETTER",""],["OUT_OF_BOUNDS",""],["PUNCTUATION",""],["SPACE",""]]});

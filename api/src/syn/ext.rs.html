@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-0.15.44/src/ext.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ext.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.46/src/ext.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ext.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -140,36 +140,24 @@
 <span id="137">137</span>
 <span id="138">138</span>
 <span id="139">139</span>
-<span id="140">140</span>
-<span id="141">141</span>
-<span id="142">142</span>
-<span id="143">143</span>
-<span id="144">144</span>
-<span id="145">145</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Extension traits to provide parsing methods on foreign types.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! *This module is available if Syn is built with the `&quot;parsing&quot;` feature.*</span>
+<span class="doccomment">//! *This module is available only if Syn is built with the `&quot;parsing&quot;` feature.*</span>
 
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">buffer</span>::<span class="ident">Cursor</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">parse</span>::<span class="ident">Peek</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">parse</span>::{<span class="ident">ParseStream</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sealed</span>::<span class="ident">lookahead</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">token</span>::<span class="ident">CustomToken</span>;
 <span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">Ident</span>;
-
-<span class="kw">use</span> <span class="ident">parse</span>::{<span class="ident">ParseStream</span>, <span class="prelude-ty">Result</span>};
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
-<span class="kw">use</span> <span class="ident">buffer</span>::<span class="ident">Cursor</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
-<span class="kw">use</span> <span class="ident">parse</span>::<span class="ident">Peek</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
-<span class="kw">use</span> <span class="ident">sealed</span>::<span class="ident">lookahead</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
-<span class="kw">use</span> <span class="ident">token</span>::<span class="ident">CustomToken</span>;
 
 <span class="doccomment">/// Additional methods for `Ident` not provided by proc-macro2 or libproc_macro.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// This trait is sealed and cannot be implemented for types outside of Syn. It</span>
 <span class="doccomment">/// is implemented only for `proc_macro2::Ident`.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// *This trait is available if Syn is built with the `&quot;parsing&quot;` feature.*</span>
+<span class="doccomment">/// *This trait is available only if Syn is built with the `&quot;parsing&quot;` feature.*</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IdentExt</span>: <span class="ident">Sized</span> <span class="op">+</span> <span class="ident">private</span>::<span class="ident">Sealed</span> {
     <span class="doccomment">/// Parses any identifier including keywords.</span>
     <span class="doccomment">///</span>
@@ -178,7 +166,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Example</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ```edition2018</span>
+    <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use syn::{Error, Ident, Result, Token};</span>
     <span class="doccomment">/// use syn::ext::IdentExt;</span>
     <span class="doccomment">/// use syn::parse::ParseStream;</span>
@@ -208,7 +196,6 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This is different from `input.peek(Ident)` which only returns true in</span>
     <span class="doccomment">/// the case of an ident which is not a Rust keyword.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_upper_case_globals</span>)]</span>
     <span class="kw">const</span> <span class="ident">peek_any</span>: <span class="ident">private</span>::<span class="ident">PeekFn</span> <span class="op">=</span> <span class="ident">private</span>::<span class="ident">PeekFn</span>;
 
@@ -229,7 +216,7 @@
     <span class="doccomment">/// fixed prefix. Without using `unraw()`, this would tend to produce</span>
     <span class="doccomment">/// invalid identifiers like `__pyo3_get_r#move`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ```edition2018</span>
+    <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use proc_macro2::Span;</span>
     <span class="doccomment">/// use syn::Ident;</span>
     <span class="doccomment">/// use syn::ext::IdentExt;</span>
@@ -260,12 +247,10 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Peek</span> <span class="kw">for</span> <span class="ident">private</span>::<span class="ident">PeekFn</span> {
     <span class="kw">type</span> <span class="ident">Token</span> <span class="op">=</span> <span class="ident">private</span>::<span class="ident">IdentAny</span>;
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
 <span class="kw">impl</span> <span class="ident">CustomToken</span> <span class="kw">for</span> <span class="ident">private</span>::<span class="ident">IdentAny</span> {
     <span class="kw">fn</span> <span class="ident">peek</span>(<span class="ident">cursor</span>: <span class="ident">Cursor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="ident">cursor</span>.<span class="ident">ident</span>().<span class="ident">is_some</span>()
@@ -276,7 +261,6 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
 <span class="kw">impl</span> <span class="ident">lookahead</span>::<span class="ident">Sealed</span> <span class="kw">for</span> <span class="ident">private</span>::<span class="ident">PeekFn</span> {}
 
 <span class="kw">mod</span> <span class="ident">private</span> {
@@ -286,11 +270,15 @@
 
     <span class="kw">impl</span> <span class="ident">Sealed</span> <span class="kw">for</span> <span class="ident">Ident</span> {}
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PeekFn</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_can_use_associated_constants</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IdentAny</span>;
+
+    <span class="kw">impl</span> <span class="ident">Copy</span> <span class="kw">for</span> <span class="ident">PeekFn</span> {}
+    <span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">PeekFn</span> {
+        <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw-2">*</span><span class="self">self</span>
+        }
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "syn";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

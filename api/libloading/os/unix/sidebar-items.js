@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["RTLD_GLOBAL","Make loaded symbols available for resolution globally."],["RTLD_LAZY","Perform lazy binding."],["RTLD_LOCAL","Load symbols into an isolated namespace."],["RTLD_NOW","Perform eager binding."]],"struct":[["Library","A platform-specific counterpart of the cross-platform `Library`."],["Symbol","Symbol from a library."]]});

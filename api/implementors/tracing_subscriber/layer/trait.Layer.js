@@ -1,4 +1,0 @@
-(function() {var implementors = {};
-implementors["tracing_subscriber"] = [];
-implementors["wgpu_subscriber"] = [{"text":"impl&lt;S&gt; Layer&lt;S&gt; for ChromeTracingLayer <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;S: Subscriber + for&lt;'span&gt; LookupSpan&lt;'span&gt;,&nbsp;</span>","synthetic":false,"types":[]},{"text":"impl&lt;S&gt; Layer&lt;S&gt; for FmtLayer <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;S: Subscriber + for&lt;'span&gt; LookupSpan&lt;'span&gt;,&nbsp;</span>","synthetic":false,"types":[]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

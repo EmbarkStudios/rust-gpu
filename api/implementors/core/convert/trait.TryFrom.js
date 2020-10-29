@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["nix"] = [{"text":"impl TryFrom&lt;i32&gt; for Signal","synthetic":false,"types":[]},{"text":"impl TryFrom&lt;u32&gt; for BaudRate","synthetic":false,"types":[]}];
+implementors["spirv_tools"] = [{"text":"impl TryFrom&lt;Vec&lt;u8&gt;&gt; for Binary","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Line","A drawable object that represents a line"]]});

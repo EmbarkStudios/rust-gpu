@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["zwp_relative_pointer_manager_v1","get relative pointer objects"],["zwp_relative_pointer_v1","relative pointer object"]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["gtk_primary_selection","Gtk primary selection protocol"]]});
