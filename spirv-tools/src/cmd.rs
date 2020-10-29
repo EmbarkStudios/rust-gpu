@@ -41,7 +41,12 @@ impl From<CmdError> for crate::error::Error {
                     .into_iter()
                     .last()
                     .map(crate::error::Diagnostic::from)
-                    .unwrap_or_else(|| crate::error::Diagnostic::from(format!("tool exited with code {} and no output", exit_code)));
+                    .unwrap_or_else(|| {
+                        crate::error::Diagnostic::from(format!(
+                            "tool exited with code {} and no output",
+                            exit_code
+                        ))
+                    });
 
                 Self {
                     inner: SpirvResult::InternalError, // this isn't really correct
