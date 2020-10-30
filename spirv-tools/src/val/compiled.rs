@@ -77,18 +77,17 @@ impl Validator for CompiledValidator {
 
             let options = options.map(Options::from);
 
-            let options = match options {
-                Some(opts) => opts.inner,
-                None => std::ptr::null(),
+            let input = shared::Binary {
+                code: binary.as_ptr(),
+                size: binary.len(),
             };
 
-            let res = val::validate(
-                self.inner,
-                binary.as_ptr(),
-                binary.len(),
-                options,
-                &mut diagnostic,
-            );
+            let res = match options {
+                Some(opts) => {
+                    val::validate_with_options(self.inner, opts.inner, &input, &mut diagnostic)
+                }
+                None => val::validate(self.inner, &input, &mut diagnostic),
+            };
 
             use std::convert::TryFrom;
             let diagnostic = crate::error::Diagnostic::try_from(diagnostic).ok();

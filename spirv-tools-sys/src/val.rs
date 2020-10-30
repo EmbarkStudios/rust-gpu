@@ -20,15 +20,36 @@ pub enum ValidatorLimits {
 }
 
 extern "C" {
-    /// Validates a raw SPIR-V binary for correctness. Any errors will be written
-    /// into *diagnostic if diagnostic is non-null, otherwise the context's message
+    /// Validates a SPIR-V binary for correctness. Any errors will be written into
+    /// *diagnostic if diagnostic is non-null, otherwise the context's message
     /// consumer will be used.
-    #[link_name = "spvValidateBinary"]
+    ///
+    /// Validate for SPIR-V spec rules for the SPIR-V version named in the
+    /// binary's header (at word offset 1).  Additionally, if the context target
+    /// environment is a client API (such as Vulkan 1.1), then validate for that
+    /// client API version, to the extent that it is verifiable from data in the
+    /// binary itself.
+    #[link_name = "spvValidate"]
     pub fn validate(
         tool: *const shared::ToolContext,
-        binary: *const u32,
-        size: usize,
+        binary: *const shared::Binary,
+        diagnostic: *mut *mut crate::diagnostics::Diagnostic,
+    ) -> crate::shared::SpirvResult;
+
+    /// Validates a SPIR-V binary for correctness. Uses the provided Validator
+    /// options. Any errors will be written into *diagnostic if diagnostic is
+    /// non-null, otherwise the context's message consumer will be used.
+    ///
+    /// Validate for SPIR-V spec rules for the SPIR-V version named in the
+    /// binary's header (at word offset 1).  Additionally, if the context target
+    /// environment is a client API (such as Vulkan 1.1), then validate for that
+    /// client API version, to the extent that it is verifiable from data in the
+    /// binary itself, or in the validator options.
+    #[link_name = "spvValidateWithOptions"]
+    pub fn validate_with_options(
+        tool: *const shared::ToolContext,
         options: *const ValidatorOptions,
+        binary: *const shared::Binary,
         diagnostic: *mut *mut crate::diagnostics::Diagnostic,
     ) -> crate::shared::SpirvResult;
 
