@@ -10,7 +10,7 @@ The `rust-gpu` project currently supports a limited number of platforms and grap
 | Operating System | Version | Support | Notes
 |-------------------|---------|---------|-------
 | Windows | 10+ | Primary | |
-| Linux | ??? | Primary | |
+| Linux | Ubuntu 18.04+ | Primary | |
 | macOS | Catalina (10.15)+ | Secondary | Using [MoltenVK]
 
 [MoltenVK]: https://github.com/KhronosGroup/MoltenVK
