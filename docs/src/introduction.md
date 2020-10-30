@@ -8,7 +8,7 @@ how to use and develop on Rust-GPU.
 1. Clone the repository.
 
     ```shell
-    git clone --recurse-submodules https://github.com/EmbarkStudios.com/rust-gpu
+    git clone --recurse-submodules https://github.com/EmbarkStudios/rust-gpu
     ```
 
 1. Install the prerequisites using the provided setup script. From the root of the project, run:
