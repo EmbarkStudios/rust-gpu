@@ -17,7 +17,7 @@ function doc() {
 }
 
 # Core crates only!
-doc spirv-std
+cargo doc --manifest-path "spirv-std/Cargo.toml"
 doc spirv-tools-sys
 doc spirv-tools
 doc rustc_codegen_spirv
