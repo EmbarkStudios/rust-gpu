@@ -27,14 +27,12 @@ const TURBIDITY: f32 = 2.0;
 
 // TODO: add this to glam? Rust std has it on f32/f64
 fn pow(v: Vec3, power: f32) -> Vec3 {
-    let v: [f32; 3] = v.into();
-    Vec3::new(v[0].pow(power), v[1].pow(power), v[2].pow(power))
+    Vec3::new(v.x().pow(power), v.y().pow(power), v.z().pow(power))
 }
 
 // TODO: add this to glam? Rust std has it on f32/f64
 fn exp(v: Vec3) -> Vec3 {
-    let v: [f32; 3] = v.into();
-    Vec3::new(v[0].exp(), v[1].exp(), v[2].exp())
+    Vec3::new(v.x().exp(), v.y().exp(), v.z().exp())
 }
 
 /// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
