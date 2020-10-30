@@ -1,3 +1,20 @@
+//! Welcome to the API documentation for the `rust-gpu` project, this API is
+//! unstable and mainly intended for developing on the project itself. This is
+//! the API documentation for `rustc_codegen_spirv` which is not that useful on
+//! its own. You might also be interested in the following crates. There's also
+//! the [Rust GPU Dev Guide][gpu-dev-guide] which contains more user-level
+//! information on how to use and setup `rust-gpu`.
+//!
+//! - [`spriv-builder`]
+//! - [`spriv-std`]
+//! - [`spriv-tools`]
+//! - [`spriv-tools-sys`]
+//!
+//! [gpu-dev-guide]: https://embarkstudios.github.io/rust-gpu/book
+//! [`spriv-builder`]: https://embarkstudios.github.io/rust-gpu/api/spirv_builder
+//! [`spriv-std`]: https://embarkstudios.github.io/rust-gpu/api/spirv_std
+//! [`spriv-tools`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools
+//! [`spriv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
 #![feature(rustc_private)]
 #![feature(once_cell)]
 #![deny(clippy::unimplemented, clippy::ok_expect, clippy::mem_forget)]
