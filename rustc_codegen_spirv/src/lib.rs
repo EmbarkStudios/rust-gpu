@@ -92,10 +92,10 @@ use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::{ErrorReported, FatalError, Handler};
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::middle::cstore::{EncodedMetadata, MetadataLoader, MetadataLoaderDyn};
-use rustc_middle::mir::mono::MonoItem;
+use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::query::Providers;
-use rustc_middle::ty::{Instance, InstanceDef, TyCtxt};
+use rustc_middle::ty::{InstanceDef, TyCtxt};
 use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::Symbol;
@@ -103,22 +103,26 @@ use rustc_target::spec::abi::Abi;
 use rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions, TargetTriple};
 use std::any::Any;
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{fs::File, io::Write, sync::Arc};
 
-fn dump_mir<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) {
-    match instance.def {
-        InstanceDef::Item(_) => {
-            let mut mir = ::std::io::Cursor::new(Vec::new());
-            match rustc_mir::util::write_mir_pretty(tcx, Some(instance.def_id()), &mut mir) {
-                Ok(()) => println!("{}", String::from_utf8(mir.into_inner()).unwrap()),
-                Err(err) => println!("Couldn't dump MIR for {}: {}", instance, err),
+fn dump_mir<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    mono_items: &[(MonoItem<'_>, (Linkage, Visibility))],
+    path: &Path,
+) {
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    let mut file = File::create(path).unwrap();
+    for &(mono_item, (_, _)) in mono_items {
+        if let MonoItem::Fn(instance) = mono_item {
+            if matches!(instance.def, InstanceDef::Item(_)) {
+                let mut mir = ::std::io::Cursor::new(Vec::new());
+                if rustc_mir::util::write_mir_pretty(tcx, Some(instance.def_id()), &mut mir).is_ok()
+                {
+                    writeln!(file, "{}", String::from_utf8(mir.into_inner()).unwrap()).unwrap()
+                }
             }
         }
-        _ => println!(
-            "Couldn't dump MIR for {}, not InstanceDef::Item: {:?}",
-            instance, instance.def
-        ),
     }
 }
 
@@ -464,13 +468,14 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         let do_codegen = || {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
+            if let Ok(path) = env::var("DUMP_MIR") {
+                let mut path = PathBuf::from(path);
+                path.push(cgu_name.to_string());
+                dump_mir(tcx, &mono_items, &path);
+            }
+
             for &(mono_item, (linkage, visibility)) in mono_items.iter() {
                 let name = mono_item.symbol_name(cx.tcx).name;
-                if env::var("DUMP_MIR").is_ok() {
-                    if let MonoItem::Fn(instance) = mono_item {
-                        dump_mir(tcx, instance);
-                    }
-                }
                 if is_blocklisted_fn(name) {
                     continue;
                 }
@@ -480,11 +485,6 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
             // ... and now that we have everything pre-defined, fill out those definitions.
             for &(mono_item, _) in mono_items.iter() {
                 let name = mono_item.symbol_name(cx.tcx).name;
-                if env::var("DUMP_MIR").is_ok() {
-                    if let MonoItem::Fn(instance) = mono_item {
-                        dump_mir(tcx, instance);
-                    }
-                }
                 if is_blocklisted_fn(name) {
                     continue;
                 }
