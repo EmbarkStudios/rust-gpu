@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["vec3","Creates a `Vec3`."]],"struct":[["Vec3","A 3-dimensional vector without SIMD support."]]});

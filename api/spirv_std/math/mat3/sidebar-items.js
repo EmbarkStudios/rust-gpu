@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["mat3","Creates a `Mat3` from three column vectors."]],"struct":[["Mat3","A 3x3 column major matrix."]]});

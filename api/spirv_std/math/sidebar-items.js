@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["mat2",""],["mat3",""],["mat4",""],["vec2",""],["vec3",""],["vec4",""]],"trait":[["MathExt",""]]});

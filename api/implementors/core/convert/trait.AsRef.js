@@ -1,6 +1,7 @@
 (function() {var implementors = {};
 implementors["raw_string"] = [{"text":"impl AsRef&lt;RawStr&gt; for RawStr","synthetic":false,"types":[]},{"text":"impl AsRef&lt;RawStr&gt; for [u8]","synthetic":false,"types":[]},{"text":"impl AsRef&lt;RawStr&gt; for str","synthetic":false,"types":[]},{"text":"impl AsRef&lt;[u8]&gt; for RawStr","synthetic":false,"types":[]},{"text":"impl AsRef&lt;RawStr&gt; for RawString","synthetic":false,"types":[]},{"text":"impl AsRef&lt;[u8]&gt; for RawString","synthetic":false,"types":[]}];
 implementors["regex_syntax"] = [{"text":"impl AsRef&lt;[u8]&gt; for Literal","synthetic":false,"types":[]}];
+implementors["spirv_std"] = [{"text":"impl AsRef&lt;[f32; 16]&gt; for Mat4","synthetic":false,"types":[]}];
 implementors["spirv_tools"] = [{"text":"impl AsRef&lt;[u32]&gt; for Binary","synthetic":false,"types":[]},{"text":"impl AsRef&lt;[u8]&gt; for Binary","synthetic":false,"types":[]}];
 implementors["tempfile"] = [{"text":"impl AsRef&lt;Path&gt; for TempDir","synthetic":false,"types":[]},{"text":"impl AsRef&lt;Path&gt; for TempPath","synthetic":false,"types":[]},{"text":"impl AsRef&lt;OsStr&gt; for TempPath","synthetic":false,"types":[]},{"text":"impl AsRef&lt;Path&gt; for NamedTempFile","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
