@@ -29,17 +29,17 @@ how to use and develop on Rust-GPU.
 
 1. **optional** Install [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools#downloads) and add it to your `PATH`. You can skip this step if you just want to run examples with the defaults. See [Using installed SPIRV-Tools](#using-installed-spirv-tools) if you decide to go with this option.
 
-1. Next, look at the [examples](examples) folder. There are two projects here: [examples/example-shader](examples/example-shader) and [examples/example-runner](examples/example-runner). The example-shader project is a "GPU crate", one that will be compiled to a SPIR-V module. The example-runner project is a normal, CPU crate that uses vulkan to consume the example-shader SPIR-V module to display a shader.
+1. Next, look at the [examples](examples) folder. There are two kinds of targets here: [runners](examples/runners) and [shaders](examples/shaders). The projects inside `shaders` are "GPU crates", i.e. ones that will be compiled one or more SPIR-V modules. The `runner` projects are normal, CPU crates that use some graphics backend (currently, we have a [`wgpu` runner](examples/runners/wgpu), a [Vulkan runner](examples/runners/ash) through `ash`, and a barebones pure software [CPU runner](examples/runners/cpu)) to actually run one of the "GPU crate" shaders.
 
     Run the example:
 
     ```shell
-    cargo run --bin example-runner
+    cargo run --bin example-runner-wgpu
     ```
 
-    This will build `rustc_codegen_spirv`, the compiler, then use that compiler to build `example-shader` into a SPIR-V module, then finally, build a vulkan sample app (taken from [ash's examples](https://github.com/MaikKlein/ash/blob/master/examples/src/bin/triangle.rs)) using the built SPIR-V module to display the shader in a window.
+    This will build `rustc_codegen_spirv`, the compiler, then use that compiler to build [`sky-shader`](examples/shaders/sky-shader) into a SPIR-V module, then finally, build a `wgpu` sample app (modified from [`wgpu`'s examples](https://github.com/gfx-rs/wgpu-rs/tree/master/examples/hello-triangle)) using the built SPIR-V module to display the shader in a window.
 
-    All of this is orchestrated by the [spirv-builder](spirv-builder) crate, which is used in example-runner's `build.rs` file. Please look at that file, as well as both example projects in general, to see how to set up your own shaders!
+    All of this is orchestrated by the [spirv-builder](spirv-builder) crate, which is used in each of the example runners' [`build.rs` files](examples/runners/wgpu/build.rs). Please look at that file, as well as both example projects in general, to see how to set up your own shaders!
 
 Be aware that this project is in a very early phase - if the above doesn't work, please [file an issue](https://github.com/EmbarkStudios/rust-gpu/issues)!
 
@@ -62,7 +62,7 @@ cargo build -Z build-std=core --target spirv-unknown-unknown --release
 
 This will produce a `target/spirv-unknown-unknown/release/crate_name.spv` file.
 
-To create a GPU crate, look at the [examples/example-shader](examples/example-shader) crate. In short, reference the `spirv-std` crate, and use intrinsics defined there to create your shader.
+To create a GPU crate, look at the crates in [examples/shaders](examples/shaders). In short, reference the `spirv-std` crate, and use intrinsics defined there to create your shader.
 
 This is all a little convoluted, hence the [spirv-builder](spirv-builder) crate handles a lot of this.
 

@@ -10,7 +10,6 @@ use glam::{const_vec3, Mat4, Vec2, Vec3, Vec4};
 use spirv_std::{Input, MathExt, Output};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
-const LUMINANCE: f32 = 1.0;
 const MIE_COEFFICIENT: f32 = 0.005;
 const MIE_DIRECTIONAL_G: f32 = 0.8;
 const MIE_K_COEFFICIENT: Vec3 = const_vec3!([0.686, 0.678, 0.666]);
@@ -24,19 +23,16 @@ const REFRACTIVE_INDEX: f32 = 1.0003;
 const SUN_ANGULAR_DIAMETER_DEGREES: f32 = 0.0093333;
 const SUN_INTENSITY_FACTOR: f32 = 1000.0;
 const SUN_INTENSITY_FALLOFF_STEEPNESS: f32 = 1.5;
-const TONEMAP_WEIGHTING: Vec3 = const_vec3!([9.50; 3]);
 const TURBIDITY: f32 = 2.0;
 
 // TODO: add this to glam? Rust std has it on f32/f64
 fn pow(v: Vec3, power: f32) -> Vec3 {
-    let v: [f32; 3] = v.into();
-    Vec3::new(v[0].pow(power), v[1].pow(power), v[2].pow(power))
+    Vec3::new(v.x().pow(power), v.y().pow(power), v.z().pow(power))
 }
 
 // TODO: add this to glam? Rust std has it on f32/f64
 fn exp(v: Vec3) -> Vec3 {
-    let v: [f32; 3] = v.into();
-    Vec3::new(v[0].exp(), v[1].exp(), v[2].exp())
+    Vec3::new(v.x().exp(), v.y().exp(), v.z().exp())
 }
 
 /// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
@@ -90,15 +86,15 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
         )
 }
 
-fn uncharted2_tonemap(w: Vec3) -> Vec3 {
-    const A: Vec3 = const_vec3!([0.15; 3]); // Shoulder strength
-    const B: Vec3 = const_vec3!([0.50; 3]); // Linear strength
-    const C: Vec3 = const_vec3!([0.10; 3]); // Linear angle
-    const D: Vec3 = const_vec3!([0.20; 3]); // Toe strength
-    const E: Vec3 = const_vec3!([0.02; 3]); // Toe numerator
-    const F: Vec3 = const_vec3!([0.30; 3]); // Toe denominator
+fn tonemap(col: Vec3) -> Vec3 {
+    // see https://www.desmos.com/calculator/0eo9pzo1at
+    const A: f32 = 2.35;
+    const B: f32 = 2.8826666;
+    const C: f32 = 789.7459;
+    const D: f32 = 0.935;
 
-    ((w * (A * w + C * B) + D * E) / (w * (A * w + B) + D * F)) - E / F
+    let z = pow(col, A);
+    z / (pow(z, D) * B + Vec3::splat(C))
 }
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
@@ -149,16 +145,8 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     );
     let mut l0 = 0.1 * fex;
     l0 += sun_e * 19000.0 * fex * sundisk;
-    let mut tex_color = lin + l0;
-    tex_color *= Vec3::splat(0.04);
-    tex_color += Vec3::new(0.0, 0.001, 0.0025) * 0.3;
 
-    // Tonemapping
-    let white_scale = 1.0 / uncharted2_tonemap(TONEMAP_WEIGHTING);
-    let curr = uncharted2_tonemap(((2.0 / LUMINANCE.pow(4.0)).log2()) * tex_color);
-    let color = curr * white_scale;
-
-    pow(color, 1.0 / (1.2 + (1.2 * sunfade)))
+    lin + l0
 }
 
 pub fn fs(screen_pos: Vec2) -> Vec4 {
@@ -172,37 +160,45 @@ pub fn fs(screen_pos: Vec2) -> Vec4 {
         Vec4::new(0.0, -0.14834046, -0.98893654, 0.0),
     );
 
-    let cs_pos = Vec4::new(screen_pos.x(), -screen_pos.y(), 1.0, 1.0);
-    let ws_pos = {
-        let p = clip_to_world.mul_vec4(cs_pos);
+    let clip_pos = screen_pos.extend(1.0).extend(1.0);
+    let world_pos = {
+        let p = clip_to_world.mul_vec4(clip_pos);
         p.truncate() / p.w()
     };
-    let dir = (ws_pos - eye_pos).normalize();
+    let dir = (world_pos - eye_pos).normalize();
 
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
 
-    color.extend(1.0)
+    // Tonemapping
+    let color = color.max(Vec3::splat(0.0)).min(Vec3::splat(1024.0));
+
+    tonemap(color).extend(1.0)
 }
 
 #[allow(unused_attributes)]
 #[spirv(fragment)]
-pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
-    let v = input.load();
-    let color = fs(Vec2::new(v.x(), v.y()));
-    output.store(color)
+pub fn main_fs(in_pos: Input<Vec2>, mut output: Output<Vec4>) {
+    let color = fs(in_pos.load());
+    output.store(color);
 }
 
 #[allow(unused_attributes)]
 #[spirv(vertex)]
 pub fn main_vs(
-    in_pos: Input<Vec4>,
-    _in_color: Input<Vec4>,
-    #[spirv(position)] mut out_pos: Output<Vec4>,
-    mut out_color: Output<Vec4>,
+    #[spirv(vertex_index)] vert_idx: Input<i32>,
+    #[spirv(position)] mut builtin_pos: Output<Vec4>,
+    mut out_pos: Output<Vec2>,
 ) {
-    out_pos.store(in_pos.load());
-    out_color.store(in_pos.load());
+    let vert_idx = vert_idx.load();
+
+    // Create a "full screen triangle" by mapping the vertex index.
+    // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
+    let uv = Vec2::new(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
+    let pos = 2.0 * uv - Vec2::one();
+
+    builtin_pos.store(pos.extend(0.0).extend(1.0));
+    out_pos.store(pos);
 }
 
 #[cfg(all(not(test), target_arch = "spirv"))]
