@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use rustc_codegen_spirv::rspirv;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
@@ -23,6 +23,14 @@ impl<'a> std::fmt::Debug for PrettyString<'a> {
 // So make a global mutex wrapping every test.
 lazy_static! {
     static ref GLOBAL_MUTEX: Mutex<()> = Mutex::new(());
+}
+
+fn global_lock() -> MutexGuard<'static, ()> {
+    match GLOBAL_MUTEX.lock() {
+        Ok(guard) => guard,
+        // we don't care about poison - a previous test may have paniced, but that's okay
+        Err(poisoned) => poisoned.into_inner(),
+    }
 }
 
 static CARGO_TOML: &str = r#"[package]
@@ -80,7 +88,7 @@ fn read_module(path: &Path) -> Result<rspirv::dr::Module, Box<dyn Error>> {
 }
 
 fn val(src: &str) {
-    let _lock = GLOBAL_MUTEX.lock().unwrap();
+    let _lock = global_lock();
     // spirv-val is included in building
     build(src);
 }
@@ -102,7 +110,7 @@ fn assert_str_eq(expected: &str, result: &str) {
 }
 
 fn dis_fn(src: &str, func: &str, expect: &str) {
-    let _lock = GLOBAL_MUTEX.lock().unwrap();
+    let _lock = global_lock();
     let module = read_module(&build(src)).unwrap();
     let id = module
         .debugs
