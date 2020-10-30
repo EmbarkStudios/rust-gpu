@@ -1,22 +1,22 @@
 const SPIRV_BIN: &[u8] = include_bytes!("wgpu_example_shader.spv");
 
-fn validate_compiled(input: &[u8]) -> Option<Result<(), spirv_tools::Error>> {
+fn validate_compiled(_input: &[u8]) -> Option<Result<(), spirv_tools::Error>> {
     #[cfg(feature = "use-compiled-tools")]
     {
         use spirv_tools::val::{compiled::CompiledValidator, Validator};
         let cv = CompiledValidator::default();
-        Some(cv.validate(spirv_tools::util::to_binary(input).unwrap(), None))
+        Some(cv.validate(spirv_tools::util::to_binary(_input).unwrap(), None))
     }
     #[cfg(not(feature = "use-compiled-tools"))]
     None
 }
 
-fn validate_tool(input: &[u8]) -> Option<Result<(), spirv_tools::Error>> {
+fn validate_tool(_input: &[u8]) -> Option<Result<(), spirv_tools::Error>> {
     #[cfg(feature = "use-installed-tools")]
     {
         use spirv_tools::val::{tool::ToolValidator, Validator};
         let cv = ToolValidator::default();
-        Some(cv.validate(spirv_tools::util::to_binary(input).unwrap(), None))
+        Some(cv.validate(spirv_tools::util::to_binary(_input).unwrap(), None))
     }
     #[cfg(not(feature = "use-installed-tools"))]
     None
