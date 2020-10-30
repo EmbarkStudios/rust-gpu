@@ -285,16 +285,19 @@ fn get_possible_merge_positions(
         }
 
         for loop_info in &cf_info.loops {
-            // Make sure we are not looping. // TODO: only accept parent branch not children
-            if new_edges.contains(&loop_info.header_id) {
+            // Make sure we are not looping.
+            if block_is_parent_of(loop_info.header_id, start, blocks)
+                && new_edges.contains(&loop_info.header_id)
+            {
                 let index = new_edges
                     .iter()
                     .position(|x| *x == loop_info.header_id)
                     .unwrap();
                 new_edges.remove(index);
             }
-            // Make sure we are not continuing after a merge. TODO: make sure header of merge is parent.
-            if front == loop_info.merge_id {
+            // Make sure we are not continuing after a merge.
+            if block_is_parent_of(loop_info.merge_id, start, blocks) && front == loop_info.merge_id
+            {
                 new_edges.clear();
             }
         }
