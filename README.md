@@ -1,7 +1,8 @@
 # 🐉 Rust GPU
 
 [![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](https://embark.dev)
-[![Embark](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
+[![Discord](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
+[![Documentation](https://img.shields.io/badge/docs-API-blue)](https://embarkstudios.github.io/rust-gpu/api/rustc_codegen_spirv)
 [![dependency status](https://deps.rs/repo/github/EmbarkStudios/rust-gpu/status.svg)](https://deps.rs/repo/github/EmbarkStudios/rust-gpu)
 [![Build status](https://github.com/EmbarkStudios/rust-gpu/workflows/Continuous%20integration/badge.svg?branch=main)](https://github.com/EmbarkStudios/rust-gpu/actions)
 
