@@ -11,7 +11,6 @@
     clippy::enum_glob_use,
     clippy::pub_enum_variant_names,
     clippy::mem_forget,
-    clippy::use_self,
     clippy::filter_map_next,
     clippy::needless_continue,
     clippy::needless_borrow,
@@ -37,9 +36,8 @@
     nonstandard_style
 )]
 
-pub mod math;
-pub use crate::math::MathExt;
-pub use crate::math::*;
+mod math_ext;
+pub use math_ext::MathExt;
 
 macro_rules! pointer_addrspace_write {
     (false) => {};

@@ -34,7 +34,10 @@ clippy rustc_codegen_spirv
 clippy spirv-builder
 
 # Examples
-clippy examples/example-runner
+
+# disabled due to https://github.com/EmbarkStudios/rust-gpu/issues/186
+#clippy examples/example-runner
+
 clippy examples/wgpu-example-runner
 
 clippy_no_features examples/example-runner-cpu
