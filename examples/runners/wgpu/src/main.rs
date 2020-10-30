@@ -127,7 +127,11 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
 
 fn main() {
     let event_loop = EventLoop::new();
-    let window = winit::window::Window::new(&event_loop).unwrap();
+    let window = winit::window::WindowBuilder::new()
+        .with_title("Rust GPU - wgpu")
+        .with_inner_size(winit::dpi::LogicalSize::new(1280.0, 720.0))
+        .build(&event_loop)
+        .unwrap();
     #[cfg(not(target_arch = "wasm32"))]
     {
         wgpu_subscriber::initialize_default_subscriber(None);

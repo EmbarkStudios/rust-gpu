@@ -228,7 +228,7 @@ impl ExampleBase {
         unsafe {
             let events_loop = winit::event_loop::EventLoop::new();
             let window = winit::window::WindowBuilder::new()
-                .with_title("Ash - Example")
+                .with_title("Rust GPU - ash")
                 .with_inner_size(winit::dpi::LogicalSize::new(
                     f64::from(window_width),
                     f64::from(window_height),
