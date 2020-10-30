@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-0.6.13/src/to_tokens.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>to_tokens.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.7/src/to_tokens.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>to_tokens.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../quote/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -206,6 +206,10 @@
 <span id="203">203</span>
 <span id="204">204</span>
 <span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">TokenStreamExt</span>;
 
@@ -215,7 +219,7 @@
 
 <span class="kw">use</span> <span class="ident">proc_macro2</span>::{<span class="ident">Group</span>, <span class="ident">Ident</span>, <span class="ident">Literal</span>, <span class="ident">Punct</span>, <span class="ident">Span</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenTree</span>};
 
-<span class="doccomment">/// Types that can be interpolated inside a [`quote!`] invocation.</span>
+<span class="doccomment">/// Types that can be interpolated inside a `quote!` invocation.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`quote!`]: macro.quote.html</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ToTokens</span> {
@@ -231,7 +235,7 @@
     <span class="doccomment">/// Example implementation for a struct representing Rust paths like</span>
     <span class="doccomment">/// `std::cmp::PartialEq`:</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ```edition2018</span>
+    <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use proc_macro2::{TokenTree, Spacing, Span, Punct, TokenStream};</span>
     <span class="doccomment">/// use quote::{TokenStreamExt, ToTokens};</span>
     <span class="doccomment">///</span>
@@ -267,13 +271,21 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This method is implicitly implemented using `to_tokens`, and acts as a</span>
     <span class="doccomment">/// convenience method for consumers of the `ToTokens` trait.</span>
+    <span class="kw">fn</span> <span class="ident">to_token_stream</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">TokenStream</span>::<span class="ident">new</span>();
+        <span class="self">self</span>.<span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tokens</span>);
+        <span class="ident">tokens</span>
+    }
+
+    <span class="doccomment">/// Convert `self` directly into a `TokenStream` object.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This method is implicitly implemented using `to_tokens`, and acts as a</span>
+    <span class="doccomment">/// convenience method for consumers of the `ToTokens` trait.</span>
     <span class="kw">fn</span> <span class="ident">into_token_stream</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span>
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">TokenStream</span>::<span class="ident">new</span>();
-        <span class="self">self</span>.<span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tokens</span>);
-        <span class="ident">tokens</span>
+        <span class="self">self</span>.<span class="ident">to_token_stream</span>()
     }
 }
 
@@ -342,22 +354,18 @@
     <span class="ident">i16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i16_suffixed</span>
     <span class="ident">i32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i32_suffixed</span>
     <span class="ident">i64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i64_suffixed</span>
+    <span class="ident">i128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i128_suffixed</span>
     <span class="ident">isize</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">isize_suffixed</span>
 
     <span class="ident">u8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u8_suffixed</span>
     <span class="ident">u16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u16_suffixed</span>
     <span class="ident">u32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32_suffixed</span>
     <span class="ident">u64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64_suffixed</span>
+    <span class="ident">u128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u128_suffixed</span>
     <span class="ident">usize</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">usize_suffixed</span>
 
     <span class="ident">f32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f32_suffixed</span>
     <span class="ident">f64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64_suffixed</span>
-}
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">integer128</span>)]</span>
-<span class="macro">primitive</span><span class="macro">!</span> {
-    <span class="ident">i128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i128_suffixed</span>
-    <span class="ident">u128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u128_suffixed</span>
 }
 
 <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">char</span> {
