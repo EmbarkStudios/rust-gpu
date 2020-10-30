@@ -7,11 +7,9 @@
 use core::panic::PanicInfo;
 extern crate spirv_std;
 
-use spirv_std::Input;
+#[spirv(gl_compute(local_size_x=64))]
+pub fn main_cs() {
 
-#[spirv(gl_compute, local_size_x=64)]
-pub fn main_cs(y: Input<f32>) {
-    
 }
 
 #[cfg(not(test))]

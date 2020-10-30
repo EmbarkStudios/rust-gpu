@@ -4,7 +4,7 @@ use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attrs, SpirvAttribute, Entry};
 use rspirv::dr::Operand;
 use rspirv::spirv::{
-    Decoration, ExecutionMode, ExecutionModel, FunctionControl, StorageClass, Word,
+    Decoration, ExecutionModel, FunctionControl, StorageClass, Word,
 };
 use rustc_hir::Param;
 use rustc_middle::ty::{Instance, Ty};
@@ -55,10 +55,12 @@ impl<'tcx> CodegenCx<'tcx> {
             )
         }
         
-        match entry {
-            Entry::Shader { execution_model } => self.shader_entry_stub(entry_func, body.params, name, execution_model),
-            Entry::GLCompute { local_size } => self.gl_compute_entry_stub(entry_func, name, local_size),
-            Entry::Kernel => self.kernel_entry_stub(entry_func, name),
+        use ExecutionModel::*;
+        
+        match entry.execution_model {
+            Kernel => self.kernel_entry_stub(entry_func, name, entry),
+            GLCompute => self.compute_shader_entry_stub(entry_func, body.params, name, entry),
+            _ => self.shader_entry_stub(entry_func, body.params, name, entry),
         }
     }
 
@@ -67,8 +69,10 @@ impl<'tcx> CodegenCx<'tcx> {
         entry_func: SpirvValue,
         hir_params: &[Param<'tcx>],
         name: String,
-        execution_model: ExecutionModel,
+        entry: Entry,
     ) {
+        let execution_model = entry.execution_model;
+    
         let void = SpirvType::Void.def(self);
         let fn_void_void = SpirvType::Function {
             return_type: void,
@@ -121,10 +125,11 @@ impl<'tcx> CodegenCx<'tcx> {
                 .collect()
         };
         emit.entry_point(execution_model, fn_id, name, interface);
-        if execution_model == ExecutionModel::Fragment {
-            // TODO: Make this configurable.
-            emit.execution_mode(fn_id, ExecutionMode::OriginUpperLeft, &[]);
-        }
+        
+        entry.execution_modes.iter()
+            .for_each(|(execution_mode, execution_mode_extra)| {
+                emit.execution_mode(fn_id, *execution_mode, execution_mode_extra);
+            });
     }
 
     fn declare_parameter(
@@ -205,7 +210,10 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         entry_func: SpirvValue,
         name: String,
-    ) {
+        entry: Entry,
+    ) { 
+        let execution_model = entry.execution_model; 
+        
         let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
             SpirvType::Function {
                 return_type,
@@ -240,50 +248,79 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         emit.end_function().unwrap();
 
-        emit.entry_point(ExecutionModel::Kernel, fn_id, name, &[]);
+        emit.entry_point(execution_model, fn_id, name, &[]);
+        
+        entry.execution_modes.iter()
+            .for_each(|(execution_mode, execution_mode_extra)| {
+                emit.execution_mode(fn_id, *execution_mode, execution_mode_extra);
+            });
     }
-   
-    fn gl_compute_entry_stub(
+    
+    fn compute_shader_entry_stub(
         &self,
         entry_func: SpirvValue,
+        hir_params: &[Param<'tcx>],
         name: String,
-        local_size: [u32; 3],
+        entry: Entry,
     ) {
+        let execution_model = entry.execution_model;
+         
+        let void = SpirvType::Void.def(self);
+        let fn_void_void = SpirvType::Function {
+            return_type: void,
+            arguments: vec![],
+        }
+        .def(self);
         let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
             SpirvType::Function {
                 return_type,
                 arguments,
             } => (return_type, arguments),
             other => self.tcx.sess.fatal(&format!(
-                "Invalid compute_entry_stub type: {}",
+                "Invalid entry_stub type: {}",
                 other.debug(entry_func.ty, self)
             )),
         };
-        let mut emit = self.emit_global();
-        let fn_id = emit
-            .begin_function(
-                entry_func_return,
-                None,
-                FunctionControl::NONE,
-                entry_func.ty,
-            )
-            .unwrap();
+        let mut decoration_locations = HashMap::new();
+        // Create OpVariables before OpFunction so they're global instead of local vars.
         let arguments = entry_func_args
             .iter()
-            .map(|&ty| emit.function_parameter(ty).unwrap())
+            .zip(hir_params)
+            .map(|(&arg, hir_param)| {
+                self.declare_parameter(arg, hir_param, &mut decoration_locations)
+            })
             .collect::<Vec<_>>();
-        emit.begin_block(None).unwrap();
-        let call_result = emit
-            .function_call(entry_func_return, None, entry_func.def, arguments)
+        let mut emit = self.emit_global();
+        let fn_id = emit
+            .begin_function(void, None, FunctionControl::NONE, fn_void_void)
             .unwrap();
-        if self.lookup_type(entry_func_return) == SpirvType::Void {
-            emit.ret().unwrap();
-        } else {
-            emit.ret_value(call_result).unwrap();
-        }
+        emit.begin_block(None).unwrap();
+        emit.function_call(
+            entry_func_return,
+            None,
+            entry_func.def,
+            arguments.iter().map(|&(a, _)| a),
+        )
+        .unwrap();
+        emit.ret().unwrap();
         emit.end_function().unwrap();
 
-        emit.entry_point(ExecutionModel::GLCompute, fn_id, name, &[]);
-        emit.execution_mode(fn_id, ExecutionMode::LocalSize, local_size);
+        let interface: Vec<_> = if emit.version().unwrap() > (1, 3) {
+            // SPIR-V >= v1.4 includes all OpVariables in the interface.
+            arguments.into_iter().map(|(a, _)| a).collect()
+        } else {
+            // SPIR-V <= v1.3 only includes Input and Output in the interface.
+            arguments
+                .into_iter()
+                .filter(|&(_, s)| s == StorageClass::Input || s == StorageClass::Output)
+                .map(|(a, _)| a)
+                .collect()
+        };
+        emit.entry_point(execution_model, fn_id, name, interface);
+        
+        entry.execution_modes.iter()
+            .for_each(|(execution_mode, execution_mode_extra)| {
+                emit.execution_mode(fn_id, *execution_mode, execution_mode_extra);
+            });
     }
 }

@@ -6,7 +6,6 @@ async fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),
-            // Request an adapter which can render to our surface
             compatible_surface: None,
         })
         .await
@@ -52,7 +51,7 @@ fn disassemble_spirv(binary: impl AsRef<[u32]>) -> String {
 
 fn main() {
     let spirv = include_bytes_align_as!(u32, env!("wgpu_example_compute_shader.spv"));
-    println!("spirv: \n{}\n", disassemble_spirv(bytemuck::cast_slice(spirv)));
+    println!("{}\n", disassemble_spirv(bytemuck::cast_slice(spirv)));
     
     let (device, queue) = futures::executor::block_on(create_device_queue());
     let shader = device.create_shader_module(wgpu::util::make_spirv(spirv));    
@@ -115,8 +114,6 @@ fn main() {
         //cpass.set_push_constants(0, push_constants);
         cpass.dispatch(1, 1, 1);
     }
-    
-    //encoder.finish();
     
     queue.submit(Some(encoder.finish()));
     

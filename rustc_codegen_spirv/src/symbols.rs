@@ -1,5 +1,5 @@
 use crate::codegen_cx::CodegenCx;
-use rspirv::spirv::{BuiltIn, ExecutionModel, StorageClass};
+use rspirv::spirv::{BuiltIn, ExecutionModel, StorageClass, ExecutionMode};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_span::symbol::Symbol;
 use std::collections::HashMap;
@@ -16,6 +16,7 @@ pub struct Symbols {
     descriptor_set: Symbol,
     binding: Symbol,
     attributes: HashMap<Symbol, SpirvAttribute>,
+    execution_modes: HashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
 }
 
 const BUILTINS: &[(&str, BuiltIn)] = {
@@ -180,6 +181,90 @@ const EXECUTION_MODELS: &[(&str, ExecutionModel)] = {
     ]
 };
 
+#[derive(Copy, Clone, Debug)]
+enum ExecutionModeExtraDim {
+    None,
+    Value,
+    X,
+    Y,
+    Z    
+}
+
+const EXECUTION_MODES: &[(&str, ExecutionMode, ExecutionModeExtraDim)] = {
+    use ExecutionMode::*;
+    use ExecutionModeExtraDim::*;
+    &[
+        ("invocations", Invocations, Value),
+        ("spacing_equal", SpacingEqual, None),
+        ("spacing_fraction_even", SpacingFractionalEven, None),
+        ("spacing_fraction_odd", SpacingFractionalOdd, None),
+        ("vertex_order_cw", VertexOrderCw, None),
+        ("vertex_order_ccw", VertexOrderCcw, None),
+        ("pixel_center_integer", PixelCenterInteger, None),
+        ("orgin_upper_left", OriginUpperLeft, None),
+        ("origin_lower_left", OriginLowerLeft, None),
+        ("early_fragment_tests", EarlyFragmentTests, None),
+        ("point_mode", PointMode, None),
+        ("xfb", Xfb, None),
+        ("depth_replacing", DepthReplacing, None),
+        ("depth_greater", DepthGreater, None),
+        ("depth_less", DepthLess, None),
+        ("depth_unchanged", DepthUnchanged, None),
+        ("local_size_x", LocalSize, X),
+        ("local_size_y", LocalSize, Y),
+        ("local_size_z", LocalSize, Z),
+        ("local_size_hint_x", LocalSizeHint, X),
+        ("local_size_hint_y", LocalSizeHint, Y),
+        ("local_size_hint_z", LocalSizeHint, Z),
+        ("input_points", InputPoints, None),
+        ("input_lines", InputLines, None),
+        ("input_lines_adjacency", InputLinesAdjacency, None),
+        ("triangles", Triangles, None),
+        ("input_triangles_adjacency", InputTrianglesAdjacency, None),
+        ("quads", Quads, None),
+        ("isolines", Isolines, None),
+        ("output_vertices", OutputVertices, Value),
+        ("output_points", OutputPoints, None),
+        ("output_line_strip", OutputLineStrip, None),
+        ("output_triangle_strip", OutputTriangleStrip, None),
+        ("vec_type_hint", VecTypeHint, Value),
+        ("contraction_off", ContractionOff, None),
+        ("initializer", Initializer, None),
+        ("finalizer", Finalizer, None),
+        ("subgroup_size", SubgroupSize, Value),
+        ("subgroups_per_workgroup", SubgroupsPerWorkgroup, Value),
+        ("subgroups_per_workgroup_id", SubgroupsPerWorkgroupId, Value),
+        ("local_size_id_x", LocalSizeId, X),
+        ("local_size_id_y", LocalSizeId, Y),
+        ("local_size_id_z", LocalSizeId, Z),
+        ("local_size_hint_id", LocalSizeHintId, Value),
+        ("post_depth_coverage", PostDepthCoverage, None),
+        ("denorm_preserve", DenormPreserve, None),
+        ("denorm_flush_to_zero", DenormFlushToZero, Value),
+        ("signed_zero_inf_nan_preserve", SignedZeroInfNanPreserve, Value),
+        ("rounding_mode_rte", RoundingModeRTE, Value),
+        ("rounding_mode_rtz", RoundingModeRTZ, Value),
+        ("stencil_ref_replacing_ext", StencilRefReplacingEXT, None),
+        ("output_lines_nv", OutputLinesNV, None),
+        ("output_primitives_nv", OutputPrimitivesNV, Value),
+        ("derivative_group_quads_nv", DerivativeGroupQuadsNV, None),
+        ("output_triangles_nv", OutputTrianglesNV, None),
+        ("pixel_interlock_ordered_ext", PixelInterlockOrderedEXT, None),
+        ("pixel_interlock_unordered_ext", PixelInterlockUnorderedEXT, None),
+        ("sample_interlock_ordered_ext", SampleInterlockOrderedEXT, None),
+        ("sample_interlock_unordered_ext", SampleInterlockUnorderedEXT, None),
+        ("shading_rate_interlock_ordered_ext", ShadingRateInterlockOrderedEXT, None),
+        ("shading_rate_interlock_unordered_ext", ShadingRateInterlockUnorderedEXT, None),
+        // Reserved
+        /*("max_workgroup_size_intel_x", MaxWorkgroupSizeINTEL, X),
+        ("max_workgroup_size_intel_y", MaxWorkgroupSizeINTEL, Y),
+        ("max_workgroup_size_intel_z", MaxWorkgroupSizeINTEL, Z),
+        ("max_work_dim_intel", MaxWorkDimINTEL, Value),
+        ("no_global_offset_intel", NoGlobalOffsetINTEL, None),
+        ("num_simd_workitems_intel", NumSIMDWorkitemsINTEL, Value),*/
+    ]
+};
+
 impl Symbols {
     pub fn new() -> Self {
         let builtins = BUILTINS
@@ -190,7 +275,7 @@ impl Symbols {
             .map(|&(a, b)| (a, SpirvAttribute::StorageClass(b)));
         let execution_models = EXECUTION_MODELS
             .iter()
-            .map(|&(a, b)| (a, SpirvAttribute::ExecutionModel(b)));
+            .map(|&(a, b)| (a, SpirvAttribute::Entry(b.into())));
         let custom = std::iter::once((
             "really_unsafe_ignore_bitcasts",
             SpirvAttribute::ReallyUnsafeIgnoreBitcasts,
@@ -207,6 +292,12 @@ impl Symbols {
             // loop here to error on duplicates.
             assert!(old.is_none());
         }
+        let mut execution_modes = HashMap::new();
+        EXECUTION_MODES.iter()
+            .for_each(|(key, mode, dim)| {
+                let old = execution_modes.insert(Symbol::intern(key), (*mode, *dim));
+                assert!(old.is_none());
+            }); 
         Self {
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
@@ -214,124 +305,62 @@ impl Symbols {
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             attributes,
+            execution_modes,
+        }
+    }
+} 
+
+#[derive(Copy, Clone, Debug)]
+pub struct ExecutionModeExtra {
+    args: [u32; 3],
+    len: u8 
+}
+
+impl ExecutionModeExtra {
+    fn new(args: impl AsRef<[u32]>) -> Self {
+        let _args = args.as_ref();
+        let mut args = [0; 3];
+        args[.._args.len()].copy_from_slice(_args);
+        let len = _args.len() as u8;
+        Self {
+            args,
+            len
         }
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum Entry {
-    Shader { execution_model: ExecutionModel },
-    Kernel,
-    GLCompute { local_size: [u32; 3] },
+impl AsRef<[u32]> for ExecutionModeExtra {
+    fn as_ref(&self) -> &[u32] {
+        &self.args[..self.len as _]
+    } 
+}
+
+
+
+#[derive(Clone, Debug)]
+pub struct Entry {
+    pub execution_model: ExecutionModel,
+    pub execution_modes: Vec<(ExecutionMode, ExecutionModeExtra)>,
+}
+
+impl From<ExecutionModel> for Entry {
+    fn from(execution_model: ExecutionModel) -> Self {
+        Self {
+            execution_model,
+            execution_modes: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub enum SpirvAttribute {
     Builtin(BuiltIn),
     StorageClass(StorageClass),
-    ExecutionModel(ExecutionModel),
+    Entry(Entry),
     DescriptorSet(u32),
     Binding(u32),
     ReallyUnsafeIgnoreBitcasts,
 }
-
-
-
-// Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused
-// reporting already happens even before we get here :(
-/// Returns empty if this attribute is not a spirv attribute, or if it's malformed (and an error is
-/// reported).
-pub fn parse_entry_attrs(
-    cx: &CodegenCx<'_>,
-    attrs: &[Attribute],
-) -> impl Iterator<Item = Option<Entry>> {
-    fn lookup_execution_model(name: impl AsRef<str>) -> Option<&'static ExecutionModel> {
-        let name = name.as_ref();
-        EXECUTION_MODELS.iter()
-            .find(|(n, _)| n == &name)
-            .map(|(_, e)| e)   
-    }
-
-    attrs.into_iter()
-        .filter_map(|attr| {
-            let is_spirv = match attr.kind {
-                AttrKind::Normal(ref item) => {
-                    // TODO: We ignore the rest of the path. Is this right?
-                    let last = item.path.segments.last();
-                    last.map_or(false, |seg| seg.ident.name == cx.sym.spirv)
-                }
-                AttrKind::DocComment(..) => false,
-            };
-            if is_spirv {
-                let args = attr.meta_item_list();
-                if args.is_none() {
-                    cx.tcx.sess.span_err(
-                        attr.span,
-                        "#[spirv(..)] attribute must have at least one argument",
-                    );
-                }
-                args
-            }
-            else {
-                None
-            }
-        })
-        .map(|args| {
-            match args.as_slice() {
-                [] => unreachable!(),
-                [arg] => {
-                    let name = arg.name_or_empty()
-                        .as_str();
-                    lookup_execution_model(&*name)
-                        .map(|execution_model| {
-                        match execution_model {
-                            ExecutionModel::GLCompute => Entry::GLCompute { local_size: [1, 1, 1] },
-                            ExecutionModel::Kernel => Entry::Kernel,
-                            &execution_model => Entry::Shader { execution_model },
-                        }
-                    })
-                }, 
-                args => {
-                    let name = args[0].name_or_empty()
-                        .as_str();
-                    lookup_execution_model(&*name)
-                        .map(|execution_model| {
-                        match execution_model {
-                            ExecutionModel::GLCompute => {
-                                let mut local_size = [1, 1, 1];
-                                args[1..]
-                                    .iter()
-                                    .for_each(|arg| {
-                                        let name = &*arg.name_or_empty()
-                                            .as_str();
-                                        match name {
-                                            "local_size_x" | "local_size_y" | "local_size_z" => {
-                                                parse_attr_int_value(cx, arg)
-                                                    .map(|x| {
-                                                        match name {
-                                                            "local_size_x" => { local_size[0] = x; },
-                                                            "local_size_y" => { local_size[1] = x; },
-                                                            "local_size_z" => { local_size[2] = x; },
-                                                            _ => unreachable!(),
-                                                        }
-                                                    });
-                                            },
-                                            _ => () //TODO: Error here?
-                                        }
-                                    });
-                                
-                                Entry::GLCompute { local_size }
-                            },
-                            //TODO: Report unsupported arguments here?
-                            ExecutionModel::Kernel => Entry::Kernel,
-                            &execution_model => Entry::Shader { execution_model },
-                        } 
-                    })
-                },
-            }
-        }).collect::<Vec<_>>().into_iter()
-}
-
 
 // Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused
 // reporting already happens even before we get here :(
@@ -362,6 +391,7 @@ pub fn parse_attrs(
             );
             Vec::new()
         };
+        
         args.into_iter().filter_map(move |ref arg| {
             if arg.has_name(cx.sym.descriptor_set) {
                 match parse_attr_int_value(cx, arg) {
@@ -384,15 +414,169 @@ pub fn parse_attrs(
                         return None;
                     }
                 };
-                match cx.sym.attributes.get(&name.name) {
-                    Some(a) => Some(a.clone()),
-                    None => {
-                        cx.tcx
-                            .sess
-                            .span_err(name.span, "unknown argument to spirv attribute");
-                        None
-                    }
+                let result = {
+                    cx.sym.attributes.get(&name.name)
+                        .map(|a| {
+                            let mut a = a.clone();
+                            use SpirvAttribute::*;
+                            use ExecutionModel::*;
+                            use ExecutionMode::*;
+                            match &mut a {
+                                Entry(e) => {
+                                    // for a given entry, gather up the additional attributes 
+                                    // in this case ExecutionMode's, some have extra arguments
+                                    // others are specified with x, y, or z components
+                                    // ie #[spirv(fragment(origin_lower_left))] or #[spirv(gl_compute(local_size_x=64, local_size_y=8))] 
+                                    let mut origin_mode: Option<ExecutionMode> = None;
+                                    let mut local_size: Option<[u32; 3]> = None;
+                                    let mut local_size_hint: Option<[u32; 3]> = None;
+                                    // Reserved
+                                    //let mut max_workgroup_size_intel: Option<[u32; 3]> = None;
+                                    if let Some(attrs) = arg.meta_item_list() {
+                                        attrs.iter()
+                                            .for_each(|attr| {
+                                                if let Some(attr_name) = attr.ident() {
+                                                    if let Some((execution_mode, extra_dim)) = cx.sym.execution_modes.get(&attr_name.name) {
+                                                        use ExecutionModeExtraDim::*;
+                                                        let val = match extra_dim {
+                                                            None => Option::None,
+                                                            _ => parse_attr_int_value(cx, attr)
+                                                        };
+                                                        match execution_mode {
+                                                            OriginUpperLeft | OriginLowerLeft => {
+                                                                origin_mode.replace(*execution_mode);        
+                                                            },  
+                                                            LocalSize => {
+                                                                let val = val.unwrap();
+                                                                if local_size.is_none() {
+                                                                    local_size.replace([1, 1, 1]);
+                                                                }
+                                                                let local_size = local_size.as_mut()
+                                                                    .unwrap();
+                                                                match extra_dim {
+                                                                    X => {
+                                                                        local_size[0] = val;
+                                                                    },
+                                                                    Y => {
+                                                                        local_size[1] = val;
+                                                                    },
+                                                                    Z => {
+                                                                        local_size[2] = val;
+                                                                    },
+                                                                    _ => unreachable!(),
+                                                                }
+                                                            },
+                                                            LocalSizeHint => {
+                                                                let val = val.unwrap();
+                                                                if local_size_hint.is_none() {
+                                                                    local_size_hint.replace([1, 1, 1]);
+                                                                }
+                                                                let local_size_hint = local_size_hint.as_mut()
+                                                                    .unwrap();
+                                                                match extra_dim {
+                                                                    X => {
+                                                                        local_size_hint[0] = val;
+                                                                    },
+                                                                    Y => {
+                                                                        local_size_hint[1] = val;
+                                                                    },
+                                                                    Z => {
+                                                                        local_size_hint[2] = val;
+                                                                    },
+                                                                    _ => unreachable!(),
+                                                                }
+                                                            },
+                                                            // Reserved
+                                                            /*MaxWorkgroupSizeINTEL => {
+                                                                let val = val.unwrap();
+                                                                if max_workgroup_size_intel.is_none() {
+                                                                    max_workgroup_size_intel.replace([1, 1, 1]);
+                                                                }
+                                                                let max_workgroup_size_intel = max_workgroup_size_intel.as_mut()
+                                                                    .unwrap();
+                                                                match extra_dim {
+                                                                    X => {
+                                                                        max_workgroup_size_intel[0] = val;
+                                                                    },
+                                                                    Y => {
+                                                                        max_workgroup_size_intel[1] = val;
+                                                                    },
+                                                                    Z => {
+                                                                        max_workgroup_size_intel[2] = val;
+                                                                    },
+                                                                    _ => unreachable!(),
+                                                                }
+                                                            },*/
+                                                            _ => {
+                                                                if let Some(val) = val {
+                                                                    e.execution_modes.push((*execution_mode, ExecutionModeExtra::new([val])));
+                                                                }
+                                                                else {
+                                                                    e.execution_modes.push((*execution_mode, ExecutionModeExtra::new([])));
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    else {
+                                                        cx.tcx.sess.span_err(
+                                                            arg.span(),
+                                                            &format!(
+                                                                "#[spirv({}(..))] unknown attribute argument {}", 
+                                                                name.name.to_ident_string(),
+                                                                attr_name.name.to_ident_string()
+                                                            ),
+                                                        );
+                                                    }
+                                                }
+                                                else {
+                                                    cx.tcx.sess.span_err(
+                                                        arg.span(),
+                                                        &format!(
+                                                            "#[spirv({}(..))] attribute argument must be single identifier", 
+                                                            name.name.to_ident_string()
+                                                        ),
+                                                    );
+                                                }
+                                                    
+                                            });
+                                    }
+                                    match e.execution_model {
+                                        Fragment => {
+                                            //FIXME: Is this the correct default?
+                                            let origin_mode = origin_mode.unwrap_or(OriginUpperLeft);
+                                            e.execution_modes.push((origin_mode, ExecutionModeExtra::new([])));
+                                        },
+                                        GLCompute => {
+                                            let local_size = local_size.unwrap_or([1, 1, 1]);
+                                            e.execution_modes.push((LocalSize, ExecutionModeExtra::new(local_size)));
+                                        },
+                                        Kernel => {
+                                            if let Some(local_size) = local_size {
+                                                e.execution_modes.push((LocalSize, ExecutionModeExtra::new(local_size)));
+                                            }
+                                            if let Some(local_size_hint) = local_size_hint {
+                                                e.execution_modes.push((LocalSizeHint, ExecutionModeExtra::new(local_size_hint)));
+                                            }
+                                            // Reserved
+                                            /*if let Some(max_workgroup_size_intel) = max_workgroup_size_intel {
+                                                e.execution_modes.push((MaxWorkgroupSizeINTEL, ExecutionModeExtra::new(max_workgroup_size_intel)));
+                                            }*/
+                                        },
+                                        //TODO: Cover more defaults
+                                        _ => {},
+                                    }
+                                }
+                                _ => {}
+                            }
+                            a
+                        })
+                };
+                if result.is_none() {
+                    cx.tcx
+                        .sess
+                        .span_err(name.span, "unknown argument to spirv attribute");
                 }
+                result
             }
         })
     });
