@@ -87,6 +87,23 @@ pub fn main(i: Input<i32>) {
 }
 
 #[test]
+fn cf_while_if_break_else_break() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(i: Input<i32>) {
+    while i.load() < 10 {
+        if i.load() == 0 {
+            break;
+        } else {
+            break;
+        }
+    }
+}
+"#);
+}
+
+#[test]
 fn cf_if_while() {
     val(r#"
 #[allow(unused_attributes)]
