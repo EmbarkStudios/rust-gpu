@@ -38,8 +38,8 @@ clippy spirv-builder
 # disabled due to https://github.com/EmbarkStudios/rust-gpu/issues/186
 #clippy examples/example-runner
 
-clippy examples/wgpu-example-runner
+clippy examples/runners/wgpu
 
-clippy_no_features examples/example-runner-cpu
-clippy_no_features examples/example-shader
-clippy_no_features examples/wgpu-example-shader
+clippy_no_features examples/runners/cpu
+clippy_no_features examples/shaders/sky-shader
+clippy_no_features examples/shaders/simplest-shader
