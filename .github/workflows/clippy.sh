@@ -35,11 +35,10 @@ clippy spirv-builder
 
 # Examples
 
-# disabled due to https://github.com/EmbarkStudios/rust-gpu/issues/186
-#clippy examples/example-runner
-
+clippy examples/runners/ash
 clippy examples/runners/wgpu
 
 clippy_no_features examples/runners/cpu
-clippy_no_features examples/shaders/sky-shader
+# disabled due to https://github.com/EmbarkStudios/rust-gpu/issues/186
+# clippy_no_features examples/shaders/sky-shader
 clippy_no_features examples/shaders/simplest-shader
