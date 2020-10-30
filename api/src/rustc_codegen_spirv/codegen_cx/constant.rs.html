@@ -510,25 +510,6 @@
 <span id="507">507</span>
 <span id="508">508</span>
 <span id="509">509</span>
-<span id="510">510</span>
-<span id="511">511</span>
-<span id="512">512</span>
-<span id="513">513</span>
-<span id="514">514</span>
-<span id="515">515</span>
-<span id="516">516</span>
-<span id="517">517</span>
-<span id="518">518</span>
-<span id="519">519</span>
-<span id="520">520</span>
-<span id="521">521</span>
-<span id="522">522</span>
-<span id="523">523</span>
-<span id="524">524</span>
-<span id="525">525</span>
-<span id="526">526</span>
-<span id="527">527</span>
-<span id="528">528</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -543,7 +524,6 @@
 <span class="kw">use</span> <span class="ident">rustc_mir</span>::<span class="ident">interpret</span>::<span class="ident">Scalar</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">symbol</span>::<span class="ident">Symbol</span>;
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{<span class="self">self</span>, <span class="ident">AddressSpace</span>, <span class="ident">HasDataLayout</span>, <span class="ident">LayoutOf</span>, <span class="ident">Primitive</span>, <span class="ident">Size</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Range</span>;
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
@@ -937,7 +917,6 @@
                     <span class="string">&quot;create_const_alloc must consume all bytes of an Allocation after an unsized struct&quot;</span>
                 );
                 }
-                <span class="self">Self</span>::<span class="ident">assert_uninit</span>(<span class="ident">alloc</span>, <span class="ident">base</span>, <span class="kw-2">*</span><span class="ident">offset</span>, <span class="ident">occupied_spaces</span>);
                 <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>)
             }
             <span class="ident">SpirvType</span>::<span class="ident">Opaque</span> { <span class="ident">name</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
@@ -1039,23 +1018,6 @@
         <span class="kw">let</span> <span class="kw-2">&amp;</span>((), <span class="ident">alloc_id</span>) <span class="op">=</span> <span class="ident">alloc</span>.<span class="ident">relocations</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">off</span>)).<span class="ident">unwrap</span>();
         <span class="kw-2">*</span><span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">len</span>);
         <span class="ident">Pointer</span>::<span class="ident">new_with_tag</span>(<span class="ident">alloc_id</span>, <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">inner_offset</span>), ())
-    }
-
-    <span class="kw">fn</span> <span class="ident">assert_uninit</span>(
-        <span class="ident">alloc</span>: <span class="kw-2">&amp;</span><span class="ident">Allocation</span>,
-        <span class="ident">start</span>: <span class="ident">Size</span>,
-        <span class="ident">end</span>: <span class="ident">Size</span>,
-        <span class="ident">occupied_ranges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Size</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) {
-        <span class="comment">// Range&lt;Size&gt; doesn&#39;t impl Iterator, so manually do it.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">start</span>;
-        <span class="kw">while</span> <span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">end</span> {
-            <span class="macro">assert_eq</span><span class="macro">!</span>(
-                <span class="ident">occupied_ranges</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">range</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>)),
-                <span class="ident">alloc</span>.<span class="ident">init_mask</span>().<span class="ident">get</span>(<span class="ident">index</span>)
-            );
-            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="number">1</span>);
-        }
     }
 }
 </pre></div>
