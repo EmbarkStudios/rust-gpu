@@ -17,6 +17,7 @@ function doc() {
 }
 
 # Core crates only!
+doc spirv-std
 doc spirv-tools-sys
 doc spirv-tools
 doc rustc_codegen_spirv
