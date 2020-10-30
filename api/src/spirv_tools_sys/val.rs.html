@@ -132,6 +132,27 @@
 <span id="129">129</span>
 <span id="130">130</span>
 <span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">shared</span>;
 
@@ -155,15 +176,36 @@
 }
 
 <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-    <span class="doccomment">/// Validates a raw SPIR-V binary for correctness. Any errors will be written</span>
-    <span class="doccomment">/// into *diagnostic if diagnostic is non-null, otherwise the context&#39;s message</span>
+    <span class="doccomment">/// Validates a SPIR-V binary for correctness. Any errors will be written into</span>
+    <span class="doccomment">/// *diagnostic if diagnostic is non-null, otherwise the context&#39;s message</span>
     <span class="doccomment">/// consumer will be used.</span>
-    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidateBinary&quot;</span>]</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Validate for SPIR-V spec rules for the SPIR-V version named in the</span>
+    <span class="doccomment">/// binary&#39;s header (at word offset 1).  Additionally, if the context target</span>
+    <span class="doccomment">/// environment is a client API (such as Vulkan 1.1), then validate for that</span>
+    <span class="doccomment">/// client API version, to the extent that it is verifiable from data in the</span>
+    <span class="doccomment">/// binary itself.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidate&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate</span>(
         <span class="ident">tool</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">shared</span>::<span class="ident">ToolContext</span>,
-        <span class="ident">binary</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u32</span>,
-        <span class="ident">size</span>: <span class="ident">usize</span>,
+        <span class="ident">binary</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">shared</span>::<span class="ident">Binary</span>,
+        <span class="ident">diagnostic</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">crate</span>::<span class="ident">diagnostics</span>::<span class="ident">Diagnostic</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">shared</span>::<span class="ident">SpirvResult</span>;
+
+    <span class="doccomment">/// Validates a SPIR-V binary for correctness. Uses the provided Validator</span>
+    <span class="doccomment">/// options. Any errors will be written into *diagnostic if diagnostic is</span>
+    <span class="doccomment">/// non-null, otherwise the context&#39;s message consumer will be used.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Validate for SPIR-V spec rules for the SPIR-V version named in the</span>
+    <span class="doccomment">/// binary&#39;s header (at word offset 1).  Additionally, if the context target</span>
+    <span class="doccomment">/// environment is a client API (such as Vulkan 1.1), then validate for that</span>
+    <span class="doccomment">/// client API version, to the extent that it is verifiable from data in the</span>
+    <span class="doccomment">/// binary itself, or in the validator options.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;spvValidateWithOptions&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_with_options</span>(
+        <span class="ident">tool</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">shared</span>::<span class="ident">ToolContext</span>,
         <span class="ident">options</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ValidatorOptions</span>,
+        <span class="ident">binary</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">shared</span>::<span class="ident">Binary</span>,
         <span class="ident">diagnostic</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">crate</span>::<span class="ident">diagnostics</span>::<span class="ident">Diagnostic</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">shared</span>::<span class="ident">SpirvResult</span>;
 
