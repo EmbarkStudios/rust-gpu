@@ -220,7 +220,7 @@ impl<'a, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         _function_source_hash: u64,
         _id: CounterValueReference,
         _region: CodeRegion,
-    ) {
+    ) -> bool {
         todo!()
     }
 
@@ -232,11 +232,11 @@ impl<'a, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         _op: Op,
         _rhs: ExpressionOperandId,
         _region: CodeRegion,
-    ) {
+    ) -> bool {
         todo!()
     }
 
-    fn add_unreachable_region(&mut self, _instance: Instance<'tcx>, _region: CodeRegion) {
+    fn add_unreachable_region(&mut self, _instance: Instance<'tcx>, _region: CodeRegion) -> bool {
         todo!()
     }
 }

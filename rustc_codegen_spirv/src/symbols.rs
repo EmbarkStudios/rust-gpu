@@ -1,7 +1,7 @@
 use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::{BuiltIn, ExecutionModel, StorageClass, ExecutionMode};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
-use rustc_span::symbol::Symbol;
+use rustc_span::symbol::{Symbol, Ident};
 use std::collections::HashMap;
 
 /// Various places in the codebase (mostly attribute parsing) need to compare rustc Symbols to particular keywords.
@@ -419,153 +419,10 @@ pub fn parse_attrs(
                         .map(|a| {
                             let mut a = a.clone();
                             use SpirvAttribute::*;
-                            use ExecutionModel::*;
-                            use ExecutionMode::*;
                             match &mut a {
-                                Entry(e) => {
-                                    // for a given entry, gather up the additional attributes 
-                                    // in this case ExecutionMode's, some have extra arguments
-                                    // others are specified with x, y, or z components
-                                    // ie #[spirv(fragment(origin_lower_left))] or #[spirv(gl_compute(local_size_x=64, local_size_y=8))] 
-                                    let mut origin_mode: Option<ExecutionMode> = None;
-                                    let mut local_size: Option<[u32; 3]> = None;
-                                    let mut local_size_hint: Option<[u32; 3]> = None;
-                                    // Reserved
-                                    //let mut max_workgroup_size_intel: Option<[u32; 3]> = None;
-                                    if let Some(attrs) = arg.meta_item_list() {
-                                        attrs.iter()
-                                            .for_each(|attr| {
-                                                if let Some(attr_name) = attr.ident() {
-                                                    if let Some((execution_mode, extra_dim)) = cx.sym.execution_modes.get(&attr_name.name) {
-                                                        use ExecutionModeExtraDim::*;
-                                                        let val = match extra_dim {
-                                                            None => Option::None,
-                                                            _ => parse_attr_int_value(cx, attr)
-                                                        };
-                                                        match execution_mode {
-                                                            OriginUpperLeft | OriginLowerLeft => {
-                                                                origin_mode.replace(*execution_mode);        
-                                                            },  
-                                                            LocalSize => {
-                                                                let val = val.unwrap();
-                                                                if local_size.is_none() {
-                                                                    local_size.replace([1, 1, 1]);
-                                                                }
-                                                                let local_size = local_size.as_mut()
-                                                                    .unwrap();
-                                                                match extra_dim {
-                                                                    X => {
-                                                                        local_size[0] = val;
-                                                                    },
-                                                                    Y => {
-                                                                        local_size[1] = val;
-                                                                    },
-                                                                    Z => {
-                                                                        local_size[2] = val;
-                                                                    },
-                                                                    _ => unreachable!(),
-                                                                }
-                                                            },
-                                                            LocalSizeHint => {
-                                                                let val = val.unwrap();
-                                                                if local_size_hint.is_none() {
-                                                                    local_size_hint.replace([1, 1, 1]);
-                                                                }
-                                                                let local_size_hint = local_size_hint.as_mut()
-                                                                    .unwrap();
-                                                                match extra_dim {
-                                                                    X => {
-                                                                        local_size_hint[0] = val;
-                                                                    },
-                                                                    Y => {
-                                                                        local_size_hint[1] = val;
-                                                                    },
-                                                                    Z => {
-                                                                        local_size_hint[2] = val;
-                                                                    },
-                                                                    _ => unreachable!(),
-                                                                }
-                                                            },
-                                                            // Reserved
-                                                            /*MaxWorkgroupSizeINTEL => {
-                                                                let val = val.unwrap();
-                                                                if max_workgroup_size_intel.is_none() {
-                                                                    max_workgroup_size_intel.replace([1, 1, 1]);
-                                                                }
-                                                                let max_workgroup_size_intel = max_workgroup_size_intel.as_mut()
-                                                                    .unwrap();
-                                                                match extra_dim {
-                                                                    X => {
-                                                                        max_workgroup_size_intel[0] = val;
-                                                                    },
-                                                                    Y => {
-                                                                        max_workgroup_size_intel[1] = val;
-                                                                    },
-                                                                    Z => {
-                                                                        max_workgroup_size_intel[2] = val;
-                                                                    },
-                                                                    _ => unreachable!(),
-                                                                }
-                                                            },*/
-                                                            _ => {
-                                                                if let Some(val) = val {
-                                                                    e.execution_modes.push((*execution_mode, ExecutionModeExtra::new([val])));
-                                                                }
-                                                                else {
-                                                                    e.execution_modes.push((*execution_mode, ExecutionModeExtra::new([])));
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                    else {
-                                                        cx.tcx.sess.span_err(
-                                                            arg.span(),
-                                                            &format!(
-                                                                "#[spirv({}(..))] unknown attribute argument {}", 
-                                                                name.name.to_ident_string(),
-                                                                attr_name.name.to_ident_string()
-                                                            ),
-                                                        );
-                                                    }
-                                                }
-                                                else {
-                                                    cx.tcx.sess.span_err(
-                                                        arg.span(),
-                                                        &format!(
-                                                            "#[spirv({}(..))] attribute argument must be single identifier", 
-                                                            name.name.to_ident_string()
-                                                        ),
-                                                    );
-                                                }
-                                                    
-                                            });
-                                    }
-                                    match e.execution_model {
-                                        Fragment => {
-                                            //FIXME: Is this the correct default?
-                                            let origin_mode = origin_mode.unwrap_or(OriginUpperLeft);
-                                            e.execution_modes.push((origin_mode, ExecutionModeExtra::new([])));
-                                        },
-                                        GLCompute => {
-                                            let local_size = local_size.unwrap_or([1, 1, 1]);
-                                            e.execution_modes.push((LocalSize, ExecutionModeExtra::new(local_size)));
-                                        },
-                                        Kernel => {
-                                            if let Some(local_size) = local_size {
-                                                e.execution_modes.push((LocalSize, ExecutionModeExtra::new(local_size)));
-                                            }
-                                            if let Some(local_size_hint) = local_size_hint {
-                                                e.execution_modes.push((LocalSizeHint, ExecutionModeExtra::new(local_size_hint)));
-                                            }
-                                            // Reserved
-                                            /*if let Some(max_workgroup_size_intel) = max_workgroup_size_intel {
-                                                e.execution_modes.push((MaxWorkgroupSizeINTEL, ExecutionModeExtra::new(max_workgroup_size_intel)));
-                                            }*/
-                                        },
-                                        //TODO: Cover more defaults
-                                        _ => {},
-                                    }
-                                }
+                                Entry(entry) => {
+                                    parse_entry_attrs(cx, arg, &name, entry);
+                                },    
                                 _ => {}
                             }
                             a
@@ -605,5 +462,151 @@ fn parse_attr_int_value(cx: &CodegenCx<'_>, arg: &NestedMetaItem) -> Option<u32>
                 .span_err(arg.span, "attribute value must be integer");
             None
         }
+    }
+}
+
+// for a given entry, gather up the additional attributes 
+// in this case ExecutionMode's, some have extra arguments
+// others are specified with x, y, or z components
+// ie #[spirv(fragment(origin_lower_left))] or #[spirv(gl_compute(local_size_x=64, local_size_y=8))] 
+fn parse_entry_attrs(cx: &CodegenCx<'_>, arg: &NestedMetaItem, name: &Ident, entry: &mut Entry) {
+    use ExecutionModel::*;
+    use ExecutionMode::*;
+    let mut origin_mode: Option<ExecutionMode> = None;
+    let mut local_size: Option<[u32; 3]> = None;
+    let mut local_size_hint: Option<[u32; 3]> = None;
+    // Reserved
+    //let mut max_workgroup_size_intel: Option<[u32; 3]> = None;
+    if let Some(attrs) = arg.meta_item_list() {
+        attrs.iter()
+            .for_each(|attr| {
+                if let Some(attr_name) = attr.ident() {
+                    if let Some((execution_mode, extra_dim)) = cx.sym.execution_modes.get(&attr_name.name) {
+                        use ExecutionModeExtraDim::*;
+                        let val = match extra_dim {
+                            None => Option::None,
+                            _ => parse_attr_int_value(cx, attr)
+                        };
+                        match execution_mode {
+                            OriginUpperLeft | OriginLowerLeft => {
+                                origin_mode.replace(*execution_mode);        
+                            },  
+                            LocalSize => {
+                                let val = val.unwrap();
+                                if local_size.is_none() {
+                                    local_size.replace([1, 1, 1]);
+                                }
+                                let local_size = local_size.as_mut()
+                                    .unwrap();
+                                match extra_dim {
+                                    X => {
+                                        local_size[0] = val;
+                                    },
+                                    Y => {
+                                        local_size[1] = val;
+                                    },
+                                    Z => {
+                                        local_size[2] = val;
+                                    },
+                                    _ => unreachable!(),
+                                }
+                            },
+                            LocalSizeHint => {
+                                let val = val.unwrap();
+                                if local_size_hint.is_none() {
+                                    local_size_hint.replace([1, 1, 1]);
+                                }
+                                let local_size_hint = local_size_hint.as_mut()
+                                    .unwrap();
+                                match extra_dim {
+                                    X => {
+                                        local_size_hint[0] = val;
+                                    },
+                                    Y => {
+                                        local_size_hint[1] = val;
+                                    },
+                                    Z => {
+                                        local_size_hint[2] = val;
+                                    },
+                                    _ => unreachable!(),
+                                }
+                            },
+                            // Reserved
+                            /*MaxWorkgroupSizeINTEL => {
+                                let val = val.unwrap();
+                                if max_workgroup_size_intel.is_none() {
+                                    max_workgroup_size_intel.replace([1, 1, 1]);
+                                }
+                                let max_workgroup_size_intel = max_workgroup_size_intel.as_mut()
+                                    .unwrap();
+                                match extra_dim {
+                                    X => {
+                                        max_workgroup_size_intel[0] = val;
+                                    },
+                                    Y => {
+                                        max_workgroup_size_intel[1] = val;
+                                    },
+                                    Z => {
+                                        max_workgroup_size_intel[2] = val;
+                                    },
+                                    _ => unreachable!(),
+                                }
+                            },*/
+                            _ => {
+                                if let Some(val) = val {
+                                    entry.execution_modes.push((*execution_mode, ExecutionModeExtra::new([val])));
+                                }
+                                else {
+                                    entry.execution_modes.push((*execution_mode, ExecutionModeExtra::new([])));
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        cx.tcx.sess.span_err(
+                            attr_name.span,
+                            &format!(
+                                "#[spirv({}(..))] unknown attribute argument {}", 
+                                name.name.to_ident_string(),
+                                attr_name.name.to_ident_string()
+                            ),
+                        );
+                    }
+                }
+                else {
+                    cx.tcx.sess.span_err(
+                        arg.span(),
+                        &format!(
+                            "#[spirv({}(..))] attribute argument must be single identifier", 
+                            name.name.to_ident_string()
+                        ),
+                    );
+                }
+                    
+            });
+    }
+    match entry.execution_model {
+        Fragment => {
+            let origin_mode = origin_mode.unwrap_or(OriginUpperLeft);
+            entry.execution_modes.push((origin_mode, ExecutionModeExtra::new([])));
+        },
+        GLCompute => {
+            let local_size = local_size.unwrap_or([1, 1, 1]);
+            entry.execution_modes.push((LocalSize, ExecutionModeExtra::new(local_size)));
+        },
+        Kernel => {
+            if let Some(local_size) = local_size {
+                entry.execution_modes.push((LocalSize, ExecutionModeExtra::new(local_size)));
+            }
+            if let Some(local_size_hint) = local_size_hint {
+                entry.execution_modes.push((LocalSizeHint, ExecutionModeExtra::new(local_size_hint)));
+            }
+            // Reserved
+            /*if let Some(max_workgroup_size_intel) = max_workgroup_size_intel {
+                entry.execution_modes.push((MaxWorkgroupSizeINTEL, ExecutionModeExtra::new(max_workgroup_size_intel)));
+            }*/
+        },
+        //TODO: Cover more defaults
+        _ => {},
     }
 }
