@@ -310,9 +310,7 @@ fn block_leads_into_continue(blocks: &[Block], cf_info: &ControlFlowInfo, start:
     let start_idx = find_block_index_from_id(blocks, &start);
     let new_edges = outgoing_edges(&blocks[start_idx]);
     for loop_info in &cf_info.loops {
-        if (new_edges.len() == 1 && loop_info.continue_id == new_edges[0])
-            || start == loop_info.continue_id
-        {
+        if new_edges.len() == 1 && loop_info.continue_id == new_edges[0] {
             return true;
         }
     }
