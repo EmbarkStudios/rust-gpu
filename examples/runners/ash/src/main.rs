@@ -564,7 +564,7 @@ fn main() {
     let options = Options::from_args();
 
     unsafe {
-        let (base, events_loop) = ExampleBase::new(1920, 1080, &options);
+        let (base, events_loop) = ExampleBase::new(1280, 720, &options);
         let renderpass_attachments = [vk::AttachmentDescription {
             format: base.surface_format.format,
             samples: vk::SampleCountFlags::TYPE_1,
