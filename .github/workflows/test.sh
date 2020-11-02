@@ -37,10 +37,10 @@ function cargo_test_no_features() {
 }
 
 # Core crates
-cargo_test spirv-tools-sys
-cargo_test spirv-tools
-cargo_test rustc_codegen_spirv
-cargo_test spirv-builder
+cargo_test crates/spirv-tools-sys
+cargo_test crates/spirv-tools
+cargo_test crates/rustc_codegen_spirv
+cargo_test crates/spirv-builder
 
 # Examples
 # See: https://github.com/EmbarkStudios/rust-gpu/issues/84
