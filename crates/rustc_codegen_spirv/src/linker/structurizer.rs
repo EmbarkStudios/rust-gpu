@@ -132,6 +132,14 @@ impl ControlFlowInfo {
     }
 }
 
+fn emit_compiler_error(sess: Option<&Session>, msg: &'static str) -> ! {
+    if let Some(sess) = sess {
+        sess.fatal(msg);
+    } else {
+        panic!(msg);
+    }
+}
+
 pub fn structurize(sess: Option<&Session>, module: &mut Module) {
     let mut debug_names = Vec::new();
 
@@ -293,6 +301,20 @@ fn block_leads_into_break(blocks: &[Block], cf_info: &ControlFlowInfo, start: Wo
         }
 
         next.extend(new_edges);
+    }
+
+    false
+}
+
+fn block_leads_into_continue(blocks: &[Block], cf_info: &ControlFlowInfo, start: Word) -> bool {
+    let start_idx = find_block_index_from_id(blocks, &start);
+    let new_edges = outgoing_edges(&blocks[start_idx]);
+    for loop_info in &cf_info.loops {
+        if (new_edges.len() == 1 && loop_info.continue_id == new_edges[0])
+            || start == loop_info.continue_id
+        {
+            return true;
+        }
     }
 
     false
@@ -473,6 +495,20 @@ fn split_block(header: &mut ModuleHeader, blocks: &mut Vec<Block>, block_to_spli
     new_original_block_id
 }
 
+fn make_unreachable_block(header: &mut ModuleHeader, blocks: &mut Vec<Block>) -> Word {
+    let id = id(header);
+    let mut new_block = Block::new();
+    new_block.label = Some(Instruction::new(Op::Label, None, Some(id), vec![]));
+    // new block is unreachable
+    new_block
+        .instructions
+        .push(Instruction::new(Op::Unreachable, None, None, vec![]));
+
+    // insert new block at the end
+    blocks.push(new_block);
+    id
+}
+
 pub fn insert_selection_merge_on_conditional_branch(
     sess: Option<&Session>,
     header: &mut ModuleHeader,
@@ -528,36 +564,37 @@ pub fn insert_selection_merge_on_conditional_branch(
 
             let branch_a_breaks = block_leads_into_break(blocks, cf_info, a_first_id);
             let branch_b_breaks = block_leads_into_break(blocks, cf_info, b_first_id);
+            let branch_a_continues = block_leads_into_continue(blocks, cf_info, a_first_id);
+            let branch_b_continues = block_leads_into_continue(blocks, cf_info, b_first_id);
             let branch_a_returns = ends_in_return(&blocks[a_last_idx]);
             let branch_b_returns = ends_in_return(&blocks[b_last_idx]);
 
-            if branch_a_breaks && branch_b_breaks {
+            if ((branch_a_breaks || branch_a_continues) && (branch_b_breaks || branch_b_continues))
+                || branch_a_returns && branch_b_returns
+            {
                 // (fully unreachable) insert a rando block and mark as merge.
-                if let Some(sess) = sess {
-                    sess.err("UNIMPLEMENTED, A fully unreachable case was detected.");
-                }
-                return;
-            } else if branch_a_breaks {
+                make_unreachable_block(header, blocks)
+            } else if branch_a_breaks || branch_a_continues || branch_a_returns {
                 // (partially unreachable) merge block becomes branch b immediatly
                 blocks[b_first_idx].label_id().unwrap()
-            } else if branch_b_breaks {
+            } else if branch_b_breaks || branch_b_continues || branch_b_returns {
                 // (partially unreachable) merge block becomes branch a immediatly
                 blocks[a_first_idx].label_id().unwrap()
             } else if branch_a_returns {
                 // (partially unreachable) merge block becomes end/start of b.
-                if let Some(sess) = sess {
-                    sess.err("UNIMPLEMENTED, A partially unreachable case was detected on a.");
-                }
-                return;
+                emit_compiler_error(
+                    sess,
+                    "UNIMPLEMENTED, A partially unreachable case was detected on a.",
+                );
             } else if branch_b_returns {
                 // (partially unreachable) merge block becomes end/start of a.
-                if let Some(sess) = sess {
-                    sess.err("UNIMPLEMENTED, A partially unreachable case was detected on b.");
-                }
-                return;
+                emit_compiler_error(
+                    sess,
+                    "UNIMPLEMENTED, A partially unreachable case was detected on b.",
+                );
             } else {
-                // (fully unreachable) insert a rando block and mark as merge.
-                blocks[b_first_idx].label_id().unwrap()
+                // In theory this should never happen.
+                emit_compiler_error(sess, "UNEXPECTED, Unknown exit detected.");
             }
         };
 
