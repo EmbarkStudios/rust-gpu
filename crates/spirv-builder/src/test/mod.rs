@@ -43,7 +43,7 @@ edition = "2018"
 crate-type = ["dylib"]
 
 [dependencies]
-spirv-std = { path = "../../spirv-std" }
+spirv-std = { path = "../../crates/spirv-std" }
 
 [workspace]
 "#;
@@ -60,7 +60,7 @@ fn panic(_: &PanicInfo) -> ! {
 "#;
 
 fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {
-    let project = Path::new("../target/test-spirv").to_owned();
+    let project = Path::new("../../target/test-spirv").to_owned();
     let cargo_toml = project.join("Cargo.toml");
     let lib_rs = project.join("src/lib.rs");
     std::fs::create_dir_all(lib_rs.parent().unwrap())?;
