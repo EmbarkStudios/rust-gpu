@@ -33,3 +33,16 @@ OpReturnValue %7
 OpFunctionEnd"#,
     );
 }
+
+// TODO: Implement strings to make this compile
+#[test]
+#[ignore]
+fn panic() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    panic!("aaa");
+}
+"#);
+}
