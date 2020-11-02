@@ -28,10 +28,10 @@ function clippy_no_features() {
 }
 
 # Core crates
-clippy spirv-tools-sys
-clippy spirv-tools
-clippy rustc_codegen_spirv
-clippy spirv-builder
+clippy crates/spirv-tools-sys
+clippy crates/spirv-tools
+clippy crates/rustc_codegen_spirv
+clippy crates/spirv-builder
 
 # Examples
 
