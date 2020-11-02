@@ -7,12 +7,20 @@ use winit::{
 async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::TextureFormat) {
     let size = window.inner_size();
     let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
-    let surface = unsafe { instance.create_surface(&window) };
+
+    // Wait for Resumed event on Android; the surface is only needed early to
+    // find an adapter that can render to this surface.
+    let mut surface = if cfg!(target_os = "android") {
+        None
+    } else {
+        Some(unsafe { instance.create_surface(&window) })
+    };
+
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),
             // Request an adapter which can render to our surface
-            compatible_surface: Some(&surface),
+            compatible_surface: surface.as_ref(),
         })
         .await
         .expect("Failed to find an appropriate adapter");
@@ -72,7 +80,9 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
         present_mode: wgpu::PresentMode::Mailbox,
     };
 
-    let mut swap_chain = device.create_swap_chain(&surface, &sc_desc);
+    let mut swap_chain = surface
+        .as_ref()
+        .map(|surface| device.create_swap_chain(&surface, &sc_desc));
 
     event_loop.run(move |event, _, control_flow| {
         // Have the closure take ownership of the resources.
@@ -82,6 +92,15 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
 
         *control_flow = ControlFlow::Wait;
         match event {
+            Event::Resumed => {
+                let s = unsafe { instance.create_surface(&window) };
+                swap_chain = Some(device.create_swap_chain(&s, &sc_desc));
+                surface = Some(s);
+            }
+            Event::Suspended => {
+                surface = None;
+                swap_chain = None;
+            }
             Event::WindowEvent {
                 event: WindowEvent::Resized(size),
                 ..
@@ -89,32 +108,36 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
                 // Recreate the swap chain with the new size
                 sc_desc.width = size.width;
                 sc_desc.height = size.height;
-                swap_chain = device.create_swap_chain(&surface, &sc_desc);
+                if let Some(surface) = &surface {
+                    swap_chain = Some(device.create_swap_chain(surface, &sc_desc));
+                }
             }
             Event::RedrawRequested(_) => {
-                let frame = swap_chain
-                    .get_current_frame()
-                    .expect("Failed to acquire next swap chain texture")
-                    .output;
-                let mut encoder =
-                    device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-                {
-                    let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                        color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                            attachment: &frame.view,
-                            resolve_target: None,
-                            ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
-                                store: true,
-                            },
-                        }],
-                        depth_stencil_attachment: None,
-                    });
-                    rpass.set_pipeline(&render_pipeline);
-                    rpass.draw(0..3, 0..1);
-                }
+                if let Some(swap_chain) = &mut swap_chain {
+                    let frame = swap_chain
+                        .get_current_frame()
+                        .expect("Failed to acquire next swap chain texture")
+                        .output;
+                    let mut encoder = device
+                        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+                    {
+                        let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                            color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
+                                attachment: &frame.view,
+                                resolve_target: None,
+                                ops: wgpu::Operations {
+                                    load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
+                                    store: true,
+                                },
+                            }],
+                            depth_stencil_attachment: None,
+                        });
+                        rpass.set_pipeline(&render_pipeline);
+                        rpass.draw(0..3, 0..1);
+                    }
 
-                queue.submit(Some(encoder.finish()));
+                    queue.submit(Some(encoder.finish()));
+                }
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
@@ -168,7 +191,15 @@ pub fn main() {
             ));
         } else {
             wgpu_subscriber::initialize_default_subscriber(None);
-            futures::executor::block_on(run(event_loop, window, wgpu::TextureFormat::Bgra8UnormSrgb));
+            futures::executor::block_on(run(
+                event_loop,
+                window,
+                if cfg!(target_os = "android") {
+                    wgpu::TextureFormat::Rgba8UnormSrgb
+                } else {
+                    wgpu::TextureFormat::Bgra8UnormSrgb
+                },
+            ));
         }
     }
 }
