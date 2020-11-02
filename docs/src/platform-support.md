@@ -38,5 +38,5 @@ Currently we don't have specific generations of GPUs for support, as long they s
 [linux-intel]: https://www.intel.com/content/www/us/en/support/articles/000005520/graphics.html
 [macOS-intel]: https://www.intel.com/content/www/us/en/support/articles/000022440/graphics.html
 [windows-intel]: https://downloadcenter.intel.com/product/80939/Graphics
-[`vulkaninfo`]: https://vulkan.lunarg.com/doc/view/1.2.148.1/windows/vulkaninfo.html
+[`vulkaninfo`]: https://vulkan.lunarg.com/doc/view/latest/windows/vulkaninfo.html
 
