@@ -232,7 +232,7 @@ fn retarget_loop_children_if_needed(blocks: &mut [Block], cf_info: &ControlFlowI
 fn eliminate_multiple_continue_blocks(blocks: &mut Vec<Block>, header: Word) -> Word {
     // Find all possible continue blocks.
     let mut continue_blocks = Vec::new();
-    for block in blocks.clone() {
+    for block in blocks.iter() {
         let block_id = block.label_id().unwrap();
         if ends_in_branch(&block) {
             let edge = outgoing_edges(&block)[0];
@@ -482,7 +482,7 @@ pub fn insert_selection_merge_on_conditional_branch(
     let mut branch_conditional_ops = Vec::new();
 
     // Find conditional branches that are not loops
-    for block in &blocks.clone() {
+    for block in blocks.iter() {
         if ends_in_branch_conditional(block)
             && !cf_info.id_is_loops_header(block.label_id().unwrap())
         {
@@ -491,7 +491,7 @@ pub fn insert_selection_merge_on_conditional_branch(
     }
 
     // Find convergence point.
-    for id in branch_conditional_ops.clone() {
+    for id in branch_conditional_ops {
         let bi = find_block_index_from_id(blocks, &id);
         let out = outgoing_edges(&blocks[bi]);
         let id = &blocks[bi].label_id().unwrap();
