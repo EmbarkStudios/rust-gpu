@@ -32,6 +32,7 @@ clippy crates/spirv-tools-sys
 clippy crates/spirv-tools
 clippy crates/rustc_codegen_spirv
 clippy crates/spirv-builder
+clippy crates/testsuite
 
 # Examples
 

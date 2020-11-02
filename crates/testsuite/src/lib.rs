@@ -1,5 +1,9 @@
-mod basic;
-mod control_flow;
+cfg_if::cfg_if! {
+    if #[cfg(test)] {
+        mod basic;
+        mod control_flow;
+    }
+}
 
 use lazy_static::lazy_static;
 use rustc_codegen_spirv::rspirv;
@@ -74,7 +78,7 @@ fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {
 
 fn build(src: &str) -> PathBuf {
     let project = setup(src).expect("Failed to set up project");
-    crate::SpirvBuilder::new(&project)
+    spirv_builder::SpirvBuilder::new(&project)
         .print_metadata(false)
         .build()
         .expect("Failed to build test")

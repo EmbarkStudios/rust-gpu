@@ -41,6 +41,7 @@ cargo_test crates/spirv-tools-sys
 cargo_test crates/spirv-tools
 cargo_test crates/rustc_codegen_spirv
 cargo_test crates/spirv-builder
+cargo_test crates/testsuite
 
 # Examples
 # See: https://github.com/EmbarkStudios/rust-gpu/issues/84
