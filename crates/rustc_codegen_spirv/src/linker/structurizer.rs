@@ -243,7 +243,7 @@ fn eliminate_multiple_continue_blocks(blocks: &mut Vec<Block>, header: Word) -> 
     for block in blocks.iter() {
         let block_id = block.label_id().unwrap();
         if ends_in_branch(block) {
-            let edge = outgoing_edges(&block)[0];
+            let edge = outgoing_edges(block)[0];
             if edge == header && block_is_parent_of(header, block_id, blocks) {
                 continue_blocks.push(block_id);
             }
