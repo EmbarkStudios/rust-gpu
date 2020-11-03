@@ -44,7 +44,7 @@ cargo_test crates/spirv-builder
 
 # Examples
 # See: https://github.com/EmbarkStudios/rust-gpu/issues/84
-if [[ -z "${CI}" && "$os" != "macOS" ]]; then
+if [[ "$os" != "macOS" ]]; then
     cargo_test examples/runners/ash
 fi
 
