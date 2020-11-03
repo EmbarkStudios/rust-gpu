@@ -32,13 +32,13 @@ clippy crates/spirv-tools-sys
 clippy crates/spirv-tools
 clippy crates/rustc_codegen_spirv
 clippy crates/spirv-builder
-clippy crates/testsuite
 
 # Examples
 
 clippy examples/runners/ash
 clippy examples/runners/wgpu
 
+clippy_no_features crates/testsuite
 clippy_no_features examples/runners/cpu
 clippy_no_features examples/shaders/sky-shader
 clippy_no_features examples/shaders/simplest-shader
