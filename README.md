@@ -39,6 +39,13 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
 
 See [source](examples/shaders/sky-shader/src/lib.rs) for full details.
 
+## Getting started
+
+For information on using `rust-gpu` to write shaders be sure to checkout the [`rust-gpu` dev guide][gpu-guide].
+
+[gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
+
+
 ## Background
 
 Historically in games GPU programming has been done through writing either HLSL, or to a lesser extent GLSL. These are simple programming languages that have evolved along with rendering APIs over the years. However, as game engines have evolved, these languages have failed to provide mechanisms for dealing with large codebases, and have generally stayed behind the curve compared to other programming languages.
@@ -96,9 +103,7 @@ There are a few different components to this repo:
 
 We welcome community contributions to this project.
 
-If you would like to get started, be sure to checkout the [`rust-gpu` dev guide][gpu-guide] and our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
-
-[gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
+Please read our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
 
 ## License
 
