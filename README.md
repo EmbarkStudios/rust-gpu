@@ -41,7 +41,7 @@ See [source](examples/shaders/sky-shader/src/lib.rs) for full details.
 
 ## Getting started
 
-For information on using `rust-gpu` to write shaders be sure to checkout the [`rust-gpu` dev guide][gpu-guide].
+Check out [The `rust-gpu` Dev Guide][gpu-guide] for information on how to get started with using it in your projects.
 
 [gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
 
