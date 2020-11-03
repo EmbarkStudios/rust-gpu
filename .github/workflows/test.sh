@@ -41,7 +41,6 @@ cargo_test crates/spirv-tools-sys
 cargo_test crates/spirv-tools
 cargo_test crates/rustc_codegen_spirv
 cargo_test crates/spirv-builder
-cargo_test crates/testsuite
 
 # Examples
 # See: https://github.com/EmbarkStudios/rust-gpu/issues/84
@@ -51,6 +50,7 @@ fi
 
 cargo_test examples/runners/wgpu
 
+cargo_test_no_features crates/testsuite
 cargo_test_no_features examples/runners/cpu
 cargo_test_no_features examples/shaders/sky-shader
 cargo_test_no_features examples/shaders/simplest-shader
