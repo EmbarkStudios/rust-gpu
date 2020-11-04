@@ -83,7 +83,7 @@ Examples of what would require an RFC:
 #### Life-cycle
 
 1. You file a [major change proposal][mcp-template] outlining the changes and the motivation for it.
-2. A member of the team will review the proposal and tag it with the appropiate label.
+2. A member of the team will review the proposal and tag it with the appropriate label.
   2.1. `mcp: accepted` means that the MCP has been accepted and is ready for a pull request implementing it.
   2.2. `mcp: rfc needed` means that the MCP has been accepted as something the team would like but needs a full RFC before the implementation.
   2.3 Closing an issue means that the MCP has rejected.
