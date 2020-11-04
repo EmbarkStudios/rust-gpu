@@ -20,7 +20,7 @@ use rustc_hir::GlobalAsm;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
-use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
+use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyS, TyCtxt};
 use rustc_session::Session;
 use rustc_span::def_id::{CrateNum, LOCAL_CRATE};
 use rustc_span::source_map::Span;
@@ -240,6 +240,7 @@ impl<'tcx> BackendTypes for CodegenCx<'tcx> {
     type Funclet = ();
 
     type DIScope = ();
+    type DILocation = ();
     type DIVariable = ();
 }
 
@@ -326,13 +327,17 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
         // Ignore.
     }
 
+    fn dbg_scope_fn(&self, _: rustc_middle::ty::Instance<'tcx>, _: &FnAbi<'tcx, &'tcx TyS<'tcx>>, _: Option<Self::Function>) -> Self::DIScope { todo!() }
+
+    fn dbg_loc(&self, _: Self::DIScope, _: Option<Self::DILocation>, _: Span) -> Self::DILocation { todo!() }
+
     fn create_function_debug_context(
         &self,
         _instance: Instance<'tcx>,
         _fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
         _llfn: Self::Function,
         _mir: &Body<'_>,
-    ) -> Option<FunctionDebugContext<Self::DIScope>> {
+    ) -> Option<FunctionDebugContext<Self::DIScope, Self::DILocation>> {
         // TODO: This is ignored. Do we want to implement this at some point?
         None
     }
@@ -341,7 +346,6 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
         &self,
         _scope_metadata: Self::DIScope,
         _file: &SourceFile,
-        _defining_crate: CrateNum,
     ) -> Self::DIScope {
         todo!()
     }
@@ -352,7 +356,6 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
 
     fn create_dbg_var(
         &self,
-        _dbg_context: &FunctionDebugContext<Self::DIScope>,
         _variable_name: Symbol,
         _variable_type: Ty<'tcx>,
         _scope_metadata: Self::DIScope,
