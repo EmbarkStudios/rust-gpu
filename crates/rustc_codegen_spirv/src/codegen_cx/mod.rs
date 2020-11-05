@@ -20,7 +20,7 @@ use rustc_hir::GlobalAsm;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
-use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyS, TyCtxt};
+use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TyS};
 use rustc_session::Session;
 use rustc_span::def_id::{CrateNum, LOCAL_CRATE};
 use rustc_span::source_map::Span;
@@ -327,9 +327,18 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
         // Ignore.
     }
 
-    fn dbg_scope_fn(&self, _: rustc_middle::ty::Instance<'tcx>, _: &FnAbi<'tcx, &'tcx TyS<'tcx>>, _: Option<Self::Function>) -> Self::DIScope { todo!() }
+    fn dbg_scope_fn(
+        &self,
+        _: rustc_middle::ty::Instance<'tcx>,
+        _: &FnAbi<'tcx, &'tcx TyS<'tcx>>,
+        _: Option<Self::Function>,
+    ) -> Self::DIScope {
+        todo!()
+    }
 
-    fn dbg_loc(&self, _: Self::DIScope, _: Option<Self::DILocation>, _: Span) -> Self::DILocation { todo!() }
+    fn dbg_loc(&self, _: Self::DIScope, _: Option<Self::DILocation>, _: Span) -> Self::DILocation {
+        todo!()
+    }
 
     fn create_function_debug_context(
         &self,

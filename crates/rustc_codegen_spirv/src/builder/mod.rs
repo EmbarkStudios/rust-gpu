@@ -254,7 +254,9 @@ impl<'a, 'tcx> DebugInfoBuilderMethods for Builder<'a, 'tcx> {
         todo!()
     }
 
-    fn set_dbg_loc(&mut self, _: Self::DILocation) { todo!() }
+    fn set_dbg_loc(&mut self, _: Self::DILocation) {
+        todo!()
+    }
 
     fn insert_reference_to_gdb_debug_scripts_section_global(&mut self) {
         todo!()
