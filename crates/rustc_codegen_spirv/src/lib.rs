@@ -237,8 +237,6 @@ impl CodegenBackend for SpirvCodegenBackend {
     }
 
     fn provide(&self, providers: &mut Providers) {
-        // For now, rustc requires this to be provided.
-        providers.supported_target_features = |_, _| Default::default();
         // This is a lil weird: so, we obviously don't support C ABIs at all. However, libcore does declare some extern
         // C functions:
         // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/slice/cmp.rs#L119
