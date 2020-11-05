@@ -80,7 +80,7 @@ impl Optimizer for CompiledOptimizer {
                 ctx: *mut std::ffi::c_void,
             ) {
                 unsafe {
-                    let ctx: &mut Ctx<'_> = &mut *(ctx as *mut Ctx);
+                    let ctx: &mut Ctx<'_> = &mut *(ctx as *mut Ctx<'_>);
 
                     let msg = error::Message::from_parts(level, source, source_pos, msg);
 

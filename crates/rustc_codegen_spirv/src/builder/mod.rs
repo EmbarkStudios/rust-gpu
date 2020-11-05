@@ -245,19 +245,16 @@ impl<'a, 'tcx> DebugInfoBuilderMethods for Builder<'a, 'tcx> {
     fn dbg_var_addr(
         &mut self,
         _dbg_var: Self::DIVariable,
-        _scope_metadata: Self::DIScope,
+        _scope_metadata: Self::DILocation,
         _variable_alloca: Self::Value,
         _direct_offset: Size,
         // NB: each offset implies a deref (i.e. they're steps in a pointer chain).
         _indirect_offsets: &[Size],
-        _span: Span,
     ) {
         todo!()
     }
 
-    fn set_source_location(&mut self, _scope: Self::DIScope, _span: Span) {
-        todo!()
-    }
+    fn set_dbg_loc(&mut self, _: Self::DILocation) { todo!() }
 
     fn insert_reference_to_gdb_debug_scripts_section_global(&mut self) {
         todo!()
@@ -375,6 +372,7 @@ impl<'a, 'tcx> BackendTypes for Builder<'a, 'tcx> {
 
     type DIScope = <CodegenCx<'tcx> as BackendTypes>::DIScope;
     type DIVariable = <CodegenCx<'tcx> as BackendTypes>::DIVariable;
+    type DILocation = <CodegenCx<'tcx> as BackendTypes>::DILocation;
 }
 
 impl<'a, 'tcx> HasCodegen<'tcx> for Builder<'a, 'tcx> {
