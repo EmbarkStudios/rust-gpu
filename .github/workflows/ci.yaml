@@ -11,7 +11,6 @@ jobs:
     name: Test
     strategy:
       matrix:
-        os: [macOS-latest, ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -63,6 +62,14 @@ jobs:
       - name: Run tests
         shell: bash
         run: .github/workflows/test.sh ${{ runner.os }}
+
+      - name: Install cargo-apk
+        run: cargo install cargo-apk
+
+      - name: Compile WGPU example for Android
+        run: |
+          rustup target add aarch64-linux-android
+          cargo apk build --manifest-path examples/runners/wgpu/Cargo.toml --features use-installed-tools --no-default-features
 
   lint:
     name: Lint
