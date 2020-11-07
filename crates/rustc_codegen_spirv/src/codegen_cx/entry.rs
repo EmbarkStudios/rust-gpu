@@ -1,11 +1,9 @@
 use super::CodegenCx;
 use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, SpirvAttribute, Entry};
+use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
 use rspirv::dr::Operand;
-use rspirv::spirv::{
-    Decoration, ExecutionModel, FunctionControl, StorageClass, Word,
-};
+use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_hir::Param;
 use rustc_middle::ty::{Instance, Ty};
 use rustc_target::abi::call::{FnAbi, PassMode};
@@ -61,7 +59,9 @@ impl<'tcx> CodegenCx<'tcx> {
             self.shader_entry_stub(entry_func, body.params, name, execution_model)
         };
         let mut emit = self.emit_global();
-        entry.execution_modes.iter()
+        entry
+            .execution_modes
+            .iter()
             .for_each(|(execution_mode, execution_mode_extra)| {
                 emit.execution_mode(fn_id, *execution_mode, execution_mode_extra);
             });

@@ -13,7 +13,4 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 
 #[allow(unused_attributes)]
 #[spirv(gl_compute)]
-pub fn main_cs() {
-
-}
-
+pub fn main_cs() {}

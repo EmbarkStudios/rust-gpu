@@ -211,13 +211,9 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
         for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
             match attr {
-                SpirvAttribute::Entry(entry) => self.entry_stub(
-                    &instance,
-                    &fn_abi,
-                    declared,
-                    human_name.clone(),
-                    entry,
-                ),
+                SpirvAttribute::Entry(entry) => {
+                    self.entry_stub(&instance, &fn_abi, declared, human_name.clone(), entry)
+                }
                 SpirvAttribute::ReallyUnsafeIgnoreBitcasts => {
                     self.really_unsafe_ignore_bitcasts
                         .borrow_mut()

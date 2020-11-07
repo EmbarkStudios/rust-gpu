@@ -1,4 +1,3 @@
-
 async fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
     let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
     let adapter = instance
@@ -8,7 +7,7 @@ async fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
         })
         .await
         .expect("Failed to find an appropriate adapter");
-        
+
     adapter
         .request_device(
             &wgpu::DeviceDescriptor {
@@ -25,25 +24,29 @@ async fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
 fn main() {
     let (device, queue) = {
         #[cfg(not(target_arch = "wasm32"))]
-        { futures::executor::block_on(create_device_queue()) }
+        {
+{            futures::executor::block_on(create_device_queue())
+        }
         #[cfg(target_arch = "wasm32")]
-        { wasm_bindgen_futures::spawn_local(create_device_queue()) }
+        {
+{            wasm_bindgen_futures::spawn_local(create_device_queue())
+        }
     };
-    
+
     // Load the shaders from disk
     let module = device.create_shader_module(wgpu::include_spirv!(env!("compute_shader.spv")));
-    
+
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
         entries: &[],
     });
-        
+
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
         bind_group_layouts: &[&bind_group_layout],
         push_constant_ranges: &[],
-    });    
-        
+    });
+
     let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
         label: None,
         layout: Some(&pipeline_layout),
@@ -52,23 +55,22 @@ fn main() {
             entry_point: "main_cs",
         },
     });
-    
+
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
         label: None,
         layout: &bind_group_layout,
         entries: &[],
     });
-    
-    let mut encoder = device.create_command_encoder(
-        &wgpu::CommandEncoderDescriptor { label: None }
-    );
-    
+
+    let mut encoder =
+        device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+
     {
         let mut cpass = encoder.begin_compute_pass();
         cpass.set_bind_group(0, &bind_group, &[]);
         cpass.set_pipeline(&compute_pipeline);
         cpass.dispatch(1, 1, 1);
     }
-    
+
     queue.submit(Some(encoder.finish()));
 }
