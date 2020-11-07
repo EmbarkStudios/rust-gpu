@@ -1,9 +1,10 @@
 # 🐉 Rust GPU
 
-[![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
+[![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](https://embark.dev)
+[![Discord](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
+[![Documentation](https://img.shields.io/badge/docs-API-blue)](https://embarkstudios.github.io/rust-gpu/api/rustc_codegen_spirv)
 [![dependency status](https://deps.rs/repo/github/EmbarkStudios/rust-gpu/status.svg)](https://deps.rs/repo/github/EmbarkStudios/rust-gpu)
-[![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](http://embark.dev)
-[![Embark](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
+[![Build status](https://github.com/EmbarkStudios/rust-gpu/workflows/Continuous%20integration/badge.svg?branch=main)](https://github.com/EmbarkStudios/rust-gpu/actions)
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
@@ -15,7 +16,7 @@ However, many things aren't implemented yet: for example, loops and switches are
 
 ### Example
 
-![Sky shader](assets/sky.jpg)
+![Sky shader](docs/assets/sky.jpg)
 
 ```rust
 #[spirv(entry = "fragment")]
@@ -36,7 +37,14 @@ pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
 }
 ```
 
-See [source](examples/example-shader/src/lib.rs) for full details.
+See [source](examples/shaders/sky-shader/src/lib.rs) for full details.
+
+## Getting started
+
+Check out [The `rust-gpu` Dev Guide][gpu-guide] for information on how to get started with using it in your projects.
+
+[gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
+
 
 ## Background
 
@@ -61,7 +69,7 @@ The scope of this overall project is quite broad, but is in multiple stages
 - `rustc` compiler backend to generate [SPIR-V], plugging in via `-Z codegen-backend`. 
   - This is the same mechanism that [rustc_codegen_cranelift](https://github.com/bjorn3/rustc_codegen_cranelift) and [rustc_codegen_gcc](https://github.com/antoyo/rustc_codegen_gcc) use.
   - Currently only [SPIR-V] support is planned, [Vulkan](https://en.wikipedia.org/wiki/Vulkan_(API))'s open compiler target
-  - Possible a future version could suppport [DXIL](https://github.com/microsoft/DirectXShaderCompiler/blob/master/docs/DXIL.rst) (the target for DirectX) or [WGSL](https://github.com/gpuweb/gpuweb/tree/main/wgsl) (the WebGPU shading language that's bijective with SPIR-V)
+  - Possible a future version could support [DXIL](https://github.com/microsoft/DirectXShaderCompiler/blob/master/docs/DXIL.rst) (the target for DirectX) or [WGSL](https://github.com/gpuweb/gpuweb/tree/main/wgsl) (the WebGPU shading language that's bijective with SPIR-V)
 - Focus on Vulkan graphics shaders first, then after Vulkan compute shaders
 - [Cargo](https://github.com/rust-lang/cargo/) and [crates.io](https://crates.io) support to develop and publish SPIR-V crates
 - High-level render graph to take advantage of this, make it easy for users to develop and use rendering effects.
@@ -84,16 +92,18 @@ Right now because the project is in a very early state of development, we might 
 
 There are a few different components to this repo:
 
-- [rfcs](rfcs) for in-depth discussion and specs.
+- [rfcs](docs/src/rfcs) for in-depth discussion and specs.
 - [rustc_codegen_spirv](rustc_codegen_spirv) for the compiler itself.
 - [spirv-std](spirv-std) for GPU intrinsics, types, and other library items used by GPU crates.
 - [spirv-builder](spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
 
-## Getting started
+## Contributing
 
-We welcome community contributions to this project. If you would like to get started, be sure to checkout the [`rust-gpu` dev guide][gpu-guide] and our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
+[![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4-ff69b4.svg)](CODE_OF_CONDUCT.md)
 
-[gpu-guide]: https://embarkstudios.github.io/rust-gpu/
+We welcome community contributions to this project.
+
+Please read our [Contributor Guide](CONTRIBUTING.md) for more information on how to get started.
 
 ## License
 

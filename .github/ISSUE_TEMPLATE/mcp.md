@@ -1,6 +1,6 @@
 ---
 name: Major change proposal (MCP)
-about: Propose a major change to the project.
+about: Propose a major change or feature to the project.
 title: "(My major change proposal)"
 labels: "mcp: proposed"
 ---

@@ -1,18 +1,23 @@
-name: Deploy mdBook
+name: Deploy docs
 on:
   push:
-    branches: 
+    branches:
       - main
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: brew install mdbook
-      - run: $(cd docs && mdbook build)
+      - run: rustup component add rustfmt clippy rust-src rustc-dev llvm-tools-preview
+      - run: sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
+      - run: brew install mdbook spirv-tools
+      - run: mkdir docs-build/
+      - run: $(cd docs && mdbook build -d ../docs-build/book)
+      - run: .github/workflows/docs.sh
+      - run: mv target/doc docs-build/api
       - uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
-          FOLDER: docs/book # The folder the action should deploy.
+          FOLDER: docs-build # The folder the action should deploy.
           CLEAN: true # Automatically remove deleted files from the deploy branch
