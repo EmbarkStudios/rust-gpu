@@ -1,37 +1,38 @@
-async fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
-    let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
-    let adapter = instance
-        .request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: wgpu::PowerPreference::default(),
-            compatible_surface: None,
-        })
-        .await
-        .expect("Failed to find an appropriate adapter");
+fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
+    async fn create_device_queue_async() -> (wgpu::Device, wgpu::Queue) {
+        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::default(),
+                compatible_surface: None,
+            })
+            .await
+            .expect("Failed to find an appropriate adapter");
 
-    adapter
-        .request_device(
-            &wgpu::DeviceDescriptor {
-                features: wgpu::Features::empty(),
-                limits: wgpu::Limits::default(),
-                shader_validation: true,
-            },
-            None,
-        )
-        .await
-        .expect("Failed to create device")
+        adapter
+            .request_device(
+                &wgpu::DeviceDescriptor {
+                    features: wgpu::Features::empty(),
+                    limits: wgpu::Limits::default(),
+                    shader_validation: true,
+                },
+                None,
+            )
+            .await
+            .expect("Failed to create device")
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        return futures::executor::block_on(create_device_queue_async());
+    };
+    #[cfg(target_arch = "wasm32")]
+    {
+        return wasm_bindgen_futures::spawn_local(create_device_queue_async());
+    };
 }
 
 fn main() {
-    let (device, queue) = {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-{            futures::executor::block_on(create_device_queue())
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-{            wasm_bindgen_futures::spawn_local(create_device_queue())
-        }
-    };
+    let (device, queue) = create_device_queue();
 
     // Load the shaders from disk
     let module = device.create_shader_module(wgpu::include_spirv!(env!("compute_shader.spv")));
