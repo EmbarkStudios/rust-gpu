@@ -151,23 +151,19 @@ fn is_blocklisted_fn(symbol_name: &str) -> bool {
 fn target_options() -> Target {
     Target {
         llvm_target: "no-llvm".to_string(),
-        target_endian: "little".to_string(),
         pointer_width: 32,
-        target_c_int_width: "32".to_string(),
-        target_os: "unknown".to_string(),
-        target_env: String::new(),
-        target_vendor: "unknown".to_string(),
         data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".to_string(),
         arch: "spirv".to_string(),
-        linker_flavor: LinkerFlavor::Ld,
         options: TargetOptions {
+            allows_weak_linkage: false,
+            crt_static_allows_dylibs: true,
             dll_prefix: "".to_string(),
             dll_suffix: ".spv".to_string(),
-            panic_strategy: PanicStrategy::Abort,
-            emit_debug_gdb_scripts: false,
-            allows_weak_linkage: false,
             dynamic_linking: true,
-            crt_static_allows_dylibs: true,
+            emit_debug_gdb_scripts: false,
+            linker_flavor: LinkerFlavor::Ld,
+            panic_strategy: PanicStrategy::Abort,
+            target_os: "unknown".to_string(),
             // TODO: Investigate if main_needs_argc_argv is useful (for building exes)
             main_needs_argc_argv: false,
             ..Default::default()
