@@ -52,6 +52,7 @@ static SRC_PREFIX: &str = r#"#![no_std]
 #![feature(lang_items, register_attr)]
 #![register_attr(spirv)]
 use core::panic::PanicInfo;
+#[allow(unused_imports)]
 use spirv_std::*;
 #[panic_handler]
 fn panic(_: &PanicInfo) -> ! {

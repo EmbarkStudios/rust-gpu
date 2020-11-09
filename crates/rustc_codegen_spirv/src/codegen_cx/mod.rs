@@ -22,7 +22,7 @@ use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TyS};
 use rustc_session::Session;
-use rustc_span::def_id::{CrateNum, LOCAL_CRATE};
+use rustc_span::def_id::LOCAL_CRATE;
 use rustc_span::source_map::Span;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_span::SourceFile;
