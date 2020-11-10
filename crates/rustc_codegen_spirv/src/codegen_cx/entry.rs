@@ -1,11 +1,9 @@
 use super::CodegenCx;
 use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, SpirvAttribute};
+use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
 use rspirv::dr::Operand;
-use rspirv::spirv::{
-    Decoration, ExecutionMode, ExecutionModel, FunctionControl, StorageClass, Word,
-};
+use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_hir::Param;
 use rustc_middle::ty::{Instance, Ty};
 use rustc_target::abi::call::{FnAbi, PassMode};
@@ -22,7 +20,7 @@ impl<'tcx> CodegenCx<'tcx> {
         fn_abi: &FnAbi<'_, Ty<'_>>,
         entry_func: SpirvValue,
         name: String,
-        execution_model: ExecutionModel,
+        entry: Entry,
     ) {
         let local_id = match instance.def_id().as_local() {
             Some(id) => id,
@@ -54,11 +52,19 @@ impl<'tcx> CodegenCx<'tcx> {
                 ),
             )
         }
-        if execution_model == ExecutionModel::Kernel {
-            self.kernel_entry_stub(entry_func, name, execution_model);
+        let execution_model = entry.execution_model;
+        let fn_id = if execution_model == ExecutionModel::Kernel {
+            self.kernel_entry_stub(entry_func, name, execution_model)
         } else {
-            self.shader_entry_stub(entry_func, body.params, name, execution_model);
-        }
+            self.shader_entry_stub(entry_func, body.params, name, execution_model)
+        };
+        let mut emit = self.emit_global();
+        entry
+            .execution_modes
+            .iter()
+            .for_each(|(execution_mode, execution_mode_extra)| {
+                emit.execution_mode(fn_id, *execution_mode, execution_mode_extra);
+            });
     }
 
     fn shader_entry_stub(
@@ -67,7 +73,7 @@ impl<'tcx> CodegenCx<'tcx> {
         hir_params: &[Param<'tcx>],
         name: String,
         execution_model: ExecutionModel,
-    ) {
+    ) -> Word {
         let void = SpirvType::Void.def(self);
         let fn_void_void = SpirvType::Function {
             return_type: void,
@@ -120,10 +126,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 .collect()
         };
         emit.entry_point(execution_model, fn_id, name, interface);
-        if execution_model == ExecutionModel::Fragment {
-            // TODO: Make this configurable.
-            emit.execution_mode(fn_id, ExecutionMode::OriginUpperLeft, &[]);
-        }
+        fn_id
     }
 
     fn declare_parameter(
@@ -205,7 +208,7 @@ impl<'tcx> CodegenCx<'tcx> {
         entry_func: SpirvValue,
         name: String,
         execution_model: ExecutionModel,
-    ) {
+    ) -> Word {
         let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
             SpirvType::Function {
                 return_type,
@@ -241,5 +244,6 @@ impl<'tcx> CodegenCx<'tcx> {
         emit.end_function().unwrap();
 
         emit.entry_point(execution_model, fn_id, name, &[]);
+        fn_id
     }
 }
