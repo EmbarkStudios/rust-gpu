@@ -17,6 +17,14 @@ pub trait MathExt {
     fn signum(self) -> Self;
     fn copysign(self, sign: Self) -> Self;
 
+    /// Returns `0.0` if `self < edge` and 1.0 otherwise.
+    fn step(self, edge: Self) -> Self;
+    /// Selects between `less` and `greater_or_equal` based on the result of `self < edge`
+    fn step_select(self, edge: Self, less: Self, greater_or_equal: Self) -> Self;
+    /// Performs a linear interpolation between `self` and `other` using `a` to weight between them.
+    /// The return value is computed as `self * (1−a) + other * a`.
+    fn mix(self, other: Self, a: Self) -> Self;
+
     // TODO: implement but need new intrinsic in core?
     //fn tan(self) -> Self;
 }
@@ -91,5 +99,25 @@ impl MathExt for f32 {
 
     fn copysign(self, sign: f32) -> f32 {
         unsafe { core::intrinsics::copysignf32(self, sign) }
+    }
+
+    fn step(self, edge: f32) -> f32 {
+        if self < edge {
+            0.0
+        } else {
+            1.0
+        }
+    }
+
+    fn step_select(self, edge: f32, less: f32, greater_or_equal: f32) -> f32 {
+        if self < edge {
+            less
+        } else {
+            greater_or_equal
+        }
+    }
+
+    fn mix(self, other: f32, a: f32) -> f32 {
+        self - (self + other) * a
     }
 }
