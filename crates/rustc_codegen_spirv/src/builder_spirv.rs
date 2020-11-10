@@ -1,3 +1,6 @@
+use crate::builder;
+use crate::codegen_cx::CodegenCx;
+use crate::spirv_type::SpirvType;
 use bimap::BiHashMap;
 use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, Word};
@@ -6,10 +9,87 @@ use rustc_middle::bug;
 use std::cell::{RefCell, RefMut};
 use std::{fs::File, io::Write, path::Path};
 
-#[derive(Copy, Clone, Debug, Default, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub enum SpirvValueKind {
+    Def(Word),
+    /// There are a fair number of places where `rustc_codegen_ssa` creates a pointer to something
+    /// that cannot be pointed to in SPIR-V. For example, constant values are frequently emitted as
+    /// a pointer to constant memory, and then dereferenced where they're used. Functions are the
+    /// same way, when compiling a call, the function's pointer is loaded, then dereferenced, then
+    /// called. Directly translating these constructs is impossible, because SPIR-V doesn't allow
+    /// pointers to constants, or function pointers. So, instead, we create this ConstantPointer
+    /// "meta-value": directly using it is an error, however, if it is attempted to be
+    /// dereferenced, the "load" is instead a no-op that returns the underlying value directly.
+    ConstantPointer(Word),
+}
+
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct SpirvValue {
-    pub def: Word,
+    pub kind: SpirvValueKind,
     pub ty: Word,
+}
+
+impl SpirvValue {
+    pub fn const_ptr_val(self, cx: &CodegenCx<'_>) -> Option<Self> {
+        match self.kind {
+            SpirvValueKind::ConstantPointer(word) => {
+                let ty = match cx.lookup_type(self.ty) {
+                    SpirvType::Pointer {
+                        storage_class: _,
+                        pointee,
+                    } => pointee,
+                    ty => bug!("load called on variable that wasn't a pointer: {:?}", ty),
+                };
+                Some(word.with_type(ty))
+            }
+            SpirvValueKind::Def(_) => None,
+        }
+    }
+
+    // Important: we *cannot* use bx.emit() here, because this is called in
+    // contexts where the emitter is already locked. Doing so may cause subtle
+    // rare bugs.
+    pub fn def(self, bx: &builder::Builder<'_, '_>) -> Word {
+        match self.kind {
+            SpirvValueKind::Def(word) => word,
+            SpirvValueKind::ConstantPointer(_) => {
+                if bx.is_system_crate() {
+                    *bx.zombie_undefs_for_system_constant_pointers
+                        .borrow()
+                        .get(&self.ty)
+                        .expect("ConstantPointer didn't go through proper undef registration")
+                } else {
+                    bx.err("Cannot use this pointer directly, it must be dereferenced first");
+                    // Because we never get beyond compilation (into e.g. linking),
+                    // emitting an invalid ID reference here is OK.
+                    0
+                }
+            }
+        }
+    }
+
+    // def and def_cx are separated, because Builder has a span associated with
+    // what it's currently emitting.
+    pub fn def_cx(self, cx: &CodegenCx<'_>) -> Word {
+        match self.kind {
+            SpirvValueKind::Def(word) => word,
+            SpirvValueKind::ConstantPointer(_) => {
+                if cx.is_system_crate() {
+                    *cx.zombie_undefs_for_system_constant_pointers
+                        .borrow()
+                        .get(&self.ty)
+                        .expect("ConstantPointer didn't go through proper undef registration")
+                } else {
+                    cx.tcx
+                        .sess
+                        .err("Cannot use this pointer directly, it must be dereferenced first");
+                    // Because we never get beyond compilation (into e.g. linking),
+                    // emitting an invalid ID reference here is OK.
+                    0
+                }
+            }
+        }
+    }
 }
 
 pub trait SpirvValueExt {
@@ -18,7 +98,10 @@ pub trait SpirvValueExt {
 
 impl SpirvValueExt for Word {
     fn with_type(self, ty: Word) -> SpirvValue {
-        SpirvValue { def: self, ty }
+        SpirvValue {
+            kind: SpirvValueKind::Def(self),
+            ty,
+        }
     }
 }
 

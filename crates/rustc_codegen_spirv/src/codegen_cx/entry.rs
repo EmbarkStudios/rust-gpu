@@ -107,7 +107,7 @@ impl<'tcx> CodegenCx<'tcx> {
         emit.function_call(
             entry_func_return,
             None,
-            entry_func.def,
+            entry_func.def_cx(self),
             arguments.iter().map(|&(a, _)| a),
         )
         .unwrap();
@@ -234,7 +234,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .collect::<Vec<_>>();
         emit.begin_block(None).unwrap();
         let call_result = emit
-            .function_call(entry_func_return, None, entry_func.def, arguments)
+            .function_call(entry_func_return, None, entry_func.def_cx(self), arguments)
             .unwrap();
         if self.lookup_type(entry_func_return) == SpirvType::Void {
             emit.ret().unwrap();

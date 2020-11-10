@@ -70,7 +70,7 @@ impl<'tcx> CodegenCx<'tcx> {
             },
             SpirvType::Integer(128, _) => {
                 let result = self.undef(ty);
-                self.zombie_no_span(result.def, "u128 constant");
+                self.zombie_no_span(result.def_cx(self), "u128 constant");
                 result
             }
             other => self.tcx.sess.fatal(&format!(
@@ -169,7 +169,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         let len = s.as_str().len();
         let ty = self.type_ptr_to(self.layout_of(self.tcx.types.str_).spirv_type(self));
         let result = self.undef(ty);
-        self.zombie_no_span(result.def, "constant string");
+        self.zombie_no_span(result.def_cx(self), "constant string");
         (result, self.const_usize(len as u64))
     }
     fn const_struct(&self, elts: &[Self::Value], _packed: bool) -> Self::Value {
@@ -185,7 +185,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             field_names: None,
         }
         .def(self);
-        self.constant_composite(struct_ty, elts.iter().map(|f| f.def).collect())
+        self.constant_composite(struct_ty, elts.iter().map(|f| f.def_cx(self)).collect())
     }
 
     fn const_to_opt_uint(&self, v: Self::Value) -> Option<u64> {
@@ -301,7 +301,10 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         ) => {
                             if a_space != b_space {
                                 // TODO: Emit the correct type that is passed into this function.
-                                self.zombie_no_span(value.def, "invalid pointer space in constant");
+                                self.zombie_no_span(
+                                    value.def_cx(self),
+                                    "invalid pointer space in constant",
+                                );
                             }
                             assert_ty_eq!(self, a, b);
                         }
@@ -330,8 +333,8 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             val
         } else {
             // constant ptrcast is not supported in spir-v
-            let result = val.def.with_type(ty);
-            self.zombie_no_span(result.def, "const_ptrcast");
+            let result = val.def_cx(self).with_type(ty);
+            self.zombie_no_span(result.def_cx(self), "const_ptrcast");
             result
         }
     }
@@ -395,7 +398,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     let mut total_offset_end = total_offset_start;
                     values.push(
                         self.create_const_alloc2(alloc, &mut total_offset_end, ty)
-                            .def,
+                            .def_cx(self),
                     );
                     occupied_spaces.push(total_offset_start..total_offset_end);
                 }
@@ -417,7 +420,10 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Array { element, count } => {
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 let values = (0..count)
-                    .map(|_| self.create_const_alloc2(alloc, offset, element).def)
+                    .map(|_| {
+                        self.create_const_alloc2(alloc, offset, element)
+                            .def_cx(self)
+                    })
                     .collect::<Vec<_>>();
                 self.constant_composite(ty, values)
             }
@@ -427,7 +433,10 @@ impl<'tcx> CodegenCx<'tcx> {
                     .expect("create_const_alloc: Vectors must be sized");
                 let final_offset = *offset + total_size;
                 let values = (0..count)
-                    .map(|_| self.create_const_alloc2(alloc, offset, element).def)
+                    .map(|_| {
+                        self.create_const_alloc2(alloc, offset, element)
+                            .def_cx(self)
+                    })
                     .collect::<Vec<_>>();
                 assert!(*offset <= final_offset);
                 // Vectors sometimes have padding at the end (e.g. vec3), skip over it.
@@ -437,7 +446,10 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::RuntimeArray { element } => {
                 let mut values = Vec::new();
                 while offset.bytes_usize() != alloc.len() {
-                    values.push(self.create_const_alloc2(alloc, offset, element).def);
+                    values.push(
+                        self.create_const_alloc2(alloc, offset, element)
+                            .def_cx(self),
+                    );
                 }
                 let result = self.constant_composite(ty, values);
                 // TODO: Figure out how to do this. Compiling the below crashes both clspv *and* llvm-spirv:
@@ -452,7 +464,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 *data = *c + asdf->y[*c];
                 }
                 */
-                self.zombie_no_span(result.def, "constant runtime array value");
+                self.zombie_no_span(result.def_cx(self), "constant runtime array value");
                 result
             }
             SpirvType::Pointer { .. } => {

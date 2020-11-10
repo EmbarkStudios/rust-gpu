@@ -148,7 +148,7 @@ impl SpirvType {
                     .sizeof(cx)
                     .expect("Element of sized array must be sized")
                     .bytes();
-                let result = cx.emit_global().type_array(element, count.def);
+                let result = cx.emit_global().type_array(element, count.def_cx(cx));
                 if !cx.kernel_mode {
                     // TODO: kernel mode can't do this??
                     cx.emit_global().decorate(
