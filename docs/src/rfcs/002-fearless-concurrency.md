@@ -1,4 +1,5 @@
-# Fearless Concurrency
+# Fearless Concurrency (V2.0)
+
 
 ## Summary
 
@@ -10,117 +11,164 @@ In GLSL and HLSL (see [Prior art](#prior-art)), applications are explicit about 
 
 This proposal currently requires the use of the `VulkanMemoryModel` capability, and describes everything in terms of that - however it could be mapped to SPIR-V without this capability in future if that's desirable.
 
+For now, this proposal only deals with barriers and the Workgroup scope as it affects buffer storage and workgroup storage; other scopes and atomics etc. are left to future proposals.
+
 ## Explanation
 
-This is a baseline proposal which is expected to be built on top of over time, to incorporate new ideas and more flexibility - for now only the basic functionality of reading and writing to a buffer or workgroup memory is covered.
+This is a baseline proposal which is expected to be built on top of over time, to incorporate new ideas and more flexibility.
 
-### Buffer Type
+### Resource Types
 
-Buffer data is wrapped with the `Buffer<T>` struct, which contains the pointer to all of the data (type `T`) in the resource. It doesn't allow direct access to this pointer (at least not via safe interfaces), but instead provides a number of safe interfaces to load and store the data. This type (and all the borrowed wrapper types) should also provide a solid link to the storage class being accessed.
-
-#### Borrowing
-
-Borrowing is a staple of rust ownership - but in order to be explicit about the scope at which values are visible, the user has to declare this intent when borrowing. Rather than a simple "borrow" and "borrow_mut" method, `Buffer` instead has the following interfaces:
+Storage buffer data is wrapped with the following type:
 
 ```rust
-fn borrow_for_device(&self) -> DeviceVisibleBufferValue<T>;
-fn borrow_mut_for_device(&mut self) -> DeviceVisibleMutableBufferValue<T>;
-fn borrow_for_workgroup(&self) -> WorkgroupVisibleBufferValue<T>;
-fn borrow_mut_for_workgroup(&mut self) -> WorkgroupVisibleMutableBufferValue<T>;
-fn borrow_for_subgroup(&self) -> SubgroupVisibleBufferValue<T>;
-fn borrow_mut_for_subgroup(&mut self) -> SubgroupVisibleMutableBufferValue<T>;
+struct MutDeviceStorage<T> {
+    data: StorageBuffer<T>,
+};
 ```
-
-Note that the borrow functions don't directly return a reference to the underlying value - instead they return intermediate types which mediate correct loads and stores, described in the following section.
-
-For each borrow, an `OpMemoryBarrier` instruction is emitted with a `Scope` equal to that of the name of the borrow command, and `Acquire | UniformMemory` memory semantics.
-
-#### Scope Visible Wrappers
-
-Rust doesn't cater for different "types" of memory or annotation at the moment, and adding that into the compiler would be a significant amount of work. It might be possible in future to use some sort of annotated type, but for now this is going down a similar route to that of the `Atomic*` types in the standard library by wrapping underlying variables with types that have dedicated load/store methods.
-
-Each wrapper type is named with its scope (Device/Workgroup/Subgroup), and whether it is mutable or not, reflecting its underlying properties.
-
-##### Loads and Stores
-
-Loads and stores are dedicated methods on the commands returned from the `Buffer` borrows. All of those types have a `load()` method; only the `Mutable` types include the `store()` method.
+Workgroup storage is wrapped with a single type:
 
 ```rust
-fn load(&self) -> T;
-fn store(&mut self, value: T);
+struct MutWorkgroupStorage<T> {
+    data: Workgroup<T>,
+};
 ```
 
-The two methods mostly map exactly to what you'd expect - `OpLoad` and `OpStore`, however each of them will include additional `Memory Operands`.
+#### MutDeviceStorage and MutWorkgroupStorage interfaces
 
-For `load()`, an `OpLoad` instruction is generated with the `MakePointerVisible` semantic and a following `Scope` parameter equal to the scope in the name of the wrapper type.
-
-For `store()`, an `OpStore` instruction is generated with the `MakePointerAvailable` semantic, and a following `Scope` parameter equal to the scope in the name of the wrapper type.
-
-##### Drop
-
-The `Mutable` variants of the wrapper types implement a custom `drop()` to ensure correct synchronization.
+For now these interfaces have two functions - but will likely change to include additional scopes (e.g. subgroup) and operations (e.g. reduction, expansion) in future iterations of the proposal:
 
 ```rust
-fn drop(&mut self);
+impl<T> MutDeviceStorage {
+    fn map_workgroup<F, E>(&mut self, f: F) where F: FnMut(E) -> E
+    {
+        unsafe {
+            spv::op_memory_barrier(Workgroup, Acquire);
+            let value: E = self.data.load_indexed_from_workgroup(invocation_index());  // OpLoad with NonPrivate|MakeVisible semantics and Workgroup scope.
+            let result = f(value);
+            self.data.store_indexed_to_workgroup(invocation_index(), result);          // OpStore with NonPrivate|MakeAvailable semantics and Workgroup scope
+            spv::op_memory_barrier(Workgroup, Release);
+        }
+    }
+    
+    fn map_workgroup_joined<F, E, const RATE: usize>(&mut self, f: F) where F: FnMut([E; RATE]) -> [E; RATE]
+    {
+        unsafe {
+            spv::op_control_barrier(Workgroup, Workgroup, Acquire);
+            if (invocation_index % RATE == 0) {
+                let value: [E; RATE] = self.data.load_array_indexed_from_workgroup(invocation_index());  // OpLoad with NonPrivate|MakeVisible semantics and Workgroup scope.
+                let result = f(value);
+                self.data.store_array_indexed_to_workgroup(invocation_index(), result);                  // OpStore with NonPrivate|MakeAvailable semantics and Workgroup scope
+            }
+            spv::op_control_barrier(Workgroup, Workgroup, Release);
+        }
+    }
+}
 ```
 
-In addition to destruction when it goes out of scope, an `OpMemoryBarrier` instruction is emitted with a `Scope` equal to that of the scope of the wrapper type, and `Release | UniformMemory` memory semantics.
+`map_workgroup` gives you a simple 1:1 interface for mutating values in a buffer, allowing you to mutate invocation-local data. It does so safely, with barriers and visibility automatically executed to provide safety.
 
-### Workgroup Struct
+`map_workgroup_joined` is similar, but allows a shader to access data shared by multiple threads, so that it can be shuffled or combined across threads. The number of threads that data is shared between is fixed by the `RATE` parameter. This function must only be called in workgroup-uniform control flow, and `RATE` must be a factor of the workgroup size.
 
-Workgroup memory can be exposed in _exactly_ the same manner as the `Buffer` type. The exhaustive list of changes are:
+The `MutWorkgroupStorage` implementation is identical; it just operates on Workgroup storage instead.
 
- - `Workgroup<T>` instead
- - No `borrow_for_device()` or `borrow_mut_for_device()` methods or associated types
- - Wrapper types with `Workgroup` in the name instead of `Buffer`.
- - `Workgroup` storage class used instead of `StorageBuffer` for accesses/initialization
- - `WorkgroupMemory` memory semantic used by `OpMemoryBarrier` in `borrow*`/`drop` methods instead of `UniformMemory`
+The load and store variants used on the underlying storage here are invented to simplify the interface; what these ultimately look like is contingent on the resource binding proposal, which is still in flight.
+The spir-v op codes are similarly somewhat invented, and will also be adjusted to mirror the final syntax for assembly here (or some friendlier wrapper).
+These are provided primarily for illustrative purposes.
 
-### Thread Synchronization
 
-SPIR-V/Vulkan offer workgroup and subgroup barriers, although the semantics of each vary in ways that are unusual, and frankly there be dragons here. Efforts are underway to smooth this out, but for now, it's likely safest if we expose only workgroup barriers.
+### Example
 
-```
-fn synchronize_workgroup();
-```
-
-Workgroup synchronization is sufficient to make values visible at smaller scopes too (i.e. subgroup) so not having a subgroup barrier is "ok". Notably there's no `synchronize_device()` function, so writing at device scope and then attempting to read from another thread in the same device is always a data race - an execution dependency in the API is currently required to make these work.
-
-This command issues an OpControlBarrier with `Execution Scope` equal to `Workgroup`, `Memory Scope` equal to `Invocation`, and `Memory Semantics` equal to `0`. This instruction does not include memory semantics, as those are already taken care of by the `borrow-*()` and `drop()` methods on resource types.
-
-This method has the probably-hard-to-enforce requirement that it's only ever called in control flow that is fully uniform across a workgroup. Potentially it could be put anywhere and hoisted to uniform control but that likely gets painful pretty quickly. Trying to detect this at compile time might also be rather difficult - although maybe "fully uniform" would be possible to detect? That would be sufficient for 99% of compute use cases.
-
-### Invocation Indexing Information
-
-In order to effectively index into resources from multiple invocations, SPIR-V provides a number of indices to identify which invocation and scope grouping the current shader invocation is executing. Exposing these to applications will be necessary to enable effective indexing.
-
-These are loose functions - they aren't tied to a particular struct or trait.
+Bitonic sort example (unrolled, incomplete...):
 
 ```rust
-fn SubgroupSize() -> usize              // Returns SubgroupSize                             - size of the subgroup
-fn SubgroupIndex() -> usize             // Returns SubgroupId                               - Linear index of the subgroup within the dispatch
-fn SubgroupInvocationIndex() -> usize   // Returns SubgroupLocalInvocationId                - Linear index of the invocation within the subgroup
-fn WorkGroupSize() -> usize             // Returns WorkgroupSize.x * y * z                  - size of the Workgroup
-fn WorkGroupIndex() -> usize            // Returns GlobalInvocationId / WorkGroupSize       - Linear index of the Workgroup within the dispatch
-fn WorkGroupInvocationIndex() -> usize  // Returns LocalInvocationIndex                     - Linear index of the invocation within the Workgroup
-fn DispatchSize() -> usize              // Returns WorkgroupSize.x * y * z * NumWorkgroups  - Linear size of the Dispatch
-fn DispatchInvocationIndex() -> usize   // Returns GlobalInvocationId                       - Linear index of the invocation within the dispatch
+fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
+    buffer.map_workgroup_joined(2, |array| {
+        [
+            max(array[0],array[1]),
+            min(array[0],array[1]),
+        ]
+    });
+    buffer.map_workgroup_joined(4, |array| {
+        [
+            max(array[0],array[3]),
+            min(array[0],array[3]),
+            max(array[1],array[2]),
+            min(array[1],array[2]),
+        ]
+    });
+    buffer.map_workgroup_joined(2, |array| {
+        [
+            max(array[0],array[1]),
+            min(array[0],array[1]),
+        ]
+    });
+    buffer.map_workgroup_joined(8, |array| {
+        [
+            max(array[0],array[7]),
+            min(array[0],array[7]),
+            max(array[1],array[6]),
+            min(array[1],array[6]),
+            max(array[2],array[5]),
+            min(array[2],array[5]),
+            max(array[3],array[4]),
+            min(array[3],array[4]),
+        ]
+    })
+    buffer.map_workgroup_joined(4, |array| {
+        [
+            max(array[0],array[1]),
+            min(array[0],array[1]),
+            max(array[2],array[3]),
+            min(array[2],array[3]),
+        ]
+    });
+    buffer.map_workgroup_joined(2, |array| {
+        [
+            max(array[0],array[1]),
+            min(array[0],array[1]),
+        ]
+    });
+    
+    // ... Keep going until the whole workgroup is sorted.
+}
 ```
+
+As a comparison point, the equivalent GLSL for at least the first iteration would look something like this:
+
+```glsl
+layout (...) workgroupcoherent Buffer buffer {
+    uint array[];
+};
+
+void main() {
+  if (gl_LocalInvocationID % 2) {
+    memoryBarrier(gl_ScopeWorkgroup, gl_StorageSemanticsBuffer, gl_SemanticsAcquire);
+    uint max = max(buffer.array[0], buffer.array[1]);
+    uint min = min(buffer.array[0], buffer.array[1]);
+    buffer.array[0] = max;
+    buffer.array[1] = min;
+    memoryBarrier(gl_ScopeWorkgroup, gl_StorageSemanticsBuffer, gl_SemanticsRelease);
+  }
+  ...
+}
+```
+
+Note that for simplicity, I've done a `map_workgroup_joined` on each iteration, though really the first iteration should use all available threads rather than masking half of them out and wasting perf... this is possibly something that some time should be spent to make things a bit more ergonomic, though this is likely contingent on the overall binding proposal.
 
 ### Future Additions
 
-#### Arrays
-
-There should probably be `borrow()` variants which return a wrapper for a range of values in the resource, since a common pattern might be to write to a single element of an array from each invocation, then read back the entire array of elements later. This can probably be added once everything else is working. There's a few options to play around with here, and it's probably not worth committing the design of this until the rest is accepted.
-
 #### Storage Images
 
-Storage images are going to be pretty similar, but they are multi-dimensional rather than being indexed in a single dimension, which complicates the implicit indexing in this proposal. Not insurmountable, but definitely requires more work.
+Storage images are going to be pretty similar, but they are multi-dimensional rather than being indexed in a single dimension, which complicates the implicit indexing in this proposal. Not difficult, but left as an exercise for a future proposal.
 
-#### Complex Borrowing
+#### More complex access patterns
 
-There are applications using interesting access patterns that are (theoretically) data race free, but cannot be boiled down to simply "accessing nearby data". Things like implementing a suballocation or linked lists on a buffer would be impossible with this interface.
+There are applications using interesting access patterns that are (theoretically) data race free, but cannot be boiled down to simply "accessing nearby data". Things like implementing a suballocation or linked lists on a buffer would be impossible with this interface. There are also local accses patterns like scatters, gathers, and reductions which would be interesting to handle.
 
+#### Multiple Resources
+
+Being able to interleave multiple resources for the map functions in a way similar to the `itertools` crate would likely be useful in future.
 
 #### Atomics
 
@@ -128,26 +176,9 @@ Atomic loads, stores, and other operations might be relatively simple to add in 
 
 ## Drawbacks
 
-This proposal doesn't enable an unsafe interface - it's *somewhat* prescriptive, so it might be hard to build very much on top of this directly.
+The main drawback of this proposal perhaps is that it's quite prescriptive, and might not clearly map to what developers in other shading languages are used to. It also doesn't address all possible uses of barriers, and more work will need to be done to address other use cases as time goes on.
 
-Whilst not really drawbacks, there are still places that a user could shoot themselves in the foot. I've laid out some examples here and how they could potentially be addressed (where possible):
-
-### Not synchronizing threads properly
-
-If a shader does something like write a value in one thread and then read it back in another in the same scope, naively there's no way to guarantee that the threads have been actually synchronized. E.g.:
-
-```rust
-let data = myBuffer.borrow_mut_for_workgroup();
-data.store(1);
-
-let data = myBuffer.borrow_for_workgroup();
-```
-
-In the above code, there's a data race even though the borrow checker should be happy, as the threads are not synchronized. An expert in this area should be able to find this by localised code inspection, so in theory the compiler should be able to figure out - the question is how?
-
-The most naive way I can think to make this work is at runtime, by tracking an extra value which indicates if a synchronization has been performed or not after a mutable value is dropped for a given resource (making the `synchronize_workgroup` function a resource method might make this easier...); if not, then fire an assert when a value is borrowed.
-
-Hopefully there's something that could be done during compilation to figure this out more elegantly and earlier, but this will require someone more familiar with compilation to figure out.
+One other drawback currently is that as certain arguments are coded as constants (e.g. RATE), it's not straightforward to write loops for algorithms that would typically want them (e.g. see the example).
 
 ### Not synchronizing outside of the shader
 
@@ -159,9 +190,7 @@ Yet another "outside of the shader" problem, if two resources input to the shade
 
 ## Alternatives
 
-The main clear alternative would be to simply provide unsafe access to a pointer, with synchronization functions similar to those in GLSL/HLSL, and load store functions indicating things like the storage class and make available/visible semantics. It might be desirable to build that interface first, and then build this on proposal on top of it, since that would let this interface be built, as well as many others in the future. 
-
-The unsafe interface could be as simple as exposing a pointer or handle, with the ability to pass that to spir-v intrinsics exposed to Rust. We could then build all of this infrastructure on top of that, along with potentially more later. If desirable, a lower level interface proposal could be spun off from this as an initial target.
+The main clear options are an unsafe interface similar to GLSL/HLSL, or something safer like this. The V1 version of this was one other proposal, but it was scrapped as fn drop() cannot be relied upon for safety.
 
 ## Prior art
 
@@ -179,13 +208,13 @@ Distinctions here are only made between global memory and workgroup memory, and 
 GLSL went down a similar route, though the features were spread across multiple extensions, exposing [compute shaders](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_compute_shader.txt), [storage images](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_shader_image_load_store.txt) and [storage buffers](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_shader_storage_buffer_object.txt). Again, the memory type, memory scope, and execution scope are all tied together in these extensions.
 
 More recently, the Vulkan WG realised that the guarantees on this were fairly loose, and testing was quite difficult. In an attempt to formalise the model somewhat, an extended and [more thoroughly tested formal model](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#memory-model) was introduced.
-As part of releasing that, @tobski wrote up a [comparison between this and the C++ memory model](https://www.khronos.org/blog/comparing-the-vulkan-spir-v-memory-model-to-cs), which may be useful to those more familiar with C++.
+As part of releasing that, the group wrote up a [comparison between the Vulkan and C++ memory models](https://www.khronos.org/blog/comparing-the-vulkan-spir-v-memory-model-to-cs), which may be useful to those more familiar with C++.
 The new Vulkan memory model is also exposed in GLSL via the [memory scope semantics](https://github.com/KhronosGroup/GLSL/blob/master/extensions/khr/GL_KHR_memory_scope_semantics.txt) extension.
 
 One of the key draws of this extension was to parameterise everything that an implementation might choose to do with memory; the memory type, memory scope, and execution scope all became independently controllable.
-GLSL hasn't really taken advantage of this, as it functions fairly closely to SPIR-V, and is thus only really providing a somewhat friendly spir-v wrapper.
+GLSL hasn't really taken advantage of this, as it functions fairly closely to SPIR-V, and is thus only really providing a somewhat friendly SPIR-V wrapper.
 
-Creating the memory model also enabled us to have in-depth (and soemtimes painful) discussions about how implementations were actually behaving when particular code was written, and what app developers typically wanted to do.
+Creating the memory model also enabled us to have in-depth (and sometimes painful) discussions about how implementations were actually behaving when particular code was written, and what app developers typically wanted to do.
 A lot of discussion/feedback here was that most developer use cases fall into a fairly narrow band, and whilst that can be much more tightly expressed with the memory model than the current limited barriers, the full suite of parameters the memory model expressed was too much, particularly without a defined execution model (e.g. you can't write spin locks!).
 Additionally, whilst GLSL and SPIR-V were necessarily conservative by having no automatic visibility for resource writes, most use cases expected that these writes would be made visible in some way to other invocations.
 All of this informed the decisions in this proposal, which suggests a tighter definition than the full memory model, but that also slightly differs from than traditional shading languages by making visibility there "by default" (albeit with explicit scope opt-in), and being relativel prescriptive.
