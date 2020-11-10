@@ -20,7 +20,7 @@ use rustc_codegen_ssa::traits::{
 use rustc_errors::DiagnosticBuilder;
 use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::mir::coverage::{
-    CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionIndex, Op,
+    CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionId, Op,
 };
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt, TyAndLayout};
 use rustc_middle::ty::{Instance, ParamEnv, Ty, TyCtxt};
@@ -214,29 +214,29 @@ impl<'a, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         todo!()
     }
 
-    fn add_counter_region(
+    fn set_function_source_hash(&mut self, _: rustc_middle::ty::Instance<'tcx>, _: u64) -> bool {
+        todo!()
+    }
+    fn add_coverage_counter(
         &mut self,
-        _instance: Instance<'tcx>,
-        _function_source_hash: u64,
-        _id: CounterValueReference,
-        _region: CodeRegion,
+        _: Instance<'tcx>,
+        _: CounterValueReference,
+        _: CodeRegion,
     ) -> bool {
         todo!()
     }
-
-    fn add_counter_expression_region(
+    fn add_coverage_counter_expression(
         &mut self,
-        _instance: Instance<'tcx>,
-        _id: InjectedExpressionIndex,
-        _lhs: ExpressionOperandId,
-        _op: Op,
-        _rhs: ExpressionOperandId,
-        _region: CodeRegion,
+        _: Instance<'tcx>,
+        _: InjectedExpressionId,
+        _: ExpressionOperandId,
+        _: Op,
+        _: ExpressionOperandId,
+        _: Option<CodeRegion>,
     ) -> bool {
         todo!()
     }
-
-    fn add_unreachable_region(&mut self, _instance: Instance<'tcx>, _region: CodeRegion) -> bool {
+    fn add_coverage_unreachable(&mut self, _: Instance<'tcx>, _: CodeRegion) -> bool {
         todo!()
     }
 }
@@ -245,17 +245,16 @@ impl<'a, 'tcx> DebugInfoBuilderMethods for Builder<'a, 'tcx> {
     fn dbg_var_addr(
         &mut self,
         _dbg_var: Self::DIVariable,
-        _scope_metadata: Self::DIScope,
+        _scope_metadata: Self::DILocation,
         _variable_alloca: Self::Value,
         _direct_offset: Size,
         // NB: each offset implies a deref (i.e. they're steps in a pointer chain).
         _indirect_offsets: &[Size],
-        _span: Span,
     ) {
         todo!()
     }
 
-    fn set_source_location(&mut self, _scope: Self::DIScope, _span: Span) {
+    fn set_dbg_loc(&mut self, _: Self::DILocation) {
         todo!()
     }
 
@@ -375,6 +374,7 @@ impl<'a, 'tcx> BackendTypes for Builder<'a, 'tcx> {
 
     type DIScope = <CodegenCx<'tcx> as BackendTypes>::DIScope;
     type DIVariable = <CodegenCx<'tcx> as BackendTypes>::DIVariable;
+    type DILocation = <CodegenCx<'tcx> as BackendTypes>::DILocation;
 }
 
 impl<'a, 'tcx> HasCodegen<'tcx> for Builder<'a, 'tcx> {

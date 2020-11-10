@@ -9,7 +9,7 @@ use ash::extensions::ext::DebugUtils;
 use ash::extensions::khr::{Surface, Swapchain};
 use ash::util::*;
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
-use ash::{vk, Device, Entry, Instance};
+use ash::{vk, Device, Instance};
 use std::borrow::Cow;
 use std::default::Default;
 use std::ffi::{CStr, CString};
@@ -159,7 +159,7 @@ pub struct ExampleBase {
     #[cfg(target_os = "macos")]
     pub entry: ash_molten::MoltenEntry,
     #[cfg(not(target_os = "macos"))]
-    pub entry: Entry,
+    pub entry: ash::Entry,
     pub instance: Instance,
     pub device: Device,
     pub surface_loader: Surface,
@@ -240,7 +240,7 @@ impl ExampleBase {
                 if #[cfg(target_os = "macos")] {
                     let entry = ash_molten::MoltenEntry::load().unwrap();
                 } else {
-                    let entry = Entry::new().unwrap();
+                    let entry = ash::Entry::new().unwrap();
                 }
             }
 

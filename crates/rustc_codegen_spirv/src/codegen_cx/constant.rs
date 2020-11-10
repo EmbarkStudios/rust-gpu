@@ -208,10 +208,12 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         ty: Self::Type,
     ) -> Self::Value {
         match scalar {
-            Scalar::Raw { data, size } => match layout.value {
-                Primitive::Int(int_size, int_signedness) => {
-                    assert_eq!(size as u64, int_size.size().bytes());
-                    match self.lookup_type(ty) {
+            Scalar::Int(int) => {
+                assert_eq!(int.size(), layout.value.size(&self.tcx));
+                let data = int.to_bits(int.size()).unwrap();
+
+                match layout.value {
+                    Primitive::Int(int_size, int_signedness) => match self.lookup_type(ty) {
                         SpirvType::Integer(width, spirv_signedness) => {
                             assert_eq!(width as u64, int_size.size().bits());
                             if !self.kernel_mode {
@@ -231,20 +233,22 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             "scalar_to_backend Primitive::Int not supported on type {}",
                             other.debug(ty, self)
                         )),
+                    },
+                    Primitive::F32 => {
+                        let res = self.constant_f32(f32::from_bits(data as u32));
+                        assert_eq!(res.ty, ty);
+                        res
+                    }
+                    Primitive::F64 => {
+                        let res = self.constant_f64(f64::from_bits(data as u64));
+                        assert_eq!(res.ty, ty);
+                        res
+                    }
+                    Primitive::Pointer => {
+                        bug!("scalar_to_backend Primitive::Ptr is an invalid state")
                     }
                 }
-                Primitive::F32 => {
-                    let res = self.constant_f32(f32::from_bits(data as u32));
-                    assert_eq!(res.ty, ty);
-                    res
-                }
-                Primitive::F64 => {
-                    let res = self.constant_f64(f64::from_bits(data as u64));
-                    assert_eq!(res.ty, ty);
-                    res
-                }
-                Primitive::Pointer => bug!("scalar_to_backend Primitive::Ptr is an invalid state"),
-            },
+            }
             Scalar::Ptr(ptr) => {
                 let (base_addr, _base_addr_space) = match self.tcx.global_alloc(ptr.alloc_id) {
                     GlobalAlloc::Memory(alloc) => {
