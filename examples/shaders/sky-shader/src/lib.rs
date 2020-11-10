@@ -6,7 +6,7 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
-use glam::{const_vec3, Mat4, Vec2, Vec3, Vec4};
+use spirv_std::glam::{const_vec3, Mat4, Vec2, Vec3, Vec4};
 use spirv_std::{Input, MathExt, Output};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
@@ -160,11 +160,7 @@ pub fn fs(screen_pos: Vec2) -> Vec4 {
         Vec4::new(0.0, -0.14834046, -0.98893654, 0.0),
     );
 
-    let clip_pos = screen_pos.extend(1.0).extend(1.0);
-    let world_pos = {
-        let p = clip_to_world.mul_vec4(clip_pos);
-        p.truncate() / p.w()
-    };
+    let world_pos = clip_to_world.transform_point3(screen_pos.extend(1.0));
     let dir = (world_pos - eye_pos).normalize();
 
     // evaluate Preetham sky model

@@ -3,7 +3,7 @@
 #![feature(register_attr)]
 #![register_attr(spirv)]
 
-use glam::Vec4;
+use spirv_std::glam::Vec4;
 use spirv_std::{Input, Output};
 
 #[allow(unused_attributes)]
