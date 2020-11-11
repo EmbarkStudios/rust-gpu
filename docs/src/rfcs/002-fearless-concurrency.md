@@ -137,17 +137,17 @@ fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
 As a comparison point, the equivalent GLSL for at least the first iteration would look something like this:
 
 ```glsl
-layout (...) workgroupcoherent Buffer buffer {
+layout (set = 0, binding = 0) workgroupcoherent buffer MyBuffer {
     uint array[];
-};
+} myBuffer;
 
 void main() {
-  if (gl_LocalInvocationID % 2) {
+  if ((gl_LocalInvocationIndex % 2) == 0) {
     memoryBarrier(gl_ScopeWorkgroup, gl_StorageSemanticsBuffer, gl_SemanticsAcquire);
-    uint max = max(buffer.array[0], buffer.array[1]);
-    uint min = min(buffer.array[0], buffer.array[1]);
-    buffer.array[0] = max;
-    buffer.array[1] = min;
+    uint max = max(myBuffer.array[0], myBuffer.array[1]);
+    uint min = min(myBuffer.array[0], myBuffer.array[1]);
+    myBuffer.array[0] = max;
+    myBuffer.array[1] = min;
     memoryBarrier(gl_ScopeWorkgroup, gl_StorageSemanticsBuffer, gl_SemanticsRelease);
   }
   ...
