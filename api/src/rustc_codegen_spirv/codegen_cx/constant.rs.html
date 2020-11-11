@@ -514,6 +514,18 @@
 <span id="511">511</span>
 <span id="512">512</span>
 <span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -587,7 +599,7 @@
             },
             <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">128</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">ty</span>);
-                <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def</span>, <span class="string">&quot;u128 constant&quot;</span>);
+                <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="string">&quot;u128 constant&quot;</span>);
                 <span class="ident">result</span>
             }
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
@@ -686,7 +698,7 @@
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">as_str</span>().<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="self">self</span>.<span class="ident">layout_of</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">types</span>.<span class="ident">str_</span>).<span class="ident">spirv_type</span>(<span class="self">self</span>));
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">ty</span>);
-        <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def</span>, <span class="string">&quot;constant string&quot;</span>);
+        <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="string">&quot;constant string&quot;</span>);
         (<span class="ident">result</span>, <span class="self">self</span>.<span class="ident">const_usize</span>(<span class="ident">len</span> <span class="kw">as</span> <span class="ident">u64</span>))
     }
     <span class="kw">fn</span> <span class="ident">const_struct</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">elts</span>: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::<span class="ident">Value</span>], <span class="ident">_packed</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
@@ -702,7 +714,7 @@
             <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
         }
         .<span class="ident">def</span>(<span class="self">self</span>);
-        <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">struct_ty</span>, <span class="ident">elts</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">def</span>).<span class="ident">collect</span>())
+        <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">struct_ty</span>, <span class="ident">elts</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">def_cx</span>(<span class="self">self</span>)).<span class="ident">collect</span>())
     }
 
     <span class="kw">fn</span> <span class="ident">const_to_opt_uint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">v</span>: <span class="self">Self</span>::<span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
@@ -818,7 +830,10 @@
                         ) <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">if</span> <span class="ident">a_space</span> <span class="op">!</span><span class="op">=</span> <span class="ident">b_space</span> {
                                 <span class="comment">// TODO: Emit the correct type that is passed into this function.</span>
-                                <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">value</span>.<span class="ident">def</span>, <span class="string">&quot;invalid pointer space in constant&quot;</span>);
+                                <span class="self">self</span>.<span class="ident">zombie_no_span</span>(
+                                    <span class="ident">value</span>.<span class="ident">def_cx</span>(<span class="self">self</span>),
+                                    <span class="string">&quot;invalid pointer space in constant&quot;</span>,
+                                );
                             }
                             <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">a</span>, <span class="ident">b</span>);
                         }
@@ -847,8 +862,8 @@
             <span class="ident">val</span>
         } <span class="kw">else</span> {
             <span class="comment">// constant ptrcast is not supported in spir-v</span>
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">def</span>.<span class="ident">with_type</span>(<span class="ident">ty</span>);
-            <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def</span>, <span class="string">&quot;const_ptrcast&quot;</span>);
+            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">def_cx</span>(<span class="self">self</span>).<span class="ident">with_type</span>(<span class="ident">ty</span>);
+            <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="string">&quot;const_ptrcast&quot;</span>);
             <span class="ident">result</span>
         }
     }
@@ -912,7 +927,7 @@
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_offset_end</span> <span class="op">=</span> <span class="ident">total_offset_start</span>;
                     <span class="ident">values</span>.<span class="ident">push</span>(
                         <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">total_offset_end</span>, <span class="ident">ty</span>)
-                            .<span class="ident">def</span>,
+                            .<span class="ident">def_cx</span>(<span class="self">self</span>),
                     );
                     <span class="ident">occupied_spaces</span>.<span class="ident">push</span>(<span class="ident">total_offset_start</span>..<span class="ident">total_offset_end</span>);
                 }
@@ -934,7 +949,10 @@
             <span class="ident">SpirvType</span>::<span class="ident">Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>).<span class="ident">unwrap</span>() <span class="kw">as</span> <span class="ident">usize</span>;
                 <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">count</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>).<span class="ident">def</span>)
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                        <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>)
+                            .<span class="ident">def_cx</span>(<span class="self">self</span>)
+                    })
                     .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
                 <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>)
             }
@@ -944,7 +962,10 @@
                     .<span class="ident">expect</span>(<span class="string">&quot;create_const_alloc: Vectors must be sized&quot;</span>);
                 <span class="kw">let</span> <span class="ident">final_offset</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">offset</span> <span class="op">+</span> <span class="ident">total_size</span>;
                 <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">count</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>).<span class="ident">def</span>)
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                        <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>)
+                            .<span class="ident">def_cx</span>(<span class="self">self</span>)
+                    })
                     .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">final_offset</span>);
                 <span class="comment">// Vectors sometimes have padding at the end (e.g. vec3), skip over it.</span>
@@ -954,7 +975,10 @@
             <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">values</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
                 <span class="kw">while</span> <span class="ident">offset</span>.<span class="ident">bytes_usize</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">alloc</span>.<span class="ident">len</span>() {
-                    <span class="ident">values</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>).<span class="ident">def</span>);
+                    <span class="ident">values</span>.<span class="ident">push</span>(
+                        <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>)
+                            .<span class="ident">def_cx</span>(<span class="self">self</span>),
+                    );
                 }
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>);
                 <span class="comment">// TODO: Figure out how to do this. Compiling the below crashes both clspv *and* llvm-spirv:</span>
@@ -969,7 +993,7 @@
                 *data = *c + asdf-&gt;y[*c];
                 }
                 */</span>
-                <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def</span>, <span class="string">&quot;constant runtime array value&quot;</span>);
+                <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="string">&quot;constant runtime array value&quot;</span>);
                 <span class="ident">result</span>
             }
             <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
