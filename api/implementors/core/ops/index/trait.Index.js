@@ -1,4 +1,5 @@
 (function() {var implementors = {};
+implementors["glam"] = [{"text":"impl Index&lt;usize&gt; for Vec2","synthetic":false,"types":[]},{"text":"impl Index&lt;usize&gt; for Vec3","synthetic":false,"types":[]},{"text":"impl Index&lt;usize&gt; for Vec3A","synthetic":false,"types":[]},{"text":"impl Index&lt;usize&gt; for Vec4","synthetic":false,"types":[]}];
 implementors["raw_string"] = [{"text":"impl&lt;I:&nbsp;RawStrIndex&gt; Index&lt;I&gt; for RawStr","synthetic":false,"types":[]}];
 implementors["regex"] = [{"text":"impl&lt;'t&gt; Index&lt;usize&gt; for Captures&lt;'t&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'t, 'i&gt; Index&lt;&amp;'i str&gt; for Captures&lt;'t&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'t&gt; Index&lt;usize&gt; for Captures&lt;'t&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'t, 'i&gt; Index&lt;&amp;'i str&gt; for Captures&lt;'t&gt;","synthetic":false,"types":[]}];
 implementors["rspirv"] = [{"text":"impl&lt;T&gt; Index&lt;Token&lt;T&gt;&gt; for Storage&lt;T&gt;","synthetic":false,"types":[]}];

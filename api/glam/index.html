@@ -1,0 +1,193 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `glam` crate."><meta name="keywords" content="rust, rustlang, rust-lang, glam"><title>glam - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../glam/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate glam</p><div class="block version"><p>Version 0.10.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all glam's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class="location"></p><script>window.sidebarCurrent = {name: "glam", ty: "mod", relpath: "../"};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/glam/lib.rs.html#1-261" title="goto source code">[src]</a></span><span class="in-band">Crate <a class="mod" href="">glam</a></span></h1><div class="docblock"><h1 id="glam" class="section-header"><a href="#glam">glam</a></h1>
+<p><code>glam</code> is a simple and fast linear algebra library for games and graphics.</p>
+<h2 id="features" class="section-header"><a href="#features">Features</a></h2>
+<p><code>glam</code> is built with SIMD in mind. Currently only SSE2 on x86/x86_64 is
+supported as this is what stable Rust supports.</p>
+<ul>
+<li>Single precision float <code>f32</code> support only (for now)</li>
+<li>SSE2 storage and optimization for many types, including <code>Mat2</code>, <code>Mat4</code>,
+<code>Quat</code>, <code>Vec3A</code> and <code>Vec4</code></li>
+<li>Scalar fallback implementations exist when SSE2 is not available</li>
+<li>Most functionality includes unit tests and benchmarks</li>
+</ul>
+<h2 id="linear-algebra-conventions" class="section-header"><a href="#linear-algebra-conventions">Linear algebra conventions</a></h2>
+<p><code>glam</code> interprets vectors as column matrices (also known as &quot;column vectors&quot;)
+meaning when transforming a vector with a matrix the matrix goes on the left.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">glam</span>::{<span class="ident">Mat3</span>, <span class="ident">Vec3</span>};
+<span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Mat3</span>::<span class="ident">identity</span>();
+<span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">Vec3</span>::<span class="ident">unit_x</span>();
+<span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">m</span> <span class="op">*</span> <span class="ident">x</span>;
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">v</span>, <span class="ident">x</span>);</pre></div>
+<p>Matrices are stored in memory in column-major order.</p>
+<h2 id="size-and-alignment-of-types" class="section-header"><a href="#size-and-alignment-of-types">Size and alignment of types</a></h2>
+<p>Some <code>glam</code> types use SIMD for storage meaning they are 16 byte aligned, these
+types include <code>Mat2</code>, <code>Mat4</code>, <code>Quat</code>, <code>Vec3A</code> and <code>Vec4</code>.</p>
+<p>When SSE2 is not available on the target architecture this type will still be 16
+byte aligned so that object sizes and layouts will not change between
+architectures.</p>
+<p>SIMD support can be disabled entirely using the <code>scalar-math</code> feature. This
+feature will also disable SIMD alignment meaning most types will use native
+<code>f32</code> alignment of 4 bytes.</p>
+<p>All the main <code>glam</code> types are <code>#[repr(C)]</code>, so they are possible to expose as
+struct members to C interfaces if desired. Be mindful of Vec3A's extra padding
+though.</p>
+<h2 id="accessing-internal-data" class="section-header"><a href="#accessing-internal-data">Accessing internal data</a></h2>
+<p>The SIMD types that <code>glam</code> builds on are opaque and their contents are not
+directly accessible. Because of this all types use getter and setter methods
+instead of providing direct access, regardless of whether they are using scalar
+or SIMD storage.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">glam</span>::<span class="ident">Vec4</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec4</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">y</span>(), <span class="number">2.0</span>);
+<span class="ident">v</span>.<span class="ident">set_z</span>(<span class="number">1.0</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">z</span>(), <span class="number">1.0</span>);
+<span class="kw-2">*</span><span class="ident">v</span>.<span class="ident">x_mut</span>() <span class="op">=</span> <span class="number">2.0</span>;
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">x</span>(), <span class="number">2.0</span>);</pre></div>
+<p>If you need to access multiple elements it is easier to convert the type to a
+tuple or array:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">glam</span>::<span class="ident">Vec4</span>;
+<span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec4</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>);
+<span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>, <span class="ident">w</span>) <span class="op">=</span> <span class="ident">v</span>.<span class="ident">into</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>((<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>, <span class="ident">w</span>), (<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>));</pre></div>
+<h2 id="vec3a" class="section-header"><a href="#vec3a">Vec3A</a></h2>
+<p><code>Vec3A</code> is a SIMD optimized version of the <code>Vec3</code> type, which due to 16 byte
+alignment results in <code>Vec3A</code> containing 4 bytes of padding making it 16 bytes
+in size in total.</p>
+<table><thead><tr><th align="left">Type</th><th align="right"><code>f32</code> bytes</th><th align="right">Align bytes</th><th align="right">Padding</th><th align="right">Size bytes</th></tr></thead><tbody>
+<tr><td align="left"><code>Vec3</code></td><td align="right">12</td><td align="right">4</td><td align="right">0</td><td align="right">12</td></tr>
+<tr><td align="left"><code>Vec3A</code></td><td align="right">12</td><td align="right">16</td><td align="right">4</td><td align="right">16</td></tr>
+</tbody></table>
+<p>Despite this wasted space the SIMD version tends to outperform the <code>f32</code>
+implementation in <a href="https://github.com/bitshifter/mathbench-rs"><strong>mathbench</strong></a>
+benchmarks.</p>
+<p><code>glam</code> treats <code>Vec3</code> as the default vector 3 type and <code>Vec3A</code> a special case for
+optimization. When methods need to return a vector 3 type they will generally
+return <code>Vec3</code>.</p>
+<p>There are <code>From</code> trait implementations for converting from <code>Vec4</code> to a <code>Vec3A</code>
+and between <code>Vec3</code> and <code>Vec3A</code> (and vice versa).</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">glam</span>::{<span class="ident">Vec3</span>, <span class="ident">Vec3A</span>, <span class="ident">Vec4</span>};
+
+<span class="kw">let</span> <span class="ident">v4</span> <span class="op">=</span> <span class="ident">Vec4</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>);
+
+<span class="comment">// Convert from `Vec4` to `Vec3A`, this is a no-op if SIMD is supported.</span>
+<span class="kw">let</span> <span class="ident">v3a</span> <span class="op">=</span> <span class="ident">Vec3A</span>::<span class="ident">from</span>(<span class="ident">v4</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Vec3A</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>), <span class="ident">v3a</span>);
+
+<span class="comment">// Convert from `Vec3A` to `Vec3`.</span>
+<span class="kw">let</span> <span class="ident">v3</span> <span class="op">=</span> <span class="ident">Vec3</span>::<span class="ident">from</span>(<span class="ident">v3a</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Vec3</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>), <span class="ident">v3</span>);
+
+<span class="comment">// Convert from `Vec3` to `Vec3A`.</span>
+<span class="kw">let</span> <span class="ident">v3a</span> <span class="op">=</span> <span class="ident">Vec3A</span>::<span class="ident">from</span>(<span class="ident">v3</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Vec3A</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>), <span class="ident">v3a</span>);</pre></div>
+<h2 id="vector-swizzles" class="section-header"><a href="#vector-swizzles">Vector swizzles</a></h2>
+<p><code>glam</code> vector types have functions allowing elements of vectors to be reordered,
+this includes creating a vector of a different size from the vectors elements.</p>
+<p>The swizzle functions are implemented using traits to add them to each vector
+type. This is primarily because there are a lot of swizzle functions which can
+obfuscate the other vector functions in documentation and so on. The traits are
+<code>Vec2Swizzles</code>, <code>Vec3Swizzles</code>, <code>Vec3ASwizzles</code> and <code>Vec4Swizzles</code>.</p>
+<p>Note that <code>Vec2Swizzles</code>, <code>Vec3Swizzles</code> and <code>Vec4Swizzles</code> will return a <code>Vec3</code>
+type for 3 element swizzles. <code>Vec3ASwizzles</code> will return a <code>Vec3A</code> for 3 element
+swizzles.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">glam</span>::{<span class="ident">Vec2</span>, <span class="ident">Vec2Swizzles</span>, <span class="ident">Vec3</span>, <span class="ident">Vec3Swizzles</span>, <span class="ident">Vec3A</span>, <span class="ident">Vec3ASwizzles</span>, <span class="ident">Vec4</span>, <span class="ident">Vec4Swizzles</span>};
+
+<span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec4</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>);
+
+<span class="comment">// Reverse elements of `v`, if SIMD is supported this will use a vector shuffle.</span>
+<span class="kw">let</span> <span class="ident">wzyx</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">wzyx</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Vec4</span>::<span class="ident">new</span>(<span class="number">4.0</span>, <span class="number">3.0</span>, <span class="number">2.0</span>, <span class="number">1.0</span>), <span class="ident">wzyx</span>);
+
+<span class="comment">// Swizzle the yzw elements of `v` into a `Vec3`</span>
+<span class="kw">let</span> <span class="ident">yzw</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">yzw</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Vec3</span>::<span class="ident">new</span>(<span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>), <span class="ident">yzw</span>);
+
+<span class="comment">// To swizzle a `Vec4` into a `Vec3A` swizzle the `Vec4` first then convert to</span>
+<span class="comment">// `Vec3A`. If SIMD is supported this will use a vector shuffle. The last</span>
+<span class="comment">// element of the shuffled `Vec4` is ignored by the `Vec3A`.</span>
+<span class="kw">let</span> <span class="ident">yzw</span> <span class="op">=</span> <span class="ident">Vec3A</span>::<span class="ident">from</span>(<span class="ident">v</span>.<span class="ident">yzwx</span>());
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Vec3A</span>::<span class="ident">new</span>(<span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>), <span class="ident">yzw</span>);
+
+<span class="comment">// You can swizzle from a `Vec4` to a `Vec2`</span>
+<span class="kw">let</span> <span class="ident">xy</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">xy</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Vec2</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">2.0</span>), <span class="ident">xy</span>);
+
+<span class="comment">// And back again</span>
+<span class="kw">let</span> <span class="ident">yyxx</span> <span class="op">=</span> <span class="ident">xy</span>.<span class="ident">yyxx</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Vec4</span>::<span class="ident">new</span>(<span class="number">2.0</span>, <span class="number">2.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>), <span class="ident">yyxx</span>);</pre></div>
+<h2 id="simd-and-scalar-consistency" class="section-header"><a href="#simd-and-scalar-consistency">SIMD and scalar consistency</a></h2>
+<p><code>glam</code> types implement <code>serde</code> <code>Serialize</code> and <code>Deserialize</code> traits to ensure
+that they will serialize and deserialize exactly the same whether or not
+SIMD support is being used.</p>
+<p>The SIMD versions implement the <code>core::fmt::Debug</code> and <code>core::fmt::Display</code>
+traits so they print the same as the scalar version.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">glam</span>::<span class="ident">Vec4</span>;
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Vec4</span>::<span class="ident">new</span>(<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">a</span>), <span class="string">&quot;[1, 2, 3, 4]&quot;</span>);</pre></div>
+<h2 id="feature-gates" class="section-header"><a href="#feature-gates">Feature gates</a></h2>
+<p>All <code>glam</code> dependencies are optional, however some are required for tests
+and benchmarks.</p>
+<ul>
+<li><code>std</code> - the default feature, has no dependencies.</li>
+<li><code>rand</code> - used to generate random values. Used in benchmarks.</li>
+<li><code>serde</code> - used for serialization and deserialization of types.</li>
+<li><code>mint</code> - used for interoperating with other linear algebra libraries.</li>
+<li><code>scalar-math</code> - disables SIMD support and uses native alignment for all
+types.</li>
+<li><code>debug-glam-assert</code> - adds assertions in debug builds which check the validity
+of parameters passed to <code>glam</code> to help catch runtime errors.</li>
+<li><code>glam-assert</code> - adds assertions to all builds which check the validity of
+parameters passed to <code>glam</code> to help catch runtime errors.</li>
+</ul>
+<h3 id="minimum-supported-version-or-rust-msvr" class="section-header"><a href="#minimum-supported-version-or-rust-msvr">Minimum Supported Version or Rust (MSVR)</a></h3>
+<p>The minimum supported version of Rust for <code>glam</code> is <code>1.36.0</code>.</p>
+</div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="f32/index.html" title="glam::f32 mod">f32</a></td><td class="docblock-short"></td></tr></table><h2 id="macros" class="section-header"><a href="#macros">Macros</a></h2>
+<table><tr class="module-item"><td><a class="macro" href="macro.const_mat2.html" title="glam::const_mat2 macro">const_mat2</a></td><td class="docblock-short"><p>Creates a <code>Mat2</code> from two column vectors that can be used to initialize a constant value.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.const_mat3.html" title="glam::const_mat3 macro">const_mat3</a></td><td class="docblock-short"><p>Creates a <code>Mat3</code> from three column vectors that can be used to initialize a constant value.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.const_mat4.html" title="glam::const_mat4 macro">const_mat4</a></td><td class="docblock-short"><p>Creates a <code>Mat4</code> from four column vectors that can be used to initialize a constant value.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.const_quat.html" title="glam::const_quat macro">const_quat</a></td><td class="docblock-short"><p>Creates a <code>Quat</code> from <code>x</code>, <code>y</code>, <code>z</code> and <code>w</code> values that can be used to initialize a constant
+value.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.const_vec2.html" title="glam::const_vec2 macro">const_vec2</a></td><td class="docblock-short"><p>Creates a <code>Vec2</code> that can be used to initialize a constant value.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.const_vec3.html" title="glam::const_vec3 macro">const_vec3</a></td><td class="docblock-short"><p>Creates a <code>Vec3</code> that can be used to initialize a constant value.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.const_vec3a.html" title="glam::const_vec3a macro">const_vec3a</a></td><td class="docblock-short"><p>Creates a <code>Vec3A</code> that can be used to initialize a constant value.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.const_vec4.html" title="glam::const_vec4 macro">const_vec4</a></td><td class="docblock-short"><p>Creates a <code>Vec4</code> that can be used to initialize a constant value.</p>
+</td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.Mat2.html" title="glam::Mat2 struct">Mat2</a></td><td class="docblock-short"><p>A 2x2 column major matrix.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Mat3.html" title="glam::Mat3 struct">Mat3</a></td><td class="docblock-short"><p>A 3x3 column major matrix.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Mat4.html" title="glam::Mat4 struct">Mat4</a></td><td class="docblock-short"><p>A 4x4 column major matrix.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Quat.html" title="glam::Quat struct">Quat</a></td><td class="docblock-short"><p>A quaternion representing an orientation.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Vec2.html" title="glam::Vec2 struct">Vec2</a></td><td class="docblock-short"><p>A 2-dimensional vector.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Vec2Mask.html" title="glam::Vec2Mask struct">Vec2Mask</a></td><td class="docblock-short"><p>A 2-dimensional vector mask.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Vec3.html" title="glam::Vec3 struct">Vec3</a></td><td class="docblock-short"><p>A 3-dimensional vector without SIMD support.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Vec3A.html" title="glam::Vec3A struct">Vec3A</a></td><td class="docblock-short"><p>A 3-dimensional vector with SIMD support.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Vec3AMask.html" title="glam::Vec3AMask struct">Vec3AMask</a></td><td class="docblock-short"><p>A 3-dimensional vector mask.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Vec3Mask.html" title="glam::Vec3Mask struct">Vec3Mask</a></td><td class="docblock-short"><p>A 3-dimensional vector mask.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Vec4.html" title="glam::Vec4 struct">Vec4</a></td><td class="docblock-short"><p>A 4-dimensional vector.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Vec4Mask.html" title="glam::Vec4Mask struct">Vec4Mask</a></td><td class="docblock-short"><p>A 4-dimensional vector mask.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.Vec2Swizzles.html" title="glam::Vec2Swizzles trait">Vec2Swizzles</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="trait" href="trait.Vec3ASwizzles.html" title="glam::Vec3ASwizzles trait">Vec3ASwizzles</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="trait" href="trait.Vec3Swizzles.html" title="glam::Vec3Swizzles trait">Vec3Swizzles</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="trait" href="trait.Vec4Swizzles.html" title="glam::Vec4Swizzles trait">Vec4Swizzles</a></td><td class="docblock-short"></td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="module-item"><td><a class="fn" href="fn.mat2.html" title="glam::mat2 fn">mat2</a></td><td class="docblock-short"><p>Creates a <code>Mat2</code> from two column vectors.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.mat3.html" title="glam::mat3 fn">mat3</a></td><td class="docblock-short"><p>Creates a <code>Mat3</code> from three column vectors.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.mat4.html" title="glam::mat4 fn">mat4</a></td><td class="docblock-short"><p>Creates a <code>Mat4</code> from four column vectors.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.quat.html" title="glam::quat fn">quat</a></td><td class="docblock-short"><p>Creates a <code>Quat</code> from <code>x</code>, <code>y</code>, <code>z</code> and <code>w</code> values.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.vec2.html" title="glam::vec2 fn">vec2</a></td><td class="docblock-short"><p>Creates a <code>Vec2</code>.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.vec3.html" title="glam::vec3 fn">vec3</a></td><td class="docblock-short"><p>Creates a <code>Vec3</code>.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.vec3a.html" title="glam::vec3a fn">vec3a</a></td><td class="docblock-short"><p>Creates a <code>Vec3</code>.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.vec4.html" title="glam::vec4 fn">vec4</a></td><td class="docblock-short"><p>Creates a <code>Vec4</code>.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "glam";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

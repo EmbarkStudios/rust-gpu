@@ -1,8 +1,9 @@
 (function() {var implementors = {};
 implementors["aho_corasick"] = [{"text":"impl Hash for Match","synthetic":false,"types":[]}];
-implementors["bimap"] = [{"text":"impl&lt;L:&nbsp;Hash, R:&nbsp;Hash&gt; Hash for Overwritten&lt;L, R&gt;","synthetic":false,"types":[]}];
+implementors["bimap"] = [{"text":"impl&lt;L, R&gt; Hash for BiBTreeMap&lt;L, R&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;L: Hash,<br>&nbsp;&nbsp;&nbsp;&nbsp;R: Hash,&nbsp;</span>","synthetic":false,"types":[]},{"text":"impl&lt;L:&nbsp;Hash, R:&nbsp;Hash&gt; Hash for Overwritten&lt;L, R&gt;","synthetic":false,"types":[]}];
 implementors["byteorder"] = [{"text":"impl Hash for BigEndian","synthetic":false,"types":[]},{"text":"impl Hash for LittleEndian","synthetic":false,"types":[]}];
 implementors["filetime"] = [{"text":"impl Hash for FileTime","synthetic":false,"types":[]}];
+implementors["glam"] = [{"text":"impl Hash for Vec2Mask","synthetic":false,"types":[]},{"text":"impl Hash for Vec3Mask","synthetic":false,"types":[]},{"text":"impl Hash for Vec3AMask","synthetic":false,"types":[]},{"text":"impl Hash for Vec4Mask","synthetic":false,"types":[]}];
 implementors["proc_macro2"] = [{"text":"impl Hash for Ident","synthetic":false,"types":[]}];
 implementors["raw_string"] = [{"text":"impl Hash for RawStr","synthetic":false,"types":[]},{"text":"impl Hash for RawString","synthetic":false,"types":[]}];
 implementors["rspirv"] = [{"text":"impl&lt;'a&gt; Hash for Instruction&lt;'a&gt;","synthetic":false,"types":[]},{"text":"impl Hash for LogicalOperand","synthetic":false,"types":[]},{"text":"impl Hash for OperandQuantifier","synthetic":false,"types":[]},{"text":"impl Hash for OperandKind","synthetic":false,"types":[]}];

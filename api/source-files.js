@@ -8,6 +8,7 @@ sourcesIndex["derive_more"] = {"name":"","files":["add_assign_like.rs","add_like
 sourcesIndex["filetime"] = {"name":"","dirs":[{"name":"unix","files":["linux.rs","mod.rs","utimes.rs"]}],"files":["lib.rs"]};
 sourcesIndex["fxhash"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["getrandom"] = {"name":"","files":["error.rs","error_impls.rs","lib.rs","linux_android.rs","use_file.rs","util.rs","util_libc.rs"]};
+sourcesIndex["glam"] = {"name":"","dirs":[{"name":"f32","files":["cast.rs","funcs.rs","mat2.rs","mat3.rs","mat4.rs","mod.rs","quat.rs","vec2.rs","vec2_mask.rs","vec2_swizzle.rs","vec3.rs","vec3_mask.rs","vec3_swizzle.rs","vec3a.rs","vec3a_mask.rs","vec3a_swizzle.rs","vec4.rs","vec4_mask.rs","vec4_swizzle.rs"]}],"files":["lib.rs","macros.rs"]};
 sourcesIndex["itoa"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["lazy_static"] = {"name":"","files":["inline_lazy.rs","lib.rs"]};
 sourcesIndex["libc"] = {"name":"","dirs":[{"name":"unix","dirs":[{"name":"linux_like","dirs":[{"name":"linux","dirs":[{"name":"gnu","dirs":[{"name":"b64","dirs":[{"name":"x86_64","files":["align.rs","mod.rs","not_x32.rs"]}],"files":["mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["fixed_width_ints.rs","lib.rs","macros.rs"]};

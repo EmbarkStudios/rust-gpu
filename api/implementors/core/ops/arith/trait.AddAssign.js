@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["glam"] = [{"text":"impl AddAssign&lt;Vec2&gt; for Vec2","synthetic":false,"types":[]},{"text":"impl AddAssign&lt;Vec3&gt; for Vec3","synthetic":false,"types":[]},{"text":"impl AddAssign&lt;Vec3A&gt; for Vec3A","synthetic":false,"types":[]},{"text":"impl AddAssign&lt;Vec4&gt; for Vec4","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

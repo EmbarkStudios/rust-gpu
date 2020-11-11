@@ -4,6 +4,7 @@ implementors["bimap"] = [{"text":"impl&lt;L, R&gt; Eq for BiBTreeMap&lt;L, R&gt;
 implementors["byteorder"] = [{"text":"impl Eq for BigEndian","synthetic":false,"types":[]},{"text":"impl Eq for LittleEndian","synthetic":false,"types":[]}];
 implementors["filetime"] = [{"text":"impl Eq for FileTime","synthetic":false,"types":[]}];
 implementors["getrandom"] = [{"text":"impl Eq for Error","synthetic":false,"types":[]}];
+implementors["glam"] = [{"text":"impl Eq for Vec2Mask","synthetic":false,"types":[]},{"text":"impl Eq for Vec3Mask","synthetic":false,"types":[]},{"text":"impl Eq for Vec3AMask","synthetic":false,"types":[]},{"text":"impl Eq for Vec4Mask","synthetic":false,"types":[]}];
 implementors["ppv_lite86"] = [{"text":"impl Eq for vec128_storage","synthetic":false,"types":[]},{"text":"impl Eq for vec256_storage","synthetic":false,"types":[]},{"text":"impl Eq for vec512_storage","synthetic":false,"types":[]}];
 implementors["proc_macro2"] = [{"text":"impl Eq for Delimiter","synthetic":false,"types":[]},{"text":"impl Eq for Spacing","synthetic":false,"types":[]},{"text":"impl Eq for Ident","synthetic":false,"types":[]}];
 implementors["rand"] = [{"text":"impl Eq for BernoulliError","synthetic":false,"types":[]},{"text":"impl Eq for WeightedError","synthetic":false,"types":[]}];

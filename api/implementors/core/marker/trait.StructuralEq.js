@@ -4,6 +4,7 @@ implementors["bimap"] = [{"text":"impl&lt;L, R&gt; StructuralEq for Overwritten&
 implementors["byteorder"] = [{"text":"impl StructuralEq for BigEndian","synthetic":false,"types":[]},{"text":"impl StructuralEq for LittleEndian","synthetic":false,"types":[]}];
 implementors["filetime"] = [{"text":"impl StructuralEq for FileTime","synthetic":false,"types":[]}];
 implementors["getrandom"] = [{"text":"impl StructuralEq for Error","synthetic":false,"types":[]}];
+implementors["glam"] = [{"text":"impl StructuralEq for Vec2Mask","synthetic":false,"types":[]},{"text":"impl StructuralEq for Vec3Mask","synthetic":false,"types":[]}];
 implementors["proc_macro2"] = [{"text":"impl StructuralEq for Delimiter","synthetic":false,"types":[]},{"text":"impl StructuralEq for Spacing","synthetic":false,"types":[]}];
 implementors["rand"] = [{"text":"impl StructuralEq for BernoulliError","synthetic":false,"types":[]},{"text":"impl StructuralEq for WeightedError","synthetic":false,"types":[]}];
 implementors["raw_string"] = [{"text":"impl StructuralEq for RawStr","synthetic":false,"types":[]},{"text":"impl StructuralEq for RawString","synthetic":false,"types":[]}];

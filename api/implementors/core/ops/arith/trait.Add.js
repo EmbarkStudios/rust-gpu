@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["glam"] = [{"text":"impl Add&lt;Mat2&gt; for Mat2","synthetic":false,"types":[]},{"text":"impl Add&lt;Mat3&gt; for Mat3","synthetic":false,"types":[]},{"text":"impl Add&lt;Mat4&gt; for Mat4","synthetic":false,"types":[]},{"text":"impl Add&lt;Quat&gt; for Quat","synthetic":false,"types":[]},{"text":"impl Add&lt;Vec2&gt; for Vec2","synthetic":false,"types":[]},{"text":"impl Add&lt;Vec3&gt; for Vec3","synthetic":false,"types":[]},{"text":"impl Add&lt;Vec3A&gt; for Vec3A","synthetic":false,"types":[]},{"text":"impl Add&lt;Vec4&gt; for Vec4","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
