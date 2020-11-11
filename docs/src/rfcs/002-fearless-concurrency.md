@@ -83,13 +83,13 @@ Bitonic sort example (unrolled, incomplete...):
 
 ```rust
 fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
-    buffer.map_workgroup_joined(2, |array| {
+    buffer.map_workgroup_joined<2>(|array| {
         [
             max(array[0],array[1]),
             min(array[0],array[1]),
         ]
     });
-    buffer.map_workgroup_joined(4, |array| {
+    buffer.map_workgroup_joined<4>(|array| {
         [
             max(array[0],array[3]),
             min(array[0],array[3]),
@@ -97,13 +97,13 @@ fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
             min(array[1],array[2]),
         ]
     });
-    buffer.map_workgroup_joined(2, |array| {
+    buffer.map_workgroup_joined<2>(|array| {
         [
             max(array[0],array[1]),
             min(array[0],array[1]),
         ]
     });
-    buffer.map_workgroup_joined(8, |array| {
+    buffer.map_workgroup_joined<8>(|array| {
         [
             max(array[0],array[7]),
             min(array[0],array[7]),
@@ -115,7 +115,7 @@ fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
             min(array[3],array[4]),
         ]
     })
-    buffer.map_workgroup_joined(4, |array| {
+    buffer.map_workgroup_joined<4>(|array| {
         [
             max(array[0],array[1]),
             min(array[0],array[1]),
@@ -123,7 +123,7 @@ fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
             min(array[2],array[3]),
         ]
     });
-    buffer.map_workgroup_joined(2, |array| {
+    buffer.map_workgroup_joined<2>(|array| {
         [
             max(array[0],array[1]),
             min(array[0],array[1]),
