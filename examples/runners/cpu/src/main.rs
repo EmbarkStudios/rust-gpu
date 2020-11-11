@@ -3,6 +3,8 @@ use rayon::prelude::*;
 use spirv_std::glam::{vec2, Vec4};
 use std::time::Instant;
 
+use sky_shader as shader_module;
+
 // apply the srgb OETF (i.e. do "linear to sRGB")
 fn srgb_oetf(x: f32) -> f32 {
     if x <= 0.0031308 {
@@ -47,7 +49,7 @@ fn main() {
             );
 
             // evaluate the fragment shader for the specific pixel
-            let color = sky_shader::fs(screen_pos);
+            let color = shader_module::fs(screen_pos);
 
             color_u32_from_vec4(color)
         })

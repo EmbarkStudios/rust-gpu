@@ -17,6 +17,10 @@ use std::io::Cursor;
 use std::ops::Drop;
 use structopt::StructOpt;
 
+fn shader_module() -> &'static [u8] {
+    &include_bytes!(env!("sky_shader.spv"))[..]
+}
+
 // Simple offset_of macro akin to C++ offsetof
 #[macro_export]
 macro_rules! offset_of {
@@ -619,7 +623,7 @@ fn main() {
             })
             .collect();
 
-        let mut spv_file = Cursor::new(&include_bytes!(env!("sky_shader.spv"))[..]);
+        let mut spv_file = Cursor::new(shader_module());
         let code = read_spv(&mut spv_file).expect("Failed to read spv file");
         let shader_info = vk::ShaderModuleCreateInfo::builder().code(&code);
 

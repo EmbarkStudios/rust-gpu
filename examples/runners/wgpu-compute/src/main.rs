@@ -1,3 +1,7 @@
+fn shader_module() -> wgpu::ShaderModuleSource<'static> {
+    wgpu::include_spirv!(env!("compute_shader.spv"))
+}
+
 fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
     async fn create_device_queue_async() -> (wgpu::Device, wgpu::Queue) {
         let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
@@ -35,7 +39,7 @@ fn main() {
     let (device, queue) = create_device_queue();
 
     // Load the shaders from disk
-    let module = device.create_shader_module(wgpu::include_spirv!(env!("compute_shader.spv")));
+    let module = device.create_shader_module(shader_module());
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
