@@ -99,7 +99,16 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
         for mut module in inputs.iter_mut().skip(1) {
             simple_passes::shift_ids(&mut module, bound);
             bound += module.header.as_ref().unwrap().bound - 1;
-            assert_eq!(version, module.header.as_ref().unwrap().version());
+            let this_version = module.header.as_ref().unwrap().version();
+            if version != this_version {
+                match sess {
+                    Some(sess) => sess.fatal(&format!(
+                        "cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}",
+                        version.0, version.1, this_version.0, this_version.1
+                    )),
+                    None => panic!("spir-v version mismatch: {:?} {:?}", version, this_version),
+                }
+            }
         }
 
         // merge the binaries
