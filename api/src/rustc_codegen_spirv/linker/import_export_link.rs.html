@@ -180,14 +180,22 @@
 <span id="177">177</span>
 <span id="178">178</span>
 <span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">LinkerError</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="kw">super</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Instruction</span>, <span class="ident">Module</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Capability</span>, <span class="ident">Decoration</span>, <span class="ident">LinkageType</span>, <span class="ident">Op</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rustc_errors</span>::<span class="ident">ErrorReported</span>;
+<span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> (<span class="ident">rewrite_rules</span>, <span class="ident">killed_parameters</span>) <span class="op">=</span> <span class="ident">find_import_export_pairs_and_killed_params</span>(<span class="ident">module</span>)<span class="question-mark">?</span>;
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> (<span class="ident">rewrite_rules</span>, <span class="ident">killed_parameters</span>) <span class="op">=</span>
+        <span class="ident">find_import_export_pairs_and_killed_params</span>(<span class="ident">sess</span>, <span class="ident">module</span>)<span class="question-mark">?</span>;
     <span class="ident">kill_linkage_instructions</span>(<span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">rewrite_rules</span>);
     <span class="ident">import_kill_annotations_and_debug</span>(<span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">rewrite_rules</span>, <span class="kw-2">&amp;</span><span class="ident">killed_parameters</span>);
     <span class="ident">replace_all_uses_with</span>(<span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">rewrite_rules</span>);
@@ -195,6 +203,7 @@
 }
 
 <span class="kw">fn</span> <span class="ident">find_import_export_pairs_and_killed_params</span>(
+    <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
     <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">type_map</span> <span class="op">=</span> <span class="ident">get_type_map</span>(<span class="ident">module</span>);
@@ -214,7 +223,8 @@
         };
         <span class="kw">let</span> <span class="ident">type_id</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">type_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="ident">expect</span>(<span class="string">&quot;Unexpected op&quot;</span>);
         <span class="kw">if</span> <span class="ident">exports</span>.<span class="ident">insert</span>(<span class="ident">name</span>, (<span class="ident">id</span>, <span class="ident">type_id</span>)).<span class="ident">is_some</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">LinkerError</span>::<span class="ident">MultipleExports</span>(<span class="ident">name</span>.<span class="ident">to_string</span>()));
+            <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Multiple exports found for {:?}&quot;</span>, <span class="ident">name</span>));
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>);
         }
     }
     <span class="comment">// Then, collect all the imports, and create the rewrite rules.</span>
@@ -225,13 +235,14 @@
         };
         <span class="kw">let</span> (<span class="ident">export_id</span>, <span class="ident">export_type</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">exports</span>.<span class="ident">get</span>(<span class="ident">name</span>) {
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">LinkerError</span>::<span class="ident">UnresolvedSymbol</span>(<span class="ident">name</span>.<span class="ident">to_string</span>()));
+                <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Unresolved symbol {:?}&quot;</span>, <span class="ident">name</span>));
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>);
             }
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">x</span>,
         };
         <span class="kw">let</span> <span class="ident">import_type</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">type_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">import_id</span>).<span class="ident">expect</span>(<span class="string">&quot;Unexpected op&quot;</span>);
         <span class="comment">// Make sure the import/export pair has the same type.</span>
-        <span class="ident">check_tys_equal</span>(<span class="ident">name</span>, <span class="ident">import_type</span>, <span class="ident">export_type</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_tys_equal</span>(<span class="ident">sess</span>, <span class="ident">name</span>, <span class="ident">import_type</span>, <span class="ident">export_type</span>)<span class="question-mark">?</span>;
         <span class="ident">rewrite_rules</span>.<span class="ident">insert</span>(<span class="ident">import_id</span>, <span class="ident">export_id</span>);
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">params</span>) <span class="op">=</span> <span class="ident">fn_parameters</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">import_id</span>) {
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">param</span> <span class="kw">in</span> <span class="ident">params</span> {
@@ -280,13 +291,12 @@
         .<span class="ident">collect</span>()
 }
 
-<span class="kw">fn</span> <span class="ident">check_tys_equal</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">import_type</span>: <span class="ident">Word</span>, <span class="ident">export_type</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">check_tys_equal</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">import_type</span>: <span class="ident">Word</span>, <span class="ident">export_type</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">import_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">export_type</span> {
         <span class="prelude-val">Ok</span>(())
     } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">LinkerError</span>::<span class="ident">TypeMismatch</span> {
-            <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">to_string</span>(),
-        })
+        <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Types mismatch for {:?}&quot;</span>, <span class="ident">name</span>));
+        <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>)
     }
 }
 

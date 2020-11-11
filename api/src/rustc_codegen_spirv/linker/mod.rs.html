@@ -203,30 +203,6 @@
 <span id="200">200</span>
 <span id="201">201</span>
 <span id="202">202</span>
-<span id="203">203</span>
-<span id="204">204</span>
-<span id="205">205</span>
-<span id="206">206</span>
-<span id="207">207</span>
-<span id="208">208</span>
-<span id="209">209</span>
-<span id="210">210</span>
-<span id="211">211</span>
-<span id="212">212</span>
-<span id="213">213</span>
-<span id="214">214</span>
-<span id="215">215</span>
-<span id="216">216</span>
-<span id="217">217</span>
-<span id="218">218</span>
-<span id="219">219</span>
-<span id="220">220</span>
-<span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span>;
@@ -244,31 +220,11 @@
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">Consumer</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Instruction</span>, <span class="ident">Loader</span>, <span class="ident">Module</span>, <span class="ident">ModuleHeader</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Op</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rustc_errors</span>::<span class="ident">ErrorReported</span>;
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">LinkerError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unresolved symbol {:?}&quot;</span>, .<span class="number">0</span>)]</span>
-    <span class="ident">UnresolvedSymbol</span>(<span class="ident">String</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Multiple exports found for {:?}&quot;</span>, .<span class="number">0</span>)]</span>
-    <span class="ident">MultipleExports</span>(<span class="ident">String</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Types mismatch for {:?}&quot;</span>, .<span class="ident">name</span>)]</span>
-    <span class="ident">TypeMismatch</span> { <span class="ident">name</span>: <span class="ident">String</span> },
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;spirv-tools error {:#}&quot;</span>, .<span class="number">0</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-    <span class="ident">SpirvTool</span>(<span class="ident">spirv_tools</span>::<span class="ident">Error</span>),
-}
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">spirv_tools</span>::<span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">LinkerError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">spirv_tools</span>::<span class="ident">Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">SpirvTool</span>(<span class="ident">err</span>)
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">LinkerError</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ErrorReported</span><span class="op">&gt;</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Options</span> {
     <span class="kw">pub</span> <span class="ident">compact_ids</span>: <span class="ident">bool</span>,
@@ -318,10 +274,9 @@
 
 <span class="comment">// Sess needs to be Option because linker tests call this method, and linker tests can&#39;t synthesize</span>
 <span class="comment">// a test Session (not sure how to do that).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">link</span>(<span class="ident">sess</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Session</span><span class="op">&gt;</span>, <span class="ident">inputs</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Module</span>], <span class="ident">opts</span>: <span class="kw-2">&amp;</span><span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Module</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">timer</span> <span class="op">=</span> <span class="op">|</span><span class="ident">n</span><span class="op">|</span> <span class="ident">sess</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">timer</span>(<span class="ident">n</span>));
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">link</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="kw-2">mut</span> <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Module</span><span class="op">&gt;</span>, <span class="ident">opts</span>: <span class="kw-2">&amp;</span><span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Module</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_merge&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_merge&quot;</span>);
         <span class="comment">// shift all the ids</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bound</span> <span class="op">=</span> <span class="ident">inputs</span>[<span class="number">0</span>].<span class="ident">header</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">bound</span> <span class="op">-</span> <span class="number">1</span>;
         <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">inputs</span>[<span class="number">0</span>].<span class="ident">header</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">version</span>();
@@ -331,20 +286,17 @@
             <span class="ident">bound</span> <span class="op">+</span><span class="op">=</span> <span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">bound</span> <span class="op">-</span> <span class="number">1</span>;
             <span class="kw">let</span> <span class="ident">this_version</span> <span class="op">=</span> <span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">version</span>();
             <span class="kw">if</span> <span class="ident">version</span> <span class="op">!</span><span class="op">=</span> <span class="ident">this_version</span> {
-                <span class="kw">match</span> <span class="ident">sess</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">sess</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
-                        <span class="string">&quot;cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}&quot;</span>,
-                        <span class="ident">version</span>.<span class="number">0</span>, <span class="ident">version</span>.<span class="number">1</span>, <span class="ident">this_version</span>.<span class="number">0</span>, <span class="ident">this_version</span>.<span class="number">1</span>
-                    )),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;spir-v version mismatch: {:?} {:?}&quot;</span>, <span class="ident">version</span>, <span class="ident">this_version</span>),
-                }
+                <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                    <span class="string">&quot;cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}&quot;</span>,
+                    <span class="ident">version</span>.<span class="number">0</span>, <span class="ident">version</span>.<span class="number">1</span>, <span class="ident">this_version</span>.<span class="number">0</span>, <span class="ident">this_version</span>.<span class="number">1</span>
+                ))
             }
         }
 
         <span class="comment">// merge the binaries</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">Loader</span>::<span class="ident">new</span>();
 
-        <span class="kw">for</span> <span class="ident">module</span> <span class="kw">in</span> <span class="ident">inputs</span>.<span class="ident">iter</span>() {
+        <span class="kw">for</span> <span class="ident">module</span> <span class="kw">in</span> <span class="ident">inputs</span> {
             <span class="ident">module</span>.<span class="ident">all_inst_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
                 <span class="ident">loader</span>.<span class="ident">consume_instruction</span>(<span class="ident">inst</span>.<span class="ident">clone</span>());
             });
@@ -359,7 +311,7 @@
 
     <span class="comment">// remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)</span>
     {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_remove_duplicates&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_remove_duplicates&quot;</span>);
         <span class="ident">duplicates</span>::<span class="ident">remove_duplicate_extensions</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
         <span class="ident">duplicates</span>::<span class="ident">remove_duplicate_capablities</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
         <span class="ident">duplicates</span>::<span class="ident">remove_duplicate_ext_inst_imports</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
@@ -369,32 +321,32 @@
 
     <span class="comment">// find import / export pairs</span>
     {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_find_pairs&quot;</span>);
-        <span class="ident">import_export_link</span>::<span class="ident">run</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_find_pairs&quot;</span>);
+        <span class="ident">import_export_link</span>::<span class="ident">run</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>)<span class="question-mark">?</span>;
     }
 
     {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_remove_zombies&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_remove_zombies&quot;</span>);
         <span class="ident">zombies</span>::<span class="ident">remove_zombies</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
     }
 
     <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">inline</span> {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_inline&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_inline&quot;</span>);
         <span class="ident">inline</span>::<span class="ident">inline</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
     }
 
     <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">dce</span> {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_dce&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_dce&quot;</span>);
         <span class="ident">dce</span>::<span class="ident">dce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
     }
 
     <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">structurize</span> {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_structurize&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_structurize&quot;</span>);
         <span class="ident">structurizer</span>::<span class="ident">structurize</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
     }
 
     {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_block_ordering_pass_and_mem2reg&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_block_ordering_pass_and_mem2reg&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pointer_to_pointee</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">constants</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
         <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">mem2reg</span> {
@@ -435,18 +387,18 @@
         }
     }
     {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_sort_globals&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_sort_globals&quot;</span>);
         <span class="ident">simple_passes</span>::<span class="ident">sort_globals</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
     }
 
     {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_remove_extra_capabilities&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_remove_extra_capabilities&quot;</span>);
         <span class="ident">capability_computation</span>::<span class="ident">remove_extra_capabilities</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
         <span class="ident">capability_computation</span>::<span class="ident">remove_extra_extensions</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
     }
 
     <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">compact_ids</span> {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">timer</span>(<span class="string">&quot;link_compact_ids&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_compact_ids&quot;</span>);
         <span class="comment">// compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43</span>
         <span class="ident">output</span>.<span class="ident">header</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>().<span class="ident">bound</span> <span class="op">=</span> <span class="ident">simple_passes</span>::<span class="ident">compact_ids</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
     };

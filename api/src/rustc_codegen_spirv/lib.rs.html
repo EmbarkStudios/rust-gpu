@@ -578,6 +578,9 @@
 <span id="575">575</span>
 <span id="576">576</span>
 <span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is</span>
 <span class="doccomment">//! unstable and mainly intended for developing on the project itself. This is</span>
@@ -694,6 +697,7 @@
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">print</span>::<span class="ident">with_no_trimmed_paths</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">query</span>::<span class="ident">Providers</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::{<span class="ident">InstanceDef</span>, <span class="ident">TyCtxt</span>};
+<span class="kw">use</span> <span class="ident">rustc_mir</span>::<span class="ident">util</span>::<span class="ident">write_mir_pretty</span>;
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">config</span>::{<span class="self">self</span>, <span class="ident">OptLevel</span>, <span class="ident">OutputFilenames</span>, <span class="ident">OutputType</span>};
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">Symbol</span>;
@@ -701,22 +705,24 @@
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">spec</span>::{<span class="ident">LinkerFlavor</span>, <span class="ident">PanicStrategy</span>, <span class="ident">Target</span>, <span class="ident">TargetOptions</span>, <span class="ident">TargetTriple</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">Any</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::{<span class="ident">create_dir_all</span>, <span class="ident">File</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Cursor</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Write</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fs</span>::<span class="ident">File</span>, <span class="ident">io</span>::<span class="ident">Write</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
 <span class="kw">fn</span> <span class="ident">dump_mir</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(
     <span class="ident">tcx</span>: <span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
     <span class="ident">mono_items</span>: <span class="kw-2">&amp;</span>[(<span class="ident">MonoItem</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, (<span class="ident">Linkage</span>, <span class="ident">Visibility</span>))],
     <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
 ) {
-    <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="ident">path</span>.<span class="ident">parent</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>();
+    <span class="ident">create_dir_all</span>(<span class="ident">path</span>.<span class="ident">parent</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">path</span>).<span class="ident">unwrap</span>();
     <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">mono_item</span>, (<span class="kw">_</span>, <span class="kw">_</span>)) <span class="kw">in</span> <span class="ident">mono_items</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">MonoItem</span>::<span class="ident">Fn</span>(<span class="ident">instance</span>) <span class="op">=</span> <span class="ident">mono_item</span> {
             <span class="kw">if</span> <span class="macro">matches</span><span class="macro">!</span>(<span class="ident">instance</span>.<span class="ident">def</span>, <span class="ident">InstanceDef</span>::<span class="ident">Item</span>(<span class="kw">_</span>)) {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mir</span> <span class="op">=</span> ::<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Cursor</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>());
-                <span class="kw">if</span> <span class="ident">rustc_mir</span>::<span class="ident">util</span>::<span class="ident">write_mir_pretty</span>(<span class="ident">tcx</span>, <span class="prelude-val">Some</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>()), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mir</span>).<span class="ident">is_ok</span>()
-                {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mir</span> <span class="op">=</span> <span class="ident">Cursor</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>());
+                <span class="kw">if</span> <span class="ident">write_mir_pretty</span>(<span class="ident">tcx</span>, <span class="prelude-val">Some</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>()), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mir</span>).<span class="ident">is_ok</span>() {
                     <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">file</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">mir</span>.<span class="ident">into_inner</span>()).<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>()
                 }
             }
@@ -851,8 +857,8 @@
 
     <span class="kw">fn</span> <span class="ident">codegen_crate</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">tcx</span>: <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">metadata</span>: <span class="ident">rustc_middle</span>::<span class="ident">middle</span>::<span class="ident">cstore</span>::<span class="ident">EncodedMetadata</span>,
+        <span class="ident">tcx</span>: <span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
+        <span class="ident">metadata</span>: <span class="ident">EncodedMetadata</span>,
         <span class="ident">need_metadata_module</span>: <span class="ident">bool</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">Any</span><span class="op">&gt;</span> {
         <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">rustc_codegen_ssa</span>::<span class="ident">base</span>::<span class="ident">codegen_crate</span>(
@@ -1131,7 +1137,7 @@
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">DumpModuleOnPanic</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">panicking</span>() {
-            <span class="kw">let</span> <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">path</span>.<span class="ident">as_ref</span>();
+            <span class="kw">let</span> <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">path</span>.<span class="ident">as_ref</span>();
             <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">has_root</span>() {
                 <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">dump_module</span>(<span class="ident">path</span>);
             } <span class="kw">else</span> {
