@@ -113,6 +113,7 @@ use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::{InstanceDef, TyCtxt};
+use rustc_mir::util::write_mir_pretty;
 use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::Symbol;
@@ -120,22 +121,24 @@ use rustc_target::spec::abi::Abi;
 use rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions, TargetTriple};
 use std::any::Any;
 use std::env;
+use std::fs::{create_dir_all, File};
+use std::io::Cursor;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::{fs::File, io::Write, sync::Arc};
+use std::sync::Arc;
 
 fn dump_mir<'tcx>(
     tcx: TyCtxt<'tcx>,
     mono_items: &[(MonoItem<'_>, (Linkage, Visibility))],
     path: &Path,
 ) {
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    create_dir_all(path.parent().unwrap()).unwrap();
     let mut file = File::create(path).unwrap();
     for &(mono_item, (_, _)) in mono_items {
         if let MonoItem::Fn(instance) = mono_item {
             if matches!(instance.def, InstanceDef::Item(_)) {
-                let mut mir = ::std::io::Cursor::new(Vec::new());
-                if rustc_mir::util::write_mir_pretty(tcx, Some(instance.def_id()), &mut mir).is_ok()
-                {
+                let mut mir = Cursor::new(Vec::new());
+                if write_mir_pretty(tcx, Some(instance.def_id()), &mut mir).is_ok() {
                     writeln!(file, "{}", String::from_utf8(mir.into_inner()).unwrap()).unwrap()
                 }
             }
@@ -270,8 +273,8 @@ impl CodegenBackend for SpirvCodegenBackend {
 
     fn codegen_crate(
         &self,
-        tcx: rustc_middle::ty::TyCtxt<'_>,
-        metadata: rustc_middle::middle::cstore::EncodedMetadata,
+        tcx: TyCtxt<'_>,
+        metadata: EncodedMetadata,
         need_metadata_module: bool,
     ) -> Box<dyn Any> {
         Box::new(rustc_codegen_ssa::base::codegen_crate(
@@ -550,7 +553,7 @@ struct DumpModuleOnPanic<'a, 'cx, 'tcx> {
 impl Drop for DumpModuleOnPanic<'_, '_, '_> {
     fn drop(&mut self) {
         if std::thread::panicking() {
-            let path: &std::path::Path = self.path.as_ref();
+            let path: &Path = self.path.as_ref();
             if path.has_root() {
                 self.cx.builder.dump_module(path);
             } else {

@@ -14,31 +14,11 @@ mod zombies;
 use rspirv::binary::Consumer;
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader};
 use rspirv::spirv::{Op, Word};
+use rustc_errors::ErrorReported;
 use rustc_session::Session;
 use std::collections::HashMap;
-use thiserror::Error;
 
-#[derive(Error, Debug, PartialEq)]
-pub enum LinkerError {
-    #[error("Unresolved symbol {:?}", .0)]
-    UnresolvedSymbol(String),
-    #[error("Multiple exports found for {:?}", .0)]
-    MultipleExports(String),
-    #[error("Types mismatch for {:?}", .name)]
-    TypeMismatch { name: String },
-    #[error("spirv-tools error {:#}", .0)]
-    #[cfg(test)]
-    SpirvTool(spirv_tools::Error),
-}
-
-#[cfg(test)]
-impl From<spirv_tools::Error> for LinkerError {
-    fn from(err: spirv_tools::Error) -> Self {
-        Self::SpirvTool(err)
-    }
-}
-
-pub type Result<T> = std::result::Result<T, LinkerError>;
+pub type Result<T> = std::result::Result<T, ErrorReported>;
 
 pub struct Options {
     pub compact_ids: bool,
@@ -88,10 +68,9 @@ fn apply_rewrite_rules(rewrite_rules: &HashMap<Word, Word>, blocks: &mut [Block]
 
 // Sess needs to be Option because linker tests call this method, and linker tests can't synthesize
 // a test Session (not sure how to do that).
-pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) -> Result<Module> {
-    let timer = |n| sess.map(|s| s.timer(n));
+pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<Module> {
     let mut output = {
-        let _timer = timer("link_merge");
+        let _timer = sess.timer("link_merge");
         // shift all the ids
         let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
         let version = inputs[0].header.as_ref().unwrap().version();
@@ -101,20 +80,17 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
             bound += module.header.as_ref().unwrap().bound - 1;
             let this_version = module.header.as_ref().unwrap().version();
             if version != this_version {
-                match sess {
-                    Some(sess) => sess.fatal(&format!(
-                        "cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}",
-                        version.0, version.1, this_version.0, this_version.1
-                    )),
-                    None => panic!("spir-v version mismatch: {:?} {:?}", version, this_version),
-                }
+                sess.fatal(&format!(
+                    "cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}",
+                    version.0, version.1, this_version.0, this_version.1
+                ))
             }
         }
 
         // merge the binaries
         let mut loader = Loader::new();
 
-        for module in inputs.iter() {
+        for module in inputs {
             module.all_inst_iter().for_each(|inst| {
                 loader.consume_instruction(inst.clone());
             });
@@ -129,7 +105,7 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
 
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     {
-        let _timer = timer("link_remove_duplicates");
+        let _timer = sess.timer("link_remove_duplicates");
         duplicates::remove_duplicate_extensions(&mut output);
         duplicates::remove_duplicate_capablities(&mut output);
         duplicates::remove_duplicate_ext_inst_imports(&mut output);
@@ -139,32 +115,32 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
 
     // find import / export pairs
     {
-        let _timer = timer("link_find_pairs");
-        import_export_link::run(&mut output)?;
+        let _timer = sess.timer("link_find_pairs");
+        import_export_link::run(sess, &mut output)?;
     }
 
     {
-        let _timer = timer("link_remove_zombies");
+        let _timer = sess.timer("link_remove_zombies");
         zombies::remove_zombies(sess, &mut output);
     }
 
     if opts.inline {
-        let _timer = timer("link_inline");
+        let _timer = sess.timer("link_inline");
         inline::inline(&mut output);
     }
 
     if opts.dce {
-        let _timer = timer("link_dce");
+        let _timer = sess.timer("link_dce");
         dce::dce(&mut output);
     }
 
     if opts.structurize {
-        let _timer = timer("link_structurize");
+        let _timer = sess.timer("link_structurize");
         structurizer::structurize(sess, &mut output);
     }
 
     {
-        let _timer = timer("link_block_ordering_pass_and_mem2reg");
+        let _timer = sess.timer("link_block_ordering_pass_and_mem2reg");
         let mut pointer_to_pointee = HashMap::new();
         let mut constants = HashMap::new();
         if opts.mem2reg {
@@ -205,18 +181,18 @@ pub fn link(sess: Option<&Session>, inputs: &mut [&mut Module], opts: &Options) 
         }
     }
     {
-        let _timer = timer("link_sort_globals");
+        let _timer = sess.timer("link_sort_globals");
         simple_passes::sort_globals(&mut output);
     }
 
     {
-        let _timer = timer("link_remove_extra_capabilities");
+        let _timer = sess.timer("link_remove_extra_capabilities");
         capability_computation::remove_extra_capabilities(&mut output);
         capability_computation::remove_extra_extensions(&mut output);
     }
 
     if opts.compact_ids {
-        let _timer = timer("link_compact_ids");
+        let _timer = sess.timer("link_compact_ids");
         // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
         output.header.as_mut().unwrap().bound = simple_passes::compact_ids(&mut output);
     };
