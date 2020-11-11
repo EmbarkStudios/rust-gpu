@@ -39,6 +39,8 @@
 mod math_ext;
 pub use math_ext::MathExt;
 
+pub use glam;
+
 macro_rules! pointer_addrspace_write {
     (false) => {};
     (true) => {

@@ -1,6 +1,6 @@
-use glam::{vec2, Vec4};
 use minifb::{Key, Window, WindowOptions};
 use rayon::prelude::*;
+use spirv_std::glam::{vec2, Vec4};
 use std::time::Instant;
 
 // apply the srgb OETF (i.e. do "linear to sRGB")
