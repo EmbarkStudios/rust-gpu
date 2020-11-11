@@ -24,7 +24,7 @@ macro_rules! simple_op {
             assert_ty_eq!(self, lhs.ty, rhs.ty);
             let result_type = lhs.ty;
             self.emit()
-                .$inst_name(result_type, None, lhs.def, rhs.def)
+                .$inst_name(result_type, None, lhs.def(self), rhs.def(self))
                 .unwrap()
                 .with_type(result_type)
         }
@@ -36,7 +36,7 @@ macro_rules! simple_op_unchecked_type {
     ($func_name:ident, $inst_name:ident) => {
         fn $func_name(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
             self.emit()
-                .$inst_name(lhs.ty, None, lhs.def, rhs.def)
+                .$inst_name(lhs.ty, None, lhs.def(self), rhs.def(self))
                 .unwrap()
                 .with_type(lhs.ty)
         }
@@ -47,7 +47,7 @@ macro_rules! simple_uni_op {
     ($func_name:ident, $inst_name:ident) => {
         fn $func_name(&mut self, val: Self::Value) -> Self::Value {
             self.emit()
-                .$inst_name(val.ty, None, val.def)
+                .$inst_name(val.ty, None, val.def(self))
                 .unwrap()
                 .with_type(val.ty)
         }
@@ -133,7 +133,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let semantics = self.constant_u32(semantics.bits());
         if invalid_seq_cst {
             self.zombie(
-                semantics.def,
+                semantics.def(self),
                 "Cannot use AtomicOrdering=SequentiallyConsistent on Vulkan memory model. Check if AcquireRelease fits your needs.",
             );
         }
@@ -145,24 +145,22 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Void => self.fatal("memset invalid on void pattern"),
             SpirvType::Bool => self.fatal("memset invalid on bool pattern"),
             SpirvType::Integer(width, _signedness) => match width {
-                8 => self.constant_u8(fill_byte).def,
-                16 => self.constant_u16(memset_fill_u16(fill_byte)).def,
-                32 => self.constant_u32(memset_fill_u32(fill_byte)).def,
-                64 => self.constant_u64(memset_fill_u64(fill_byte)).def,
+                8 => self.constant_u8(fill_byte).def(self),
+                16 => self.constant_u16(memset_fill_u16(fill_byte)).def(self),
+                32 => self.constant_u32(memset_fill_u32(fill_byte)).def(self),
+                64 => self.constant_u64(memset_fill_u64(fill_byte)).def(self),
                 _ => self.fatal(&format!(
                     "memset on integer width {} not implemented yet",
                     width
                 )),
             },
             SpirvType::Float(width) => match width {
-                32 => {
-                    self.constant_f32(f32::from_bits(memset_fill_u32(fill_byte)))
-                        .def
-                }
-                64 => {
-                    self.constant_f64(f64::from_bits(memset_fill_u64(fill_byte)))
-                        .def
-                }
+                32 => self
+                    .constant_f32(f32::from_bits(memset_fill_u32(fill_byte)))
+                    .def(self),
+                64 => self
+                    .constant_f64(f64::from_bits(memset_fill_u64(fill_byte)))
+                    .def(self),
                 _ => self.fatal(&format!(
                     "memset on float width {} not implemented yet",
                     width
@@ -173,13 +171,13 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Vector { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 self.constant_composite(ty.clone().def(self), vec![elem_pat; count as usize])
-                    .def
+                    .def(self)
             }
             SpirvType::Array { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 self.constant_composite(ty.clone().def(self), vec![elem_pat; count])
-                    .def
+                    .def(self)
             }
             SpirvType::RuntimeArray { .. } => {
                 self.fatal("memset on runtime arrays not implemented yet")
@@ -371,7 +369,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
 impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn new_block<'b>(cx: &'a Self::CodegenCx, llfn: Self::Function, _name: &'b str) -> Self {
-        let cursor_fn = cx.builder.select_function_by_id(llfn.def);
+        let cursor_fn = cx.builder.select_function_by_id(llfn.def_cx(cx));
         let label = cx.emit_with_cursor(cursor_fn).begin_block(None).unwrap();
         let cursor = cx.builder.select_block_by_id(label);
         Self {
@@ -388,7 +386,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         Self {
             cx,
             cursor: Default::default(),
-            current_fn: Default::default(),
+            current_fn: 0.with_type(0),
             basic_block: Default::default(),
             current_span: Default::default(),
         }
@@ -446,7 +444,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn ret(&mut self, value: Self::Value) {
-        self.emit().ret_value(value.def).unwrap();
+        self.emit().ret_value(value.def(self)).unwrap();
     }
 
     fn br(&mut self, dest: Self::BasicBlock) {
@@ -464,7 +462,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         else_llbb: Self::BasicBlock,
     ) {
         self.emit()
-            .branch_conditional(cond.def, then_llbb, else_llbb, empty())
+            .branch_conditional(cond.def(self), then_llbb, else_llbb, empty())
             .unwrap()
     }
 
@@ -547,7 +545,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let cases = cases
             .map(|(i, b)| (construct_case(self, signed, i), b))
             .collect::<Vec<_>>();
-        self.emit().switch(v.def, else_llbb, cases).unwrap()
+        self.emit().switch(v.def(self), else_llbb, cases).unwrap()
     }
 
     fn invoke(
@@ -606,8 +604,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         assert_ty_eq!(self, lhs.ty, rhs.ty);
         let ty = lhs.ty;
         match self.lookup_type(ty) {
-            SpirvType::Integer(_, _) => self.emit().bitwise_and(ty, None, lhs.def, rhs.def),
-            SpirvType::Bool => self.emit().logical_and(ty, None, lhs.def, rhs.def),
+            SpirvType::Integer(_, _) => {
+                self.emit()
+                    .bitwise_and(ty, None, lhs.def(self), rhs.def(self))
+            }
+            SpirvType::Bool => self
+                .emit()
+                .logical_and(ty, None, lhs.def(self), rhs.def(self)),
             o => self.fatal(&format!(
                 "and() not implemented for type {}",
                 o.debug(ty, self)
@@ -620,8 +623,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         assert_ty_eq!(self, lhs.ty, rhs.ty);
         let ty = lhs.ty;
         match self.lookup_type(ty) {
-            SpirvType::Integer(_, _) => self.emit().bitwise_or(ty, None, lhs.def, rhs.def),
-            SpirvType::Bool => self.emit().logical_or(ty, None, lhs.def, rhs.def),
+            SpirvType::Integer(_, _) => {
+                self.emit()
+                    .bitwise_or(ty, None, lhs.def(self), rhs.def(self))
+            }
+            SpirvType::Bool => self
+                .emit()
+                .logical_or(ty, None, lhs.def(self), rhs.def(self)),
             o => self.fatal(&format!(
                 "or() not implemented for type {}",
                 o.debug(ty, self)
@@ -634,8 +642,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         assert_ty_eq!(self, lhs.ty, rhs.ty);
         let ty = lhs.ty;
         match self.lookup_type(ty) {
-            SpirvType::Integer(_, _) => self.emit().bitwise_xor(ty, None, lhs.def, rhs.def),
-            SpirvType::Bool => self.emit().logical_not_equal(ty, None, lhs.def, rhs.def),
+            SpirvType::Integer(_, _) => {
+                self.emit()
+                    .bitwise_xor(ty, None, lhs.def(self), rhs.def(self))
+            }
+            SpirvType::Bool => {
+                self.emit()
+                    .logical_not_equal(ty, None, lhs.def(self), rhs.def(self))
+            }
             o => self.fatal(&format!(
                 "xor() not implemented for type {}",
                 o.debug(ty, self)
@@ -646,12 +660,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
     fn not(&mut self, val: Self::Value) -> Self::Value {
         match self.lookup_type(val.ty) {
-            SpirvType::Integer(_, _) => self.emit().not(val.ty, None, val.def),
+            SpirvType::Integer(_, _) => self.emit().not(val.ty, None, val.def(self)),
             SpirvType::Bool => {
                 let true_ = self.constant_bool(true);
                 // intel-compute-runtime doesn't like OpLogicalNot
                 self.emit()
-                    .logical_not_equal(val.ty, None, val.def, true_.def)
+                    .logical_not_equal(val.ty, None, val.def(self), true_.def(self))
             }
             o => self.fatal(&format!(
                 "not() not implemented for type {}",
@@ -676,7 +690,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             OverflowOp::Mul => (self.mul(lhs, rhs), fals),
         };
         self.zombie(
-            result.1.def,
+            result.1.def(self),
             match oop {
                 OverflowOp::Add => "checked add is not supported yet",
                 OverflowOp::Sub => "checked sub is not supported yet",
@@ -751,8 +765,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
-        // See comment on `register_constant_pointer`
-        if let Some(value) = self.lookup_constant_pointer(ptr) {
+        // See comment on `SpirvValueKind::ConstantPointer`
+        if let Some(value) = ptr.const_ptr_val(self) {
             return value;
         }
         let ty = match self.lookup_type(ptr.ty) {
@@ -766,7 +780,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )),
         };
         self.emit()
-            .load(ty, None, ptr.def, None, empty())
+            .load(ty, None, ptr.def(self), None, empty())
             .unwrap()
             .with_type(ty)
     }
@@ -774,7 +788,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn volatile_load(&mut self, ptr: Self::Value) -> Self::Value {
         // TODO: Implement this
         let result = self.load(ptr, Align::from_bytes(0).unwrap());
-        self.zombie(result.def, "volatile load is not supported yet");
+        self.zombie(result.def(self), "volatile load is not supported yet");
         result
     }
 
@@ -794,10 +808,16 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let semantics = self.ordering_to_semantics_def(order);
         let result = self
             .emit()
-            .atomic_load(ty, None, ptr.def, memory.def, semantics.def)
+            .atomic_load(
+                ty,
+                None,
+                ptr.def(self),
+                memory.def(self),
+                semantics.def(self),
+            )
             .unwrap()
             .with_type(ty);
-        self.validate_atomic(ty, result.def);
+        self.validate_atomic(ty, result.def(self));
         result
     }
 
@@ -887,7 +907,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )),
         };
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
-        self.emit().store(ptr.def, val.def, None, empty()).unwrap();
+        self.emit()
+            .store(ptr.def(self), val.def(self), None, empty())
+            .unwrap();
         val
     }
 
@@ -928,9 +950,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
         let semantics = self.ordering_to_semantics_def(order);
-        self.validate_atomic(val.ty, ptr.def);
+        self.validate_atomic(val.ty, ptr.def(self));
         self.emit()
-            .atomic_store(ptr.def, memory.def, semantics.def, val.def)
+            .atomic_store(
+                ptr.def(self),
+                memory.def(self),
+                semantics.def(self),
+                val.def(self),
+            )
             .unwrap();
     }
 
@@ -972,9 +999,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if idx > u32::MAX as u64 {
             self.fatal("struct_gep bigger than u32::MAX");
         }
-        let index_const = self.constant_u32(idx as u32).def;
+        let index_const = self.constant_u32(idx as u32).def(self);
         self.emit()
-            .access_chain(result_type, None, ptr.def, [index_const].iter().cloned())
+            .access_chain(
+                result_type,
+                None,
+                ptr.def(self),
+                [index_const].iter().cloned(),
+            )
             .unwrap()
             .with_type(result_type)
     }
@@ -1003,7 +1035,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             val
         } else {
             self.emit()
-                .convert_f_to_u(dest_ty, None, val.def)
+                .convert_f_to_u(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty)
         }
@@ -1014,7 +1046,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             val
         } else {
             self.emit()
-                .convert_f_to_s(dest_ty, None, val.def)
+                .convert_f_to_s(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty)
         }
@@ -1025,7 +1057,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             val
         } else {
             self.emit()
-                .convert_u_to_f(dest_ty, None, val.def)
+                .convert_u_to_f(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty)
         }
@@ -1036,7 +1068,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             val
         } else {
             self.emit()
-                .convert_s_to_f(dest_ty, None, val.def)
+                .convert_s_to_f(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty)
         }
@@ -1047,7 +1079,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             val
         } else {
             self.emit()
-                .f_convert(dest_ty, None, val.def)
+                .f_convert(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty)
         }
@@ -1058,7 +1090,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             val
         } else {
             self.emit()
-                .f_convert(dest_ty, None, val.def)
+                .f_convert(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty)
         }
@@ -1077,10 +1109,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         } else {
             let result = self
                 .emit()
-                .convert_ptr_to_u(dest_ty, None, val.def)
+                .convert_ptr_to_u(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty);
-            self.zombie_convert_ptr_to_u(result.def);
+            self.zombie_convert_ptr_to_u(result.def(self));
             result
         }
     }
@@ -1098,10 +1130,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         } else {
             let result = self
                 .emit()
-                .convert_u_to_ptr(dest_ty, None, val.def)
+                .convert_u_to_ptr(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty);
-            self.zombie_convert_u_to_ptr(result.def);
+            self.zombie_convert_u_to_ptr(result.def(self));
             result
         }
     }
@@ -1112,13 +1144,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         } else {
             let result = self
                 .emit()
-                .bitcast(dest_ty, None, val.def)
+                .bitcast(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty);
             let val_is_ptr = matches!(self.lookup_type(val.ty), SpirvType::Pointer{..});
             let dest_is_ptr = matches!(self.lookup_type(dest_ty), SpirvType::Pointer{..});
             if val_is_ptr || dest_is_ptr {
-                self.zombie_bitcast_ptr(result.def, val.ty, dest_ty);
+                self.zombie_bitcast_ptr(result.def(self), val.ty, dest_ty);
             }
             result
         }
@@ -1136,7 +1168,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 SpirvType::Integer(dest_width, dest_signedness),
             ) if val_width == dest_width && val_signedness != dest_signedness => self
                 .emit()
-                .bitcast(dest_ty, None, val.def)
+                .bitcast(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty),
             // width change, and optional sign change
@@ -1144,9 +1176,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // spir-v spec doesn't seem to say that signedness needs to match the operands, only that the signedness
                 // of the destination type must match the instruction's signedness.
                 if dest_signedness {
-                    self.emit().s_convert(dest_ty, None, val.def)
+                    self.emit().s_convert(dest_ty, None, val.def(self))
                 } else {
-                    self.emit().u_convert(dest_ty, None, val.def)
+                    self.emit().u_convert(dest_ty, None, val.def(self))
                 }
                 .unwrap()
                 .with_type(dest_ty)
@@ -1157,7 +1189,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 let if_true = self.constant_int(dest_ty, 1);
                 let if_false = self.constant_int(dest_ty, 0);
                 self.emit()
-                    .select(dest_ty, None, val.def, if_true.def, if_false.def)
+                    .select(
+                        dest_ty,
+                        None,
+                        val.def(self),
+                        if_true.def(self),
+                        if_false.def(self),
+                    )
                     .unwrap()
                     .with_type(dest_ty)
             }
@@ -1165,7 +1203,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // spir-v doesn't have a direct conversion instruction, glslang emits OpINotEqual
                 let zero = self.constant_int(val.ty, 0);
                 self.emit()
-                    .i_not_equal(dest_ty, None, val.def, zero.def)
+                    .i_not_equal(dest_ty, None, val.def(self), zero.def(self))
                     .unwrap()
                     .with_type(dest_ty)
             }
@@ -1196,10 +1234,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         } else if let Some(indices) = self.try_pointercast_via_gep(val_pointee, dest_pointee) {
             let indices = indices
                 .into_iter()
-                .map(|idx| self.constant_u32(idx).def)
+                .map(|idx| self.constant_u32(idx).def(self))
                 .collect::<Vec<_>>();
             self.emit()
-                .access_chain(dest_ty, None, val.def, indices)
+                .access_chain(dest_ty, None, val.def(self), indices)
                 .unwrap()
                 .with_type(dest_ty)
         } else if self
@@ -1211,10 +1249,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         } else {
             let result = self
                 .emit()
-                .bitcast(dest_ty, None, val.def)
+                .bitcast(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty);
-            self.zombie_bitcast_ptr(result.def, val.ty, dest_ty);
+            self.zombie_bitcast_ptr(result.def(self), val.ty, dest_ty);
             result
         }
     }
@@ -1226,71 +1264,126 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let b = SpirvType::Bool.def(self);
         match self.lookup_type(lhs.ty) {
             SpirvType::Integer(_, _) => match op {
-                IntEQ => self.emit().i_equal(b, None, lhs.def, rhs.def),
-                IntNE => self.emit().i_not_equal(b, None, lhs.def, rhs.def),
-                IntUGT => self.emit().u_greater_than(b, None, lhs.def, rhs.def),
-                IntUGE => self.emit().u_greater_than_equal(b, None, lhs.def, rhs.def),
-                IntULT => self.emit().u_less_than(b, None, lhs.def, rhs.def),
-                IntULE => self.emit().u_less_than_equal(b, None, lhs.def, rhs.def),
-                IntSGT => self.emit().s_greater_than(b, None, lhs.def, rhs.def),
-                IntSGE => self.emit().s_greater_than_equal(b, None, lhs.def, rhs.def),
-                IntSLT => self.emit().s_less_than(b, None, lhs.def, rhs.def),
-                IntSLE => self.emit().s_less_than_equal(b, None, lhs.def, rhs.def),
+                IntEQ => self.emit().i_equal(b, None, lhs.def(self), rhs.def(self)),
+                IntNE => self
+                    .emit()
+                    .i_not_equal(b, None, lhs.def(self), rhs.def(self)),
+                IntUGT => self
+                    .emit()
+                    .u_greater_than(b, None, lhs.def(self), rhs.def(self)),
+                IntUGE => self
+                    .emit()
+                    .u_greater_than_equal(b, None, lhs.def(self), rhs.def(self)),
+                IntULT => self
+                    .emit()
+                    .u_less_than(b, None, lhs.def(self), rhs.def(self)),
+                IntULE => self
+                    .emit()
+                    .u_less_than_equal(b, None, lhs.def(self), rhs.def(self)),
+                IntSGT => self
+                    .emit()
+                    .s_greater_than(b, None, lhs.def(self), rhs.def(self)),
+                IntSGE => self
+                    .emit()
+                    .s_greater_than_equal(b, None, lhs.def(self), rhs.def(self)),
+                IntSLT => self
+                    .emit()
+                    .s_less_than(b, None, lhs.def(self), rhs.def(self)),
+                IntSLE => self
+                    .emit()
+                    .s_less_than_equal(b, None, lhs.def(self), rhs.def(self)),
             },
             SpirvType::Pointer { .. } => match op {
                 IntEQ => {
                     if self.emit().version().unwrap() > (1, 3) {
-                        self.emit().ptr_equal(b, None, lhs.def, rhs.def)
+                        self.emit().ptr_equal(b, None, lhs.def(self), rhs.def(self))
                     } else {
                         let int_ty = self.type_usize();
-                        let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                        let lhs = self
+                            .emit()
+                            .convert_ptr_to_u(int_ty, None, lhs.def(self))
+                            .unwrap();
                         self.zombie_convert_ptr_to_u(lhs);
-                        let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                        let rhs = self
+                            .emit()
+                            .convert_ptr_to_u(int_ty, None, rhs.def(self))
+                            .unwrap();
                         self.zombie_convert_ptr_to_u(rhs);
                         self.emit().i_not_equal(b, None, lhs, rhs)
                     }
                 }
                 IntNE => {
                     if self.emit().version().unwrap() > (1, 3) {
-                        self.emit().ptr_not_equal(b, None, lhs.def, rhs.def)
+                        self.emit()
+                            .ptr_not_equal(b, None, lhs.def(self), rhs.def(self))
                     } else {
                         let int_ty = self.type_usize();
-                        let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                        let lhs = self
+                            .emit()
+                            .convert_ptr_to_u(int_ty, None, lhs.def(self))
+                            .unwrap();
                         self.zombie_convert_ptr_to_u(lhs);
-                        let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                        let rhs = self
+                            .emit()
+                            .convert_ptr_to_u(int_ty, None, rhs.def(self))
+                            .unwrap();
                         self.zombie_convert_ptr_to_u(rhs);
                         self.emit().i_not_equal(b, None, lhs, rhs)
                     }
                 }
                 IntUGT => {
                     let int_ty = self.type_usize();
-                    let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    let lhs = self
+                        .emit()
+                        .convert_ptr_to_u(int_ty, None, lhs.def(self))
+                        .unwrap();
                     self.zombie_convert_ptr_to_u(lhs);
-                    let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    let rhs = self
+                        .emit()
+                        .convert_ptr_to_u(int_ty, None, rhs.def(self))
+                        .unwrap();
                     self.zombie_convert_ptr_to_u(rhs);
                     self.emit().u_greater_than(b, None, lhs, rhs)
                 }
                 IntUGE => {
                     let int_ty = self.type_usize();
-                    let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    let lhs = self
+                        .emit()
+                        .convert_ptr_to_u(int_ty, None, lhs.def(self))
+                        .unwrap();
                     self.zombie_convert_ptr_to_u(lhs);
-                    let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    let rhs = self
+                        .emit()
+                        .convert_ptr_to_u(int_ty, None, rhs.def(self))
+                        .unwrap();
                     self.zombie_convert_ptr_to_u(rhs);
                     self.emit().u_greater_than_equal(b, None, lhs, rhs)
                 }
                 IntULT => {
                     let int_ty = self.type_usize();
-                    let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    let lhs = self
+                        .emit()
+                        .convert_ptr_to_u(int_ty, None, lhs.def(self))
+                        .unwrap();
                     self.zombie_convert_ptr_to_u(lhs);
-                    let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    let rhs = self
+                        .emit()
+                        .convert_ptr_to_u(int_ty, None, rhs.def(self))
+                        .unwrap();
                     self.zombie_convert_ptr_to_u(rhs);
                     self.emit().u_less_than(b, None, lhs, rhs)
                 }
                 IntULE => {
                     let int_ty = self.type_usize();
-                    let lhs = self.emit().convert_ptr_to_u(int_ty, None, lhs.def).unwrap();
+                    let lhs = self
+                        .emit()
+                        .convert_ptr_to_u(int_ty, None, lhs.def(self))
+                        .unwrap();
                     self.zombie_convert_ptr_to_u(lhs);
-                    let rhs = self.emit().convert_ptr_to_u(int_ty, None, rhs.def).unwrap();
+                    let rhs = self
+                        .emit()
+                        .convert_ptr_to_u(int_ty, None, rhs.def(self))
+                        .unwrap();
                     self.zombie_convert_ptr_to_u(rhs);
                     self.emit().u_less_than_equal(b, None, lhs, rhs)
                 }
@@ -1300,44 +1393,48 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 IntSLE => self.fatal("TODO: pointer operator IntSLE not implemented yet"),
             },
             SpirvType::Bool => match op {
-                IntEQ => self.emit().logical_equal(b, None, lhs.def, rhs.def),
-                IntNE => self.emit().logical_not_equal(b, None, lhs.def, rhs.def),
+                IntEQ => self
+                    .emit()
+                    .logical_equal(b, None, lhs.def(self), rhs.def(self)),
+                IntNE => self
+                    .emit()
+                    .logical_not_equal(b, None, lhs.def(self), rhs.def(self)),
                 // x > y  =>  x && !y
                 IntUGT => {
                     // intel-compute-runtime doesn't like OpLogicalNot
                     let true_ = self.constant_bool(true);
                     let rhs = self
                         .emit()
-                        .logical_not_equal(b, None, rhs.def, true_.def)
+                        .logical_not_equal(b, None, rhs.def(self), true_.def(self))
                         .unwrap();
-                    self.emit().logical_and(b, None, lhs.def, rhs)
+                    self.emit().logical_and(b, None, lhs.def(self), rhs)
                 }
                 // x >= y  =>  x || !y
                 IntUGE => {
                     let true_ = self.constant_bool(true);
                     let rhs = self
                         .emit()
-                        .logical_not_equal(b, None, rhs.def, true_.def)
+                        .logical_not_equal(b, None, rhs.def(self), true_.def(self))
                         .unwrap();
-                    self.emit().logical_or(b, None, lhs.def, rhs)
+                    self.emit().logical_or(b, None, lhs.def(self), rhs)
                 }
                 // x < y  =>  !x && y
                 IntULE => {
                     let true_ = self.constant_bool(true);
                     let lhs = self
                         .emit()
-                        .logical_not_equal(b, None, lhs.def, true_.def)
+                        .logical_not_equal(b, None, lhs.def(self), true_.def(self))
                         .unwrap();
-                    self.emit().logical_and(b, None, lhs, rhs.def)
+                    self.emit().logical_and(b, None, lhs, rhs.def(self))
                 }
                 // x <= y  =>  !x || y
                 IntULT => {
                     let true_ = self.constant_bool(true);
                     let lhs = self
                         .emit()
-                        .logical_not_equal(b, None, lhs.def, true_.def)
+                        .logical_not_equal(b, None, lhs.def(self), true_.def(self))
                         .unwrap();
-                    self.emit().logical_or(b, None, lhs, rhs.def)
+                    self.emit().logical_or(b, None, lhs, rhs.def(self))
                 }
                 IntSGT => self.fatal("TODO: boolean operator IntSGT not implemented yet"),
                 IntSGE => self.fatal("TODO: boolean operator IntSGE not implemented yet"),
@@ -1360,26 +1457,45 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         match op {
             RealPredicateFalse => return self.cx.constant_bool(false),
             RealPredicateTrue => return self.cx.constant_bool(true),
-            RealOEQ => self.emit().f_ord_equal(b, None, lhs.def, rhs.def),
-            RealOGT => self.emit().f_ord_greater_than(b, None, lhs.def, rhs.def),
+            RealOEQ => self
+                .emit()
+                .f_ord_equal(b, None, lhs.def(self), rhs.def(self)),
+            RealOGT => self
+                .emit()
+                .f_ord_greater_than(b, None, lhs.def(self), rhs.def(self)),
             RealOGE => self
                 .emit()
-                .f_ord_greater_than_equal(b, None, lhs.def, rhs.def),
-            RealOLT => self.emit().f_ord_less_than(b, None, lhs.def, rhs.def),
-            RealOLE => self.emit().f_ord_less_than_equal(b, None, lhs.def, rhs.def),
-            RealONE => self.emit().f_ord_not_equal(b, None, lhs.def, rhs.def),
-            RealORD => self.emit().ordered(b, None, lhs.def, rhs.def),
-            RealUNO => self.emit().unordered(b, None, lhs.def, rhs.def),
-            RealUEQ => self.emit().f_unord_equal(b, None, lhs.def, rhs.def),
-            RealUGT => self.emit().f_unord_greater_than(b, None, lhs.def, rhs.def),
-            RealUGE => self
+                .f_ord_greater_than_equal(b, None, lhs.def(self), rhs.def(self)),
+            RealOLT => self
                 .emit()
-                .f_unord_greater_than_equal(b, None, lhs.def, rhs.def),
-            RealULT => self.emit().f_unord_less_than(b, None, lhs.def, rhs.def),
+                .f_ord_less_than(b, None, lhs.def(self), rhs.def(self)),
+            RealOLE => self
+                .emit()
+                .f_ord_less_than_equal(b, None, lhs.def(self), rhs.def(self)),
+            RealONE => self
+                .emit()
+                .f_ord_not_equal(b, None, lhs.def(self), rhs.def(self)),
+            RealORD => self.emit().ordered(b, None, lhs.def(self), rhs.def(self)),
+            RealUNO => self.emit().unordered(b, None, lhs.def(self), rhs.def(self)),
+            RealUEQ => self
+                .emit()
+                .f_unord_equal(b, None, lhs.def(self), rhs.def(self)),
+            RealUGT => self
+                .emit()
+                .f_unord_greater_than(b, None, lhs.def(self), rhs.def(self)),
+            RealUGE => {
+                self.emit()
+                    .f_unord_greater_than_equal(b, None, lhs.def(self), rhs.def(self))
+            }
+            RealULT => self
+                .emit()
+                .f_unord_less_than(b, None, lhs.def(self), rhs.def(self)),
             RealULE => self
                 .emit()
-                .f_unord_less_than_equal(b, None, lhs.def, rhs.def),
-            RealUNE => self.emit().f_unord_not_equal(b, None, lhs.def, rhs.def),
+                .f_unord_less_than_equal(b, None, lhs.def(self), rhs.def(self)),
+            RealUNE => self
+                .emit()
+                .f_unord_not_equal(b, None, lhs.def(self), rhs.def(self)),
         }
         .unwrap()
         .with_type(b)
@@ -1411,19 +1527,31 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         let src_element_size = src_pointee.and_then(|p| self.lookup_type(p).sizeof(self));
         if src_element_size.is_some() && src_element_size == const_size.map(Size::from_bytes) {
-            if let Some(const_value) = self.lookup_constant_pointer(src) {
+            // See comment on `SpirvValueKind::ConstantPointer`
+
+            if let Some(const_value) = src.const_ptr_val(self) {
                 self.store(const_value, dst, Align::from_bytes(0).unwrap());
             } else {
                 self.emit()
-                    .copy_memory(dst.def, src.def, None, None, empty())
+                    .copy_memory(dst.def(self), src.def(self), None, None, empty())
                     .unwrap();
             }
         } else {
             self.emit()
-                .copy_memory_sized(dst.def, src.def, size.def, None, None, empty())
+                .copy_memory_sized(
+                    dst.def(self),
+                    src.def(self),
+                    size.def(self),
+                    None,
+                    None,
+                    empty(),
+                )
                 .unwrap();
             if !self.builder.has_capability(Capability::Addresses) {
-                self.zombie(dst.def, "OpCopyMemorySized without OpCapability Addresses")
+                self.zombie(
+                    dst.def(self),
+                    "OpCopyMemorySized without OpCapability Addresses",
+                )
             }
         }
     }
@@ -1464,7 +1592,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let elem_ty_spv = self.lookup_type(elem_ty);
         let pat = match self.builder.lookup_const_u64(fill_byte) {
             Some(fill_byte) => self.memset_const_pattern(&elem_ty_spv, fill_byte as u8),
-            None => self.memset_dynamic_pattern(&elem_ty_spv, fill_byte.def),
+            None => self.memset_dynamic_pattern(&elem_ty_spv, fill_byte.def(self)),
         }
         .with_type(elem_ty);
         match self.builder.lookup_const_u64(size) {
@@ -1482,7 +1610,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         assert_ty_eq!(self, then_val.ty, else_val.ty);
         let result_type = then_val.ty;
         self.emit()
-            .select(result_type, None, cond.def, then_val.def, else_val.def)
+            .select(
+                result_type,
+                None,
+                cond.def(self),
+                then_val.def(self),
+                else_val.def(self),
+            )
             .unwrap()
             .with_type(result_type)
     }
@@ -1503,12 +1637,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             Some(const_index) => self.emit().composite_extract(
                 result_type,
                 None,
-                vec.def,
+                vec.def(self),
                 [const_index as u32].iter().cloned(),
             ),
-            None => self
-                .emit()
-                .vector_extract_dynamic(result_type, None, vec.def, idx.def),
+            None => {
+                self.emit()
+                    .vector_extract_dynamic(result_type, None, vec.def(self), idx.def(self))
+            }
         }
         .unwrap()
         .with_type(result_type)
@@ -1521,10 +1656,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
         .def(self);
         if self.builder.lookup_const(elt).is_some() {
-            self.constant_composite(result_type, vec![elt.def; num_elts])
+            self.constant_composite(result_type, vec![elt.def(self); num_elts])
         } else {
             self.emit()
-                .composite_construct(result_type, None, std::iter::repeat(elt.def).take(num_elts))
+                .composite_construct(
+                    result_type,
+                    None,
+                    std::iter::repeat(elt.def(self)).take(num_elts),
+                )
                 .unwrap()
                 .with_type(result_type)
         }
@@ -1539,7 +1678,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )),
         };
         self.emit()
-            .composite_extract(result_type, None, agg_val.def, [idx as u32].iter().cloned())
+            .composite_extract(
+                result_type,
+                None,
+                agg_val.def(self),
+                [idx as u32].iter().cloned(),
+            )
             .unwrap()
             .with_type(result_type)
     }
@@ -1555,8 +1699,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .composite_insert(
                 agg_val.ty,
                 None,
-                elt.def,
-                agg_val.def,
+                elt.def(self),
+                agg_val.def(self),
                 [idx as u32].iter().cloned(),
             )
             .unwrap()
@@ -1638,7 +1782,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         assert_ty_eq!(self, dst_pointee_ty, cmp.ty);
         assert_ty_eq!(self, dst_pointee_ty, src.ty);
-        self.validate_atomic(dst_pointee_ty, dst.def);
+        self.validate_atomic(dst_pointee_ty, dst.def(self));
         // TODO: Default to device scope
         let memory = self.constant_u32(Scope::Device as u32);
         let semantics_equal = self.ordering_to_semantics_def(order);
@@ -1648,12 +1792,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .atomic_compare_exchange(
                 src.ty,
                 None,
-                dst.def,
-                memory.def,
-                semantics_equal.def,
-                semantics_unequal.def,
-                src.def,
-                cmp.def,
+                dst.def(self),
+                memory.def(self),
+                semantics_equal.def(self),
+                semantics_unequal.def(self),
+                src.def(self),
+                cmp.def(self),
             )
             .unwrap()
             .with_type(src.ty)
@@ -1677,24 +1821,94 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )),
         };
         assert_ty_eq!(self, dst_pointee_ty, src.ty);
-        self.validate_atomic(dst_pointee_ty, dst.def);
+        self.validate_atomic(dst_pointee_ty, dst.def(self));
         // TODO: Default to device scope
-        let memory = self.constant_u32(Scope::Device as u32).def;
-        let semantics = self.ordering_to_semantics_def(order).def;
+        let memory = self.constant_u32(Scope::Device as u32).def(self);
+        let semantics = self.ordering_to_semantics_def(order).def(self);
         let mut emit = self.emit();
         use AtomicRmwBinOp::*;
         match op {
-            AtomicXchg => emit.atomic_exchange(src.ty, None, dst.def, memory, semantics, src.def),
-            AtomicAdd => emit.atomic_i_add(src.ty, None, dst.def, memory, semantics, src.def),
-            AtomicSub => emit.atomic_i_sub(src.ty, None, dst.def, memory, semantics, src.def),
-            AtomicAnd => emit.atomic_and(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicXchg => emit.atomic_exchange(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
+            AtomicAdd => emit.atomic_i_add(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
+            AtomicSub => emit.atomic_i_sub(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
+            AtomicAnd => emit.atomic_and(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
             AtomicNand => self.fatal("atomic nand is not supported"),
-            AtomicOr => emit.atomic_or(src.ty, None, dst.def, memory, semantics, src.def),
-            AtomicXor => emit.atomic_xor(src.ty, None, dst.def, memory, semantics, src.def),
-            AtomicMax => emit.atomic_s_max(src.ty, None, dst.def, memory, semantics, src.def),
-            AtomicMin => emit.atomic_s_min(src.ty, None, dst.def, memory, semantics, src.def),
-            AtomicUMax => emit.atomic_u_max(src.ty, None, dst.def, memory, semantics, src.def),
-            AtomicUMin => emit.atomic_u_min(src.ty, None, dst.def, memory, semantics, src.def),
+            AtomicOr => emit.atomic_or(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
+            AtomicXor => emit.atomic_xor(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
+            AtomicMax => emit.atomic_s_max(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
+            AtomicMin => emit.atomic_s_min(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
+            AtomicUMax => emit.atomic_u_max(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
+            AtomicUMin => emit.atomic_u_min(
+                src.ty,
+                None,
+                dst.def(self),
+                memory,
+                semantics,
+                src.def(self),
+            ),
         }
         .unwrap()
         .with_type(src.ty)
@@ -1703,8 +1917,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn atomic_fence(&mut self, order: AtomicOrdering, _scope: SynchronizationScope) {
         // Ignore sync scope (it only has "single thread" and "cross thread")
         // TODO: Default to device scope
-        let memory = self.constant_u32(Scope::Device as u32).def;
-        let semantics = self.ordering_to_semantics_def(order).def;
+        let memory = self.constant_u32(Scope::Device as u32).def(self);
+        let semantics = self.ordering_to_semantics_def(order).def(self);
         self.emit().memory_barrier(memory, semantics).unwrap();
     }
 
@@ -1759,9 +1973,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         for (argument, argument_type) in args.iter().zip(argument_types) {
             assert_ty_eq!(self, argument.ty, argument_type);
         }
-        let args = args.iter().map(|arg| arg.def).collect::<Vec<_>>();
+        let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
         self.emit()
-            .function_call(result_type, None, llfn.def, args)
+            .function_call(result_type, None, llfn.def(self), args)
             .unwrap()
             .with_type(result_type)
     }

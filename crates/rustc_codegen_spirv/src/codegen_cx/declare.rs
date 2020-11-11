@@ -82,7 +82,7 @@ impl<'tcx> CodegenCx<'tcx> {
             // This can happen if we call a blocklisted function in another crate.
             let result = self.undef(function_type);
             // TODO: Span info here
-            self.zombie_no_span(result.def, "called blocklisted fn");
+            self.zombie_no_span(result.def_cx(self), "called blocklisted fn");
             return result;
         }
         let mut emit = self.emit_global();
@@ -132,7 +132,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let span = self.tcx.def_span(def_id);
         let g = self.declare_global(span, self.layout_of(ty).spirv_type(self));
         self.instances.borrow_mut().insert(instance, g);
-        self.set_linkage(g.def, sym.to_string(), LinkageType::Import);
+        self.set_linkage(g.def_cx(self), sym.to_string(), LinkageType::Import);
         g
     }
 
@@ -147,7 +147,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .variable(ptr_ty, None, StorageClass::Function, None)
             .with_type(ptr_ty);
         // TODO: These should be StorageClass::Private, so just zombie for now.
-        self.zombie_with_span(result.def, span, "Globals are not supported yet");
+        self.zombie_with_span(result.def_cx(self), span, "Globals are not supported yet");
         result
     }
 }
@@ -182,7 +182,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
         self.instances.borrow_mut().insert(instance, g);
         if let Some(linkage) = linkage {
-            self.set_linkage(g.def, symbol_name.to_string(), linkage);
+            self.set_linkage(g.def_cx(self), symbol_name.to_string(), linkage);
         }
     }
 
@@ -229,7 +229,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
 impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
-        self.register_constant_pointer(cv)
+        self.make_constant_pointer(cv)
     }
 
     fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
@@ -260,7 +260,8 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         }
 
         assert_ty_eq!(self, value_ty, v.ty);
-        self.builder.set_global_initializer(g.def, v.def);
+        self.builder
+            .set_global_initializer(g.def_cx(self), v.def_cx(self));
     }
 
     /// Mark the given global value as "used", to prevent a backend from potentially removing a

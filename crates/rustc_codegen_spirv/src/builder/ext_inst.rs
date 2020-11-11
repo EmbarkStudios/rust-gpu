@@ -62,7 +62,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 None,
                 glsl,
                 op as u32,
-                args.iter().map(|a| Operand::IdRef(a.def)),
+                args.iter().map(|a| Operand::IdRef(a.def(self))),
             )
             .unwrap()
             .with_type(args[0].ty)
@@ -77,7 +77,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 None,
                 opencl,
                 op as u32,
-                args.iter().map(|a| Operand::IdRef(a.def)),
+                args.iter().map(|a| Operand::IdRef(a.def(self))),
             )
             .unwrap()
             .with_type(args[0].ty)

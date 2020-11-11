@@ -99,7 +99,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                     )),
                 };
                 // TODO: Implement this
-                self.zombie(result.def, "saturating_add is not implemented yet");
+                self.zombie(result.def(self), "saturating_add is not implemented yet");
                 result
             }
             sym::saturating_sub => {
@@ -115,7 +115,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                     )),
                 };
                 // TODO: Implement this
-                self.zombie(result.def, "saturating_sub is not implemented yet");
+                self.zombie(result.def(self), "saturating_sub is not implemented yet");
                 result
             }
 
@@ -326,7 +326,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         .u_count_leading_zeros_intel(
                             args[0].immediate().ty,
                             None,
-                            args[0].immediate().def,
+                            args[0].immediate().def(self),
                         )
                         .unwrap()
                         .with_type(args[0].immediate().ty)
@@ -340,7 +340,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         .u_count_trailing_zeros_intel(
                             args[0].immediate().ty,
                             None,
-                            args[0].immediate().def,
+                            args[0].immediate().def(self),
                         )
                         .unwrap()
                         .with_type(args[0].immediate().ty)
@@ -349,12 +349,12 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 
             sym::ctpop => self
                 .emit()
-                .bit_count(args[0].immediate().ty, None, args[0].immediate().def)
+                .bit_count(args[0].immediate().ty, None, args[0].immediate().def(self))
                 .unwrap()
                 .with_type(args[0].immediate().ty),
             sym::bitreverse => self
                 .emit()
-                .bit_reverse(args[0].immediate().ty, None, args[0].immediate().def)
+                .bit_reverse(args[0].immediate().ty, None, args[0].immediate().def(self))
                 .unwrap()
                 .with_type(args[0].immediate().ty),
 

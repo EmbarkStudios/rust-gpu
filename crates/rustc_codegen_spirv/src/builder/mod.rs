@@ -110,7 +110,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             )),
         };
         for index in indices.iter().cloned().skip(1) {
-            result_indices.push(index.def);
+            result_indices.push(index.def(self));
             result_pointee_type = match self.lookup_type(result_pointee_type) {
                 SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } => element,
                 _ => self.fatal(&format!(
@@ -127,12 +127,12 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         if self.builder.lookup_const_u64(indices[0]) == Some(0) {
             if is_inbounds {
                 self.emit()
-                    .in_bounds_access_chain(result_type, None, ptr.def, result_indices)
+                    .in_bounds_access_chain(result_type, None, ptr.def(self), result_indices)
                     .unwrap()
                     .with_type(result_type)
             } else {
                 self.emit()
-                    .access_chain(result_type, None, ptr.def, result_indices)
+                    .access_chain(result_type, None, ptr.def(self), result_indices)
                     .unwrap()
                     .with_type(result_type)
             }
@@ -142,15 +142,21 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .in_bounds_ptr_access_chain(
                         result_type,
                         None,
-                        ptr.def,
-                        indices[0].def,
+                        ptr.def(self),
+                        indices[0].def(self),
                         result_indices,
                     )
                     .unwrap()
                     .with_type(result_type)
             } else {
                 self.emit()
-                    .ptr_access_chain(result_type, None, ptr.def, indices[0].def, result_indices)
+                    .ptr_access_chain(
+                        result_type,
+                        None,
+                        ptr.def(self),
+                        indices[0].def(self),
+                        result_indices,
+                    )
                     .unwrap()
                     .with_type(result_type)
             };
@@ -159,7 +165,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 .has_capability(rspirv::spirv::Capability::Addresses);
             if !has_addresses {
                 self.zombie(
-                    result.def,
+                    result.def(self),
                     "OpPtrAccessChain without OpCapability Addresses",
                 );
             }
@@ -193,7 +199,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         // So we need to check for zero shift, and don't use the shift result if it is.
         let mask_is_zero = self
             .emit()
-            .i_not_equal(bool, None, mask_shift.def, zero.def)
+            .i_not_equal(bool, None, mask_shift.def(self), zero.def(self))
             .unwrap()
             .with_type(bool);
         self.select(mask_is_zero, value, or)
@@ -275,7 +281,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
         dst: PlaceRef<'tcx, Self::Value>,
     ) {
         fn next<'a, 'tcx>(bx: &mut Builder<'a, 'tcx>, idx: &mut usize) -> SpirvValue {
-            let val = bx.function_parameter_values.borrow()[&bx.current_fn.def][*idx];
+            let val = bx.function_parameter_values.borrow()[&bx.current_fn.def(bx)][*idx];
             *idx += 1;
             val
         }
@@ -333,7 +339,7 @@ impl<'a, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'tcx> {
     fn apply_attrs_callsite(&mut self, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>, _callsite: Self::Value) {}
 
     fn get_param(&self, index: usize) -> Self::Value {
-        self.function_parameter_values.borrow()[&self.current_fn.def][index]
+        self.function_parameter_values.borrow()[&self.current_fn.def(self)][index]
     }
 }
 
