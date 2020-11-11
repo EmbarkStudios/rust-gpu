@@ -132,15 +132,7 @@ impl ControlFlowInfo {
     }
 }
 
-fn emit_compiler_error(sess: Option<&Session>, msg: &'static str) -> ! {
-    if let Some(sess) = sess {
-        sess.fatal(msg);
-    } else {
-        panic!(msg);
-    }
-}
-
-pub fn structurize(sess: Option<&Session>, module: &mut Module) {
+pub fn structurize(sess: &Session, module: &mut Module) {
     let mut debug_names = Vec::new();
 
     for func in &mut module.functions {
@@ -508,7 +500,7 @@ fn make_unreachable_block(header: &mut ModuleHeader, blocks: &mut Vec<Block>) ->
 }
 
 pub fn insert_selection_merge_on_conditional_branch(
-    sess: Option<&Session>,
+    sess: &Session,
     header: &mut ModuleHeader,
     blocks: &mut Vec<Block>,
     cf_info: &mut ControlFlowInfo,
@@ -580,19 +572,13 @@ pub fn insert_selection_merge_on_conditional_branch(
                 blocks[a_first_idx].label_id().unwrap()
             } else if branch_a_returns {
                 // (partially unreachable) merge block becomes end/start of b.
-                emit_compiler_error(
-                    sess,
-                    "UNIMPLEMENTED, A partially unreachable case was detected on a.",
-                );
+                sess.fatal("UNIMPLEMENTED, A partially unreachable case was detected on a.");
             } else if branch_b_returns {
                 // (partially unreachable) merge block becomes end/start of a.
-                emit_compiler_error(
-                    sess,
-                    "UNIMPLEMENTED, A partially unreachable case was detected on b.",
-                );
+                sess.fatal("UNIMPLEMENTED, A partially unreachable case was detected on b.");
             } else {
                 // In theory this should never happen.
-                emit_compiler_error(sess, "UNEXPECTED, Unknown exit detected.");
+                sess.fatal("UNEXPECTED, Unknown exit detected.");
             }
         };
 

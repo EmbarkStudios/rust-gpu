@@ -160,7 +160,7 @@ fn report_error_zombies(sess: &Session, module: &Module, zombie: &HashMap<Word, 
     }
 }
 
-pub fn remove_zombies(sess: Option<&Session>, module: &mut Module) {
+pub fn remove_zombies(sess: &Session, module: &mut Module) {
     let zombies_owned = collect_zombies(module);
     let mut zombies = zombies_owned
         .iter()
@@ -170,9 +170,7 @@ pub fn remove_zombies(sess: Option<&Session>, module: &mut Module) {
     // Note: This is O(n^2).
     while spread_zombie(module, &mut zombies) {}
 
-    if let Some(sess) = sess {
-        report_error_zombies(sess, module, &zombies);
-    }
+    report_error_zombies(sess, module, &zombies);
 
     if env::var("PRINT_ALL_ZOMBIE").is_ok() {
         for (&zomb, reason) in &zombies {

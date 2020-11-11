@@ -1,5 +1,13 @@
-use super::{link, LinkerError, Options, Result};
+use super::{link, Options};
+use pipe::pipe;
 use rspirv::dr::{Loader, Module};
+use rustc_driver::handle_options;
+use rustc_errors::registry::Registry;
+use rustc_session::config::build_session_options;
+use rustc_session::config::Input;
+use rustc_session::DiagnosticOutput;
+use std::io::Read;
+use std::path::PathBuf;
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
@@ -12,15 +20,17 @@ impl<'a> std::fmt::Debug for PrettyString<'a> {
     }
 }
 
-fn assemble_spirv(spirv: &str) -> Result<Vec<u8>> {
+fn assemble_spirv(spirv: &str) -> Vec<u8> {
     use spirv_tools::assembler::{self, Assembler};
 
     let assembler = assembler::create(None);
 
-    let spv_binary = assembler.assemble(spirv, assembler::AssemblerOptions::default())?;
+    let spv_binary = assembler
+        .assemble(spirv, assembler::AssemblerOptions::default())
+        .expect("Failed to assemble test spir-v");
 
     let contents: &[u8] = spv_binary.as_ref();
-    Ok(contents.to_vec())
+    contents.to_vec()
 }
 
 #[allow(unused)]
@@ -40,21 +50,56 @@ fn load(bytes: &[u8]) -> Module {
     loader.module()
 }
 
-fn assemble_and_link(binaries: &[&[u8]]) -> super::Result<Module> {
-    let mut modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
-    let mut modules = modules.iter_mut().collect::<Vec<_>>();
+fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
+    let modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
 
-    link(
-        None,
-        &mut modules,
-        &Options {
-            compact_ids: true,
-            dce: false,
-            inline: false,
-            mem2reg: false,
-            structurize: false,
-        },
-    )
+    // need pipe here because Config takes ownership of the writer, and the writer must be 'static.
+    let (mut read_diags, write_diags) = pipe();
+    let thread = std::thread::spawn(move || {
+        // must spawn thread because pipe crate is synchronous
+        let mut diags = String::new();
+        read_diags.read_to_string(&mut diags).unwrap();
+        let suffix = "\n\nerror: aborting due to previous error\n\n";
+        if diags.ends_with(suffix) {
+            diags.truncate(diags.len() - suffix.len());
+        }
+        diags
+    });
+    let matches = handle_options(&["".to_string(), "x.rs".to_string()]).unwrap();
+    let sopts = build_session_options(&matches);
+    let config = rustc_interface::Config {
+        opts: sopts,
+        crate_cfg: Default::default(),
+        input: Input::File(PathBuf::new()),
+        input_path: None,
+        output_file: None,
+        output_dir: None,
+        file_loader: None,
+        diagnostic_output: DiagnosticOutput::Raw(Box::new(write_diags)),
+        stderr: None,
+        crate_name: None,
+        lint_caps: Default::default(),
+        register_lints: None,
+        override_queries: None,
+        make_codegen_backend: None,
+        registry: Registry::new(&[]),
+    };
+    let res = rustc_interface::interface::run_compiler(config, |compiler| {
+        let res = link(
+            compiler.session(),
+            modules,
+            &Options {
+                compact_ids: true,
+                dce: false,
+                inline: false,
+                mem2reg: false,
+                structurize: false,
+            },
+        );
+        assert_eq!(compiler.session().has_errors(), res.is_err());
+        res
+    });
+    res.map_err(|_| thread.join().unwrap())
 }
 
 fn without_header_eq(mut result: Module, expected: &str) {
@@ -91,14 +136,14 @@ fn without_header_eq(mut result: Module, expected: &str) {
 }
 
 #[test]
-fn standard() -> Result<()> {
+fn standard() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
         OpDecorate %1 LinkageAttributes "foo" Import
         %2 = OpTypeFloat 32
         %1 = OpVariable %2 Uniform
         %3 = OpVariable %2 Input"#,
-    )?;
+    );
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -107,38 +152,19 @@ fn standard() -> Result<()> {
         %3 = OpConstant %2 42
         %1 = OpVariable %2 Uniform %3
         "#,
-    )?;
+    );
 
-    let result = assemble_and_link(&[&a, &b])?;
+    let result = assemble_and_link(&[&a, &b]).unwrap();
     let expect = r#"%1 = OpTypeFloat 32
         %2 = OpVariable %1 Input
         %3 = OpConstant %1 42.0
         %4 = OpVariable %1 Uniform %3"#;
 
     without_header_eq(result, expect);
-    Ok(())
 }
 
 #[test]
-fn not_a_lib_extra_exports() -> Result<()> {
-    let a = assemble_spirv(
-        r#"OpCapability Linkage
-            OpDecorate %1 LinkageAttributes "foo" Export
-            %2 = OpTypeFloat 32
-            %1 = OpVariable %2 Uniform"#,
-    )?;
-
-    let result = assemble_and_link(&[&a])?;
-    let expect = r#"%1 = OpTypeFloat 32
-        %2 = OpVariable %1 Uniform"#;
-    without_header_eq(result, expect);
-    Ok(())
-}
-
-// TODO: Lib mode is not supported yet. Double-TODO: Will it *ever* be supported? (probably not)
-/*
-#[test]
-fn lib_extra_exports() -> Result<()> {
+fn not_a_lib_extra_exports() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
             OpDecorate %1 LinkageAttributes "foo" Export
@@ -146,46 +172,40 @@ fn lib_extra_exports() -> Result<()> {
             %1 = OpVariable %2 Uniform"#,
     );
 
-    let result = assemble_and_link(&[&a])?;
-
-    let expect = r#"OpDecorate %1 LinkageAttributes "foo" Export
-        %2 = OpTypeFloat 32
-        %1 = OpVariable %2 Uniform"#;
+    let result = assemble_and_link(&[&a]).unwrap();
+    let expect = r#"%1 = OpTypeFloat 32
+        %2 = OpVariable %1 Uniform"#;
     without_header_eq(result, expect);
-    Ok(())
 }
-*/
 
 #[test]
-fn unresolved_symbol() -> Result<()> {
+fn unresolved_symbol() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform"#,
-    )?;
+    );
 
-    let b = assemble_spirv("OpCapability Linkage")?;
+    let b = assemble_spirv("OpCapability Linkage");
 
     let result = assemble_and_link(&[&a, &b]);
 
     assert_eq!(
-        result.err(),
-        Some(LinkerError::UnresolvedSymbol("foo".to_string()))
+        result.err().as_deref(),
+        Some("error: Unresolved symbol \"foo\"")
     );
-
-    Ok(())
 }
 
 #[test]
-fn type_mismatch() -> Result<()> {
+fn type_mismatch() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
             %3 = OpVariable %2 Input"#,
-    )?;
+    );
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -194,27 +214,24 @@ fn type_mismatch() -> Result<()> {
             %3 = OpConstant %2 42
             %1 = OpVariable %2 Uniform %3
         "#,
-    )?;
+    );
 
     let result = assemble_and_link(&[&a, &b]);
     assert_eq!(
-        result.err(),
-        Some(LinkerError::TypeMismatch {
-            name: "foo".to_string(),
-        })
+        result.err().as_deref(),
+        Some("error: Types mismatch for \"foo\"")
     );
-    Ok(())
 }
 
 #[test]
-fn multiple_definitions() -> Result<()> {
+fn multiple_definitions() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
             %3 = OpVariable %2 Input"#,
-    )?;
+    );
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -223,7 +240,7 @@ fn multiple_definitions() -> Result<()> {
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 42
             %1 = OpVariable %2 Uniform %3"#,
-    )?;
+    );
 
     let c = assemble_spirv(
         r#"OpCapability Linkage
@@ -231,25 +248,24 @@ fn multiple_definitions() -> Result<()> {
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 -1
             %1 = OpVariable %2 Uniform %3"#,
-    )?;
+    );
 
     let result = assemble_and_link(&[&a, &b, &c]);
     assert_eq!(
-        result.err(),
-        Some(LinkerError::MultipleExports("foo".to_string()))
+        result.err().as_deref(),
+        Some("error: Multiple exports found for \"foo\"")
     );
-    Ok(())
 }
 
 #[test]
-fn multiple_definitions_different_types() -> Result<()> {
+fn multiple_definitions_different_types() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
             %3 = OpVariable %2 Input"#,
-    )?;
+    );
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -258,7 +274,7 @@ fn multiple_definitions_different_types() -> Result<()> {
             %2 = OpTypeInt 32 0
             %3 = OpConstant %2 42
             %1 = OpVariable %2 Uniform %3"#,
-    )?;
+    );
 
     let c = assemble_spirv(
         r#"OpCapability Linkage
@@ -266,19 +282,18 @@ fn multiple_definitions_different_types() -> Result<()> {
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 12
             %1 = OpVariable %2 Uniform %3"#,
-    )?;
+    );
 
     let result = assemble_and_link(&[&a, &b, &c]);
     assert_eq!(
-        result.err(),
-        Some(LinkerError::MultipleExports("foo".to_string()))
+        result.err().as_deref(),
+        Some("error: Multiple exports found for \"foo\"")
     );
-    Ok(())
 }
 
 //jb-todo: this isn't validated yet in the linker (see ensure_matching_import_export_pairs)
 /*#[test]
-fn decoration_mismatch() -> Result<()> {
+fn decoration_mismatch() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
         OpDecorate %1 LinkageAttributes "foo" Import
@@ -305,7 +320,7 @@ fn decoration_mismatch() -> Result<()> {
 }*/
 
 #[test]
-fn func_ctrl() -> Result<()> {
+fn func_ctrl() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
             OpDecorate %1 LinkageAttributes "foo" Import
@@ -315,7 +330,7 @@ fn func_ctrl() -> Result<()> {
             %5 = OpVariable %4 Uniform
             %1 = OpFunction %2 None %3
             OpFunctionEnd"#,
-    )?;
+    );
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
@@ -326,9 +341,9 @@ fn func_ctrl() -> Result<()> {
             %4 = OpLabel
             OpReturn
             OpFunctionEnd"#,
-    )?;
+    );
 
-    let result = assemble_and_link(&[&a, &b])?;
+    let result = assemble_and_link(&[&a, &b]).unwrap();
 
     let expect = r#"%1 = OpTypeVoid
             %2 = OpTypeFunction %1
@@ -340,11 +355,10 @@ fn func_ctrl() -> Result<()> {
             OpFunctionEnd"#;
 
     without_header_eq(result, expect);
-    Ok(())
 }
 
 #[test]
-fn use_exported_func_param_attr() -> Result<()> {
+fn use_exported_func_param_attr() {
     let a = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
@@ -362,7 +376,7 @@ fn use_exported_func_param_attr() -> Result<()> {
             %4 = OpFunctionParameter %6
             OpFunctionEnd
             "#,
-    )?;
+    );
 
     let b = assemble_spirv(
         r#"OpCapability Kernel
@@ -378,9 +392,9 @@ fn use_exported_func_param_attr() -> Result<()> {
             OpReturn
             OpFunctionEnd
             "#,
-    )?;
+    );
 
-    let result = assemble_and_link(&[&a, &b])?;
+    let result = assemble_and_link(&[&a, &b]).unwrap();
 
     let expect = r#"OpCapability Kernel
         OpDecorate %1 FuncParamAttr Zext
@@ -400,11 +414,10 @@ fn use_exported_func_param_attr() -> Result<()> {
         OpFunctionEnd"#;
 
     without_header_eq(result, expect);
-    Ok(())
 }
 
 #[test]
-fn names_and_decorations() -> Result<()> {
+fn names_and_decorations() {
     let a = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
@@ -426,7 +439,7 @@ fn names_and_decorations() -> Result<()> {
             %4 = OpFunctionParameter %9
             OpFunctionEnd
             "#,
-    )?;
+    );
 
     let b = assemble_spirv(
         r#"OpCapability Kernel
@@ -445,9 +458,9 @@ fn names_and_decorations() -> Result<()> {
             OpReturn
             OpFunctionEnd
             "#,
-    )?;
+    );
 
-    let result = assemble_and_link(&[&a, &b])?;
+    let result = assemble_and_link(&[&a, &b]).unwrap();
 
     let expect = r#"OpCapability Kernel
         OpName %1 "foo"
@@ -471,5 +484,4 @@ fn names_and_decorations() -> Result<()> {
         OpFunctionEnd"#;
 
     without_header_eq(result, expect);
-    Ok(())
 }

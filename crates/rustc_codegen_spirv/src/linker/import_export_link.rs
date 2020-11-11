@@ -1,10 +1,13 @@
-use super::{LinkerError, Result};
+use super::Result;
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
+use rustc_errors::ErrorReported;
+use rustc_session::Session;
 use std::collections::{HashMap, HashSet};
 
-pub fn run(module: &mut Module) -> Result<()> {
-    let (rewrite_rules, killed_parameters) = find_import_export_pairs_and_killed_params(module)?;
+pub fn run(sess: &Session, module: &mut Module) -> Result<()> {
+    let (rewrite_rules, killed_parameters) =
+        find_import_export_pairs_and_killed_params(sess, module)?;
     kill_linkage_instructions(module, &rewrite_rules);
     import_kill_annotations_and_debug(module, &rewrite_rules, &killed_parameters);
     replace_all_uses_with(module, &rewrite_rules);
@@ -12,6 +15,7 @@ pub fn run(module: &mut Module) -> Result<()> {
 }
 
 fn find_import_export_pairs_and_killed_params(
+    sess: &Session,
     module: &Module,
 ) -> Result<(HashMap<u32, u32>, HashSet<u32>)> {
     let type_map = get_type_map(module);
@@ -31,7 +35,8 @@ fn find_import_export_pairs_and_killed_params(
         };
         let type_id = *type_map.get(&id).expect("Unexpected op");
         if exports.insert(name, (id, type_id)).is_some() {
-            return Err(LinkerError::MultipleExports(name.to_string()));
+            sess.err(&format!("Multiple exports found for {:?}", name));
+            return Err(ErrorReported);
         }
     }
     // Then, collect all the imports, and create the rewrite rules.
@@ -42,13 +47,14 @@ fn find_import_export_pairs_and_killed_params(
         };
         let (export_id, export_type) = match exports.get(name) {
             None => {
-                return Err(LinkerError::UnresolvedSymbol(name.to_string()));
+                sess.err(&format!("Unresolved symbol {:?}", name));
+                return Err(ErrorReported);
             }
             Some(&x) => x,
         };
         let import_type = *type_map.get(&import_id).expect("Unexpected op");
         // Make sure the import/export pair has the same type.
-        check_tys_equal(name, import_type, export_type)?;
+        check_tys_equal(sess, name, import_type, export_type)?;
         rewrite_rules.insert(import_id, export_id);
         if let Some(params) = fn_parameters.get(&import_id) {
             for &param in params {
@@ -97,13 +103,12 @@ fn fn_parameters(module: &Module) -> HashMap<Word, Vec<Word>> {
         .collect()
 }
 
-fn check_tys_equal(name: &str, import_type: Word, export_type: Word) -> Result<()> {
+fn check_tys_equal(sess: &Session, name: &str, import_type: Word, export_type: Word) -> Result<()> {
     if import_type == export_type {
         Ok(())
     } else {
-        Err(LinkerError::TypeMismatch {
-            name: name.to_string(),
-        })
+        sess.err(&format!("Types mismatch for {:?}", name));
+        Err(ErrorReported)
     }
 }
 

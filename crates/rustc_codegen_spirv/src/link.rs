@@ -386,15 +386,13 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: boo
         }
     }
 
-    let mut module_refs = modules.iter_mut().collect::<Vec<_>>();
-
     if let Ok(ref path) = env::var("DUMP_PRE_LINK") {
         let path = Path::new(path);
         if path.is_file() {
             std::fs::remove_file(path).unwrap();
         }
         std::fs::create_dir_all(path).unwrap();
-        for (num, module) in module_refs.iter().enumerate() {
+        for (num, module) in modules.iter().enumerate() {
             File::create(path.join(format!("mod_{}.spv", num)))
                 .unwrap()
                 .write_all(crate::slice_u32_to_u8(&module.assemble()))
@@ -412,25 +410,13 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: boo
         structurize: env::var("NO_STRUCTURIZE").is_err(),
     };
 
-    let link_result = linker::link(Some(sess), &mut module_refs, &options);
+    let link_result = linker::link(sess, modules, &options);
 
     let assembled = match link_result {
         Ok(v) => v,
-        Err(err) => {
-            if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
-                let path = Path::new(path);
-                if path.is_file() {
-                    std::fs::remove_file(path).unwrap();
-                }
-                std::fs::create_dir_all(path).unwrap();
-                for (num, module) in modules.iter().enumerate() {
-                    File::create(path.join(format!("mod_{}.spv", num)))
-                        .unwrap()
-                        .write_all(crate::slice_u32_to_u8(&module.assemble()))
-                        .unwrap();
-                }
-            }
-            sess.fatal(&format!("Linker error: {}", err))
+        Err(rustc_errors::ErrorReported) => {
+            sess.abort_if_errors();
+            bug!("Linker errored, but no error reported")
         }
     };
 
