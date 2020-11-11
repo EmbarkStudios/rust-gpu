@@ -11,7 +11,6 @@ jobs:
     name: Test
     strategy:
       matrix:
-        os: [macOS-latest, ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -63,6 +62,31 @@ jobs:
       - name: Run tests
         shell: bash
         run: .github/workflows/test.sh ${{ runner.os }}
+
+      - name: Install cargo-apk
+        run: cargo install cargo-apk
+
+      - if: runner.os == 'Windows'
+        name: Create symlink to Android SDK/NDK without spaces
+        run: |
+          $oldAndroidPath = $env:ANDROID_HOME
+          $sdk_root = "C:\Android"
+          New-Item -Path $sdk_root -ItemType SymbolicLink -Value $oldAndroidPath
+
+          echo "ANDROID_SDK_ROOT=$sdk_root" >> $env:GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=$sdk_root\ndk-bundle" >> $env:GITHUB_ENV
+
+          # Update legacy path for ndk-build:
+          echo "ANDROID_HOME=$sdk_root" >> $env:GITHUB_ENV
+
+          # Unset legacy paths:
+          echo "ANDROID_NDK_HOME=" >> $env:GITHUB_ENV
+          echo "ANDROID_NDK_PATH=" >> $env:GITHUB_ENV
+
+      - name: Compile WGPU example for Android
+        run: |
+          rustup target add aarch64-linux-android
+          cargo apk build --manifest-path examples/runners/wgpu/Cargo.toml --features use-installed-tools --no-default-features
 
   lint:
     name: Lint
