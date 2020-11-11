@@ -218,6 +218,15 @@
 <span id="215">215</span>
 <span id="216">216</span>
 <span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span>;
@@ -320,7 +329,16 @@
         <span class="kw">for</span> <span class="kw-2">mut</span> <span class="ident">module</span> <span class="kw">in</span> <span class="ident">inputs</span>.<span class="ident">iter_mut</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
             <span class="ident">simple_passes</span>::<span class="ident">shift_ids</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>, <span class="ident">bound</span>);
             <span class="ident">bound</span> <span class="op">+</span><span class="op">=</span> <span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">bound</span> <span class="op">-</span> <span class="number">1</span>;
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">version</span>, <span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">version</span>());
+            <span class="kw">let</span> <span class="ident">this_version</span> <span class="op">=</span> <span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">version</span>();
+            <span class="kw">if</span> <span class="ident">version</span> <span class="op">!</span><span class="op">=</span> <span class="ident">this_version</span> {
+                <span class="kw">match</span> <span class="ident">sess</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">sess</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                        <span class="string">&quot;cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}&quot;</span>,
+                        <span class="ident">version</span>.<span class="number">0</span>, <span class="ident">version</span>.<span class="number">1</span>, <span class="ident">this_version</span>.<span class="number">0</span>, <span class="ident">this_version</span>.<span class="number">1</span>
+                    )),
+                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;spir-v version mismatch: {:?} {:?}&quot;</span>, <span class="ident">version</span>, <span class="ident">this_version</span>),
+                }
+            }
         }
 
         <span class="comment">// merge the binaries</span>
