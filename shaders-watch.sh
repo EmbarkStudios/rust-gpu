@@ -1,1 +1,1 @@
-RUSTFLAGS="-Zcodegen-backend=rustc_codegen_spirv.dll" cargo watch -x 'build -Z build-std=core --target spirv-unknown-unknown --release -p sky-shader'
+RUSTFLAGS="-Zcodegen-backend=rustc_codegen_spirv.dll" cargo watch -x 'build -Z build-std=core --target spirv-unknown-unknown --release -p sky-shader' -q -d 0.1
