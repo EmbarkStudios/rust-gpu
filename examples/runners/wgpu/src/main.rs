@@ -1,37 +1,23 @@
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Instant;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::Window,
 };
 
-async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::TextureFormat) {
-    let size = window.inner_size();
-    let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
-    let surface = unsafe { instance.create_surface(&window) };
-    let adapter = instance
-        .request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: wgpu::PowerPreference::default(),
-            // Request an adapter which can render to our surface
-            compatible_surface: Some(&surface),
-        })
-        .await
-        .expect("Failed to find an appropiate adapter");
+static RELOAD: AtomicBool = AtomicBool::new(false);
 
-    // Create the logical device and command queue
-    let (device, queue) = adapter
-        .request_device(
-            &wgpu::DeviceDescriptor {
-                features: wgpu::Features::empty(),
-                limits: wgpu::Limits::default(),
-                shader_validation: true,
-            },
-            None,
-        )
-        .await
-        .expect("Failed to create device");
+fn create_pipeline(
+    device: &wgpu::Device,
+    swapchain_format: wgpu::TextureFormat,
+    spirv_bytes: &[u8],
+) -> wgpu::RenderPipeline {
+    let module_source = wgpu::util::make_spirv(spirv_bytes);
 
-    // Load the shaders from disk
-    let module = device.create_shader_module(wgpu::include_spirv!(env!("sky_shader.spv")));
+    let module = device.create_shader_module(module_source);
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
@@ -64,6 +50,54 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
         alpha_to_coverage_enabled: false,
     });
 
+    render_pipeline
+}
+
+async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::TextureFormat) {
+    let size = window.inner_size();
+    let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+    let surface = unsafe { instance.create_surface(&window) };
+    let adapter = instance
+        .request_adapter(&wgpu::RequestAdapterOptions {
+            power_preference: wgpu::PowerPreference::default(),
+            // Request an adapter which can render to our surface
+            compatible_surface: Some(&surface),
+        })
+        .await
+        .expect("Failed to find an appropiate adapter");
+
+    // Create the logical device and command queue
+    let (device, queue) = adapter
+        .request_device(
+            &wgpu::DeviceDescriptor {
+                features: wgpu::Features::empty(),
+                limits: wgpu::Limits::default(),
+                shader_validation: true,
+            },
+            None,
+        )
+        .await
+        .expect("Failed to create device");
+
+    let mut file_watcher: RecommendedWatcher = Watcher::new_immediate(|res| match res {
+        Ok(_event) => {
+            RELOAD.store(true, Ordering::SeqCst);
+        }
+        Err(e) => println!("watch error: {:?}", e),
+    })
+    .expect("Failed setting up file watcher");
+
+    let (shader_name, shader_bytes) = ("sky_shader.spv", include_bytes!(env!("sky_shader.spv")));
+
+    // add file watcher to be able to reload the shadre on changes
+
+    let shader_path = Path::new("target/spirv-unknown-unknown/release/").join(shader_name);
+    file_watcher
+        .watch(&shader_path, RecursiveMode::NonRecursive)
+        .expect("Failed watching shader file");
+
+    let mut render_pipeline = create_pipeline(&device, swapchain_format, shader_bytes);
+
     let mut sc_desc = wgpu::SwapChainDescriptor {
         usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
         format: swapchain_format,
@@ -78,7 +112,7 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
         // Have the closure take ownership of the resources.
         // `event_loop.run` never returns, therefore we must do this to ensure
         // the resources are properly cleaned up.
-        let _ = (&instance, &adapter, &module, &pipeline_layout);
+        let _ = (&instance, &adapter /*&module, &pipeline_layout*/);
 
         *control_flow = ControlFlow::Poll;
         match event {
@@ -120,7 +154,19 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
                 event: WindowEvent::CloseRequested,
                 ..
             } => *control_flow = ControlFlow::Exit,
-            _ => {}
+            _ => {
+                if RELOAD.load(Ordering::SeqCst) {
+                    RELOAD.store(false, Ordering::SeqCst);
+
+                    let start_time = Instant::now();
+                    let spirv_bytes =
+                        std::fs::read(&shader_path).expect("Failed reading shader file");
+                    render_pipeline = create_pipeline(&device, swapchain_format, &spirv_bytes);
+                    println!("Reloaded shader [{} ms]", start_time.elapsed().as_millis());
+
+                    window.request_redraw();
+                }
+            }
         }
     });
 }

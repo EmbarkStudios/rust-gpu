@@ -1,0 +1,1 @@
+RUSTFLAGS="-Zcodegen-backend=rustc_codegen_spirv.dll" cargo build -Z build-std=core --target spirv-unknown-unknown --release -p sky-shader
