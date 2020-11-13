@@ -68,7 +68,7 @@ This is all a little convoluted, hence the [spirv-builder] crate handles a lot o
 
 ## Using installed SPIRV-Tools
 
-By default, all of the crates and examples in this repo will compile the `spirv-tools-sys` crate, including a lot of C++ code from [SPIRV-Tools](https://github.com/EmbarkStudios/SPIRV-Tools). If you don't want to build the C++ code because you already have [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools#downloads) installed, or just don't want to spend more time compiling, you can build/run the crate with the `use-installed-tools` feature.
+By default, all of the crates and examples in this repo will compile the [`spirv-tools-sys`](https://crates.io/crates/spirv-tools-sys) crate, including a lot of C++ code from [SPIRV-Tools](https://github.com/EmbarkStudios/SPIRV-Tools). If you don't want to build the C++ code because you already have [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools#downloads) installed, or just don't want to spend more time compiling, you can build/run the crate with the `use-installed-tools` feature.
 
 ```shell
 cargo run \
