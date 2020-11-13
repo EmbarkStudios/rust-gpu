@@ -410,7 +410,7 @@ pub fn parse_attrs(
     let result =
         attrs.iter().flat_map(|attr| {
             let is_spirv = match attr.kind {
-                AttrKind::Normal(ref item) => {
+                AttrKind::Normal(ref item, _) => {
                     // TODO: We ignore the rest of the path. Is this right?
                     let last = item.path.segments.last();
                     last.map_or(false, |seg| seg.ident.name == cx.sym.spirv)
