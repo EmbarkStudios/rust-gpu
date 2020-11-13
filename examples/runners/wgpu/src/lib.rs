@@ -1,14 +1,36 @@
+use clap::Clap;
+use strum::{Display, EnumString};
 use winit::{
     event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::Window,
 };
 
-fn shader_module() -> wgpu::ShaderModuleSource<'static> {
-    wgpu::include_spirv!(env!("sky_shader.spv"))
+#[derive(EnumString, Display)]
+enum RustGPUShader {
+    Simplest,
+    Sky,
 }
 
-async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::TextureFormat) {
+fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleSource<'static> {
+    match shader {
+        RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),
+        RustGPUShader::Sky => wgpu::include_spirv!(env!("sky_shader.spv")),
+    }
+}
+
+#[derive(Clap)]
+struct Options {
+    #[clap(short, long, default_value = "Sky")]
+    shader: RustGPUShader,
+}
+
+async fn run(
+    options: Options,
+    event_loop: EventLoop<()>,
+    window: Window,
+    swapchain_format: wgpu::TextureFormat,
+) {
     let size = window.inner_size();
     let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
 
@@ -43,7 +65,7 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
         .expect("Failed to create device");
 
     // Load the shaders from disk
-    let module = device.create_shader_module(shader_module());
+    let module = device.create_shader_module(shader_module(options.shader));
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
@@ -166,6 +188,8 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
 
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
 pub fn main() {
+    let options: Options = Options::parse();
+
     let event_loop = EventLoop::new();
     let window = winit::window::WindowBuilder::new()
         .with_title("Rust GPU - wgpu")
@@ -196,6 +220,7 @@ pub fn main() {
         } else {
             wgpu_subscriber::initialize_default_subscriber(None);
             futures::executor::block_on(run(
+                options,
                 event_loop,
                 window,
                 if cfg!(target_os = "android") {

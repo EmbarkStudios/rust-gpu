@@ -1,10 +1,15 @@
 use spirv_builder::SpirvBuilder;
 use std::error::Error;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    // This will set the env var `sky-shader.spv` to a spir-v file that can be include!()'d
-    SpirvBuilder::new("../../shaders/sky-shader")
+fn build_shader(path_to_create: &str) -> Result<(), Box<dyn Error>> {
+    SpirvBuilder::new(path_to_create)
         .spirv_version(1, 0)
         .build()?;
+    Ok(())
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    build_shader("../../shaders/sky-shader")?;
+    build_shader("../../shaders/simplest-shader")?;
     Ok(())
 }
