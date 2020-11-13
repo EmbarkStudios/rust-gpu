@@ -22,24 +22,24 @@ This is a baseline proposal which is expected to be built on top of over time, t
 Storage buffer data is wrapped with the following type:
 
 ```rust
-struct MutDeviceStorage<T> {
+struct DeviceStorageMut<T> {
     data: StorageBuffer<T>,
 };
 ```
 Workgroup storage is wrapped with a single type:
 
 ```rust
-struct MutWorkgroupStorage<T> {
+struct WorkgroupStorageMut<T> {
     data: Workgroup<T>,
 };
 ```
 
-#### MutDeviceStorage and MutWorkgroupStorage interfaces
+#### DeviceStorageMut and WorkgroupStorageMut interfaces
 
 For now these interfaces have two functions - but will likely change to include additional scopes (e.g. subgroup) and operations (e.g. reduction, expansion) in future iterations of the proposal:
 
 ```rust
-impl<T> MutDeviceStorage {
+impl<T> DeviceStorageMut {
     fn map_workgroup<F, E>(&mut self, f: F) where F: FnMut(E) -> E
     {
         unsafe {
@@ -70,7 +70,7 @@ impl<T> MutDeviceStorage {
 
 `map_workgroup_joined` is similar, but allows a shader to access data shared by multiple threads, so that it can be shuffled or combined across threads. The number of threads that data is shared between is fixed by the `RATE` parameter. This function must only be called in workgroup-uniform control flow, and `RATE` must be a factor of the workgroup size.
 
-The `MutWorkgroupStorage` implementation is identical; it just operates on Workgroup storage instead.
+The `WorkgroupStorageMut` implementation is identical; it just operates on Workgroup storage instead.
 
 The load and store variants used on the underlying storage here are invented to simplify the interface; what these ultimately look like is contingent on the resource binding proposal, which is still in flight.
 The spir-v op codes are similarly somewhat invented, and will also be adjusted to mirror the final syntax for assembly here (or some friendlier wrapper).
@@ -82,14 +82,14 @@ These are provided primarily for illustrative purposes.
 Bitonic sort example (unrolled, incomplete...):
 
 ```rust
-fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
-    buffer.map_workgroup_joined<2>(|array| {
+fn bitonic_sort_workgroup(buffer: DeviceStorageMut<u32>) {
+    buffer.map_workgroup_joined(|array| {
         [
             max(array[0],array[1]),
             min(array[0],array[1]),
         ]
     });
-    buffer.map_workgroup_joined<4>(|array| {
+    buffer.map_workgroup_joined(|array| {
         [
             max(array[0],array[3]),
             min(array[0],array[3]),
@@ -97,13 +97,13 @@ fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
             min(array[1],array[2]),
         ]
     });
-    buffer.map_workgroup_joined<2>(|array| {
+    buffer.map_workgroup_joined(|array| {
         [
             max(array[0],array[1]),
             min(array[0],array[1]),
         ]
     });
-    buffer.map_workgroup_joined<8>(|array| {
+    buffer.map_workgroup_joined(|array| {
         [
             max(array[0],array[7]),
             min(array[0],array[7]),
@@ -115,7 +115,7 @@ fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
             min(array[3],array[4]),
         ]
     })
-    buffer.map_workgroup_joined<4>(|array| {
+    buffer.map_workgroup_joined(|array| {
         [
             max(array[0],array[1]),
             min(array[0],array[1]),
@@ -123,7 +123,7 @@ fn bitonic_sort_workgroup(buffer: MutDeviceStorage<u32>) {
             min(array[2],array[3]),
         ]
     });
-    buffer.map_workgroup_joined<2>(|array| {
+    buffer.map_workgroup_joined(|array| {
         [
             max(array[0],array[1]),
             min(array[0],array[1]),
