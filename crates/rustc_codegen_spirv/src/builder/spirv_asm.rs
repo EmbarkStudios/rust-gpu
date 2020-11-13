@@ -1,0 +1,1025 @@
+use crate::builder_spirv::SpirvValue;
+use crate::spirv_type::SpirvType;
+
+use super::Builder;
+use rspirv::dr;
+use rspirv::grammar::{LogicalOperand, OperandKind, OperandQuantifier};
+use rspirv::spirv::{
+    FPFastMathMode, FunctionControl, ImageOperands, KernelProfilingInfo, LoopControl, MemoryAccess,
+    MemorySemantics, Op, RayFlags, SelectionControl, Word,
+};
+use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
+use rustc_codegen_ssa::mir::place::PlaceRef;
+use rustc_codegen_ssa::traits::{AsmBuilderMethods, InlineAsmOperandRef};
+use rustc_hir::LlvmInlineAsmInner;
+use rustc_middle::bug;
+use rustc_span::source_map::Span;
+use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
+use std::collections::HashMap;
+
+pub struct InstructionTable {
+    table: HashMap<&'static str, &'static rspirv::grammar::Instruction<'static>>,
+}
+
+impl InstructionTable {
+    pub fn new() -> Self {
+        let table = (0..u16::MAX)
+            .filter_map(rspirv::grammar::CoreInstructionTable::lookup_opcode)
+            .map(|inst| (inst.opname, inst))
+            .collect();
+        Self { table }
+    }
+}
+
+impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
+    fn codegen_llvm_inline_asm(
+        &mut self,
+        _: &LlvmInlineAsmInner,
+        _: Vec<PlaceRef<'tcx, Self::Value>>,
+        _: Vec<Self::Value>,
+        _: Span,
+    ) -> bool {
+        self.err("LLVM asm not supported");
+        true
+    }
+
+    /* Example asm and the template it compiles to:
+    asm!(
+        "mov {0}, {1}",
+        "add {0}, {number}",
+        out(reg) o,
+        in(reg) i,
+        number = const 5,
+    );
+    [
+    String("mov "),
+    Placeholder { operand_idx: 0, modifier: None, span: src/lib.rs:19:18: 19:21 (#0) },
+    String(", "),
+    Placeholder { operand_idx: 1, modifier: None, span: src/lib.rs:19:23: 19:26 (#0) },
+    String("\n"),
+    String("add "),
+    Placeholder { operand_idx: 0, modifier: None, span: src/lib.rs:20:18: 20:21 (#0) },
+    String(", "),
+    Placeholder { operand_idx: 2, modifier: None, span: src/lib.rs:20:23: 20:31 (#0) }
+    ]
+     */
+
+    fn codegen_inline_asm(
+        &mut self,
+        template: &[InlineAsmTemplatePiece],
+        operands: &[InlineAsmOperandRef<'tcx, Self>],
+        options: InlineAsmOptions,
+        _line_spans: &[Span],
+    ) {
+        if !options.is_empty() {
+            self.err(&format!("asm flags not supported: {:?}", options));
+        }
+        // vec of lines, and each line is vec of tokens
+        let mut tokens = vec![vec![]];
+        for piece in template {
+            match piece {
+                InlineAsmTemplatePiece::String(asm) => {
+                    // We cannot use str::lines() here because we don't want the behavior of "the
+                    // last newline is optional", we want an empty string for the last line if
+                    // there is no newline terminator.
+                    // Lambda copied from std LinesAnyMap
+                    let lines = asm.split('\n').map(|line| {
+                        let l = line.len();
+                        if l > 0 && line.as_bytes()[l - 1] == b'\r' {
+                            &line[0..l - 1]
+                        } else {
+                            line
+                        }
+                    });
+                    for (index, line) in lines.enumerate() {
+                        if index != 0 {
+                            // There was a newline, add a new line.
+                            tokens.push(vec![]);
+                        }
+                        for word in line.split_whitespace() {
+                            tokens.last_mut().unwrap().push(Token::Word(word));
+                        }
+                    }
+                }
+                &InlineAsmTemplatePiece::Placeholder {
+                    operand_idx,
+                    modifier,
+                    span,
+                } => {
+                    if let Some(modifier) = modifier {
+                        self.tcx.sess.span_err(
+                            span,
+                            &format!("asm modifiers are not supported: {}", modifier),
+                        );
+                    }
+                    let line = tokens.last_mut().unwrap();
+                    if line
+                        .last()
+                        .map_or(false, |prev| matches!(prev, Token::Word("typeof")))
+                    {
+                        *line.last_mut().unwrap() = Token::Typeof(&operands[operand_idx], span);
+                    } else {
+                        line.push(Token::Placeholder(&operands[operand_idx], span));
+                    }
+                }
+            }
+        }
+
+        let mut id_map = HashMap::new();
+        for line in tokens {
+            self.codegen_asm(&mut id_map, line.into_iter());
+        }
+    }
+}
+
+enum Token<'a, 'cx, 'tcx> {
+    Word(&'a str),
+    Placeholder(&'a InlineAsmOperandRef<'tcx, Builder<'cx, 'tcx>>, Span),
+    Typeof(&'a InlineAsmOperandRef<'tcx, Builder<'cx, 'tcx>>, Span),
+}
+
+enum OutRegister<'a> {
+    Regular(Word),
+    Place(PlaceRef<'a, SpirvValue>),
+}
+
+impl<'cx, 'tcx> Builder<'cx, 'tcx> {
+    fn insert_inst(&mut self, id_map: &mut HashMap<&str, Word>, inst: dr::Instruction) {
+        // Types declared must be registered in our type system.
+        let new_result_id = match inst.class.opcode {
+            Op::TypeVoid => SpirvType::Void.def(self),
+            Op::TypeBool => SpirvType::Bool.def(self),
+            Op::TypeInt => SpirvType::Integer(
+                inst.operands[0].unwrap_literal_int32(),
+                inst.operands[1].unwrap_literal_int32() != 0,
+            )
+            .def(self),
+            Op::TypeFloat => SpirvType::Float(inst.operands[0].unwrap_literal_int32()).def(self),
+            Op::TypeStruct => {
+                self.err("OpTypeStruct in asm! is not supported yet");
+                return;
+            }
+            Op::TypeOpaque => SpirvType::Opaque {
+                name: inst.operands[0].unwrap_literal_string().to_string(),
+            }
+            .def(self),
+            Op::TypeVector => SpirvType::Vector {
+                element: inst.operands[0].unwrap_id_ref(),
+                count: inst.operands[0].unwrap_literal_int32(),
+            }
+            .def(self),
+            Op::TypeArray => {
+                self.err("OpTypeArray in asm! is not supported yet");
+                return;
+            }
+            _ => {
+                self.emit()
+                    .insert_into_block(dr::InsertPoint::End, inst)
+                    .unwrap();
+                return;
+            }
+        };
+        for value in id_map.values_mut() {
+            if *value == inst.result_id.unwrap() {
+                *value = new_result_id;
+            }
+        }
+    }
+
+    fn codegen_asm<'a>(
+        &mut self,
+        id_map: &mut HashMap<&'a str, Word>,
+        mut tokens: impl Iterator<Item = Token<'a, 'cx, 'tcx>>,
+    ) where
+        'cx: 'a,
+        'tcx: 'a,
+    {
+        let mut first_token = match tokens.next() {
+            Some(tok) => tok,
+            None => return,
+        };
+        // Parse result_id in front of instruction:
+        // %z = OpAdd %ty %x %y
+        let out_register = if match first_token {
+            Token::Placeholder(_, _) => true,
+            Token::Word(id_str) if id_str.starts_with('%') => true,
+            Token::Word(_) => false,
+            Token::Typeof(_, _) => false,
+        } {
+            let result_id = match self.parse_id_out(id_map, first_token) {
+                Some(result_id) => result_id,
+                None => return,
+            };
+            match tokens.next() {
+                Some(Token::Word("=")) => (),
+                _ => {
+                    self.err("expected equals after result id specifier");
+                    return;
+                }
+            }
+            first_token = match tokens.next() {
+                Some(tok) => tok,
+                None => {
+                    self.err("expected instruction after equals");
+                    return;
+                }
+            };
+            Some(result_id)
+        } else {
+            None
+        };
+        let inst_name = match first_token {
+            Token::Word(inst_name) => inst_name,
+            Token::Placeholder(_, span) | Token::Typeof(_, span) => {
+                self.tcx
+                    .sess
+                    .span_err(span, "cannot use a dynamic value as an instruction type");
+                return;
+            }
+        };
+        let inst_class = inst_name
+            .strip_prefix("Op")
+            .and_then(|n| self.instruction_table.table.get(n));
+        let inst_class = match inst_class {
+            Some(inst) => inst,
+            None => {
+                self.err(&format!("unknown spirv instruction {}", inst_name));
+                return;
+            }
+        };
+        let result_id = match out_register {
+            Some(OutRegister::Regular(reg)) => Some(reg),
+            Some(OutRegister::Place(_)) => Some(self.emit().id()),
+            None => None,
+        };
+        let mut instruction = dr::Instruction {
+            class: inst_class,
+            result_type: None,
+            result_id,
+            operands: vec![],
+        };
+        self.parse_operands(id_map, tokens, &mut instruction);
+        self.insert_inst(id_map, instruction);
+        if let Some(OutRegister::Place(place)) = out_register {
+            self.emit()
+                .store(
+                    place.llval.def(self),
+                    result_id.unwrap(),
+                    None,
+                    std::iter::empty(),
+                )
+                .unwrap();
+        }
+    }
+
+    fn parse_operands<'a>(
+        &mut self,
+        id_map: &mut HashMap<&'a str, Word>,
+        mut tokens: impl Iterator<Item = Token<'a, 'cx, 'tcx>>,
+        instruction: &mut dr::Instruction,
+    ) where
+        'cx: 'a,
+        'tcx: 'a,
+    {
+        let mut saw_id_result = false;
+        for &LogicalOperand { kind, quantifier } in instruction.class.operands {
+            if kind == OperandKind::IdResult {
+                assert_eq!(quantifier, OperandQuantifier::One);
+                if instruction.result_id == None {
+                    self.err(&format!(
+                        "instruction {} expects a result id",
+                        instruction.class.opname
+                    ));
+                }
+                saw_id_result = true;
+                continue;
+            }
+            match quantifier {
+                OperandQuantifier::One => {
+                    if !self.parse_one_operand(id_map, instruction, kind, &mut tokens) {
+                        self.err(&format!(
+                            "expected operand after instruction: {}",
+                            instruction.class.opname
+                        ));
+                        return;
+                    }
+                }
+                OperandQuantifier::ZeroOrOne => {
+                    let _ = self.parse_one_operand(id_map, instruction, kind, &mut tokens);
+                    // If this return false, well, it's optional, do nothing
+                }
+                OperandQuantifier::ZeroOrMore => {
+                    while self.parse_one_operand(id_map, instruction, kind, &mut tokens) {}
+                }
+            }
+        }
+        if !saw_id_result && instruction.result_id.is_some() {
+            self.err(&format!(
+                "instruction {} does not expect a result id",
+                instruction.class.opname
+            ));
+        }
+        if tokens.next().is_some() {
+            self.tcx.sess.err(&format!(
+                "too many operands to instruction: {}",
+                instruction.class.opname
+            ));
+        }
+    }
+
+    fn check_reg(&mut self, span: Span, reg: &InlineAsmRegOrRegClass) {
+        match reg {
+            InlineAsmRegOrRegClass::RegClass(InlineAsmRegClass::SpirV(
+                SpirVInlineAsmRegClass::reg,
+            )) => {}
+            _ => self
+                .tcx
+                .sess
+                .span_err(span, &format!("invalid register: {}", reg)),
+        }
+    }
+
+    fn parse_id_out<'a>(
+        &mut self,
+        id_map: &mut HashMap<&'a str, Word>,
+        token: Token<'a, 'cx, 'tcx>,
+    ) -> Option<OutRegister<'a>> {
+        match token {
+            Token::Word(word) => match word.strip_prefix("%") {
+                Some(id) => Some(OutRegister::Regular(
+                    *id_map.entry(id).or_insert_with(|| self.emit().id()),
+                )),
+                None => {
+                    self.err("expected ID");
+                    None
+                }
+            },
+            Token::Typeof(_, span) => {
+                self.tcx
+                    .sess
+                    .span_err(span, "cannot assign to a typeof expression");
+                None
+            }
+            Token::Placeholder(hole, span) => match hole {
+                InlineAsmOperandRef::In { reg, value: _ } => {
+                    self.check_reg(span, reg);
+                    self.tcx
+                        .sess
+                        .span_err(span, "in register cannot be assigned to");
+                    None
+                }
+                InlineAsmOperandRef::Out {
+                    reg,
+                    late: _,
+                    place,
+                } => {
+                    self.check_reg(span, reg);
+                    match place {
+                        Some(place) => Some(OutRegister::Place(*place)),
+                        None => {
+                            self.tcx.sess.span_err(span, "missing place for register");
+                            None
+                        }
+                    }
+                }
+                InlineAsmOperandRef::InOut {
+                    reg,
+                    late: _,
+                    in_value: _,
+                    out_place,
+                } => {
+                    self.check_reg(span, reg);
+                    match out_place {
+                        Some(out_place) => Some(OutRegister::Place(*out_place)),
+                        None => {
+                            self.tcx.sess.span_err(span, "missing place for register");
+                            None
+                        }
+                    }
+                }
+                InlineAsmOperandRef::Const { string: _ } => {
+                    self.tcx
+                        .sess
+                        .span_err(span, "cannot write to const asm argument");
+                    None
+                }
+                InlineAsmOperandRef::SymFn { instance: _ } => {
+                    self.tcx
+                        .sess
+                        .span_err(span, "cannot write to function asm argument");
+                    None
+                }
+                InlineAsmOperandRef::SymStatic { def_id: _ } => {
+                    self.tcx
+                        .sess
+                        .span_err(span, "cannot write to static variable asm argument");
+                    None
+                }
+            },
+        }
+    }
+
+    fn parse_id_in<'a>(
+        &mut self,
+        id_map: &mut HashMap<&'a str, Word>,
+        token: Token<'a, 'cx, 'tcx>,
+    ) -> Option<Word> {
+        match token {
+            Token::Word(word) => match word.strip_prefix("%") {
+                Some(id) => Some(*id_map.entry(id).or_insert_with(|| self.emit().id())),
+                None => {
+                    self.err("expected ID");
+                    None
+                }
+            },
+            Token::Typeof(hole, span) => match hole {
+                InlineAsmOperandRef::In { reg, value } => {
+                    self.check_reg(span, reg);
+                    Some(value.immediate().ty)
+                }
+                InlineAsmOperandRef::Out {
+                    reg,
+                    late: _,
+                    place,
+                } => {
+                    self.check_reg(span, reg);
+                    match place {
+                        Some(place) => match self.lookup_type(place.llval.ty) {
+                            SpirvType::Pointer { pointee, .. } => Some(pointee),
+                            other => {
+                                self.tcx.sess.span_err(
+                                    span,
+                                    &format!(
+                                        "out register type not pointer: {}",
+                                        other.debug(place.llval.ty, self)
+                                    ),
+                                );
+                                None
+                            }
+                        },
+                        None => {
+                            self.tcx
+                                .sess
+                                .span_err(span, "missing place for out register typeof");
+                            None
+                        }
+                    }
+                }
+                InlineAsmOperandRef::InOut {
+                    reg,
+                    late: _,
+                    in_value,
+                    out_place: _,
+                } => {
+                    self.check_reg(span, reg);
+                    Some(in_value.immediate().ty)
+                }
+                InlineAsmOperandRef::Const { string: _ } => {
+                    self.tcx
+                        .sess
+                        .span_err(span, "cannot take the type of a const asm argument");
+                    None
+                }
+                InlineAsmOperandRef::SymFn { instance: _ } => {
+                    self.tcx
+                        .sess
+                        .span_err(span, "cannot take the type of a function asm argument");
+                    None
+                }
+                InlineAsmOperandRef::SymStatic { def_id: _ } => {
+                    self.tcx.sess.span_err(
+                        span,
+                        "cannot take the type of a static variable asm argument",
+                    );
+                    None
+                }
+            },
+            Token::Placeholder(hole, span) => match hole {
+                InlineAsmOperandRef::In { reg, value } => {
+                    self.check_reg(span, reg);
+                    Some(value.immediate().def(self))
+                }
+                InlineAsmOperandRef::Out {
+                    reg,
+                    late: _,
+                    place: _,
+                } => {
+                    self.check_reg(span, reg);
+                    self.tcx
+                        .sess
+                        .span_err(span, "out register cannot be used as a value");
+                    None
+                }
+                InlineAsmOperandRef::InOut {
+                    reg,
+                    late: _,
+                    in_value,
+                    out_place: _,
+                } => {
+                    self.check_reg(span, reg);
+                    Some(in_value.immediate().def(self))
+                }
+                InlineAsmOperandRef::Const { string: _ } => {
+                    self.tcx
+                        .sess
+                        .span_err(span, "const asm argument not supported yet");
+                    None
+                }
+                InlineAsmOperandRef::SymFn { instance: _ } => {
+                    self.tcx
+                        .sess
+                        .span_err(span, "function asm argument not supported yet");
+                    None
+                }
+                InlineAsmOperandRef::SymStatic { def_id: _ } => {
+                    self.tcx
+                        .sess
+                        .span_err(span, "static variable asm argument not supported yet");
+                    None
+                }
+            },
+        }
+    }
+
+    fn parse_one_operand<'a>(
+        &mut self,
+        id_map: &mut HashMap<&'a str, Word>,
+        inst: &mut dr::Instruction,
+        kind: OperandKind,
+        tokens: &mut impl Iterator<Item = Token<'a, 'cx, 'tcx>>,
+    ) -> bool
+    where
+        'cx: 'a,
+        'tcx: 'a,
+    {
+        let token = match tokens.next() {
+            Some(tok) => tok,
+            None => return false,
+        };
+        let word = match token {
+            Token::Word(word) => Some(word),
+            Token::Placeholder(_, _) => None,
+            Token::Typeof(_, _) => None,
+        };
+        match (kind, word) {
+            (OperandKind::IdResultType, _) => {
+                if let Some(id) = self.parse_id_in(id_map, token) {
+                    inst.result_type = Some(id)
+                }
+            }
+            (OperandKind::IdResult, _) => bug!("should be handled by parse_operands"),
+            (OperandKind::IdMemorySemantics, _) => {
+                if let Some(id) = self.parse_id_in(id_map, token) {
+                    inst.operands.push(dr::Operand::IdMemorySemantics(id))
+                }
+            }
+            (OperandKind::IdScope, _) => {
+                if let Some(id) = self.parse_id_in(id_map, token) {
+                    inst.operands.push(dr::Operand::IdScope(id))
+                }
+            }
+            (OperandKind::IdRef, _) => {
+                if let Some(id) = self.parse_id_in(id_map, token) {
+                    inst.operands.push(dr::Operand::IdRef(id))
+                }
+            }
+
+            (OperandKind::LiteralInteger, Some(word)) => match word.parse() {
+                Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
+                Err(e) => self.err(&format!("invalid integer: {}", e)),
+            },
+            (OperandKind::LiteralString, _) => self.err("LiteralString not supported yet"),
+            (OperandKind::LiteralContextDependentNumber, Some(word)) => {
+                assert!(matches!(inst.class.opcode, Op::Constant | Op::SpecConstant));
+                let ty = inst.result_type.unwrap();
+                fn parse(ty: SpirvType, w: &str) -> Result<dr::Operand, String> {
+                    fn fmt(x: impl ToString) -> String {
+                        x.to_string()
+                    }
+                    Ok(match ty {
+                        SpirvType::Integer(8, false) => {
+                            dr::Operand::LiteralInt32(w.parse::<u8>().map_err(fmt)? as u32)
+                        }
+                        SpirvType::Integer(16, false) => {
+                            dr::Operand::LiteralInt32(w.parse::<u16>().map_err(fmt)? as u32)
+                        }
+                        SpirvType::Integer(32, false) => {
+                            dr::Operand::LiteralInt32(w.parse::<u32>().map_err(fmt)?)
+                        }
+                        SpirvType::Integer(64, false) => {
+                            dr::Operand::LiteralInt64(w.parse::<u64>().map_err(fmt)?)
+                        }
+                        SpirvType::Integer(8, true) => {
+                            dr::Operand::LiteralInt32(w.parse::<i8>().map_err(fmt)? as i32 as u32)
+                        }
+                        SpirvType::Integer(16, true) => {
+                            dr::Operand::LiteralInt32(w.parse::<i16>().map_err(fmt)? as i32 as u32)
+                        }
+                        SpirvType::Integer(32, true) => {
+                            dr::Operand::LiteralInt32(w.parse::<i32>().map_err(fmt)? as u32)
+                        }
+                        SpirvType::Integer(64, true) => {
+                            dr::Operand::LiteralInt64(w.parse::<i64>().map_err(fmt)? as u64)
+                        }
+                        SpirvType::Float(32) => {
+                            dr::Operand::LiteralFloat32(w.parse::<f32>().map_err(fmt)?)
+                        }
+                        SpirvType::Float(64) => {
+                            dr::Operand::LiteralFloat64(w.parse::<f64>().map_err(fmt)?)
+                        }
+                        _ => return Err("expected number literal in OpConstant".to_string()),
+                    })
+                }
+                match parse(self.lookup_type(ty), word) {
+                    Ok(op) => inst.operands.push(op),
+                    Err(err) => self.err(&err),
+                }
+            }
+            (OperandKind::LiteralExtInstInteger, Some(word)) => match word.parse() {
+                Ok(v) => inst.operands.push(dr::Operand::LiteralExtInstInteger(v)),
+                Err(e) => self.err(&format!("invalid integer: {}", e)),
+            },
+            (OperandKind::LiteralSpecConstantOpInteger, Some(word)) => {
+                match self.instruction_table.table.get(word) {
+                    Some(v) => {
+                        inst.operands
+                            .push(dr::Operand::LiteralSpecConstantOpInteger(v.opcode));
+                    }
+                    None => self.err("invalid instruction in OpSpecConstantOp"),
+                }
+            }
+            (OperandKind::PairLiteralIntegerIdRef, _) => {
+                self.err("PairLiteralIntegerIdRef not supported yet")
+            }
+            (OperandKind::PairIdRefLiteralInteger, _) => {
+                if let Some(id) = self.parse_id_in(id_map, token) {
+                    inst.operands.push(dr::Operand::IdRef(id));
+                    match tokens.next() {
+                        Some(Token::Word(word)) => match word.parse() {
+                            Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
+                            Err(e) => self.err(&format!("invalid integer: {}", e)),
+                        },
+                        Some(Token::Placeholder(_, span)) => self.tcx.sess.span_err(
+                            span,
+                            &format!("expected a literal, not a dynamic value for a {:?}", kind),
+                        ),
+                        Some(Token::Typeof(_, span)) => self.tcx.sess.span_err(
+                            span,
+                            &format!("expected a literal, not a type for a {:?}", kind),
+                        ),
+                        None => self.err("expected operand after instruction"),
+                    }
+                }
+            }
+            (OperandKind::PairIdRefIdRef, _) => {
+                if let Some(id) = self.parse_id_in(id_map, token) {
+                    inst.operands.push(dr::Operand::IdRef(id));
+                    match tokens.next() {
+                        Some(token) => {
+                            if let Some(id) = self.parse_id_in(id_map, token) {
+                                inst.operands.push(dr::Operand::IdRef(id));
+                            }
+                        }
+                        None => self.err("expected operand after instruction"),
+                    }
+                }
+            }
+
+            (OperandKind::ImageOperands, Some(word)) => {
+                match parse_bitflags_operand(IMAGE_OPERANDS, word) {
+                    Some(x) => inst.operands.push(dr::Operand::ImageOperands(x)),
+                    None => self.err(&format!("Unknown ImageOperands {}", word)),
+                }
+            }
+            (OperandKind::FPFastMathMode, Some(word)) => {
+                match parse_bitflags_operand(FP_FAST_MATH_MODE, word) {
+                    Some(x) => inst.operands.push(dr::Operand::FPFastMathMode(x)),
+                    None => self.err(&format!("Unknown FPFastMathMode {}", word)),
+                }
+            }
+            (OperandKind::SelectionControl, Some(word)) => {
+                match parse_bitflags_operand(SELECTION_CONTROL, word) {
+                    Some(x) => inst.operands.push(dr::Operand::SelectionControl(x)),
+                    None => self.err(&format!("Unknown SelectionControl {}", word)),
+                }
+            }
+            (OperandKind::LoopControl, Some(word)) => {
+                match parse_bitflags_operand(LOOP_CONTROL, word) {
+                    Some(x) => inst.operands.push(dr::Operand::LoopControl(x)),
+                    None => self.err(&format!("Unknown LoopControl {}", word)),
+                }
+            }
+            (OperandKind::FunctionControl, Some(word)) => {
+                match parse_bitflags_operand(FUNCTION_CONTROL, word) {
+                    Some(x) => inst.operands.push(dr::Operand::FunctionControl(x)),
+                    None => self.err(&format!("Unknown FunctionControl {}", word)),
+                }
+            }
+            (OperandKind::MemorySemantics, Some(word)) => {
+                match parse_bitflags_operand(MEMORY_SEMANTICS, word) {
+                    Some(x) => inst.operands.push(dr::Operand::MemorySemantics(x)),
+                    None => self.err(&format!("Unknown MemorySemantics {}", word)),
+                }
+            }
+            (OperandKind::MemoryAccess, Some(word)) => {
+                match parse_bitflags_operand(MEMORY_ACCESS, word) {
+                    Some(x) => inst.operands.push(dr::Operand::MemoryAccess(x)),
+                    None => self.err(&format!("Unknown MemoryAccess {}", word)),
+                }
+            }
+            (OperandKind::KernelProfilingInfo, Some(word)) => {
+                match parse_bitflags_operand(KERNEL_PROFILING_INFO, word) {
+                    Some(x) => inst.operands.push(dr::Operand::KernelProfilingInfo(x)),
+                    None => self.err(&format!("Unknown KernelProfilingInfo {}", word)),
+                }
+            }
+            (OperandKind::RayFlags, Some(word)) => match parse_bitflags_operand(RAY_FLAGS, word) {
+                Some(x) => inst.operands.push(dr::Operand::RayFlags(x)),
+                None => self.err(&format!("Unknown RayFlags {}", word)),
+            },
+
+            (OperandKind::SourceLanguage, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::SourceLanguage(x)),
+                Err(()) => self.err(&format!("Unknown SourceLanguage {}", word)),
+            },
+            (OperandKind::ExecutionModel, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::ExecutionModel(x)),
+                Err(()) => self.err(&format!("unknown ExecutionModel {}", word)),
+            },
+            (OperandKind::AddressingModel, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::AddressingModel(x)),
+                Err(()) => self.err(&format!("unknown AddressingModel {}", word)),
+            },
+            (OperandKind::MemoryModel, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::MemoryModel(x)),
+                Err(()) => self.err(&format!("unknown MemoryModel {}", word)),
+            },
+            (OperandKind::ExecutionMode, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::ExecutionMode(x)),
+                Err(()) => self.err(&format!("unknown ExecutionMode {}", word)),
+            },
+            (OperandKind::StorageClass, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::StorageClass(x)),
+                Err(()) => self.err(&format!("unknown StorageClass {}", word)),
+            },
+            (OperandKind::Dim, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::Dim(x)),
+                Err(()) => self.err(&format!("unknown Dim {}", word)),
+            },
+            (OperandKind::SamplerAddressingMode, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::SamplerAddressingMode(x)),
+                Err(()) => self.err(&format!("unknown SamplerAddressingMode {}", word)),
+            },
+            (OperandKind::SamplerFilterMode, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::SamplerFilterMode(x)),
+                Err(()) => self.err(&format!("unknown SamplerFilterMode {}", word)),
+            },
+            (OperandKind::ImageFormat, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::ImageFormat(x)),
+                Err(()) => self.err(&format!("unknown ImageFormat {}", word)),
+            },
+            (OperandKind::ImageChannelOrder, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::ImageChannelOrder(x)),
+                Err(()) => self.err(&format!("unknown ImageChannelOrder {}", word)),
+            },
+            (OperandKind::ImageChannelDataType, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::ImageChannelDataType(x)),
+                Err(()) => self.err(&format!("unknown ImageChannelDataType {}", word)),
+            },
+            (OperandKind::FPRoundingMode, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::FPRoundingMode(x)),
+                Err(()) => self.err(&format!("unknown FPRoundingMode {}", word)),
+            },
+            (OperandKind::LinkageType, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::LinkageType(x)),
+                Err(()) => self.err(&format!("unknown LinkageType {}", word)),
+            },
+            (OperandKind::AccessQualifier, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::AccessQualifier(x)),
+                Err(()) => self.err(&format!("unknown AccessQualifier {}", word)),
+            },
+            (OperandKind::FunctionParameterAttribute, Some(word)) => match word.parse() {
+                Ok(x) => inst
+                    .operands
+                    .push(dr::Operand::FunctionParameterAttribute(x)),
+                Err(()) => self.err(&format!("unknown FunctionParameterAttribute {}", word)),
+            },
+            (OperandKind::Decoration, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::Decoration(x)),
+                Err(()) => self.err(&format!("unknown Decoration {}", word)),
+            },
+            (OperandKind::BuiltIn, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::BuiltIn(x)),
+                Err(()) => self.err(&format!("unknown BuiltIn {}", word)),
+            },
+            (OperandKind::Scope, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::Scope(x)),
+                Err(()) => self.err(&format!("unknown Scope {}", word)),
+            },
+            (OperandKind::GroupOperation, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::GroupOperation(x)),
+                Err(()) => self.err(&format!("unknown GroupOperation {}", word)),
+            },
+            (OperandKind::KernelEnqueueFlags, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::KernelEnqueueFlags(x)),
+                Err(()) => self.err(&format!("unknown KernelEnqueueFlags {}", word)),
+            },
+            (OperandKind::Capability, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::Capability(x)),
+                Err(()) => self.err(&format!("unknown Capability {}", word)),
+            },
+            (OperandKind::RayQueryIntersection, Some(word)) => match word.parse() {
+                Ok(x) => inst.operands.push(dr::Operand::RayQueryIntersection(x)),
+                Err(()) => self.err(&format!("unknown RayQueryIntersection {}", word)),
+            },
+            (OperandKind::RayQueryCommittedIntersectionType, Some(word)) => match word.parse() {
+                Ok(x) => inst
+                    .operands
+                    .push(dr::Operand::RayQueryCommittedIntersectionType(x)),
+                Err(()) => self.err(&format!(
+                    "unknown RayQueryCommittedIntersectionType {}",
+                    word
+                )),
+            },
+            (OperandKind::RayQueryCandidateIntersectionType, Some(word)) => match word.parse() {
+                Ok(x) => inst
+                    .operands
+                    .push(dr::Operand::RayQueryCandidateIntersectionType(x)),
+                Err(()) => self.err(&format!(
+                    "unknown RayQueryCandidateIntersectionType {}",
+                    word
+                )),
+            },
+            (kind, None) => match token {
+                Token::Word(_) => bug!(),
+                Token::Placeholder(_, span) => {
+                    self.tcx.sess.span_err(
+                        span,
+                        &format!("expected a literal, not a dynamic value for a {:?}", kind),
+                    );
+                }
+                Token::Typeof(_, span) => {
+                    self.tcx.sess.span_err(
+                        span,
+                        &format!("expected a literal, not a type for a {:?}", kind),
+                    );
+                }
+            },
+        }
+        true
+    }
+}
+
+pub const IMAGE_OPERANDS: &[(&str, ImageOperands)] = &[
+    ("None", ImageOperands::NONE),
+    ("Bias", ImageOperands::BIAS),
+    ("Lod", ImageOperands::LOD),
+    ("Grad", ImageOperands::GRAD),
+    ("ConstOffset", ImageOperands::CONST_OFFSET),
+    ("Offset", ImageOperands::OFFSET),
+    ("ConstOffsets", ImageOperands::CONST_OFFSETS),
+    ("Sample", ImageOperands::SAMPLE),
+    ("MinLod", ImageOperands::MIN_LOD),
+    ("MakeTexelAvailable", ImageOperands::MAKE_TEXEL_AVAILABLE),
+    (
+        "MakeTexelAvailableKHR",
+        ImageOperands::MAKE_TEXEL_AVAILABLE_KHR,
+    ),
+    ("MakeTexelVisible", ImageOperands::MAKE_TEXEL_VISIBLE),
+    ("MakeTexelVisibleKHR", ImageOperands::MAKE_TEXEL_VISIBLE_KHR),
+    ("NonPrivateTexel", ImageOperands::NON_PRIVATE_TEXEL),
+    ("NonPrivateTexelKHR", ImageOperands::NON_PRIVATE_TEXEL_KHR),
+    ("VolatileTexel", ImageOperands::VOLATILE_TEXEL),
+    ("VolatileTexelKHR", ImageOperands::VOLATILE_TEXEL_KHR),
+    ("SignExtend", ImageOperands::SIGN_EXTEND),
+    ("ZeroExtend", ImageOperands::ZERO_EXTEND),
+];
+pub const FP_FAST_MATH_MODE: &[(&str, FPFastMathMode)] = &[
+    ("None", FPFastMathMode::NONE),
+    ("NotNan", FPFastMathMode::NOT_NAN),
+    ("NotInf", FPFastMathMode::NOT_INF),
+    ("Nsz", FPFastMathMode::NSZ),
+    ("AllowRecip", FPFastMathMode::ALLOW_RECIP),
+    ("Fast", FPFastMathMode::FAST),
+];
+pub const SELECTION_CONTROL: &[(&str, SelectionControl)] = &[
+    ("None", SelectionControl::NONE),
+    ("Flatten", SelectionControl::FLATTEN),
+    ("DontFlatten", SelectionControl::DONT_FLATTEN),
+];
+pub const LOOP_CONTROL: &[(&str, LoopControl)] = &[
+    ("None", LoopControl::NONE),
+    ("Unroll", LoopControl::UNROLL),
+    ("DontUnroll", LoopControl::DONT_UNROLL),
+    ("DependencyInfinite", LoopControl::DEPENDENCY_INFINITE),
+    ("DependencyLength", LoopControl::DEPENDENCY_LENGTH),
+    ("MinIterations", LoopControl::MIN_ITERATIONS),
+    ("MaxIterations", LoopControl::MAX_ITERATIONS),
+    ("IterationMultiple", LoopControl::ITERATION_MULTIPLE),
+    ("PeelCount", LoopControl::PEEL_COUNT),
+    ("PartialCount", LoopControl::PARTIAL_COUNT),
+];
+pub const FUNCTION_CONTROL: &[(&str, FunctionControl)] = &[
+    ("None", FunctionControl::NONE),
+    ("Inline", FunctionControl::INLINE),
+    ("DontInline", FunctionControl::DONT_INLINE),
+    ("Pure", FunctionControl::PURE),
+    ("Const", FunctionControl::CONST),
+];
+pub const MEMORY_SEMANTICS: &[(&str, MemorySemantics)] = &[
+    ("Relaxed", MemorySemantics::RELAXED),
+    ("None", MemorySemantics::NONE),
+    ("Acquire", MemorySemantics::ACQUIRE),
+    ("Release", MemorySemantics::RELEASE),
+    ("AcquireRelease", MemorySemantics::ACQUIRE_RELEASE),
+    (
+        "SequentiallyConsistent",
+        MemorySemantics::SEQUENTIALLY_CONSISTENT,
+    ),
+    ("UniformMemory", MemorySemantics::UNIFORM_MEMORY),
+    ("SubgroupMemory", MemorySemantics::SUBGROUP_MEMORY),
+    ("WorkgroupMemory", MemorySemantics::WORKGROUP_MEMORY),
+    (
+        "CrossWorkgroupMemory",
+        MemorySemantics::CROSS_WORKGROUP_MEMORY,
+    ),
+    (
+        "AtomicCounterMemory",
+        MemorySemantics::ATOMIC_COUNTER_MEMORY,
+    ),
+    ("ImageMemory", MemorySemantics::IMAGE_MEMORY),
+    ("OutputMemory", MemorySemantics::OUTPUT_MEMORY),
+    ("OutputMemoryKHR", MemorySemantics::OUTPUT_MEMORY_KHR),
+    ("MakeAvailable", MemorySemantics::MAKE_AVAILABLE),
+    ("MakeAvailableKHR", MemorySemantics::MAKE_AVAILABLE_KHR),
+    ("MakeVisible", MemorySemantics::MAKE_VISIBLE),
+    ("MakeVisibleKHR", MemorySemantics::MAKE_VISIBLE_KHR),
+    ("Volatile", MemorySemantics::VOLATILE),
+];
+pub const MEMORY_ACCESS: &[(&str, MemoryAccess)] = &[
+    ("None", MemoryAccess::NONE),
+    ("Volatile", MemoryAccess::VOLATILE),
+    ("Aligned", MemoryAccess::ALIGNED),
+    ("Nontemporal", MemoryAccess::NONTEMPORAL),
+    ("MakePointerAvailable", MemoryAccess::MAKE_POINTER_AVAILABLE),
+    (
+        "MakePointerAvailableKHR",
+        MemoryAccess::MAKE_POINTER_AVAILABLE_KHR,
+    ),
+    ("MakePointerVisible", MemoryAccess::MAKE_POINTER_VISIBLE),
+    (
+        "MakePointerVisibleKHR",
+        MemoryAccess::MAKE_POINTER_VISIBLE_KHR,
+    ),
+    ("NonPrivatePointer", MemoryAccess::NON_PRIVATE_POINTER),
+    (
+        "NonPrivatePointerKHR",
+        MemoryAccess::NON_PRIVATE_POINTER_KHR,
+    ),
+];
+pub const KERNEL_PROFILING_INFO: &[(&str, KernelProfilingInfo)] = &[
+    ("None", KernelProfilingInfo::NONE),
+    ("CmdExecTime", KernelProfilingInfo::CMD_EXEC_TIME),
+];
+pub const RAY_FLAGS: &[(&str, RayFlags)] = &[
+    ("NoneKHR", RayFlags::NONE_KHR),
+    ("OpaqueKHR", RayFlags::OPAQUE_KHR),
+    ("NoOpaqueKHR", RayFlags::NO_OPAQUE_KHR),
+    (
+        "TerminateOnFirstHitKHR",
+        RayFlags::TERMINATE_ON_FIRST_HIT_KHR,
+    ),
+    (
+        "SkipClosestHitShaderKHR",
+        RayFlags::SKIP_CLOSEST_HIT_SHADER_KHR,
+    ),
+    (
+        "CullBackFacingTrianglesKHR",
+        RayFlags::CULL_BACK_FACING_TRIANGLES_KHR,
+    ),
+    (
+        "CullFrontFacingTrianglesKHR",
+        RayFlags::CULL_FRONT_FACING_TRIANGLES_KHR,
+    ),
+    ("CullOpaqueKHR", RayFlags::CULL_OPAQUE_KHR),
+    ("CullNoOpaqueKHR", RayFlags::CULL_NO_OPAQUE_KHR),
+    ("SkipTrianglesKHR", RayFlags::SKIP_TRIANGLES_KHR),
+    ("SkipAabBsKHR", RayFlags::SKIP_AAB_BS_KHR),
+];
+
+fn parse_bitflags_operand<T: std::ops::BitOr<Output = T> + Copy>(
+    values: &'static [(&'static str, T)],
+    word: &str,
+) -> Option<T> {
+    let mut result = None;
+    'outer: for item in word.split('|') {
+        for &(key, value) in values {
+            if item == key {
+                result = Some(result.map_or(value, |x| x | value));
+                continue 'outer;
+            }
+        }
+        return None;
+    }
+    result
+}

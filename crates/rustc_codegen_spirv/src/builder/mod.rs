@@ -1,24 +1,23 @@
 mod builder_methods;
 mod ext_inst;
 mod intrinsics;
+mod spirv_asm;
 
 pub use ext_inst::ExtInst;
+pub use spirv_asm::InstructionTable;
 
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{StorageClass, Word};
-use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::operand::OperandValue;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
-    AbiBuilderMethods, ArgAbiMethods, AsmBuilderMethods, BackendTypes, BuilderMethods,
-    CoverageInfoBuilderMethods, DebugInfoBuilderMethods, HasCodegen, InlineAsmOperandRef,
-    StaticBuilderMethods,
+    AbiBuilderMethods, ArgAbiMethods, BackendTypes, BuilderMethods, CoverageInfoBuilderMethods,
+    DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods,
 };
 use rustc_errors::DiagnosticBuilder;
-use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::mir::coverage::{
     CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionId, Op,
 };
@@ -343,28 +342,6 @@ impl<'a, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'tcx> {
     }
 }
 
-impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
-    fn codegen_llvm_inline_asm(
-        &mut self,
-        _ia: &LlvmInlineAsmInner,
-        _outputs: Vec<PlaceRef<'tcx, Self::Value>>,
-        _inputs: Vec<Self::Value>,
-        _span: Span,
-    ) -> bool {
-        self.err("LLVM asm not supported");
-        true
-    }
-
-    fn codegen_inline_asm(
-        &mut self,
-        _template: &[InlineAsmTemplatePiece],
-        _operands: &[InlineAsmOperandRef<'tcx, Self>],
-        _options: InlineAsmOptions,
-        _line_spans: &[Span],
-    ) {
-        self.err("asm not supported")
-    }
-}
 impl<'a, 'tcx> StaticBuilderMethods for Builder<'a, 'tcx> {
     fn get_static(&mut self, def_id: DefId) -> Self::Value {
         self.cx.get_static(def_id)
