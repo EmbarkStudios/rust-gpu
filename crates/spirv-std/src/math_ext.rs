@@ -11,6 +11,8 @@ pub trait MathExt {
     fn ceil(self) -> Self;
     fn exp(self) -> Self;
     fn saturate(self) -> Self;
+    fn trunc(self) -> Self;
+    fn fract(self) -> Self;
 
     fn signum(self) -> Self;
     fn copysign(self, sign: Self) -> Self;
@@ -69,6 +71,14 @@ impl MathExt for f32 {
 
     fn saturate(self) -> f32 {
         self.max(0.0).min(1.0)
+    }
+
+    fn trunc(self) -> f32 {
+        unsafe { core::intrinsics::truncf32(self) }
+    }
+
+    fn fract(self) -> f32 {
+        self - self.trunc()
     }
 
     fn signum(self) -> f32 {
