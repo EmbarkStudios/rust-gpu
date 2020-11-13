@@ -4,6 +4,10 @@ use winit::{
     window::Window,
 };
 
+fn shader_module() -> wgpu::ShaderModuleSource<'static> {
+    wgpu::include_spirv!(env!("sky_shader.spv"))
+}
+
 async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::TextureFormat) {
     let size = window.inner_size();
     let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
@@ -39,7 +43,7 @@ async fn run(event_loop: EventLoop<()>, window: Window, swapchain_format: wgpu::
         .expect("Failed to create device");
 
     // Load the shaders from disk
-    let module = device.create_shader_module(wgpu::include_spirv!(env!("sky_shader.spv")));
+    let module = device.create_shader_module(shader_module());
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
