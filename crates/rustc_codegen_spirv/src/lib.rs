@@ -166,7 +166,7 @@ fn target_options() -> Target {
             emit_debug_gdb_scripts: false,
             linker_flavor: LinkerFlavor::Ld,
             panic_strategy: PanicStrategy::Abort,
-            target_os: "unknown".to_string(),
+            os: "unknown".to_string(),
             // TODO: Investigate if main_needs_argc_argv is useful (for building exes)
             main_needs_argc_argv: false,
             ..Default::default()
