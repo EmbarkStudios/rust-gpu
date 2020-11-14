@@ -1,14 +1,12 @@
 use super::{shader_module, Options};
 
-fn create_device_queue(compatible_surface: Option<&wgpu::Surface>) -> (wgpu::Device, wgpu::Queue) {
-    async fn create_device_queue_async(
-        compatible_surface: Option<&wgpu::Surface>,
-    ) -> (wgpu::Device, wgpu::Queue) {
+fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
+    async fn create_device_queue_async() -> (wgpu::Device, wgpu::Queue) {
         let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
-                compatible_surface,
+                compatible_surface: None,
             })
             .await
             .expect("Failed to find an appropriate adapter");
@@ -27,16 +25,16 @@ fn create_device_queue(compatible_surface: Option<&wgpu::Surface>) -> (wgpu::Dev
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        return futures::executor::block_on(create_device_queue_async(compatible_surface));
+        return futures::executor::block_on(create_device_queue_async());
     };
     #[cfg(target_arch = "wasm32")]
     {
-        return wasm_bindgen_futures::spawn_local(create_device_queue_async(compatible_surface));
+        return wasm_bindgen_futures::spawn_local(create_device_queue_async());
     };
 }
 
 pub fn start(options: &Options) {
-    let (device, queue) = create_device_queue(None);
+    let (device, queue) = create_device_queue();
 
     // Load the shaders from disk
     let module = device.create_shader_module(shader_module(options.shader));
