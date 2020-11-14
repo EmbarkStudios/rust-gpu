@@ -25,12 +25,12 @@ fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        return futures::executor::block_on(create_device_queue_async());
-    };
+        futures::executor::block_on(create_device_queue_async())
+    }
     #[cfg(target_arch = "wasm32")]
     {
-        return wasm_bindgen_futures::spawn_local(create_device_queue_async());
-    };
+        wasm_bindgen_futures::spawn_local(create_device_queue_async())
+    }
 }
 
 pub fn start(options: &Options) {
