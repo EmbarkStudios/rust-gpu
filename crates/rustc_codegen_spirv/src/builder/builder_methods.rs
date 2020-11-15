@@ -1215,11 +1215,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        let (val_pointee, val_storage_class) = match self.lookup_type(val.ty) {
-            SpirvType::Pointer {
-                pointee,
-                storage_class,
-            } => (pointee, storage_class),
+        let val_pointee = match self.lookup_type(val.ty) {
+            SpirvType::Pointer { pointee, .. } => pointee,
             other => self.fatal(&format!(
                 "pointercast called on non-pointer source type: {:?}",
                 other
@@ -1239,12 +1236,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .into_iter()
                 .map(|idx| self.constant_u32(idx).def(self))
                 .collect::<Vec<_>>();
-            // OpAccessChain requires storage classes to match
-            let dest_ty = SpirvType::Pointer {
-                pointee: dest_pointee,
-                storage_class: val_storage_class,
-            }
-            .def(self);
             self.emit()
                 .access_chain(dest_ty, None, val.def(self), indices)
                 .unwrap()

@@ -180,6 +180,12 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
             }
         }
     }
+    
+    { 
+        let _timer = sess.timer("match_variable_storage_classes");
+        simple_passes::match_variable_storage_classes(&mut output);
+    }
+    
     {
         let _timer = sess.timer("link_sort_globals");
         simple_passes::sort_globals(&mut output);
