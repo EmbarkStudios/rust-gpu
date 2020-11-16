@@ -1,9 +1,16 @@
-use super::{shader_module, Options};
+use super::{shader_module, Options, ShaderConstants};
 use winit::{
     event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::Window,
 };
+
+unsafe fn any_as_u32_slice<T: Sized>(p: &T) -> &[u32] {
+    ::std::slice::from_raw_parts(
+        (p as *const T) as *const u32,
+        ::std::mem::size_of::<T>() / 4,
+    )
+}
 
 async fn run(
     options: &Options,
@@ -31,12 +38,18 @@ async fn run(
         .await
         .expect("Failed to find an appropriate adapter");
 
+    let features = wgpu::Features::PUSH_CONSTANTS;
+    let limits = wgpu::Limits {
+        max_push_constant_size: 256,
+        ..Default::default()
+    };
+
     // Create the logical device and command queue
     let (device, queue) = adapter
         .request_device(
             &wgpu::DeviceDescriptor {
-                features: wgpu::Features::empty(),
-                limits: wgpu::Limits::default(),
+                features,
+                limits,
                 shader_validation: true,
             },
             None,
@@ -50,7 +63,10 @@ async fn run(
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
         bind_group_layouts: &[],
-        push_constant_ranges: &[],
+        push_constant_ranges: &[wgpu::PushConstantRange {
+            stages: wgpu::ShaderStage::all(),
+            range: 0..std::mem::size_of::<ShaderConstants>() as u32,
+        }],
     });
 
     let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -90,6 +106,8 @@ async fn run(
         .as_ref()
         .map(|surface| device.create_swap_chain(&surface, &sc_desc));
 
+    let start = std::time::Instant::now();
+
     event_loop.run(move |event, _, control_flow| {
         // Have the closure take ownership of the resources.
         // `event_loop.run` never returns, therefore we must do this to ensure
@@ -98,6 +116,9 @@ async fn run(
 
         *control_flow = ControlFlow::Wait;
         match event {
+            Event::MainEventsCleared => {
+                window.request_redraw();
+            }
             Event::Resumed => {
                 let s = unsafe { instance.create_surface(&window) };
                 swap_chain = Some(device.create_swap_chain(&s, &sc_desc));
@@ -138,7 +159,15 @@ async fn run(
                             }],
                             depth_stencil_attachment: None,
                         });
+                        let push_constants = ShaderConstants {
+                            width: window.inner_size().width,
+                            height: window.inner_size().height,
+                            time: start.elapsed().as_secs_f32(),
+                        };
                         rpass.set_pipeline(&render_pipeline);
+                        rpass.set_push_constants(wgpu::ShaderStage::all(), 0, unsafe {
+                            any_as_u32_slice(&push_constants)
+                        });
                         rpass.draw(0..3, 0..1);
                     }
 

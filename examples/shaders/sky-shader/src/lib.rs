@@ -6,8 +6,8 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
-use spirv_std::glam::{const_vec3, Mat4, Vec2, Vec3, Vec4};
-use spirv_std::{Input, MathExt, Output};
+use spirv_std::glam::{const_vec3, Vec2, Vec3, Vec4};
+use spirv_std::{Input, MathExt, Output, PushConstant};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const MIE_COEFFICIENT: f32 = 0.005;
@@ -24,6 +24,13 @@ const SUN_ANGULAR_DIAMETER_DEGREES: f32 = 0.0093333;
 const SUN_INTENSITY_FACTOR: f32 = 1000.0;
 const SUN_INTENSITY_FALLOFF_STEEPNESS: f32 = 1.5;
 const TURBIDITY: f32 = 2.0;
+
+#[derive(Copy, Clone)]
+pub struct ShaderConstants {
+    pub width: u32,
+    pub height: u32,
+    pub time: f32,
+}
 
 // TODO: add this to glam? Rust std has it on f32/f64
 fn pow(v: Vec3, power: f32) -> Vec3 {
@@ -149,19 +156,22 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     lin + l0
 }
 
-pub fn fs(screen_pos: Vec2) -> Vec4 {
+fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3) -> Vec3 {
+    let forward = (look_at_pos - pos).normalize();
+    let right = Vec3::new(0.0, 1.0, 0.0).cross(forward).normalize();
+    let up = forward.cross(right);
+    (forward + uv.x() * right + uv.y() * up).normalize()
+}
+
+pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
+    let mut uv = (frag_coord - 0.5 * Vec2::new(constants.width as f32, constants.height as f32))
+        / constants.height as f32;
+    uv.set_y(-uv.y());
+
     // hard-code information because we can't bind buffers at the moment
     let eye_pos = Vec3::new(0.0, 0.0997, 0.2);
     let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
-    let clip_to_world = Mat4::from_cols(
-        Vec4::new(-0.5522849, 0.0, 0.0, 0.0),
-        Vec4::new(0.0, 0.4096309, -0.061444636, 0.0),
-        Vec4::new(0.0, 99.99999, 199.99998, 999.99994),
-        Vec4::new(0.0, -0.14834046, -0.98893654, 0.0),
-    );
-
-    let world_pos = clip_to_world.transform_point3(screen_pos.extend(1.0));
-    let dir = (world_pos - eye_pos).normalize();
+    let dir = get_ray_dir(uv, eye_pos, sun_pos);
 
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
@@ -174,8 +184,15 @@ pub fn fs(screen_pos: Vec2) -> Vec4 {
 
 #[allow(unused_attributes)]
 #[spirv(fragment)]
-pub fn main_fs(in_pos: Input<Vec2>, mut output: Output<Vec4>) {
-    let color = fs(in_pos.load());
+pub fn main_fs(
+    #[spirv(frag_coord)] in_frag_coord: Input<Vec4>,
+    #[spirv(push_constant)] constants: PushConstant<ShaderConstants>,
+    mut output: Output<Vec4>,
+) {
+    let constants = constants.load();
+
+    let frag_coord = Vec2::new(in_frag_coord.load().x(), in_frag_coord.load().y());
+    let color = fs(&constants, frag_coord);
     output.store(color);
 }
 
@@ -184,7 +201,6 @@ pub fn main_fs(in_pos: Input<Vec2>, mut output: Output<Vec4>) {
 pub fn main_vs(
     #[spirv(vertex_index)] vert_idx: Input<i32>,
     #[spirv(position)] mut builtin_pos: Output<Vec4>,
-    mut out_pos: Output<Vec2>,
 ) {
     let vert_idx = vert_idx.load();
 
@@ -194,7 +210,6 @@ pub fn main_vs(
     let pos = 2.0 * uv - Vec2::one();
 
     builtin_pos.store(pos.extend(0.0).extend(1.0));
-    out_pos.store(pos);
 }
 
 #[cfg(all(not(test), target_arch = "spirv"))]
