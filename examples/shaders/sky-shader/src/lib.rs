@@ -165,12 +165,6 @@ fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3, z: f32) -> Vec3 {
     i.normalize()
 }
 
-fn rot(a: f32) -> Mat2 {
-    let s = a.sin();
-    let c = a.cos();
-    Mat2::from_cols_array(&[c, -s, s, c])
-}
-
 pub fn fs(screen_pos: Vec2, constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
     let mut uv = (frag_coord - 0.5 * Vec2::new(constants.width as f32, constants.height as f32))
         / constants.height as f32;
