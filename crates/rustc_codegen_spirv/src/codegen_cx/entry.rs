@@ -159,6 +159,12 @@ impl<'tcx> CodegenCx<'tcx> {
                     has_location = false;
                 }
                 SpirvAttribute::DescriptorSet(index) => {
+                    if index == 0 {
+                        self.tcx.sess.span_err(
+                            hir_param.span,
+                            "descriptor_set 0 is reserved for internal / future use",
+                        );
+                    }
                     self.emit_global().decorate(
                         variable,
                         Decoration::DescriptorSet,
@@ -167,12 +173,6 @@ impl<'tcx> CodegenCx<'tcx> {
                     has_location = false;
                 }
                 SpirvAttribute::Binding(index) => {
-                    if index == 0 {
-                        self.tcx.sess.span_err(
-                            hir_param.span,
-                            "descriptor_set 0 is reserved for internal / future use",
-                        );
-                    }
                     self.emit_global().decorate(
                         variable,
                         Decoration::Binding,

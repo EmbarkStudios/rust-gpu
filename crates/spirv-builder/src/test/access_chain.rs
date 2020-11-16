@@ -91,7 +91,7 @@ impl<T: ?Sized> DerefMut for StorageBuffer<'_, T> {
 #[spirv(gl_compute)]
 pub fn main_cs(
     #[spirv(global_invocation_id)] global_id: Input<Dim3>,
-    #[spirv(descriptor_set=0, binding=1)] mut y: StorageBuffer<[f32; 100]>
+    #[spirv(descriptor_set=1, binding=0)] mut y: StorageBuffer<[f32; 100]>
 ) {
     if (*global_id).x == 0 {
         y[0] = 1.;
