@@ -158,7 +158,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
 fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3) -> Vec3 {
     let forward = (look_at_pos - pos).normalize();
-    let right = ((Vec3::new(0.0, 1.0, 0.0)).cross(forward)).normalize();
+    let right = Vec3::new(0.0, 1.0, 0.0).cross(forward).normalize();
     let up = forward.cross(right);
     (forward + uv.x() * right + uv.y() * up).normalize()
 }
