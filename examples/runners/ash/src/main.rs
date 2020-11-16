@@ -32,6 +32,17 @@ macro_rules! offset_of {
         }
     }};
 }
+
+struct ShaderConstants {
+    width: u32,
+    height: u32,
+    time: f32,
+}
+
+unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
+    ::std::slice::from_raw_parts((p as *const T) as *const u8, ::std::mem::size_of::<T>())
+}
+
 /// Helper function for submitting command buffers. Immediately waits for the fence before the command buffer
 /// is executed. That way we can delay the waiting for the fences by 1 frame which is good for performance.
 /// Make sure to create the fence in a signaled state on the first use.
@@ -632,7 +643,14 @@ fn main() {
             .create_shader_module(&shader_info, None)
             .expect("Shader module error");
 
-        let layout_create_info = vk::PipelineLayoutCreateInfo::default();
+        let push_constant_range = vk::PushConstantRange::builder()
+            .offset(0)
+            .size(std::mem::size_of::<ShaderConstants>() as u32)
+            .stage_flags(vk::ShaderStageFlags::all())
+            .build();
+        let layout_create_info = vk::PipelineLayoutCreateInfo::builder()
+            .push_constant_ranges(&vec![push_constant_range])
+            .build();
 
         let pipeline_layout = base
             .device
@@ -750,6 +768,8 @@ fn main() {
 
         let graphic_pipeline = graphics_pipelines[0];
 
+        let start = std::time::Instant::now();
+
         base.render_loop(events_loop, move |base| {
             let (present_index, _) = base
                 .swapchain_loader
@@ -796,6 +816,19 @@ fn main() {
                     );
                     device.cmd_set_viewport(draw_command_buffer, 0, &viewports);
                     device.cmd_set_scissor(draw_command_buffer, 0, &scissors);
+                    let push_constants = ShaderConstants {
+                        width: 1280, // ash runner currently does not support resizing.
+                        height: 720,
+                        time: start.elapsed().as_secs_f32(),
+                    };
+
+                    device.cmd_push_constants(
+                        draw_command_buffer,
+                        pipeline_layout,
+                        ash::vk::ShaderStageFlags::all(),
+                        0,
+                        any_as_u8_slice(&push_constants),
+                    );
                     device.cmd_draw(draw_command_buffer, 3, 1, 0, 0);
                     // Or draw without the index buffer
                     // device.cmd_draw(draw_command_buffer, 3, 1, 0, 0);
