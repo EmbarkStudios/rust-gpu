@@ -39,8 +39,10 @@ async fn run(
         .expect("Failed to find an appropriate adapter");
 
     let features = wgpu::Features::PUSH_CONSTANTS;
-    let mut limits = wgpu::Limits::default();
-    limits.max_push_constant_size = 256;
+    let limits = wgpu::Limits {
+        max_push_constant_size: 256,
+        ..Default::default()
+    };
 
     // Create the logical device and command queue
     let (device, queue) = adapter
