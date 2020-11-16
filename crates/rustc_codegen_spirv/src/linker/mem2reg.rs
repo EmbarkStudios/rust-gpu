@@ -52,7 +52,7 @@ pub fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
 // Paper: A Simple, Fast Dominance Algorithm
 // https://www.cs.rice.edu/~keith/EMBED/dom.pdf
 // Note: requires nodes in reverse postorder
-fn compute_idom(preds: &[Vec<usize>]) -> Vec<usize> {
+pub fn compute_idom(preds: &[Vec<usize>]) -> Vec<usize> {
     fn intersect(doms: &[Option<usize>], mut finger1: usize, mut finger2: usize) -> usize {
         // TODO: This may return an optional result?
         while finger1 != finger2 {

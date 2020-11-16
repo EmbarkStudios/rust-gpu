@@ -143,7 +143,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
         let _timer = sess.timer("link_block_ordering_pass_and_mem2reg");
         let mut pointer_to_pointee = HashMap::new();
         let mut constants = HashMap::new();
-        if opts.mem2reg {
+        if false {
             let mut u32 = None;
             for inst in &output.types_global_values {
                 match inst.class.opcode {
@@ -168,7 +168,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
         }
         for func in &mut output.functions {
             simple_passes::block_ordering_pass(func);
-            if opts.mem2reg {
+            if false {
                 // Note: mem2reg requires functions to be in RPO order (i.e. block_ordering_pass)
                 mem2reg::mem2reg(
                     output.header.as_mut().unwrap(),
