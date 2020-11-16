@@ -6,7 +6,7 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
-use spirv_std::glam::{const_vec3, Mat2, Mat4, Vec2, Vec3, Vec4};
+use spirv_std::glam::{const_vec3, Vec2, Vec3, Vec4};
 use spirv_std::{Input, MathExt, Output, PushConstant};
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
@@ -29,7 +29,7 @@ const TURBIDITY: f32 = 2.0;
 pub struct ShaderConstants {
     width: u32,
     height: u32,
-    time: f32,
+    _time: f32,
 }
 
 // TODO: add this to glam? Rust std has it on f32/f64
@@ -165,7 +165,7 @@ fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3, z: f32) -> Vec3 {
     i.normalize()
 }
 
-pub fn fs(screen_pos: Vec2, constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
+pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
     let mut uv = (frag_coord - 0.5 * Vec2::new(constants.width as f32, constants.height as f32))
         / constants.height as f32;
     uv.set_y(-uv.y());
@@ -187,7 +187,6 @@ pub fn fs(screen_pos: Vec2, constants: &ShaderConstants, frag_coord: Vec2) -> Ve
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main_fs(
-    in_pos: Input<Vec2>,
     #[spirv(frag_coord)] in_frag_coord: Input<Vec4>,
     #[spirv(push_constant)] constants: PushConstant<ShaderConstants>,
     mut output: Output<Vec4>,
@@ -195,7 +194,7 @@ pub fn main_fs(
     let constants = constants.load();
 
     let frag_coord = Vec2::new(in_frag_coord.load().x(), in_frag_coord.load().y());
-    let color = fs(in_pos.load(), &constants, frag_coord);
+    let color = fs(&constants, frag_coord);
     output.store(color);
 }
 
@@ -204,7 +203,6 @@ pub fn main_fs(
 pub fn main_vs(
     #[spirv(vertex_index)] vert_idx: Input<i32>,
     #[spirv(position)] mut builtin_pos: Output<Vec4>,
-    mut out_pos: Output<Vec2>,
 ) {
     let vert_idx = vert_idx.load();
 
@@ -214,7 +212,6 @@ pub fn main_vs(
     let pos = 2.0 * uv - Vec2::one();
 
     builtin_pos.store(pos.extend(0.0).extend(1.0));
-    out_pos.store(pos);
 }
 
 #[cfg(all(not(test), target_arch = "spirv"))]
