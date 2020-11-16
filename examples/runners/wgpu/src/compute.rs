@@ -23,13 +23,12 @@ fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
             .await
             .expect("Failed to create device")
     }
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        futures::executor::block_on(create_device_queue_async())
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        wasm_bindgen_futures::spawn_local(create_device_queue_async())
+    cfg_if::cfg_if! {
+        if #[cfg(target_arch = "wasm32")] {
+            wasm_bindgen_futures::spawn_local(create_device_queue_async())
+        } else {
+            futures::executor::block_on(create_device_queue_async())
+        }
     }
 }
 
