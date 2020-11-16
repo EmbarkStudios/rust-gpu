@@ -156,13 +156,11 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     lin + l0
 }
 
-fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3, z: f32) -> Vec3 {
-    let f = (look_at_pos - pos).normalize();
-    let r = ((Vec3::new(0.0, 1.0, 0.0)).cross(f)).normalize();
-    let u = f.cross(r);
-    let c = f * z;
-    let i = c + uv.x() * r + uv.y() * u;
-    i.normalize()
+fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3) -> Vec3 {
+    let forward = (look_at_pos - pos).normalize();
+    let right = ((Vec3::new(0.0, 1.0, 0.0)).cross(forward)).normalize();
+    let up = forward.cross(right);
+    (forward + uv.x() * right + uv.y() * up).normalize()
 }
 
 pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
@@ -173,7 +171,7 @@ pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
     // hard-code information because we can't bind buffers at the moment
     let eye_pos = Vec3::new(0.0, 0.0997, 0.2);
     let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
-    let dir = get_ray_dir(uv, eye_pos, sun_pos, 1.0);
+    let dir = get_ray_dir(uv, eye_pos, sun_pos);
 
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
