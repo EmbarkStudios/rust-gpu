@@ -33,6 +33,7 @@ macro_rules! offset_of {
     }};
 }
 
+#[allow(dead_code)]
 struct ShaderConstants {
     width: u32,
     height: u32,

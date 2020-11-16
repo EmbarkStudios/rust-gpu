@@ -27,9 +27,9 @@ const TURBIDITY: f32 = 2.0;
 
 #[derive(Copy, Clone)]
 pub struct ShaderConstants {
-    width: u32,
-    height: u32,
-    _time: f32,
+    pub width: u32,
+    pub height: u32,
+    pub time: f32,
 }
 
 // TODO: add this to glam? Rust std has it on f32/f64
