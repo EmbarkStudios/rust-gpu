@@ -1,7 +1,8 @@
-use rspirv::dr::{Block, Function, Module, Instruction, Operand};
-use rspirv::spirv::{Op, Word, StorageClass};
-use std::collections::{HashMap, HashSet};
 use bimap::BiHashMap;
+use rspirv::dr::{Block, Function, Instruction, Module, Operand};
+use rspirv::spirv::{Op, StorageClass, Word};
+use std::collections::hash_map::Entry;
+use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::mem::replace;
 
@@ -127,96 +128,126 @@ pub fn sort_globals(module: &mut Module) {
 }
 
 // OpAccessChain requires the result pointer storage class to match
-// the storage class of the base. 
+// the storage class of the base.
 // Modifies ops in place, but may add additional pointer types
-// the old pointer types may then be unused 
+// the old pointer types may then be unused.
+// Additionally updates OpPhi return type to match the type of the
+// access.
 pub fn match_variable_storage_classes(module: &mut Module) {
-    let mut variable_to_storage_class = HashMap::<Word, StorageClass>::new();
-    let mut pointer_to_storage_class_pointee = BiHashMap::<Word, (StorageClass, Word)>::new();
-    let mut id = module.global_inst_iter().count() as Word;
-    
-    fn get_variable(instr: &Instruction) -> Option<(Word, StorageClass)> {
-        let result_id = instr.result_id?;
-        if let &[Operand::StorageClass(storage_class)] = &*instr.operands {
-            Some((result_id, storage_class))
-        } else {
-            None
-        }
-    } 
-    
-    fn get_pointer(instr: &Instruction) -> Option<(Word, (StorageClass, Word))> {
-        let pointer = instr.result_id?;
-        if let &[Operand::StorageClass(storage_class), Operand::IdRef(pointee)] = &*instr.operands {
-            Some((pointer, (storage_class, pointee)))
-        } else {
-            None
-        }
-    } 
-    
+    let mut ops = BiHashMap::<Word, (StorageClass, Word)>::new();
+
     // Get variables and pointers
-    for instr in &module.types_global_values {
-        match instr.class.opcode {
-            Op::Variable => {
-                if let Some((result_id, storage_class)) = get_variable(instr) {
-                    let prev = variable_to_storage_class.insert(result_id, storage_class);
-                    assert!(prev.is_none());
-                }
-            },
-            Op::TypePointer => {
-                if let Some((pointer, (storage_class, pointee))) = get_pointer(instr) {
-                    pointer_to_storage_class_pointee.insert_no_overwrite(pointer, (storage_class, pointee)).unwrap();
-                }
-            },
+    for inst in &module.types_global_values {
+        match inst.class.opcode {
+            Op::Variable | Op::TypePointer => {
+                let result_type = match inst.class.opcode {
+                    Op::Variable => inst.result_type.unwrap(),
+                    Op::TypePointer => inst.operands[1].unwrap_id_ref(),
+                    _ => unreachable!(),
+                };
+                let result_id = inst.result_id.unwrap();
+                let storage_class = inst.operands[0].unwrap_storage_class();
+                ops.insert(result_id, (storage_class, result_type));
+            }
             _ => (),
         }
     }
-    
-    let mut types_global_values = &mut module.types_global_values;
-    
-    let mut update_op = |instr: &mut Instruction| {
-        let op_pointer = instr.result_type?;
-        if let &[Operand::IdRef(base_id), ..] = &*instr.operands {
-            let base_storage_class = *variable_to_storage_class.get(&base_id)?;
-            let &(storage_class, pointee) = pointer_to_storage_class_pointee.get_by_left(&op_pointer)?;
-            if storage_class != base_storage_class {
-                // Create a new pointer with base_storage_class
-                // If it exists, use that id
-                if let Some(&pointer) = pointer_to_storage_class_pointee.get_by_right(&(base_storage_class, pointee)) {
-                    instr.result_type.replace(pointer);
-                } else { // otherwise create it
-                    instr.result_type.replace(id);
-                    pointer_to_storage_class_pointee.insert_no_overwrite(id, (base_storage_class, pointee)).unwrap();
-                    types_global_values.push(Instruction::new(
-                        Op::TypePointer,
-                        None,
-                        Some(id),
-                        vec![
-                            Operand::StorageClass(base_storage_class),
-                            Operand::IdRef(pointee)
-                        ]
-                    ));
-                    id += 1;           
+
+    let header = module.header.as_mut().unwrap();
+    let mut new_pointers = HashMap::<Word, Vec<Instruction>>::new();
+    let mut changes = HashMap::<Word, Word>::new();
+
+    for function in &mut module.functions {
+        for inst in function.blocks.iter_mut().flat_map(|b| &mut b.instructions) {
+            // TODO: Potentially handle PtrAccessChain?
+            if let Op::AccessChain | Op::InBoundsAccessChain = inst.class.opcode {
+                if let Some(&(base_storage_class, _)) =
+                    ops.get_by_left(&inst.operands[0].unwrap_id_ref())
+                {
+                    let &(storage_class, pointee) =
+                        ops.get_by_left(&inst.result_type.unwrap()).unwrap();
+                    if storage_class != base_storage_class {
+                        let pointer = if let Some(&pointer) =
+                            ops.get_by_right(&(base_storage_class, pointee))
+                        {
+                            pointer
+                        } else {
+                            let pointer = super::id(header);
+                            ops.insert_no_overwrite(pointer, (base_storage_class, pointee))
+                                .unwrap();
+                            let new_pointer = Instruction::new(
+                                Op::TypePointer,
+                                None,
+                                Some(pointer),
+                                vec![
+                                    Operand::StorageClass(base_storage_class),
+                                    Operand::IdRef(pointee),
+                                ],
+                            );
+                            match new_pointers.entry(pointee) {
+                                Entry::Occupied(mut occupied) => {
+                                    occupied.get_mut().push(new_pointer);
+                                }
+                                Entry::Vacant(vacant) => {
+                                    vacant.insert(vec![new_pointer]);
+                                }
+                            }
+                            pointer
+                        };
+                        inst.result_type.replace(pointer);
+                        ops.insert(inst.result_id.unwrap(), (base_storage_class, pointer));
+                    }
                 }
-            }    
+            }
         }
-        Some(())
-    };          
-    
-    let func_instr_iter = module
-        .functions
-        .iter_mut()
-        .flat_map(|f| &mut f.blocks)
-        .flat_map(|b| &mut b.instructions);
-    
-    // Update access chains with new pointer result type
-    for instr in func_instr_iter {
-        match instr.class.opcode {
-            Op::AccessChain | Op::InBoundsAccessChain => {
-                update_op(instr);
-            },
-            _ => (),
+
+        for inst in function.blocks.iter_mut().flat_map(|b| &mut b.instructions) {
+            if let Op::Phi = inst.class.opcode {
+                if let Some(&Operand::IdRef(base)) = inst.operands.first() {
+                    if let Some(&(_, result_type)) = ops.get_by_left(&base) {
+                        inst.result_type.replace(result_type);
+                        for var in inst.operands.iter().step_by(2) {
+                            let result_id = var.unwrap_id_ref();
+                            if !ops.contains_left(&result_id) {
+                                changes.insert(result_id, result_type);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-    
-    
+
+    for inst in &mut module.types_global_values {
+        if let Some(result_id) = inst.result_id {
+            if let Some(&result_type) = changes.get(&result_id) {
+                inst.result_type.replace(result_type);
+            }
+        }
+    }
+
+    if !changes.is_empty() {
+        // insert pointers after pointee declaration
+        let types_global_values = module
+            .types_global_values
+            .iter()
+            .cloned()
+            .flat_map(|mut inst| {
+                if let Some(result_id) = inst.result_id {
+                    if let Some(&result_type) = changes.get(&result_id) {
+                        inst.result_type.replace(result_type);
+                    }
+                    if let Some(pointers) = new_pointers.get_mut(&result_id) {
+                        let pointers = core::mem::replace(pointers, Vec::new());
+                        once(inst).chain(pointers)
+                    } else {
+                        once(inst).chain(Vec::new())
+                    }
+                } else {
+                    once(inst).chain(Vec::new())
+                }
+            })
+            .collect();
+        module.types_global_values = types_global_values;
+    }
 }
