@@ -109,7 +109,6 @@ fn cf_while_if_break_if_break() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    let mut a = 0;
     while i.load() < 10 {
         if i.load() == 0 {
             break;
