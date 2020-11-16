@@ -650,7 +650,7 @@ fn main() {
             .stage_flags(vk::ShaderStageFlags::all())
             .build();
         let layout_create_info = vk::PipelineLayoutCreateInfo::builder()
-            .push_constant_ranges(&vec![push_constant_range])
+            .push_constant_ranges(&[push_constant_range])
             .build();
 
         let pipeline_layout = base
