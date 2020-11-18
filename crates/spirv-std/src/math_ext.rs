@@ -1,5 +1,5 @@
 pub trait MathExt {
-    fn pow(self, factor: Self) -> Self;
+    fn powf(self, factor: Self) -> Self;
     fn sqrt(self) -> Self;
     fn log2(self) -> Self;
     fn abs(self) -> Self;
@@ -10,7 +10,6 @@ pub trait MathExt {
     fn floor(self) -> Self;
     fn ceil(self) -> Self;
     fn exp(self) -> Self;
-    fn saturate(self) -> Self;
     fn trunc(self) -> Self;
     fn fract(self) -> Self;
 
@@ -22,7 +21,7 @@ pub trait MathExt {
 }
 
 impl MathExt for f32 {
-    fn pow(self, factor: f32) -> f32 {
+    fn powf(self, factor: f32) -> f32 {
         unsafe { core::intrinsics::powf32(self, factor) }
     }
 
@@ -67,10 +66,6 @@ impl MathExt for f32 {
 
     fn exp(self) -> f32 {
         unsafe { core::intrinsics::expf32(self) }
-    }
-
-    fn saturate(self) -> f32 {
-        self.max(0.0).min(1.0)
     }
 
     fn trunc(self) -> f32 {

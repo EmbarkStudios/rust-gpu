@@ -32,9 +32,13 @@ pub struct ShaderConstants {
     pub time: f32,
 }
 
+fn saturate(x: f32) -> f32 {
+    x.max(0.0).min(1.0)
+}
+
 // TODO: add this to glam? Rust std has it on f32/f64
 fn pow(v: Vec3, power: f32) -> Vec3 {
-    Vec3::new(v.x().pow(power), v.y().pow(power), v.z().pow(power))
+    Vec3::new(v.x().powf(power), v.y().powf(power), v.z().powf(power))
 }
 
 // TODO: add this to glam? Rust std has it on f32/f64
@@ -58,14 +62,14 @@ fn acos_approx(v: f32) -> f32 {
 /// renamed because of cross-compilation issues with spirv-cross/ moltenvk
 fn my_smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
     // Scale, bias and saturate x to 0..1 range
-    let x = ((x - edge0) / (edge1 - edge0)).saturate();
+    let x = saturate((x - edge0) / (edge1 - edge0));
     // Evaluate polynomial
     x * x * (3.0 - 2.0 * x)
 }
 
 fn total_rayleigh(lambda: Vec3) -> Vec3 {
-    (8.0 * PI.pow(3.0)
-        * (REFRACTIVE_INDEX.pow(2.0) - 1.0).pow(2.0)
+    (8.0 * PI.powf(3.0)
+        * (REFRACTIVE_INDEX.powf(2.0) - 1.0).powf(2.0)
         * (6.0 + 3.0 * DEPOLARIZATION_FACTOR))
         / (3.0 * NUM_MOLECULES * pow(lambda, 4.0) * (6.0 - 7.0 * DEPOLARIZATION_FACTOR))
 }
@@ -76,11 +80,11 @@ fn total_mie(lambda: Vec3, k: Vec3, t: f32) -> Vec3 {
 }
 
 fn rayleigh_phase(cos_theta: f32) -> f32 {
-    (3.0 / (16.0 * PI)) * (1.0 + cos_theta.pow(2.0))
+    (3.0 / (16.0 * PI)) * (1.0 + cos_theta.powf(2.0))
 }
 
 fn henyey_greenstein_phase(cos_theta: f32, g: f32) -> f32 {
-    (1.0 / (4.0 * PI)) * ((1.0 - g.pow(2.0)) / (1.0 - 2.0 * g * cos_theta + g.pow(2.0)).pow(1.5))
+    (1.0 / (4.0 * PI)) * ((1.0 - g.powf(2.0)) / (1.0 - 2.0 * g * cos_theta + g.powf(2.0)).powf(1.5))
 }
 
 fn sun_intensity(zenith_angle_cos: f32) -> f32 {
@@ -106,7 +110,7 @@ fn tonemap(col: Vec3) -> Vec3 {
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
-    let sunfade = 1.0 - (1.0 - (sun_position.y() / 450000.0).exp()).saturate();
+    let sunfade = 1.0 - (1.0 - saturate(sun_position.y() / 450000.0).exp());
     let rayleigh_coefficient = RAYLEIGH - (1.0 * (1.0 - sunfade));
     let beta_r = total_rayleigh(PRIMARIES) * rayleigh_coefficient;
 
@@ -115,7 +119,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     // Optical length, cutoff angle at 90 to avoid singularity
     let zenith_angle = acos_approx(up.dot(dir).max(0.0));
-    let denom = (zenith_angle).cos() + 0.15 * (93.885 - ((zenith_angle * 180.0) / PI)).pow(-1.253);
+    let denom = (zenith_angle).cos() + 0.15 * (93.885 - ((zenith_angle * 180.0) / PI)).powf(-1.253);
 
     let s_r = RAYLEIGH_ZENITH_LENGTH / denom;
     let s_m = MIE_ZENITH_LENGTH / denom;
@@ -140,7 +144,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
             sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex,
             0.5,
         ),
-        ((1.0 - up.dot(sun_direction)).pow(5.0)).saturate(),
+        saturate((1.0 - up.dot(sun_direction)).powf(5.0)),
     );
 
     // Composition + solar disc
