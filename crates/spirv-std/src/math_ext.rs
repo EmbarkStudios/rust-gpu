@@ -78,7 +78,7 @@ impl MathExt for f32 {
     }
 
     fn fract(self) -> f32 {
-        self - self.floor()
+        self - self.trunc()
     }
 
     fn signum(self) -> f32 {
