@@ -328,3 +328,22 @@ pub fn main(i: Input<i32>) {
 }
 "#);
 }
+
+#[test]
+fn cf_defer() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(i: Input<i32>) {
+    while i.load() < 32 {
+        let current_position = 0;
+        if i.load() < current_position {
+            break;
+        }
+        if i.load() < current_position {
+            break;
+        }
+    }
+}
+"#);
+}
