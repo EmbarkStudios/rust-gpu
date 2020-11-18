@@ -4,7 +4,7 @@ use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
-use rustc_hir::Param;
+use rustc_hir::{Param, PatKind};
 use rustc_middle::ty::{Instance, Ty};
 use rustc_target::abi::call::{FnAbi, PassMode};
 use std::collections::HashMap;
@@ -148,6 +148,9 @@ impl<'tcx> CodegenCx<'tcx> {
         );
         // Note: this *declares* the variable too.
         let variable = self.emit_global().variable(arg, None, storage_class, None);
+        if let PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
+            self.emit_global().name(variable, ident.to_string());
+        }
         for attr in parse_attrs(self, hir_param.attrs) {
             match attr {
                 SpirvAttribute::Builtin(builtin) => {
