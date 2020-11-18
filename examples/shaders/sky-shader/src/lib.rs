@@ -192,7 +192,6 @@ pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
         / constants.height as f32;
     uv.set_y(-uv.y());
 
-    // hard-code information because we can't bind buffers at the moment
     let eye_pos = Vec3::new(0.0, 2.0, 0.0);
     let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
     let dir = get_ray_dir(uv, eye_pos, sun_pos);
