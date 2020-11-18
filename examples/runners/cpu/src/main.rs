@@ -1,5 +1,6 @@
 use minifb::{Key, Window, WindowOptions};
 use rayon::prelude::*;
+use shared::ShaderConstants;
 use spirv_std::glam::{vec2, Vec2, Vec4};
 use std::time::Instant;
 
@@ -35,7 +36,7 @@ fn main() {
     )
     .expect("Window creation failed");
 
-    let push_constants = shader_module::ShaderConstants {
+    let push_constants = ShaderConstants {
         width: WIDTH as u32,
         height: HEIGHT as u32,
         time: 0f32,

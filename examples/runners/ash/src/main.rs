@@ -10,6 +10,7 @@ use ash::extensions::khr::{Surface, Swapchain};
 use ash::util::*;
 use ash::version::{DeviceV1_0, EntryV1_0, InstanceV1_0};
 use ash::{vk, Device, Instance};
+use shared::ShaderConstants;
 use std::borrow::Cow;
 use std::default::Default;
 use std::ffi::{CStr, CString};
@@ -31,13 +32,6 @@ macro_rules! offset_of {
             (&b.$field as *const _ as isize) - (&b as *const _ as isize)
         }
     }};
-}
-
-#[allow(dead_code)]
-struct ShaderConstants {
-    width: u32,
-    height: u32,
-    time: f32,
 }
 
 unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
