@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use super::{shader_module, Options};
 use shared::ShaderConstants;
@@ -102,7 +102,7 @@ async fn run(
         format: swapchain_format,
         width: size.width,
         height: size.height,
-        present_mode: wgpu::PresentMode::Mailbox,
+        present_mode: wgpu::PresentMode::Fifo,
     };
 
     let mut swap_chain = surface
@@ -113,8 +113,7 @@ async fn run(
 
     let mut last_printed_fps = Instant::now();
     let mut last_frame_start = Instant::now();
-    let mut frame_times = [-1f64; 20];
-    let mut frame_idx = 0;
+    let mut frame_times = Vec::with_capacity(70);
 
     event_loop.run(move |event, _, control_flow| {
         // Have the closure take ownership of the resources.
@@ -122,7 +121,7 @@ async fn run(
         // the resources are properly cleaned up.
         let _ = (&instance, &adapter, &module, &pipeline_layout);
 
-        *control_flow = ControlFlow::Wait;
+        *control_flow = ControlFlow::Poll;
         match event {
             Event::MainEventsCleared => {
                 window.request_redraw();
@@ -149,24 +148,19 @@ async fn run(
             }
             Event::RedrawRequested(_) => {
                 // Compute FPS
-                frame_times[frame_idx] = (Instant::now() - last_frame_start).as_secs_f64();
+                frame_times.push(last_frame_start.elapsed().as_secs_f64());
                 last_frame_start = Instant::now();
-                frame_idx = (frame_idx + 1) % frame_times.len();
                 // Print fps every second
-                if Instant::now() - last_printed_fps > Duration::from_secs_f32(1.) {
+                if last_printed_fps.elapsed().as_secs_f32() > 1. {
+                    let fps = (frame_times.iter().sum::<f64>() / frame_times.len() as f64).recip();
+                    println!(
+                        "FPS : {}; Frames since previous: {} (After: {:?})",
+                        fps,
+                        frame_times.len(),
+                        start.elapsed(),
+                    );
                     last_printed_fps = Instant::now();
-                    let mut count = 0;
-                    let fps = (frame_times
-                        .iter()
-                        .filter(|x| **x != -1.)
-                        .map(|x| {
-                            count += 1;
-                            *x
-                        })
-                        .sum::<f64>()
-                        / count as f64)
-                        .recip();
-                    println!("FPS: {}", fps);
+                    frame_times.clear();
                 }
                 if let Some(swap_chain) = &mut swap_chain {
                     let frame = swap_chain
