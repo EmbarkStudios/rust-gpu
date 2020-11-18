@@ -46,7 +46,7 @@ pub fn hash(p: Vec3) -> f32 {
     (p.x() * p.y() * p.z() * (p.x() + p.y() + p.z())).gl_fract()
 }
 
-pub fn mix(x: f32, y: f32, s: f32) -> f32 {
+pub fn lerp(x: f32, y: f32, s: f32) -> f32 {
     x + s * (y - x)
 }
 
@@ -56,27 +56,27 @@ pub fn noise(x: Vec3) -> f32 {
     f = f * f * (Vec3::splat(3.0) - Vec3::splat(2.0) * f);
 
     -1.0 + 2.0
-        * mix(
-            mix(
-                mix(
+        * lerp(
+            lerp(
+                lerp(
                     hash(i + Vec3::new(0.0, 0.0, 0.0)),
                     hash(i + Vec3::new(1.0, 0.0, 0.0)),
                     f.x(),
                 ),
-                mix(
+                lerp(
                     hash(i + Vec3::new(0.0, 1.0, 0.0)),
                     hash(i + Vec3::new(1.0, 1.0, 0.0)),
                     f.x(),
                 ),
                 f.y(),
             ),
-            mix(
-                mix(
+            lerp(
+                lerp(
                     hash(i + Vec3::new(0.0, 0.0, 1.0)),
                     hash(i + Vec3::new(1.0, 0.0, 1.0)),
                     f.x(),
                 ),
-                mix(
+                lerp(
                     hash(i + Vec3::new(0.0, 1.0, 1.0)),
                     hash(i + Vec3::new(1.0, 1.0, 1.0)),
                     f.x(),
