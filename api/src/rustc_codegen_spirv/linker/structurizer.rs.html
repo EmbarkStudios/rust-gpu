@@ -835,115 +835,11 @@
 <span id="832">832</span>
 <span id="833">833</span>
 <span id="834">834</span>
-<span id="835">835</span>
-<span id="836">836</span>
-<span id="837">837</span>
-<span id="838">838</span>
-<span id="839">839</span>
-<span id="840">840</span>
-<span id="841">841</span>
-<span id="842">842</span>
-<span id="843">843</span>
-<span id="844">844</span>
-<span id="845">845</span>
-<span id="846">846</span>
-<span id="847">847</span>
-<span id="848">848</span>
-<span id="849">849</span>
-<span id="850">850</span>
-<span id="851">851</span>
-<span id="852">852</span>
-<span id="853">853</span>
-<span id="854">854</span>
-<span id="855">855</span>
-<span id="856">856</span>
-<span id="857">857</span>
-<span id="858">858</span>
-<span id="859">859</span>
-<span id="860">860</span>
-<span id="861">861</span>
-<span id="862">862</span>
-<span id="863">863</span>
-<span id="864">864</span>
-<span id="865">865</span>
-<span id="866">866</span>
-<span id="867">867</span>
-<span id="868">868</span>
-<span id="869">869</span>
-<span id="870">870</span>
-<span id="871">871</span>
-<span id="872">872</span>
-<span id="873">873</span>
-<span id="874">874</span>
-<span id="875">875</span>
-<span id="876">876</span>
-<span id="877">877</span>
-<span id="878">878</span>
-<span id="879">879</span>
-<span id="880">880</span>
-<span id="881">881</span>
-<span id="882">882</span>
-<span id="883">883</span>
-<span id="884">884</span>
-<span id="885">885</span>
-<span id="886">886</span>
-<span id="887">887</span>
-<span id="888">888</span>
-<span id="889">889</span>
-<span id="890">890</span>
-<span id="891">891</span>
-<span id="892">892</span>
-<span id="893">893</span>
-<span id="894">894</span>
-<span id="895">895</span>
-<span id="896">896</span>
-<span id="897">897</span>
-<span id="898">898</span>
-<span id="899">899</span>
-<span id="900">900</span>
-<span id="901">901</span>
-<span id="902">902</span>
-<span id="903">903</span>
-<span id="904">904</span>
-<span id="905">905</span>
-<span id="906">906</span>
-<span id="907">907</span>
-<span id="908">908</span>
-<span id="909">909</span>
-<span id="910">910</span>
-<span id="911">911</span>
-<span id="912">912</span>
-<span id="913">913</span>
-<span id="914">914</span>
-<span id="915">915</span>
-<span id="916">916</span>
-<span id="917">917</span>
-<span id="918">918</span>
-<span id="919">919</span>
-<span id="920">920</span>
-<span id="921">921</span>
-<span id="922">922</span>
-<span id="923">923</span>
-<span id="924">924</span>
-<span id="925">925</span>
-<span id="926">926</span>
-<span id="927">927</span>
-<span id="928">928</span>
-<span id="929">929</span>
-<span id="930">930</span>
-<span id="931">931</span>
-<span id="932">932</span>
-<span id="933">933</span>
-<span id="934">934</span>
-<span id="935">935</span>
-<span id="936">936</span>
-<span id="937">937</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// This pass inserts merge instructions for structured control flow with the assumption the spir-v is reducible.</span>
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">id</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">simple_passes</span>::<span class="ident">outgoing_edges</span>;
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">ModuleHeader</span>, <span class="ident">Operand</span>};
+<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Builder</span>, <span class="ident">InsertPoint</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Op</span>, <span class="ident">SelectionControl</span>, <span class="ident">Word</span>};
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">VecDeque</span>};
@@ -1047,69 +943,51 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_debug_names</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">String</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">retval</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-
+    <span class="kw">fn</span> <span class="ident">set_names</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>) {
         <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">loops</span> {
-            <span class="ident">retval</span>.<span class="ident">push</span>((<span class="ident">loop_info</span>.<span class="ident">header_id</span>, <span class="string">&quot;loop_header&quot;</span>.<span class="ident">to_string</span>()));
-            <span class="ident">retval</span>.<span class="ident">push</span>((<span class="ident">loop_info</span>.<span class="ident">merge_id</span>, <span class="string">&quot;loop_merge&quot;</span>.<span class="ident">to_string</span>()));
-            <span class="ident">retval</span>.<span class="ident">push</span>((<span class="ident">loop_info</span>.<span class="ident">continue_id</span>, <span class="string">&quot;loop_continue&quot;</span>.<span class="ident">to_string</span>()));
+            <span class="ident">builder</span>.<span class="ident">name</span>(<span class="ident">loop_info</span>.<span class="ident">header_id</span>, <span class="string">&quot;loop_header&quot;</span>.<span class="ident">to_string</span>());
+            <span class="ident">builder</span>.<span class="ident">name</span>(<span class="ident">loop_info</span>.<span class="ident">merge_id</span>, <span class="string">&quot;loop_merge&quot;</span>.<span class="ident">to_string</span>());
+            <span class="ident">builder</span>.<span class="ident">name</span>(<span class="ident">loop_info</span>.<span class="ident">continue_id</span>, <span class="string">&quot;loop_continue&quot;</span>.<span class="ident">to_string</span>());
         }
         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">if_merge_ids</span> {
-            <span class="ident">retval</span>.<span class="ident">push</span>((<span class="kw-2">*</span><span class="ident">id</span>, <span class="string">&quot;if_merge&quot;</span>.<span class="ident">to_string</span>()));
+            <span class="ident">builder</span>.<span class="ident">name</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="string">&quot;if_merge&quot;</span>.<span class="ident">to_string</span>());
         }
         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">switch_merge_ids</span> {
-            <span class="ident">retval</span>.<span class="ident">push</span>((<span class="kw-2">*</span><span class="ident">id</span>, <span class="string">&quot;switch_merge&quot;</span>.<span class="ident">to_string</span>()));
+            <span class="ident">builder</span>.<span class="ident">name</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="string">&quot;switch_merge&quot;</span>.<span class="ident">to_string</span>());
         }
-
-        <span class="ident">retval</span>
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">structurize</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Module</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">debug_names</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">structurize</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Module</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new_from_module</span>(<span class="ident">module</span>);
 
-    <span class="kw">for</span> <span class="ident">func</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">functions</span> {
+    <span class="kw">for</span> <span class="ident">func_idx</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">builder</span>.<span class="ident">module_ref</span>().<span class="ident">functions</span>.<span class="ident">len</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cf_info</span> <span class="op">=</span> <span class="ident">ControlFlowInfo</span>::<span class="ident">new</span>();
 
-        <span class="ident">insert_loop_merge_on_conditional_branch</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>(),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func</span>.<span class="ident">blocks</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cf_info</span>,
-        );
+        <span class="ident">builder</span>.<span class="ident">select_function</span>(<span class="prelude-val">Some</span>(<span class="ident">func_idx</span>)).<span class="ident">unwrap</span>();
 
-        <span class="ident">retarget_loop_children_if_needed</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func</span>.<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">cf_info</span>);
-
-        <span class="ident">insert_selection_merge_on_conditional_branch</span>(
-            <span class="ident">sess</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>(),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func</span>.<span class="ident">blocks</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cf_info</span>,
-        );
-
-        <span class="ident">defer_loop_internals</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">header</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>(),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func</span>.<span class="ident">blocks</span>,
-            <span class="kw-2">&amp;</span><span class="ident">cf_info</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">debug_names</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">types_global_values</span>,
-        );
-
-        <span class="ident">debug_names</span>.<span class="ident">extend</span>(<span class="ident">cf_info</span>.<span class="ident">get_debug_names</span>());
+        <span class="ident">insert_loop_merge_on_conditional_branch</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cf_info</span>);
+        <span class="ident">retarget_loop_children_if_needed</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">cf_info</span>);
+        <span class="ident">insert_selection_merge_on_conditional_branch</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cf_info</span>);
+        <span class="ident">defer_loop_internals</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">cf_info</span>);
+        <span class="ident">cf_info</span>.<span class="ident">set_names</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>);
     }
 
-    <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">name</span>) <span class="kw">in</span> <span class="ident">debug_names</span> {
-        <span class="ident">module</span>.<span class="ident">debugs</span>.<span class="ident">push</span>(<span class="ident">Instruction</span>::<span class="ident">new</span>(
-            <span class="ident">Op</span>::<span class="ident">Name</span>,
-            <span class="prelude-val">None</span>,
-            <span class="prelude-val">None</span>,
-            <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">id</span>), <span class="ident">Operand</span>::<span class="ident">LiteralString</span>(<span class="ident">name</span>)],
-        ))
-    }
+    <span class="ident">builder</span>.<span class="ident">module</span>()
 }
 
-<span class="kw">fn</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+<span class="kw">fn</span> <span class="ident">get_blocks_mut</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Block</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">selected_function</span>().<span class="ident">unwrap</span>();
+    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>.<span class="ident">module_mut</span>().<span class="ident">functions</span>[<span class="ident">function</span>].<span class="ident">blocks</span>
+}
+
+<span class="kw">fn</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">Block</span>] {
+    <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">selected_function</span>().<span class="ident">unwrap</span>();
+    <span class="kw-2">&amp;</span><span class="ident">builder</span>.<span class="ident">module_ref</span>().<span class="ident">functions</span>[<span class="ident">function</span>].<span class="ident">blocks</span>
+}
+
+<span class="kw">fn</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>).<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
         <span class="kw">if</span> <span class="ident">block</span>.<span class="ident">label_id</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">id</span>) {
             <span class="kw">return</span> <span class="ident">i</span>;
         }
@@ -1118,8 +996,24 @@
     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Failed to find block from id {}&quot;</span>, <span class="ident">id</span>);
 }
 
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">get_block_mut</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">builder</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">idx</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">get_blocks_mut</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">builder</span>)[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">idx</span>]
+    };
+}
+
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">get_block_ref</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">builder</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">idx</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw-2">&amp;</span><span class="ident">get_blocks_ref</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">builder</span>)[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">idx</span>]
+    };
+}
+
+<span class="kw">fn</span> <span class="ident">idx_to_id</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>)[<span class="ident">idx</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>()
+}
+
 <span class="comment">// some times break will yeet themselfs out of a parent loop by skipping the merge block. This prevents that.</span>
-<span class="kw">fn</span> <span class="ident">retarget_loop_children_if_needed</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>], <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>) {
+<span class="kw">fn</span> <span class="ident">retarget_loop_children_if_needed</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>, <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>) {
     <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
         <span class="kw">let</span> <span class="ident">LoopInfo</span> {
             <span class="ident">header_id</span>: <span class="ident">header</span>,
@@ -1131,8 +1025,8 @@
         <span class="ident">next</span>.<span class="ident">push_back</span>(<span class="kw-2">*</span><span class="ident">header</span>);
 
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">front</span>) <span class="op">=</span> <span class="ident">next</span>.<span class="ident">pop_front</span>() {
-            <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">block_idx</span>]);
+            <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
 
             <span class="comment">// Make sure we are not looping or going into child loops.</span>
             <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
@@ -1152,9 +1046,9 @@
 
             <span class="kw">if</span> <span class="ident">new_edges</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
                 <span class="comment">// if front branches to a block that is the child of a merge, retarget it.</span>
-                <span class="kw">if</span> <span class="ident">block_is_parent_of</span>(<span class="kw-2">*</span><span class="ident">merge</span>, <span class="ident">new_edges</span>[<span class="number">0</span>], <span class="ident">blocks</span>) {
+                <span class="kw">if</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>, <span class="kw-2">*</span><span class="ident">merge</span>, <span class="ident">new_edges</span>[<span class="number">0</span>]) {
                     <span class="comment">// retarget front to branch to merge.</span>
-                    <span class="kw">let</span> <span class="ident">front_block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span>[<span class="ident">block_idx</span>];
+                    <span class="kw">let</span> <span class="ident">front_block</span> <span class="op">=</span> <span class="macro">get_block_mut</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>);
                     (<span class="kw-2">*</span><span class="ident">front_block</span>
                         .<span class="ident">instructions</span>
                         .<span class="ident">last_mut</span>()
@@ -1170,9 +1064,9 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">incoming_edges</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">incoming_edges</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">incoming_edges</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span> {
+    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>) {
         <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>);
         <span class="kw">if</span> <span class="ident">out</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
             <span class="ident">incoming_edges</span>.<span class="ident">push</span>(<span class="ident">block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>());
@@ -1182,168 +1076,94 @@
     <span class="ident">incoming_edges</span>
 }
 
-<span class="kw">fn</span> <span class="ident">num_incoming_edges</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-    <span class="ident">incoming_edges</span>(<span class="ident">id</span>, <span class="ident">blocks</span>).<span class="ident">len</span>()
+<span class="kw">fn</span> <span class="ident">num_incoming_edges</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="ident">incoming_edges</span>(<span class="ident">id</span>, <span class="ident">builder</span>).<span class="ident">len</span>()
 }
 
 <span class="comment">// Turn a block into a conditional branch that either goes to yes or goes to merge.</span>
 <span class="kw">fn</span> <span class="ident">change_block_to_switch</span>(
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>],
+    <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>,
     <span class="ident">block_id</span>: <span class="ident">Word</span>,
     <span class="ident">cases</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
     <span class="ident">merge</span>: <span class="ident">Word</span>,
     <span class="ident">condition</span>: <span class="ident">Word</span>,
 ) {
-    <span class="kw">let</span> <span class="ident">cb_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">block_id</span>);
-    <span class="kw">let</span> <span class="ident">cb_block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span>[<span class="ident">cb_idx</span>];
+    <span class="kw">let</span> <span class="ident">cb_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">block_id</span>);
+    <span class="ident">builder</span>.<span class="ident">select_block</span>(<span class="prelude-val">Some</span>(<span class="ident">cb_idx</span>)).<span class="ident">unwrap</span>();
 
-    <span class="comment">// selection merge</span>
-    <span class="kw">let</span> <span class="ident">merge_operands</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
-        <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">merge</span>),
-        <span class="ident">Operand</span>::<span class="ident">SelectionControl</span>(<span class="ident">SelectionControl</span>::<span class="ident">NONE</span>),
-    ];
-    <span class="kw-2">*</span><span class="ident">cb_block</span>.<span class="ident">instructions</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>() <span class="op">=</span>
-        <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">SelectionMerge</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">merge_operands</span>);
+    <span class="kw">let</span> <span class="ident">target</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Operand</span>, <span class="ident">Word</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">cases</span>
+        .<span class="ident">iter</span>()
+        .<span class="ident">enumerate</span>()
+        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">id</span>)<span class="op">|</span> (<span class="ident">Operand</span>::<span class="ident">LiteralInt32</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="number">1</span>), <span class="kw-2">*</span><span class="ident">id</span>))
+        .<span class="ident">collect</span>();
 
-    <span class="comment">// conditional branch</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">switch_operands</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">condition</span>), <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">merge</span>)];
-
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">label_id</span>) <span class="kw">in</span> <span class="ident">cases</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">let</span> <span class="ident">literal</span> <span class="op">=</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="number">1</span>;
-        <span class="ident">switch_operands</span>.<span class="ident">push</span>(<span class="ident">Operand</span>::<span class="ident">LiteralInt32</span>(<span class="ident">literal</span>));
-        <span class="ident">switch_operands</span>.<span class="ident">push</span>(<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="kw-2">*</span><span class="ident">label_id</span>));
-    }
-
-    <span class="ident">cb_block</span>
-        .<span class="ident">instructions</span>
-        .<span class="ident">push</span>(<span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Switch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">switch_operands</span>));
-}
-
-<span class="kw">fn</span> <span class="ident">find_or_create_int_constant</span>(
-    <span class="ident">opcode</span>: <span class="ident">Op</span>,
-    <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">type_result_id</span>: <span class="ident">Word</span>,
-    <span class="ident">value</span>: <span class="ident">u32</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-    <span class="comment">// create</span>
-    <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="ident">id</span>(<span class="ident">header</span>);
-    <span class="kw">let</span> <span class="ident">new_constant</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(
-        <span class="ident">opcode</span>,
-        <span class="prelude-val">Some</span>(<span class="ident">type_result_id</span>),
-        <span class="prelude-val">Some</span>(<span class="ident">result_id</span>),
-        <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Operand</span>::<span class="ident">LiteralInt32</span>(<span class="ident">value</span>)],
-    );
-    <span class="ident">constants</span>.<span class="ident">push</span>(<span class="ident">new_constant</span>);
-
-    <span class="ident">result_id</span>
-}
-
-<span class="kw">fn</span> <span class="ident">find_or_create_type_constant</span>(
-    <span class="ident">opcode</span>: <span class="ident">Op</span>,
-    <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-    <span class="comment">// find</span>
-    <span class="kw">for</span> <span class="ident">constant</span> <span class="kw">in</span> <span class="ident">constants</span>.<span class="ident">iter</span>() {
-        <span class="kw">if</span> <span class="ident">constant</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">opcode</span> {
-            <span class="kw">return</span> <span class="ident">constant</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>();
-        }
-    }
-
-    <span class="comment">// create</span>
-    <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="ident">id</span>(<span class="ident">header</span>);
-    <span class="kw">let</span> <span class="ident">new_constant</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">opcode</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">result_id</span>), <span class="macro">vec</span><span class="macro">!</span>[]);
-    <span class="ident">constants</span>.<span class="ident">push</span>(<span class="ident">new_constant</span>);
-
-    <span class="ident">result_id</span>
+    <span class="ident">builder</span>.<span class="ident">pop_instruction</span>().<span class="ident">unwrap</span>();
+    <span class="ident">builder</span>
+        .<span class="ident">selection_merge</span>(<span class="ident">merge</span>, <span class="ident">SelectionControl</span>::<span class="ident">NONE</span>)
+        .<span class="ident">unwrap</span>();
+    <span class="ident">builder</span>.<span class="ident">switch</span>(<span class="ident">condition</span>, <span class="ident">merge</span>, <span class="ident">target</span>).<span class="ident">unwrap</span>();
 }
 
 <span class="comment">// detect the intermediate break block by checking whether a block that branches to a merge block has 2 parents.</span>
-<span class="kw">fn</span> <span class="ident">defer_loop_internals</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Block</span><span class="op">&gt;</span>,
-    <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>,
-    <span class="ident">debug_names</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">String</span>)<span class="op">&gt;</span>,
-    <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
-) {
+<span class="kw">fn</span> <span class="ident">defer_loop_internals</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>, <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>) {
     <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
         <span class="comment">// find all blocks that branch to a merge block.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">possible_intermediate_block_idexes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>).<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
             <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>);
             <span class="kw">if</span> <span class="ident">out</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">out</span>[<span class="number">0</span>] <span class="op">=</span><span class="op">=</span> <span class="ident">loop_info</span>.<span class="ident">merge_id</span> {
                 <span class="ident">possible_intermediate_block_idexes</span>.<span class="ident">push</span>(<span class="ident">i</span>)
             }
         }
         <span class="comment">// check how many incoming edges the branch has and use that to collect a list of intermediate blocks.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">intermediate_blocks</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">intermediate_block_ids</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">possible_intermediate_block_idexes</span> {
-            <span class="kw">let</span> <span class="ident">intermediate_block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">i</span>];
-            <span class="kw">let</span> <span class="ident">num_incoming_edges</span> <span class="op">=</span>
-                <span class="ident">num_incoming_edges</span>(<span class="ident">intermediate_block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>(), <span class="ident">blocks</span>);
+            <span class="kw">let</span> <span class="ident">intermediate_block_id</span> <span class="op">=</span> <span class="ident">idx_to_id</span>(<span class="ident">builder</span>, <span class="ident">i</span>);
+            <span class="kw">let</span> <span class="ident">num_incoming_edges</span> <span class="op">=</span> <span class="ident">num_incoming_edges</span>(<span class="ident">intermediate_block_id</span>, <span class="ident">builder</span>);
             <span class="kw">if</span> <span class="ident">num_incoming_edges</span> <span class="op">&gt;</span> <span class="number">1</span> {
-                <span class="ident">intermediate_blocks</span>.<span class="ident">push</span>(<span class="ident">i</span>);
+                <span class="ident">intermediate_block_ids</span>.<span class="ident">push</span>(<span class="ident">intermediate_block_id</span>);
             }
         }
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">intermediate_blocks</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">let</span> <span class="ident">intermediate_block_ids</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">intermediate_blocks</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">idx</span><span class="op">|</span> <span class="ident">blocks</span>[<span class="kw-2">*</span><span class="ident">idx</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>())
-                .<span class="ident">collect</span>();
-
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">intermediate_block_ids</span>.<span class="ident">is_empty</span>() {
             <span class="comment">// Create a new empty block.</span>
-            <span class="kw">let</span> <span class="ident">old_merge_block_id</span> <span class="op">=</span> <span class="ident">split_block</span>(<span class="ident">header</span>, <span class="ident">blocks</span>, <span class="ident">loop_info</span>.<span class="ident">merge_id</span>, <span class="bool-val">false</span>);
+            <span class="kw">let</span> <span class="ident">old_merge_block_id</span> <span class="op">=</span> <span class="ident">split_block</span>(<span class="ident">builder</span>, <span class="ident">loop_info</span>.<span class="ident">merge_id</span>, <span class="bool-val">false</span>);
 
             <span class="comment">// Create Phi</span>
-            <span class="kw">let</span> <span class="ident">phi_result_id</span> <span class="op">=</span> <span class="ident">id</span>(<span class="ident">header</span>);
-            <span class="kw">let</span> <span class="ident">int_type_id</span> <span class="op">=</span> <span class="ident">find_or_create_type_constant</span>(<span class="ident">Op</span>::<span class="ident">TypeInt</span>, <span class="ident">constants</span>, <span class="ident">header</span>);
-            <span class="kw">let</span> <span class="ident">const_0_id</span> <span class="op">=</span>
-                <span class="ident">find_or_create_int_constant</span>(<span class="ident">Op</span>::<span class="ident">Constant</span>, <span class="ident">constants</span>, <span class="ident">header</span>, <span class="ident">int_type_id</span>, <span class="number">0</span>);
+            <span class="kw">let</span> <span class="ident">phi_result_id</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">id</span>();
+            <span class="kw">let</span> <span class="ident">int_type_id</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">type_int</span>(<span class="number">32</span>, <span class="number">1</span>);
+            <span class="kw">let</span> <span class="ident">const_0_id</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">constant_u32</span>(<span class="ident">int_type_id</span>, <span class="number">0</span>);
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">phi_operands</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
             <span class="kw">for</span> (<span class="ident">intermediate_i</span>, <span class="ident">intermediate_block_id</span>) <span class="kw">in</span> <span class="ident">intermediate_block_ids</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>()
             {
                 <span class="kw">let</span> <span class="ident">intermediate_i</span> <span class="op">=</span> <span class="ident">intermediate_i</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="number">1</span>;
-                <span class="kw">let</span> <span class="ident">intermediate_block_idx</span> <span class="op">=</span>
-                    <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="ident">intermediate_block_id</span>);
-                <span class="kw">let</span> <span class="ident">intermediate_block_id</span> <span class="op">=</span> <span class="ident">blocks</span>[<span class="ident">intermediate_block_idx</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">const_x_id</span> <span class="op">=</span> <span class="ident">find_or_create_int_constant</span>(
-                    <span class="ident">Op</span>::<span class="ident">Constant</span>,
-                    <span class="ident">constants</span>,
-                    <span class="ident">header</span>,
-                    <span class="ident">int_type_id</span>,
-                    <span class="ident">intermediate_i</span>,
-                );
-                <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">incoming_edges</span>(<span class="ident">intermediate_block_id</span>, <span class="ident">blocks</span>);
+                <span class="kw">let</span> <span class="ident">const_x_id</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">constant_u32</span>(<span class="ident">int_type_id</span>, <span class="ident">intermediate_i</span>);
+                <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">incoming_edges</span>(<span class="kw-2">*</span><span class="ident">intermediate_block_id</span>, <span class="ident">builder</span>);
                 <span class="kw">for</span> <span class="ident">blocks_that_go_to_intermediate</span> <span class="kw">in</span> <span class="ident">t</span> {
-                    <span class="ident">phi_operands</span>.<span class="ident">push</span>(<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">const_x_id</span>));
-                    <span class="ident">phi_operands</span>.<span class="ident">push</span>(<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">blocks_that_go_to_intermediate</span>));
+                    <span class="ident">phi_operands</span>.<span class="ident">push</span>((<span class="ident">const_x_id</span>, <span class="ident">blocks_that_go_to_intermediate</span>));
                 }
-                <span class="ident">debug_names</span>.<span class="ident">push</span>((<span class="ident">intermediate_block_id</span>, <span class="string">&quot;deferred&quot;</span>.<span class="ident">to_string</span>()));
+                <span class="ident">builder</span>.<span class="ident">name</span>(<span class="kw-2">*</span><span class="ident">intermediate_block_id</span>, <span class="string">&quot;deferred&quot;</span>.<span class="ident">to_string</span>());
             }
-            <span class="ident">phi_operands</span>.<span class="ident">push</span>(<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">const_0_id</span>));
-            <span class="ident">phi_operands</span>.<span class="ident">push</span>(<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">loop_info</span>.<span class="ident">header_id</span>));
-            <span class="kw">let</span> <span class="ident">phi_inst</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(
-                <span class="ident">Op</span>::<span class="ident">Phi</span>,
-                <span class="prelude-val">Some</span>(<span class="ident">int_type_id</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">phi_result_id</span>),
-                <span class="ident">phi_operands</span>,
-            );
+            <span class="ident">phi_operands</span>.<span class="ident">push</span>((<span class="ident">const_0_id</span>, <span class="ident">loop_info</span>.<span class="ident">header_id</span>));
 
-            <span class="comment">// add phi to the empty merge block.</span>
-            {
-                <span class="kw">let</span> <span class="ident">merge_block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">loop_info</span>.<span class="ident">merge_id</span>);
-                <span class="kw">let</span> <span class="ident">merge_block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span>[<span class="ident">merge_block_idx</span>];
-                <span class="ident">merge_block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(<span class="number">0</span>, <span class="ident">phi_inst</span>);
-            }
+            <span class="ident">builder</span>
+                .<span class="ident">select_block</span>(<span class="prelude-val">Some</span>(<span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">loop_info</span>.<span class="ident">merge_id</span>)))
+                .<span class="ident">unwrap</span>();
+            <span class="ident">builder</span>
+                .<span class="ident">insert_phi</span>(
+                    <span class="ident">InsertPoint</span>::<span class="ident">Begin</span>,
+                    <span class="ident">int_type_id</span>,
+                    <span class="prelude-val">Some</span>(<span class="ident">phi_result_id</span>),
+                    <span class="ident">phi_operands</span>,
+                )
+                .<span class="ident">unwrap</span>();
 
             <span class="comment">// point all intermediate blocks to the new empty merge block.</span>
             <span class="kw">for</span> <span class="ident">intermediate_block_id</span> <span class="kw">in</span> <span class="ident">intermediate_block_ids</span>.<span class="ident">iter</span>() {
-                <span class="kw">for</span> <span class="ident">incoming_id</span> <span class="kw">in</span> <span class="ident">incoming_edges</span>(<span class="kw-2">*</span><span class="ident">intermediate_block_id</span>, <span class="ident">blocks</span>) {
-                    <span class="kw">let</span> <span class="ident">incoming_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">incoming_id</span>);
-                    <span class="kw">let</span> <span class="ident">incoming_block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span>[<span class="ident">incoming_idx</span>];
+                <span class="kw">for</span> <span class="ident">incoming_id</span> <span class="kw">in</span> <span class="ident">incoming_edges</span>(<span class="kw-2">*</span><span class="ident">intermediate_block_id</span>, <span class="ident">builder</span>) {
+                    <span class="kw">let</span> <span class="ident">incoming_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">incoming_id</span>);
+                    <span class="kw">let</span> <span class="ident">incoming_block</span> <span class="op">=</span> <span class="macro">get_block_mut</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">incoming_idx</span>);
 
                     <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">incoming_block</span>.<span class="ident">instructions</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>().<span class="ident">operands</span> {
                         <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">operand</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="kw-2">*</span><span class="ident">intermediate_block_id</span>) {
@@ -1355,7 +1175,7 @@
 
             <span class="comment">// Create a switch statement of all intermediate blocks.</span>
             <span class="ident">change_block_to_switch</span>(
-                <span class="ident">blocks</span>,
+                <span class="ident">builder</span>,
                 <span class="ident">loop_info</span>.<span class="ident">merge_id</span>,
                 <span class="kw-2">&amp;</span><span class="ident">intermediate_block_ids</span>,
                 <span class="ident">old_merge_block_id</span>,
@@ -1365,8 +1185,8 @@
             <span class="comment">// point intermediate blocks to the old merge block.</span>
             <span class="kw">for</span> <span class="ident">intermediate_block_id</span> <span class="kw">in</span> <span class="ident">intermediate_block_ids</span>.<span class="ident">iter</span>() {
                 <span class="kw">let</span> <span class="ident">intermediate_block_idx</span> <span class="op">=</span>
-                    <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="ident">intermediate_block_id</span>);
-                <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span>[<span class="ident">intermediate_block_idx</span>]
+                    <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="ident">intermediate_block_id</span>);
+                <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="macro">get_block_mut</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">intermediate_block_idx</span>)
                     .<span class="ident">instructions</span>
                     .<span class="ident">last_mut</span>()
                     .<span class="ident">unwrap</span>()
@@ -1382,14 +1202,14 @@
 }
 
 <span class="comment">// &quot;Combines&quot; all continue blocks into 1 and returns the ID of the continue block.</span>
-<span class="kw">fn</span> <span class="ident">eliminate_multiple_continue_blocks</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Block</span><span class="op">&gt;</span>, <span class="ident">header</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+<span class="kw">fn</span> <span class="ident">eliminate_multiple_continue_blocks</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>, <span class="ident">header</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
     <span class="comment">// Find all possible continue blocks.</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">continue_blocks</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>() {
+    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>) {
         <span class="kw">let</span> <span class="ident">block_id</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
         <span class="kw">if</span> <span class="ident">ends_in_branch</span>(<span class="ident">block</span>) {
             <span class="kw">let</span> <span class="ident">edge</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>)[<span class="number">0</span>];
-            <span class="kw">if</span> <span class="ident">edge</span> <span class="op">=</span><span class="op">=</span> <span class="ident">header</span> <span class="op">&amp;&amp;</span> <span class="ident">block_is_parent_of</span>(<span class="ident">header</span>, <span class="ident">block_id</span>, <span class="ident">blocks</span>) {
+            <span class="kw">if</span> <span class="ident">edge</span> <span class="op">=</span><span class="op">=</span> <span class="ident">header</span> <span class="op">&amp;&amp;</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>, <span class="ident">header</span>, <span class="ident">block_id</span>) {
                 <span class="ident">continue_blocks</span>.<span class="ident">push</span>(<span class="ident">block_id</span>);
             }
         }
@@ -1398,8 +1218,8 @@
     <span class="kw">if</span> <span class="ident">continue_blocks</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
         <span class="kw">let</span> <span class="ident">continue_block_id</span> <span class="op">=</span> <span class="ident">continue_blocks</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>();
         <span class="kw">for</span> <span class="ident">block_id</span> <span class="kw">in</span> <span class="ident">continue_blocks</span>.<span class="ident">iter</span>().<span class="ident">take</span>(<span class="ident">continue_blocks</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>) {
-            <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="ident">block_id</span>);
-            <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span>[<span class="ident">idx</span>];
+            <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="ident">block_id</span>);
+            <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="macro">get_block_mut</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">idx</span>);
             <span class="kw">for</span> <span class="ident">op</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>().<span class="ident">operands</span> {
                 <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">op</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">header</span>) {
                     <span class="kw-2">*</span><span class="ident">op</span> <span class="op">=</span> <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="kw-2">*</span><span class="ident">continue_block_id</span>);
@@ -1413,13 +1233,13 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">block_leads_into_break</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>, <span class="ident">start</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">block_leads_into_break</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span>, <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>, <span class="ident">start</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">next</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">VecDeque</span>::<span class="ident">new</span>();
     <span class="ident">next</span>.<span class="ident">push_back</span>(<span class="ident">start</span>);
 
     <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">front</span>) <span class="op">=</span> <span class="ident">next</span>.<span class="ident">pop_front</span>() {
-        <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">block_idx</span>]);
+        <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
 
         <span class="comment">// Make sure we are not looping.</span>
         <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
@@ -1433,13 +1253,14 @@
         }
 
         <span class="comment">// Skip inner branches. TODO: is this correct?</span>
-        <span class="kw">if</span> <span class="ident">ends_in_branch_conditional</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>)]) {
+        <span class="kw">if</span> <span class="ident">ends_in_branch_conditional</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>)) {
             <span class="ident">new_edges</span>.<span class="ident">clear</span>();
         }
 
         <span class="comment">// if front is a merge block return true</span>
         <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
-            <span class="kw">if</span> <span class="ident">front</span> <span class="op">=</span><span class="op">=</span> <span class="ident">loop_info</span>.<span class="ident">merge_id</span> <span class="op">&amp;&amp;</span> <span class="ident">block_is_parent_of</span>(<span class="ident">loop_info</span>.<span class="ident">header_id</span>, <span class="ident">start</span>, <span class="ident">blocks</span>)
+            <span class="kw">if</span> <span class="ident">front</span> <span class="op">=</span><span class="op">=</span> <span class="ident">loop_info</span>.<span class="ident">merge_id</span>
+                <span class="op">&amp;&amp;</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>, <span class="ident">loop_info</span>.<span class="ident">header_id</span>, <span class="ident">start</span>)
             {
                 <span class="kw">return</span> <span class="bool-val">true</span>;
             }
@@ -1451,9 +1272,9 @@
     <span class="bool-val">false</span>
 }
 
-<span class="kw">fn</span> <span class="ident">block_leads_into_continue</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>, <span class="ident">start</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="ident">start_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">start</span>);
-    <span class="kw">let</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">start_idx</span>]);
+<span class="kw">fn</span> <span class="ident">block_leads_into_continue</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span>, <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>, <span class="ident">start</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">start_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">start</span>);
+    <span class="kw">let</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">start_idx</span>));
     <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
         <span class="kw">if</span> <span class="ident">new_edges</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">loop_info</span>.<span class="ident">continue_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">new_edges</span>[<span class="number">0</span>] {
             <span class="kw">return</span> <span class="bool-val">true</span>;
@@ -1464,7 +1285,12 @@
 }
 
 <span class="comment">// every branch from a reaches b.</span>
-<span class="kw">fn</span> <span class="ident">block_is_reverse_idom_of</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>, <span class="ident">a</span>: <span class="ident">Word</span>, <span class="ident">b</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">block_is_reverse_idom_of</span>(
+    <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span>,
+    <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>,
+    <span class="ident">a</span>: <span class="ident">Word</span>,
+    <span class="ident">b</span>: <span class="ident">Word</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">next</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">VecDeque</span>::<span class="ident">new</span>();
     <span class="ident">next</span>.<span class="ident">push_back</span>(<span class="ident">a</span>);
 
@@ -1472,13 +1298,13 @@
     <span class="ident">processed</span>.<span class="ident">push</span>(<span class="ident">a</span>); <span class="comment">// ensures we are not looping.</span>
 
     <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">front</span>) <span class="op">=</span> <span class="ident">next</span>.<span class="ident">pop_front</span>() {
-        <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
+        <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
 
         <span class="kw">if</span> <span class="ident">front</span> <span class="op">=</span><span class="op">=</span> <span class="ident">b</span> {
             <span class="kw">continue</span>;
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">block_idx</span>]);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
 
         <span class="comment">// Skip loop bodies by jumping to the merge block is we hit a header block.</span>
         <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
@@ -1490,7 +1316,7 @@
 
         <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
             <span class="comment">// Make sure we are not looping.</span>
-            <span class="kw">if</span> <span class="ident">block_is_parent_of</span>(<span class="ident">loop_info</span>.<span class="ident">header_id</span>, <span class="ident">a</span>, <span class="ident">blocks</span>)
+            <span class="kw">if</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>, <span class="ident">loop_info</span>.<span class="ident">header_id</span>, <span class="ident">a</span>)
                 <span class="op">&amp;&amp;</span> <span class="ident">new_edges</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">loop_info</span>.<span class="ident">header_id</span>)
             {
                 <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">new_edges</span>
@@ -1501,7 +1327,7 @@
             }
 
             <span class="comment">// Make sure we are not continuing after a merge.</span>
-            <span class="kw">if</span> <span class="ident">block_is_parent_of</span>(<span class="ident">loop_info</span>.<span class="ident">header_id</span>, <span class="ident">a</span>, <span class="ident">blocks</span>) <span class="op">&amp;&amp;</span> <span class="ident">front</span> <span class="op">=</span><span class="op">=</span> <span class="ident">loop_info</span>.<span class="ident">merge_id</span> {
+            <span class="kw">if</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>, <span class="ident">loop_info</span>.<span class="ident">header_id</span>, <span class="ident">a</span>) <span class="op">&amp;&amp;</span> <span class="ident">front</span> <span class="op">=</span><span class="op">=</span> <span class="ident">loop_info</span>.<span class="ident">merge_id</span> {
                 <span class="ident">new_edges</span>.<span class="ident">clear</span>();
             }
         }
@@ -1523,13 +1349,13 @@
     <span class="bool-val">true</span>
 }
 <span class="kw">fn</span> <span class="ident">get_possible_merge_positions</span>(
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>],
+    <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span>,
     <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>,
     <span class="ident">start</span>: <span class="ident">Word</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">retval</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="kw">for</span> (<span class="ident">idx</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">if</span> <span class="ident">block_is_reverse_idom_of</span>(<span class="ident">blocks</span>, <span class="ident">cf_info</span>, <span class="ident">start</span>, <span class="ident">block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>()) {
+    <span class="kw">for</span> (<span class="ident">idx</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>).<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+        <span class="kw">if</span> <span class="ident">block_is_reverse_idom_of</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">start</span>, <span class="ident">block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>()) {
             <span class="ident">retval</span>.<span class="ident">push</span>(<span class="ident">idx</span>);
         }
     }
@@ -1537,7 +1363,7 @@
     <span class="ident">retval</span>
 }
 
-<span class="kw">fn</span> <span class="ident">block_is_parent_of</span>(<span class="ident">parent</span>: <span class="ident">Word</span>, <span class="ident">child</span>: <span class="ident">Word</span>, <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span>, <span class="ident">parent</span>: <span class="ident">Word</span>, <span class="ident">child</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">next</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">VecDeque</span>::<span class="ident">new</span>();
     <span class="ident">next</span>.<span class="ident">push_back</span>(<span class="ident">parent</span>);
 
@@ -1545,8 +1371,8 @@
     <span class="ident">processed</span>.<span class="ident">push</span>(<span class="ident">parent</span>); <span class="comment">// ensures we are not looping.</span>
 
     <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">front</span>) <span class="op">=</span> <span class="ident">next</span>.<span class="ident">pop_front</span>() {
-        <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">block_idx</span>]);
+        <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
 
         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">processed</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">new_edges</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">id</span>) {
@@ -1567,7 +1393,7 @@
 
 <span class="comment">// Returns the idx of the branch that loops.</span>
 <span class="kw">fn</span> <span class="ident">get_looping_branch_from_block</span>(
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>],
+    <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span>,
     <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>,
     <span class="ident">start</span>: <span class="ident">Word</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
@@ -1582,17 +1408,18 @@
             <span class="kw">continue</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">block_idx</span>]);
+        <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
 
         <span class="kw">let</span> <span class="ident">edge_it</span> <span class="op">=</span> <span class="ident">new_edges</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">start</span>); <span class="comment">// Check if the new_edges contain the start</span>
         <span class="kw">if</span> <span class="ident">new_edges</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">edge_it</span>) <span class="op">=</span> <span class="ident">edge_it</span> {
                 <span class="comment">// loop over the orginal edges to find which branch is looping</span>
-                <span class="kw">let</span> <span class="ident">start_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">start</span>)]);
+                <span class="kw">let</span> <span class="ident">start_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
+                <span class="kw">let</span> <span class="ident">start_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">start_idx</span>));
 
                 <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">start_edge</span>) <span class="kw">in</span> <span class="ident">start_edges</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="kw">if</span> <span class="ident">start_edge</span> <span class="op">=</span><span class="op">=</span> <span class="ident">edge_it</span> <span class="op">|</span><span class="op">|</span> <span class="ident">block_is_parent_of</span>(<span class="kw-2">*</span><span class="ident">start_edge</span>, <span class="kw-2">*</span><span class="ident">edge_it</span>, <span class="ident">blocks</span>) {
+                    <span class="kw">if</span> <span class="ident">start_edge</span> <span class="op">=</span><span class="op">=</span> <span class="ident">edge_it</span> <span class="op">|</span><span class="op">|</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>, <span class="kw-2">*</span><span class="ident">start_edge</span>, <span class="kw-2">*</span><span class="ident">edge_it</span>) {
                         <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
                     }
                 }
@@ -1628,36 +1455,23 @@
 }
 
 <span class="comment">// Returns the new id assigned to the original block.</span>
-<span class="kw">fn</span> <span class="ident">split_block</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Block</span><span class="op">&gt;</span>,
-    <span class="ident">block_to_split</span>: <span class="ident">Word</span>,
-    <span class="ident">retarget</span>: <span class="ident">bool</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-    <span class="comment">// create new block with old id.</span>
-    <span class="kw">let</span> <span class="ident">block_to_split_index</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">block_to_split</span>);
-    <span class="kw">let</span> <span class="ident">orignial_block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span>[<span class="ident">block_to_split_index</span>];
-    <span class="kw">let</span> <span class="ident">original_id</span> <span class="op">=</span> <span class="ident">orignial_block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
-    <span class="ident">new_block</span>.<span class="ident">label</span> <span class="op">=</span> <span class="ident">orignial_block</span>.<span class="ident">label</span>.<span class="ident">clone</span>();
+<span class="kw">fn</span> <span class="ident">split_block</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>, <span class="ident">block_to_split</span>: <span class="ident">Word</span>, <span class="ident">retarget</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
     <span class="comment">// assign old block new id.</span>
-    <span class="kw">let</span> <span class="ident">new_original_block_id</span> <span class="op">=</span> <span class="ident">id</span>(<span class="ident">header</span>);
+    <span class="kw">let</span> <span class="ident">new_original_block_id</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">id</span>();
+    <span class="kw">let</span> <span class="ident">block_to_split_index</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">block_to_split</span>);
+    <span class="kw">let</span> <span class="ident">orignial_block</span> <span class="op">=</span> <span class="macro">get_block_mut</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_to_split_index</span>);
     <span class="ident">orignial_block</span>.<span class="ident">label</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>().<span class="ident">result_id</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">new_original_block_id</span>);
+    <span class="comment">// create new block with old id.</span>
+    <span class="ident">builder</span>.<span class="ident">begin_block</span>(<span class="prelude-val">Some</span>(<span class="ident">block_to_split</span>)).<span class="ident">unwrap</span>();
     <span class="comment">// new block branches to old block.</span>
-    <span class="kw">let</span> <span class="ident">branch_inst</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(
-        <span class="ident">Op</span>::<span class="ident">Branch</span>,
-        <span class="prelude-val">None</span>,
-        <span class="prelude-val">None</span>,
-        <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">new_original_block_id</span>)],
-    );
-    <span class="ident">new_block</span>.<span class="ident">instructions</span>.<span class="ident">push</span>(<span class="ident">branch_inst</span>);
+    <span class="ident">builder</span>.<span class="ident">branch</span>(<span class="ident">new_original_block_id</span>).<span class="ident">unwrap</span>();
     <span class="kw">if</span> <span class="ident">retarget</span> {
         <span class="comment">// update all merge ops to point the the old block with its new id.</span>
-        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter_mut</span>() {
+        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">get_blocks_mut</span>(<span class="ident">builder</span>) {
             <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">block</span>.<span class="ident">instructions</span> {
                 <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">LoopMerge</span> <span class="op">|</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">SelectionMerge</span> {
                     <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inst</span>.<span class="ident">operands</span> {
-                        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">operand</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">original_id</span>) {
+                        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">operand</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">block_to_split</span>) {
                             <span class="kw-2">*</span><span class="ident">operand</span> <span class="op">=</span> <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">new_original_block_id</span>);
                         }
                     }
@@ -1666,35 +1480,25 @@
         }
     }
 
-    <span class="comment">// insert new block before the old block.</span>
-    <span class="ident">blocks</span>.<span class="ident">insert</span>(<span class="ident">block_to_split_index</span>, <span class="ident">new_block</span>);
     <span class="ident">new_original_block_id</span>
 }
 
-<span class="kw">fn</span> <span class="ident">make_unreachable_block</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>, <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Block</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">id</span>(<span class="ident">header</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
-    <span class="ident">new_block</span>.<span class="ident">label</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Label</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="macro">vec</span><span class="macro">!</span>[]));
-    <span class="comment">// new block is unreachable</span>
-    <span class="ident">new_block</span>
-        .<span class="ident">instructions</span>
-        .<span class="ident">push</span>(<span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Unreachable</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec</span><span class="macro">!</span>[]));
-
-    <span class="comment">// insert new block at the end</span>
-    <span class="ident">blocks</span>.<span class="ident">push</span>(<span class="ident">new_block</span>);
+<span class="kw">fn</span> <span class="ident">make_unreachable_block</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">id</span>();
+    <span class="ident">builder</span>.<span class="ident">begin_block</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>)).<span class="ident">unwrap</span>();
+    <span class="ident">builder</span>.<span class="ident">unreachable</span>().<span class="ident">unwrap</span>();
     <span class="ident">id</span>
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_selection_merge_on_conditional_branch</span>(
     <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Block</span><span class="op">&gt;</span>,
+    <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>,
     <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ControlFlowInfo</span>,
 ) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">branch_conditional_ops</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
 
     <span class="comment">// Find conditional branches that are not loops</span>
-    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>() {
+    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>) {
         <span class="kw">if</span> <span class="ident">ends_in_branch_conditional</span>(<span class="ident">block</span>)
             <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">cf_info</span>.<span class="ident">id_is_loops_header</span>(<span class="ident">block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>())
         {
@@ -1711,11 +1515,11 @@
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">id</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="ident">id</span>);
-        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">bi</span>]);
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">bi</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">a_nexts</span> <span class="op">=</span> <span class="ident">get_possible_merge_positions</span>(<span class="ident">blocks</span>, <span class="ident">cf_info</span>, <span class="ident">out</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">b_nexts</span> <span class="op">=</span> <span class="ident">get_possible_merge_positions</span>(<span class="ident">blocks</span>, <span class="ident">cf_info</span>, <span class="ident">out</span>[<span class="number">1</span>]);
+        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="ident">id</span>);
+        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>)[<span class="ident">bi</span>]);
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">idx_to_id</span>(<span class="ident">builder</span>, <span class="ident">bi</span>);
+        <span class="kw">let</span> <span class="ident">a_nexts</span> <span class="op">=</span> <span class="ident">get_possible_merge_positions</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">out</span>[<span class="number">0</span>]);
+        <span class="kw">let</span> <span class="ident">b_nexts</span> <span class="op">=</span> <span class="ident">get_possible_merge_positions</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">out</span>[<span class="number">1</span>]);
 
         <span class="comment">// Check for a matching possible merge position.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">first_merge</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -1730,45 +1534,37 @@
 
         <span class="kw">let</span> <span class="ident">merge_block_id</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">idx</span>) <span class="op">=</span> <span class="ident">first_merge</span> {
             <span class="comment">// We found a existing block that we can use as a merge block!</span>
-            <span class="ident">blocks</span>[<span class="ident">idx</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>()
+            <span class="ident">idx_to_id</span>(<span class="ident">builder</span>, <span class="ident">idx</span>)
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">a_first_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">out</span>[<span class="number">0</span>]);
-            <span class="kw">let</span> <span class="ident">b_first_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">out</span>[<span class="number">1</span>]);
-            <span class="kw">let</span> <span class="ident">a_first_id</span> <span class="op">=</span> <span class="ident">blocks</span>[<span class="ident">a_first_idx</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">b_first_id</span> <span class="op">=</span> <span class="ident">blocks</span>[<span class="ident">b_first_idx</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">a_first_id</span> <span class="op">=</span> <span class="ident">out</span>[<span class="number">0</span>];
+            <span class="kw">let</span> <span class="ident">b_first_id</span> <span class="op">=</span> <span class="ident">out</span>[<span class="number">1</span>];
             <span class="kw">let</span> <span class="ident">a_last_idx</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">a_nexts</span>.<span class="ident">last</span>() {
                 <span class="prelude-val">Some</span>(<span class="ident">last</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">last</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">out</span>[<span class="number">0</span>]),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">out</span>[<span class="number">0</span>]),
             };
             <span class="kw">let</span> <span class="ident">b_last_idx</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">b_nexts</span>.<span class="ident">last</span>() {
                 <span class="prelude-val">Some</span>(<span class="ident">last</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">last</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">out</span>[<span class="number">1</span>]),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">out</span>[<span class="number">1</span>]),
             };
 
-            <span class="kw">let</span> <span class="ident">branch_a_breaks</span> <span class="op">=</span> <span class="ident">block_leads_into_break</span>(<span class="ident">blocks</span>, <span class="ident">cf_info</span>, <span class="ident">a_first_id</span>);
-            <span class="kw">let</span> <span class="ident">branch_b_breaks</span> <span class="op">=</span> <span class="ident">block_leads_into_break</span>(<span class="ident">blocks</span>, <span class="ident">cf_info</span>, <span class="ident">b_first_id</span>);
-            <span class="kw">let</span> <span class="ident">branch_a_continues</span> <span class="op">=</span> <span class="ident">block_leads_into_continue</span>(<span class="ident">blocks</span>, <span class="ident">cf_info</span>, <span class="ident">a_first_id</span>);
-            <span class="kw">let</span> <span class="ident">branch_b_continues</span> <span class="op">=</span> <span class="ident">block_leads_into_continue</span>(<span class="ident">blocks</span>, <span class="ident">cf_info</span>, <span class="ident">b_first_id</span>);
-            <span class="kw">let</span> <span class="ident">branch_a_returns</span> <span class="op">=</span> <span class="ident">ends_in_return</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">a_last_idx</span>]);
-            <span class="kw">let</span> <span class="ident">branch_b_returns</span> <span class="op">=</span> <span class="ident">ends_in_return</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">b_last_idx</span>]);
+            <span class="kw">let</span> <span class="ident">branch_a_breaks</span> <span class="op">=</span> <span class="ident">block_leads_into_break</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">a_first_id</span>);
+            <span class="kw">let</span> <span class="ident">branch_b_breaks</span> <span class="op">=</span> <span class="ident">block_leads_into_break</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">b_first_id</span>);
+            <span class="kw">let</span> <span class="ident">branch_a_continues</span> <span class="op">=</span> <span class="ident">block_leads_into_continue</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">a_first_id</span>);
+            <span class="kw">let</span> <span class="ident">branch_b_continues</span> <span class="op">=</span> <span class="ident">block_leads_into_continue</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">b_first_id</span>);
+            <span class="kw">let</span> <span class="ident">branch_a_returns</span> <span class="op">=</span> <span class="ident">ends_in_return</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">a_last_idx</span>));
+            <span class="kw">let</span> <span class="ident">branch_b_returns</span> <span class="op">=</span> <span class="ident">ends_in_return</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">b_last_idx</span>));
 
             <span class="kw">if</span> ((<span class="ident">branch_a_breaks</span> <span class="op">|</span><span class="op">|</span> <span class="ident">branch_a_continues</span>) <span class="op">&amp;&amp;</span> (<span class="ident">branch_b_breaks</span> <span class="op">|</span><span class="op">|</span> <span class="ident">branch_b_continues</span>))
                 <span class="op">|</span><span class="op">|</span> <span class="ident">branch_a_returns</span> <span class="op">&amp;&amp;</span> <span class="ident">branch_b_returns</span>
             {
                 <span class="comment">// (fully unreachable) insert a rando block and mark as merge.</span>
-                <span class="ident">make_unreachable_block</span>(<span class="ident">header</span>, <span class="ident">blocks</span>)
+                <span class="ident">make_unreachable_block</span>(<span class="ident">builder</span>)
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">branch_a_breaks</span> <span class="op">|</span><span class="op">|</span> <span class="ident">branch_a_continues</span> <span class="op">|</span><span class="op">|</span> <span class="ident">branch_a_returns</span> {
                 <span class="comment">// (partially unreachable) merge block becomes branch b immediatly</span>
-                <span class="ident">blocks</span>[<span class="ident">b_first_idx</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>()
+                <span class="ident">b_first_id</span>
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">branch_b_breaks</span> <span class="op">|</span><span class="op">|</span> <span class="ident">branch_b_continues</span> <span class="op">|</span><span class="op">|</span> <span class="ident">branch_b_returns</span> {
                 <span class="comment">// (partially unreachable) merge block becomes branch a immediatly</span>
-                <span class="ident">blocks</span>[<span class="ident">a_first_idx</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>()
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">branch_a_returns</span> {
-                <span class="comment">// (partially unreachable) merge block becomes end/start of b.</span>
-                <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="string">&quot;UNIMPLEMENTED, A partially unreachable case was detected on a.&quot;</span>);
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">branch_b_returns</span> {
-                <span class="comment">// (partially unreachable) merge block becomes end/start of a.</span>
-                <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="string">&quot;UNIMPLEMENTED, A partially unreachable case was detected on b.&quot;</span>);
+                <span class="ident">a_first_id</span>
             } <span class="kw">else</span> {
                 <span class="comment">// In theory this should never happen.</span>
                 <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="string">&quot;UNEXPECTED, Unknown exit detected.&quot;</span>);
@@ -1776,7 +1572,7 @@
         };
 
         <span class="kw">if</span> <span class="ident">cf_info</span>.<span class="ident">used</span>(<span class="ident">merge_block_id</span>) {
-            <span class="kw">let</span> <span class="ident">new_id</span> <span class="op">=</span> <span class="ident">split_block</span>(<span class="ident">header</span>, <span class="ident">blocks</span>, <span class="ident">merge_block_id</span>, <span class="bool-val">true</span>);
+            <span class="kw">let</span> <span class="ident">new_id</span> <span class="op">=</span> <span class="ident">split_block</span>(<span class="ident">builder</span>, <span class="ident">merge_block_id</span>, <span class="bool-val">true</span>);
             <span class="ident">cf_info</span>.<span class="ident">retarget</span>(<span class="ident">merge_block_id</span>, <span class="ident">new_id</span>);
 
             <span class="kw">if</span> <span class="ident">branch_conditional_ops</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">merge_block_id</span>) {
@@ -1792,8 +1588,8 @@
         <span class="ident">cf_info</span>.<span class="ident">if_merge_ids</span>.<span class="ident">push</span>(<span class="ident">merge_block_id</span>);
 
         <span class="comment">// Insert the merge instruction</span>
-        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="ident">id</span>); <span class="comment">// after this we don&#39;t insert or remove blocks</span>
-        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span>[<span class="ident">bi</span>];
+        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>); <span class="comment">// after this we don&#39;t insert or remove blocks</span>
+        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="macro">get_block_mut</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">bi</span>);
         <span class="kw">let</span> <span class="ident">merge_inst</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">SelectionMerge</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">merge_operands</span>);
         <span class="ident">block</span>
             .<span class="ident">instructions</span>
@@ -1802,18 +1598,17 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_loop_merge_on_conditional_branch</span>(
-    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
-    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Block</span><span class="op">&gt;</span>,
+    <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>,
     <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ControlFlowInfo</span>,
 ) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">branch_conditional_ops</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
 
     <span class="comment">// Find conditional branches that are loops, and find which branch is the one that loops.</span>
-    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>() {
+    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>) {
         <span class="kw">if</span> <span class="ident">ends_in_branch_conditional</span>(<span class="ident">block</span>) {
             <span class="kw">let</span> <span class="ident">block_id</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">looping_branch_idx</span>) <span class="op">=</span>
-                <span class="ident">get_looping_branch_from_block</span>(<span class="ident">blocks</span>, <span class="ident">cf_info</span>, <span class="ident">block_id</span>)
+                <span class="ident">get_looping_branch_from_block</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">block_id</span>)
             {
                 <span class="ident">branch_conditional_ops</span>.<span class="ident">push</span>((<span class="ident">block_id</span>, <span class="ident">looping_branch_idx</span>));
                 <span class="ident">cf_info</span>.<span class="ident">loops</span>.<span class="ident">push</span>(<span class="ident">LoopInfo</span> {
@@ -1824,7 +1619,6 @@
             }
         }
     }
-
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modified_ids</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
 
     <span class="comment">// Figure out which branch loops and which branch should merge, also find any potential break ops.</span>
@@ -1835,14 +1629,14 @@
         };
 
         <span class="kw">let</span> <span class="ident">merge_branch_idx</span> <span class="op">=</span> (<span class="ident">looping_branch_idx</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">%</span> <span class="number">2</span>;
-        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>);
-        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">bi</span>]);
+        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>);
+        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>)[<span class="ident">bi</span>]);
 
-        <span class="kw">let</span> <span class="ident">continue_block_id</span> <span class="op">=</span> <span class="ident">eliminate_multiple_continue_blocks</span>(<span class="ident">blocks</span>, <span class="ident">id</span>);
+        <span class="kw">let</span> <span class="ident">continue_block_id</span> <span class="op">=</span> <span class="ident">eliminate_multiple_continue_blocks</span>(<span class="ident">builder</span>, <span class="ident">id</span>);
         <span class="kw">let</span> <span class="ident">merge_block_id</span> <span class="op">=</span> <span class="ident">out</span>[<span class="ident">merge_branch_idx</span>];
 
         <span class="kw">if</span> <span class="ident">cf_info</span>.<span class="ident">used</span>(<span class="ident">continue_block_id</span>) {
-            <span class="kw">let</span> <span class="ident">new_id</span> <span class="op">=</span> <span class="ident">split_block</span>(<span class="ident">header</span>, <span class="ident">blocks</span>, <span class="ident">continue_block_id</span>, <span class="bool-val">true</span>);
+            <span class="kw">let</span> <span class="ident">new_id</span> <span class="op">=</span> <span class="ident">split_block</span>(<span class="ident">builder</span>, <span class="ident">continue_block_id</span>, <span class="bool-val">true</span>);
             <span class="ident">cf_info</span>.<span class="ident">retarget</span>(<span class="ident">continue_block_id</span>, <span class="ident">new_id</span>);
 
             <span class="kw">if</span> <span class="ident">branch_conditional_ops</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span>(<span class="ident">continue_block_id</span>, <span class="kw-2">*</span><span class="ident">looping_branch_idx</span>)) {
@@ -1850,7 +1644,7 @@
             }
         }
         <span class="kw">if</span> <span class="ident">cf_info</span>.<span class="ident">used</span>(<span class="ident">merge_block_id</span>) {
-            <span class="kw">let</span> <span class="ident">new_id</span> <span class="op">=</span> <span class="ident">split_block</span>(<span class="ident">header</span>, <span class="ident">blocks</span>, <span class="ident">merge_block_id</span>, <span class="bool-val">true</span>);
+            <span class="kw">let</span> <span class="ident">new_id</span> <span class="op">=</span> <span class="ident">split_block</span>(<span class="ident">builder</span>, <span class="ident">merge_block_id</span>, <span class="bool-val">true</span>);
             <span class="ident">cf_info</span>.<span class="ident">retarget</span>(<span class="ident">merge_block_id</span>, <span class="ident">new_id</span>);
 
             <span class="kw">if</span> <span class="ident">branch_conditional_ops</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span>(<span class="ident">merge_block_id</span>, <span class="kw-2">*</span><span class="ident">looping_branch_idx</span>)) {
@@ -1858,8 +1652,8 @@
             }
         }
 
-        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>); <span class="comment">// after this we don&#39;t insert or remove blocks</span>
-        <span class="kw">let</span> <span class="ident">check_block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span>[<span class="ident">bi</span>];
+        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>); <span class="comment">// after this we don&#39;t insert or remove blocks</span>
+        <span class="kw">let</span> <span class="ident">check_block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">get_blocks_mut</span>(<span class="ident">builder</span>)[<span class="ident">bi</span>];
 
         <span class="kw">let</span> <span class="ident">merge_operands</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
             <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">merge_block_id</span>),

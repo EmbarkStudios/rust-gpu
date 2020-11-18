@@ -203,6 +203,8 @@
 <span id="200">200</span>
 <span id="201">201</span>
 <span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span>;
@@ -340,10 +342,12 @@
         <span class="ident">dce</span>::<span class="ident">dce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
     }
 
-    <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">structurize</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">structurize</span> {
         <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_structurize&quot;</span>);
-        <span class="ident">structurizer</span>::<span class="ident">structurize</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
-    }
+        <span class="ident">structurizer</span>::<span class="ident">structurize</span>(<span class="ident">sess</span>, <span class="ident">output</span>)
+    } <span class="kw">else</span> {
+        <span class="ident">output</span>
+    };
 
     {
         <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_block_ordering_pass_and_mem2reg&quot;</span>);
