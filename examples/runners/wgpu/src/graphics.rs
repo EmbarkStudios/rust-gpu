@@ -100,7 +100,7 @@ async fn run(
         format: swapchain_format,
         width: size.width,
         height: size.height,
-        present_mode: wgpu::PresentMode::Mailbox,
+        present_mode: wgpu::PresentMode::Fifo,
     };
 
     let mut swap_chain = surface
@@ -115,7 +115,7 @@ async fn run(
         // the resources are properly cleaned up.
         let _ = (&instance, &adapter, &module, &pipeline_layout);
 
-        *control_flow = ControlFlow::Wait;
+        *control_flow = ControlFlow::Poll;
         match event {
             Event::MainEventsCleared => {
                 window.request_redraw();

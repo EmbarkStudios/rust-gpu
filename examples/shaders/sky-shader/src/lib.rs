@@ -1,4 +1,5 @@
-//! Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
+//! Sky: Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
+//! Clouds: Ported to Rust from IQ's https://www.shadertoy.com/view/XslGRr
 
 #![cfg_attr(target_arch = "spirv", no_std)]
 #![feature(lang_items)]
@@ -108,18 +109,102 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     lin + l0
 }
 
+fn map(pos: Vec3, num: u32, time: f32) -> f32 {
+    let q = pos - Vec3::new(0.0, 0.1, 1.0) * time;
+    let mut f = 1.0;
+    let mut weight = 1.0;
+
+    let mut i = 0;
+    while i < num {
+        f += 0.5 / weight * noise(weight * q);
+
+        i += 1;
+        weight *= 2.1;
+    }
+
+    (1.5 - pos.y() - 2. + 1.75 * f).min(1.0).max(0.0)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn raymarch_cloud_layer(
+    steps: u32,
+    n: u32,
+    ro: Vec3,
+    rd: Vec3,
+    sun_dir: Vec3,
+    bg_col: Vec3,
+    sum: &mut Vec4,
+    t: &mut f32,
+    time: f32,
+) {
+    let mut i = 0;
+    while i < steps {
+        let pos = ro + (*t) * rd;
+        if sum.w() > 0.99 {
+            break;
+        }
+        let den = map(pos, n, time);
+        if den > 0.01 {
+            let dif = ((den - map(pos + 0.3 * sun_dir, n, time)) / 0.6)
+                .max(0.0)
+                .min(1.0);
+
+            let lin = Vec3::new(0.65, 0.7, 0.75) * 1.4 + Vec3::new(1.0, 0.6, 0.3) * dif;
+            let mut col = Vec3::new(1.0, 0.95, 0.8)
+                .lerp(Vec3::new(0.25, 0.3, 0.35), den)
+                .extend(den);
+            col *= lin.extend(1.0);
+            col = col.lerp(bg_col.extend(col.w()), 1.0 - (-0.003 * (*t) * (*t)).exp());
+            col.set_w(col.w() * 0.4);
+
+            col.set_x(col.x() * col.w());
+            col.set_y(col.y() * col.w());
+            col.set_z(col.z() * col.w());
+
+            *sum += col * (1.0 - sum.w());
+        }
+        *t += 0.05f32.max(0.02 * (*t));
+
+        i += 1;
+    }
+}
+
+fn raymarch_clouds(ro: Vec3, rd: Vec3, sun_dir: Vec3, bg_col: Vec3, time: f32) -> Vec4 {
+    let mut sum = Vec4::zero();
+    let mut t = 0.0;
+
+    raymarch_cloud_layer(40, 5, ro, rd, sun_dir, bg_col, &mut sum, &mut t, time);
+    raymarch_cloud_layer(40, 4, ro, rd, sun_dir, bg_col, &mut sum, &mut t, time);
+    raymarch_cloud_layer(30, 3, ro, rd, sun_dir, bg_col, &mut sum, &mut t, time);
+    raymarch_cloud_layer(30, 2, ro, rd, sun_dir, bg_col, &mut sum, &mut t, time);
+
+    let sky_power = 2.5f32;
+    Vec4::new(
+        sum.x() * sky_power,
+        sum.y() * sky_power,
+        sum.z() * sky_power,
+        sum.w(),
+    )
+}
+
 pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
     let mut uv = (frag_coord - 0.5 * Vec2::new(constants.width as f32, constants.height as f32))
         / constants.height as f32;
     uv.set_y(-uv.y());
 
     // hard-code information because we can't bind buffers at the moment
-    let eye_pos = Vec3::new(0.0, 0.0997, 0.2);
+    let eye_pos = Vec3::new(0.0, 2.0, 0.0);
     let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
     let dir = get_ray_dir(uv, eye_pos, sun_pos);
+    let sun_dir = sun_pos.normalize();
 
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
+
+    // raymarch clouds
+    let clouds = raymarch_clouds(eye_pos, dir, sun_dir, color, constants.time);
+    let w = clouds.w();
+    let color = color * (1.0 - w) + Vec3::new(clouds.x(), clouds.y(), clouds.z());
 
     // Tonemapping
     let color = color.max(Vec3::splat(0.0)).min(Vec3::splat(1024.0));

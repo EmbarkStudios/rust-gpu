@@ -5,7 +5,7 @@
 #![feature(register_attr)]
 #![register_attr(spirv)]
 
-use core::f32::consts::PI;
+use core::f32::consts::{FRAC_1_PI, PI};
 use spirv_std::glam::{Vec2, Vec3};
 use spirv_std::MathExt;
 
@@ -37,6 +37,54 @@ pub fn acos_approx(v: f32) -> f32 {
     } else {
         PI - res
     }
+}
+
+pub fn hash(p: Vec3) -> f32 {
+    let p = p * Vec3::splat(FRAC_1_PI) + Vec3::splat(0.1);
+    let mut p = Vec3::new(p.x().fract(), p.y().fract(), p.z().fract());
+    p *= 17.0;
+    (p.x() * p.y() * p.z() * (p.x() + p.y() + p.z())).fract()
+}
+
+pub fn mix(x: f32, y: f32, s: f32) -> f32 {
+    x + s * (y - x)
+}
+
+pub fn noise(x: Vec3) -> f32 {
+    let i = x.floor();
+    let mut f = Vec3::new(x.x().fract(), x.y().fract(), x.z().fract());
+    f = f * f * (Vec3::splat(3.0) - Vec3::splat(2.0) * f);
+
+    -1.0 + 2.0
+        * mix(
+            mix(
+                mix(
+                    hash(i + Vec3::new(0.0, 0.0, 0.0)),
+                    hash(i + Vec3::new(1.0, 0.0, 0.0)),
+                    f.x(),
+                ),
+                mix(
+                    hash(i + Vec3::new(0.0, 1.0, 0.0)),
+                    hash(i + Vec3::new(1.0, 1.0, 0.0)),
+                    f.x(),
+                ),
+                f.y(),
+            ),
+            mix(
+                mix(
+                    hash(i + Vec3::new(0.0, 0.0, 1.0)),
+                    hash(i + Vec3::new(1.0, 0.0, 1.0)),
+                    f.x(),
+                ),
+                mix(
+                    hash(i + Vec3::new(0.0, 1.0, 1.0)),
+                    hash(i + Vec3::new(1.0, 1.0, 1.0)),
+                    f.x(),
+                ),
+                f.y(),
+            ),
+            f.z(),
+        )
 }
 
 /// renamed because of cross-compilation issues with spirv-cross/ moltenvk
