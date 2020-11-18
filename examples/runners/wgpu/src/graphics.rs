@@ -154,7 +154,7 @@ async fn run(
                 if last_printed_fps.elapsed().as_secs_f32() > 1. {
                     let fps = (frame_times.iter().sum::<f64>() / frame_times.len() as f64).recip();
                     println!(
-                        "FPS : {}; Frames since previous: {} (After: {:?})",
+                        "FPS : {:.5}; Frames since previous: {} (After: {:?})",
                         fps,
                         frame_times.len(),
                         start.elapsed(),
