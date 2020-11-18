@@ -49,7 +49,7 @@ spirv-std = { path = "../../crates/spirv-std" }
 "#;
 
 static SRC_PREFIX: &str = r#"#![no_std]
-#![feature(lang_items, register_attr)]
+#![feature(lang_items, register_attr, asm)]
 #![register_attr(spirv)]
 use core::panic::PanicInfo;
 #[allow(unused_imports)]
