@@ -143,7 +143,7 @@ fn get_blocks_mut(builder: &mut Builder) -> &mut Vec<Block> {
     &mut builder.module_mut().functions[function].blocks
 }
 
-fn get_blocks_ref(builder: &Builder) -> &Vec<Block> {
+fn get_blocks_ref(builder: &Builder) -> &[Block] {
     let function = builder.selected_function().unwrap();
     &builder.module_ref().functions[function].blocks
 }
