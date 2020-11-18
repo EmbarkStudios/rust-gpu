@@ -1,8 +1,8 @@
 use minifb::{Key, Window, WindowOptions};
 use rayon::prelude::*;
+use shared::ShaderConstants;
 use spirv_std::glam::{vec2, Vec2, Vec4};
 use std::time::Instant;
-use shared::ShaderConstants;
 
 use sky_shader as shader_module;
 
