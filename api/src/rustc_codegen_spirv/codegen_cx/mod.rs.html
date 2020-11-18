@@ -367,13 +367,15 @@
 <span id="364">364</span>
 <span id="365">365</span>
 <span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
 <span class="kw">mod</span> <span class="ident">entry</span>;
 <span class="kw">mod</span> <span class="ident">type_</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder</span>::<span class="ident">ExtInst</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder</span>::{<span class="ident">ExtInst</span>, <span class="ident">InstructionTable</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">BuilderSpirv</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueKind</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">finalizing_passes</span>::<span class="ident">export_zombies</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::{<span class="ident">SpirvType</span>, <span class="ident">SpirvTypePrinter</span>, <span class="ident">TypeCache</span>};
@@ -420,6 +422,7 @@
     <span class="kw">pub</span> <span class="ident">kernel_mode</span>: <span class="ident">bool</span>,
     <span class="doccomment">/// Cache of all the builtin symbols we need</span>
     <span class="kw">pub</span> <span class="ident">sym</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Symbols</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">instruction_table</span>: <span class="ident">InstructionTable</span>,
     <span class="kw">pub</span> <span class="ident">really_unsafe_ignore_bitcasts</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">SpirvValue</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">zombie_undefs_for_system_constant_pointers</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it&#39;s allowed by the spec.</span>
@@ -470,6 +473,7 @@
             <span class="ident">zombie_values</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">kernel_mode</span>,
             <span class="ident">sym</span>,
+            <span class="ident">instruction_table</span>: <span class="ident">InstructionTable</span>::<span class="ident">new</span>(),
             <span class="ident">really_unsafe_ignore_bitcasts</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">zombie_undefs_for_system_constant_pointers</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">i8_i16_atomics_allowed</span>: <span class="bool-val">false</span>,
@@ -633,7 +637,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">get_fn_addr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_fn_ext</span>(<span class="ident">instance</span>);
+        <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_fn</span>(<span class="ident">instance</span>);
         <span class="self">self</span>.<span class="ident">make_constant_pointer</span>(<span class="ident">function</span>)
     }
 
