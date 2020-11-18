@@ -41,9 +41,9 @@ pub fn acos_approx(v: f32) -> f32 {
 
 pub fn hash(p: Vec3) -> f32 {
     let p = p * Vec3::splat(FRAC_1_PI) + Vec3::splat(0.1);
-    let mut p = Vec3::new(p.x().fract(), p.y().fract(), p.z().fract());
+    let mut p = Vec3::new(p.x().gl_fract(), p.y().gl_fract(), p.z().gl_fract());
     p *= 17.0;
-    (p.x() * p.y() * p.z() * (p.x() + p.y() + p.z())).fract()
+    (p.x() * p.y() * p.z() * (p.x() + p.y() + p.z())).gl_fract()
 }
 
 pub fn mix(x: f32, y: f32, s: f32) -> f32 {
@@ -52,7 +52,7 @@ pub fn mix(x: f32, y: f32, s: f32) -> f32 {
 
 pub fn noise(x: Vec3) -> f32 {
     let i = x.floor();
-    let mut f = Vec3::new(x.x().fract(), x.y().fract(), x.z().fract());
+    let mut f = Vec3::new(x.x().gl_fract(), x.y().gl_fract(), x.z().gl_fract());
     f = f * f * (Vec3::splat(3.0) - Vec3::splat(2.0) * f);
 
     -1.0 + 2.0

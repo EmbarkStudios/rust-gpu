@@ -13,6 +13,7 @@ pub trait MathExt {
     fn saturate(self) -> Self;
     fn trunc(self) -> Self;
     fn fract(self) -> Self;
+    fn gl_fract(self) -> Self;
 
     fn signum(self) -> Self;
     fn copysign(self, sign: Self) -> Self;
@@ -78,6 +79,10 @@ impl MathExt for f32 {
     }
 
     fn fract(self) -> f32 {
+        self - self.trunc()
+    }
+
+    fn gl_fract(self) -> f32 {
         self - self.floor()
     }
 
