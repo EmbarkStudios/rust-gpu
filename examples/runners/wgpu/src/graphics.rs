@@ -1,4 +1,5 @@
-use super::{shader_module, Options, ShaderConstants};
+use super::{shader_module, Options};
+use shared::ShaderConstants;
 use winit::{
     event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
