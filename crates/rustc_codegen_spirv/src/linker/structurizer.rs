@@ -766,24 +766,21 @@ pub fn insert_loop_merge_on_conditional_branch(
     let mut branch_conditional_ops = Vec::new();
 
     // Find conditional branches that are loops, and find which branch is the one that loops.
-    {
-        for block in get_blocks_ref(builder) {
-            if ends_in_branch_conditional(block) {
-                let block_id = block.label_id().unwrap();
-                if let Some(looping_branch_idx) =
-                    get_looping_branch_from_block(builder, cf_info, block_id)
-                {
-                    branch_conditional_ops.push((block_id, looping_branch_idx));
-                    cf_info.loops.push(LoopInfo {
-                        header_id: block_id,
-                        merge_id: 0,
-                        continue_id: 0,
-                    })
-                }
+    for block in get_blocks_ref(builder) {
+        if ends_in_branch_conditional(block) {
+            let block_id = block.label_id().unwrap();
+            if let Some(looping_branch_idx) =
+                get_looping_branch_from_block(builder, cf_info, block_id)
+            {
+                branch_conditional_ops.push((block_id, looping_branch_idx));
+                cf_info.loops.push(LoopInfo {
+                    header_id: block_id,
+                    merge_id: 0,
+                    continue_id: 0,
+                })
             }
         }
     }
-
     let mut modified_ids = HashMap::new();
 
     // Figure out which branch loops and which branch should merge, also find any potential break ops.
