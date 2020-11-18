@@ -26,13 +26,6 @@ const SUN_INTENSITY_FACTOR: f32 = 1000.0;
 const SUN_INTENSITY_FALLOFF_STEEPNESS: f32 = 1.5;
 const TURBIDITY: f32 = 2.0;
 
-#[derive(Copy, Clone)]
-pub struct ShaderConstants {
-    pub width: u32,
-    pub height: u32,
-    pub time: f32,
-}
-
 fn total_rayleigh(lambda: Vec3) -> Vec3 {
     (8.0 * PI.pow(3.0)
         * (REFRACTIVE_INDEX.pow(2.0) - 1.0).pow(2.0)
