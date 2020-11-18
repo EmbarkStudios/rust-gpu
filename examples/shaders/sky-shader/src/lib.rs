@@ -38,12 +38,12 @@ fn saturate(x: f32) -> f32 {
 
 // TODO: add this to glam? Rust std has it on f32/f64
 fn pow(v: Vec3, power: f32) -> Vec3 {
-    Vec3::new(v.x().powf(power), v.y().powf(power), v.z().powf(power))
+    Vec3::new(v.x.powf(power), v.y.powf(power), v.z.powf(power))
 }
 
 // TODO: add this to glam? Rust std has it on f32/f64
 fn exp(v: Vec3) -> Vec3 {
-    Vec3::new(v.x().exp(), v.y().exp(), v.z().exp())
+    Vec3::new(v.x.exp(), v.y.exp(), v.z.exp())
 }
 
 /// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
@@ -110,7 +110,7 @@ fn tonemap(col: Vec3) -> Vec3 {
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
-    let sunfade = 1.0 - (1.0 - saturate(sun_position.y() / 450000.0).exp());
+    let sunfade = 1.0 - (1.0 - saturate(sun_position.y / 450000.0).exp());
     let rayleigh_coefficient = RAYLEIGH - (1.0 * (1.0 - sunfade));
     let beta_r = total_rayleigh(PRIMARIES) * rayleigh_coefficient;
 
@@ -164,13 +164,13 @@ fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3) -> Vec3 {
     let forward = (look_at_pos - pos).normalize();
     let right = Vec3::new(0.0, 1.0, 0.0).cross(forward).normalize();
     let up = forward.cross(right);
-    (forward + uv.x() * right + uv.y() * up).normalize()
+    (forward + uv.x * right + uv.y * up).normalize()
 }
 
 pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
     let mut uv = (frag_coord - 0.5 * Vec2::new(constants.width as f32, constants.height as f32))
         / constants.height as f32;
-    uv.set_y(-uv.y());
+    uv.y = -uv.y;
 
     // hard-code information because we can't bind buffers at the moment
     let eye_pos = Vec3::new(0.0, 0.0997, 0.2);
@@ -195,7 +195,7 @@ pub fn main_fs(
 ) {
     let constants = constants.load();
 
-    let frag_coord = Vec2::new(in_frag_coord.load().x(), in_frag_coord.load().y());
+    let frag_coord = Vec2::new(in_frag_coord.load().x, in_frag_coord.load().y);
     let color = fs(&constants, frag_coord);
     output.store(color);
 }

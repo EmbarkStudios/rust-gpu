@@ -17,10 +17,10 @@ fn srgb_oetf(x: f32) -> f32 {
 fn color_u32_from_vec4(v: Vec4) -> u32 {
     let convert = |f: f32| -> u32 { (f.min(1.0).max(0.0) * 255.0).round() as u32 };
 
-    convert(srgb_oetf(v.z()))
-        | convert(srgb_oetf(v.y())) << 8
-        | convert(srgb_oetf(v.x())) << 16
-        | convert(v.w()) << 24
+    convert(srgb_oetf(v.z))
+        | convert(srgb_oetf(v.y)) << 8
+        | convert(srgb_oetf(v.x)) << 16
+        | convert(v.w) << 24
 }
 
 fn main() {
@@ -54,8 +54,7 @@ fn main() {
                 -((i / WIDTH) as f32 / HEIGHT as f32 * 2.0 - 1.0),
             );
 
-            let frag_coord = (vec2(screen_pos.x(), -screen_pos.y()) + Vec2::one())
-                / Vec2::splat(2.0)
+            let frag_coord = (vec2(screen_pos.x, -screen_pos.y) + Vec2::one()) / Vec2::splat(2.0)
                 * vec2(WIDTH as f32, HEIGHT as f32);
 
             // evaluate the fragment shader for the specific pixel
