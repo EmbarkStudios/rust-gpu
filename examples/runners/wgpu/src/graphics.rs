@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use super::{shader_module, Options};
 use shared::ShaderConstants;
 use winit::{
@@ -109,6 +111,11 @@ async fn run(
 
     let start = std::time::Instant::now();
 
+    let mut last_printed_fps = Instant::now();
+    let mut last_frame_start = Instant::now();
+    let mut frame_times = [-1f64; 20];
+    let mut frame_idx = 0;
+
     event_loop.run(move |event, _, control_flow| {
         // Have the closure take ownership of the resources.
         // `event_loop.run` never returns, therefore we must do this to ensure
@@ -141,6 +148,26 @@ async fn run(
                 }
             }
             Event::RedrawRequested(_) => {
+                // Compute FPS
+                frame_times[frame_idx] = (Instant::now() - last_frame_start).as_secs_f64();
+                last_frame_start = Instant::now();
+                frame_idx = (frame_idx + 1) % frame_times.len();
+                // Print fps every second
+                if Instant::now() - last_printed_fps > Duration::from_secs_f32(1.) {
+                    last_printed_fps = Instant::now();
+                    let mut count = 0;
+                    let fps = (frame_times
+                        .iter()
+                        .filter(|x| **x != -1.)
+                        .map(|x| {
+                            count += 1;
+                            *x
+                        })
+                        .sum::<f64>()
+                        / count as f64)
+                        .recip();
+                    println!("FPS: {}", fps);
+                }
                 if let Some(swap_chain) = &mut swap_chain {
                     let frame = swap_chain
                         .get_current_frame()
