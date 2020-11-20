@@ -58,7 +58,6 @@ impl<'tcx> CodegenCx<'tcx> {
     // MiscMethods::get_fn_addr -> get_fn_ext -> declare_fn_ext
     // PreDefineMethods::predefine_fn -> declare_fn_ext
     fn declare_fn_ext(&self, instance: Instance<'tcx>, linkage: Option<LinkageType>) -> SpirvValue {
-        let symbol_name = self.tcx.symbol_name(instance).name;
         let control = attrs_to_spirv(self.tcx.codegen_fn_attrs(instance.def_id()));
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
         let function_type = fn_abi.spirv_type(self);
@@ -70,7 +69,7 @@ impl<'tcx> CodegenCx<'tcx> {
             other => bug!("fn_abi type {}", other.debug(function_type, self)),
         };
 
-        if crate::is_blocklisted_fn(symbol_name) {
+        if crate::is_blocklisted_fn(self.tcx, &self.sym, instance) {
             // This can happen if we call a blocklisted function in another crate.
             let result = self.undef(function_type);
             // TODO: Span info here
@@ -96,6 +95,7 @@ impl<'tcx> CodegenCx<'tcx> {
         emit.name(fn_id, &human_name);
         drop(emit); // set_linkage uses emit
         if let Some(linkage) = linkage {
+            let symbol_name = self.tcx.symbol_name(instance).name;
             self.set_linkage(fn_id, symbol_name.to_owned(), linkage);
         }
 

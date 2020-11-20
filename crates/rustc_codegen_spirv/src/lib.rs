@@ -112,11 +112,11 @@ use rustc_middle::middle::cstore::{EncodedMetadata, MetadataLoader, MetadataLoad
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::query::Providers;
-use rustc_middle::ty::{InstanceDef, TyCtxt};
+use rustc_middle::ty::{self, DefIdTree, Instance, InstanceDef, TyCtxt};
 use rustc_mir::util::write_mir_pretty;
 use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
-use rustc_span::Symbol;
+use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions, TargetTriple};
 use std::any::Any;
@@ -146,9 +146,41 @@ fn dump_mir<'tcx>(
     }
 }
 
-fn is_blocklisted_fn(symbol_name: &str) -> bool {
+fn is_blocklisted_fn<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    sym: &symbols::Symbols,
+    instance: Instance<'tcx>,
+) -> bool {
     // TODO: These sometimes have a constant value of an enum variant with a hole
-    symbol_name.contains("core..fmt..Debug")
+    if let InstanceDef::Item(def) = instance.def {
+        if let Some(debug_trait_def_id) = tcx.get_diagnostic_item(sym::debug_trait) {
+            // Helper for detecting `<_ as core::fmt::Debug>::fmt` (in impls).
+            let is_debug_fmt_method = |def_id| match tcx.opt_associated_item(def_id) {
+                Some(assoc) if assoc.ident.name == sym::fmt => match assoc.container {
+                    ty::ImplContainer(impl_def_id) => {
+                        tcx.impl_trait_ref(impl_def_id).map(|tr| tr.def_id)
+                            == Some(debug_trait_def_id)
+                    }
+                    ty::TraitContainer(_) => false,
+                },
+                _ => false,
+            };
+
+            if is_debug_fmt_method(def.did) {
+                return true;
+            }
+
+            if tcx.opt_item_name(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
+                if let Some(parent_def_id) = tcx.parent(def.did) {
+                    if is_debug_fmt_method(parent_def_id) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    false
 }
 
 fn target_options() -> Target {
@@ -489,18 +521,20 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
             }
 
             for &(mono_item, (linkage, visibility)) in mono_items.iter() {
-                let name = mono_item.symbol_name(cx.tcx).name;
-                if is_blocklisted_fn(name) {
-                    continue;
+                if let MonoItem::Fn(instance) = mono_item {
+                    if is_blocklisted_fn(cx.tcx, &cx.sym, instance) {
+                        continue;
+                    }
                 }
                 mono_item.predefine::<Builder<'_, '_>>(&cx, linkage, visibility);
             }
 
             // ... and now that we have everything pre-defined, fill out those definitions.
             for &(mono_item, _) in mono_items.iter() {
-                let name = mono_item.symbol_name(cx.tcx).name;
-                if is_blocklisted_fn(name) {
-                    continue;
+                if let MonoItem::Fn(instance) = mono_item {
+                    if is_blocklisted_fn(cx.tcx, &cx.sym, instance) {
+                        continue;
+                    }
                 }
                 mono_item.define::<Builder<'_, '_>>(&cx);
             }
