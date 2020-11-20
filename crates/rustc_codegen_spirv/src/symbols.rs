@@ -10,6 +10,9 @@ use std::collections::HashMap;
 /// already exists, deduplicating it if so. This makes things like comparison and cloning really cheap. So, this struct
 /// is to allocate all our keywords up front and intern them all, so we can do comparisons really easily and fast.
 pub struct Symbols {
+    // Used by `is_blocklisted_fn`.
+    pub fmt_decimal: Symbol,
+
     pub spirv: Symbol,
     pub spirv_std: Symbol,
     pub kernel: Symbol,
@@ -331,6 +334,8 @@ impl Symbols {
             assert!(old.is_none());
         });
         Self {
+            fmt_decimal: Symbol::intern("fmt_decimal"),
+
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
             kernel: Symbol::intern("kernel"),

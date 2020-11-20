@@ -146,7 +146,11 @@ fn dump_mir<'tcx>(
     }
 }
 
-fn is_blocklisted_fn<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) -> bool {
+fn is_blocklisted_fn<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    sym: &symbols::Symbols,
+    instance: Instance<'tcx>,
+) -> bool {
     // TODO: These sometimes have a constant value of an enum variant with a hole
     if let InstanceDef::Item(def) = instance.def {
         if let Some(debug_trait_def_id) = tcx.get_diagnostic_item(sym::debug_trait) {
@@ -166,12 +170,10 @@ fn is_blocklisted_fn<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) -> bool 
                 return true;
             }
 
-            if let Some(name) = tcx.opt_item_name(def.did) {
-                if name.as_str() == "fmt_decimal" {
-                    if let Some(parent_def_id) = tcx.parent(def.did) {
-                        if is_debug_fmt_method(parent_def_id) {
-                            return true;
-                        }
+            if tcx.opt_item_name(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
+                if let Some(parent_def_id) = tcx.parent(def.did) {
+                    if is_debug_fmt_method(parent_def_id) {
+                        return true;
                     }
                 }
             }
@@ -520,7 +522,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
 
             for &(mono_item, (linkage, visibility)) in mono_items.iter() {
                 if let MonoItem::Fn(instance) = mono_item {
-                    if is_blocklisted_fn(cx.tcx, instance) {
+                    if is_blocklisted_fn(cx.tcx, &cx.sym, instance) {
                         continue;
                     }
                 }
@@ -530,7 +532,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
             // ... and now that we have everything pre-defined, fill out those definitions.
             for &(mono_item, _) in mono_items.iter() {
                 if let MonoItem::Fn(instance) = mono_item {
-                    if is_blocklisted_fn(cx.tcx, instance) {
+                    if is_blocklisted_fn(cx.tcx, &cx.sym, instance) {
                         continue;
                     }
                 }
