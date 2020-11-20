@@ -91,11 +91,20 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         emit.end_function().unwrap();
 
-        let human_name = format!("{}", instance);
-        emit.name(fn_id, &human_name);
+        // HACK(eddyb) this is a bit roundabout, but the easiest way to get a
+        // fully absolute path that contains at least as much information as
+        // `instance.to_string()` (at least with `-Z symbol-mangling-version=v0`).
+        // While we could use the mangled symbol insyead, like we do for linkage,
+        // `OpName` is more of a debugging aid, so not having to separately
+        // demangle the SPIR-V can help. However, if some tools assume `OpName`
+        // is always a valid identifier, we may have to offer the mangled name
+        // (as some sort of opt-in, or toggled based on the platform, etc.).
+        let symbol_name = self.tcx.symbol_name(instance).name;
+        let demangled_symbol_name = format!("{:#}", rustc_demangle::demangle(symbol_name));
+        emit.name(fn_id, &demangled_symbol_name);
+
         drop(emit); // set_linkage uses emit
         if let Some(linkage) = linkage {
-            let symbol_name = self.tcx.symbol_name(instance).name;
             self.set_linkage(fn_id, symbol_name.to_owned(), linkage);
         }
 
@@ -104,7 +113,8 @@ impl<'tcx> CodegenCx<'tcx> {
         for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
             match attr {
                 SpirvAttribute::Entry(entry) => {
-                    self.entry_stub(&instance, &fn_abi, declared, human_name.clone(), entry)
+                    let crate_relative_name = instance.to_string();
+                    self.entry_stub(&instance, &fn_abi, declared, crate_relative_name, entry)
                 }
                 SpirvAttribute::ReallyUnsafeIgnoreBitcasts => {
                     self.really_unsafe_ignore_bitcasts
