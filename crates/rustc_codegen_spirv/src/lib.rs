@@ -111,8 +111,7 @@ use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::middle::cstore::{EncodedMetadata, MetadataLoader, MetadataLoaderDyn};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::print::with_no_trimmed_paths;
-use rustc_middle::ty::query::Providers;
-use rustc_middle::ty::{self, DefIdTree, Instance, InstanceDef, TyCtxt};
+use rustc_middle::ty::{self, query, DefIdTree, Instance, InstanceDef, TyCtxt};
 use rustc_mir::util::write_mir_pretty;
 use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
@@ -267,7 +266,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         Box::new(SpirvMetadataLoader)
     }
 
-    fn provide(&self, providers: &mut Providers) {
+    fn provide(&self, providers: &mut query::Providers) {
         // This is a lil weird: so, we obviously don't support C ABIs at all. However, libcore does declare some extern
         // C functions:
         // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/slice/cmp.rs#L119
@@ -290,7 +289,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         };
     }
 
-    fn provide_extern(&self, providers: &mut Providers) {
+    fn provide_extern(&self, providers: &mut query::Providers) {
         // See comments in provide(), only this time we use the default *extern* provider.
         providers.fn_sig = |tcx, def_id| {
             let result = (rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig)(tcx, def_id);

@@ -12,6 +12,7 @@ use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BuilderMethods, ConstMethods, LayoutTypeMethods, OverflowOp};
 use rustc_codegen_ssa::MemFlags;
+use rustc_middle::bug;
 use rustc_middle::ty::Ty;
 use rustc_span::Span;
 use rustc_target::abi::{Abi, Align, Scalar, Size};
@@ -1973,11 +1974,26 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         for (argument, argument_type) in args.iter().zip(argument_types) {
             assert_ty_eq!(self, argument.ty, argument_type);
         }
-        let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
-        self.emit()
-            .function_call(result_type, None, llfn.def(self), args)
-            .unwrap()
-            .with_type(result_type)
+        let llfn_def = llfn.def(self);
+        let libm_intrinsic = self.libm_intrinsics.borrow().get(&llfn_def).cloned();
+        if let Some(libm_intrinsic) = libm_intrinsic {
+            let result = self.call_libm_intrinsic(libm_intrinsic, result_type, args);
+            if result_type != result.ty {
+                bug!(
+                    "Mismatched libm result type for {:?}: expected {}, got {}",
+                    libm_intrinsic,
+                    self.debug_type(result_type),
+                    self.debug_type(result.ty),
+                );
+            }
+            result
+        } else {
+            let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
+            self.emit()
+                .function_call(result_type, None, llfn_def, args)
+                .unwrap()
+                .with_type(result_type)
+        }
     }
 
     fn zext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {

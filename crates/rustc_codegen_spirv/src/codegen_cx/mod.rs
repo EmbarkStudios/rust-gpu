@@ -53,6 +53,7 @@ pub struct CodegenCx<'tcx> {
     pub instruction_table: InstructionTable,
     pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
     pub zombie_undefs_for_system_constant_pointers: RefCell<HashMap<Word, Word>>,
+    pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
@@ -104,6 +105,7 @@ impl<'tcx> CodegenCx<'tcx> {
             instruction_table: InstructionTable::new(),
             really_unsafe_ignore_bitcasts: Default::default(),
             zombie_undefs_for_system_constant_pointers: Default::default(),
+            libm_intrinsics: Default::default(),
             i8_i16_atomics_allowed: false,
         }
     }
@@ -168,6 +170,8 @@ impl<'tcx> CodegenCx<'tcx> {
             .contains_name(self.tcx.hir().krate_attrs(), sym::compiler_builtins)
             || self.tcx.crate_name(LOCAL_CRATE) == sym::core
             || self.tcx.crate_name(LOCAL_CRATE) == self.sym.spirv_std
+            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.libm
+            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.num_traits
     }
 
     pub fn finalize_module(self) -> Module {

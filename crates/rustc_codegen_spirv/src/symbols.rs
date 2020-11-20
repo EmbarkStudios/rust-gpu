@@ -1,3 +1,4 @@
+use crate::builder::libm_intrinsics;
 use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
@@ -15,6 +16,8 @@ pub struct Symbols {
 
     pub spirv: Symbol,
     pub spirv_std: Symbol,
+    pub libm: Symbol,
+    pub num_traits: Symbol,
     pub kernel: Symbol,
     pub simple: Symbol,
     pub vulkan: Symbol,
@@ -30,6 +33,7 @@ pub struct Symbols {
     really_unsafe_ignore_bitcasts: Symbol,
     attributes: HashMap<Symbol, SpirvAttribute>,
     execution_modes: HashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
+    pub libm_intrinsics: HashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
 }
 
 const BUILTINS: &[(&str, BuiltIn)] = {
@@ -322,22 +326,30 @@ impl Symbols {
             .chain(execution_models)
             .map(|(a, b)| (Symbol::intern(a), b));
         let mut attributes = HashMap::new();
-        attributes_iter.for_each(|(a, b)| {
+        for (a, b) in attributes_iter {
             let old = attributes.insert(a, b);
             // `.collect()` into a HashMap does not error on duplicates, so manually write out the
             // loop here to error on duplicates.
             assert!(old.is_none());
-        });
+        }
         let mut execution_modes = HashMap::new();
-        EXECUTION_MODES.iter().for_each(|(key, mode, dim)| {
-            let old = execution_modes.insert(Symbol::intern(key), (*mode, *dim));
+        for &(key, mode, dim) in EXECUTION_MODES {
+            let old = execution_modes.insert(Symbol::intern(key), (mode, dim));
             assert!(old.is_none());
-        });
+        }
+
+        let mut libm_intrinsics = HashMap::new();
+        for &(a, b) in libm_intrinsics::TABLE {
+            let old = libm_intrinsics.insert(Symbol::intern(a), b);
+            assert!(old.is_none());
+        }
         Self {
             fmt_decimal: Symbol::intern("fmt_decimal"),
 
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
+            libm: Symbol::intern("libm"),
+            num_traits: Symbol::intern("num_traits"),
             kernel: Symbol::intern("kernel"),
             simple: Symbol::intern("simple"),
             vulkan: Symbol::intern("vulkan"),
@@ -353,6 +365,7 @@ impl Symbols {
             really_unsafe_ignore_bitcasts: Symbol::intern("really_unsafe_ignore_bitcasts"),
             attributes,
             execution_modes,
+            libm_intrinsics,
         }
     }
 }
