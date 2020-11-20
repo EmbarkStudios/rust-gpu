@@ -97,7 +97,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     // Composition + solar disc
     let sun_angular_diameter_cos = SUN_ANGULAR_DIAMETER_DEGREES.cos();
-    let sundisk = my_smoothstep(
+    let sundisk = smoothstep(
         sun_angular_diameter_cos,
         sun_angular_diameter_cos + 0.00002,
         cos_theta,
