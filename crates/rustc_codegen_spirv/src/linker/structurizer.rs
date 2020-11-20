@@ -1,8 +1,11 @@
 // This pass inserts merge instructions for structured control flow with the assumption the spir-v is reducible.
 
 use super::simple_passes::outgoing_edges;
-use rspirv::dr::{Block, Builder, InsertPoint, Instruction, Module, Operand};
 use rspirv::spirv::{Op, SelectionControl, Word};
+use rspirv::{
+    dr::{Block, Builder, InsertPoint, Module, Operand},
+    spirv::LoopControl,
+};
 use rustc_session::Session;
 use std::collections::{HashMap, VecDeque};
 
@@ -742,20 +745,18 @@ pub fn insert_selection_merge_on_conditional_branch(
             }
         }
 
-        let merge_operands = vec![
-            Operand::IdRef(merge_block_id),
-            Operand::SelectionControl(SelectionControl::NONE),
-        ];
-
         cf_info.if_merge_ids.push(merge_block_id);
 
         // Insert the merge instruction
         let bi = find_block_index_from_id(builder, &id); // after this we don't insert or remove blocks
-        let block = get_block_mut!(builder, bi);
-        let merge_inst = Instruction::new(Op::SelectionMerge, None, None, merge_operands);
-        block
-            .instructions
-            .insert(block.instructions.len() - 1, merge_inst);
+        builder.select_block(Some(bi)).unwrap();
+        builder
+            .insert_selection_merge(
+                InsertPoint::FromEnd(1),
+                merge_block_id,
+                SelectionControl::NONE,
+            )
+            .unwrap();
     }
 }
 
@@ -814,21 +815,19 @@ pub fn insert_loop_merge_on_conditional_branch(
             }
         }
 
-        let bi = find_block_index_from_id(builder, &id); // after this we don't insert or remove blocks
-        let check_block = &mut get_blocks_mut(builder)[bi];
-
-        let merge_operands = vec![
-            Operand::IdRef(merge_block_id),
-            Operand::IdRef(continue_block_id),
-            Operand::SelectionControl(SelectionControl::NONE),
-        ];
-
         cf_info.set_loops_continue_and_merge(id, merge_block_id, continue_block_id);
 
         // Insert the merge instruction
-        let merge_inst = Instruction::new(Op::LoopMerge, None, None, merge_operands);
-        check_block
-            .instructions
-            .insert(check_block.instructions.len() - 1, merge_inst);
+        let bi = find_block_index_from_id(builder, &id); // after this we don't insert or remove blocks
+        builder.select_block(Some(bi)).unwrap();
+        builder
+            .insert_loop_merge(
+                InsertPoint::FromEnd(1),
+                merge_block_id,
+                continue_block_id,
+                LoopControl::NONE,
+                None,
+            )
+            .unwrap();
     }
 }
