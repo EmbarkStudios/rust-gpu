@@ -1,6 +1,6 @@
 use super::Builder;
 use crate::abi::ConvSpirvType;
-use crate::builder_spirv::SpirvValueExt;
+use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{CLOp, GLOp};
@@ -30,6 +30,36 @@ fn int_type_width_signed(ty: Ty<'_>, cx: &CodegenCx<'_>) -> Option<(u64, bool)> 
     }
 }
 
+impl Builder<'_, '_> {
+    pub fn copysign(&mut self, val: SpirvValue, sign: SpirvValue) -> SpirvValue {
+        let width = match self.lookup_type(val.ty) {
+            SpirvType::Float(width) => width,
+            other => bug!(
+                "copysign must have float argument, not {}",
+                other.debug(val.ty, self)
+            ),
+        };
+        let int_ty = SpirvType::Integer(width, false).def(self);
+        let (mask_sign, mask_value) = match width {
+            32 => (
+                self.constant_u32(1 << 31),
+                self.constant_u32(u32::max_value() >> 1),
+            ),
+            64 => (
+                self.constant_u64(1 << 63),
+                self.constant_u64(u64::max_value() >> 1),
+            ),
+            _ => bug!("copysign must have width 32 or 64, not {}", width),
+        };
+        let val_bits = self.bitcast(val, int_ty);
+        let sign_bits = self.bitcast(sign, int_ty);
+        let val_masked = self.and(val_bits, mask_value);
+        let sign_masked = self.and(sign_bits, mask_sign);
+        let result_bits = self.or(val_masked, sign_masked);
+        self.bitcast(result_bits, val.ty)
+    }
+}
+
 impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     fn codegen_intrinsic_call(
         &mut self,
@@ -53,6 +83,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         let arg_tys = sig.inputs();
         let name = self.tcx.item_name(def_id);
 
+        let ret_ty = self.layout_of(sig.output()).spirv_type(self);
         let result = PlaceRef::new_sized(llresult, fn_abi.ret.layout);
 
         let value = match name {
@@ -122,76 +153,88 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             // TODO: Configure these to be ocl vs. gl ext instructions, etc.
             sym::sqrtf32 | sym::sqrtf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::sqrt, [args[0].immediate()])
+                    self.cl_op(CLOp::sqrt, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Sqrt, [args[0].immediate()])
+                    self.gl_op(GLOp::Sqrt, ret_ty, [args[0].immediate()])
                 }
             }
             sym::powif32 | sym::powif64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::pown, [args[0].immediate(), args[1].immediate()])
+                    self.cl_op(
+                        CLOp::pown,
+                        ret_ty,
+                        [args[0].immediate(), args[1].immediate()],
+                    )
                 } else {
                     let float = self.sitofp(args[1].immediate(), args[0].immediate().ty);
-                    self.gl_op(GLOp::Pow, [args[0].immediate(), float])
+                    self.gl_op(GLOp::Pow, ret_ty, [args[0].immediate(), float])
                 }
             }
             sym::sinf32 | sym::sinf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::sin, [args[0].immediate()])
+                    self.cl_op(CLOp::sin, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Sin, [args[0].immediate()])
+                    self.gl_op(GLOp::Sin, ret_ty, [args[0].immediate()])
                 }
             }
             sym::cosf32 | sym::cosf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::cos, [args[0].immediate()])
+                    self.cl_op(CLOp::cos, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Cos, [args[0].immediate()])
+                    self.gl_op(GLOp::Cos, ret_ty, [args[0].immediate()])
                 }
             }
             sym::powf32 | sym::powf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::pow, [args[0].immediate(), args[1].immediate()])
+                    self.cl_op(
+                        CLOp::pow,
+                        ret_ty,
+                        [args[0].immediate(), args[1].immediate()],
+                    )
                 } else {
-                    self.gl_op(GLOp::Pow, [args[0].immediate(), args[1].immediate()])
+                    self.gl_op(
+                        GLOp::Pow,
+                        ret_ty,
+                        [args[0].immediate(), args[1].immediate()],
+                    )
                 }
             }
             sym::expf32 | sym::expf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::exp, [args[0].immediate()])
+                    self.cl_op(CLOp::exp, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Exp, [args[0].immediate()])
+                    self.gl_op(GLOp::Exp, ret_ty, [args[0].immediate()])
                 }
             }
             sym::exp2f32 | sym::exp2f64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::exp2, [args[0].immediate()])
+                    self.cl_op(CLOp::exp2, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Exp2, [args[0].immediate()])
+                    self.gl_op(GLOp::Exp2, ret_ty, [args[0].immediate()])
                 }
             }
             sym::logf32 | sym::logf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::log, [args[0].immediate()])
+                    self.cl_op(CLOp::log, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Log, [args[0].immediate()])
+                    self.gl_op(GLOp::Log, ret_ty, [args[0].immediate()])
                 }
             }
             sym::log2f32 | sym::log2f64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::log2, [args[0].immediate()])
+                    self.cl_op(CLOp::log2, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Log2, [args[0].immediate()])
+                    self.gl_op(GLOp::Log2, ret_ty, [args[0].immediate()])
                 }
             }
             sym::log10f32 | sym::log10f64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::log10, [args[0].immediate()])
+                    self.cl_op(CLOp::log10, ret_ty, [args[0].immediate()])
                 } else {
                     // spir-v glsl doesn't have log10, so,
                     // log10(x) == (1 / ln(10)) * ln(x)
                     let mul = self.constant_float(args[0].immediate().ty, 1.0 / 10.0f64.ln());
-                    let ln = self.gl_op(GLOp::Log, [args[0].immediate()]);
+                    let ln = self.gl_op(GLOp::Log, ret_ty, [args[0].immediate()]);
                     self.mul(mul, ln)
                 }
             }
@@ -199,6 +242,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 if self.kernel_mode {
                     self.cl_op(
                         CLOp::fma,
+                        ret_ty,
                         [
                             args[0].immediate(),
                             args[1].immediate(),
@@ -208,6 +252,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 } else {
                     self.gl_op(
                         GLOp::Fma,
+                        ret_ty,
                         [
                             args[0].immediate(),
                             args[1].immediate(),
@@ -218,92 +263,88 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             }
             sym::fabsf32 | sym::fabsf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::fabs, [args[0].immediate()])
+                    self.cl_op(CLOp::fabs, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::FAbs, [args[0].immediate()])
+                    self.gl_op(GLOp::FAbs, ret_ty, [args[0].immediate()])
                 }
             }
             sym::minnumf32 | sym::minnumf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::fmin, [args[0].immediate(), args[1].immediate()])
+                    self.cl_op(
+                        CLOp::fmin,
+                        ret_ty,
+                        [args[0].immediate(), args[1].immediate()],
+                    )
                 } else {
-                    self.gl_op(GLOp::FMin, [args[0].immediate(), args[1].immediate()])
+                    self.gl_op(
+                        GLOp::FMin,
+                        ret_ty,
+                        [args[0].immediate(), args[1].immediate()],
+                    )
                 }
             }
             sym::maxnumf32 | sym::maxnumf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::fmax, [args[0].immediate(), args[1].immediate()])
+                    self.cl_op(
+                        CLOp::fmax,
+                        ret_ty,
+                        [args[0].immediate(), args[1].immediate()],
+                    )
                 } else {
-                    self.gl_op(GLOp::FMax, [args[0].immediate(), args[1].immediate()])
+                    self.gl_op(
+                        GLOp::FMax,
+                        ret_ty,
+                        [args[0].immediate(), args[1].immediate()],
+                    )
                 }
             }
             sym::copysignf32 | sym::copysignf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::copysign, [args[0].immediate(), args[1].immediate()])
+                    self.cl_op(
+                        CLOp::copysign,
+                        ret_ty,
+                        [args[0].immediate(), args[1].immediate()],
+                    )
                 } else {
                     let val = args[0].immediate();
                     let sign = args[1].immediate();
-                    let width = match self.lookup_type(val.ty) {
-                        SpirvType::Float(width) => width,
-                        other => bug!(
-                            "copysign must have float argument, not {}",
-                            other.debug(val.ty, self)
-                        ),
-                    };
-                    let int_ty = SpirvType::Integer(width, false).def(self);
-                    let (mask_sign, mask_value) = match width {
-                        32 => (
-                            self.constant_u32(1 << 31),
-                            self.constant_u32(u32::max_value() >> 1),
-                        ),
-                        64 => (
-                            self.constant_u64(1 << 63),
-                            self.constant_u64(u64::max_value() >> 1),
-                        ),
-                        _ => bug!("copysign must have width 32 or 64, not {}", width),
-                    };
-                    let val_bits = self.bitcast(val, int_ty);
-                    let sign_bits = self.bitcast(sign, int_ty);
-                    let val_masked = self.and(val_bits, mask_value);
-                    let sign_masked = self.and(sign_bits, mask_sign);
-                    let result_bits = self.or(val_masked, sign_masked);
-                    self.bitcast(result_bits, val.ty)
+                    self.copysign(val, sign)
                 }
             }
             sym::floorf32 | sym::floorf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::floor, [args[0].immediate()])
+                    self.cl_op(CLOp::floor, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Floor, [args[0].immediate()])
+                    self.gl_op(GLOp::Floor, ret_ty, [args[0].immediate()])
                 }
             }
             sym::ceilf32 | sym::ceilf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::ceil, [args[0].immediate()])
+                    self.cl_op(CLOp::ceil, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Ceil, [args[0].immediate()])
+                    self.gl_op(GLOp::Ceil, ret_ty, [args[0].immediate()])
                 }
             }
             sym::truncf32 | sym::truncf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::trunc, [args[0].immediate()])
+                    self.cl_op(CLOp::trunc, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Trunc, [args[0].immediate()])
+                    self.gl_op(GLOp::Trunc, ret_ty, [args[0].immediate()])
                 }
             }
             // TODO: Correctness of all these rounds
             sym::rintf32 | sym::rintf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::rint, [args[0].immediate()])
+                    self.cl_op(CLOp::rint, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Round, [args[0].immediate()])
+                    self.gl_op(GLOp::Round, ret_ty, [args[0].immediate()])
                 }
             }
             sym::nearbyintf32 | sym::nearbyintf64 | sym::roundf32 | sym::roundf64 => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::round, [args[0].immediate()])
+                    self.cl_op(CLOp::round, ret_ty, [args[0].immediate()])
                 } else {
-                    self.gl_op(GLOp::Round, [args[0].immediate()])
+                    self.gl_op(GLOp::Round, ret_ty, [args[0].immediate()])
                 }
             }
 
@@ -317,7 +358,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             // TODO: Do we want to manually implement these instead of using intel instructions?
             sym::ctlz | sym::ctlz_nonzero => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::clz, [args[0].immediate()])
+                    self.cl_op(CLOp::clz, ret_ty, [args[0].immediate()])
                 } else {
                     self.ext_inst
                         .borrow_mut()
@@ -334,7 +375,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             }
             sym::cttz | sym::cttz_nonzero => {
                 if self.kernel_mode {
-                    self.cl_op(CLOp::ctz, [args[0].immediate()])
+                    self.cl_op(CLOp::ctz, ret_ty, [args[0].immediate()])
                 } else {
                     self.emit()
                         .u_count_trailing_zeros_intel(

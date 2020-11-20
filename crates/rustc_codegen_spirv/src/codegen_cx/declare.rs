@@ -10,7 +10,7 @@ use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::FnAbiExt;
-use rustc_middle::ty::{Instance, ParamEnv, TypeFoldable};
+use rustc_middle::ty::{self, Instance, ParamEnv, TypeFoldable};
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
@@ -122,6 +122,23 @@ impl<'tcx> CodegenCx<'tcx> {
                         .insert(declared);
                 }
                 _ => {}
+            }
+        }
+
+        if self.tcx.crate_name(instance.def_id().krate) == self.sym.libm {
+            let intrinsic = super::super::builder::libm_intrinsics::get_intrinsic(symbol_name);
+            match intrinsic {
+                Some(intrinsic) => {
+                    self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
+                }
+                None => {
+                    if self.tcx.visibility(instance.def_id()) == ty::Visibility::Public {
+                        self.tcx.sess.err(&format!(
+                            "missing libm intrinsic {}, which is {}",
+                            symbol_name, instance
+                        ))
+                    }
+                }
             }
         }
 

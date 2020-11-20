@@ -15,6 +15,8 @@ pub struct Symbols {
 
     pub spirv: Symbol,
     pub spirv_std: Symbol,
+    pub libm: Symbol,
+    pub num_traits: Symbol,
     pub kernel: Symbol,
     pub simple: Symbol,
     pub vulkan: Symbol,
@@ -338,6 +340,8 @@ impl Symbols {
 
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
+            libm: Symbol::intern("libm"),
+            num_traits: Symbol::intern("num_traits"),
             kernel: Symbol::intern("kernel"),
             simple: Symbol::intern("simple"),
             vulkan: Symbol::intern("vulkan"),
