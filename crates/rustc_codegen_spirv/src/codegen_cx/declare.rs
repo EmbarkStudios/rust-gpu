@@ -10,7 +10,7 @@ use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::FnAbiExt;
-use rustc_middle::ty::{Instance, ParamEnv, Ty, TypeFoldable};
+use rustc_middle::ty::{self, Instance, ParamEnv, TypeFoldable};
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
@@ -43,14 +43,10 @@ impl<'tcx> CodegenCx<'tcx> {
             return func;
         }
 
-        let sym = self.tcx.symbol_name(instance).name;
         // Because we've already declared everything with predefine_fn, if we hit this branch, we're guaranteed to be
         // importing this function from elsewhere. So, slap an extern on it.
-        let human_name = format!("{}", instance);
         let linkage = Some(LinkageType::Import);
-        let attrs = attrs_to_spirv(self.tcx.codegen_fn_attrs(instance.def_id()));
-        let fn_abi = FnAbi::of_instance(self, instance, &[]);
-        let llfn = self.declare_fn_ext(sym, Some(&human_name), linkage, attrs, &fn_abi);
+        let llfn = self.declare_fn_ext(instance, linkage);
 
         self.instances.borrow_mut().insert(instance, llfn);
 
@@ -61,14 +57,9 @@ impl<'tcx> CodegenCx<'tcx> {
     // MiscMethods::get_fn -> get_fn_ext -> declare_fn_ext
     // MiscMethods::get_fn_addr -> get_fn_ext -> declare_fn_ext
     // PreDefineMethods::predefine_fn -> declare_fn_ext
-    fn declare_fn_ext(
-        &self,
-        name: &str,
-        human_name: Option<&str>,
-        linkage: Option<LinkageType>,
-        control: FunctionControl,
-        fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
-    ) -> SpirvValue {
+    fn declare_fn_ext(&self, instance: Instance<'tcx>, linkage: Option<LinkageType>) -> SpirvValue {
+        let control = attrs_to_spirv(self.tcx.codegen_fn_attrs(instance.def_id()));
+        let fn_abi = FnAbi::of_instance(self, instance, &[]);
         let function_type = fn_abi.spirv_type(self);
         let (return_type, argument_types) = match self.lookup_type(function_type) {
             SpirvType::Function {
@@ -78,7 +69,7 @@ impl<'tcx> CodegenCx<'tcx> {
             other => bug!("fn_abi type {}", other.debug(function_type, self)),
         };
 
-        if crate::is_blocklisted_fn(name) {
+        if crate::is_blocklisted_fn(self.tcx, &self.sym, instance) {
             // This can happen if we call a blocklisted function in another crate.
             let result = self.undef(function_type);
             // TODO: Span info here
@@ -99,16 +90,59 @@ impl<'tcx> CodegenCx<'tcx> {
                 .insert(fn_id, parameter_values);
         }
         emit.end_function().unwrap();
-        match human_name {
-            Some(human_name) => emit.name(fn_id, human_name),
-            None => emit.name(fn_id, name),
-        }
+
+        // HACK(eddyb) this is a bit roundabout, but the easiest way to get a
+        // fully absolute path that contains at least as much information as
+        // `instance.to_string()` (at least with `-Z symbol-mangling-version=v0`).
+        // While we could use the mangled symbol insyead, like we do for linkage,
+        // `OpName` is more of a debugging aid, so not having to separately
+        // demangle the SPIR-V can help. However, if some tools assume `OpName`
+        // is always a valid identifier, we may have to offer the mangled name
+        // (as some sort of opt-in, or toggled based on the platform, etc.).
+        let symbol_name = self.tcx.symbol_name(instance).name;
+        let demangled_symbol_name = format!("{:#}", rustc_demangle::demangle(symbol_name));
+        emit.name(fn_id, &demangled_symbol_name);
+
         drop(emit); // set_linkage uses emit
         if let Some(linkage) = linkage {
-            self.set_linkage(fn_id, name.to_owned(), linkage);
+            self.set_linkage(fn_id, symbol_name.to_owned(), linkage);
         }
 
-        fn_id.with_type(function_type)
+        let declared = fn_id.with_type(function_type);
+
+        for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
+            match attr {
+                SpirvAttribute::Entry(entry) => {
+                    let crate_relative_name = instance.to_string();
+                    self.entry_stub(&instance, &fn_abi, declared, crate_relative_name, entry)
+                }
+                SpirvAttribute::ReallyUnsafeIgnoreBitcasts => {
+                    self.really_unsafe_ignore_bitcasts
+                        .borrow_mut()
+                        .insert(declared);
+                }
+                _ => {}
+            }
+        }
+
+        let instance_def_id = instance.def_id();
+        if self.tcx.crate_name(instance_def_id.krate) == self.sym.libm {
+            let item_name = self.tcx.item_name(instance_def_id);
+            let intrinsic = self.sym.libm_intrinsics.get(&item_name);
+            if self.tcx.visibility(instance.def_id()) == ty::Visibility::Public {
+                match intrinsic {
+                    Some(&intrinsic) => {
+                        self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
+                    }
+                    None => self.tcx.sess.err(&format!(
+                        "missing libm intrinsic {}, which is {}",
+                        symbol_name, instance
+                    )),
+                }
+            }
+        }
+
+        declared
     }
 
     pub fn get_static(&self, def_id: DefId) -> SpirvValue {
@@ -175,11 +209,6 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         let span = self.tcx.def_span(def_id);
         let g = self.declare_global(span, spvty);
 
-        // unsafe {
-        //     llvm::LLVMRustSetLinkage(g, base::linkage_to_llvm(linkage));
-        //     llvm::LLVMRustSetVisibility(g, base::visibility_to_llvm(visibility));
-        // }
-
         self.instances.borrow_mut().insert(instance, g);
         if let Some(linkage) = linkage {
             self.set_linkage(g.def_cx(self), symbol_name.to_string(), linkage);
@@ -191,10 +220,8 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         instance: Instance<'tcx>,
         linkage: Linkage,
         _visibility: Visibility,
-        symbol_name: &str,
+        _symbol_name: &str,
     ) {
-        let fn_abi = FnAbi::of_instance(self, instance, &[]);
-        let human_name = format!("{}", instance);
         let linkage2 = match linkage {
             Linkage::External => Some(LinkageType::Export),
             Linkage::Internal => None,
@@ -203,25 +230,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
                 other
             )),
         };
-        let rust_attrs = self.tcx.codegen_fn_attrs(instance.def_id());
-        let spv_attrs = attrs_to_spirv(rust_attrs);
-
-        let declared =
-            self.declare_fn_ext(symbol_name, Some(&human_name), linkage2, spv_attrs, &fn_abi);
-
-        for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
-            match attr {
-                SpirvAttribute::Entry(entry) => {
-                    self.entry_stub(&instance, &fn_abi, declared, human_name.clone(), entry)
-                }
-                SpirvAttribute::ReallyUnsafeIgnoreBitcasts => {
-                    self.really_unsafe_ignore_bitcasts
-                        .borrow_mut()
-                        .insert(declared);
-                }
-                _ => {}
-            }
-        }
+        let declared = self.declare_fn_ext(instance, linkage2);
 
         self.instances.borrow_mut().insert(instance, declared);
     }

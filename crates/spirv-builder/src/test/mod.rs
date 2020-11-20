@@ -49,7 +49,7 @@ spirv-std = { path = "../../crates/spirv-std" }
 "#;
 
 static SRC_PREFIX: &str = r#"#![no_std]
-#![feature(lang_items, register_attr)]
+#![feature(lang_items, register_attr, asm)]
 #![register_attr(spirv)]
 use core::panic::PanicInfo;
 #[allow(unused_imports)]
@@ -113,12 +113,13 @@ fn assert_str_eq(expected: &str, result: &str) {
 fn dis_fn(src: &str, func: &str, expect: &str) {
     let _lock = global_lock();
     let module = read_module(&build(src)).unwrap();
+    let abs_func_path = format!("test_project::{}", func);
     let id = module
         .debugs
         .iter()
         .find(|inst| {
             inst.class.opcode == rspirv::spirv::Op::Name
-                && inst.operands[1].unwrap_literal_string() == func
+                && inst.operands[1].unwrap_literal_string() == abs_func_path
         })
         .expect("No function with that name found")
         .operands[0]

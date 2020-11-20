@@ -143,7 +143,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         format!(" -C target-feature={}", target_features.join(","))
     };
     let rustflags = format!(
-        "-Z codegen-backend={}{}",
+        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}",
         rustc_codegen_spirv.display(),
         feature_flag,
     );
@@ -162,9 +162,14 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         .env("RUSTFLAGS", rustflags)
         .output()
         .expect("failed to execute cargo build");
+
+    // `get_last_artifact` has the side-effect of printing invalid lines, so
+    // we do that even in case of an error, to let through any useful messages
+    // that ended up on stdout instead of stderr.
+    let stdout = String::from_utf8(build.stdout).unwrap();
+    let artifact = get_last_artifact(&stdout);
+
     if build.status.success() {
-        let stdout = String::from_utf8(build.stdout).unwrap();
-        let artifact = get_last_artifact(&stdout);
         if builder.print_metadata {
             print_deps_of(&artifact);
         }

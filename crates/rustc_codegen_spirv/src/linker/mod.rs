@@ -134,10 +134,12 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
         dce::dce(&mut output);
     }
 
-    if opts.structurize {
+    let mut output = if opts.structurize {
         let _timer = sess.timer("link_structurize");
-        structurizer::structurize(sess, &mut output);
-    }
+        structurizer::structurize(sess, output)
+    } else {
+        output
+    };
 
     {
         let _timer = sess.timer("link_block_ordering_pass_and_mem2reg");

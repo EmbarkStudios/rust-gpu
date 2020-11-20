@@ -53,33 +53,43 @@ impl ExtInst {
 }
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
-    pub fn gl_op(&mut self, op: GLOp, args: impl AsRef<[SpirvValue]>) -> SpirvValue {
+    pub fn gl_op(
+        &mut self,
+        op: GLOp,
+        result_type: Word,
+        args: impl AsRef<[SpirvValue]>,
+    ) -> SpirvValue {
         let args = args.as_ref();
         let glsl = self.ext_inst.borrow_mut().import_glsl(self);
         self.emit()
             .ext_inst(
-                args[0].ty,
+                result_type,
                 None,
                 glsl,
                 op as u32,
                 args.iter().map(|a| Operand::IdRef(a.def(self))),
             )
             .unwrap()
-            .with_type(args[0].ty)
+            .with_type(result_type)
     }
 
-    pub fn cl_op(&mut self, op: CLOp, args: impl AsRef<[SpirvValue]>) -> SpirvValue {
+    pub fn cl_op(
+        &mut self,
+        op: CLOp,
+        result_type: Word,
+        args: impl AsRef<[SpirvValue]>,
+    ) -> SpirvValue {
         let args = args.as_ref();
         let opencl = self.ext_inst.borrow_mut().import_opencl(self);
         self.emit()
             .ext_inst(
-                args[0].ty,
+                result_type,
                 None,
                 opencl,
                 op as u32,
                 args.iter().map(|a| Operand::IdRef(a.def(self))),
             )
             .unwrap()
-            .with_type(args[0].ty)
+            .with_type(result_type)
     }
 }

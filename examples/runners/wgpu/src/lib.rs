@@ -11,13 +11,6 @@ pub enum RustGPUShader {
     Compute,
 }
 
-#[allow(dead_code)]
-pub struct ShaderConstants {
-    width: u32,
-    height: u32,
-    time: f32,
-}
-
 fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleSource<'static> {
     match shader {
         RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),

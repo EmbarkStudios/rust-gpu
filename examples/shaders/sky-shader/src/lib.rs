@@ -6,6 +6,7 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
+use shared::*;
 use spirv_std::glam::{const_vec3, Vec2, Vec3, Vec4};
 use spirv_std::{Input, MathExt, Output, PushConstant};
 
@@ -25,46 +26,15 @@ const SUN_INTENSITY_FACTOR: f32 = 1000.0;
 const SUN_INTENSITY_FALLOFF_STEEPNESS: f32 = 1.5;
 const TURBIDITY: f32 = 2.0;
 
-#[derive(Copy, Clone)]
-pub struct ShaderConstants {
-    pub width: u32,
-    pub height: u32,
-    pub time: f32,
-}
+pub fn tonemap(col: Vec3) -> Vec3 {
+    // see https://www.desmos.com/calculator/0eo9pzo1at
+    const A: f32 = 2.35;
+    const B: f32 = 2.8826666;
+    const C: f32 = 789.7459;
+    const D: f32 = 0.935;
 
-fn saturate(x: f32) -> f32 {
-    x.max(0.0).min(1.0)
-}
-
-// TODO: add this to glam? Rust std has it on f32/f64
-fn pow(v: Vec3, power: f32) -> Vec3 {
-    Vec3::new(v.x.powf(power), v.y.powf(power), v.z.powf(power))
-}
-
-// TODO: add this to glam? Rust std has it on f32/f64
-fn exp(v: Vec3) -> Vec3 {
-    Vec3::new(v.x.exp(), v.y.exp(), v.z.exp())
-}
-
-/// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
-fn acos_approx(v: f32) -> f32 {
-    let x = v.abs();
-    let mut res = -0.155972 * x + 1.56467; // p(x)
-    res *= (1.0f32 - x).sqrt();
-
-    if v >= 0.0 {
-        res
-    } else {
-        PI - res
-    }
-}
-
-/// renamed because of cross-compilation issues with spirv-cross/ moltenvk
-fn my_smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
-    // Scale, bias and saturate x to 0..1 range
-    let x = saturate((x - edge0) / (edge1 - edge0));
-    // Evaluate polynomial
-    x * x * (3.0 - 2.0 * x)
+    let z = pow(col, A);
+    z / (pow(z, D) * B + Vec3::splat(C))
 }
 
 fn total_rayleigh(lambda: Vec3) -> Vec3 {
@@ -95,17 +65,6 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
                 / SUN_INTENSITY_FALLOFF_STEEPNESS))
                 .exp(),
         )
-}
-
-fn tonemap(col: Vec3) -> Vec3 {
-    // see https://www.desmos.com/calculator/0eo9pzo1at
-    const A: f32 = 2.35;
-    const B: f32 = 2.8826666;
-    const C: f32 = 789.7459;
-    const D: f32 = 0.935;
-
-    let z = pow(col, A);
-    z / (pow(z, D) * B + Vec3::splat(C))
 }
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
@@ -149,7 +108,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     // Composition + solar disc
     let sun_angular_diameter_cos = SUN_ANGULAR_DIAMETER_DEGREES.cos();
-    let sundisk = my_smoothstep(
+    let sundisk = smoothstep(
         sun_angular_diameter_cos,
         sun_angular_diameter_cos + 0.00002,
         cos_theta,
