@@ -39,8 +39,7 @@ pub fn acos_approx(v: f32) -> f32 {
     }
 }
 
-/// renamed because of cross-compilation issues with spirv-cross/ moltenvk
-pub fn my_smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
+pub fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
     // Scale, bias and saturate x to 0..1 range
     let x = ((x - edge0) / (edge1 - edge0)).saturate();
     // Evaluate polynomial
