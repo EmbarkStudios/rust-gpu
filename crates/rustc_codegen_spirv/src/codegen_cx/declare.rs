@@ -127,7 +127,6 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let instance_def_id = instance.def_id();
         if self.tcx.crate_name(instance_def_id.krate) == self.sym.libm {
-            //let path = self.tcx.def_path(instance_def_id);
             let item_name = self.tcx.item_name(instance_def_id);
             let intrinsic = self.sym.libm_intrinsics.get(&item_name);
             if self.tcx.visibility(instance.def_id()) == ty::Visibility::Public {
