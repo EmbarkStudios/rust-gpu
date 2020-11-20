@@ -125,19 +125,20 @@ impl<'tcx> CodegenCx<'tcx> {
             }
         }
 
-        if self.tcx.crate_name(instance.def_id().krate) == self.sym.libm {
-            let intrinsic = super::super::builder::libm_intrinsics::get_intrinsic(symbol_name);
-            match intrinsic {
-                Some(intrinsic) => {
-                    self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
-                }
-                None => {
-                    if self.tcx.visibility(instance.def_id()) == ty::Visibility::Public {
-                        self.tcx.sess.err(&format!(
-                            "missing libm intrinsic {}, which is {}",
-                            symbol_name, instance
-                        ))
+        let instance_def_id = instance.def_id();
+        if self.tcx.crate_name(instance_def_id.krate) == self.sym.libm {
+            //let path = self.tcx.def_path(instance_def_id);
+            let item_name = self.tcx.item_name(instance_def_id);
+            let intrinsic = self.sym.libm_intrinsics.get(&item_name);
+            if self.tcx.visibility(instance.def_id()) == ty::Visibility::Public {
+                match intrinsic {
+                    Some(&intrinsic) => {
+                        self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
                     }
+                    None => self.tcx.sess.err(&format!(
+                        "missing libm intrinsic {}, which is {}",
+                        symbol_name, instance
+                    )),
                 }
             }
         }
