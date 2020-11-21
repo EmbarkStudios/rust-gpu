@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use super::{shader_module, Options};
 use shared::ShaderConstants;
@@ -111,9 +111,9 @@ async fn run(
 
     let start = std::time::Instant::now();
 
-    let mut last_printed_fps = Instant::now();
+    let mut last_printed_frame_times = Instant::now();
     let mut last_frame_start = Instant::now();
-    let mut frame_times = Vec::with_capacity(70);
+    let mut frame_times = Vec::with_capacity(75);
 
     event_loop.run(move |event, _, control_flow| {
         // Have the closure take ownership of the resources.
@@ -148,18 +148,19 @@ async fn run(
             }
             Event::RedrawRequested(_) => {
                 // Compute FPS
-                frame_times.push(last_frame_start.elapsed().as_secs_f64());
+                frame_times.push(last_frame_start.elapsed());
                 last_frame_start = Instant::now();
                 // Print fps every second
-                if last_printed_fps.elapsed().as_secs_f32() > 1. {
-                    let fps = (frame_times.iter().sum::<f64>() / frame_times.len() as f64).recip();
+                if last_printed_frame_times.elapsed().as_secs_f32() > 1. {
+                    let frame_time =
+                        frame_times.iter().sum::<Duration>() / frame_times.len() as u32;
                     println!(
-                        "FPS : {:.5}; Frames since previous: {} (After: {:?})",
-                        fps,
+                        "avg. time between redraws: {:?}, over {} redraws. (Program running for {:?})",
+                        frame_time,
                         frame_times.len(),
                         start.elapsed(),
                     );
-                    last_printed_fps = Instant::now();
+                    last_printed_frame_times = Instant::now();
                     frame_times.clear();
                 }
                 if let Some(swap_chain) = &mut swap_chain {
