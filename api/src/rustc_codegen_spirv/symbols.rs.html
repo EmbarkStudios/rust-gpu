@@ -661,7 +661,26 @@
 <span id="658">658</span>
 <span id="659">659</span>
 <span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder</span>::<span class="ident">libm_intrinsics</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">codegen_cx</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">BuiltIn</span>, <span class="ident">ExecutionMode</span>, <span class="ident">ExecutionModel</span>, <span class="ident">StorageClass</span>};
 <span class="kw">use</span> <span class="ident">rustc_ast</span>::<span class="ident">ast</span>::{<span class="ident">AttrKind</span>, <span class="ident">Attribute</span>, <span class="ident">Lit</span>, <span class="ident">LitIntType</span>, <span class="ident">LitKind</span>, <span class="ident">NestedMetaItem</span>};
@@ -674,8 +693,13 @@
 <span class="doccomment">/// already exists, deduplicating it if so. This makes things like comparison and cloning really cheap. So, this struct</span>
 <span class="doccomment">/// is to allocate all our keywords up front and intern them all, so we can do comparisons really easily and fast.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Symbols</span> {
+    <span class="comment">// Used by `is_blocklisted_fn`.</span>
+    <span class="kw">pub</span> <span class="ident">fmt_decimal</span>: <span class="ident">Symbol</span>,
+
     <span class="kw">pub</span> <span class="ident">spirv</span>: <span class="ident">Symbol</span>,
     <span class="kw">pub</span> <span class="ident">spirv_std</span>: <span class="ident">Symbol</span>,
+    <span class="kw">pub</span> <span class="ident">libm</span>: <span class="ident">Symbol</span>,
+    <span class="kw">pub</span> <span class="ident">num_traits</span>: <span class="ident">Symbol</span>,
     <span class="kw">pub</span> <span class="ident">kernel</span>: <span class="ident">Symbol</span>,
     <span class="kw">pub</span> <span class="ident">simple</span>: <span class="ident">Symbol</span>,
     <span class="kw">pub</span> <span class="ident">vulkan</span>: <span class="ident">Symbol</span>,
@@ -691,6 +715,7 @@
     <span class="ident">really_unsafe_ignore_bitcasts</span>: <span class="ident">Symbol</span>,
     <span class="ident">attributes</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Symbol</span>, <span class="ident">SpirvAttribute</span><span class="op">&gt;</span>,
     <span class="ident">execution_modes</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Symbol</span>, (<span class="ident">ExecutionMode</span>, <span class="ident">ExecutionModeExtraDim</span>)<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">libm_intrinsics</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Symbol</span>, <span class="ident">libm_intrinsics</span>::<span class="ident">LibmIntrinsic</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">const</span> <span class="ident">BUILTINS</span>: <span class="kw-2">&amp;</span>[(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">BuiltIn</span>)] <span class="op">=</span> {
@@ -983,20 +1008,30 @@
             .<span class="ident">chain</span>(<span class="ident">execution_models</span>)
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="op">|</span> (<span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="ident">a</span>), <span class="ident">b</span>));
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
-        <span class="ident">attributes_iter</span>.<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="op">|</span> {
+        <span class="kw">for</span> (<span class="ident">a</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="ident">attributes_iter</span> {
             <span class="kw">let</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">attributes</span>.<span class="ident">insert</span>(<span class="ident">a</span>, <span class="ident">b</span>);
             <span class="comment">// `.collect()` into a HashMap does not error on duplicates, so manually write out the</span>
             <span class="comment">// loop here to error on duplicates.</span>
             <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">old</span>.<span class="ident">is_none</span>());
-        });
+        }
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">execution_modes</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
-        <span class="ident">EXECUTION_MODES</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">mode</span>, <span class="ident">dim</span>)<span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">execution_modes</span>.<span class="ident">insert</span>(<span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="ident">key</span>), (<span class="kw-2">*</span><span class="ident">mode</span>, <span class="kw-2">*</span><span class="ident">dim</span>));
+        <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">key</span>, <span class="ident">mode</span>, <span class="ident">dim</span>) <span class="kw">in</span> <span class="ident">EXECUTION_MODES</span> {
+            <span class="kw">let</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">execution_modes</span>.<span class="ident">insert</span>(<span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="ident">key</span>), (<span class="ident">mode</span>, <span class="ident">dim</span>));
             <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">old</span>.<span class="ident">is_none</span>());
-        });
+        }
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">libm_intrinsics</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+        <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">a</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="ident">libm_intrinsics</span>::<span class="ident">TABLE</span> {
+            <span class="kw">let</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">libm_intrinsics</span>.<span class="ident">insert</span>(<span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="ident">a</span>), <span class="ident">b</span>);
+            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">old</span>.<span class="ident">is_none</span>());
+        }
         <span class="self">Self</span> {
+            <span class="ident">fmt_decimal</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;fmt_decimal&quot;</span>),
+
             <span class="ident">spirv</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;spirv&quot;</span>),
             <span class="ident">spirv_std</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;spirv_std&quot;</span>),
+            <span class="ident">libm</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;libm&quot;</span>),
+            <span class="ident">num_traits</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;num_traits&quot;</span>),
             <span class="ident">kernel</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;kernel&quot;</span>),
             <span class="ident">simple</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;simple&quot;</span>),
             <span class="ident">vulkan</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;vulkan&quot;</span>),
@@ -1012,6 +1047,7 @@
             <span class="ident">really_unsafe_ignore_bitcasts</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;really_unsafe_ignore_bitcasts&quot;</span>),
             <span class="ident">attributes</span>,
             <span class="ident">execution_modes</span>,
+            <span class="ident">libm_intrinsics</span>,
         }
     }
 }

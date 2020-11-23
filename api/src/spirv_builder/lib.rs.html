@@ -228,6 +228,11 @@
 <span id="225">225</span>
 <span id="226">226</span>
 <span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span>;
@@ -374,7 +379,7 @@
         <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot; -C target-feature={}&quot;</span>, <span class="ident">target_features</span>.<span class="ident">join</span>(<span class="string">&quot;,&quot;</span>))
     };
     <span class="kw">let</span> <span class="ident">rustflags</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(
-        <span class="string">&quot;-Z codegen-backend={}{}&quot;</span>,
+        <span class="string">&quot;-Z codegen-backend={} -Z symbol-mangling-version=v0{}&quot;</span>,
         <span class="ident">rustc_codegen_spirv</span>.<span class="ident">display</span>(),
         <span class="ident">feature_flag</span>,
     );
@@ -393,9 +398,14 @@
         .<span class="ident">env</span>(<span class="string">&quot;RUSTFLAGS&quot;</span>, <span class="ident">rustflags</span>)
         .<span class="ident">output</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;failed to execute cargo build&quot;</span>);
+
+    <span class="comment">// `get_last_artifact` has the side-effect of printing invalid lines, so</span>
+    <span class="comment">// we do that even in case of an error, to let through any useful messages</span>
+    <span class="comment">// that ended up on stdout instead of stderr.</span>
+    <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">build</span>.<span class="ident">stdout</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">artifact</span> <span class="op">=</span> <span class="ident">get_last_artifact</span>(<span class="kw-2">&amp;</span><span class="ident">stdout</span>);
+
     <span class="kw">if</span> <span class="ident">build</span>.<span class="ident">status</span>.<span class="ident">success</span>() {
-        <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">build</span>.<span class="ident">stdout</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">artifact</span> <span class="op">=</span> <span class="ident">get_last_artifact</span>(<span class="kw-2">&amp;</span><span class="ident">stdout</span>);
         <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">print_metadata</span> {
             <span class="ident">print_deps_of</span>(<span class="kw-2">&amp;</span><span class="ident">artifact</span>);
         }

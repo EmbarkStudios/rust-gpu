@@ -834,13 +834,15 @@
 <span id="831">831</span>
 <span id="832">832</span>
 <span id="833">833</span>
-<span id="834">834</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// This pass inserts merge instructions for structured control flow with the assumption the spir-v is reducible.</span>
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">simple_passes</span>::<span class="ident">outgoing_edges</span>;
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Builder</span>, <span class="ident">InsertPoint</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Op</span>, <span class="ident">SelectionControl</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rspirv</span>::{
+    <span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Builder</span>, <span class="ident">InsertPoint</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>},
+    <span class="ident">spirv</span>::<span class="ident">LoopControl</span>,
+};
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">VecDeque</span>};
 
@@ -1580,20 +1582,18 @@
             }
         }
 
-        <span class="kw">let</span> <span class="ident">merge_operands</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
-            <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">merge_block_id</span>),
-            <span class="ident">Operand</span>::<span class="ident">SelectionControl</span>(<span class="ident">SelectionControl</span>::<span class="ident">NONE</span>),
-        ];
-
         <span class="ident">cf_info</span>.<span class="ident">if_merge_ids</span>.<span class="ident">push</span>(<span class="ident">merge_block_id</span>);
 
         <span class="comment">// Insert the merge instruction</span>
         <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>); <span class="comment">// after this we don&#39;t insert or remove blocks</span>
-        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="macro">get_block_mut</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">bi</span>);
-        <span class="kw">let</span> <span class="ident">merge_inst</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">SelectionMerge</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">merge_operands</span>);
-        <span class="ident">block</span>
-            .<span class="ident">instructions</span>
-            .<span class="ident">insert</span>(<span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>, <span class="ident">merge_inst</span>);
+        <span class="ident">builder</span>.<span class="ident">select_block</span>(<span class="prelude-val">Some</span>(<span class="ident">bi</span>)).<span class="ident">unwrap</span>();
+        <span class="ident">builder</span>
+            .<span class="ident">insert_selection_merge</span>(
+                <span class="ident">InsertPoint</span>::<span class="ident">FromEnd</span>(<span class="number">1</span>),
+                <span class="ident">merge_block_id</span>,
+                <span class="ident">SelectionControl</span>::<span class="ident">NONE</span>,
+            )
+            .<span class="ident">unwrap</span>();
     }
 }
 
@@ -1652,22 +1652,20 @@
             }
         }
 
-        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>); <span class="comment">// after this we don&#39;t insert or remove blocks</span>
-        <span class="kw">let</span> <span class="ident">check_block</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">get_blocks_mut</span>(<span class="ident">builder</span>)[<span class="ident">bi</span>];
-
-        <span class="kw">let</span> <span class="ident">merge_operands</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
-            <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">merge_block_id</span>),
-            <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">continue_block_id</span>),
-            <span class="ident">Operand</span>::<span class="ident">SelectionControl</span>(<span class="ident">SelectionControl</span>::<span class="ident">NONE</span>),
-        ];
-
         <span class="ident">cf_info</span>.<span class="ident">set_loops_continue_and_merge</span>(<span class="ident">id</span>, <span class="ident">merge_block_id</span>, <span class="ident">continue_block_id</span>);
 
         <span class="comment">// Insert the merge instruction</span>
-        <span class="kw">let</span> <span class="ident">merge_inst</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">LoopMerge</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">merge_operands</span>);
-        <span class="ident">check_block</span>
-            .<span class="ident">instructions</span>
-            .<span class="ident">insert</span>(<span class="ident">check_block</span>.<span class="ident">instructions</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>, <span class="ident">merge_inst</span>);
+        <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>); <span class="comment">// after this we don&#39;t insert or remove blocks</span>
+        <span class="ident">builder</span>.<span class="ident">select_block</span>(<span class="prelude-val">Some</span>(<span class="ident">bi</span>)).<span class="ident">unwrap</span>();
+        <span class="ident">builder</span>
+            .<span class="ident">insert_loop_merge</span>(
+                <span class="ident">InsertPoint</span>::<span class="ident">FromEnd</span>(<span class="number">1</span>),
+                <span class="ident">merge_block_id</span>,
+                <span class="ident">continue_block_id</span>,
+                <span class="ident">LoopControl</span>::<span class="ident">NONE</span>,
+                <span class="prelude-val">None</span>,
+            )
+            .<span class="ident">unwrap</span>();
     }
 }
 </pre></div>

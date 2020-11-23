@@ -369,6 +369,10 @@
 <span id="366">366</span>
 <span id="367">367</span>
 <span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
@@ -425,6 +429,7 @@
     <span class="kw">pub</span> <span class="ident">instruction_table</span>: <span class="ident">InstructionTable</span>,
     <span class="kw">pub</span> <span class="ident">really_unsafe_ignore_bitcasts</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">SpirvValue</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">zombie_undefs_for_system_constant_pointers</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">libm_intrinsics</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw">super</span>::<span class="ident">builder</span>::<span class="ident">libm_intrinsics</span>::<span class="ident">LibmIntrinsic</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it&#39;s allowed by the spec.</span>
     <span class="doccomment">/// This enables/disables them.</span>
     <span class="kw">pub</span> <span class="ident">i8_i16_atomics_allowed</span>: <span class="ident">bool</span>,
@@ -476,6 +481,7 @@
             <span class="ident">instruction_table</span>: <span class="ident">InstructionTable</span>::<span class="ident">new</span>(),
             <span class="ident">really_unsafe_ignore_bitcasts</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">zombie_undefs_for_system_constant_pointers</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">libm_intrinsics</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">i8_i16_atomics_allowed</span>: <span class="bool-val">false</span>,
         }
     }
@@ -540,6 +546,8 @@
             .<span class="ident">contains_name</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">krate_attrs</span>(), <span class="ident">sym</span>::<span class="ident">compiler_builtins</span>)
             <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">LOCAL_CRATE</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">sym</span>::<span class="ident">core</span>
             <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">LOCAL_CRATE</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">spirv_std</span>
+            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">LOCAL_CRATE</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">libm</span>
+            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">LOCAL_CRATE</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">num_traits</span>
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize_module</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Module</span> {
