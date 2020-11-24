@@ -6,8 +6,8 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
-use spirv_std::glam::{Vec2, Vec3};
-use spirv_std::MathExt;
+use spirv_std::glam::Vec3;
+use spirv_std::num_traits::Float;
 
 #[derive(Copy, Clone)]
 pub struct ShaderConstants {
