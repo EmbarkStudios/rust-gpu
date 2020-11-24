@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/glam-rs-c6c9bb5297445777/c9561e4/src/f32/quat.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>quat.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/glam-rs-c6c9bb5297445777/ea8fe27/src/f32/quat.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>quat.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../glam/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -734,9 +734,35 @@
 <span id="731">731</span>
 <span id="732">732</span>
 <span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)]</span>
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">spirv</span>::<span class="ident">MathExt</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;num-traits&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">num_traits</span>::<span class="ident">Float</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">scalar_acos</span>, <span class="ident">scalar_sin_cos</span>, <span class="ident">Mat3</span>, <span class="ident">Mat4</span>, <span class="ident">Vec3</span>, <span class="ident">Vec3A</span>, <span class="ident">Vec4</span>, <span class="ident">Vec4Swizzles</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">vec4_sse2</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>,))]</span>
@@ -747,9 +773,14 @@
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>;
 <span class="kw">use</span> <span class="ident">core</span>::{
     <span class="ident">cmp</span>::<span class="ident">Ordering</span>,
-    <span class="ident">ops</span>::{<span class="ident">Add</span>, <span class="ident">Div</span>, <span class="ident">Mul</span>, <span class="ident">MulAssign</span>, <span class="ident">Neg</span>, <span class="ident">Sub</span>},
+    <span class="ident">ops</span>::{<span class="ident">Add</span>, <span class="ident">Deref</span>, <span class="ident">Div</span>, <span class="ident">Mul</span>, <span class="ident">MulAssign</span>, <span class="ident">Neg</span>, <span class="ident">Sub</span>},
 };
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>::{<span class="ident">Product</span>, <span class="ident">Sum</span>};
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
+<span class="kw">const</span> <span class="ident">ZERO</span>: <span class="ident">Quat</span> <span class="op">=</span> <span class="macro">const_quat</span><span class="macro">!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]);
 <span class="kw">const</span> <span class="ident">IDENTITY</span>: <span class="ident">Quat</span> <span class="op">=</span> <span class="macro">const_quat</span><span class="macro">!</span>([<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]);
 
 <span class="doccomment">/// A quaternion representing an orientation.</span>
@@ -759,6 +790,17 @@
 <span class="doccomment">/// operations are applied.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// This type is 16 byte aligned.</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Quat</span> {
+    <span class="kw">pub</span> <span class="ident">x</span>: <span class="ident">f32</span>,
+    <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">f32</span>,
+    <span class="kw">pub</span> <span class="ident">z</span>: <span class="ident">f32</span>,
+    <span class="kw">pub</span> <span class="ident">w</span>: <span class="ident">f32</span>,
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">doc</span>))]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Quat</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">Vec4</span>);
@@ -966,7 +1008,7 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">vec4_f32</span>)]</span>
         {
-            <span class="self">Self</span>::<span class="ident">from_xyzw</span>(<span class="op">-</span>(<span class="self">self</span>.<span class="number">0</span>).<span class="number">0</span>, <span class="op">-</span>(<span class="self">self</span>.<span class="number">0</span>).<span class="number">1</span>, <span class="op">-</span>(<span class="self">self</span>.<span class="number">0</span>).<span class="number">2</span>, (<span class="self">self</span>.<span class="number">0</span>).<span class="number">3</span>)
+            <span class="self">Self</span>::<span class="ident">from_xyzw</span>(<span class="op">-</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">x</span>, <span class="op">-</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">y</span>, <span class="op">-</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">z</span>, <span class="self">self</span>.<span class="number">0</span>.<span class="ident">w</span>)
         }
     }
 
@@ -992,12 +1034,6 @@
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">length_squared</span>()
     }
 
-    <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.9.5&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;please use `Quat::length_recip` instead&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length_reciprocal</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="self">self</span>.<span class="ident">length_recip</span>()
-    }
-
     <span class="doccomment">/// Computes `1.0 / Quat::length()`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// For valid results, `self` must _not_ be of length zero.</span>
@@ -1013,6 +1049,17 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">normalize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">inv_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">length_recip</span>();
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">mul</span>(<span class="ident">inv_len</span>))
+    }
+
+    <span class="doccomment">/// Returns `true` if, and only if, all elements are finite.</span>
+    <span class="doccomment">/// If any element is either `NaN`, positive or negative infinity, this will return `false`.</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_finite</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">is_finite</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_nan</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">is_nan</span>()
     }
 
     <span class="doccomment">/// Returns whether `self` of length `1.0` or not.</span>
@@ -1040,7 +1087,7 @@
         <span class="comment">// If the quat.w is close to -1.0, the angle will be near 2*PI which is close to</span>
         <span class="comment">// a negative 0 rotation. By forcing quat.w to be positive, we&#39;ll end up with</span>
         <span class="comment">// the shortest path.</span>
-        <span class="kw">let</span> <span class="ident">positive_w_angle</span> <span class="op">=</span> <span class="ident">scalar_acos</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">w</span>().<span class="ident">abs</span>()) <span class="op">*</span> <span class="number">2.0</span>;
+        <span class="kw">let</span> <span class="ident">positive_w_angle</span> <span class="op">=</span> <span class="ident">scalar_acos</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">w</span>.<span class="ident">abs</span>()) <span class="op">*</span> <span class="number">2.0</span>;
         <span class="ident">positive_w_angle</span> <span class="op">&lt;</span> <span class="ident">THRESHOLD_ANGLE</span>
     }
 
@@ -1175,7 +1222,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">vec4_f32</span>)]</span>
         {
             <span class="kw">let</span> <span class="ident">other</span> <span class="op">=</span> <span class="ident">Vec3</span>::<span class="ident">from</span>(<span class="ident">other</span>);
-            <span class="kw">let</span> <span class="ident">w</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">w</span>();
+            <span class="kw">let</span> <span class="ident">w</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">w</span>;
             <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">Vec3</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="number">0</span>);
             <span class="kw">let</span> <span class="ident">b2</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">dot</span>(<span class="ident">b</span>);
             <span class="ident">Vec3A</span>::<span class="ident">from</span>(
@@ -1246,29 +1293,6 @@
                 <span class="ident">w0</span> <span class="op">*</span> <span class="ident">w1</span> <span class="op">-</span> <span class="ident">x0</span> <span class="op">*</span> <span class="ident">x1</span> <span class="op">-</span> <span class="ident">y0</span> <span class="op">*</span> <span class="ident">y1</span> <span class="op">-</span> <span class="ident">z0</span> <span class="op">*</span> <span class="ident">z1</span>,
             )
         }
-    }
-    <span class="doccomment">/// Returns element `x`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">x</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">x</span>()
-    }
-
-    <span class="doccomment">/// Returns element `y`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">y</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">y</span>()
-    }
-
-    <span class="doccomment">/// Returns element `z`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">z</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">z</span>()
-    }
-
-    <span class="doccomment">/// Returns element `w`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">w</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">w</span>()
     }
 }
 
@@ -1466,6 +1490,34 @@
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">t</span>: <span class="ident">__m128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">Vec4</span>(<span class="ident">t</span>))
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Quat</span> {
+    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">XYZW</span>;
+    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
+        <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="self">Self</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="self">Self</span>::<span class="ident">Target</span>) }
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Sum</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Quat</span> {
+    <span class="kw">fn</span> <span class="ident">sum</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
+    <span class="kw">where</span>
+        <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span>,
+    {
+        <span class="ident">iter</span>.<span class="ident">fold</span>(<span class="ident">ZERO</span>, <span class="op">|</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="self">Self</span>::<span class="ident">add</span>(<span class="ident">a</span>, <span class="ident">b</span>))
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Product</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Quat</span> {
+    <span class="kw">fn</span> <span class="ident">product</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
+    <span class="kw">where</span>
+        <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span><span class="op">&gt;</span>,
+    {
+        <span class="ident">iter</span>.<span class="ident">fold</span>(<span class="ident">IDENTITY</span>, <span class="op">|</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="self">Self</span>::<span class="ident">mul</span>(<span class="ident">a</span>, <span class="ident">b</span>))
     }
 }
 </pre></div>
