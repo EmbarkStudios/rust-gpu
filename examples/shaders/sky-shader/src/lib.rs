@@ -8,7 +8,12 @@
 use core::f32::consts::PI;
 use shared::*;
 use spirv_std::glam::{const_vec3, Vec2, Vec3, Vec4};
-use spirv_std::{Input, MathExt, Output, PushConstant};
+use spirv_std::{Input, Output, PushConstant};
+
+// Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
+// we tie #[no_std] above to the same condition, so it's fine.
+#[cfg(target_arch = "spirv")]
+use spirv_std::num_traits::Float;
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const MIE_COEFFICIENT: f32 = 0.005;
@@ -26,9 +31,20 @@ const SUN_INTENSITY_FACTOR: f32 = 1000.0;
 const SUN_INTENSITY_FALLOFF_STEEPNESS: f32 = 1.5;
 const TURBIDITY: f32 = 2.0;
 
+pub fn tonemap(col: Vec3) -> Vec3 {
+    // see https://www.desmos.com/calculator/0eo9pzo1at
+    const A: f32 = 2.35;
+    const B: f32 = 2.8826666;
+    const C: f32 = 789.7459;
+    const D: f32 = 0.935;
+
+    let z = pow(col, A);
+    z / (pow(z, D) * B + Vec3::splat(C))
+}
+
 fn total_rayleigh(lambda: Vec3) -> Vec3 {
-    (8.0 * PI.pow(3.0)
-        * (REFRACTIVE_INDEX.pow(2.0) - 1.0).pow(2.0)
+    (8.0 * PI.powf(3.0)
+        * (REFRACTIVE_INDEX.powf(2.0) - 1.0).powf(2.0)
         * (6.0 + 3.0 * DEPOLARIZATION_FACTOR))
         / (3.0 * NUM_MOLECULES * pow(lambda, 4.0) * (6.0 - 7.0 * DEPOLARIZATION_FACTOR))
 }
@@ -39,11 +55,11 @@ fn total_mie(lambda: Vec3, k: Vec3, t: f32) -> Vec3 {
 }
 
 fn rayleigh_phase(cos_theta: f32) -> f32 {
-    (3.0 / (16.0 * PI)) * (1.0 + cos_theta.pow(2.0))
+    (3.0 / (16.0 * PI)) * (1.0 + cos_theta.powf(2.0))
 }
 
 fn henyey_greenstein_phase(cos_theta: f32, g: f32) -> f32 {
-    (1.0 / (4.0 * PI)) * ((1.0 - g.pow(2.0)) / (1.0 - 2.0 * g * cos_theta + g.pow(2.0)).pow(1.5))
+    (1.0 / (4.0 * PI)) * ((1.0 - g.powf(2.0)) / (1.0 - 2.0 * g * cos_theta + g.powf(2.0)).powf(1.5))
 }
 
 fn sun_intensity(zenith_angle_cos: f32) -> f32 {
@@ -58,7 +74,7 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     let up = Vec3::new(0.0, 1.0, 0.0);
-    let sunfade = 1.0 - (1.0 - (sun_position.y() / 450000.0).exp()).saturate();
+    let sunfade = 1.0 - (1.0 - saturate(sun_position.y / 450000.0).exp());
     let rayleigh_coefficient = RAYLEIGH - (1.0 * (1.0 - sunfade));
     let beta_r = total_rayleigh(PRIMARIES) * rayleigh_coefficient;
 
@@ -67,7 +83,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
     // Optical length, cutoff angle at 90 to avoid singularity
     let zenith_angle = acos_approx(up.dot(dir).max(0.0));
-    let denom = (zenith_angle).cos() + 0.15 * (93.885 - ((zenith_angle * 180.0) / PI)).pow(-1.253);
+    let denom = (zenith_angle).cos() + 0.15 * (93.885 - ((zenith_angle * 180.0) / PI)).powf(-1.253);
 
     let s_r = RAYLEIGH_ZENITH_LENGTH / denom;
     let s_m = MIE_ZENITH_LENGTH / denom;
@@ -92,7 +108,7 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
             sun_e * ((beta_r_theta + beta_m_theta) / (beta_r + beta_m)) * fex,
             0.5,
         ),
-        ((1.0 - up.dot(sun_direction)).pow(5.0)).saturate(),
+        saturate((1.0 - up.dot(sun_direction)).powf(5.0)),
     );
 
     // Composition + solar disc
@@ -108,10 +124,17 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
     lin + l0
 }
 
+fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3) -> Vec3 {
+    let forward = (look_at_pos - pos).normalize();
+    let right = Vec3::new(0.0, 1.0, 0.0).cross(forward).normalize();
+    let up = forward.cross(right);
+    (forward + uv.x * right + uv.y * up).normalize()
+}
+
 pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
     let mut uv = (frag_coord - 0.5 * Vec2::new(constants.width as f32, constants.height as f32))
         / constants.height as f32;
-    uv.set_y(-uv.y());
+    uv.y = -uv.y;
 
     // hard-code information because we can't bind buffers at the moment
     let eye_pos = Vec3::new(0.0, 0.0997, 0.2);
@@ -136,7 +159,7 @@ pub fn main_fs(
 ) {
     let constants = constants.load();
 
-    let frag_coord = Vec2::new(in_frag_coord.load().x(), in_frag_coord.load().y());
+    let frag_coord = Vec2::new(in_frag_coord.load().x, in_frag_coord.load().y);
     let color = fs(&constants, frag_coord);
     output.store(color);
 }

@@ -6,8 +6,12 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
-use spirv_std::glam::{Vec2, Vec3};
-use spirv_std::MathExt;
+use spirv_std::glam::Vec3;
+
+// Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
+// we tie #[no_std] above to the same condition, so it's fine.
+#[cfg(target_arch = "spirv")]
+use spirv_std::num_traits::Float;
 
 #[derive(Copy, Clone)]
 pub struct ShaderConstants {
@@ -16,14 +20,16 @@ pub struct ShaderConstants {
     pub time: f32,
 }
 
-// TODO: add this to glam? Rust std has it on f32/f64
-pub fn pow(v: Vec3, power: f32) -> Vec3 {
-    Vec3::new(v.x().pow(power), v.y().pow(power), v.z().pow(power))
+pub fn saturate(x: f32) -> f32 {
+    x.max(0.0).min(1.0)
 }
 
-// TODO: add this to glam? Rust std has it on f32/f64
+pub fn pow(v: Vec3, power: f32) -> Vec3 {
+    Vec3::new(v.x.powf(power), v.y.powf(power), v.z.powf(power))
+}
+
 pub fn exp(v: Vec3) -> Vec3 {
-    Vec3::new(v.x().exp(), v.y().exp(), v.z().exp())
+    Vec3::new(v.x.exp(), v.y.exp(), v.z.exp())
 }
 
 /// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
@@ -41,25 +47,7 @@ pub fn acos_approx(v: f32) -> f32 {
 
 pub fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
     // Scale, bias and saturate x to 0..1 range
-    let x = ((x - edge0) / (edge1 - edge0)).saturate();
+    let x = saturate((x - edge0) / (edge1 - edge0));
     // Evaluate polynomial
     x * x * (3.0 - 2.0 * x)
-}
-
-pub fn tonemap(col: Vec3) -> Vec3 {
-    // see https://www.desmos.com/calculator/0eo9pzo1at
-    const A: f32 = 2.35;
-    const B: f32 = 2.8826666;
-    const C: f32 = 789.7459;
-    const D: f32 = 0.935;
-
-    let z = pow(col, A);
-    z / (pow(z, D) * B + Vec3::splat(C))
-}
-
-pub fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3) -> Vec3 {
-    let forward = (look_at_pos - pos).normalize();
-    let right = Vec3::new(0.0, 1.0, 0.0).cross(forward).normalize();
-    let up = forward.cross(right);
-    (forward + uv.x() * right + uv.y() * up).normalize()
 }

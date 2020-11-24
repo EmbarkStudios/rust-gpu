@@ -37,10 +37,8 @@
     nonstandard_style
 )]
 
-mod math_ext;
-pub use math_ext::MathExt;
-
 pub use glam;
+pub use num_traits;
 
 macro_rules! pointer_addrspace_write {
     (false) => {};
