@@ -290,13 +290,20 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
             PassMode::Pair(..) => {
                 OperandValue::Pair(next(self, idx), next(self, idx)).store(self, dst)
             }
-            PassMode::Indirect(_, Some(_)) => OperandValue::Ref(
+            PassMode::Indirect {
+                extra_attrs: Some(_),
+                ..
+            } => OperandValue::Ref(
                 next(self, idx),
                 Some(next(self, idx)),
                 arg_abi.layout.align.abi,
             )
             .store(self, dst),
-            PassMode::Direct(_) | PassMode::Indirect(_, None) | PassMode::Cast(_) => {
+            PassMode::Direct(_)
+            | PassMode::Indirect {
+                extra_attrs: None, ..
+            }
+            | PassMode::Cast(_) => {
                 let next_arg = next(self, idx);
                 self.store_arg(arg_abi, next_arg, dst)
             }

@@ -201,7 +201,7 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
             .map(|&kind| {
                 Reg {
                     kind,
-                    size: self.prefix_chunk,
+                    size: self.prefix_chunk_size,
                 }
                 .spirv_type(cx)
             })
@@ -240,7 +240,7 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
             PassMode::Ignore => SpirvType::Void.def(cx),
             PassMode::Direct(_) | PassMode::Pair(..) => self.ret.layout.spirv_type_immediate(cx),
             PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
-            PassMode::Indirect(..) => {
+            PassMode::Indirect { .. } => {
                 let pointee = self.ret.layout.spirv_type(cx);
                 let pointer = SpirvType::Pointer {
                     storage_class: StorageClass::Function,
@@ -263,14 +263,19 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
                     continue;
                 }
                 PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
-                PassMode::Indirect(_, Some(_)) => {
+                PassMode::Indirect {
+                    extra_attrs: Some(_),
+                    ..
+                } => {
                     let ptr_ty = cx.tcx.mk_mut_ptr(arg.layout.ty);
                     let ptr_layout = cx.layout_of(ptr_ty);
                     argument_types.push(scalar_pair_element_backend_type(cx, ptr_layout, 0, true));
                     argument_types.push(scalar_pair_element_backend_type(cx, ptr_layout, 1, true));
                     continue;
                 }
-                PassMode::Indirect(_, None) => {
+                PassMode::Indirect {
+                    extra_attrs: None, ..
+                } => {
                     let pointee = arg.layout.spirv_type(cx);
                     SpirvType::Pointer {
                         storage_class: StorageClass::Function,
