@@ -1,6 +1,8 @@
 use crate::builder::libm_intrinsics;
 use crate::codegen_cx::CodegenCx;
-use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
+use rspirv::spirv::{
+    AccessQualifier, BuiltIn, Dim, ExecutionMode, ExecutionModel, ImageFormat, StorageClass,
+};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_span::symbol::{Ident, Symbol};
 use std::collections::HashMap;
@@ -30,7 +32,14 @@ pub struct Symbols {
     pub spirv15: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
-    really_unsafe_ignore_bitcasts: Symbol,
+    image: Symbol,
+    dim: Symbol,
+    depth: Symbol,
+    arrayed: Symbol,
+    multisampled: Symbol,
+    sampled: Symbol,
+    image_format: Symbol,
+    access_qualifier: Symbol,
     attributes: HashMap<Symbol, SpirvAttribute>,
     execution_modes: HashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
     pub libm_intrinsics: HashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
@@ -321,9 +330,19 @@ impl Symbols {
         let execution_models = EXECUTION_MODELS
             .iter()
             .map(|&(a, b)| (a, SpirvAttribute::Entry(b.into())));
+        let custom_attributes = [
+            (
+                "really_unsafe_ignore_bitcasts",
+                SpirvAttribute::ReallyUnsafeIgnoreBitcasts,
+            ),
+            ("sampler", SpirvAttribute::Sampler),
+        ]
+        .iter()
+        .cloned();
         let attributes_iter = builtins
             .chain(storage_classes)
             .chain(execution_models)
+            .chain(custom_attributes)
             .map(|(a, b)| (Symbol::intern(a), b));
         let mut attributes = HashMap::new();
         for (a, b) in attributes_iter {
@@ -362,7 +381,14 @@ impl Symbols {
             spirv15: Symbol::intern("spirv1.5"),
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
-            really_unsafe_ignore_bitcasts: Symbol::intern("really_unsafe_ignore_bitcasts"),
+            image: Symbol::intern("image"),
+            dim: Symbol::intern("dim"),
+            depth: Symbol::intern("depth"),
+            arrayed: Symbol::intern("arrayed"),
+            multisampled: Symbol::intern("multisampled"),
+            sampled: Symbol::intern("sampled"),
+            image_format: Symbol::intern("image_format"),
+            access_qualifier: Symbol::intern("access_qualifier"),
             attributes,
             execution_modes,
             libm_intrinsics,
@@ -415,6 +441,16 @@ pub enum SpirvAttribute {
     DescriptorSet(u32),
     Binding(u32),
     ReallyUnsafeIgnoreBitcasts,
+    Image {
+        dim: Dim,
+        depth: u32,
+        arrayed: u32,
+        multisampled: u32,
+        sampled: u32,
+        image_format: ImageFormat,
+        access_qualifier: Option<AccessQualifier>,
+    },
+    Sampler,
 }
 
 // Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused
@@ -448,8 +484,8 @@ pub fn parse_attrs(
                 Vec::new()
             };
             args.into_iter().filter_map(move |ref arg| {
-                if arg.has_name(cx.sym.really_unsafe_ignore_bitcasts) {
-                    Some(SpirvAttribute::ReallyUnsafeIgnoreBitcasts)
+                if arg.has_name(cx.sym.image) {
+                    parse_image(cx, arg)
                 } else if arg.has_name(cx.sym.descriptor_set) {
                     match parse_attr_int_value(cx, arg) {
                         Some(x) => Some(SpirvAttribute::DescriptorSet(x)),
@@ -491,6 +527,136 @@ pub fn parse_attrs(
         });
     // lifetimes are hard :(
     result.collect::<Vec<_>>().into_iter()
+}
+
+fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribute> {
+    let args = match attr.meta_item_list() {
+        Some(args) => args,
+        None => {
+            cx.tcx
+                .sess
+                .span_err(attr.span(), "image attribute must have arguments");
+            return None;
+        }
+    };
+    if args.len() != 6 && args.len() != 7 {
+        cx.tcx
+            .sess
+            .span_err(attr.span(), "image attribute must have 6 or 7 arguments");
+        return None;
+    }
+    let check = |idx: usize, sym: Symbol| -> bool {
+        if args[idx].has_name(sym) {
+            false
+        } else {
+            cx.tcx.sess.span_err(
+                args[idx].span(),
+                &format!("image attribute argument {} must be {}=...", idx + 1, sym),
+            );
+            true
+        }
+    };
+    if check(0, cx.sym.dim)
+        | check(1, cx.sym.depth)
+        | check(2, cx.sym.arrayed)
+        | check(3, cx.sym.multisampled)
+        | check(4, cx.sym.sampled)
+        | check(5, cx.sym.image_format)
+        | (args.len() == 7 && check(6, cx.sym.access_qualifier))
+    {
+        return None;
+    }
+    let arg_values = args
+        .iter()
+        .map(
+            |arg| match arg.meta_item().and_then(|arg| arg.name_value_literal()) {
+                Some(arg) => Some(arg),
+                None => {
+                    cx.tcx
+                        .sess
+                        .span_err(arg.span(), "image attribute must be name=value");
+                    None
+                }
+            },
+        )
+        .collect::<Option<Vec<_>>>()?;
+    let dim = match arg_values[0].kind {
+        LitKind::Str(dim, _) => match dim.with(|s| s.parse()) {
+            Ok(dim) => dim,
+            Err(()) => {
+                cx.tcx.sess.span_err(args[0].span(), "invalid dim value");
+                return None;
+            }
+        },
+        _ => {
+            cx.tcx
+                .sess
+                .span_err(args[0].span(), "dim value must be str");
+            return None;
+        }
+    };
+    let parse_lit = |idx: usize, name: &str| -> Option<u32> {
+        match arg_values[idx].kind {
+            LitKind::Int(v, _) => Some(v as u32),
+            _ => {
+                cx.tcx
+                    .sess
+                    .span_err(args[idx].span(), &format!("{} value must be int", name));
+                None
+            }
+        }
+    };
+    let depth = parse_lit(1, "depth")?;
+    let arrayed = parse_lit(2, "arrayed")?;
+    let multisampled = parse_lit(3, "multisampled")?;
+    let sampled = parse_lit(4, "sampled")?;
+    let image_format = match arg_values[5].kind {
+        LitKind::Str(dim, _) => match dim.with(|s| s.parse()) {
+            Ok(dim) => dim,
+            Err(()) => {
+                cx.tcx
+                    .sess
+                    .span_err(args[5].span(), "invalid image_format value");
+                return None;
+            }
+        },
+        _ => {
+            cx.tcx
+                .sess
+                .span_err(args[5].span(), "image_format value must be str");
+            return None;
+        }
+    };
+    let access_qualifier = if args.len() == 7 {
+        Some(match arg_values[6].kind {
+            LitKind::Str(dim, _) => match dim.with(|s| s.parse()) {
+                Ok(dim) => dim,
+                Err(()) => {
+                    cx.tcx
+                        .sess
+                        .span_err(args[6].span(), "invalid access_qualifier value");
+                    return None;
+                }
+            },
+            _ => {
+                cx.tcx
+                    .sess
+                    .span_err(args[6].span(), "access_qualifier value must be str");
+                return None;
+            }
+        })
+    } else {
+        None
+    };
+    Some(SpirvAttribute::Image {
+        dim,
+        depth,
+        arrayed,
+        multisampled,
+        sampled,
+        image_format,
+        access_qualifier,
+    })
 }
 
 fn parse_attr_int_value(cx: &CodegenCx<'_>, arg: &NestedMetaItem) -> Option<u32> {

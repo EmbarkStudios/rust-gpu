@@ -37,8 +37,11 @@
     nonstandard_style
 )]
 
+mod textures;
+
 pub use glam;
 pub use num_traits;
+pub use textures::*;
 
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[panic_handler]

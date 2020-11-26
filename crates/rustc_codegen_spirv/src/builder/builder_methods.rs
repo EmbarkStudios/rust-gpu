@@ -185,6 +185,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             }
             SpirvType::Pointer { .. } => self.fatal("memset on pointers not implemented yet"),
             SpirvType::Function { .. } => self.fatal("memset on functions not implemented yet"),
+            SpirvType::Image { .. } => self.fatal("cannot memset image"),
+            SpirvType::Sampler => self.fatal("cannot memset sampler"),
         }
     }
 
@@ -238,6 +240,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             }
             SpirvType::Pointer { .. } => self.fatal("memset on pointers not implemented yet"),
             SpirvType::Function { .. } => self.fatal("memset on functions not implemented yet"),
+            SpirvType::Image { .. } => self.fatal("cannot memset image"),
+            SpirvType::Sampler => self.fatal("cannot memset sampler"),
         }
     }
 

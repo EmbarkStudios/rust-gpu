@@ -3,7 +3,9 @@ use crate::builder_spirv::SpirvValue;
 use crate::codegen_cx::CodegenCx;
 use bimap::BiHashMap;
 use rspirv::dr::Operand;
-use rspirv::spirv::{Capability, Decoration, StorageClass, Word};
+use rspirv::spirv::{
+    AccessQualifier, Capability, Decoration, Dim, ImageFormat, StorageClass, Word,
+};
 use rustc_target::abi::{Align, Size};
 use std::cell::RefCell;
 use std::fmt;
@@ -56,6 +58,17 @@ pub enum SpirvType {
         return_type: Word,
         arguments: Vec<Word>,
     },
+    Image {
+        sampled_type: Word,
+        dim: Dim,
+        depth: u32,
+        arrayed: u32,
+        multisampled: u32,
+        sampled: u32,
+        image_format: ImageFormat,
+        access_qualifier: Option<AccessQualifier>,
+    },
+    Sampler,
 }
 
 impl SpirvType {
@@ -183,6 +196,26 @@ impl SpirvType {
             } => cx
                 .emit_global()
                 .type_function(return_type, arguments.iter().cloned()),
+            Self::Image {
+                sampled_type,
+                dim,
+                depth,
+                arrayed,
+                multisampled,
+                sampled,
+                image_format,
+                access_qualifier,
+            } => cx.emit_global().type_image(
+                sampled_type,
+                dim,
+                depth,
+                arrayed,
+                multisampled,
+                sampled,
+                image_format,
+                access_qualifier,
+            ),
+            Self::Sampler => cx.emit_global().type_sampler(),
         };
         cx.type_cache.def(result, self);
         result
@@ -244,6 +277,8 @@ impl SpirvType {
             Self::RuntimeArray { .. } => return None,
             Self::Pointer { .. } => cx.tcx.data_layout.pointer_size,
             Self::Function { .. } => cx.tcx.data_layout.pointer_size,
+            Self::Image { .. } => Size::from_bytes(4),
+            Self::Sampler => Size::from_bytes(4),
         };
         Some(result)
     }
@@ -267,6 +302,8 @@ impl SpirvType {
             Self::RuntimeArray { element } => cx.lookup_type(element).alignof(cx),
             Self::Pointer { .. } => cx.tcx.data_layout.pointer_align.abi,
             Self::Function { .. } => cx.tcx.data_layout.pointer_align.abi,
+            Self::Image { .. } => Align::from_bytes(4).unwrap(),
+            Self::Sampler => Align::from_bytes(4).unwrap(),
         }
     }
 }
@@ -380,6 +417,28 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                     .field("arguments", &args)
                     .finish()
             }
+            SpirvType::Image {
+                sampled_type,
+                dim,
+                depth,
+                arrayed,
+                multisampled,
+                sampled,
+                image_format,
+                access_qualifier,
+            } => f
+                .debug_struct("Image")
+                .field("id", &self.id)
+                .field("sampled_type", &self.cx.debug_type(sampled_type))
+                .field("dim", &dim)
+                .field("depth", &depth)
+                .field("arrayed", &arrayed)
+                .field("multisampled", &multisampled)
+                .field("sampled", &sampled)
+                .field("image_format", &image_format)
+                .field("access_qualifier", &access_qualifier)
+                .finish(),
+            SpirvType::Sampler => f.debug_struct("Sampler").field("id", &self.id).finish(),
         };
         {
             let mut debug_stack = DEBUG_STACK.lock().unwrap();
@@ -489,6 +548,27 @@ impl SpirvTypePrinter<'_, '_> {
                 f.write_str(") -> ")?;
                 ty(self.cx, stack, f, return_type)
             }
+            SpirvType::Image {
+                sampled_type,
+                dim,
+                depth,
+                arrayed,
+                multisampled,
+                sampled,
+                image_format,
+                access_qualifier,
+            } => f
+                .debug_struct("Image")
+                .field("sampled_type", &self.cx.debug_type(sampled_type))
+                .field("dim", &dim)
+                .field("depth", &depth)
+                .field("arrayed", &arrayed)
+                .field("multisampled", &multisampled)
+                .field("sampled", &sampled)
+                .field("image_format", &image_format)
+                .field("access_qualifier", &access_qualifier)
+                .finish(),
+            SpirvType::Sampler => f.write_str("Sampler"),
         }
     }
 }

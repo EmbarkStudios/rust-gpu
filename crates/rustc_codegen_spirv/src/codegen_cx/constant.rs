@@ -482,6 +482,11 @@ impl<'tcx> CodegenCx<'tcx> {
                 .tcx
                 .sess
                 .fatal("TODO: SpirvType::Function not supported yet in create_const_alloc"),
+            SpirvType::Image { .. } => self.tcx.sess.fatal("Cannot create a constant image value"),
+            SpirvType::Sampler => self
+                .tcx
+                .sess
+                .fatal("Cannot create a constant sampler value"),
         }
     }
 
