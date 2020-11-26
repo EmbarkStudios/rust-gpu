@@ -1026,6 +1026,35 @@
 <span id="1023">1023</span>
 <span id="1024">1024</span>
 <span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+<span id="1029">1029</span>
+<span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
@@ -1142,13 +1171,17 @@
                         );
                     }
                     <span class="kw">let</span> <span class="ident">line</span> <span class="op">=</span> <span class="ident">tokens</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
-                    <span class="kw">if</span> <span class="ident">line</span>
-                        .<span class="ident">last</span>()
-                        .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">prev</span><span class="op">|</span> <span class="macro">matches</span><span class="macro">!</span>(<span class="ident">prev</span>, <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="string">&quot;typeof&quot;</span>)))
-                    {
-                        <span class="kw-2">*</span><span class="ident">line</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>() <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw-2">&amp;</span><span class="ident">operands</span>[<span class="ident">operand_idx</span>], <span class="ident">span</span>);
-                    } <span class="kw">else</span> {
-                        <span class="ident">line</span>.<span class="ident">push</span>(<span class="ident">Token</span>::<span class="ident">Placeholder</span>(<span class="kw-2">&amp;</span><span class="ident">operands</span>[<span class="ident">operand_idx</span>], <span class="ident">span</span>));
+                    <span class="kw">let</span> <span class="ident">typeof_kind</span> <span class="op">=</span> <span class="ident">line</span>.<span class="ident">last</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">prev</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">prev</span> {
+                        <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="string">&quot;typeof&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">TypeofKind</span>::<span class="ident">Plain</span>),
+                        <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="string">&quot;typeof*&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">TypeofKind</span>::<span class="ident">Dereference</span>),
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                    });
+                    <span class="kw">match</span> <span class="ident">typeof_kind</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">kind</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw-2">*</span><span class="ident">line</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>() <span class="op">=</span>
+                                <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw-2">&amp;</span><span class="ident">operands</span>[<span class="ident">operand_idx</span>], <span class="ident">span</span>, <span class="ident">kind</span>)
+                        }
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">line</span>.<span class="ident">push</span>(<span class="ident">Token</span>::<span class="ident">Placeholder</span>(<span class="kw-2">&amp;</span><span class="ident">operands</span>[<span class="ident">operand_idx</span>], <span class="ident">span</span>)),
                     }
                 }
             }
@@ -1161,10 +1194,19 @@
     }
 }
 
+<span class="kw">enum</span> <span class="ident">TypeofKind</span> {
+    <span class="ident">Plain</span>,
+    <span class="ident">Dereference</span>,
+}
+
 <span class="kw">enum</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="ident">Word</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>),
     <span class="ident">Placeholder</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">InlineAsmOperandRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Span</span>),
-    <span class="ident">Typeof</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">InlineAsmOperandRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Span</span>),
+    <span class="ident">Typeof</span>(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">InlineAsmOperandRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">Span</span>,
+        <span class="ident">TypeofKind</span>,
+    ),
 }
 
 <span class="kw">enum</span> <span class="ident">OutRegister</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -1233,7 +1275,7 @@
             <span class="ident">Token</span>::<span class="ident">Placeholder</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="ident">id_str</span>) <span class="kw">if</span> <span class="ident">id_str</span>.<span class="ident">starts_with</span>(<span class="string">&#39;%&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         } {
             <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">parse_id_out</span>(<span class="ident">id_map</span>, <span class="ident">first_token</span>) {
                 <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">result_id</span>,
@@ -1259,7 +1301,7 @@
         };
         <span class="kw">let</span> <span class="ident">inst_name</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">first_token</span> {
             <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="ident">inst_name</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">inst_name</span>,
-            <span class="ident">Token</span>::<span class="ident">Placeholder</span>(<span class="kw">_</span>, <span class="ident">span</span>) <span class="op">|</span> <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="ident">span</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Token</span>::<span class="ident">Placeholder</span>(<span class="kw">_</span>, <span class="ident">span</span>) <span class="op">|</span> <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="ident">span</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">tcx</span>
                     .<span class="ident">sess</span>
                     .<span class="ident">span_err</span>(<span class="ident">span</span>, <span class="string">&quot;cannot use a dynamic value as an instruction type&quot;</span>);
@@ -1383,7 +1425,7 @@
                     <span class="prelude-val">None</span>
                 }
             },
-            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="ident">span</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="ident">span</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">tcx</span>
                     .<span class="ident">sess</span>
                     .<span class="ident">span_err</span>(<span class="ident">span</span>, <span class="string">&quot;cannot assign to a typeof expression&quot;</span>);
@@ -1461,10 +1503,26 @@
                     <span class="prelude-val">None</span>
                 }
             },
-            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="ident">hole</span>, <span class="ident">span</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">hole</span> {
+            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="ident">hole</span>, <span class="ident">span</span>, <span class="ident">kind</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">hole</span> {
                 <span class="ident">InlineAsmOperandRef</span>::<span class="ident">In</span> { <span class="ident">reg</span>, <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="self">self</span>.<span class="ident">check_reg</span>(<span class="ident">span</span>, <span class="ident">reg</span>);
-                    <span class="prelude-val">Some</span>(<span class="ident">value</span>.<span class="ident">immediate</span>().<span class="ident">ty</span>)
+                    <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">immediate</span>().<span class="ident">ty</span>;
+                    <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">kind</span> {
+                        <span class="ident">TypeofKind</span>::<span class="ident">Plain</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty</span>,
+                        <span class="ident">TypeofKind</span>::<span class="ident">Dereference</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
+                            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+                            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                                    <span class="ident">span</span>,
+                                    <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                                        <span class="string">&quot;cannot use typeof* on non-pointer type: {}&quot;</span>,
+                                        <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">ty</span>, <span class="self">self</span>)
+                                    ),
+                                );
+                                <span class="ident">ty</span>
+                            }
+                        },
+                    })
                 }
                 <span class="ident">InlineAsmOperandRef</span>::<span class="ident">Out</span> {
                     <span class="ident">reg</span>,
@@ -1588,7 +1646,7 @@
         <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">token</span> {
             <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="ident">word</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">word</span>),
             <span class="ident">Token</span>::<span class="ident">Placeholder</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         };
         <span class="kw">match</span> (<span class="ident">kind</span>, <span class="ident">word</span>) {
             (<span class="ident">OperandKind</span>::<span class="ident">IdResultType</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -1692,7 +1750,7 @@
                             <span class="ident">span</span>,
                             <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;expected a literal, not a dynamic value for a {:?}&quot;</span>, <span class="ident">kind</span>),
                         ),
-                        <span class="prelude-val">Some</span>(<span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="ident">span</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                        <span class="prelude-val">Some</span>(<span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="ident">span</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
                             <span class="ident">span</span>,
                             <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;expected a literal, not a type for a {:?}&quot;</span>, <span class="ident">kind</span>),
                         ),
@@ -1887,7 +1945,7 @@
                         <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;expected a literal, not a dynamic value for a {:?}&quot;</span>, <span class="ident">kind</span>),
                     );
                 }
-                <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="ident">span</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="ident">span</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
                         <span class="ident">span</span>,
                         <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;expected a literal, not a type for a {:?}&quot;</span>, <span class="ident">kind</span>),
