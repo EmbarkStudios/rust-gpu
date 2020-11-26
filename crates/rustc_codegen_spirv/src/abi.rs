@@ -305,6 +305,13 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
 }
 
 fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immediate: bool) -> Word {
+    if let TyKind::Adt(adt, _) = *ty.ty.kind() {
+        for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
+            if let Some(image) = trans_image(cx, ty, attr) {
+                return image;
+            }
+        }
+    }
     // Note: ty.layout is orthogonal to ty.ty, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
     // `ScalarPair`.
     // There's a few layers that we go through here. First we inspect layout.abi, then if relevant, layout.fields, etc.
@@ -704,4 +711,50 @@ fn name_of_struct(ty: TyAndLayout<'_>) -> String {
         write!(&mut name, "::{}", GeneratorSubsts::variant_name(index)).unwrap();
     }
     name
+}
+
+fn trans_image<'tcx>(
+    cx: &CodegenCx<'tcx>,
+    ty: TyAndLayout<'tcx>,
+    attr: SpirvAttribute,
+) -> Option<Word> {
+    match attr {
+        SpirvAttribute::Image {
+            dim,
+            depth,
+            arrayed,
+            multisampled,
+            sampled,
+            image_format,
+            access_qualifier,
+        } => {
+            // see SpirvType::sizeof
+            if ty.size != Size::from_bytes(4) {
+                cx.tcx.sess.err("#[spirv(image)] type must have size 4");
+                return None;
+            }
+            // Hardcode to float for now
+            let sampled_type = SpirvType::Float(32).def(cx);
+            let ty = SpirvType::Image {
+                sampled_type,
+                dim,
+                depth,
+                arrayed,
+                multisampled,
+                sampled,
+                image_format,
+                access_qualifier,
+            };
+            Some(ty.def(cx))
+        }
+        SpirvAttribute::Sampler => {
+            // see SpirvType::sizeof
+            if ty.size != Size::from_bytes(4) {
+                cx.tcx.sess.err("#[spirv(sampler)] type must have size 4");
+                return None;
+            }
+            Some(SpirvType::Sampler.def(cx))
+        }
+        _ => None,
+    }
 }

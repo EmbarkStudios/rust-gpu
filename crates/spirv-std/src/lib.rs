@@ -37,8 +37,11 @@
     nonstandard_style
 )]
 
+mod textures;
+
 pub use glam;
 pub use num_traits;
+pub use textures::*;
 
 macro_rules! pointer_addrspace_write {
     (false) => {};
