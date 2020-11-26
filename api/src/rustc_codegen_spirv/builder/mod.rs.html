@@ -400,6 +400,13 @@
 <span id="397">397</span>
 <span id="398">398</span>
 <span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">builder_methods</span>;
 <span class="kw">mod</span> <span class="ident">ext_inst</span>;
@@ -693,13 +700,20 @@
             <span class="ident">PassMode</span>::<span class="ident">Pair</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">OperandValue</span>::<span class="ident">Pair</span>(<span class="ident">next</span>(<span class="self">self</span>, <span class="ident">idx</span>), <span class="ident">next</span>(<span class="self">self</span>, <span class="ident">idx</span>)).<span class="ident">store</span>(<span class="self">self</span>, <span class="ident">dst</span>)
             }
-            <span class="ident">PassMode</span>::<span class="ident">Indirect</span>(<span class="kw">_</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">OperandValue</span>::<span class="ident">Ref</span>(
+            <span class="ident">PassMode</span>::<span class="ident">Indirect</span> {
+                <span class="ident">extra_attrs</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
+                ..
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">OperandValue</span>::<span class="ident">Ref</span>(
                 <span class="ident">next</span>(<span class="self">self</span>, <span class="ident">idx</span>),
                 <span class="prelude-val">Some</span>(<span class="ident">next</span>(<span class="self">self</span>, <span class="ident">idx</span>)),
                 <span class="ident">arg_abi</span>.<span class="ident">layout</span>.<span class="ident">align</span>.<span class="ident">abi</span>,
             )
             .<span class="ident">store</span>(<span class="self">self</span>, <span class="ident">dst</span>),
-            <span class="ident">PassMode</span>::<span class="ident">Direct</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode</span>::<span class="ident">Indirect</span>(<span class="kw">_</span>, <span class="prelude-val">None</span>) <span class="op">|</span> <span class="ident">PassMode</span>::<span class="ident">Cast</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">PassMode</span>::<span class="ident">Direct</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">PassMode</span>::<span class="ident">Indirect</span> {
+                <span class="ident">extra_attrs</span>: <span class="prelude-val">None</span>, ..
+            }
+            <span class="op">|</span> <span class="ident">PassMode</span>::<span class="ident">Cast</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">next_arg</span> <span class="op">=</span> <span class="ident">next</span>(<span class="self">self</span>, <span class="ident">idx</span>);
                 <span class="self">self</span>.<span class="ident">store_arg</span>(<span class="ident">arg_abi</span>, <span class="ident">next_arg</span>, <span class="ident">dst</span>)
             }

@@ -703,6 +703,11 @@
 <span id="700">700</span>
 <span id="701">701</span>
 <span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s</span>
 <span class="doccomment">//! surprisingly difficult.</span>
@@ -907,7 +912,7 @@
             .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">kind</span><span class="op">|</span> {
                 <span class="ident">Reg</span> {
                     <span class="ident">kind</span>,
-                    <span class="ident">size</span>: <span class="self">self</span>.<span class="ident">prefix_chunk</span>,
+                    <span class="ident">size</span>: <span class="self">self</span>.<span class="ident">prefix_chunk_size</span>,
                 }
                 .<span class="ident">spirv_type</span>(<span class="ident">cx</span>)
             })
@@ -946,7 +951,7 @@
             <span class="ident">PassMode</span>::<span class="ident">Ignore</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">Void</span>.<span class="ident">def</span>(<span class="ident">cx</span>),
             <span class="ident">PassMode</span>::<span class="ident">Direct</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode</span>::<span class="ident">Pair</span>(..) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">ret</span>.<span class="ident">layout</span>.<span class="ident">spirv_type_immediate</span>(<span class="ident">cx</span>),
             <span class="ident">PassMode</span>::<span class="ident">Cast</span>(<span class="ident">cast_target</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cast_target</span>.<span class="ident">spirv_type</span>(<span class="ident">cx</span>),
-            <span class="ident">PassMode</span>::<span class="ident">Indirect</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">PassMode</span>::<span class="ident">Indirect</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">pointee</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ret</span>.<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="ident">cx</span>);
                 <span class="kw">let</span> <span class="ident">pointer</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
                     <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
@@ -969,14 +974,19 @@
                     <span class="kw">continue</span>;
                 }
                 <span class="ident">PassMode</span>::<span class="ident">Cast</span>(<span class="ident">cast_target</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cast_target</span>.<span class="ident">spirv_type</span>(<span class="ident">cx</span>),
-                <span class="ident">PassMode</span>::<span class="ident">Indirect</span>(<span class="kw">_</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">PassMode</span>::<span class="ident">Indirect</span> {
+                    <span class="ident">extra_attrs</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
+                    ..
+                } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">ptr_ty</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">mk_mut_ptr</span>(<span class="ident">arg</span>.<span class="ident">layout</span>.<span class="ident">ty</span>);
                     <span class="kw">let</span> <span class="ident">ptr_layout</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">layout_of</span>(<span class="ident">ptr_ty</span>);
                     <span class="ident">argument_types</span>.<span class="ident">push</span>(<span class="ident">scalar_pair_element_backend_type</span>(<span class="ident">cx</span>, <span class="ident">ptr_layout</span>, <span class="number">0</span>, <span class="bool-val">true</span>));
                     <span class="ident">argument_types</span>.<span class="ident">push</span>(<span class="ident">scalar_pair_element_backend_type</span>(<span class="ident">cx</span>, <span class="ident">ptr_layout</span>, <span class="number">1</span>, <span class="bool-val">true</span>));
                     <span class="kw">continue</span>;
                 }
-                <span class="ident">PassMode</span>::<span class="ident">Indirect</span>(<span class="kw">_</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">PassMode</span>::<span class="ident">Indirect</span> {
+                    <span class="ident">extra_attrs</span>: <span class="prelude-val">None</span>, ..
+                } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">pointee</span> <span class="op">=</span> <span class="ident">arg</span>.<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="ident">cx</span>);
                     <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
                         <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
