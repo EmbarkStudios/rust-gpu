@@ -13,9 +13,15 @@ pub enum RustGPUShader {
 
 fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleSource<'static> {
     match shader {
-        RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),
-        RustGPUShader::Sky => wgpu::include_spirv!(env!("sky_shader.spv")),
-        RustGPUShader::Compute => wgpu::include_spirv!(env!("compute_shader.spv")),
+        RustGPUShader::Compute => {
+            wgpu::include_spirv!(concat!(env!("OUT_DIR"), "/compute_shader.spv"))
+        }
+        RustGPUShader::Simplest => {
+            wgpu::include_spirv!(concat!(env!("OUT_DIR"), "/simplest_shader.spv"))
+        }
+        RustGPUShader::Sky => {
+            wgpu::include_spirv!(concat!(env!("OUT_DIR"), "/sky_shader.spv"))
+        }
     }
 }
 

@@ -2,7 +2,6 @@ mod basic;
 mod control_flow;
 
 use lazy_static::lazy_static;
-use rustc_codegen_spirv::rspirv;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard};
@@ -34,7 +33,7 @@ fn global_lock() -> MutexGuard<'static, ()> {
 }
 
 static CARGO_TOML: &str = r#"[package]
-name = "test-project"
+name = "spirv-module"
 version = "0.1.0"
 authors = ["Embark <opensource@embark-studios.com>"]
 edition = "2018"
@@ -70,11 +69,19 @@ fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {
 }
 
 fn build(src: &str) -> PathBuf {
+    let out_dir = PathBuf::from(env!("OUT_DIR"));
     let project = setup(src).expect("Failed to set up project");
-    crate::SpirvBuilder::new(&project)
-        .print_metadata(false)
+    crate::SpirvBuilder::new(&project, out_dir.join("spirv"))
+        .codegen_source(crate::Source {
+            compile_source: false,
+            kind: crate::options::SourceKind::Path("../../target/debug/".into()),
+        })
+        .sysroot_location(crate::Source {
+            compile_source: true,
+            kind: crate::options::SourceKind::Path("../../target/sysroot".into()),
+        })
         .build()
-        .expect("Failed to build test")
+        .unwrap()
 }
 
 fn read_module(path: &Path) -> Result<rspirv::dr::Module, Box<dyn Error>> {
@@ -108,8 +115,8 @@ fn assert_str_eq(expected: &str, result: &str) {
 
 fn dis_fn(src: &str, func: &str, expect: &str) {
     let _lock = global_lock();
-    let module = read_module(&build(src)).unwrap();
-    let abs_func_path = format!("test_project::{}", func);
+    let module = read_module(&build(src).join("spirv_module.spv")).unwrap();
+    let abs_func_path = format!("spirv_module::{}", func);
     let id = module
         .debugs
         .iter()

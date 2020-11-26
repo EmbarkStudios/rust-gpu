@@ -1,63 +1,119 @@
+//! `spirv-builder` is crate designed to automate the process of compiling and
+//! building SPIR-V crates.
+//!
+//! # Dependencies
+//! `spirv-builder` requires `cargo` to be available in the environment, in
+//! order to compile crates. You can override which `cargo` is used with the
+//! `CARGO` environment variable.
+//!
+//! # Build script example
+//! In this example we'll show how to compile a SPIR-V crate to be included
+//! at compile time.
+//!
+//! ## `build.rs`
+//! ```no_run
+//! use spirv_builder::{options::{Source, SourceKind}, SpirvBuilder};
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! #   let path_to_crate_source = std::path::PathBuf::new();
+//!     let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR")?);
+//!     SpirvBuilder::new(path_to_crate_source, &out_dir)
+//!         // Currently `librustc_codegen_spirv` and the `spirv-unknown-unknown`
+//!         // sysroot are not packaged with Rust, so we have to build it ourselves.
+//!         // See `Source` for more information on different ways to provide or
+//!         // compile the sources.
+//!         .codegen_source(Source {
+//!             compile_source: true,
+//!             kind: SourceKind::Git {
+//!                 repository: "https://github.com/EmbarkStudios/rust-gpu".into(),
+//!                 into: out_dir.join("rust-gpu"),
+//!                 commitish: None,
+//!             }
+//!         })
+//!         .sysroot_location(Source {
+//!             compile_source: true,
+//!             kind: SourceKind::Path(out_dir.join("sysroot"))
+//!         })
+//!         // Emit cargo build script metadata for the SPIR-V project.
+//!         .emit_build_script_metadata()
+//!         .build()?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ## `main.rs`
+//! ```no_compile
+//! const SPIRV_BINARY: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/crate_name.spv"));
+//! ```
+
 #[cfg(test)]
 mod test;
 
 mod depfile;
+mod error;
+pub mod options;
+mod rustc;
+mod utils;
 
-use raw_string::{RawStr, RawString};
-use serde::Deserialize;
-use std::collections::HashMap;
 use std::env;
-use std::error::Error;
-use std::fmt;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
-#[derive(Debug)]
-pub enum SpirvBuilderError {
-    BuildFailed,
-}
+use eyre::Result;
 
-impl fmt::Display for SpirvBuilderError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            SpirvBuilderError::BuildFailed => f.write_str("Build failed"),
-        }
-    }
-}
+use options::{CodegenBuildOptions, MemoryModel, Source, Version};
 
-impl Error for SpirvBuilderError {}
+pub use error::SpirvBuilderError;
 
-pub enum MemoryModel {
-    Simple,
-    Vulkan,
-    GLSL450,
-}
-
+/// The builder struct that compiles SPIR-V crates using
+/// either a compiled or installed `librustc_codegen_spirv` and
+/// `spirv-unknown-unknown` sysroot.
+#[derive(Default)]
 pub struct SpirvBuilder {
-    path_to_crate: PathBuf,
-    print_metadata: bool,
-    spirv_version: Option<(u8, u8)>,
+    build_script_metadata: bool,
+    codegen_options: CodegenBuildOptions,
+    codegen_source: Source,
+    destination: PathBuf,
     memory_model: Option<MemoryModel>,
+    rust_src: Option<PathBuf>,
+    sysroot_location: Source,
+    source: PathBuf,
+    spirv_version: Option<Version>,
 }
+
 impl SpirvBuilder {
-    pub fn new(path_to_crate: impl AsRef<Path>) -> Self {
+    /// Initialise a new [`SpirvBuilder`] with a source and
+    /// destination directories.
+    pub fn new(source: impl Into<PathBuf>, destination: impl Into<PathBuf>) -> Self {
         Self {
-            path_to_crate: path_to_crate.as_ref().to_owned(),
-            print_metadata: true,
-            spirv_version: None,
-            memory_model: None,
+            source: source.into(),
+            destination: destination.into(),
+            ..Default::default()
         }
     }
 
-    /// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to true.
-    pub fn print_metadata(mut self, v: bool) -> Self {
-        self.print_metadata = v;
+    /// Sets the source for code generation.
+    pub fn codegen_source(mut self, codegen_source: Source) -> Self {
+        self.codegen_source = codegen_source;
+        self
+    }
+
+    /// Sets the location for the sysroot.
+    pub fn sysroot_location(mut self, sysroot_location: Source) -> Self {
+        self.sysroot_location = sysroot_location;
         self
     }
 
     /// Sets the SPIR-V binary version to use. Defaults to v1.3.
     pub fn spirv_version(mut self, major: u8, minor: u8) -> Self {
-        self.spirv_version = Some((major, minor));
+        self.spirv_version = Some(Version { major, minor });
+        self
+    }
+
+    /// Sets the path to the rust source to use for building sysroot. Default:
+    /// The current toolchain's `rust-src` component.
+    pub fn rust_src(mut self, rust_src: impl Into<PathBuf>) -> Self {
+        self.rust_src = Some(rust_src.into());
         self
     }
 
@@ -67,166 +123,182 @@ impl SpirvBuilder {
         self
     }
 
-    /// Builds the module. Returns the path to the built spir-v file. If print_metadata is true,
-    /// you usually don't have to inspect the path, as the environment variable will already be
-    /// set.
-    pub fn build(self) -> Result<PathBuf, SpirvBuilderError> {
-        let spirv_module = invoke_rustc(&self)?;
-        let env_var = spirv_module.file_name().unwrap().to_str().unwrap();
-        if self.print_metadata {
-            println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
+    /// Sets whether to print build script metadata (e.g. `rerun-if-changed`
+    /// for artifacts) to `cargo`.
+    pub fn emit_build_script_metadata(mut self) -> Self {
+        self.build_script_metadata = true;
+        self
+    }
+
+    /// Creates the target feature flag for rustc, setting the SPIR-V version
+    /// and/or memory model.
+    fn target_feature_flag(&self) -> String {
+        let mut target_features = Vec::new();
+        if let Some(version) = self.spirv_version {
+            target_features.push(format!("+{}", version));
         }
-        Ok(spirv_module)
-    }
-}
+        if let Some(memory_model) = &self.memory_model {
+            target_features.push(format!("+{}", memory_model));
+        }
 
-// https://github.com/rust-lang/cargo/blob/1857880b5124580c4aeb4e8bc5f1198f491d61b1/src/cargo/util/paths.rs#L29-L52
-fn dylib_path_envvar() -> &'static str {
-    if cfg!(windows) {
-        "PATH"
-    } else if cfg!(target_os = "macos") {
-        "DYLD_FALLBACK_LIBRARY_PATH"
-    } else {
-        "LD_LIBRARY_PATH"
-    }
-}
-fn dylib_path() -> Vec<PathBuf> {
-    match env::var_os(dylib_path_envvar()) {
-        Some(var) => env::split_paths(&var).collect(),
-        None => Vec::new(),
-    }
-}
-
-fn find_rustc_codegen_spirv() -> PathBuf {
-    let filename = format!(
-        "{}rustc_codegen_spirv{}",
-        env::consts::DLL_PREFIX,
-        env::consts::DLL_SUFFIX
-    );
-    for mut path in dylib_path() {
-        path.push(&filename);
-        if path.is_file() {
-            return path;
+        if target_features.is_empty() {
+            String::new()
+        } else {
+            format!("-C target-feature={}", target_features.join(","))
         }
     }
-    panic!("Could not find {} in library path", filename);
-}
 
-fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
-    // Okay, this is a little bonkers: in a normal world, we'd have the user clone
-    // rustc_codegen_spirv and pass in the path to it, and then we'd invoke cargo to build it, grab
-    // the resulting .so, and pass it into -Z codegen-backend. But that's really gross: the user
-    // needs to clone rustc_codegen_spirv and tell us its path! So instead, we *directly reference
-    // rustc_codegen_spirv in spirv-builder's Cargo.toml*, which means that it will get built
-    // alongside build.rs, and cargo will helpfully add it to LD_LIBRARY_PATH for us! However,
-    // rustc expects a full path, instead of a filename looked up via LD_LIBRARY_PATH, so we need
-    // to copy cargo's understanding of library lookup and find the library and its full path.
-    let rustc_codegen_spirv = find_rustc_codegen_spirv();
-    let mut target_features = Vec::new();
-    // these must match codegen_cx/mod.rs
-    if let Some((major, minor)) = builder.spirv_version {
-        target_features.push(format!("+spirv{}.{}", major, minor));
+    fn rustc_flags(&self, sysroot: Option<impl AsRef<Path>>, codegen: impl AsRef<Path>) -> String {
+        vec![
+            match sysroot {
+                Some(path) => format!("--sysroot={}", path.as_ref().display()),
+                None => String::new(),
+            },
+            format!("-Zcodegen-backend={}", codegen.as_ref().display()),
+            self.target_feature_flag(),
+        ]
+        .join(" ")
     }
-    if let Some(memory_model) = &builder.memory_model {
-        target_features.push(
-            match memory_model {
-                MemoryModel::Simple => "+simple",
-                MemoryModel::Vulkan => "+vulkan",
-                MemoryModel::GLSL450 => "+glsl450",
-            }
-            .to_string(),
+
+    /// Builds the module. Returns the path to the built spir-v file(s).
+    pub fn build(mut self) -> Result<PathBuf> {
+        if std::fs::metadata(&self.destination).is_ok() {
+            remove_dir_all::remove_dir_all(&self.destination)?;
+        }
+        std::fs::create_dir_all(&self.destination)?;
+        self.destination = self.destination.canonicalize()?;
+        self.source = self.source.canonicalize()?;
+        utils::fix_canon_paths(&mut self.destination);
+        utils::fix_canon_paths(&mut self.source);
+
+        for module in self.build_shader()? {
+            std::fs::copy(&module, self.destination.join(module.file_name().unwrap()))?;
+        }
+
+        Ok(self.destination)
+    }
+
+    /// Builds the SPIR-V codegen backend and returns a path to the
+    /// compiled dynamic library. If `codegen_source.compile_source` is `false`
+    /// then then it will return the `codegen_source` path with the DLL file name.
+    pub fn build_spirv_codegen(&self) -> Result<PathBuf> {
+        const CRATE_NAME: &str = "rustc_codegen_spirv";
+        let dll_file_name = format!(
+            "{}{}{}",
+            env::consts::DLL_PREFIX,
+            CRATE_NAME,
+            env::consts::DLL_SUFFIX
         );
-    }
-    let feature_flag = if target_features.is_empty() {
-        String::new()
-    } else {
-        format!(" -C target-feature={}", target_features.join(","))
-    };
-    let rustflags = format!(
-        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}",
-        rustc_codegen_spirv.display(),
-        feature_flag,
-    );
-    let build = Command::new("cargo")
-        .args(&[
-            "build",
-            "--message-format=json-render-diagnostics",
-            "-Z",
-            "build-std=core",
-            "--target",
-            "spirv-unknown-unknown",
-            "--release",
-        ])
-        .stderr(Stdio::inherit())
-        .current_dir(&builder.path_to_crate)
-        .env("RUSTFLAGS", rustflags)
-        .output()
-        .expect("failed to execute cargo build");
 
-    // `get_last_artifact` has the side-effect of printing invalid lines, so
-    // we do that even in case of an error, to let through any useful messages
-    // that ended up on stdout instead of stderr.
-    let stdout = String::from_utf8(build.stdout).unwrap();
-    let artifact = get_last_artifact(&stdout);
+        let path = self.codegen_source.get()?;
+        let repo_dir = match self.codegen_source.compile_source {
+            true => path,
+            false => return Ok(path.join(&dll_file_name)),
+        };
 
-    if build.status.success() {
-        if builder.print_metadata {
-            print_deps_of(&artifact);
+        let crate_path = repo_dir.join("crates").join(CRATE_NAME);
+        let mut args = vec![
+            "build".into(),
+            "--no-default-features".into(),
+            format!("--features={}", self.codegen_options.spirv_tools),
+            format!(
+                "--manifest-path={}",
+                crate_path.join("Cargo.toml").display()
+            ),
+        ];
+
+        if self.codegen_options.release {
+            args.push("--release".into());
         }
-        Ok(artifact)
-    } else {
-        Err(SpirvBuilderError::BuildFailed)
+
+        let output = rustc::cargo()
+            .args(&args)
+            .stderr(Stdio::inherit())
+            .current_dir(&crate_path)
+            .output()?;
+
+        let backend = repo_dir
+            .join("target")
+            .join(if self.codegen_options.release {
+                "release"
+            } else {
+                "debug"
+            })
+            .join(&dll_file_name);
+
+        if !output.status.success() || std::fs::metadata(&backend).is_err() {
+            Err(eyre::eyre!("Building `rustc_codegen_spirv` failed."))
+        } else {
+            Ok(backend)
+        }
     }
-}
 
-#[derive(Deserialize)]
-struct RustcOutput {
-    reason: String,
-    filenames: Option<Vec<String>>,
-}
+    pub fn build_sysroot(&self, backend: impl AsRef<Path>) -> Result<Option<PathBuf>> {
+        const TARGET_NAME: &str = "spirv-unknown-unknown";
+        if self.sysroot_location.kind.is_environment() {
+            return Ok(None);
+        }
 
-fn get_last_artifact(out: &str) -> PathBuf {
-    let last = out
-        .lines()
-        .filter_map(|line| match serde_json::from_str::<RustcOutput>(line) {
-            Ok(line) => Some(line),
-            Err(_) => {
-                // Pass through invalid lines
-                println!("{}", line);
-                None
-            }
-        })
-        .filter(|line| line.reason == "compiler-artifact")
-        .last()
-        .expect("Did not find output file in rustc output");
+        let backend = backend.as_ref();
+        let path = self.sysroot_location.get()?;
 
-    let mut filenames = last
-        .filenames
-        .unwrap()
-        .into_iter()
-        .filter(|v| v.ends_with(".spv"));
-    let filename = filenames.next().expect("Crate had no .spv artifacts");
-    assert_eq!(filenames.next(), None, "Crate had multiple .spv artifacts");
-    filename.into()
-}
+        let sysroot_dir = match self.sysroot_location.compile_source {
+            true => path,
+            false => return Ok(Some(path)),
+        };
 
-fn print_deps_of(artifact: &Path) {
-    let deps_file = artifact.with_extension("d");
-    let mut deps_map = HashMap::new();
-    depfile::read_deps_file(&deps_file, |item, deps| {
-        deps_map.insert(item, deps);
-        Ok(())
-    })
-    .expect("Could not read dep file");
-    fn recurse(map: &HashMap<RawString, Vec<RawString>>, artifact: &RawStr) {
-        match map.get(artifact) {
-            Some(entries) => {
-                for entry in entries {
-                    recurse(map, entry)
+        let mut builder =
+            cargo_sysroot::SysrootBuilder::new(cargo_sysroot::Sysroot::CompilerBuiltins);
+        builder
+            .target(TARGET_NAME.into())
+            .output(sysroot_dir)
+            .rustc_flags(&[format!("-Zcodegen-backend={}", backend.display())]);
+
+        if let Some(path) = &self.rust_src {
+            builder.rust_src(path.clone());
+        }
+
+        let sysroot = builder.build().map_err(|e| eyre::eyre!("{}", e))?;
+        let sysroot_codegen = sysroot.join(backend.file_name().unwrap());
+        std::fs::copy(&backend, &sysroot_codegen)?;
+        Ok(Some(sysroot))
+    }
+
+    pub fn build_shader(&self) -> eyre::Result<Vec<PathBuf>> {
+        let backend = self.build_spirv_codegen()?;
+        let sysroot = self.build_sysroot(&backend)?;
+        let flags = self.rustc_flags(sysroot, backend);
+        let build = rustc::cargo()
+            .args(&[
+                "build",
+                "--verbose",
+                "--release",
+                "--message-format=json-render-diagnostics",
+                "--target",
+                "spirv-unknown-unknown",
+            ])
+            .stderr(Stdio::inherit())
+            .current_dir(&self.source)
+            .env("RUSTFLAGS", flags)
+            .output()
+            .expect("failed to execute cargo build");
+
+        // get_artifacts_from_output` has the side-effect of printing invalid
+        // lines, so we do that even in case of an error, to let through any
+        // useful messages that ended up on stdout instead of stderr.
+        let stdout = String::from_utf8(build.stdout).unwrap();
+        let artifacts = rustc::get_artifacts_from_output(&stdout);
+
+        if build.status.success() {
+            if self.build_script_metadata {
+                for artifact in &artifacts {
+                    rustc::print_deps_of(&artifact);
                 }
             }
-            None => println!("cargo:rerun-if-changed={}", artifact),
+
+            Ok(artifacts)
+        } else {
+            Err(SpirvBuilderError.into())
         }
     }
-    recurse(&deps_map, artifact.to_str().unwrap().into());
 }

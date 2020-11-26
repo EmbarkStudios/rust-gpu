@@ -10,6 +10,7 @@ jobs:
   check:
     name: Test
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -82,11 +83,13 @@ jobs:
           # Unset legacy paths:
           echo "ANDROID_NDK_HOME=" >> $env:GITHUB_ENV
           echo "ANDROID_NDK_PATH=" >> $env:GITHUB_ENV
+          # Perform a clean build on Windows.
+          cargo clean --manifest-path examples/runners/wgpu/Cargo.toml
 
       - name: Compile WGPU example for Android
         run: |
           rustup target add aarch64-linux-android
-          cargo apk build --manifest-path examples/runners/wgpu/Cargo.toml --features use-installed-tools --no-default-features
+          cargo apk build --manifest-path examples/runners/wgpu/Cargo.toml
 
   lint:
     name: Lint

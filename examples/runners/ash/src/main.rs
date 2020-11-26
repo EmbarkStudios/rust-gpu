@@ -19,7 +19,7 @@ use std::ops::Drop;
 use structopt::StructOpt;
 
 fn shader_module() -> &'static [u8] {
-    &include_bytes!(env!("sky_shader.spv"))[..]
+    &include_bytes!(concat!(env!("OUT_DIR"), "/sky_shader.spv"))[..]
 }
 
 // Simple offset_of macro akin to C++ offsetof
