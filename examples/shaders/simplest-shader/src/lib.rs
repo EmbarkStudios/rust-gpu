@@ -1,5 +1,4 @@
 #![cfg_attr(target_arch = "spirv", no_std)]
-#![feature(lang_items)]
 #![feature(register_attr)]
 #![register_attr(spirv)]
 
@@ -26,13 +25,3 @@ pub fn main_vs(
         1.0,
     ));
 }
-
-#[cfg(all(not(test), target_arch = "spirv"))]
-#[panic_handler]
-fn panic(_: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
-
-#[cfg(all(not(test), target_arch = "spirv"))]
-#[lang = "eh_personality"]
-extern "C" fn rust_eh_personality() {}
