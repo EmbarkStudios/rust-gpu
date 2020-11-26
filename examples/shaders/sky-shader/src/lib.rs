@@ -179,13 +179,3 @@ pub fn main_vs(
 
     builtin_pos.store(pos.extend(0.0).extend(1.0));
 }
-
-#[cfg(all(not(test), target_arch = "spirv"))]
-#[panic_handler]
-fn panic(_: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
-
-#[cfg(all(not(test), target_arch = "spirv"))]
-#[lang = "eh_personality"]
-extern "C" fn rust_eh_personality() {}

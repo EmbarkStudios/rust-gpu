@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(register_attr, repr_simd, core_intrinsics)]
+#![feature(register_attr, repr_simd, core_intrinsics, lang_items)]
 #![cfg_attr(target_arch = "spirv", feature(asm))]
 #![register_attr(spirv)]
 // Our standard Clippy lints that we use in Embark projects, we opt out of a few that are not appropriate for the specific crate (yet)
@@ -39,6 +39,16 @@
 
 pub use glam;
 pub use num_traits;
+
+#[cfg(all(not(test), target_arch = "spirv"))]
+#[panic_handler]
+fn panic(_: &core::panic::PanicInfo<'_>) -> ! {
+    loop {}
+}
+
+#[cfg(all(not(test), target_arch = "spirv"))]
+#[lang = "eh_personality"]
+extern "C" fn rust_eh_personality() {}
 
 macro_rules! pointer_addrspace_write {
     (false) => {};
