@@ -165,10 +165,142 @@ These traits allow us to be generic over types that can be borrowed as slices. T
 
 These traits may potentially be private to a "global_buffer" module. Note that the implementation for arrays requires the unstable feature "min_const_generics", but this is set to be stable in 1.50 (currently 1.48). The AsRef trait does not specify T, ie it's a generic parameter to the trait not an associated type, which makes it more cumbersone to use. 
 
+## GlobalBuffer
 
+The GlobalBuffer and GlobalBufferMut structs will be used as entry parameters. They have a reference to a GlobalBlock\<B>, where B may be a slice aka RuntimeArray, an array, or some arbitrary type (like an iterface block of glam Mat or Vec types). For Copy types, GlobalBuffer implements "load", returning a copy of the data. For arrays and slices, it implements "as_slice", which returns a Global<\[T]>. This is safe because it is immutable:
+
+    #[allow(unused_attributes)]
+    #[spirv(global)] 
+    pub struct GlobalBuffer<'a, B> {
+        x: &'a GlobalBlock<B>
+    }
     
+    impl<'a, B: Copy> GlobalBuffer<'a, B> {
+        pub fn load(&self) -> B {
+            *self.x
+        }
+    }
+
+    impl<'a, T, B: AsSlice<Item=T>> GlobalBuffer<'a, B> {
+        pub fn as_slice(&self) -> Global<'a, [T]> {
+            Global::new(self.x.as_slice())
+        }
+    }
+
+MutableBuffers are more restricted. There will be no public interface, instead "as_unsafe_slice" and "as_unsafe_mut_slice", private to spirv-std, which are unsafe because multiple invocations could both read and write to it. Potentially, a safe high-level abstraction like an iterator will partition this slice between invocations and perform any necessary barriers. 
+
+    #[allow(unused_attributes)]
+    #[spirv(global)] 
+    pub struct GlobalBufferMut<'a, B> {
+        x: &'a mut GlobalBlock<B>
+    }
+
+    impl<'a, T, B: AsSlice<Item=T>> GlobalBufferMut<'a, B> {
+        pub(crate) unsafe fn as_unsafe_slice(&self) -> Global<'a, [T]> {
+            Global::new(self.x.as_slice())
+        }
+    }
+
+    impl<'a, T, B: AsMutSlice<Item=T>> GlobalBufferMut<'a, B> {
+        pub(crate) unsafe fn as_unsafe_mut_slice(&mut self) -> GlobalMut<'a, [T]> {
+            GlobalMut::new(self.x.as_mut_slice())
+        } 
+    }
+
+## GlobalIndex 
+
+In order to do work in parallel, the shader must acquire the global index, ie gl_GlobalInvocationIndex. Use of this value presents several problems. First, the programmer must take care to have each invocation access different memory, or use appropriate synchronization. The index may be out of bounds, larger than the length of the buffer. Using the value conditionally may lead to non-uniform control flow, impeding optimizations or leading to undefined behavior. Lastly, both non-uniform control flow and invalid memory use may invalidate other safe abstractions. In order to provide some protection, a GlobalIndex struct will wrap the value, which allows it to be returned without allowing the value to be read.
     
+    #[derive(Clone, Copy)]
+    pub(crate) struct GlobalIndex(u32);   
+
+    pub(crate) fn global_index() -> GlobalIndex;
     
+Not sure how to implement "global_index". Currently, an Input<u32x3> with the "GlobalInvocationID" builtin decoration, where u32x3 is a vector of u32's, will then be stored with the global id. In combination with global size, acquired the same way, the global index can be computed. However, this would have to be built in to the compiler, to emit the appropriate input variables and expose them to spirv-std. Or maybe via the asm! macro. At some point it may be useful to have a "global_xyz" function, but I'm uncertain how to handle these. Is everything just a GlobalIndex? Do we have a GlobalDim, a GlobaX, etc? I'm not sure that much can be done from a security standpoint beyond just wrapping the type, and for now just getting the global index is enough to build on. 
+    
+The "get" and "get_unchecked" methods on Global and (mut equivalents for GlobalMut) are overloaded via the GetExt and GetMutExt traits for GlobalIndex, ensuring that the value is protected. The get / get_mut methods aare safe because the Global(Mut) must have been acquired via a safe method, or the "unsafe_as_slice" and "unsafe_as_mut_slice" methods, for which the caller has already taken responsibility for safety. Futher, these methods are private to spirv-std.  
+
+    pub(crate) trait GetExt<I> {
+        type Output;
+        fn get(&self, index: I) -> Option<Self::Output>;
+        unsafe fn get_unchecked(&self, index: I) -> Self::Output;
+    }
+
+    pub(crate) trait GetMutExt<I> {
+        type Output;
+        fn get_mut(&mut self, index: I) -> Option<Self::Output>;
+        unsafe fn get_unchecked_mut(&mut self, index: I) -> Self::Output;
+    }
+
+
+    impl<'a, T> GetExt<GlobalIndex> for Global<'a, [T]> {
+        type Output = Global<'a, T>;
+        fn get(&self, index: GlobalIndex) -> Option<Self::Output> {
+            self.get(index.0)
+        }
+        unsafe fn get_unchecked(&self, index: GlobalIndex) -> Self::Output [
+            self.get_unchecked(index.0)
+        }
+    }
+
+    impl<'a, T> GetExt<GlobalIndex> for GlobalMut<'a, [T]> {
+        type Output = Global<'a, T>;
+        fn get(&self, index: GlobalIndex) -> Option<Self::Output> {
+            self.get(index.0)
+        }
+        unsafe fn get_unchecked(&self, index: GlobalIndex) -> Self::Output [
+            self.get_unchecked(index.0)
+        }
+    }
+
+    impl<'a, T> GetMutExt<GlobalIndex> for GlobalMut<'a, [T]> {
+        type Output = GlobalMut<'a, T>;
+        fn get_mut(&mut self, index: GlobalIndex) -> Option<Self::Output> {
+            self.get_mut(index.0)
+        }
+        unsafe fn get_unchecked_mut(&mut self, index: GlobalIndex) -> Self::Output [
+            self.get_unchecked_mut(index.0)
+        }
+    }
+    
+## Example 
+
+As an example, suppose that a hypothetical "zip_mut_with" (see ndarray) function was added to spirv-std. 
+
+    // spirv-std/src/lib.rs
+    
+    impl<'a, T, const N: usize> BufferMut<[T; N]> {
+        pub fn zip_mut_with<C: Copy>(mut self, rhs: Buffer<[T; N]>, constants: C, f: impl fn(GloablMut<T>, Global<T>, C)) {
+            let index = global_index();
+            barrier(); // barrier for any previous writes to self 
+            self.get_mut(index).zip(rhs.get(index))
+                .map(|(lhs, rhs)| f(lhs, rhs, constants));
+            // this method consumes self
+            // alternatively take self by reference, and emit a barrier here
+        }
+    }
+  
+    // scaled_add.rs
+    use spirv_std::{Buffer, BufferMut};
+    
+    type T = f32;
+    const N: usize = 1024;
+    
+    #[allow(unused_attributes)]
+    #[spirv(gl_compute(local_size=64)]
+    pub fn scaled_add(
+        #[spirv(descriptor_set=1, binding=0)] x: Buffer<[T; N]>,
+        #[spirv(descriptor_set=1, binding=1)] mut y: BufferMut<[T; N]>,
+        push_constants: PushConstant<T>
+    ) {
+        let alpha = push_constants.load();
+        y.zip_mut_with(x, alpha, |(y, x, alpha)| {
+            let result = y.load() + alpha * x.load();
+            y.store(result);
+        });
+    }
+
+To be clear, this proposal neglects to include Barriers or PushConstants. Potentially, having functions like "zip_mut_with" or iterators consume their buffers, combined with the fn closure (which doesn't capture), will be secure enough to make public. The idea is that if y is consumed, it can't be used again in a subsequent operation, and thus no barriers are required. But I'm not sure how that fits into a larger ecosystem, where some functions may borrow buffers, so that subsequent operations can be performed. These problems are left for futher work. 
 
 # Drawbacks
 
