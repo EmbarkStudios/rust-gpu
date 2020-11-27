@@ -302,10 +302,14 @@ To be clear, this proposal neglects to include Barriers or PushConstants. Potent
 
 List potential issues that one would want to have discussed in the RFC comment section
 
+Not really a drawback, but it may be necessary to move some code into submodules with spirv-std, in order to maintain privacy, prevent access outside of explicit functions, and hide utility types, traits, or functions. 
+
+This proposal neglects how StorageBuffers will work in other shaders, where access patterns are different. 
+
 # Alternatives
 
 A list of potential alternatives, though sometimes they can arise from the comments as well.
 
 # Prior art
 
-Usually this will involve looking at current shading languages out there to see if we can either borrow concepts from them, or if we can improve upon existing concepts.
+Typically in gpu code, which is often some superset of c, "buffers" are essentially just pointers and the user just indexes them freely utilizing global_id and friends. While this "works", and is fairly straigtforward as well as being typical to programming in general, it can potentially lead to various memory use errors. In particular, reading / writing out of bounds. The shader doesn't just have access to the buffers it is provided as parameters, it actually has access to the entire gpu memory space, and invalid writes will be written to other buffers used by other shaders / kernels. This is very hard to troubleshoot, because the code causing the problem may fuction correctly by itself, but "poison" other shaders that happen to be used in some sequence. Rust as a language seeks to prevent and or limit such errors to small, well scrutinized blocks of code. 
