@@ -91,7 +91,7 @@ The intent with Global and GlobalMut, is that they are returned from higher leve
 
 Global and GlobalMut are essentially either &(mut)T or &(mut)\[T\]. They are only to be provided to user code when they are not aliased. Safe abstractions should ensure that this is the case, and then yield these objects. 
 
-Due to the nature of GlobalMut, it is critical that the compiler prevents GlobalMut from being passed in as a parameter, since it marks a safe to access reference or slice. Global, since it is immutable, is not problematic, but might as well be banned as well. Further, the spirv attribute, at least for "storage_buffer" and "cross_workgroup", etc, should be limited only to within the crate. 
+Due to the nature of GlobalMut, it is critical that the compiler prevents GlobalMut from being passed in as a parameter, since it marks a safe to access reference or slice. Global, since it is immutable, is not problematic, but might as well be banned as well, as it isn't meant to be used this way, and will not be portable. Further, the spirv attribute, at least for "storage_buffer" and "cross_workgroup", etc, should be limited only to within the crate. 
 
 ## GlobalBlock
 
