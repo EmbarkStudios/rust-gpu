@@ -1,13 +1,9 @@
 
 # Summary
 
-State the problem that this RFC is trying to address clearly but briefly
-
 This proposal aims to define a core interface for storage buffers aka "buffer blocks", specifically for compute shaders but potentially applicable for other modes. Accessing mutable global memory from a compute shader is typically unsafe, and may require the use of barriers to ensure correctness. This proposal exposes only a minimal public interface, and a private interface that is intended to be built upon with higher level abstractions.   
 
 # Explanation
-
-Give examples, elaborate on the proposal
 
 ## Global Storage
 
