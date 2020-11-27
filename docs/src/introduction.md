@@ -9,4 +9,3 @@ more information on how to get started.
 
 Alternatively if you're looking to contribute to the `rust-gpu` project, have
 a look at [_"Building Rust-GPU"_](./building-rust-gpu.md) section.
-

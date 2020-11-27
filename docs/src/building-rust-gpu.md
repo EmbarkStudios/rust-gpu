@@ -7,22 +7,6 @@
     git clone --recurse-submodules https://github.com/EmbarkStudios/rust-gpu
     ```
 
-1. Install the prerequisites using the provided setup script. From the root of the project, run:
-
-    MacOS, Linux:
-
-    ```shell
-    sh setup.sh
-    ```
-
-    Windows:
-
-    ```shell
-    setup.bat
-    ```
-
-    The setup script installs nightly Rust (required for now, see [#78](https://github.com/EmbarkStudios/rust-gpu/issues/78) for tracking issue).
-
 1. **optional** Install [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools#downloads) and add it to your `PATH`. You can skip this step if you just want to run examples with the defaults. See [Using installed SPIRV-Tools](#using-installed-spirv-tools) if you decide to go with this option.
 
 1. Next, look at the [examples] folder. There are two kinds of targets here: [runners] and [shaders]. The projects inside `shaders` are "GPU crates", i.e. ones that will be compiled one or more SPIR-V modules. The `runner` projects are normal, CPU crates that use some graphics backend (currently, we have a [`wgpu` runner][examples/runners/wgpu], a [Vulkan runner][examples/runners/ash] through `ash`, and a barebones pure software [CPU runner][examples/runners/cpu]) to actually run one of the "GPU crate" shaders.
