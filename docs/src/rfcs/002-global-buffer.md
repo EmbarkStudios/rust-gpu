@@ -42,10 +42,12 @@ In addition, Global also acts like a slice, when it wraps a slice. Note that we 
           self.x.get(index)
               .map(|x| Global::new(x))
       } 
-      pub unsafe fn get_unchecked<I: SliceIndex<[T]>(&self, index: I) -> Self::Output {
+      pub(crate) unsafe fn get_unchecked<I: SliceIndex<[T]>(&self, index: I) -> Self::Output {
           Global::new(self.x.get_unchecked(index))
       }
     }
+    
+The "get_unchecked" method could be public, as it emulates core::slice::get_unchecked. However, this would of course expose an unsafe public interface. Instead, potentially a future addition would be an Iter (like slice::Iter), which allows for sequential access without repeated bounds checks. The intent is to allow for something like a "Chunks" iterator, which could yield a Global<\[T]>, which can then be used in some user defined function per invocation.  
   
 Similar to Global, GlobalMut will also be introduced:
 
@@ -75,14 +77,14 @@ Similar to Global, GlobalMut will also be introduced:
               self.x.get(index)
                   .map(|x| Global::new(x))
           } 
-          pub unsafe fn get_unchecked<I: SliceIndex<[T]>(&self, index: I) -> Global<'a, <I as SliceIndex<[T]>>::Output {
+          pub(crate) unsafe fn get_unchecked<I: SliceIndex<[T]>(&self, index: I) -> Global<'a, <I as SliceIndex<[T]>>::Output {
               Global::new(self.x.get_unchecked(index))
           }
           pub fn get_mut<I: SliceIndexMut<[T]>>(&mut self, index: I) -> Option<GlobalMut<'a, <I as SliceIndexMut<[T]>>::Output>> {
               self.x.get(index)
                   .map(|x| GlobalMut::new(x))
           } 
-          pub unsafe fn get_unchecked_mut<I: SliceIndex<[T]>(&mut self, index: I) -> GlobalMut<'a, <I as SliceIndexMut<[T]>>::Output> {
+          pub(crate) unsafe fn get_unchecked_mut<I: SliceIndex<[T]>(&mut self, index: I) -> GlobalMut<'a, <I as SliceIndexMut<[T]>>::Output> {
               GlobalMut::new(self.x.get_unchecked(index))
           }
       }
@@ -261,16 +263,18 @@ The "get" and "get_unchecked" methods on Global and (mut equivalents for GlobalM
     
 ## Example 
 
-As an example, suppose that a hypothetical "zip_mut_with" (see ndarray) function was added to spirv-std. 
+As an example, suppose that a hypothetical "zip_mut_with" (see ndarray [zip_mut_with](https://docs.rs/ndarray/0.13.1/ndarray/struct.ArrayBase.html#method.zip_mut_with)) function was added to spirv-std. 
 
     // spirv-std/src/lib.rs
     
     impl<'a, T, const N: usize> BufferMut<[T; N]> {
         pub fn zip_mut_with<C: Copy>(mut self, rhs: Buffer<[T; N]>, constants: C, f: impl fn(GloablMut<T>, Global<T>, C)) {
             let index = global_index();
-            barrier(); // barrier for any previous writes to self 
-            self.get_mut(index).zip(rhs.get(index))
-                .map(|(lhs, rhs)| f(lhs, rhs, constants));
+            barrier(); // barrier for any previous writes to self
+            unsafe {
+                self.as_unsafe_mut_slice().get_mut(index).zip(rhs.as_slice().get(index))
+                    .map(|(lhs, rhs)| f(lhs, rhs, constants));
+            }
             // this method consumes self
             // alternatively take self by reference, and emit a barrier here
         }
@@ -304,12 +308,17 @@ List potential issues that one would want to have discussed in the RFC comment s
 
 Not really a drawback, but it may be necessary to move some code into submodules with spirv-std, in order to maintain privacy, prevent access outside of explicit functions, and hide utility types, traits, or functions. 
 
-This proposal neglects how StorageBuffers will work in other shaders, where access patterns are different. 
+This proposal neglects how GlobalBuffer(Mut) will work in other shaders, where access patterns are different.
 
 # Alternatives
 
-A list of potential alternatives, though sometimes they can arise from the comments as well.
+A list of potential alternatives, though sometimes they can arise from the comments as well.  
+
+Potentially, instead of GlobalBuffer and GlobalBufferMut, we might have 2 or 3 variants, for 4 or 6 structs total. This eliminates the need for the awkward "AsSlice" trait, which enables the as_slice / as_unsafe_slice methods, which in turn will potentially enable higher abstractions like iterators. That means that AsSlice potentially needs to be visable, or else traits are simply implemented twice. There are different ways to rework this for better ergonomics and stability. 
 
 # Prior art
 
 Typically in gpu code, which is often some superset of c, "buffers" are essentially just pointers and the user just indexes them freely utilizing global_id and friends. While this "works", and is fairly straigtforward as well as being typical to programming in general, it can potentially lead to various memory use errors. In particular, reading / writing out of bounds. The shader doesn't just have access to the buffers it is provided as parameters, it actually has access to the entire gpu memory space, and invalid writes will be written to other buffers used by other shaders / kernels. This is very hard to troubleshoot, because the code causing the problem may fuction correctly by itself, but "poison" other shaders that happen to be used in some sequence. Rust as a language seeks to prevent and or limit such errors to small, well scrutinized blocks of code. 
+
+As far as I know, there isn't any gpu language that hides global invocation builtins like the global id, and shaders can index into declared buffer inputs without restriction, necessary synchronization is the responsibility of the programmer. Note that in some cases, Metal for example, out of bounds writes are specified as ignored. This prevents "poisoning" as described earlier, but doesn't fully protect against security vulnerabilities, and arguably out of bounds reads or writes are bugs, which should be caught and fixed. Safe Rust promises to prevent out of bounds accesses. 
+
