@@ -227,6 +227,7 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
             field_types: args,
             field_offsets,
             field_names: None,
+            is_block: false
         }
         .def(cx)
     }
@@ -311,6 +312,7 @@ fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immedia
             field_types: Vec::new(),
             field_offsets: Vec::new(),
             field_names: None,
+            is_block: false,
         }
         .def(cx),
         Abi::Scalar(ref scalar) => trans_scalar(cx, ty, scalar, None, is_immediate),
@@ -330,6 +332,7 @@ fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immedia
                 field_types: vec![one_spirv, two_spirv],
                 field_offsets: vec![one_offset, two_offset],
                 field_names: None,
+                is_block: false,
             }
             .def(cx)
         }
@@ -547,6 +550,20 @@ fn get_storage_class<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Optio
     None
 }
 
+/// Handles `#[spirv(block)]`. Note this is only called in the scalar translation code, because this is only
+/// used for spooky builtin stuff, and we pinky promise to never have more than one pointer field in one of these.
+// TODO: Enforce this is only used in spirv-std.
+fn get_is_block_decorated<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> bool {
+    if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
+        for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
+            if let SpirvAttribute::Block = attr {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     match ty.fields {
         FieldsShape::Primitive => cx.tcx.sess.fatal(&format!(
@@ -583,6 +600,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
                     field_types: Vec::new(),
                     field_offsets: Vec::new(),
                     field_names: None,
+                    is_block: false,
                 }
                 .def(cx)
             } else {
@@ -676,6 +694,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
             }
         };
     }
+    let is_block = get_is_block_decorated(cx, ty);
     SpirvType::Adt {
         name,
         size,
@@ -683,6 +702,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
         field_types,
         field_offsets,
         field_names: Some(field_names),
+        is_block 
     }
     .def(cx)
 }

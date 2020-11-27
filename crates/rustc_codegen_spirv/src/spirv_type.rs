@@ -31,6 +31,7 @@ pub enum SpirvType {
         field_types: Vec<Word>,
         field_offsets: Vec<Size>,
         field_names: Option<Vec<String>>,
+        is_block: bool
     },
     Opaque {
         name: String,
@@ -112,6 +113,7 @@ impl SpirvType {
                 ref field_types,
                 ref field_offsets,
                 ref field_names,
+                is_block,
             } => {
                 let mut emit = cx.emit_global();
                 // Ensure a unique struct is emitted each time, due to possibly having different OpMemberDecorates
@@ -131,6 +133,9 @@ impl SpirvType {
                                 .cloned(),
                         );
                     }
+                }
+                if is_block {
+                    emit.decorate(id, Decoration::Block, None);
                 }
                 if let Some(field_names) = field_names {
                     for (index, field_name) in field_names.iter().enumerate() {
@@ -313,6 +318,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 ref field_types,
                 ref field_offsets,
                 ref field_names,
+                is_block
             } => {
                 let fields = field_types
                     .iter()
@@ -326,6 +332,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                     .field("field_types", &fields)
                     .field("field_offsets", field_offsets)
                     .field("field_names", field_names)
+                    .field("is_block", &is_block)
                     .finish()
             }
             SpirvType::Opaque { ref name } => f
@@ -432,6 +439,7 @@ impl SpirvTypePrinter<'_, '_> {
                 ref field_types,
                 field_offsets: _,
                 ref field_names,
+                is_block: _,
             } => {
                 write!(f, "struct {} {{ ", name)?;
                 for (index, &field) in field_types.iter().enumerate() {

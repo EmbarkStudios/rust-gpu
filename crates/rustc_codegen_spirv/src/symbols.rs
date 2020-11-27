@@ -4,6 +4,7 @@ use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_span::symbol::{Ident, Symbol};
 use std::collections::HashMap;
+use std::iter::once;
 
 /// Various places in the codebase (mostly attribute parsing) need to compare rustc Symbols to particular keywords.
 /// Symbols are interned, as in, they don't actually store the string itself inside them, but rather an index into a
@@ -324,6 +325,7 @@ impl Symbols {
         let attributes_iter = builtins
             .chain(storage_classes)
             .chain(execution_models)
+            .chain(once(("block", SpirvAttribute::Block)))
             .map(|(a, b)| (Symbol::intern(a), b));
         let mut attributes = HashMap::new();
         for (a, b) in attributes_iter {
@@ -411,6 +413,7 @@ impl From<ExecutionModel> for Entry {
 pub enum SpirvAttribute {
     Builtin(BuiltIn),
     StorageClass(StorageClass),
+    Block,
     Entry(Entry),
     DescriptorSet(u32),
     Binding(u32),

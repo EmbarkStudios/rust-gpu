@@ -183,6 +183,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             field_types,
             field_offsets,
             field_names: None,
+            is_block: false,
         }
         .def(self);
         self.constant_composite(struct_ty, elts.iter().map(|f| f.def_cx(self)).collect())
