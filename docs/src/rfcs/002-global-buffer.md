@@ -97,6 +97,78 @@ Global and GlobalMut are essentially either &(mut)T or &(mut)\[T\]. They are onl
 
 Due to the nature of GlobalMut, it is critical that the compiler prevents GlobalMut from being passed in as a parameter, since it marks a safe to access reference or slice. Global, since it is immutable, is not problematic, but might as well be banned as well. Further, the spirv attribute, at least for "storage_buffer" and "cross_workgroup", etc, should be limited only to within the crate. 
 
+## GlobalBlock
+
+Per the SPIRV-V spec, "buffer blocks" must have a variable with StorageBuffer storage class point to a "block" decorated struct. On certain platforms, the block decoration is ignored, on others the shader will not access the buffer at all. It may be possible to just have one Block struct, but it may be helpful to have one specific to the Global -> StorageBuffer / CrossWorkgroup classes. It is my understanding that Rust requires fields of public structs to be public, even though this was relaxed at one point. This struct is hidden from the docs because it is merely meant to be a placeholder, for the block decoration. The "block" attribute will be added to the compiler. For convenience, this struct will impl Deref and DerefMut. This allows it to be treated as if it is the interior type, since it isn't meant to do anything but be a block decorated wrapper. 
+
+    #[doc(hidden)]
+    #[allow(unused_attributes)]
+    #[spirv(block)]
+    #[repr(transparent)]
+    pub struct GlobalBlock<B>(B);
+    
+    use core::ops::{Deref, DerefMut};
+    
+    impl<B> Deref for GlobalBlock<B> {
+        type Target = B;
+        fn deref(&self) -> &B {
+            &*self.0
+        }
+    }
+    
+    impl<B> DerefMut for GlobalBlock<B> {
+        fn deref_mut(&mut self) -> &B {
+            &mut *self.0
+        }
+    }
+    
+As noted above, SPIR-V requires that storage classes match. In Rust, it's pretty common to borrow an object, especially when calling a method on it. However, this may produce a *Function pointer to it, which may cause problems. Thus, this GlobalBlock is specific to the "Global" storage class, in case hard coding is necessary. 
+
+## AsSlice and AsMutSlice
+
+These traits allow us to be generic over types that can be borrowed as slices. This will be used to acquire a slice from either a slice or an array in GlobalBuffer(Mut):  
+
+    pub(crate) trait AsSlice {
+        type Item;
+        fn as_slice(&self) -> &[Self::Item];
+    }
+    
+    pub(crate) trait AsMutSlice: AsSlice {
+        fn as_mut_slice(&mut self) -> &[Self::Item];
+    }
+    
+    impl<T> AsSlice for [T] {
+        type Item = T;
+        fn as_slice(&self) -> &[Self::Item] {
+            self
+        }
+    }
+    
+    impl<T> AsMutSlice for [T] {
+        fn as_slice(&mut self) -> &[Self::Item] {
+            self
+        }
+    }
+    
+    impl<T, const N: usize> AsSlice for [T; N] {
+        type Item = T;
+        fn as_slice(&self) -> &[Self::Item] {
+            self.as_ref()
+        }
+    }
+    
+    impl<T, const N: usize> AsSlice for [T; N] {
+        fn as_slice(&self) -> &[Self::Item] {
+            self.as_mut()
+        }
+    }
+
+These traits may potentially be private to a "global_buffer" module. Note that the implementation for arrays requires the unstable feature "min_const_generics", but this is set to be stable in 1.50 (currently 1.48). The AsRef trait does not specify T, ie it's a generic parameter to the trait not an associated type, which makes it more cumbersone to use. 
+
+
+    
+    
+    
 
 # Drawbacks
 
