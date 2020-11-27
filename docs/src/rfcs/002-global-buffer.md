@@ -289,8 +289,8 @@ As an example, suppose that a hypothetical "zip_mut_with" (see ndarray [zip_mut_
     #[allow(unused_attributes)]
     #[spirv(gl_compute(local_size=64)]
     pub fn scaled_add(
-        #[spirv(descriptor_set=1, binding=0)] x: Buffer<[T; N]>,
-        #[spirv(descriptor_set=1, binding=1)] mut y: BufferMut<[T; N]>,
+        #[spirv(descriptor_set=1, binding=0)] x: GlobalBuffer<[T; N]>,
+        #[spirv(descriptor_set=1, binding=1)] mut y: GlobalBufferMut<[T; N]>,
         push_constants: PushConstant<T>
     ) {
         let alpha = push_constants.load();
@@ -304,17 +304,17 @@ To be clear, this proposal neglects to include Barriers or PushConstants. Potent
 
 # Drawbacks
 
-List potential issues that one would want to have discussed in the RFC comment section
-
 Not really a drawback, but it may be necessary to move some code into submodules with spirv-std, in order to maintain privacy, prevent access outside of explicit functions, and hide utility types, traits, or functions. 
 
-This proposal neglects how GlobalBuffer(Mut) will work in other shaders, where access patterns are different.
+This proposal neglects how GlobalBuffer(Mut) will work in other shaders, where access patterns may be different.
 
-# Alternatives
+Barriers are not adressed in this proposal, but GlobalIndex and the scheme of restricting access all have to work in concert. Without some more thought into how barriers will work and how that interacts with the rest of the system, it won't be possible to allow access to GlobalBufferMut, which is of course necessary to actually use compute shaders. 
 
-A list of potential alternatives, though sometimes they can arise from the comments as well.  
+GlobalIndex is meant to be a simple way of performing parallel work, but restricting access to the global id means that at some point combinations of operations, combined with global size, will need to be exposed, though potentially this can be handled with iterators. 
 
-Potentially, instead of GlobalBuffer and GlobalBufferMut, we might have 2 or 3 variants, for 4 or 6 structs total. This eliminates the need for the awkward "AsSlice" trait, which enables the as_slice / as_unsafe_slice methods, which in turn will potentially enable higher abstractions like iterators. That means that AsSlice potentially needs to be visable, or else traits are simply implemented twice. There are different ways to rework this for better ergonomics and stability. 
+# Alternatives 
+
+Potentially, instead of GlobalBuffer and GlobalBufferMut, we might have 2 or 3 variants, for 4 or 6 structs total. Those being one for arbitrary T: Copy, one for Arrays, and one for RuntimeArrays. This eliminates the need for the awkward "AsSlice" trait, which enables the as_slice / as_unsafe_slice methods, which in turn will potentially enable higher abstractions like iterators. That means that AsSlice potentially needs to be visable, or else traits are simply implemented twice. There are different ways to rework this for better ergonomics and stability. 
 
 # Prior art
 
