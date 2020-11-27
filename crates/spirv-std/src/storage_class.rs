@@ -15,7 +15,7 @@ macro_rules! storage_class {
             value: &'value mut T,
         }
 
-        impl<'a, T: Copy> $name<'a, T> {
+        impl<T: Copy> $name<'_, T> {
             /// Load the value into memory.
             #[inline]
             #[allow(unused_attributes)]
