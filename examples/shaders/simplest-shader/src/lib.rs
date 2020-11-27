@@ -3,7 +3,7 @@
 #![register_attr(spirv)]
 
 use spirv_std::glam::Vec4;
-use spirv_std::{Input, Output};
+use spirv_std::storage_class::{Input, Output};
 
 #[allow(unused_attributes)]
 #[spirv(fragment)]

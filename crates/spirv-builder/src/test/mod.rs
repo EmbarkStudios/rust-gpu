@@ -51,8 +51,9 @@ spirv-std = { path = "../../crates/spirv-std" }
 static SRC_PREFIX: &str = r#"#![no_std]
 #![feature(register_attr, asm)]
 #![register_attr(spirv)]
-#[allow(unused_imports)]
+#![allow(unused_imports)]
 use spirv_std::*;
+use spirv_std::storage_class::*;
 "#;
 
 fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {
