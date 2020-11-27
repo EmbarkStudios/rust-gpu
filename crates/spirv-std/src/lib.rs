@@ -37,6 +37,7 @@
     nonstandard_style
 )]
 
+pub mod storage_class;
 mod textures;
 
 pub use glam;
@@ -52,62 +53,6 @@ fn panic(_: &core::panic::PanicInfo<'_>) -> ! {
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[lang = "eh_personality"]
 extern "C" fn rust_eh_personality() {}
-
-macro_rules! pointer_addrspace_write {
-    (false) => {};
-    (true) => {
-        #[inline]
-        #[allow(unused_attributes)]
-        #[spirv(really_unsafe_ignore_bitcasts)]
-        pub fn store(&mut self, v: T) {
-            *self.x = v
-        }
-    };
-}
-
-macro_rules! pointer_addrspace {
-    ($storage_class:ident, $type_name:ident, $writeable:tt) => {
-        #[allow(unused_attributes)]
-        #[spirv($storage_class)]
-        pub struct $type_name<'a, T> {
-            x: &'a mut T,
-        }
-
-        impl<'a, T: Copy> $type_name<'a, T> {
-            #[inline]
-            #[allow(unused_attributes)]
-            #[spirv(really_unsafe_ignore_bitcasts)]
-            pub fn load(&self) -> T {
-                *self.x
-            }
-
-            pointer_addrspace_write!($writeable);
-        }
-    };
-}
-
-// Make sure these strings stay synced with symbols.rs
-// Note the type names don't have to match anything, they can be renamed (only the string must match)
-pointer_addrspace!(uniform_constant, UniformConstant, false);
-pointer_addrspace!(input, Input, false);
-pointer_addrspace!(uniform, Uniform, true);
-pointer_addrspace!(output, Output, true);
-pointer_addrspace!(workgroup, Workgroup, true);
-pointer_addrspace!(cross_workgroup, CrossWorkgroup, true);
-pointer_addrspace!(private, Private, true);
-pointer_addrspace!(function, Function, true);
-pointer_addrspace!(generic, Generic, true);
-pointer_addrspace!(push_constant, PushConstant, false);
-pointer_addrspace!(atomic_counter, AtomicCounter, true);
-pointer_addrspace!(image, Image, true);
-pointer_addrspace!(storage_buffer, StorageBuffer, true);
-pointer_addrspace!(callable_data_khr, CallableDataKHR, true);
-pointer_addrspace!(incoming_callable_data_khr, IncomingCallableDataKHR, true);
-pointer_addrspace!(ray_payload_khr, RayPayloadKHR, true);
-pointer_addrspace!(hit_attribute_khr, HitAttributeKHR, true);
-pointer_addrspace!(incoming_ray_payload_khr, IncomingRayPayloadKHR, true);
-pointer_addrspace!(shader_record_buffer_khr, ShaderRecordBufferKHR, true);
-pointer_addrspace!(physical_storage_buffer, PhysicalStorageBuffer, true);
 
 pub trait Derivative {
     fn ddx(self) -> Self;
