@@ -47,7 +47,7 @@ pub use glam;
 #[spirv(block)]
 #[repr(transparent)]
 #[derive(Clone, Copy)]
-pub struct Block<T>(T); 
+pub struct Block<T>(T);
 
 macro_rules! pointer_addrspace_write {
     (false) => {};

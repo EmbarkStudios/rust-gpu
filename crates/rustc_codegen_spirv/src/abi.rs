@@ -227,7 +227,7 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
             field_types: args,
             field_offsets,
             field_names: None,
-            is_block: false
+            is_block: false,
         }
         .def(cx)
     }
@@ -702,7 +702,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
         field_types,
         field_offsets,
         field_names: Some(field_names),
-        is_block 
+        is_block,
     }
     .def(cx)
 }

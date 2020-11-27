@@ -31,7 +31,7 @@ pub enum SpirvType {
         field_types: Vec<Word>,
         field_offsets: Vec<Size>,
         field_names: Option<Vec<String>>,
-        is_block: bool
+        is_block: bool,
     },
     Opaque {
         name: String,
@@ -318,7 +318,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 ref field_types,
                 ref field_offsets,
                 ref field_names,
-                is_block
+                is_block,
             } => {
                 let fields = field_types
                     .iter()
