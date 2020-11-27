@@ -267,8 +267,8 @@ As an example, suppose that a hypothetical "zip_mut_with" (see ndarray [zip_mut_
 
     // spirv-std/src/lib.rs
     
-    impl<'a, T, const N: usize> BufferMut<[T; N]> {
-        pub fn zip_mut_with<C: Copy>(mut self, rhs: Buffer<[T; N]>, constants: C, f: impl fn(GloablMut<T>, Global<T>, C)) {
+    impl<'a, T, const N: usize> GlobalBufferMut<[T; N]> {
+        pub fn zip_mut_with<C: Copy>(mut self, rhs: &GlobalBuffer<[T; N]>, constants: C, f: impl fn(GloablMut<T>, Global<T>, C)) {
             let index = global_index();
             barrier(); // barrier for any previous writes to self
             unsafe {
@@ -294,7 +294,7 @@ As an example, suppose that a hypothetical "zip_mut_with" (see ndarray [zip_mut_
         push_constants: PushConstant<T>
     ) {
         let alpha = push_constants.load();
-        y.zip_mut_with(x, alpha, |(y, x, alpha)| {
+        y.zip_mut_with(&x, alpha, |(y, x, alpha)| {
             let result = y.load() + alpha * x.load();
             y.store(result);
         });
