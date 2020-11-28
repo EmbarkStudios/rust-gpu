@@ -113,13 +113,17 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                         );
                     }
                     let line = tokens.last_mut().unwrap();
-                    if line
-                        .last()
-                        .map_or(false, |prev| matches!(prev, Token::Word("typeof")))
-                    {
-                        *line.last_mut().unwrap() = Token::Typeof(&operands[operand_idx], span);
-                    } else {
-                        line.push(Token::Placeholder(&operands[operand_idx], span));
+                    let typeof_kind = line.last().and_then(|prev| match prev {
+                        Token::Word("typeof") => Some(TypeofKind::Plain),
+                        Token::Word("typeof*") => Some(TypeofKind::Dereference),
+                        _ => None,
+                    });
+                    match typeof_kind {
+                        Some(kind) => {
+                            *line.last_mut().unwrap() =
+                                Token::Typeof(&operands[operand_idx], span, kind)
+                        }
+                        None => line.push(Token::Placeholder(&operands[operand_idx], span)),
                     }
                 }
             }
@@ -132,10 +136,19 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
     }
 }
 
+enum TypeofKind {
+    Plain,
+    Dereference,
+}
+
 enum Token<'a, 'cx, 'tcx> {
     Word(&'a str),
     Placeholder(&'a InlineAsmOperandRef<'tcx, Builder<'cx, 'tcx>>, Span),
-    Typeof(&'a InlineAsmOperandRef<'tcx, Builder<'cx, 'tcx>>, Span),
+    Typeof(
+        &'a InlineAsmOperandRef<'tcx, Builder<'cx, 'tcx>>,
+        Span,
+        TypeofKind,
+    ),
 }
 
 enum OutRegister<'a> {
@@ -204,7 +217,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Token::Placeholder(_, _) => true,
             Token::Word(id_str) if id_str.starts_with('%') => true,
             Token::Word(_) => false,
-            Token::Typeof(_, _) => false,
+            Token::Typeof(_, _, _) => false,
         } {
             let result_id = match self.parse_id_out(id_map, first_token) {
                 Some(result_id) => result_id,
@@ -230,7 +243,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         };
         let inst_name = match first_token {
             Token::Word(inst_name) => inst_name,
-            Token::Placeholder(_, span) | Token::Typeof(_, span) => {
+            Token::Placeholder(_, span) | Token::Typeof(_, span, _) => {
                 self.tcx
                     .sess
                     .span_err(span, "cannot use a dynamic value as an instruction type");
@@ -354,7 +367,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     None
                 }
             },
-            Token::Typeof(_, span) => {
+            Token::Typeof(_, span, _) => {
                 self.tcx
                     .sess
                     .span_err(span, "cannot assign to a typeof expression");
@@ -432,10 +445,26 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     None
                 }
             },
-            Token::Typeof(hole, span) => match hole {
+            Token::Typeof(hole, span, kind) => match hole {
                 InlineAsmOperandRef::In { reg, value } => {
                     self.check_reg(span, reg);
-                    Some(value.immediate().ty)
+                    let ty = value.immediate().ty;
+                    Some(match kind {
+                        TypeofKind::Plain => ty,
+                        TypeofKind::Dereference => match self.lookup_type(ty) {
+                            SpirvType::Pointer { pointee, .. } => pointee,
+                            other => {
+                                self.tcx.sess.span_err(
+                                    span,
+                                    &format!(
+                                        "cannot use typeof* on non-pointer type: {}",
+                                        other.debug(ty, self)
+                                    ),
+                                );
+                                ty
+                            }
+                        },
+                    })
                 }
                 InlineAsmOperandRef::Out {
                     reg,
@@ -559,7 +588,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         let word = match token {
             Token::Word(word) => Some(word),
             Token::Placeholder(_, _) => None,
-            Token::Typeof(_, _) => None,
+            Token::Typeof(_, _, _) => None,
         };
         match (kind, word) {
             (OperandKind::IdResultType, _) => {
@@ -663,7 +692,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                             span,
                             &format!("expected a literal, not a dynamic value for a {:?}", kind),
                         ),
-                        Some(Token::Typeof(_, span)) => self.tcx.sess.span_err(
+                        Some(Token::Typeof(_, span, _)) => self.tcx.sess.span_err(
                             span,
                             &format!("expected a literal, not a type for a {:?}", kind),
                         ),
@@ -858,7 +887,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         &format!("expected a literal, not a dynamic value for a {:?}", kind),
                     );
                 }
-                Token::Typeof(_, span) => {
+                Token::Typeof(_, span, _) => {
                     self.tcx.sess.span_err(
                         span,
                         &format!("expected a literal, not a type for a {:?}", kind),

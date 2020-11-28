@@ -49,15 +49,11 @@ spirv-std = { path = "../../crates/spirv-std" }
 "#;
 
 static SRC_PREFIX: &str = r#"#![no_std]
-#![feature(lang_items, register_attr, asm)]
+#![feature(register_attr, asm)]
 #![register_attr(spirv)]
-use core::panic::PanicInfo;
-#[allow(unused_imports)]
+#![allow(unused_imports)]
 use spirv_std::*;
-#[panic_handler]
-fn panic(_: &PanicInfo) -> ! {
-    loop {}
-}
+use spirv_std::storage_class::*;
 "#;
 
 fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {

@@ -79,7 +79,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         let sig = callee_ty.fn_sig(self.tcx);
         let sig = self
             .tcx
-            .normalize_erasing_late_bound_regions(ParamEnv::reveal_all(), &sig);
+            .normalize_erasing_late_bound_regions(ParamEnv::reveal_all(), sig);
         let arg_tys = sig.inputs();
         let name = self.tcx.item_name(def_id);
 
