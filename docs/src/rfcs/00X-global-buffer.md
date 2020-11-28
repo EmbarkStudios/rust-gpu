@@ -267,8 +267,8 @@ As an example, suppose that a hypothetical "zip_mut_with" (see ndarray [zip_mut_
 
     // spirv-std/src/lib.rs
     
-    impl<'a, T, const N: usize> GlobalBufferMut<[T; N]> {
-        pub fn zip_mut_with<C: Copy>(mut self, rhs: &GlobalBuffer<[T; N]>, constants: C, f: impl fn(GloablMut<T>, Global<T>, C)) {
+    impl<'a, T> GlobalBufferMut<[T]> {
+        pub fn zip_mut_with<C: Copy>(mut self, rhs: &GlobalBuffer<[T]>, constants: C, f: impl fn(GloablMut<T>, Global<T>, C)) {
             let index = global_index();
             barrier(); // barrier for any previous writes to self
             unsafe {
@@ -283,20 +283,22 @@ As an example, suppose that a hypothetical "zip_mut_with" (see ndarray [zip_mut_
     // scaled_add.rs
     use spirv_std::{Buffer, BufferMut};
     
-    type T = f32;
-    const N: usize = 1024;
+    // probably shared with host code
+    #[derive(Clone, Copy)]
+    pub struct ScaledAddConsts {
+        alpha: f32
+    }
     
     #[allow(unused_attributes)]
     #[spirv(gl_compute(local_size=64)]
     pub fn scaled_add(
-        #[spirv(descriptor_set=1, binding=0)] x: GlobalBuffer<[T; N]>,
-        #[spirv(descriptor_set=1, binding=1)] mut y: GlobalBufferMut<[T; N]>,
-        push_constants: PushConstant<T>
+        #[spirv(descriptor_set=1, binding=0)] x: GlobalBuffer<[f32]>,
+        #[spirv(descriptor_set=1, binding=1)] mut y: GlobalBufferMut<[f32]>,
+        push_constants: PushConstant<ScaledAddConsts>
     ) {
-        let alpha = push_constants.load();
-        y.zip_mut_with(&x, alpha, |(y, x, alpha)| {
-            let result = y.load() + alpha * x.load();
-            y.store(result);
+        let c = push_constants.load();
+        y.zip_mut_with(&x, c, |(y, x, c)| {
+            y.then(|y| y + c.alpha * x.load());
         });
     }
 
