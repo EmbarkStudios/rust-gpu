@@ -48,6 +48,53 @@ macro_rules! storage_class {
         }
     };
 
+    // Interior Block
+    ($(#[$($meta:meta)+])* block $block:ident storage_class $name:ident ; $($tt:tt)*) => {
+
+        $(#[$($meta)+])*
+        #[spirv(block)]
+        #[allow(unused_attributes)]
+        pub struct $block <T>(T);
+
+        $(#[$($meta)+])*
+        #[allow(unused_attributes)]
+        pub struct $name<'value, T> {
+            value: &'value mut $block <T>,
+        }
+
+        impl<T: Copy> $name<'_, T> {
+            /// Load the value into memory.
+            #[inline]
+            #[allow(unused_attributes)]
+            #[spirv(really_unsafe_ignore_bitcasts)]
+            pub fn load(&self) -> T {
+                self.value.0
+            }
+        }
+
+        storage_class!($($tt)*);
+    };
+
+    // Methods available on writeable storage classes.
+    ($(#[$($meta:meta)+])* writeable block $block:ident storage_class $name:ident $($tt:tt)+) => {
+        storage_class!($(#[$($meta)+])* block $block storage_class $name $($tt)+);
+
+        impl <T: Copy> $name<'_, T> {
+            /// Store the value in storage.
+            #[inline]
+            #[allow(unused_attributes)]
+            #[spirv(really_unsafe_ignore_bitcasts)]
+            pub fn store(&mut self, v: T) {
+                self.value.0 = v
+            }
+
+            /// A convenience function to load a value into memory and store it.
+            pub fn then(&mut self, then: impl FnOnce(T) -> T) {
+                self.store((then)(self.load()));
+            }
+        }
+    };
+
     (;) => {};
     () => {};
 }
@@ -112,7 +159,7 @@ storage_class! {
     /// Intended to contain a small bank of values pushed from the client API.
     /// Variables declared with this storage class are read-only, and must not
     /// have initializers.
-    #[spirv(push_constant)] storage_class PushConstant;
+    #[spirv(push_constant)] block PushConstantBlock storage_class PushConstant;
 
     /// Atomic counter-specific memory.
     ///
@@ -131,7 +178,7 @@ storage_class! {
     ///
     /// Shared externally, readable and writable, visible across all functions
     /// in all invocations in all work groups.
-    #[spirv(storage_buffer)] writeable storage_class StorageBuffer;
+    #[spirv(storage_buffer)] writeable block StorageBufferBlock storage_class StorageBuffer;
 
     /// Used for storing arbitrary data associated with a ray to pass
     /// to callables. (Requires `SPV_KHR_ray_tracing` extension)

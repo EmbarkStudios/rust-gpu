@@ -1220,8 +1220,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        let val_pointee = match self.lookup_type(val.ty) {
-            SpirvType::Pointer { pointee, .. } => pointee,
+        let (storage_class, val_pointee) = match self.lookup_type(val.ty) {
+            SpirvType::Pointer {
+                storage_class,
+                pointee,
+            } => (storage_class, pointee),
             other => self.fatal(&format!(
                 "pointercast called on non-pointer source type: {:?}",
                 other
@@ -1237,6 +1240,19 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if val.ty == dest_ty {
             val
         } else if let Some(indices) = self.try_pointercast_via_gep(val_pointee, dest_pointee) {
+            let dest_ty = if self
+                .really_unsafe_ignore_bitcasts
+                .borrow()
+                .contains(&self.current_fn)
+            {
+                SpirvType::Pointer {
+                    storage_class,
+                    pointee: dest_pointee,
+                }
+                .def(self)
+            } else {
+                dest_ty
+            };
             let indices = indices
                 .into_iter()
                 .map(|idx| self.constant_u32(idx).def(self))
