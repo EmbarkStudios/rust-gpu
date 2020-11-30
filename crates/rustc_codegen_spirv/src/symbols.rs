@@ -6,7 +6,6 @@ use rspirv::spirv::{
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_span::symbol::{Ident, Symbol};
 use std::collections::HashMap;
-use std::iter::once;
 
 /// Various places in the codebase (mostly attribute parsing) need to compare rustc Symbols to particular keywords.
 /// Symbols are interned, as in, they don't actually store the string itself inside them, but rather an index into a

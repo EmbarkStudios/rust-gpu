@@ -51,7 +51,6 @@ macro_rules! storage_class {
     // Interior Block
     ($(#[$($meta:meta)+])* block $block:ident storage_class $name:ident ; $($tt:tt)*) => {
 
-        $(#[$($meta)+])*
         #[spirv(block)]
         #[allow(unused_attributes)]
         pub struct $block <T>(T);
