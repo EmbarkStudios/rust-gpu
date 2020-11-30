@@ -514,16 +514,22 @@
 <span id="511">511</span>
 <span id="512">512</span>
 <span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">codegen_cx</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">CLOp</span>, <span class="ident">GLOp</span>};
+<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">CLOp</span>, <span class="ident">GLOp</span>, <span class="ident">StorageClass</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">operand</span>::<span class="ident">OperandRef</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">place</span>::<span class="ident">PlaceRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">BuilderMethods</span>, <span class="ident">IntrinsicCallMethods</span>};
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">BuilderMethods</span>, <span class="ident">IntrinsicCallMethods</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::{<span class="ident">FnDef</span>, <span class="ident">Instance</span>, <span class="ident">ParamEnv</span>, <span class="ident">Ty</span>, <span class="ident">TyKind</span>};
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">source_map</span>::<span class="ident">Span</span>;
@@ -556,15 +562,15 @@
                 <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">val</span>.<span class="ident">ty</span>, <span class="self">self</span>)
             ),
         };
-        <span class="kw">let</span> <span class="ident">int_ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">int_ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="kw">let</span> (<span class="ident">mask_sign</span>, <span class="ident">mask_value</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">width</span> {
             <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> (
-                <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">31</span>),
-                <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">u32</span>::<span class="ident">max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
+                <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">31</span>),
+                <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">u32</span>::<span class="ident">max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
             ),
             <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> (
-                <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">63</span>),
-                <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="ident">u64</span>::<span class="ident">max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
+                <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">63</span>),
+                <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">u64</span>::<span class="ident">max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
             ),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug</span><span class="macro">!</span>(<span class="string">&quot;copysign must have width 32 or 64, not {}&quot;</span>, <span class="ident">width</span>),
         };
@@ -600,7 +606,7 @@
         <span class="kw">let</span> <span class="ident">arg_tys</span> <span class="op">=</span> <span class="ident">sig</span>.<span class="ident">inputs</span>();
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">item_name</span>(<span class="ident">def_id</span>);
 
-        <span class="kw">let</span> <span class="ident">ret_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">sig</span>.<span class="ident">output</span>()).<span class="ident">spirv_type</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">ret_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">sig</span>.<span class="ident">output</span>()).<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">PlaceRef</span>::<span class="ident">new_sized</span>(<span class="ident">llresult</span>, <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">layout</span>);
 
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">name</span> {
@@ -619,7 +625,13 @@
                 <span class="kw">let</span> <span class="ident">tp_ty</span> <span class="op">=</span> <span class="ident">substs</span>.<span class="ident">type_at</span>(<span class="number">0</span>);
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>();
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">PassMode</span>::<span class="ident">Cast</span>(<span class="ident">ty</span>) <span class="op">=</span> <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">mode</span> {
-                    <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pointercast</span>(<span class="ident">ptr</span>, <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">ty</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>)));
+                    <span class="kw">let</span> <span class="ident">pointee</span> <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
+                    <span class="kw">let</span> <span class="ident">pointer</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
+                        <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
+                        <span class="ident">pointee</span>,
+                    }
+                    .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
+                    <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pointercast</span>(<span class="ident">ptr</span>, <span class="ident">pointer</span>);
                 }
                 <span class="kw">let</span> <span class="ident">load</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">volatile_load</span>(<span class="ident">ptr</span>);
                 <span class="self">self</span>.<span class="ident">to_immediate</span>(<span class="ident">load</span>, <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">tp_ty</span>))
@@ -926,16 +938,16 @@
                 {
                     <span class="number">8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">arg</span>,
                     <span class="number">16</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">offset8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u16</span>(<span class="number">8</span>);
+                        <span class="kw">let</span> <span class="ident">offset8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u16</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">8</span>);
                         <span class="kw">let</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
                         <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
                         <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">tmp1</span>, <span class="ident">tmp2</span>)
                     }
                     <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">offset8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="number">8</span>);
-                        <span class="kw">let</span> <span class="ident">offset24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="number">24</span>);
-                        <span class="kw">let</span> <span class="ident">mask16</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="number">0xFF00</span>);
-                        <span class="kw">let</span> <span class="ident">mask24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="number">0xFF0000</span>);
+                        <span class="kw">let</span> <span class="ident">offset8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">8</span>);
+                        <span class="kw">let</span> <span class="ident">offset24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">24</span>);
+                        <span class="kw">let</span> <span class="ident">mask16</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xFF00</span>);
+                        <span class="kw">let</span> <span class="ident">mask24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xFF0000</span>);
                         <span class="kw">let</span> <span class="ident">tmp4</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset24</span>);
                         <span class="kw">let</span> <span class="ident">tmp3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
                         <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lshr</span>(<span class="ident">arg</span>, <span class="ident">offset8</span>);
@@ -947,16 +959,16 @@
                         <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">res1</span>, <span class="ident">res2</span>)
                     }
                     <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">offset8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">8</span>);
-                        <span class="kw">let</span> <span class="ident">offset24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">24</span>);
-                        <span class="kw">let</span> <span class="ident">offset40</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">40</span>);
-                        <span class="kw">let</span> <span class="ident">offset56</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">56</span>);
-                        <span class="kw">let</span> <span class="ident">mask16</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">0xff00</span>);
-                        <span class="kw">let</span> <span class="ident">mask24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">0xff0000</span>);
-                        <span class="kw">let</span> <span class="ident">mask32</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">0xff000000</span>);
-                        <span class="kw">let</span> <span class="ident">mask40</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">0xff00000000</span>);
-                        <span class="kw">let</span> <span class="ident">mask48</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">0xff0000000000</span>);
-                        <span class="kw">let</span> <span class="ident">mask56</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="number">0xff000000000000</span>);
+                        <span class="kw">let</span> <span class="ident">offset8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">8</span>);
+                        <span class="kw">let</span> <span class="ident">offset24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">24</span>);
+                        <span class="kw">let</span> <span class="ident">offset40</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">40</span>);
+                        <span class="kw">let</span> <span class="ident">offset56</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">56</span>);
+                        <span class="kw">let</span> <span class="ident">mask16</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff00</span>);
+                        <span class="kw">let</span> <span class="ident">mask24</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff0000</span>);
+                        <span class="kw">let</span> <span class="ident">mask32</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff000000</span>);
+                        <span class="kw">let</span> <span class="ident">mask40</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff00000000</span>);
+                        <span class="kw">let</span> <span class="ident">mask48</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff0000000000</span>);
+                        <span class="kw">let</span> <span class="ident">mask56</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">0xff000000000000</span>);
                         <span class="kw">let</span> <span class="ident">tmp8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset56</span>);
                         <span class="kw">let</span> <span class="ident">tmp7</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset40</span>);
                         <span class="kw">let</span> <span class="ident">tmp6</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shl</span>(<span class="ident">arg</span>, <span class="ident">offset24</span>);

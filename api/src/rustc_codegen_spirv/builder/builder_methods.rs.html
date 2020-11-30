@@ -2016,6 +2016,15 @@
 <span id="2013">2013</span>
 <span id="2014">2014</span>
 <span id="2015">2015</span>
+<span id="2016">2016</span>
+<span id="2017">2017</span>
+<span id="2018">2018</span>
+<span id="2019">2019</span>
+<span id="2020">2020</span>
+<span id="2021">2021</span>
+<span id="2022">2022</span>
+<span id="2023">2023</span>
+<span id="2024">2024</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
@@ -2100,10 +2109,10 @@
     <span class="ident">is_float</span>: <span class="ident">bool</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
     <span class="kw">let</span> <span class="ident">composite_type</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Vector</span> {
-        <span class="ident">element</span>: <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">builder</span>),
+        <span class="ident">element</span>: <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">builder</span>.<span class="ident">span</span>(), <span class="ident">builder</span>),
         <span class="ident">count</span>: <span class="ident">byte_width</span> <span class="kw">as</span> <span class="ident">u32</span>,
     }
-    .<span class="ident">def</span>(<span class="ident">builder</span>);
+    .<span class="ident">def</span>(<span class="ident">builder</span>.<span class="ident">span</span>(), <span class="ident">builder</span>);
     <span class="kw">let</span> <span class="ident">composite</span> <span class="op">=</span> <span class="ident">builder</span>
         .<span class="ident">emit</span>()
         .<span class="ident">composite_construct</span>(
@@ -2119,7 +2128,7 @@
     };
     <span class="ident">builder</span>
         .<span class="ident">emit</span>()
-        .<span class="ident">bitcast</span>(<span class="ident">result_type</span>.<span class="ident">def</span>(<span class="ident">builder</span>), <span class="prelude-val">None</span>, <span class="ident">composite</span>)
+        .<span class="ident">bitcast</span>(<span class="ident">result_type</span>.<span class="ident">def</span>(<span class="ident">builder</span>.<span class="ident">span</span>(), <span class="ident">builder</span>), <span class="prelude-val">None</span>, <span class="ident">composite</span>)
         .<span class="ident">unwrap</span>()
 }
 
@@ -2150,7 +2159,7 @@
                     <span class="op">|</span> <span class="ident">MemorySemantics</span>::<span class="ident">SEQUENTIALLY_CONSISTENT</span>
             }
         };
-        <span class="kw">let</span> <span class="ident">semantics</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">semantics</span>.<span class="ident">bits</span>());
+        <span class="kw">let</span> <span class="ident">semantics</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">semantics</span>.<span class="ident">bits</span>());
         <span class="kw">if</span> <span class="ident">invalid_seq_cst</span> {
             <span class="self">self</span>.<span class="ident">zombie</span>(
                 <span class="ident">semantics</span>.<span class="ident">def</span>(<span class="self">self</span>),
@@ -2165,10 +2174,16 @@
             <span class="ident">SpirvType</span>::<span class="ident">Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;memset invalid on void pattern&quot;</span>),
             <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;memset invalid on bool pattern&quot;</span>),
             <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="ident">_signedness</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">width</span> {
-                <span class="number">8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_u8</span>(<span class="ident">fill_byte</span>).<span class="ident">def</span>(<span class="self">self</span>),
-                <span class="number">16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_u16</span>(<span class="ident">memset_fill_u16</span>(<span class="ident">fill_byte</span>)).<span class="ident">def</span>(<span class="self">self</span>),
-                <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">memset_fill_u32</span>(<span class="ident">fill_byte</span>)).<span class="ident">def</span>(<span class="self">self</span>),
-                <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="ident">memset_fill_u64</span>(<span class="ident">fill_byte</span>)).<span class="ident">def</span>(<span class="self">self</span>),
+                <span class="number">8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_u8</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">fill_byte</span>).<span class="ident">def</span>(<span class="self">self</span>),
+                <span class="number">16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+                    .<span class="ident">constant_u16</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">memset_fill_u16</span>(<span class="ident">fill_byte</span>))
+                    .<span class="ident">def</span>(<span class="self">self</span>),
+                <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+                    .<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">memset_fill_u32</span>(<span class="ident">fill_byte</span>))
+                    .<span class="ident">def</span>(<span class="self">self</span>),
+                <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+                    .<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">memset_fill_u64</span>(<span class="ident">fill_byte</span>))
+                    .<span class="ident">def</span>(<span class="self">self</span>),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                     <span class="string">&quot;memset on integer width {} not implemented yet&quot;</span>,
                     <span class="ident">width</span>
@@ -2176,10 +2191,10 @@
             },
             <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">width</span> {
                 <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
-                    .<span class="ident">constant_f32</span>(<span class="ident">f32</span>::<span class="ident">from_bits</span>(<span class="ident">memset_fill_u32</span>(<span class="ident">fill_byte</span>)))
+                    .<span class="ident">constant_f32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">f32</span>::<span class="ident">from_bits</span>(<span class="ident">memset_fill_u32</span>(<span class="ident">fill_byte</span>)))
                     .<span class="ident">def</span>(<span class="self">self</span>),
                 <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
-                    .<span class="ident">constant_f64</span>(<span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">memset_fill_u64</span>(<span class="ident">fill_byte</span>)))
+                    .<span class="ident">constant_f64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">memset_fill_u64</span>(<span class="ident">fill_byte</span>)))
                     .<span class="ident">def</span>(<span class="self">self</span>),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                     <span class="string">&quot;memset on float width {} not implemented yet&quot;</span>,
@@ -2190,13 +2205,16 @@
             <span class="ident">SpirvType</span>::<span class="ident">Opaque</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;memset on opaque type is invalid&quot;</span>),
             <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">elem_pat</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">memset_const_pattern</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>), <span class="ident">fill_byte</span>);
-                <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>.<span class="ident">clone</span>().<span class="ident">def</span>(<span class="self">self</span>), <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">elem_pat</span>; <span class="ident">count</span> <span class="kw">as</span> <span class="ident">usize</span>])
-                    .<span class="ident">def</span>(<span class="self">self</span>)
+                <span class="self">self</span>.<span class="ident">constant_composite</span>(
+                    <span class="ident">ty</span>.<span class="ident">clone</span>().<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
+                    <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">elem_pat</span>; <span class="ident">count</span> <span class="kw">as</span> <span class="ident">usize</span>],
+                )
+                .<span class="ident">def</span>(<span class="self">self</span>)
             }
             <span class="ident">SpirvType</span>::<span class="ident">Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">elem_pat</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">memset_const_pattern</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>), <span class="ident">fill_byte</span>);
                 <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>).<span class="ident">unwrap</span>() <span class="kw">as</span> <span class="ident">usize</span>;
-                <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>.<span class="ident">clone</span>().<span class="ident">def</span>(<span class="self">self</span>), <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">elem_pat</span>; <span class="ident">count</span>])
+                <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>.<span class="ident">clone</span>().<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>), <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">elem_pat</span>; <span class="ident">count</span>])
                     .<span class="ident">def</span>(<span class="self">self</span>)
             }
             <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
@@ -2238,7 +2256,7 @@
                 <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>).<span class="ident">unwrap</span>() <span class="kw">as</span> <span class="ident">usize</span>;
                 <span class="self">self</span>.<span class="ident">emit</span>()
                     .<span class="ident">composite_construct</span>(
-                        <span class="ident">ty</span>.<span class="ident">clone</span>().<span class="ident">def</span>(<span class="self">self</span>),
+                        <span class="ident">ty</span>.<span class="ident">clone</span>().<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
                         <span class="prelude-val">None</span>,
                         <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">repeat</span>(<span class="ident">elem_pat</span>).<span class="ident">take</span>(<span class="ident">count</span>),
                     )
@@ -2248,7 +2266,7 @@
                 <span class="kw">let</span> <span class="ident">elem_pat</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">memset_dynamic_pattern</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>), <span class="ident">fill_var</span>);
                 <span class="self">self</span>.<span class="ident">emit</span>()
                     .<span class="ident">composite_construct</span>(
-                        <span class="ident">ty</span>.<span class="ident">clone</span>().<span class="ident">def</span>(<span class="self">self</span>),
+                        <span class="ident">ty</span>.<span class="ident">clone</span>().<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
                         <span class="prelude-val">None</span>,
                         <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">repeat</span>(<span class="ident">elem_pat</span>).<span class="ident">take</span>(<span class="ident">count</span> <span class="kw">as</span> <span class="ident">usize</span>),
                     )
@@ -2274,7 +2292,7 @@
             <span class="self">self</span>.<span class="ident">store</span>(<span class="ident">pat</span>, <span class="ident">ptr</span>, <span class="ident">Align</span>::<span class="ident">from_bytes</span>(<span class="number">0</span>).<span class="ident">unwrap</span>());
         } <span class="kw">else</span> {
             <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">count</span> {
-                <span class="kw">let</span> <span class="ident">const_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>);
+                <span class="kw">let</span> <span class="ident">const_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>);
                 <span class="kw">let</span> <span class="ident">gep_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gep</span>(<span class="ident">ptr</span>, <span class="kw-2">&amp;</span>[<span class="ident">const_index</span>]);
                 <span class="self">self</span>.<span class="ident">store</span>(<span class="ident">pat</span>, <span class="ident">gep_ptr</span>, <span class="ident">Align</span>::<span class="ident">from_bytes</span>(<span class="number">0</span>).<span class="ident">unwrap</span>());
             }
@@ -2472,10 +2490,6 @@
     }
 
     <span class="kw">fn</span> <span class="ident">br</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="self">Self</span>::<span class="ident">BasicBlock</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">kernel_mode</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">basic_block</span> <span class="op">=</span><span class="op">=</span> <span class="ident">dest</span> {
-            <span class="comment">// TODO: Remove once structurizer is done.</span>
-            <span class="self">self</span>.<span class="ident">zombie_even_in_user_code</span>(<span class="ident">dest</span>, <span class="string">&quot;Infinite loop before structurizer is done&quot;</span>);
-        }
         <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">branch</span>(<span class="ident">dest</span>).<span class="ident">unwrap</span>()
     }
 
@@ -2686,7 +2700,7 @@
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">not</span>(<span class="ident">val</span>.<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">val</span>.<span class="ident">def</span>(<span class="self">self</span>)),
             <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="bool-val">true</span>);
+                <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="bool-val">true</span>);
                 <span class="comment">// intel-compute-runtime doesn&#39;t like OpLogicalNot</span>
                 <span class="self">self</span>.<span class="ident">emit</span>()
                     .<span class="ident">logical_not_equal</span>(<span class="ident">val</span>.<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">val</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">true_</span>.<span class="ident">def</span>(<span class="self">self</span>))
@@ -2707,7 +2721,7 @@
         <span class="ident">lhs</span>: <span class="self">Self</span>::<span class="ident">Value</span>,
         <span class="ident">rhs</span>: <span class="self">Self</span>::<span class="ident">Value</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>::<span class="ident">Value</span>, <span class="self">Self</span>::<span class="ident">Value</span>) {
-        <span class="kw">let</span> <span class="ident">fals</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="bool-val">false</span>);
+        <span class="kw">let</span> <span class="ident">fals</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="bool-val">false</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">oop</span> {
             <span class="ident">OverflowOp</span>::<span class="ident">Add</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="self">self</span>.<span class="ident">add</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>), <span class="ident">fals</span>),
             <span class="ident">OverflowOp</span>::<span class="ident">Sub</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>), <span class="ident">fals</span>),
@@ -2726,7 +2740,7 @@
 
     <span class="kw">fn</span> <span class="ident">from_immediate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="self">Self</span>::<span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span> {
-            <span class="kw">let</span> <span class="ident">i8</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>);
+            <span class="kw">let</span> <span class="ident">i8</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
             <span class="self">self</span>.<span class="ident">zext</span>(<span class="ident">val</span>, <span class="ident">i8</span>)
         } <span class="kw">else</span> {
             <span class="ident">val</span>
@@ -2735,7 +2749,7 @@
 
     <span class="kw">fn</span> <span class="ident">to_immediate_scalar</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">scalar</span>: <span class="kw-2">&amp;</span><span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">if</span> <span class="ident">scalar</span>.<span class="ident">is_bool</span>() {
-            <span class="kw">let</span> <span class="ident">bool</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>);
+            <span class="kw">let</span> <span class="ident">bool</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
             <span class="kw">return</span> <span class="self">self</span>.<span class="ident">trunc</span>(<span class="ident">val</span>, <span class="ident">bool</span>);
         }
         <span class="ident">val</span>
@@ -2746,7 +2760,7 @@
             <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
             <span class="ident">pointee</span>: <span class="ident">ty</span>,
         }
-        .<span class="ident">def</span>(<span class="self">self</span>);
+        .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="comment">// &quot;All OpVariable instructions in a function must be the first instructions in the first block.&quot;</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit</span>();
         <span class="ident">builder</span>.<span class="ident">select_block</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>)).<span class="ident">unwrap</span>();
@@ -2828,7 +2842,7 @@
             )),
         };
         <span class="comment">// TODO: Default to device scope</span>
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>);
         <span class="kw">let</span> <span class="ident">semantics</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ordering_to_semantics_def</span>(<span class="ident">order</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">emit</span>()
@@ -2867,7 +2881,7 @@
                 <span class="comment">// WARN! This does not go through to_immediate due to only having a Scalar, not a Ty, but it still does</span>
                 <span class="comment">// whatever to_immediate does!</span>
                 <span class="kw">if</span> <span class="ident">scalar</span>.<span class="ident">is_bool</span>() {
-                    <span class="self">self</span>.<span class="ident">trunc</span>(<span class="ident">load</span>, <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>))
+                    <span class="self">self</span>.<span class="ident">trunc</span>(<span class="ident">load</span>, <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>))
                 } <span class="kw">else</span> {
                     <span class="ident">load</span>
                 }
@@ -2972,7 +2986,7 @@
         };
         <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">ptr_elem_ty</span>, <span class="ident">val</span>.<span class="ident">ty</span>);
         <span class="comment">// TODO: Default to device scope</span>
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>);
         <span class="kw">let</span> <span class="ident">semantics</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ordering_to_semantics_def</span>(<span class="ident">order</span>);
         <span class="self">self</span>.<span class="ident">validate_atomic</span>(<span class="ident">val</span>.<span class="ident">ty</span>, <span class="ident">ptr</span>.<span class="ident">def</span>(<span class="self">self</span>));
         <span class="self">self</span>.<span class="ident">emit</span>()
@@ -3017,13 +3031,13 @@
             <span class="ident">storage_class</span>,
             <span class="ident">pointee</span>: <span class="ident">result_pointee_type</span>,
         }
-        .<span class="ident">def</span>(<span class="self">self</span>);
+        .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="comment">// Important! LLVM, and therefore intel-compute-runtime, require the `getelementptr` instruction (and therefore</span>
         <span class="comment">// OpAccessChain) on structs to be a constant i32. Not i64! i32.</span>
         <span class="kw">if</span> <span class="ident">idx</span> <span class="op">&gt;</span> <span class="ident">u32</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">u64</span> {
             <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;struct_gep bigger than u32::MAX&quot;</span>);
         }
-        <span class="kw">let</span> <span class="ident">index_const</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">def</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">index_const</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">idx</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">def</span>(<span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">emit</span>()
             .<span class="ident">access_chain</span>(
                 <span class="ident">result_type</span>,
@@ -3258,7 +3272,7 @@
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">indices</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">try_pointercast_via_gep</span>(<span class="ident">val_pointee</span>, <span class="ident">dest_pointee</span>) {
             <span class="kw">let</span> <span class="ident">indices</span> <span class="op">=</span> <span class="ident">indices</span>
                 .<span class="ident">into_iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">idx</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">idx</span>).<span class="ident">def</span>(<span class="self">self</span>))
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">idx</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">idx</span>).<span class="ident">def</span>(<span class="self">self</span>))
                 .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
             <span class="self">self</span>.<span class="ident">emit</span>()
                 .<span class="ident">access_chain</span>(<span class="ident">dest_ty</span>, <span class="prelude-val">None</span>, <span class="ident">val</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">indices</span>)
@@ -3285,7 +3299,7 @@
         <span class="comment">// Note: the signedness of the opcode doesn&#39;t have to match the signedness of the operands.</span>
         <span class="kw">use</span> <span class="ident">IntPredicate</span>::<span class="kw-2">*</span>;
         <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">lhs</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">op</span> {
                 <span class="ident">IntEQ</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">i_equal</span>(<span class="ident">b</span>, <span class="prelude-val">None</span>, <span class="ident">lhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">rhs</span>.<span class="ident">def</span>(<span class="self">self</span>)),
@@ -3426,7 +3440,7 @@
                 <span class="comment">// x &gt; y  =&gt;  x &amp;&amp; !y</span>
                 <span class="ident">IntUGT</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="comment">// intel-compute-runtime doesn&#39;t like OpLogicalNot</span>
-                    <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="bool-val">true</span>);
+                    <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="bool-val">true</span>);
                     <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="self">self</span>
                         .<span class="ident">emit</span>()
                         .<span class="ident">logical_not_equal</span>(<span class="ident">b</span>, <span class="prelude-val">None</span>, <span class="ident">rhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">true_</span>.<span class="ident">def</span>(<span class="self">self</span>))
@@ -3435,7 +3449,7 @@
                 }
                 <span class="comment">// x &gt;= y  =&gt;  x || !y</span>
                 <span class="ident">IntUGE</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="bool-val">true</span>);
+                    <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="bool-val">true</span>);
                     <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="self">self</span>
                         .<span class="ident">emit</span>()
                         .<span class="ident">logical_not_equal</span>(<span class="ident">b</span>, <span class="prelude-val">None</span>, <span class="ident">rhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">true_</span>.<span class="ident">def</span>(<span class="self">self</span>))
@@ -3444,7 +3458,7 @@
                 }
                 <span class="comment">// x &lt; y  =&gt;  !x &amp;&amp; y</span>
                 <span class="ident">IntULE</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="bool-val">true</span>);
+                    <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="bool-val">true</span>);
                     <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="self">self</span>
                         .<span class="ident">emit</span>()
                         .<span class="ident">logical_not_equal</span>(<span class="ident">b</span>, <span class="prelude-val">None</span>, <span class="ident">lhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">true_</span>.<span class="ident">def</span>(<span class="self">self</span>))
@@ -3453,7 +3467,7 @@
                 }
                 <span class="comment">// x &lt;= y  =&gt;  !x || y</span>
                 <span class="ident">IntULT</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="bool-val">true</span>);
+                    <span class="kw">let</span> <span class="ident">true_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="bool-val">true</span>);
                     <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="self">self</span>
                         .<span class="ident">emit</span>()
                         .<span class="ident">logical_not_equal</span>(<span class="ident">b</span>, <span class="prelude-val">None</span>, <span class="ident">lhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">true_</span>.<span class="ident">def</span>(<span class="self">self</span>))
@@ -3477,10 +3491,10 @@
     <span class="kw">fn</span> <span class="ident">fcmp</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">op</span>: <span class="ident">RealPredicate</span>, <span class="ident">lhs</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">rhs</span>: <span class="self">Self</span>::<span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">use</span> <span class="ident">RealPredicate</span>::<span class="kw-2">*</span>;
         <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="kw">match</span> <span class="ident">op</span> {
-            <span class="ident">RealPredicateFalse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">constant_bool</span>(<span class="bool-val">false</span>),
-            <span class="ident">RealPredicateTrue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">constant_bool</span>(<span class="bool-val">true</span>),
+            <span class="ident">RealPredicateFalse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">constant_bool</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="bool-val">false</span>),
+            <span class="ident">RealPredicateTrue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">constant_bool</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="bool-val">true</span>),
             <span class="ident">RealOEQ</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                 .<span class="ident">emit</span>()
                 .<span class="ident">f_ord_equal</span>(<span class="ident">b</span>, <span class="prelude-val">None</span>, <span class="ident">lhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">rhs</span>.<span class="ident">def</span>(<span class="self">self</span>)),
@@ -3678,7 +3692,7 @@
             <span class="ident">element</span>: <span class="ident">elt</span>.<span class="ident">ty</span>,
             <span class="ident">count</span>: <span class="ident">num_elts</span> <span class="kw">as</span> <span class="ident">u32</span>,
         }
-        .<span class="ident">def</span>(<span class="self">self</span>);
+        .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const</span>(<span class="ident">elt</span>).<span class="ident">is_some</span>() {
             <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">result_type</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">elt</span>.<span class="ident">def</span>(<span class="self">self</span>); <span class="ident">num_elts</span>])
         } <span class="kw">else</span> {
@@ -3808,7 +3822,7 @@
         <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">dst_pointee_ty</span>, <span class="ident">src</span>.<span class="ident">ty</span>);
         <span class="self">self</span>.<span class="ident">validate_atomic</span>(<span class="ident">dst_pointee_ty</span>, <span class="ident">dst</span>.<span class="ident">def</span>(<span class="self">self</span>));
         <span class="comment">// TODO: Default to device scope</span>
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>);
         <span class="kw">let</span> <span class="ident">semantics_equal</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ordering_to_semantics_def</span>(<span class="ident">order</span>);
         <span class="kw">let</span> <span class="ident">semantics_unequal</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ordering_to_semantics_def</span>(<span class="ident">failure_order</span>);
         <span class="comment">// Note: OpAtomicCompareExchangeWeak is deprecated, and has the same semantics</span>
@@ -3847,7 +3861,9 @@
         <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">dst_pointee_ty</span>, <span class="ident">src</span>.<span class="ident">ty</span>);
         <span class="self">self</span>.<span class="ident">validate_atomic</span>(<span class="ident">dst_pointee_ty</span>, <span class="ident">dst</span>.<span class="ident">def</span>(<span class="self">self</span>));
         <span class="comment">// TODO: Default to device scope</span>
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">def</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>)
+            .<span class="ident">def</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="ident">semantics</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ordering_to_semantics_def</span>(<span class="ident">order</span>).<span class="ident">def</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit</span>();
         <span class="kw">use</span> <span class="ident">AtomicRmwBinOp</span>::<span class="kw-2">*</span>;
@@ -3941,7 +3957,9 @@
     <span class="kw">fn</span> <span class="ident">atomic_fence</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">order</span>: <span class="ident">AtomicOrdering</span>, <span class="ident">_scope</span>: <span class="ident">SynchronizationScope</span>) {
         <span class="comment">// Ignore sync scope (it only has &quot;single thread&quot; and &quot;cross thread&quot;)</span>
         <span class="comment">// TODO: Default to device scope</span>
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">def</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">Scope</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="ident">u32</span>)
+            .<span class="ident">def</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="ident">semantics</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ordering_to_semantics_def</span>(<span class="ident">order</span>).<span class="ident">def</span>(<span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">memory_barrier</span>(<span class="ident">memory</span>, <span class="ident">semantics</span>).<span class="ident">unwrap</span>();
     }

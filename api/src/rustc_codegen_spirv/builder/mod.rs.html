@@ -407,6 +407,11 @@
 <span id="404">404</span>
 <span id="405">405</span>
 <span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">builder_methods</span>;
 <span class="kw">mod</span> <span class="ident">ext_inst</span>;
@@ -415,6 +420,7 @@
 <span class="kw">mod</span> <span class="ident">spirv_asm</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ext_inst</span>::<span class="ident">ExtInst</span>;
+<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">DUMMY_SP</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">spirv_asm</span>::<span class="ident">InstructionTable</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -498,6 +504,10 @@
         }
     }
 
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Span</span> {
+        <span class="self">self</span>.<span class="ident">current_span</span>.<span class="ident">unwrap_or</span>(<span class="ident">DUMMY_SP</span>)
+    }
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gep_help</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">ptr</span>: <span class="ident">SpirvValue</span>,
@@ -533,7 +543,7 @@
             <span class="ident">storage_class</span>,
             <span class="ident">pointee</span>: <span class="ident">result_pointee_type</span>,
         }
-        .<span class="ident">def</span>(<span class="self">self</span>);
+        .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">indices</span>[<span class="number">0</span>]) <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="number">0</span>) {
             <span class="kw">if</span> <span class="ident">is_inbounds</span> {
                 <span class="self">self</span>.<span class="ident">emit</span>()
@@ -595,7 +605,7 @@
         <span class="kw">let</span> <span class="ident">int_size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">shift</span>.<span class="ident">ty</span>, <span class="ident">width</span> <span class="kw">as</span> <span class="ident">u64</span>);
         <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">shift</span>.<span class="ident">ty</span>, (<span class="ident">width</span> <span class="op">-</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u64</span>);
         <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">shift</span>.<span class="ident">ty</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">bool</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">bool</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="comment">// https://stackoverflow.com/a/10134877</span>
         <span class="kw">let</span> <span class="ident">mask_shift</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">and</span>(<span class="ident">shift</span>, <span class="ident">mask</span>);
         <span class="kw">let</span> <span class="ident">sub</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">int_size</span>, <span class="ident">mask_shift</span>);
@@ -734,12 +744,12 @@
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">arg_abi</span>.<span class="ident">is_unsized_indirect</span>() {
             <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;unsized `ArgAbi` must be handled through `store_fn_arg`&quot;</span>);
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">PassMode</span>::<span class="ident">Cast</span>(<span class="ident">cast</span>) <span class="op">=</span> <span class="ident">arg_abi</span>.<span class="ident">mode</span> {
-            <span class="kw">let</span> <span class="ident">cast_ty</span> <span class="op">=</span> <span class="ident">cast</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>);
+            <span class="kw">let</span> <span class="ident">cast_ty</span> <span class="op">=</span> <span class="ident">cast</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
             <span class="kw">let</span> <span class="ident">cast_ptr_ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
                 <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
                 <span class="ident">pointee</span>: <span class="ident">cast_ty</span>,
             }
-            .<span class="ident">def</span>(<span class="self">self</span>);
+            .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
             <span class="kw">let</span> <span class="ident">cast_dst</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pointercast</span>(<span class="ident">dst</span>.<span class="ident">llval</span>, <span class="ident">cast_ptr_ty</span>);
             <span class="self">self</span>.<span class="ident">store</span>(<span class="ident">val</span>, <span class="ident">cast_dst</span>, <span class="ident">arg_abi</span>.<span class="ident">layout</span>.<span class="ident">align</span>.<span class="ident">abi</span>);
         } <span class="kw">else</span> {
@@ -748,7 +758,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">arg_memory_ty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">arg_abi</span>: <span class="kw-2">&amp;</span><span class="ident">ArgAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Type</span> {
-        <span class="ident">arg_abi</span>.<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>)
+        <span class="ident">arg_abi</span>.<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>)
     }
 }
 

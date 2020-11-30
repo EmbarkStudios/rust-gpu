@@ -371,8 +371,6 @@
 <span id="368">368</span>
 <span id="369">369</span>
 <span id="370">370</span>
-<span id="371">371</span>
-<span id="372">372</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
@@ -536,9 +534,6 @@
             <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="ident">reason</span>);
         }
     }
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zombie_even_in_user_code</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">word</span>: <span class="ident">Word</span>, <span class="ident">reason</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) {
-        <span class="self">self</span>.<span class="ident">zombie_values</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">word</span>, <span class="ident">reason</span>);
-    }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_system_crate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">tcx</span>
@@ -565,12 +560,12 @@
     }
 
     <span class="doccomment">/// See note on `SpirvValueKind::ConstantPointer`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_constant_pointer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">SpirvValue</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_constant_pointer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">value</span>: <span class="ident">SpirvValue</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
             <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
             <span class="ident">pointee</span>: <span class="ident">value</span>.<span class="ident">ty</span>,
         }
-        .<span class="ident">def</span>(<span class="self">self</span>);
+        .<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_system_crate</span>() {
             <span class="comment">// Create these undefs up front instead of on demand in SpirvValue::def because</span>
             <span class="comment">// SpirvValue::def can&#39;t use cx.emit()</span>
@@ -646,7 +641,8 @@
 
     <span class="kw">fn</span> <span class="ident">get_fn_addr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_fn</span>(<span class="ident">instance</span>);
-        <span class="self">self</span>.<span class="ident">make_constant_pointer</span>(<span class="ident">function</span>)
+        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>());
+        <span class="self">self</span>.<span class="ident">make_constant_pointer</span>(<span class="ident">span</span>, <span class="ident">function</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">eh_personality</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {

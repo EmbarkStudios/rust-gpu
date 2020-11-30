@@ -531,6 +531,12 @@
 <span id="528">528</span>
 <span id="529">529</span>
 <span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -544,31 +550,32 @@
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::<span class="ident">TyAndLayout</span>;
 <span class="kw">use</span> <span class="ident">rustc_mir</span>::<span class="ident">interpret</span>::<span class="ident">Scalar</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">symbol</span>::<span class="ident">Symbol</span>;
+<span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{<span class="self">self</span>, <span class="ident">AddressSpace</span>, <span class="ident">HasDataLayout</span>, <span class="ident">LayoutOf</span>, <span class="ident">Primitive</span>, <span class="ident">Size</span>};
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">ty</span>, <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u16</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">u16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">16</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u16</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">u16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">16</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">ty</span>, <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">32</span>, <span class="op">!</span><span class="self">self</span>.<span class="ident">kernel_mode</span>).<span class="ident">def</span>(<span class="self">self</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">32</span>, <span class="op">!</span><span class="self">self</span>.<span class="ident">kernel_mode</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">ty</span>, <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">32</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">32</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">ty</span>, <span class="ident">val</span>))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">64</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">64</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U64</span>(<span class="ident">ty</span>, <span class="ident">val</span>))
     }
 
@@ -614,14 +621,14 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="number">32</span>).<span class="ident">def</span>(<span class="self">self</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="number">32</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>
             .<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">F32</span>(<span class="ident">ty</span>, <span class="ident">val</span>.<span class="ident">to_bits</span>()))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="number">64</span>).<span class="ident">def</span>(<span class="self">self</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="number">64</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>
             .<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">F64</span>(<span class="ident">ty</span>, <span class="ident">val</span>.<span class="ident">to_bits</span>()))
     }
@@ -641,8 +648,8 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_bool</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="self">self</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_bool</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">Bool</span>(<span class="ident">ty</span>, <span class="ident">val</span>))
     }
 
@@ -676,24 +683,24 @@
         <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">t</span>, <span class="ident">u</span> <span class="kw">as</span> <span class="ident">u64</span>)
     }
     <span class="kw">fn</span> <span class="ident">const_bool</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="ident">val</span>)
+        <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">val</span>)
     }
     <span class="kw">fn</span> <span class="ident">const_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">constant_i32</span>(<span class="ident">i</span>)
+        <span class="self">self</span>.<span class="ident">constant_i32</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">i</span>)
     }
     <span class="kw">fn</span> <span class="ident">const_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">i</span>)
+        <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">i</span>)
     }
     <span class="kw">fn</span> <span class="ident">const_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="ident">i</span>)
+        <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">i</span>)
     }
     <span class="kw">fn</span> <span class="ident">const_usize</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">let</span> <span class="ident">ptr_size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">data_layout</span>.<span class="ident">pointer_size</span>.<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">ptr_size</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">ptr_size</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">t</span>, <span class="ident">i</span>)
     }
     <span class="kw">fn</span> <span class="ident">const_u8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">constant_u8</span>(<span class="ident">i</span>)
+        <span class="self">self</span>.<span class="ident">constant_u8</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">i</span>)
     }
     <span class="kw">fn</span> <span class="ident">const_real</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">t</span>: <span class="self">Self</span>::<span class="ident">Type</span>, <span class="ident">val</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="self">self</span>.<span class="ident">constant_float</span>(<span class="ident">t</span>, <span class="ident">val</span>)
@@ -701,7 +708,10 @@
 
     <span class="kw">fn</span> <span class="ident">const_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="ident">Symbol</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>::<span class="ident">Value</span>, <span class="self">Self</span>::<span class="ident">Value</span>) {
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">as_str</span>().<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="self">self</span>.<span class="ident">layout_of</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">types</span>.<span class="ident">str_</span>).<span class="ident">spirv_type</span>(<span class="self">self</span>));
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(
+            <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">types</span>.<span class="ident">str_</span>)
+                .<span class="ident">spirv_type</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>),
+        );
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">ty</span>);
         <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="string">&quot;constant string&quot;</span>);
         (<span class="ident">result</span>, <span class="self">self</span>.<span class="ident">const_usize</span>(<span class="ident">len</span> <span class="kw">as</span> <span class="ident">u64</span>))
@@ -718,7 +728,7 @@
             <span class="ident">field_offsets</span>,
             <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
         }
-        .<span class="ident">def</span>(<span class="self">self</span>);
+        .<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">struct_ty</span>, <span class="ident">elts</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">def_cx</span>(<span class="self">self</span>)).<span class="ident">collect</span>())
     }
 
@@ -756,8 +766,8 @@
                             <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">ty</span>, <span class="ident">data</span> <span class="kw">as</span> <span class="ident">u64</span>)
                         }
                         <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">data</span> {
-                            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="bool-val">false</span>),
-                            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="bool-val">true</span>),
+                            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="ident">DUMMY_SP</span>, <span class="bool-val">false</span>),
+                            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="ident">DUMMY_SP</span>, <span class="bool-val">true</span>),
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                                 .<span class="ident">tcx</span>
                                 .<span class="ident">sess</span>
@@ -769,12 +779,12 @@
                         )),
                     },
                     <span class="ident">Primitive</span>::<span class="ident">F32</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_f32</span>(<span class="ident">f32</span>::<span class="ident">from_bits</span>(<span class="ident">data</span> <span class="kw">as</span> <span class="ident">u32</span>));
+                        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_f32</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">f32</span>::<span class="ident">from_bits</span>(<span class="ident">data</span> <span class="kw">as</span> <span class="ident">u32</span>));
                         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">res</span>.<span class="ident">ty</span>, <span class="ident">ty</span>);
                         <span class="ident">res</span>
                     }
                     <span class="ident">Primitive</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_f64</span>(<span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">data</span> <span class="kw">as</span> <span class="ident">u64</span>));
+                        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_f64</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">data</span> <span class="kw">as</span> <span class="ident">u64</span>));
                         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">res</span>.<span class="ident">ty</span>, <span class="ident">ty</span>);
                         <span class="ident">res</span>
                     }
@@ -856,7 +866,7 @@
         <span class="ident">offset</span>: <span class="ident">Size</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PlaceRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="self">Self</span>::<span class="ident">Value</span><span class="op">&gt;</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">offset</span>, <span class="ident">Size</span>::<span class="ident">ZERO</span>);
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
         <span class="kw">let</span> <span class="ident">init</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_const_alloc</span>(<span class="ident">alloc</span>, <span class="ident">ty</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">static_addr_of</span>(<span class="ident">init</span>, <span class="ident">alloc</span>.<span class="ident">align</span>, <span class="prelude-val">None</span>);
         <span class="ident">PlaceRef</span>::<span class="ident">new_sized</span>(<span class="ident">result</span>, <span class="ident">layout</span>)
@@ -902,7 +912,9 @@
                 .<span class="ident">tcx</span>
                 .<span class="ident">sess</span>
                 .<span class="ident">fatal</span>(<span class="string">&quot;Cannot create const alloc of type void&quot;</span>),
-            <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="self">self</span>.<span class="ident">read_alloc_val</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>),
+            <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>.<span class="ident">read_alloc_val</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>)
+            }
             <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_alloc_val</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, (<span class="ident">width</span> <span class="op">/</span> <span class="number">8</span>) <span class="kw">as</span> <span class="ident">usize</span>);
                 <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">ty</span>, <span class="ident">v</span> <span class="kw">as</span> <span class="ident">u64</span>)
@@ -910,8 +922,8 @@
             <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_alloc_val</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, (<span class="ident">width</span> <span class="op">/</span> <span class="number">8</span>) <span class="kw">as</span> <span class="ident">usize</span>);
                 <span class="kw">match</span> <span class="ident">width</span> {
-                    <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_f32</span>(<span class="ident">f32</span>::<span class="ident">from_bits</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>)),
-                    <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_f64</span>(<span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u64</span>)),
+                    <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_f32</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">f32</span>::<span class="ident">from_bits</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>)),
+                    <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_f64</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u64</span>)),
                     <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                         .<span class="ident">tcx</span>
                         .<span class="ident">sess</span>
