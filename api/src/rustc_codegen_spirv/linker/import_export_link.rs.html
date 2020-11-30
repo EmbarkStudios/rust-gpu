@@ -185,6 +185,11 @@
 <span id="182">182</span>
 <span id="183">183</span>
 <span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Instruction</span>, <span class="ident">Module</span>};
@@ -227,6 +232,7 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>);
         }
     }
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_err</span> <span class="op">=</span> <span class="bool-val">false</span>;
     <span class="comment">// Then, collect all the imports, and create the rewrite rules.</span>
     <span class="kw">for</span> <span class="ident">annotation</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">annotations</span> {
         <span class="kw">let</span> (<span class="ident">import_id</span>, <span class="ident">name</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">get_linkage_inst</span>(<span class="ident">annotation</span>) {
@@ -236,7 +242,8 @@
         <span class="kw">let</span> (<span class="ident">export_id</span>, <span class="ident">export_type</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">exports</span>.<span class="ident">get</span>(<span class="ident">name</span>) {
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Unresolved symbol {:?}&quot;</span>, <span class="ident">name</span>));
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>);
+                <span class="ident">has_err</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                <span class="kw">continue</span>;
             }
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">x</span>,
         };
@@ -249,6 +256,9 @@
                 <span class="ident">killed_parameters</span>.<span class="ident">insert</span>(<span class="ident">param</span>);
             }
         }
+    }
+    <span class="kw">if</span> <span class="ident">has_err</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>);
     }
 
     <span class="prelude-val">Ok</span>((<span class="ident">rewrite_rules</span>, <span class="ident">killed_parameters</span>))
