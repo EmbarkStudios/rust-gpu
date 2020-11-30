@@ -88,7 +88,7 @@ macro_rules! storage_class {
             pub fn store(&mut self, v: T) {
                 self.block.value = v;
             }
-            
+
             /// A convenience function to load a value into memory and store it.
             pub fn then(&mut self, then: impl FnOnce(T) -> T) {
                 self.store((then)(self.load()));
