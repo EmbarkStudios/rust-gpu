@@ -22,12 +22,9 @@ jobs:
     env:
       spirv_tools_version: "20200928"
     steps:
-      # Note that we are explicitly NOT checking out submodules, to validate
-      # that we haven't accidentally enabled spirv-tools native compilation
-      # and regressed CI times
       - uses: actions/checkout@v2
-        with:
-          submodules: "false"
+        # Ensure rustup is up to date.
+      - run: rustup self update
       # Ubuntu does have `brew install spirv-tools`, but it installs from
       # source and so takes >8 minutes.
       - if: ${{ runner.os == 'Linux' }}
