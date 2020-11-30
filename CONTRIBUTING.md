@@ -6,7 +6,7 @@ At Embark, we aspire to empower everyone to create interactive experiences. To d
 
 If you have ideas for collaboration, email us at opensource@embark-studios.com.
 
-We're also hiring full-time engineers to work with us in Stockholm! Check out our current job postings [here](https://embark.games/careers).
+We're also hiring full-time engineers to work with us in Stockholm! Check out our current job postings [here](https://www.embark-studios.com/jobs).
 
 ## Issues
 

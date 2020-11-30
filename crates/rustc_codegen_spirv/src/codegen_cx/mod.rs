@@ -160,9 +160,6 @@ impl<'tcx> CodegenCx<'tcx> {
             self.tcx.sess.err(reason);
         }
     }
-    pub fn zombie_even_in_user_code(&self, word: Word, reason: &'static str) {
-        self.zombie_values.borrow_mut().insert(word, reason);
-    }
 
     pub fn is_system_crate(&self) -> bool {
         self.tcx
@@ -189,12 +186,12 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     /// See note on `SpirvValueKind::ConstantPointer`
-    pub fn make_constant_pointer(&self, value: SpirvValue) -> SpirvValue {
+    pub fn make_constant_pointer(&self, span: Span, value: SpirvValue) -> SpirvValue {
         let ty = SpirvType::Pointer {
             storage_class: StorageClass::Function,
             pointee: value.ty,
         }
-        .def(self);
+        .def(span, self);
         if self.is_system_crate() {
             // Create these undefs up front instead of on demand in SpirvValue::def because
             // SpirvValue::def can't use cx.emit()
@@ -270,7 +267,8 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
 
     fn get_fn_addr(&self, instance: Instance<'tcx>) -> Self::Value {
         let function = self.get_fn(instance);
-        self.make_constant_pointer(function)
+        let span = self.tcx.def_span(instance.def_id());
+        self.make_constant_pointer(span, function)
     }
 
     fn eh_personality(&self) -> Self::Value {

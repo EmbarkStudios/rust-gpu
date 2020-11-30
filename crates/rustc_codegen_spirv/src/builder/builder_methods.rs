@@ -81,10 +81,10 @@ fn memset_dynamic_scalar(
     is_float: bool,
 ) -> Word {
     let composite_type = SpirvType::Vector {
-        element: SpirvType::Integer(8, false).def(builder),
+        element: SpirvType::Integer(8, false).def(builder.span(), builder),
         count: byte_width as u32,
     }
-    .def(builder);
+    .def(builder.span(), builder);
     let composite = builder
         .emit()
         .composite_construct(
@@ -100,7 +100,7 @@ fn memset_dynamic_scalar(
     };
     builder
         .emit()
-        .bitcast(result_type.def(builder), None, composite)
+        .bitcast(result_type.def(builder.span(), builder), None, composite)
         .unwrap()
 }
 
@@ -131,7 +131,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     | MemorySemantics::SEQUENTIALLY_CONSISTENT
             }
         };
-        let semantics = self.constant_u32(semantics.bits());
+        let semantics = self.constant_u32(self.span(), semantics.bits());
         if invalid_seq_cst {
             self.zombie(
                 semantics.def(self),
@@ -146,10 +146,16 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Void => self.fatal("memset invalid on void pattern"),
             SpirvType::Bool => self.fatal("memset invalid on bool pattern"),
             SpirvType::Integer(width, _signedness) => match width {
-                8 => self.constant_u8(fill_byte).def(self),
-                16 => self.constant_u16(memset_fill_u16(fill_byte)).def(self),
-                32 => self.constant_u32(memset_fill_u32(fill_byte)).def(self),
-                64 => self.constant_u64(memset_fill_u64(fill_byte)).def(self),
+                8 => self.constant_u8(self.span(), fill_byte).def(self),
+                16 => self
+                    .constant_u16(self.span(), memset_fill_u16(fill_byte))
+                    .def(self),
+                32 => self
+                    .constant_u32(self.span(), memset_fill_u32(fill_byte))
+                    .def(self),
+                64 => self
+                    .constant_u64(self.span(), memset_fill_u64(fill_byte))
+                    .def(self),
                 _ => self.fatal(&format!(
                     "memset on integer width {} not implemented yet",
                     width
@@ -157,10 +163,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             },
             SpirvType::Float(width) => match width {
                 32 => self
-                    .constant_f32(f32::from_bits(memset_fill_u32(fill_byte)))
+                    .constant_f32(self.span(), f32::from_bits(memset_fill_u32(fill_byte)))
                     .def(self),
                 64 => self
-                    .constant_f64(f64::from_bits(memset_fill_u64(fill_byte)))
+                    .constant_f64(self.span(), f64::from_bits(memset_fill_u64(fill_byte)))
                     .def(self),
                 _ => self.fatal(&format!(
                     "memset on float width {} not implemented yet",
@@ -171,13 +177,16 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Opaque { .. } => self.fatal("memset on opaque type is invalid"),
             SpirvType::Vector { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
-                self.constant_composite(ty.clone().def(self), vec![elem_pat; count as usize])
-                    .def(self)
+                self.constant_composite(
+                    ty.clone().def(self.span(), self),
+                    vec![elem_pat; count as usize],
+                )
+                .def(self)
             }
             SpirvType::Array { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
-                self.constant_composite(ty.clone().def(self), vec![elem_pat; count])
+                self.constant_composite(ty.clone().def(self.span(), self), vec![elem_pat; count])
                     .def(self)
             }
             SpirvType::RuntimeArray { .. } => {
@@ -219,7 +228,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 self.emit()
                     .composite_construct(
-                        ty.clone().def(self),
+                        ty.clone().def(self.span(), self),
                         None,
                         std::iter::repeat(elem_pat).take(count),
                     )
@@ -229,7 +238,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let elem_pat = self.memset_dynamic_pattern(&self.lookup_type(element), fill_var);
                 self.emit()
                     .composite_construct(
-                        ty.clone().def(self),
+                        ty.clone().def(self.span(), self),
                         None,
                         std::iter::repeat(elem_pat).take(count as usize),
                     )
@@ -255,7 +264,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             self.store(pat, ptr, Align::from_bytes(0).unwrap());
         } else {
             for index in 0..count {
-                let const_index = self.constant_u32(index as u32);
+                let const_index = self.constant_u32(self.span(), index as u32);
                 let gep_ptr = self.gep(ptr, &[const_index]);
                 self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
             }
@@ -453,10 +462,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn br(&mut self, dest: Self::BasicBlock) {
-        if !self.kernel_mode && self.basic_block == dest {
-            // TODO: Remove once structurizer is done.
-            self.zombie_even_in_user_code(dest, "Infinite loop before structurizer is done");
-        }
         self.emit().branch(dest).unwrap()
     }
 
@@ -667,7 +672,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         match self.lookup_type(val.ty) {
             SpirvType::Integer(_, _) => self.emit().not(val.ty, None, val.def(self)),
             SpirvType::Bool => {
-                let true_ = self.constant_bool(true);
+                let true_ = self.constant_bool(self.span(), true);
                 // intel-compute-runtime doesn't like OpLogicalNot
                 self.emit()
                     .logical_not_equal(val.ty, None, val.def(self), true_.def(self))
@@ -688,7 +693,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         lhs: Self::Value,
         rhs: Self::Value,
     ) -> (Self::Value, Self::Value) {
-        let fals = self.constant_bool(false);
+        let fals = self.constant_bool(self.span(), false);
         let result = match oop {
             OverflowOp::Add => (self.add(lhs, rhs), fals),
             OverflowOp::Sub => (self.sub(lhs, rhs), fals),
@@ -707,7 +712,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn from_immediate(&mut self, val: Self::Value) -> Self::Value {
         if self.lookup_type(val.ty) == SpirvType::Bool {
-            let i8 = SpirvType::Integer(8, false).def(self);
+            let i8 = SpirvType::Integer(8, false).def(self.span(), self);
             self.zext(val, i8)
         } else {
             val
@@ -716,7 +721,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn to_immediate_scalar(&mut self, val: Self::Value, scalar: &Scalar) -> Self::Value {
         if scalar.is_bool() {
-            let bool = SpirvType::Bool.def(self);
+            let bool = SpirvType::Bool.def(self.span(), self);
             return self.trunc(val, bool);
         }
         val
@@ -727,7 +732,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             storage_class: StorageClass::Function,
             pointee: ty,
         }
-        .def(self);
+        .def(self.span(), self);
         // "All OpVariable instructions in a function must be the first instructions in the first block."
         let mut builder = self.emit();
         builder.select_block(Some(0)).unwrap();
@@ -809,7 +814,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )),
         };
         // TODO: Default to device scope
-        let memory = self.constant_u32(Scope::Device as u32);
+        let memory = self.constant_u32(self.span(), Scope::Device as u32);
         let semantics = self.ordering_to_semantics_def(order);
         let result = self
             .emit()
@@ -848,7 +853,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // WARN! This does not go through to_immediate due to only having a Scalar, not a Ty, but it still does
                 // whatever to_immediate does!
                 if scalar.is_bool() {
-                    self.trunc(load, SpirvType::Bool.def(self))
+                    self.trunc(load, SpirvType::Bool.def(self.span(), self))
                 } else {
                     load
                 }
@@ -953,7 +958,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
         // TODO: Default to device scope
-        let memory = self.constant_u32(Scope::Device as u32);
+        let memory = self.constant_u32(self.span(), Scope::Device as u32);
         let semantics = self.ordering_to_semantics_def(order);
         self.validate_atomic(val.ty, ptr.def(self));
         self.emit()
@@ -998,13 +1003,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             storage_class,
             pointee: result_pointee_type,
         }
-        .def(self);
+        .def(self.span(), self);
         // Important! LLVM, and therefore intel-compute-runtime, require the `getelementptr` instruction (and therefore
         // OpAccessChain) on structs to be a constant i32. Not i64! i32.
         if idx > u32::MAX as u64 {
             self.fatal("struct_gep bigger than u32::MAX");
         }
-        let index_const = self.constant_u32(idx as u32).def(self);
+        let index_const = self.constant_u32(self.span(), idx as u32).def(self);
         self.emit()
             .access_chain(
                 result_type,
@@ -1249,13 +1254,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     storage_class,
                     pointee: dest_pointee,
                 }
-                .def(self)
+                // TODO: Get actual span here
+                .def(Span::default(), self)
             } else {
                 dest_ty
             };
             let indices = indices
                 .into_iter()
-                .map(|idx| self.constant_u32(idx).def(self))
+                .map(|idx| self.constant_u32(self.span(), idx).def(self))
                 .collect::<Vec<_>>();
             self.emit()
                 .access_chain(dest_ty, None, val.def(self), indices)
@@ -1282,7 +1288,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // Note: the signedness of the opcode doesn't have to match the signedness of the operands.
         use IntPredicate::*;
         assert_ty_eq!(self, lhs.ty, rhs.ty);
-        let b = SpirvType::Bool.def(self);
+        let b = SpirvType::Bool.def(self.span(), self);
         match self.lookup_type(lhs.ty) {
             SpirvType::Integer(_, _) => match op {
                 IntEQ => self.emit().i_equal(b, None, lhs.def(self), rhs.def(self)),
@@ -1423,7 +1429,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 // x > y  =>  x && !y
                 IntUGT => {
                     // intel-compute-runtime doesn't like OpLogicalNot
-                    let true_ = self.constant_bool(true);
+                    let true_ = self.constant_bool(self.span(), true);
                     let rhs = self
                         .emit()
                         .logical_not_equal(b, None, rhs.def(self), true_.def(self))
@@ -1432,7 +1438,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 }
                 // x >= y  =>  x || !y
                 IntUGE => {
-                    let true_ = self.constant_bool(true);
+                    let true_ = self.constant_bool(self.span(), true);
                     let rhs = self
                         .emit()
                         .logical_not_equal(b, None, rhs.def(self), true_.def(self))
@@ -1441,7 +1447,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 }
                 // x < y  =>  !x && y
                 IntULE => {
-                    let true_ = self.constant_bool(true);
+                    let true_ = self.constant_bool(self.span(), true);
                     let lhs = self
                         .emit()
                         .logical_not_equal(b, None, lhs.def(self), true_.def(self))
@@ -1450,7 +1456,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 }
                 // x <= y  =>  !x || y
                 IntULT => {
-                    let true_ = self.constant_bool(true);
+                    let true_ = self.constant_bool(self.span(), true);
                     let lhs = self
                         .emit()
                         .logical_not_equal(b, None, lhs.def(self), true_.def(self))
@@ -1474,10 +1480,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn fcmp(&mut self, op: RealPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
         use RealPredicate::*;
         assert_ty_eq!(self, lhs.ty, rhs.ty);
-        let b = SpirvType::Bool.def(self);
+        let b = SpirvType::Bool.def(self.span(), self);
         match op {
-            RealPredicateFalse => return self.cx.constant_bool(false),
-            RealPredicateTrue => return self.cx.constant_bool(true),
+            RealPredicateFalse => return self.cx.constant_bool(self.span(), false),
+            RealPredicateTrue => return self.cx.constant_bool(self.span(), true),
             RealOEQ => self
                 .emit()
                 .f_ord_equal(b, None, lhs.def(self), rhs.def(self)),
@@ -1675,7 +1681,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             element: elt.ty,
             count: num_elts as u32,
         }
-        .def(self);
+        .def(self.span(), self);
         if self.builder.lookup_const(elt).is_some() {
             self.constant_composite(result_type, vec![elt.def(self); num_elts])
         } else {
@@ -1805,7 +1811,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         assert_ty_eq!(self, dst_pointee_ty, src.ty);
         self.validate_atomic(dst_pointee_ty, dst.def(self));
         // TODO: Default to device scope
-        let memory = self.constant_u32(Scope::Device as u32);
+        let memory = self.constant_u32(self.span(), Scope::Device as u32);
         let semantics_equal = self.ordering_to_semantics_def(order);
         let semantics_unequal = self.ordering_to_semantics_def(failure_order);
         // Note: OpAtomicCompareExchangeWeak is deprecated, and has the same semantics
@@ -1844,7 +1850,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         assert_ty_eq!(self, dst_pointee_ty, src.ty);
         self.validate_atomic(dst_pointee_ty, dst.def(self));
         // TODO: Default to device scope
-        let memory = self.constant_u32(Scope::Device as u32).def(self);
+        let memory = self
+            .constant_u32(self.span(), Scope::Device as u32)
+            .def(self);
         let semantics = self.ordering_to_semantics_def(order).def(self);
         let mut emit = self.emit();
         use AtomicRmwBinOp::*;
@@ -1938,7 +1946,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn atomic_fence(&mut self, order: AtomicOrdering, _scope: SynchronizationScope) {
         // Ignore sync scope (it only has "single thread" and "cross thread")
         // TODO: Default to device scope
-        let memory = self.constant_u32(Scope::Device as u32).def(self);
+        let memory = self
+            .constant_u32(self.span(), Scope::Device as u32)
+            .def(self);
         let semantics = self.ordering_to_semantics_def(order).def(self);
         self.emit().memory_barrier(memory, semantics).unwrap();
     }

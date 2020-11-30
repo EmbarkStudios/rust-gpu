@@ -95,6 +95,7 @@ fn gather_annotations(annotations: &[Instruction]) -> HashMap<Word, Vec<u32>> {
 fn make_type_key(
     inst: &Instruction,
     unresolved_forward_pointers: &HashSet<Word>,
+    zombies: &HashSet<Word>,
     annotations: &HashMap<Word, Vec<u32>>,
 ) -> Vec<u32> {
     let mut data = vec![];
@@ -120,6 +121,7 @@ fn make_type_key(
         }
     }
     if let Some(id) = inst.result_id {
+        data.push(if zombies.contains(&id) { 1 } else { 0 });
         if let Some(annos) = annotations.get(&id) {
             data.extend_from_slice(annos)
         }
@@ -140,9 +142,13 @@ fn rewrite_inst_with_rules(inst: &mut Instruction, rules: &HashMap<u32, u32>) {
     }
 }
 
-// TODO: Don't merge zombie types with non-zombie types
 pub fn remove_duplicate_types(module: &mut Module) {
     // Keep in mind, this algorithm requires forward type references to not exist - i.e. it's a valid spir-v module.
+
+    // Include zombies in the key to not merge zombies with non-zombies
+    let zombies: HashSet<Word> = super::zombies::collect_zombies(module)
+        .map(|(z, _)| z)
+        .collect();
 
     // When a duplicate type is encountered, then this is a map from the deleted ID, to the new, deduplicated ID.
     let mut rewrite_rules = HashMap::new();
@@ -181,7 +187,7 @@ pub fn remove_duplicate_types(module: &mut Module) {
         // all_inst_iter_mut pass below. However, the code is a lil bit cleaner this way I guess.
         rewrite_inst_with_rules(inst, &rewrite_rules);
 
-        let key = make_type_key(inst, &unresolved_forward_pointers, &annotations);
+        let key = make_type_key(inst, &unresolved_forward_pointers, &zombies, &annotations);
 
         match key_to_result_id.entry(key) {
             hash_map::Entry::Vacant(entry) => {

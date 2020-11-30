@@ -12,7 +12,7 @@ use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::FnAbiExt;
 use rustc_middle::ty::{self, Instance, ParamEnv, TypeFoldable};
 use rustc_span::def_id::DefId;
-use rustc_span::Span;
+use rustc_span::{Span, DUMMY_SP};
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Align, LayoutOf};
 
@@ -60,7 +60,8 @@ impl<'tcx> CodegenCx<'tcx> {
     fn declare_fn_ext(&self, instance: Instance<'tcx>, linkage: Option<LinkageType>) -> SpirvValue {
         let control = attrs_to_spirv(self.tcx.codegen_fn_attrs(instance.def_id()));
         let fn_abi = FnAbi::of_instance(self, instance, &[]);
-        let function_type = fn_abi.spirv_type(self);
+        let span = self.tcx.def_span(instance.def_id());
+        let function_type = fn_abi.spirv_type(span, self);
         let (return_type, argument_types) = match self.lookup_type(function_type) {
             SpirvType::Function {
                 return_type,
@@ -72,8 +73,7 @@ impl<'tcx> CodegenCx<'tcx> {
         if crate::is_blocklisted_fn(self.tcx, &self.sym, instance) {
             // This can happen if we call a blocklisted function in another crate.
             let result = self.undef(function_type);
-            // TODO: Span info here
-            self.zombie_no_span(result.def_cx(self), "called blocklisted fn");
+            self.zombie_with_span(result.def_cx(self), span, "called blocklisted fn");
             return result;
         }
         let mut emit = self.emit_global();
@@ -164,7 +164,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let ty = instance.ty(self.tcx, ParamEnv::reveal_all());
         let sym = self.tcx.symbol_name(instance).name;
         let span = self.tcx.def_span(def_id);
-        let g = self.declare_global(span, self.layout_of(ty).spirv_type(self));
+        let g = self.declare_global(span, self.layout_of(ty).spirv_type(span, self));
         self.instances.borrow_mut().insert(instance, g);
         self.set_linkage(g.def_cx(self), sym.to_string(), LinkageType::Import);
         g
@@ -175,7 +175,7 @@ impl<'tcx> CodegenCx<'tcx> {
             storage_class: StorageClass::Function,
             pointee: ty,
         }
-        .def(self);
+        .def(span, self);
         let result = self
             .emit_global()
             .variable(ptr_ty, None, StorageClass::Function, None)
@@ -196,7 +196,8 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
     ) {
         let instance = Instance::mono(self.tcx, def_id);
         let ty = instance.ty(self.tcx, ParamEnv::reveal_all());
-        let spvty = self.layout_of(ty).spirv_type(self);
+        let span = self.tcx.def_span(def_id);
+        let spvty = self.layout_of(ty).spirv_type(span, self);
         let linkage = match linkage {
             Linkage::External => Some(LinkageType::Export),
             Linkage::Internal => None,
@@ -206,7 +207,6 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             )),
         };
 
-        let span = self.tcx.def_span(def_id);
         let g = self.declare_global(span, spvty);
 
         self.instances.borrow_mut().insert(instance, g);
@@ -238,11 +238,12 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
 impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
-        self.make_constant_pointer(cv)
+        self.make_constant_pointer(DUMMY_SP, cv)
     }
 
     fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
         let g = self.get_static(def_id);
+        let span = self.tcx.def_span(def_id);
 
         let alloc = match self.tcx.eval_static_initializer(def_id) {
             Ok(alloc) => alloc,
@@ -265,7 +266,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
                 SpirvConst::Bool(_, true) => 0,
                 _ => bug!(),
             };
-            v = self.constant_u8(val_int);
+            v = self.constant_u8(span, val_int);
         }
 
         assert_ty_eq!(self, value_ty, v.ty);

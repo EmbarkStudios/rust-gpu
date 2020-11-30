@@ -35,23 +35,23 @@ impl<'tcx> LayoutOf for CodegenCx<'tcx> {
 
 impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
-        layout.spirv_type(self)
+        layout.spirv_type(DUMMY_SP, self)
     }
 
     fn cast_backend_type(&self, ty: &CastTarget) -> Self::Type {
-        ty.spirv_type(self)
+        ty.spirv_type(DUMMY_SP, self)
     }
 
     fn fn_ptr_backend_type(&self, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Type {
-        fn_abi.spirv_type(self)
+        fn_abi.spirv_type(DUMMY_SP, self)
     }
 
     fn reg_backend_type(&self, ty: &Reg) -> Self::Type {
-        ty.spirv_type(self)
+        ty.spirv_type(DUMMY_SP, self)
     }
 
     fn immediate_backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {
-        layout.spirv_type_immediate(self)
+        layout.spirv_type_immediate(DUMMY_SP, self)
     }
 
     fn is_backend_immediate(&self, layout: TyAndLayout<'tcx>) -> bool {
@@ -92,46 +92,46 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
         index: usize,
         immediate: bool,
     ) -> Self::Type {
-        crate::abi::scalar_pair_element_backend_type(self, layout, index, immediate)
+        crate::abi::scalar_pair_element_backend_type(self, DUMMY_SP, layout, index, immediate)
     }
 }
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn type_usize(&self) -> Word {
         let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
-        SpirvType::Integer(ptr_size, false).def(self)
+        SpirvType::Integer(ptr_size, false).def(DUMMY_SP, self)
     }
 }
 
 impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn type_i1(&self) -> Self::Type {
-        SpirvType::Bool.def(self)
+        SpirvType::Bool.def(DUMMY_SP, self)
     }
     fn type_i8(&self) -> Self::Type {
-        SpirvType::Integer(8, false).def(self)
+        SpirvType::Integer(8, false).def(DUMMY_SP, self)
     }
     fn type_i16(&self) -> Self::Type {
-        SpirvType::Integer(16, false).def(self)
+        SpirvType::Integer(16, false).def(DUMMY_SP, self)
     }
     fn type_i32(&self) -> Self::Type {
-        SpirvType::Integer(32, false).def(self)
+        SpirvType::Integer(32, false).def(DUMMY_SP, self)
     }
     fn type_i64(&self) -> Self::Type {
-        SpirvType::Integer(64, false).def(self)
+        SpirvType::Integer(64, false).def(DUMMY_SP, self)
     }
     fn type_i128(&self) -> Self::Type {
-        SpirvType::Integer(128, false).def(self)
+        SpirvType::Integer(128, false).def(DUMMY_SP, self)
     }
     fn type_isize(&self) -> Self::Type {
         let ptr_size = self.tcx.data_layout.pointer_size.bits() as u32;
-        SpirvType::Integer(ptr_size, false).def(self)
+        SpirvType::Integer(ptr_size, false).def(DUMMY_SP, self)
     }
 
     fn type_f32(&self) -> Self::Type {
-        SpirvType::Float(32).def(self)
+        SpirvType::Float(32).def(DUMMY_SP, self)
     }
     fn type_f64(&self) -> Self::Type {
-        SpirvType::Float(64).def(self)
+        SpirvType::Float(64).def(DUMMY_SP, self)
     }
 
     fn type_func(&self, args: &[Self::Type], ret: Self::Type) -> Self::Type {
@@ -139,7 +139,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             return_type: ret,
             arguments: args.to_vec(),
         }
-        .def(self)
+        .def(DUMMY_SP, self)
     }
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
         let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, els);
@@ -152,7 +152,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             field_names: None,
             is_block: false,
         }
-        .def(self)
+        .def(DUMMY_SP, self)
     }
     fn type_kind(&self, ty: Self::Type) -> TypeKind {
         match self.lookup_type(ty) {
@@ -184,14 +184,14 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             storage_class: StorageClass::Function,
             pointee: ty,
         }
-        .def(self)
+        .def(DUMMY_SP, self)
     }
     fn type_ptr_to_ext(&self, ty: Self::Type, _address_space: AddressSpace) -> Self::Type {
         SpirvType::Pointer {
             storage_class: StorageClass::Function,
             pointee: ty,
         }
-        .def(self)
+        .def(DUMMY_SP, self)
     }
     fn element_type(&self, ty: Self::Type) -> Self::Type {
         match self.lookup_type(ty) {

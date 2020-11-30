@@ -7,22 +7,18 @@ use std::collections::HashMap;
 use std::env;
 use std::iter::once;
 
-fn collect_zombies(module: &Module) -> Vec<(Word, String)> {
-    module
-        .annotations
-        .iter()
-        .filter_map(|inst| {
-            // TODO: Temp hack. We hijack UserTypeGOOGLE right now, since the compiler never emits this.
-            if inst.class.opcode == Op::DecorateString
-                && inst.operands[1].unwrap_decoration() == Decoration::UserTypeGOOGLE
-            {
-                let id = inst.operands[0].unwrap_id_ref();
-                let reason = inst.operands[2].unwrap_literal_string();
-                return Some((id, reason.to_string()));
-            }
-            None
-        })
-        .collect()
+pub fn collect_zombies(module: &Module) -> impl Iterator<Item = (Word, String)> + '_ {
+    module.annotations.iter().filter_map(|inst| {
+        // TODO: Temp hack. We hijack UserTypeGOOGLE right now, since the compiler never emits this.
+        if inst.class.opcode == Op::DecorateString
+            && inst.operands[1].unwrap_decoration() == Decoration::UserTypeGOOGLE
+        {
+            let id = inst.operands[0].unwrap_id_ref();
+            let reason = inst.operands[2].unwrap_literal_string();
+            return Some((id, reason.to_string()));
+        }
+        None
+    })
 }
 
 fn remove_zombie_annotations(module: &mut Module) {
@@ -161,7 +157,7 @@ fn report_error_zombies(sess: &Session, module: &Module, zombie: &HashMap<Word, 
 }
 
 pub fn remove_zombies(sess: &Session, module: &mut Module) {
-    let zombies_owned = collect_zombies(module);
+    let zombies_owned = collect_zombies(module).collect::<Vec<_>>();
     let mut zombies = zombies_owned
         .iter()
         .map(|(a, b)| (*a, ZombieInfo::from_reason(b)))

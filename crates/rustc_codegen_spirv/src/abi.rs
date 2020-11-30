@@ -8,6 +8,7 @@ use rspirv::spirv::{StorageClass, Word};
 use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind, TypeAndMut};
+use rustc_span::Span;
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{
     Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, TagEncoding, Variants,
@@ -64,6 +65,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
     fn end(
         &self,
         cx: &CodegenCx<'tcx>,
+        span: Span,
         pointee: PointeeTy<'tcx>,
         storage_class: StorageClass,
         pointee_spv: Word,
@@ -80,7 +82,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                         storage_class,
                         pointee: pointee_spv,
                     }
-                    .def(cx);
+                    .def(span, cx);
                     entry.insert(PointeeDefState::Defined(id));
                     id
                 }
@@ -92,7 +94,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                         storage_class,
                         pointee: pointee_spv,
                     }
-                    .def_with_id(cx, id)
+                    .def_with_id(cx, span, id)
                 }
                 PointeeDefState::Defined(_) => {
                     bug!("RecursivePointeeCache::end defined pointer twice")
@@ -126,48 +128,48 @@ enum PointeeDefState {
 /// Various type-like things can be converted to a spirv type - normal types, function types, etc. - and this trait
 /// provides a uniform way of translating them.
 pub trait ConvSpirvType<'tcx> {
-    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word;
+    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word;
     /// spirv (and llvm) do not allow storing booleans in memory, they are abstract unsized values.
     /// So, if we're dealing with a "memory type", convert bool to u8. The opposite is an
     /// "immediate type", which keeps bools as bools. See also the functions `from_immediate` and
     /// `to_immediate`, which convert between the two.
-    fn spirv_type_immediate(&self, cx: &CodegenCx<'tcx>) -> Word {
-        self.spirv_type(cx)
+    fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
+        self.spirv_type(span, cx)
     }
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
-    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
+    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
         match *self {
-            PointeeTy::Ty(ty) => ty.spirv_type(cx),
-            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type(cx),
+            PointeeTy::Ty(ty) => ty.spirv_type(span, cx),
+            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type(span, cx),
         }
     }
-    fn spirv_type_immediate(&self, cx: &CodegenCx<'tcx>) -> Word {
+    fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
         match *self {
-            PointeeTy::Ty(ty) => ty.spirv_type_immediate(cx),
-            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type_immediate(cx),
+            PointeeTy::Ty(ty) => ty.spirv_type_immediate(span, cx),
+            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type_immediate(span, cx),
         }
     }
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for Reg {
-    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
+    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
         match self.kind {
-            RegKind::Integer => SpirvType::Integer(self.size.bits() as u32, false).def(cx),
-            RegKind::Float => SpirvType::Float(self.size.bits() as u32).def(cx),
+            RegKind::Integer => SpirvType::Integer(self.size.bits() as u32, false).def(span, cx),
+            RegKind::Float => SpirvType::Float(self.size.bits() as u32).def(span, cx),
             RegKind::Vector => SpirvType::Vector {
-                element: SpirvType::Integer(8, false).def(cx),
+                element: SpirvType::Integer(8, false).def(span, cx),
                 count: self.size.bytes() as u32,
             }
-            .def(cx),
+            .def(span, cx),
         }
     }
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
-    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
-        let rest_ll_unit = self.rest.unit.spirv_type(cx);
+    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
+        let rest_ll_unit = self.rest.unit.spirv_type(span, cx);
         let (rest_count, rem_bytes) = if self.rest.unit.size.bytes() == 0 {
             (0, 0)
         } else {
@@ -187,9 +189,9 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
             if rem_bytes == 0 {
                 return SpirvType::Array {
                     element: rest_ll_unit,
-                    count: cx.constant_u32(rest_count as u32),
+                    count: cx.constant_u32(span, rest_count as u32),
                 }
-                .def(cx);
+                .def(span, cx);
             }
         }
 
@@ -203,7 +205,7 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
                     kind,
                     size: self.prefix_chunk_size,
                 }
-                .spirv_type(cx)
+                .spirv_type(span, cx)
             })
             .chain((0..rest_count).map(|_| rest_ll_unit))
             .collect();
@@ -212,7 +214,7 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
         if rem_bytes != 0 {
             // Only integers can be really split further.
             assert_eq!(self.rest.unit.kind, RegKind::Integer);
-            args.push(SpirvType::Integer(rem_bytes as u32 * 8, false).def(cx));
+            args.push(SpirvType::Integer(rem_bytes as u32 * 8, false).def(span, cx));
         }
 
         let size = Some(self.size(cx));
@@ -229,60 +231,70 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
             field_names: None,
             is_block: false,
         }
-        .def(cx)
+        .def(span, cx)
     }
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
-    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
+    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
         let mut argument_types = Vec::new();
 
         let return_type = match self.ret.mode {
-            PassMode::Ignore => SpirvType::Void.def(cx),
-            PassMode::Direct(_) | PassMode::Pair(..) => self.ret.layout.spirv_type_immediate(cx),
-            PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
+            PassMode::Ignore => SpirvType::Void.def(span, cx),
+            PassMode::Direct(_) | PassMode::Pair(..) => {
+                self.ret.layout.spirv_type_immediate(span, cx)
+            }
+            PassMode::Cast(cast_target) => cast_target.spirv_type(span, cx),
             PassMode::Indirect { .. } => {
-                let pointee = self.ret.layout.spirv_type(cx);
+                let pointee = self.ret.layout.spirv_type(span, cx);
                 let pointer = SpirvType::Pointer {
                     storage_class: StorageClass::Function,
                     pointee,
                 }
-                .def(cx);
+                .def(span, cx);
                 // Important: the return pointer comes *first*, not last.
                 argument_types.push(pointer);
-                SpirvType::Void.def(cx)
+                SpirvType::Void.def(span, cx)
             }
         };
 
         for arg in &self.args {
             let arg_type = match arg.mode {
                 PassMode::Ignore => continue,
-                PassMode::Direct(_) => arg.layout.spirv_type_immediate(cx),
+                PassMode::Direct(_) => arg.layout.spirv_type_immediate(span, cx),
                 PassMode::Pair(_, _) => {
-                    argument_types.push(scalar_pair_element_backend_type(cx, arg.layout, 0, true));
-                    argument_types.push(scalar_pair_element_backend_type(cx, arg.layout, 1, true));
+                    argument_types.push(scalar_pair_element_backend_type(
+                        cx, span, arg.layout, 0, true,
+                    ));
+                    argument_types.push(scalar_pair_element_backend_type(
+                        cx, span, arg.layout, 1, true,
+                    ));
                     continue;
                 }
-                PassMode::Cast(cast_target) => cast_target.spirv_type(cx),
+                PassMode::Cast(cast_target) => cast_target.spirv_type(span, cx),
                 PassMode::Indirect {
                     extra_attrs: Some(_),
                     ..
                 } => {
                     let ptr_ty = cx.tcx.mk_mut_ptr(arg.layout.ty);
                     let ptr_layout = cx.layout_of(ptr_ty);
-                    argument_types.push(scalar_pair_element_backend_type(cx, ptr_layout, 0, true));
-                    argument_types.push(scalar_pair_element_backend_type(cx, ptr_layout, 1, true));
+                    argument_types.push(scalar_pair_element_backend_type(
+                        cx, span, ptr_layout, 0, true,
+                    ));
+                    argument_types.push(scalar_pair_element_backend_type(
+                        cx, span, ptr_layout, 1, true,
+                    ));
                     continue;
                 }
                 PassMode::Indirect {
                     extra_attrs: None, ..
                 } => {
-                    let pointee = arg.layout.spirv_type(cx);
+                    let pointee = arg.layout.spirv_type(span, cx);
                     SpirvType::Pointer {
                         storage_class: StorageClass::Function,
                         pointee,
                     }
-                    .def(cx)
+                    .def(span, cx)
                 }
             };
             argument_types.push(arg_type);
@@ -292,23 +304,28 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
             return_type,
             arguments: argument_types,
         }
-        .def(cx)
+        .def(span, cx)
     }
 }
 
 impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
-    fn spirv_type(&self, cx: &CodegenCx<'tcx>) -> Word {
-        trans_type_impl(cx, *self, false)
+    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
+        trans_type_impl(cx, span, *self, false)
     }
-    fn spirv_type_immediate(&self, cx: &CodegenCx<'tcx>) -> Word {
-        trans_type_impl(cx, *self, true)
+    fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
+        trans_type_impl(cx, span, *self, true)
     }
 }
 
-fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immediate: bool) -> Word {
+fn trans_type_impl<'tcx>(
+    cx: &CodegenCx<'tcx>,
+    span: Span,
+    ty: TyAndLayout<'tcx>,
+    is_immediate: bool,
+) -> Word {
     if let TyKind::Adt(adt, _) = *ty.ty.kind() {
         for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
-            if let Some(image) = trans_image(cx, ty, attr) {
+            if let Some(image) = trans_image(cx, span, ty, attr) {
                 return image;
             }
         }
@@ -326,12 +343,12 @@ fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immedia
             field_names: None,
             is_block: false,
         }
-        .def(cx),
-        Abi::Scalar(ref scalar) => trans_scalar(cx, ty, scalar, None, is_immediate),
+        .def(span, cx),
+        Abi::Scalar(ref scalar) => trans_scalar(cx, span, ty, scalar, None, is_immediate),
         Abi::ScalarPair(ref one, ref two) => {
             // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
-            let one_spirv = trans_scalar(cx, ty, one, Some(0), false);
-            let two_spirv = trans_scalar(cx, ty, two, Some(1), false);
+            let one_spirv = trans_scalar(cx, span, ty, one, Some(0), false);
+            let two_spirv = trans_scalar(cx, span, ty, two, Some(1), false);
             // Note: We can't use auto_struct_layout here because the spirv types here might be undefined due to
             // recursive pointer types.
             let one_offset = Size::ZERO;
@@ -346,17 +363,17 @@ fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immedia
                 field_names: None,
                 is_block: false,
             }
-            .def(cx)
+            .def(span, cx)
         }
         Abi::Vector { ref element, count } => {
-            let elem_spirv = trans_scalar(cx, ty, element, None, is_immediate);
+            let elem_spirv = trans_scalar(cx, span, ty, element, None, is_immediate);
             SpirvType::Vector {
                 element: elem_spirv,
                 count: count as u32,
             }
-            .def(cx)
+            .def(span, cx)
         }
-        Abi::Aggregate { sized: _ } => trans_aggregate(cx, ty),
+        Abi::Aggregate { sized: _ } => trans_aggregate(cx, span, ty),
     }
 }
 
@@ -364,6 +381,7 @@ fn trans_type_impl<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>, is_immedia
 /// doing before calling this.
 pub fn scalar_pair_element_backend_type<'tcx>(
     cx: &CodegenCx<'tcx>,
+    span: Span,
     ty: TyAndLayout<'tcx>,
     index: usize,
     is_immediate: bool,
@@ -372,7 +390,7 @@ pub fn scalar_pair_element_backend_type<'tcx>(
         Abi::ScalarPair(a, b) => [a, b][index],
         other => bug!("scalar_pair_element_backend_type invalid abi: {:?}", other),
     };
-    trans_scalar(cx, ty, scalar, Some(index), is_immediate)
+    trans_scalar(cx, span, ty, scalar, Some(index), is_immediate)
 }
 
 /// A "scalar" is a basic building block: bools, ints, floats, pointers. (i.e. not something complex like a struct)
@@ -384,13 +402,14 @@ pub fn scalar_pair_element_backend_type<'tcx>(
 /// lead and doing what they want makes things go smoothly, so we'll implement it here too.
 fn trans_scalar<'tcx>(
     cx: &CodegenCx<'tcx>,
+    span: Span,
     ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
     index: Option<usize>,
     is_immediate: bool,
 ) -> Word {
     if is_immediate && scalar.is_bool() {
-        return SpirvType::Bool.def(cx);
+        return SpirvType::Bool.def(span, cx);
     }
 
     match scalar.value {
@@ -398,10 +417,10 @@ fn trans_scalar<'tcx>(
             if cx.kernel_mode {
                 signedness = false;
             }
-            SpirvType::Integer(width.size().bits() as u32, signedness).def(cx)
+            SpirvType::Integer(width.size().bits() as u32, signedness).def(span, cx)
         }
-        Primitive::F32 => SpirvType::Float(32).def(cx),
-        Primitive::F64 => SpirvType::Float(64).def(cx),
+        Primitive::F32 => SpirvType::Float(32).def(span, cx),
+        Primitive::F64 => SpirvType::Float(64).def(span, cx),
         Primitive::Pointer => {
             let (storage_class, pointee_ty) = dig_scalar_pointee(cx, ty, index);
             // Default to function storage class.
@@ -415,10 +434,14 @@ fn trans_scalar<'tcx>(
             {
                 predefined_result
             } else {
-                let pointee = pointee_ty.spirv_type(cx);
-                cx.type_cache
-                    .recursive_pointee_cache
-                    .end(cx, pointee_ty, storage_class, pointee)
+                let pointee = pointee_ty.spirv_type(span, cx);
+                cx.type_cache.recursive_pointee_cache.end(
+                    cx,
+                    span,
+                    pointee_ty,
+                    storage_class,
+                    pointee,
+                )
             }
         }
     }
@@ -576,7 +599,7 @@ fn get_is_block_decorated<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> 
     false
 }
 
-fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
     match ty.fields {
         FieldsShape::Primitive => cx.tcx.sess.fatal(&format!(
             "FieldsShape::Primitive not supported yet in trans_type: {:?}",
@@ -585,16 +608,16 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
         FieldsShape::Union(_) => {
             assert_ne!(ty.size.bytes(), 0, "{:#?}", ty);
             assert!(!ty.is_unsized(), "{:#?}", ty);
-            let byte = SpirvType::Integer(8, false).def(cx);
-            let count = cx.constant_u32(ty.size.bytes() as u32);
+            let byte = SpirvType::Integer(8, false).def(span, cx);
+            let count = cx.constant_u32(span, ty.size.bytes() as u32);
             SpirvType::Array {
                 element: byte,
                 count,
             }
-            .def(cx)
+            .def(span, cx)
         }
         FieldsShape::Array { stride, count } => {
-            let element_type = trans_type_impl(cx, ty.field(cx, 0), false);
+            let element_type = trans_type_impl(cx, span, ty.field(cx, 0), false);
             if ty.is_unsized() {
                 // There's a potential for this array to be sized, but the element to be unsized, e.g. `[[u8]; 5]`.
                 // However, I think rust disallows all these cases, so assert this here.
@@ -602,7 +625,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
                 SpirvType::RuntimeArray {
                     element: element_type,
                 }
-                .def(cx)
+                .def(span, cx)
             } else if count == 0 {
                 // spir-v doesn't support zero-sized arrays
                 SpirvType::Adt {
@@ -614,9 +637,9 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
                     field_names: None,
                     is_block: false,
                 }
-                .def(cx)
+                .def(span, cx)
             } else {
-                let count_const = cx.constant_u32(count as u32);
+                let count_const = cx.constant_u32(span, count as u32);
                 let element_spv = cx.lookup_type(element_type);
                 let stride_spv = element_spv
                     .sizeof(cx)
@@ -627,13 +650,13 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
                     element: element_type,
                     count: count_const,
                 }
-                .def(cx)
+                .def(span, cx)
             }
         }
         FieldsShape::Arbitrary {
             offsets: _,
             memory_index: _,
-        } => trans_struct(cx, ty),
+        } => trans_struct(cx, span, ty),
     }
 }
 
@@ -663,7 +686,7 @@ pub fn auto_struct_layout<'tcx>(
 }
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
-fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
+fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
     let name = name_of_struct(ty);
     if let TyKind::Foreign(_) = ty.ty.kind() {
         // "An unsized FFI type that is opaque to Rust", `extern type A;` (currently unstable)
@@ -673,7 +696,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
             return SpirvType::Opaque {
                 name: "".to_string(),
             }
-            .def(cx);
+            .def(span, cx);
         }
         // otherwise fall back
     };
@@ -684,7 +707,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
     let mut field_names = Vec::new();
     for i in ty.fields.index_by_increasing_offset() {
         let field_ty = ty.field(cx, i);
-        field_types.push(trans_type_impl(cx, field_ty, false));
+        field_types.push(trans_type_impl(cx, span, field_ty, false));
         let offset = ty.fields.offset(i);
         field_offsets.push(offset);
         if let Variants::Single { index } = ty.variants {
@@ -716,7 +739,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
         field_names: Some(field_names),
         is_block,
     }
-    .def(cx)
+    .def(span, cx)
 }
 
 fn name_of_struct(ty: TyAndLayout<'_>) -> String {
@@ -735,6 +758,7 @@ fn name_of_struct(ty: TyAndLayout<'_>) -> String {
 
 fn trans_image<'tcx>(
     cx: &CodegenCx<'tcx>,
+    span: Span,
     ty: TyAndLayout<'tcx>,
     attr: SpirvAttribute,
 ) -> Option<Word> {
@@ -754,7 +778,7 @@ fn trans_image<'tcx>(
                 return None;
             }
             // Hardcode to float for now
-            let sampled_type = SpirvType::Float(32).def(cx);
+            let sampled_type = SpirvType::Float(32).def(span, cx);
             let ty = SpirvType::Image {
                 sampled_type,
                 dim,
@@ -765,7 +789,7 @@ fn trans_image<'tcx>(
                 image_format,
                 access_qualifier,
             };
-            Some(ty.def(cx))
+            Some(ty.def(span, cx))
         }
         SpirvAttribute::Sampler => {
             // see SpirvType::sizeof
@@ -773,7 +797,7 @@ fn trans_image<'tcx>(
                 cx.tcx.sess.err("#[spirv(sampler)] type must have size 4");
                 return None;
             }
-            Some(SpirvType::Sampler.def(cx))
+            Some(SpirvType::Sampler.def(span, cx))
         }
         _ => None,
     }
