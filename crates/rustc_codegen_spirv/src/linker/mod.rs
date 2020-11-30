@@ -7,6 +7,7 @@ mod duplicates;
 mod import_export_link;
 mod inline;
 mod mem2reg;
+mod new_structurizer;
 mod simple_passes;
 mod structurizer;
 mod zombies;
@@ -26,6 +27,7 @@ pub struct Options {
     pub inline: bool,
     pub mem2reg: bool,
     pub structurize: bool,
+    pub use_new_structurizer: bool,
 }
 
 fn id(header: &mut ModuleHeader) -> Word {
@@ -136,7 +138,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
 
     let mut output = if opts.structurize {
         let _timer = sess.timer("link_structurize");
-        structurizer::structurize(sess, output)
+        if opts.use_new_structurizer {
+            new_structurizer::structurize(output)
+        } else {
+            structurizer::structurize(sess, output)
+        }
     } else {
         output
     };

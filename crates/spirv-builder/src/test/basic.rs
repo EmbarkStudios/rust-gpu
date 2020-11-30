@@ -97,11 +97,7 @@ OpFunctionEnd"#,
     );
 }
 
-// TODO: While the "checked sub is not implemented yet" issue is fixed and so this repro should be
-// fixed, a further underlying issue gets triggered instead, which is that the current structurizer
-// doesn't handle this case. Remove `#[ignore]` once fixed.
 #[test]
-#[ignore]
 fn logical_and() {
     val(r#"
 fn f(x: bool, y: bool) -> bool {

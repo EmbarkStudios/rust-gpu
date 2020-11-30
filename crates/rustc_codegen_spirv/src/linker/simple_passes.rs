@@ -44,8 +44,18 @@ pub fn block_ordering_pass(func: &mut Function) {
             .iter()
             .find(|b| b.label_id().unwrap() == current)
             .unwrap();
+        let mut edges = outgoing_edges(current_block);
+        // HACK(eddyb) treat `OpSelectionMerge` as an edge, in case it points
+        // to an otherwise-unreachable block.
+        if let Some(before_last_idx) = current_block.instructions.len().checked_sub(2) {
+            if let Some(before_last) = current_block.instructions.get(before_last_idx) {
+                if before_last.class.opcode == Op::SelectionMerge {
+                    edges.push(before_last.operands[0].unwrap_id_ref());
+                }
+            }
+        }
         // Reverse the order, so reverse-postorder keeps things tidy
-        for &outgoing in outgoing_edges(current_block).iter().rev() {
+        for &outgoing in edges.iter().rev() {
             visit_postorder(func, visited, postorder, outgoing);
         }
         postorder.push(current);
@@ -70,6 +80,7 @@ pub fn block_ordering_pass(func: &mut Function) {
     assert_eq!(func.blocks[0].label_id().unwrap(), entry_label);
 }
 
+// FIXME(eddyb) use `Either`, `Cow`, and/or `SmallVec`.
 pub fn outgoing_edges(block: &Block) -> Vec<Word> {
     let terminator = block.instructions.last().unwrap();
     // https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#Termination

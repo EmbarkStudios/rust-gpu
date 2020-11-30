@@ -408,6 +408,7 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: boo
         inline: legalize,
         mem2reg: legalize,
         structurize: env::var("NO_STRUCTURIZE").is_err(),
+        use_new_structurizer: env::var("OLD_STRUCTURIZER").is_err(),
     };
 
     let link_result = linker::link(sess, modules, &options);
