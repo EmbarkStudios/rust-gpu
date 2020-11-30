@@ -39,6 +39,7 @@ fn find_import_export_pairs_and_killed_params(
             return Err(ErrorReported);
         }
     }
+    let mut has_err = false;
     // Then, collect all the imports, and create the rewrite rules.
     for annotation in &module.annotations {
         let (import_id, name) = match get_linkage_inst(annotation) {
@@ -48,7 +49,8 @@ fn find_import_export_pairs_and_killed_params(
         let (export_id, export_type) = match exports.get(name) {
             None => {
                 sess.err(&format!("Unresolved symbol {:?}", name));
-                return Err(ErrorReported);
+                has_err = true;
+                continue;
             }
             Some(&x) => x,
         };
@@ -61,6 +63,9 @@ fn find_import_export_pairs_and_killed_params(
                 killed_parameters.insert(param);
             }
         }
+    }
+    if has_err {
+        return Err(ErrorReported);
     }
 
     Ok((rewrite_rules, killed_parameters))
