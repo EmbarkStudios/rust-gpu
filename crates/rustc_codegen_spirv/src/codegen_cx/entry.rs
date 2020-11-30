@@ -6,6 +6,7 @@ use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_hir::{Param, PatKind};
 use rustc_middle::ty::{Instance, Ty};
+use rustc_span::Span;
 use rustc_target::abi::call::{FnAbi, PassMode};
 use std::collections::HashMap;
 
@@ -56,7 +57,13 @@ impl<'tcx> CodegenCx<'tcx> {
         let fn_id = if execution_model == ExecutionModel::Kernel {
             self.kernel_entry_stub(entry_func, name, execution_model)
         } else {
-            self.shader_entry_stub(entry_func, body.params, name, execution_model)
+            self.shader_entry_stub(
+                self.tcx.def_span(instance.def_id()),
+                entry_func,
+                body.params,
+                name,
+                execution_model,
+            )
         };
         let mut emit = self.emit_global();
         entry
@@ -69,17 +76,18 @@ impl<'tcx> CodegenCx<'tcx> {
 
     fn shader_entry_stub(
         &self,
+        span: Span,
         entry_func: SpirvValue,
         hir_params: &[Param<'tcx>],
         name: String,
         execution_model: ExecutionModel,
     ) -> Word {
-        let void = SpirvType::Void.def(self);
+        let void = SpirvType::Void.def(span, self);
         let fn_void_void = SpirvType::Function {
             return_type: void,
             arguments: vec![],
         }
-        .def(self);
+        .def(span, self);
         let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
             SpirvType::Function {
                 return_type,

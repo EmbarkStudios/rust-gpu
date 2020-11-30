@@ -6,6 +6,7 @@ use rspirv::dr::Operand;
 use rspirv::spirv::{
     AccessQualifier, Capability, Decoration, Dim, ImageFormat, StorageClass, Word,
 };
+use rustc_span::Span;
 use rustc_target::abi::{Align, Size};
 use std::cell::RefCell;
 use std::fmt;
@@ -74,7 +75,7 @@ pub enum SpirvType {
 impl SpirvType {
     /// Note: `Builder::type_*` should be called *nowhere else* but here, to ensure
     /// `CodegenCx::type_defs` stays up-to-date
-    pub fn def(self, cx: &CodegenCx<'_>) -> Word {
+    pub fn def(self, def_span: Span, cx: &CodegenCx<'_>) -> Word {
         if let Some(cached) = cx.type_cache.get(&self) {
             return cached;
         }
@@ -87,16 +88,16 @@ impl SpirvType {
                     .type_int(width, if signedness { 1 } else { 0 });
                 match width {
                     8 if !cx.builder.has_capability(Capability::Int8) => {
-                        cx.zombie_no_span(result, "u8 without OpCapability Int8")
+                        cx.zombie_with_span(result, def_span, "u8 without OpCapability Int8")
                     }
                     16 if !cx.builder.has_capability(Capability::Int16) => {
-                        cx.zombie_no_span(result, "u16 without OpCapability Int16")
+                        cx.zombie_with_span(result, def_span, "u16 without OpCapability Int16")
                     }
                     64 if !cx.builder.has_capability(Capability::Int64) => {
-                        cx.zombie_no_span(result, "u64 without OpCapability Int64")
+                        cx.zombie_with_span(result, def_span, "u64 without OpCapability Int64")
                     }
                     8 | 16 | 32 | 64 => (),
-                    128 => cx.zombie_no_span(result, "u128"),
+                    128 => cx.zombie_with_span(result, def_span, "u128"),
                     other => cx
                         .tcx
                         .sess
@@ -108,7 +109,7 @@ impl SpirvType {
                 let result = cx.emit_global().type_float(width);
                 match width {
                     64 if !cx.builder.has_capability(Capability::Float64) => {
-                        cx.zombie_no_span(result, "f64 without OpCapability Float64")
+                        cx.zombie_with_span(result, def_span, "f64 without OpCapability Float64")
                     }
                     32 | 64 => (),
                     other => cx
@@ -175,7 +176,7 @@ impl SpirvType {
             Self::RuntimeArray { element } => {
                 let result = cx.emit_global().type_runtime_array(element);
                 if cx.kernel_mode {
-                    cx.zombie_no_span(result, "RuntimeArray in kernel mode");
+                    cx.zombie_with_span(result, def_span, "RuntimeArray in kernel mode");
                 }
                 result
             }
@@ -183,12 +184,12 @@ impl SpirvType {
                 storage_class,
                 pointee,
             } => {
-                let result = cx.emit_global().type_pointer(None, storage_class, pointee);
-                // no pointers to functions
-                if let Self::Function { .. } = cx.lookup_type(pointee) {
-                    cx.zombie_even_in_user_code(result, "pointer to function")
-                }
-                result
+                // Note: pointers to functions are always illegal in SPIR-V. However, the type of a
+                // pointer to a function is sometimes used in e.g. get_fn_addr, which creates a
+                // `SpirvValueKind::ConstantPointer`. So, pointers to functions are made illegal by
+                // the fact it's impossible to create a pointer to function *value*, so the type
+                // existing is fine.
+                cx.emit_global().type_pointer(None, storage_class, pointee)
             }
             Self::Function {
                 return_type,
@@ -223,7 +224,7 @@ impl SpirvType {
 
     /// `def_with_id` is used by the `RecursivePointeeCache` to handle `OpTypeForwardPointer`: when
     /// emitting the subsequent `OpTypePointer`, the ID is already known and must be re-used.
-    pub fn def_with_id(self, cx: &CodegenCx<'_>, id: Word) -> Word {
+    pub fn def_with_id(self, cx: &CodegenCx<'_>, _def_span: Span, id: Word) -> Word {
         if let Some(cached) = cx.type_cache.get(&self) {
             assert_eq!(cached, id);
             return cached;
@@ -232,16 +233,9 @@ impl SpirvType {
             Self::Pointer {
                 storage_class,
                 pointee,
-            } => {
-                let result = cx
-                    .emit_global()
-                    .type_pointer(Some(id), storage_class, pointee);
-                // no pointers to functions
-                if let Self::Function { .. } = cx.lookup_type(pointee) {
-                    cx.zombie_even_in_user_code(result, "pointer to function")
-                }
-                result
-            }
+            } => cx
+                .emit_global()
+                .type_pointer(Some(id), storage_class, pointee),
             ref other => cx
                 .tcx
                 .sess

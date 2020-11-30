@@ -160,14 +160,16 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
     fn insert_inst(&mut self, id_map: &mut HashMap<&str, Word>, inst: dr::Instruction) {
         // Types declared must be registered in our type system.
         let new_result_id = match inst.class.opcode {
-            Op::TypeVoid => SpirvType::Void.def(self),
-            Op::TypeBool => SpirvType::Bool.def(self),
+            Op::TypeVoid => SpirvType::Void.def(self.span(), self),
+            Op::TypeBool => SpirvType::Bool.def(self.span(), self),
             Op::TypeInt => SpirvType::Integer(
                 inst.operands[0].unwrap_literal_int32(),
                 inst.operands[1].unwrap_literal_int32() != 0,
             )
-            .def(self),
-            Op::TypeFloat => SpirvType::Float(inst.operands[0].unwrap_literal_int32()).def(self),
+            .def(self.span(), self),
+            Op::TypeFloat => {
+                SpirvType::Float(inst.operands[0].unwrap_literal_int32()).def(self.span(), self)
+            }
             Op::TypeStruct => {
                 self.err("OpTypeStruct in asm! is not supported yet");
                 return;
@@ -175,12 +177,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Op::TypeOpaque => SpirvType::Opaque {
                 name: inst.operands[0].unwrap_literal_string().to_string(),
             }
-            .def(self),
+            .def(self.span(), self),
             Op::TypeVector => SpirvType::Vector {
                 element: inst.operands[0].unwrap_id_ref(),
                 count: inst.operands[0].unwrap_literal_int32(),
             }
-            .def(self),
+            .def(self.span(), self),
             Op::TypeArray => {
                 self.err("OpTypeArray in asm! is not supported yet");
                 return;

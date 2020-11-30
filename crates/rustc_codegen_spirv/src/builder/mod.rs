@@ -5,6 +5,7 @@ pub mod libm_intrinsics;
 mod spirv_asm;
 
 pub use ext_inst::ExtInst;
+use rustc_span::DUMMY_SP;
 pub use spirv_asm::InstructionTable;
 
 use crate::abi::ConvSpirvType;
@@ -88,6 +89,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
+    pub fn span(&self) -> Span {
+        self.current_span.unwrap_or(DUMMY_SP)
+    }
+
     pub fn gep_help(
         &self,
         ptr: SpirvValue,
@@ -123,7 +128,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             storage_class,
             pointee: result_pointee_type,
         }
-        .def(self);
+        .def(self.span(), self);
         if self.builder.lookup_const_u64(indices[0]) == Some(0) {
             if is_inbounds {
                 self.emit()
@@ -185,7 +190,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let int_size = self.constant_int(shift.ty, width as u64);
         let mask = self.constant_int(shift.ty, (width - 1) as u64);
         let zero = self.constant_int(shift.ty, 0);
-        let bool = SpirvType::Bool.def(self);
+        let bool = SpirvType::Bool.def(self.span(), self);
         // https://stackoverflow.com/a/10134877
         let mask_shift = self.and(shift, mask);
         let sub = self.sub(int_size, mask_shift);
@@ -324,12 +329,12 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
         } else if arg_abi.is_unsized_indirect() {
             self.fatal("unsized `ArgAbi` must be handled through `store_fn_arg`");
         } else if let PassMode::Cast(cast) = arg_abi.mode {
-            let cast_ty = cast.spirv_type(self);
+            let cast_ty = cast.spirv_type(self.span(), self);
             let cast_ptr_ty = SpirvType::Pointer {
                 storage_class: StorageClass::Function,
                 pointee: cast_ty,
             }
-            .def(self);
+            .def(self.span(), self);
             let cast_dst = self.pointercast(dst.llval, cast_ptr_ty);
             self.store(val, cast_dst, arg_abi.layout.align.abi);
         } else {
@@ -338,7 +343,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
     }
 
     fn arg_memory_ty(&self, arg_abi: &ArgAbi<'tcx, Ty<'tcx>>) -> Self::Type {
-        arg_abi.layout.spirv_type(self)
+        arg_abi.layout.spirv_type(self.span(), self)
     }
 }
 

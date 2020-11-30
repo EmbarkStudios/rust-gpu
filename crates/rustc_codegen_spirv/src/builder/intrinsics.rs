@@ -3,10 +3,10 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::{CLOp, GLOp};
+use rspirv::spirv::{CLOp, GLOp, StorageClass};
 use rustc_codegen_ssa::mir::operand::OperandRef;
 use rustc_codegen_ssa::mir::place::PlaceRef;
-use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods, IntrinsicCallMethods};
+use rustc_codegen_ssa::traits::{BuilderMethods, IntrinsicCallMethods};
 use rustc_middle::bug;
 use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyKind};
 use rustc_span::source_map::Span;
@@ -39,15 +39,15 @@ impl Builder<'_, '_> {
                 other.debug(val.ty, self)
             ),
         };
-        let int_ty = SpirvType::Integer(width, false).def(self);
+        let int_ty = SpirvType::Integer(width, false).def(self.span(), self);
         let (mask_sign, mask_value) = match width {
             32 => (
-                self.constant_u32(1 << 31),
-                self.constant_u32(u32::max_value() >> 1),
+                self.constant_u32(self.span(), 1 << 31),
+                self.constant_u32(self.span(), u32::max_value() >> 1),
             ),
             64 => (
-                self.constant_u64(1 << 63),
-                self.constant_u64(u64::max_value() >> 1),
+                self.constant_u64(self.span(), 1 << 63),
+                self.constant_u64(self.span(), u64::max_value() >> 1),
             ),
             _ => bug!("copysign must have width 32 or 64, not {}", width),
         };
@@ -83,7 +83,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         let arg_tys = sig.inputs();
         let name = self.tcx.item_name(def_id);
 
-        let ret_ty = self.layout_of(sig.output()).spirv_type(self);
+        let ret_ty = self.layout_of(sig.output()).spirv_type(self.span(), self);
         let result = PlaceRef::new_sized(llresult, fn_abi.ret.layout);
 
         let value = match name {
@@ -102,7 +102,13 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 let tp_ty = substs.type_at(0);
                 let mut ptr = args[0].immediate();
                 if let PassMode::Cast(ty) = fn_abi.ret.mode {
-                    ptr = self.pointercast(ptr, self.type_ptr_to(ty.spirv_type(self)));
+                    let pointee = ty.spirv_type(self.span(), self);
+                    let pointer = SpirvType::Pointer {
+                        storage_class: StorageClass::Function,
+                        pointee,
+                    }
+                    .def(self.span(), self);
+                    ptr = self.pointercast(ptr, pointer);
                 }
                 let load = self.volatile_load(ptr);
                 self.to_immediate(load, self.layout_of(tp_ty))
@@ -409,16 +415,16 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 {
                     8 => arg,
                     16 => {
-                        let offset8 = self.constant_u16(8);
+                        let offset8 = self.constant_u16(self.span(), 8);
                         let tmp1 = self.shl(arg, offset8);
                         let tmp2 = self.lshr(arg, offset8);
                         self.or(tmp1, tmp2)
                     }
                     32 => {
-                        let offset8 = self.constant_u32(8);
-                        let offset24 = self.constant_u32(24);
-                        let mask16 = self.constant_u32(0xFF00);
-                        let mask24 = self.constant_u32(0xFF0000);
+                        let offset8 = self.constant_u32(self.span(), 8);
+                        let offset24 = self.constant_u32(self.span(), 24);
+                        let mask16 = self.constant_u32(self.span(), 0xFF00);
+                        let mask24 = self.constant_u32(self.span(), 0xFF0000);
                         let tmp4 = self.shl(arg, offset24);
                         let tmp3 = self.shl(arg, offset8);
                         let tmp2 = self.lshr(arg, offset8);
@@ -430,16 +436,16 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                         self.or(res1, res2)
                     }
                     64 => {
-                        let offset8 = self.constant_u64(8);
-                        let offset24 = self.constant_u64(24);
-                        let offset40 = self.constant_u64(40);
-                        let offset56 = self.constant_u64(56);
-                        let mask16 = self.constant_u64(0xff00);
-                        let mask24 = self.constant_u64(0xff0000);
-                        let mask32 = self.constant_u64(0xff000000);
-                        let mask40 = self.constant_u64(0xff00000000);
-                        let mask48 = self.constant_u64(0xff0000000000);
-                        let mask56 = self.constant_u64(0xff000000000000);
+                        let offset8 = self.constant_u64(self.span(), 8);
+                        let offset24 = self.constant_u64(self.span(), 24);
+                        let offset40 = self.constant_u64(self.span(), 40);
+                        let offset56 = self.constant_u64(self.span(), 56);
+                        let mask16 = self.constant_u64(self.span(), 0xff00);
+                        let mask24 = self.constant_u64(self.span(), 0xff0000);
+                        let mask32 = self.constant_u64(self.span(), 0xff000000);
+                        let mask40 = self.constant_u64(self.span(), 0xff00000000);
+                        let mask48 = self.constant_u64(self.span(), 0xff0000000000);
+                        let mask56 = self.constant_u64(self.span(), 0xff000000000000);
                         let tmp8 = self.shl(arg, offset56);
                         let tmp7 = self.shl(arg, offset40);
                         let tmp6 = self.shl(arg, offset24);
