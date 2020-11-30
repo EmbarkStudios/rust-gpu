@@ -53,12 +53,14 @@ macro_rules! storage_class {
 
         #[spirv(block)]
         #[allow(unused_attributes)]
-        pub struct $block <T>(T);
+        pub struct $block <T> {
+            value: T
+        }
 
         $(#[$($meta)+])*
         #[allow(unused_attributes)]
-        pub struct $name<'value, T> {
-            value: &'value mut $block <T>,
+        pub struct $name<'block, T> {
+            block: &'block mut $block <T>,
         }
 
         impl<T: Copy> $name<'_, T> {
@@ -67,7 +69,7 @@ macro_rules! storage_class {
             #[allow(unused_attributes)]
             #[spirv(really_unsafe_ignore_bitcasts)]
             pub fn load(&self) -> T {
-                self.value.0
+                self.block.value
             }
         }
 
@@ -84,9 +86,9 @@ macro_rules! storage_class {
             #[allow(unused_attributes)]
             #[spirv(really_unsafe_ignore_bitcasts)]
             pub fn store(&mut self, v: T) {
-                self.value.0 = v
+                self.block.value = v;
             }
-
+            
             /// A convenience function to load a value into memory and store it.
             pub fn then(&mut self, then: impl FnOnce(T) -> T) {
                 self.store((then)(self.load()));
