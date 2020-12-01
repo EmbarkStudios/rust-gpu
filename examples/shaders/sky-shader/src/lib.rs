@@ -154,7 +154,7 @@ pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
 #[spirv(fragment)]
 pub fn main_fs(
     #[spirv(frag_coord)] in_frag_coord: Input<Vec4>,
-    #[spirv(push_constant)] constants: PushConstant<ShaderConstants>,
+    constants: PushConstant<ShaderConstants>,
     mut output: Output<Vec4>,
 ) {
     let constants = constants.load();

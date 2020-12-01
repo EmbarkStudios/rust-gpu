@@ -141,9 +141,7 @@ pub struct ShaderConstants {
 
 #[allow(unused_attributes)]
 #[spirv(fragment)]
-pub fn main(
-    #[spirv(push_constant)] constants: PushConstant<ShaderConstants>,
-) {
+pub fn main(constants: PushConstant<ShaderConstants>) {
     let _constants = constants.load();
 }
 "#);
@@ -167,9 +165,7 @@ pub struct ShaderConstants {
 
 #[allow(unused_attributes)]
 #[spirv(fragment)]
-pub fn main(
-    #[spirv(push_constant)] constants: PushConstant<ShaderConstants>,
-) {
+pub fn main(constants: PushConstant<ShaderConstants>) {
     let _constants = constants.load();
 }
 "#,
