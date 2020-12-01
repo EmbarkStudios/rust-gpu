@@ -150,6 +150,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             field_types: els.to_vec(),
             field_offsets,
             field_names: None,
+            is_block: false,
         }
         .def(DUMMY_SP, self)
     }
