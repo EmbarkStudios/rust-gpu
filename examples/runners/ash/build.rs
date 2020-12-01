@@ -3,6 +3,8 @@ use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // This will set the env var `sky-shader.spv` to a spir-v file that can be include!()'d
-    SpirvBuilder::new("../../shaders/sky-shader").build()?;
+    SpirvBuilder::new("../../shaders/sky-shader")
+        .spirv_version(1, 3)
+        .build()?;
     Ok(())
 }
