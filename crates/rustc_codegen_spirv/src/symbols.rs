@@ -336,6 +336,7 @@ impl Symbols {
                 SpirvAttribute::ReallyUnsafeIgnoreBitcasts,
             ),
             ("sampler", SpirvAttribute::Sampler),
+            ("block", SpirvAttribute::Block),
         ]
         .iter()
         .cloned();
@@ -451,6 +452,7 @@ pub enum SpirvAttribute {
         access_qualifier: Option<AccessQualifier>,
     },
     Sampler,
+    Block,
 }
 
 // Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused

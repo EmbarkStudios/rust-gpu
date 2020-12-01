@@ -90,6 +90,25 @@ fn val(src: &str) {
     build(src);
 }
 
+/// While `val` runs baseline SPIR-V validation, for some tests we want the
+/// stricter Vulkan validation (`vulkan1.2` specifically), which may produce
+/// additional errors (such as missing Vulkan-specific decorations).
+fn val_vulkan(src: &str) {
+    use rustc_codegen_spirv::spirv_tools::{
+        util::to_binary,
+        val::{self, Validator},
+        TargetEnv,
+    };
+
+    let validator = val::create(Some(TargetEnv::Vulkan_1_2));
+
+    let _lock = global_lock();
+    let bytes = std::fs::read(build(src)).unwrap();
+    if let Err(e) = validator.validate(to_binary(&bytes).unwrap(), None) {
+        panic!("Vulkan validation failed:\n{}", e.to_string());
+    }
+}
+
 fn assert_str_eq(expected: &str, result: &str) {
     let expected = expected
         .split('\n')

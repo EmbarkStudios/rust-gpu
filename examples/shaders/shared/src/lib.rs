@@ -14,6 +14,8 @@ use spirv_std::glam::Vec3;
 use spirv_std::num_traits::Float;
 
 #[derive(Copy, Clone)]
+#[allow(unused_attributes)]
+#[spirv(block)]
 pub struct ShaderConstants {
     pub width: u32,
     pub height: u32,

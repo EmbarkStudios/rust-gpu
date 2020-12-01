@@ -1,4 +1,4 @@
-use super::{dis_fn, val};
+use super::{dis_fn, val, val_vulkan};
 
 #[test]
 fn hello_world() {
@@ -125,4 +125,53 @@ pub fn main() {
     panic!("aaa");
 }
 "#);
+}
+
+// NOTE(eddyb) this won't pass Vulkan validation (see `push_constant_vulkan`),
+// but should still pass the basline SPIR-V validation.
+#[test]
+fn push_constant() {
+    val(r#"
+#[derive(Copy, Clone)]
+pub struct ShaderConstants {
+    pub width: u32,
+    pub height: u32,
+    pub time: f32,
+}
+
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(
+    #[spirv(push_constant)] constants: PushConstant<ShaderConstants>,
+) {
+    let _constants = constants.load();
+}
+"#);
+}
+
+// NOTE(eddyb) we specifically run Vulkan validation here, as the default
+// validation rules are more lax and don't require a `Block` decoration
+// (`#[spirv(block)]` here) on `struct ShaderConstants`.
+#[test]
+fn push_constant_vulkan() {
+    val_vulkan(
+        r#"
+#[derive(Copy, Clone)]
+#[allow(unused_attributes)]
+#[spirv(block)]
+pub struct ShaderConstants {
+    pub width: u32,
+    pub height: u32,
+    pub time: f32,
+}
+
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(
+    #[spirv(push_constant)] constants: PushConstant<ShaderConstants>,
+) {
+    let _constants = constants.load();
+}
+"#,
+    );
 }

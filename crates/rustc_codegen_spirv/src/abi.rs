@@ -229,6 +229,7 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
             field_types: args,
             field_offsets,
             field_names: None,
+            is_block: false,
         }
         .def(span, cx)
     }
@@ -324,6 +325,35 @@ fn trans_type_impl<'tcx>(
 ) -> Word {
     if let TyKind::Adt(adt, _) = *ty.ty.kind() {
         for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
+            if matches!(attr, SpirvAttribute::Block) {
+                if !adt.is_struct() {
+                    cx.tcx.sess.span_err(
+                        span,
+                        &format!(
+                            "`#[spirv(block)]` can only be used on a `struct`, \
+                             but `{}` is a `{}`",
+                            ty.ty,
+                            adt.descr(),
+                        ),
+                    );
+                }
+
+                if !matches!(ty.abi, Abi::Aggregate { sized: true }) {
+                    cx.tcx.sess.span_err(
+                        span,
+                        &format!(
+                            "`#[spirv(block)]` can only be used for `Sized` aggregates, \
+                             but `{}` has `Abi::{:?}`",
+                            ty.ty, ty.abi,
+                        ),
+                    );
+                }
+
+                assert!(matches!(ty.fields, FieldsShape::Arbitrary { .. }));
+
+                return trans_struct(cx, span, ty, true);
+            }
+
             if let Some(image) = trans_image(cx, span, ty, attr) {
                 return image;
             }
@@ -340,6 +370,7 @@ fn trans_type_impl<'tcx>(
             field_types: Vec::new(),
             field_offsets: Vec::new(),
             field_names: None,
+            is_block: false,
         }
         .def(span, cx),
         Abi::Scalar(ref scalar) => trans_scalar(cx, span, ty, scalar, None, is_immediate),
@@ -359,6 +390,7 @@ fn trans_type_impl<'tcx>(
                 field_types: vec![one_spirv, two_spirv],
                 field_offsets: vec![one_offset, two_offset],
                 field_names: None,
+                is_block: false,
             }
             .def(span, cx)
         }
@@ -618,6 +650,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
                     field_types: Vec::new(),
                     field_offsets: Vec::new(),
                     field_names: None,
+                    is_block: false,
                 }
                 .def(span, cx)
             } else {
@@ -638,7 +671,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
         FieldsShape::Arbitrary {
             offsets: _,
             memory_index: _,
-        } => trans_struct(cx, span, ty),
+        } => trans_struct(cx, span, ty, false),
     }
 }
 
@@ -668,7 +701,12 @@ pub fn auto_struct_layout<'tcx>(
 }
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
-fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
+fn trans_struct<'tcx>(
+    cx: &CodegenCx<'tcx>,
+    span: Span,
+    ty: TyAndLayout<'tcx>,
+    is_block: bool,
+) -> Word {
     let name = name_of_struct(ty);
     if let TyKind::Foreign(_) = ty.ty.kind() {
         // "An unsized FFI type that is opaque to Rust", `extern type A;` (currently unstable)
@@ -718,6 +756,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
         field_types,
         field_offsets,
         field_names: Some(field_names),
+        is_block,
     }
     .def(span, cx)
 }

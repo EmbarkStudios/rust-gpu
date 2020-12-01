@@ -118,6 +118,7 @@ use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions, TargetTriple};
+pub use spirv_tools;
 use std::any::Any;
 use std::env;
 use std::fs::{create_dir_all, File};
