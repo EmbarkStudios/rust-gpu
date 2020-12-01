@@ -147,16 +147,39 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         rustc_codegen_spirv.display(),
         feature_flag,
     );
-    let build = Command::new("cargo")
-        .args(&[
-            "build",
-            "--message-format=json-render-diagnostics",
-            "-Z",
-            "build-std=core",
-            "--target",
-            "spirv-unknown-unknown",
-            "--release",
-        ])
+    let mut cargo = Command::new("cargo");
+    cargo.args(&[
+        "build",
+        "--message-format=json-render-diagnostics",
+        "-Z",
+        "build-std=core",
+        "--target",
+        "spirv-unknown-unknown",
+        "--release",
+    ]);
+
+    // If we're nested in `cargo` invocation, use a different `--target-dir`,
+    // to avoid waiting on the same lock (which effectively dead-locks us).
+    // This also helps with e.g. RLS, which uses `--target target/rls`,
+    // so we'll have a separate `target/rls/spirv-builder` for it.
+    if let (Ok(profile), Some(mut dir)) = (
+        env::var("PROFILE"),
+        env::var_os("OUT_DIR").map(PathBuf::from),
+    ) {
+        // Strip `$profile/build/*/out`.
+        if dir.ends_with("out")
+            && dir.pop()
+            && dir.pop()
+            && dir.ends_with("build")
+            && dir.pop()
+            && dir.ends_with(profile)
+            && dir.pop()
+        {
+            cargo.arg("--target-dir").arg(dir.join("spirv-builder"));
+        }
+    }
+
+    let build = cargo
         .stderr(Stdio::inherit())
         .current_dir(&builder.path_to_crate)
         .env("RUSTFLAGS", rustflags)
