@@ -35,6 +35,7 @@ impl Source {
                 commitish,
                 into,
             } => {
+                let into = into.to_owned();
                 std::fs::create_dir_all(&into)?;
                 let repo = git2::build::RepoBuilder::new().clone(&repository, &into)?;
 
