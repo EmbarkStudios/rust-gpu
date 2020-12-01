@@ -36,8 +36,6 @@ impl Source {
                 into,
             } => {
                 std::fs::create_dir_all(&into)?;
-
-                let into = into.canonicalize()?;
                 let repo = git2::build::RepoBuilder::new().clone(&repository, &into)?;
 
                 if let Some(commitish) = commitish {
