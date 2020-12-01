@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">4.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">3.</strong> Building Rust-GPU</a></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">4.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">5.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -166,56 +166,11 @@
                         <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
 <p>Welcome to the Rust-GPU dev guide! This documentation is meant for documenting
 how to use and develop on Rust-GPU.</p>
-<h2><a class="header" href="#getting-started" id="getting-started">Getting started</a></h2>
-<ol>
-<li>
-<p>Clone the repository.</p>
-<pre><code class="language-shell">git clone --recurse-submodules https://github.com/EmbarkStudios/rust-gpu
-</code></pre>
-</li>
-<li>
-<p>Install the prerequisites using the provided setup script. From the root of the project, run:</p>
-<p>MacOS, Linux:</p>
-<pre><code class="language-shell">sh setup.sh
-</code></pre>
-<p>Windows:</p>
-<pre><code class="language-shell">setup.bat
-</code></pre>
-<p>The setup script installs nightly Rust (required for now, see <a href="https://github.com/EmbarkStudios/rust-gpu/issues/78">#78</a> for tracking issue).</p>
-</li>
-<li>
-<p><strong>optional</strong> Install <a href="https://github.com/KhronosGroup/SPIRV-Tools#downloads">SPIRV-Tools</a> and add it to your <code>PATH</code>. You can skip this step if you just want to run examples with the defaults. See <a href="#using-installed-spirv-tools">Using installed SPIRV-Tools</a> if you decide to go with this option.</p>
-</li>
-<li>
-<p>Next, look at the <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples">examples</a> folder. There are two kinds of targets here: [runners] and [shaders]. The projects inside <code>shaders</code> are &quot;GPU crates&quot;, i.e. ones that will be compiled one or more SPIR-V modules. The <code>runner</code> projects are normal, CPU crates that use some graphics backend (currently, we have a <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/runners/wgpu"><code>wgpu</code> runner</a>, a <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/runners/ash">Vulkan runner</a> through <code>ash</code>, and a barebones pure software <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/runners/cpu">CPU runner</a>) to actually run one of the &quot;GPU crate&quot; shaders.</p>
-<p>Run the example:</p>
-<pre><code class="language-shell">cargo run --bin example-runner-wgpu
-</code></pre>
-<p>This will build <code>rustc_codegen_spirv</code>, the compiler, then use that compiler to build <a href="examples/shaders/sky-shader"><code>sky-shader</code></a> into a SPIR-V module, then finally, build a <code>wgpu</code> sample app (modified from <a href="https://github.com/gfx-rs/wgpu-rs/tree/master/examples/hello-triangle"><code>wgpu</code>'s examples</a>) using the built SPIR-V module to display the shader in a window.</p>
-<p>All of this is orchestrated by the <a href="https://embarkstudios.github.io/rust-gpu/api/spirv_builder/index.html">spirv-builder</a> crate, which is used in each of the example runners' <a href="examples/runners/wgpu/build.rs"><code>build.rs</code> files</a>. Please look at that file, as well as both example projects in general, to see how to set up your own shaders!</p>
-</li>
-</ol>
-<p>Be aware that this project is in a very early phase - if the above doesn't work, please <a href="https://github.com/EmbarkStudios/rust-gpu/issues">file an issue</a>!</p>
-<h2><a class="header" href="#getting-started-for-power-users-who-dont-want-to-use-spirv-builder" id="getting-started-for-power-users-who-dont-want-to-use-spirv-builder">Getting started, for power users who don't want to use spirv-builder</a></h2>
-<p>If you would like to build the compiler, <code>rustc_codegen_spirv</code> is the relevant folder. Install the prerequisites, as above, then, <code>cd rustc_codegen_spirv &amp;&amp; cargo build</code>. This produces an .so file, located at <code>./target/debug/librustc_codegen_spirv.so</code> (or <code>.dll</code>/<code>.dylib</code> depending on your platform).</p>
-<p>This file is a dynamically loaded backend for rustc - you may tell rustc to use it as a backend through the <code>-Z codegen-backend=...</code> flag. To pass this to rustc through cargo, set the environment variable <code>RUSTFLAGS=&quot;-Z codegen-backend=$PATH_TO_FILE&quot;</code>.</p>
-<p>Then, when building a GPU crate, we need to configure some flags when we call cargo. First, we need to build libcore ourselves - we obviously have no SPIR-V libcore installed on our system! Use the flag <code>-Z build-std=core</code>. Then, we need to tell rustc to generate SPIR-V instead of x86 code: <code>--target spirv-unknown-unknown</code>.</p>
-<p>Overall, building your own SPIR-V crate looks like:</p>
-<pre><code class="language-shell">export RUSTFLAGS=&quot;-Zcodegen-backend=$THIS_REPO/target/debug/librustc_codegen_spirv.so&quot;
-cargo build -Z build-std=core --target spirv-unknown-unknown --release
-</code></pre>
-<p>(with an appropriate path for <code>$THIS_REPO</code>, and replacing <code>export</code> with <code>set</code> if you're on windows as well as the proper dll name)</p>
-<p>This will produce a <code>target/spirv-unknown-unknown/release/crate_name.spv</code> file.</p>
-<p>To create a GPU crate, look at the crates in <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/shaders">examples/shaders</a>. In short, reference the <code>spirv-std</code> crate, and use intrinsics defined there to create your shader.</p>
-<p>This is all a little convoluted, hence the <a href="https://embarkstudios.github.io/rust-gpu/api/spirv_builder/index.html">spirv-builder</a> crate handles a lot of this.</p>
-<h2><a class="header" href="#using-installed-spirv-tools" id="using-installed-spirv-tools">Using installed SPIRV-Tools</a></h2>
-<p>By default, all of the crates and examples in this repo will compile the <a href="https://crates.io/crates/spirv-tools-sys"><code>spirv-tools-sys</code></a> crate, including a lot of C++ code from <a href="https://github.com/EmbarkStudios/SPIRV-Tools">SPIRV-Tools</a>. If you don't want to build the C++ code because you already have <a href="https://github.com/KhronosGroup/SPIRV-Tools#downloads">SPIRV-Tools</a> installed, or just don't want to spend more time compiling, you can build/run the crate with the <code>use-installed-tools</code> feature.</p>
-<pre><code class="language-shell">cargo run \
-    --manifest-path examples/example-runner/Cargo.toml \
-    --features use-installed-tools \
-    --no-default-features
-</code></pre>
-<p>You should see <code>warning: use-installed-tools feature on, skipping compilation of C++ code</code> during the compilation, but otherwise the build will function just the same as if you compiled the C++ code, with the exception that it will fail if you don't have SPIRV-Tools installed correctly.</p>
+<p>If you're looking to get started with writing your own shaders in Rust, 
+check out the <a href="./writing-shader-crates.html"><em>&quot;Writing Shader Crates&quot;</em></a> section for
+more information on how to get started.</p>
+<p>Alternatively if you're looking to contribute to the <code>rust-gpu</code> project, have
+a look at <a href="./building-rust-gpu.html"><em>&quot;Building Rust-GPU&quot;</em></a> section.</p>
 
                     </main>
 
