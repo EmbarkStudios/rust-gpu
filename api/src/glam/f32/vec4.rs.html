@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/glam-rs-c6c9bb5297445777/ea8fe27/src/f32/vec4.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vec4.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/glam-rs-c6c9bb5297445777/238c449/src/f32/vec4.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vec4.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../glam/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1281,6 +1281,23 @@
 <span id="1278">1278</span>
 <span id="1279">1279</span>
 <span id="1280">1280</span>
+<span id="1281">1281</span>
+<span id="1282">1282</span>
+<span id="1283">1283</span>
+<span id="1284">1284</span>
+<span id="1285">1285</span>
+<span id="1286">1286</span>
+<span id="1287">1287</span>
+<span id="1288">1288</span>
+<span id="1289">1289</span>
+<span id="1290">1290</span>
+<span id="1291">1291</span>
+<span id="1292">1292</span>
+<span id="1293">1293</span>
+<span id="1294">1294</span>
+<span id="1295">1295</span>
+<span id="1296">1296</span>
+<span id="1297">1297</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;num-traits&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">num_traits</span>::<span class="ident">Float</span>;
@@ -1313,7 +1330,7 @@
 <span class="doccomment">/// A 4-dimensional vector.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// This type is 16 byte aligned.</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">vec4_sse2</span>, <span class="ident">not</span>(<span class="ident">doc</span>)))]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;sse2&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;scalar-math&quot;</span>), <span class="ident">not</span>(<span class="ident">doc</span>)))]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Vec4</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">__m128</span>);
@@ -1934,6 +1951,23 @@
                 <span class="ident">w</span>: <span class="self">self</span>.<span class="ident">w</span>.<span class="ident">ceil</span>(),
             }
         }
+    }
+
+    <span class="doccomment">/// Returns a `Vec4` containing `e^self` (the exponential function) for each element of `self`.</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exp</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">x</span>.<span class="ident">exp</span>(), <span class="self">self</span>.<span class="ident">y</span>.<span class="ident">exp</span>(), <span class="self">self</span>.<span class="ident">z</span>.<span class="ident">exp</span>(), <span class="self">self</span>.<span class="ident">w</span>.<span class="ident">exp</span>())
+    }
+
+    <span class="doccomment">/// Returns a `Vec4` containing each element of `self` raised to the power of `n`.</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">powf</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">new</span>(
+            <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">powf</span>(<span class="ident">n</span>),
+            <span class="self">self</span>.<span class="ident">y</span>.<span class="ident">powf</span>(<span class="ident">n</span>),
+            <span class="self">self</span>.<span class="ident">z</span>.<span class="ident">powf</span>(<span class="ident">n</span>),
+            <span class="self">self</span>.<span class="ident">w</span>.<span class="ident">powf</span>(<span class="ident">n</span>),
+        )
     }
 
     <span class="doccomment">/// Performs `is_nan` on each element of self, returning a `Vec4Mask` of the results.</span>
