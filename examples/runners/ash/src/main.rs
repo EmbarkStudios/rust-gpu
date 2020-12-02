@@ -123,10 +123,14 @@ pub fn main() {
 }
 
 pub fn compile_shaders() -> Vec<SpirvShader> {
-    let spirv_codegen_backend = String::from("codegen_backend=rustc_codegen_spirv.dll");
+    let spirv_codegen_backend = format!(
+        "codegen_backend={}rustc_codegen_spirv{}",
+        std::env::consts::DLL_PREFIX,
+        std::env::consts::DLL_SUFFIX
+    );
     let rustflags = format!("-Z {} -Z symbol-mangling-version=v0", spirv_codegen_backend);
-    let manifest_path = "examples\\shaders\\sky-shader\\Cargo.toml";
-    let target_dir = "target\\shaders";
+    let manifest_path = "examples/shaders/sky-shader/Cargo.toml";
+    let target_dir = "target/shaders";
 
     // run a cargo process with spirv codegen
     let cargo_out = Command::new("cargo")
@@ -754,7 +758,9 @@ impl RenderCtx {
                 ((frag_module, frag_name), (vert_module, vert_name))
             })
             .collect::<Vec<_>>();
-        let viewport = vk::PipelineViewportStateCreateInfo::builder();
+        let viewport = vk::PipelineViewportStateCreateInfo::builder()
+            .scissor_count(1)
+            .viewport_count(1);
         let descs = modules_names
             .iter()
             .map(|((frag_module, frag_name), (vert_module, vert_name))| {
@@ -1099,7 +1105,9 @@ impl Pipeline {
         desc: PipelineDescriptor,
         pipeline_cache: vk::PipelineCache,
     ) -> Self {
-        let viewport = vk::PipelineViewportStateCreateInfo::builder();
+        let viewport = vk::PipelineViewportStateCreateInfo::builder()
+            .scissor_count(1)
+            .viewport_count(1);
         let pipeline_layout = ctx.create_pipeline_layout();
 
         let pipeline_info = vk::GraphicsPipelineCreateInfo::builder()
