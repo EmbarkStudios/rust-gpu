@@ -142,6 +142,13 @@ impl<'tcx> CodegenCx<'tcx> {
             }
         }
 
+        if Some(instance_def_id) == self.tcx.lang_items().panic_fn() {
+            self.panic_fn_id.set(Some(fn_id));
+        }
+        if Some(instance_def_id) == self.tcx.lang_items().panic_bounds_check_fn() {
+            self.panic_bounds_check_fn_id.set(Some(fn_id));
+        }
+
         declared
     }
 

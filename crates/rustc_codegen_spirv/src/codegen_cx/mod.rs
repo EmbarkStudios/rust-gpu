@@ -27,7 +27,7 @@ use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 
@@ -54,6 +54,12 @@ pub struct CodegenCx<'tcx> {
     pub instruction_table: InstructionTable,
     pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
     pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
+
+    /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
+    pub panic_fn_id: Cell<Option<Word>>,
+    /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
+    pub panic_bounds_check_fn_id: Cell<Option<Word>>,
+
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
@@ -105,6 +111,8 @@ impl<'tcx> CodegenCx<'tcx> {
             instruction_table: InstructionTable::new(),
             really_unsafe_ignore_bitcasts: Default::default(),
             libm_intrinsics: Default::default(),
+            panic_fn_id: Default::default(),
+            panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
         }
     }

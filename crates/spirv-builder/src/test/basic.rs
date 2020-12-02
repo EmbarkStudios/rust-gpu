@@ -110,15 +110,43 @@ pub fn main() {
 }"#);
 }
 
-// TODO: Implement strings to make this compile
 #[test]
-#[ignore]
 fn panic() {
     val(r#"
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     panic!("aaa");
+}
+"#);
+}
+
+#[test]
+fn panic_builtin() {
+    val(r#"
+fn int_div(x: usize) -> usize {
+    1 / x
+}
+
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    int_div(0);
+}
+"#);
+}
+
+#[test]
+fn panic_builtin_bounds_check() {
+    val(r#"
+fn array_bounds_check(x: [u32; 4], i: usize) -> u32 {
+    x[i]
+}
+
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    array_bounds_check([0, 1, 2, 3], 5);
 }
 "#);
 }
