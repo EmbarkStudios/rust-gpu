@@ -2075,33 +2075,59 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn call(
         &mut self,
-        mut llfn: Self::Value,
+        callee: Self::Value,
         args: &[Self::Value],
         funclet: Option<&Self::Funclet>,
     ) -> Self::Value {
         if funclet.is_some() {
             self.fatal("TODO: Funclets are not supported");
         }
-        // dereference pointers
-        let (result_type, argument_types) = loop {
-            match self.lookup_type(llfn.ty) {
-                SpirvType::Pointer { .. } => {
-                    // Note that this doesn't necessarily mean a dynamic load, the function is
-                    // probably in cx.constant_pointers
-                    llfn = self.load(llfn, Align::from_bytes(0).unwrap());
-                }
+
+        // NOTE(eddyb) see the comment on `SpirvValueKind::FnAddr`, this should
+        // be fixed upstream, so we never see any "function pointer" values being
+        // created just to perform direct calls.
+        let (callee_val, result_type, argument_types) = match self.lookup_type(callee.ty) {
+            // HACK(eddyb) this seems to be needed, but it's not what `get_fn_addr`
+            // produces, are these coming from inside `rustc_codegen_spirv`?
+            SpirvType::Function {
+                return_type,
+                arguments,
+            } => (callee.def(self), return_type, arguments),
+
+            SpirvType::Pointer { pointee } => match self.lookup_type(pointee) {
                 SpirvType::Function {
                     return_type,
                     arguments,
-                } => break (return_type, arguments),
-                ty => self.fatal(&format!("Calling non-function type: {:?}", ty)),
-            }
+                } => (
+                    match callee.kind {
+                        SpirvValueKind::FnAddr { function } => function,
+
+                        // Truly indirect call.
+                        _ => {
+                            let fn_ptr_val = callee.def(self);
+                            self.zombie(fn_ptr_val, "indirect calls are not supported in SPIR-V");
+                            fn_ptr_val
+                        }
+                    },
+                    return_type,
+                    arguments,
+                ),
+                _ => bug!(
+                    "call expected `fn` pointer to point to function type, got `{}`",
+                    self.debug_type(pointee)
+                ),
+            },
+
+            _ => bug!(
+                "call expected function or `fn` pointer type, got `{}`",
+                self.debug_type(callee.ty)
+            ),
         };
+
         for (argument, argument_type) in args.iter().zip(argument_types) {
             assert_ty_eq!(self, argument.ty, argument_type);
         }
-        let llfn_def = llfn.def(self);
-        let libm_intrinsic = self.libm_intrinsics.borrow().get(&llfn_def).cloned();
+        let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).cloned();
         if let Some(libm_intrinsic) = libm_intrinsic {
             let result = self.call_libm_intrinsic(libm_intrinsic, result_type, args);
             if result_type != result.ty {
@@ -2114,7 +2140,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             }
             result
         } else if [self.panic_fn_id.get(), self.panic_bounds_check_fn_id.get()]
-            .contains(&Some(llfn_def))
+            .contains(&Some(callee_val))
         {
             // HACK(eddyb) redirect builtin panic calls to an abort, to avoid
             // needing to materialize `&core::panic::Location` or `format_args!`.
@@ -2123,7 +2149,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()
-                .function_call(result_type, None, llfn_def, args)
+                .function_call(result_type, None, callee_val, args)
                 .unwrap()
                 .with_type(result_type)
         }
