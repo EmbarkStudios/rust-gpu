@@ -38,7 +38,17 @@ pub fn mem2reg(
 pub fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
     let mut result = vec![vec![]; blocks.len()];
     for (source_idx, source) in blocks.iter().enumerate() {
-        for dest_id in outgoing_edges(source) {
+        let mut edges = outgoing_edges(source);
+        // HACK(eddyb) treat `OpSelectionMerge` as an edge, in case it points
+        // to an otherwise-unreachable block.
+        if let Some(before_last_idx) = source.instructions.len().checked_sub(2) {
+            if let Some(before_last) = source.instructions.get(before_last_idx) {
+                if before_last.class.opcode == Op::SelectionMerge {
+                    edges.push(before_last.operands[0].unwrap_id_ref());
+                }
+            }
+        }
+        for dest_id in edges {
             let dest_idx = blocks
                 .iter()
                 .position(|b| b.label_id().unwrap() == dest_id)

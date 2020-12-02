@@ -482,11 +482,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         else_llbb: Self::BasicBlock,
         cases: impl ExactSizeIterator<Item = (u128, Self::BasicBlock)>,
     ) {
-        if !self.kernel_mode {
-            // TODO: Remove once structurizer is done.
-            self.zombie(else_llbb, "OpSwitch before structurizer is done");
-        }
-
         fn construct_8(self_: &Builder<'_, '_>, signed: bool, v: u128) -> Operand {
             if v > u8::MAX as u128 {
                 self_.fatal(&format!(
@@ -700,7 +695,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             OverflowOp::Mul => (self.mul(lhs, rhs), fals),
         };
         self.zombie(
-            result.1.def(self),
+            result.0.def(self),
             match oop {
                 OverflowOp::Add => "checked add is not supported yet",
                 OverflowOp::Sub => "checked sub is not supported yet",

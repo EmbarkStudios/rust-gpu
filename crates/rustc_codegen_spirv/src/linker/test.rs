@@ -94,6 +94,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
                 inline: false,
                 mem2reg: false,
                 structurize: false,
+                use_new_structurizer: false,
             },
         );
         assert_eq!(compiler.session().has_errors(), res.is_err());
