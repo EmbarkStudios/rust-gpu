@@ -7,6 +7,7 @@ use raw_string::{RawStr, RawString};
 pub fn cargo() -> Command {
     let mut cmd = Command::new(std::env::var("CARGO").unwrap_or_else(|_| String::from("cargo")));
     cmd.env_clear();
+    cmd.env("PATH", std::env::var("PATH").unwrap());
     cmd
 }
 
