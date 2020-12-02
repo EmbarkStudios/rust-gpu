@@ -167,3 +167,13 @@ pub fn main(constants: PushConstant<ShaderConstants>) {
 "#,
     );
 }
+
+#[test]
+fn infinite_loop() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    loop {}
+}"#);
+}
