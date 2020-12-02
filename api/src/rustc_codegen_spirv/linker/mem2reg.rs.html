@@ -479,6 +479,16 @@
 <span id="476">476</span>
 <span id="477">477</span>
 <span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.</span>
 <span class="doccomment">//! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a</span>
@@ -520,7 +530,17 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_preds</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="macro">vec</span><span class="macro">!</span>[]; <span class="ident">blocks</span>.<span class="ident">len</span>()];
     <span class="kw">for</span> (<span class="ident">source_idx</span>, <span class="ident">source</span>) <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">outgoing_edges</span>(<span class="ident">source</span>) {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">source</span>);
+        <span class="comment">// HACK(eddyb) treat `OpSelectionMerge` as an edge, in case it points</span>
+        <span class="comment">// to an otherwise-unreachable block.</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">before_last_idx</span>) <span class="op">=</span> <span class="ident">source</span>.<span class="ident">instructions</span>.<span class="ident">len</span>().<span class="ident">checked_sub</span>(<span class="number">2</span>) {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">before_last</span>) <span class="op">=</span> <span class="ident">source</span>.<span class="ident">instructions</span>.<span class="ident">get</span>(<span class="ident">before_last_idx</span>) {
+                <span class="kw">if</span> <span class="ident">before_last</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">SelectionMerge</span> {
+                    <span class="ident">edges</span>.<span class="ident">push</span>(<span class="ident">before_last</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>());
+                }
+            }
+        }
+        <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">edges</span> {
             <span class="kw">let</span> <span class="ident">dest_idx</span> <span class="op">=</span> <span class="ident">blocks</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">position</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">dest_id</span>)

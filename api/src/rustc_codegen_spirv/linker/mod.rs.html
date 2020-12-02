@@ -205,6 +205,12 @@
 <span id="202">202</span>
 <span id="203">203</span>
 <span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span>;
@@ -215,6 +221,7 @@
 <span class="kw">mod</span> <span class="ident">import_export_link</span>;
 <span class="kw">mod</span> <span class="ident">inline</span>;
 <span class="kw">mod</span> <span class="ident">mem2reg</span>;
+<span class="kw">mod</span> <span class="ident">new_structurizer</span>;
 <span class="kw">mod</span> <span class="ident">simple_passes</span>;
 <span class="kw">mod</span> <span class="ident">structurizer</span>;
 <span class="kw">mod</span> <span class="ident">zombies</span>;
@@ -234,6 +241,7 @@
     <span class="kw">pub</span> <span class="ident">inline</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">mem2reg</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">structurize</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">use_new_structurizer</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">fn</span> <span class="ident">id</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
@@ -344,7 +352,11 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">structurize</span> {
         <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_structurize&quot;</span>);
-        <span class="ident">structurizer</span>::<span class="ident">structurize</span>(<span class="ident">sess</span>, <span class="ident">output</span>)
+        <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">use_new_structurizer</span> {
+            <span class="ident">new_structurizer</span>::<span class="ident">structurize</span>(<span class="ident">output</span>)
+        } <span class="kw">else</span> {
+            <span class="ident">structurizer</span>::<span class="ident">structurize</span>(<span class="ident">sess</span>, <span class="ident">output</span>)
+        }
     } <span class="kw">else</span> {
         <span class="ident">output</span>
     };
