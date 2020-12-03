@@ -19,8 +19,6 @@ pub fn remove_extra_capabilities(module: &mut Module) {
         .difference(&used_capabilities)
         .copied()
         .collect();
-    eprintln!("Detected capabilities: {:?}", used_capabilities);
-    eprintln!("Removing capabilities: {:?}", to_remove);
     remove_capabilities(module, &to_remove);
 }
 
