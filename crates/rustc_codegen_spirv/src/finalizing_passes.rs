@@ -55,7 +55,7 @@ mod serde_adapters {
     impl From<rustc_span::SourceFileHash> for SourceFileHash {
         fn from(hash: rustc_span::SourceFileHash) -> Self {
             let bytes = hash.hash_bytes();
-            let mut hash = SourceFileHash {
+            let mut hash = Self {
                 kind: hash.kind.into(),
                 value: Default::default(),
             };
@@ -74,7 +74,7 @@ impl ZombieSpan {
         }
 
         let (lo, hi) = (span.lo(), span.hi());
-        if !(lo <= hi) {
+        if lo > hi {
             // FIXME(eddyb) broken `Span` - potentially turn this into an assert?
             return None;
         }
@@ -85,7 +85,7 @@ impl ZombieSpan {
             return None;
         }
 
-        Some(ZombieSpan {
+        Some(Self {
             file: match &file.name {
                 // We can only support real files, not "synthetic" ones (which
                 // are almost never exposed to the compiler backend anyway).
@@ -98,7 +98,7 @@ impl ZombieSpan {
         })
     }
 
-    pub fn to_rustc(self, source_map: &SourceMap) -> Option<Span> {
+    pub fn to_rustc(&self, source_map: &SourceMap) -> Option<Span> {
         let file = source_map.load_file(&self.file).ok()?;
 
         // If the file has changed since serializing, there's not much we can do,
