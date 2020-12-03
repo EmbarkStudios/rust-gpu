@@ -53,7 +53,6 @@ pub struct CodegenCx<'tcx> {
     pub sym: Box<Symbols>,
     pub instruction_table: InstructionTable,
     pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
-    pub zombie_undefs_for_system_constant_pointers: RefCell<HashMap<Word, Word>>,
     pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
@@ -105,7 +104,6 @@ impl<'tcx> CodegenCx<'tcx> {
             sym,
             instruction_table: InstructionTable::new(),
             really_unsafe_ignore_bitcasts: Default::default(),
-            zombie_undefs_for_system_constant_pointers: Default::default(),
             libm_intrinsics: Default::default(),
             i8_i16_atomics_allowed: false,
         }
@@ -163,6 +161,9 @@ impl<'tcx> CodegenCx<'tcx> {
             self.tcx.sess.err(reason);
         }
     }
+    pub fn zombie_even_in_user_code(&self, word: Word, span: Span, reason: &'static str) {
+        self.zombie_values.borrow_mut().insert(word, (reason, span));
+    }
 
     pub fn is_system_crate(&self) -> bool {
         self.tcx
@@ -199,19 +200,18 @@ impl<'tcx> CodegenCx<'tcx> {
             pointee: value.ty,
         }
         .def(span, self);
-        if self.is_system_crate() {
-            // Create these undefs up front instead of on demand in SpirvValue::def because
-            // SpirvValue::def can't use cx.emit()
-            self.zombie_undefs_for_system_constant_pointers
-                .borrow_mut()
-                .entry(ty)
-                .or_insert_with(|| {
-                    // We want a unique ID for these undefs, so don't use the caching system.
-                    self.emit_global().undef(ty, None)
-                });
-        }
+        let initializer = value.def_cx(self);
+
+        // Create these undefs up front instead of on demand in SpirvValue::def because
+        // SpirvValue::def can't use cx.emit()
+        // We want a unique ID for these undefs, so don't use the caching system.
+        let zombie = self.emit_global().undef(ty, None);
+
         SpirvValue {
-            kind: SpirvValueKind::ConstantPointer(value.def_cx(self)),
+            kind: SpirvValueKind::ConstantPointer {
+                initializer,
+                zombie,
+            },
             ty,
         }
     }
