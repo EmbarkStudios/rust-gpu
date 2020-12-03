@@ -489,6 +489,12 @@
 <span id="486">486</span>
 <span id="487">487</span>
 <span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">indexmap</span>::{<span class="ident">indexmap</span>, <span class="ident">IndexMap</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Builder</span>, <span class="ident">Function</span>, <span class="ident">InsertPoint</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
@@ -732,8 +738,14 @@
 
                 <span class="comment">// Move all of the contents of the original `block` into the</span>
                 <span class="comment">// new loop body, but keep labels and indices intact.</span>
+                <span class="comment">// Also update the existing merge if it happens to be the `block`</span>
+                <span class="comment">// we just moved (this should only be relevant to infinite loops).</span>
                 <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">blocks_mut</span>()[<span class="ident">while_body_block</span>].<span class="ident">instructions</span> <span class="op">=</span>
                     <span class="ident">mem</span>::<span class="ident">replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">blocks_mut</span>()[<span class="ident">block</span>].<span class="ident">instructions</span>, <span class="macro">vec</span><span class="macro">!</span>[]);
+                <span class="kw">if</span> <span class="ident">region</span>.<span class="ident">merge</span> <span class="op">=</span><span class="op">=</span> <span class="ident">block</span> {
+                    <span class="ident">region</span>.<span class="ident">merge</span> <span class="op">=</span> <span class="ident">while_body_block</span>;
+                    <span class="ident">region</span>.<span class="ident">merge_id</span> <span class="op">=</span> <span class="ident">while_body_block_id</span>;
+                }
 
                 <span class="comment">// Create a separate merge block for the loop body, as the original</span>
                 <span class="comment">// one might be used by an `OpSelectionMerge` and cannot be reused.</span>

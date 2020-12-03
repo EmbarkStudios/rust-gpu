@@ -520,6 +520,7 @@
 <span id="517">517</span>
 <span id="518">518</span>
 <span id="519">519</span>
+<span id="520">520</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -1010,12 +1011,13 @@
     }
 
     <span class="kw">fn</span> <span class="ident">abort</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="comment">// codegen_llvm uses call(llvm.trap) here, so it is not a block terminator</span>
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">kernel_mode</span> {
-            <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">kill</span>().<span class="ident">unwrap</span>();
-            <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_sibling_block</span>(<span class="string">&quot;abort_continue&quot;</span>);
-        }
-        <span class="comment">// TODO: Figure out an appropriate instruction for kernel mode.</span>
+        <span class="comment">// HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,</span>
+        <span class="comment">// so the best thing we can do is inject an infinite loop.</span>
+        <span class="comment">// (While there is `OpKill`, it doesn&#39;t really have the right semantics)</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">abort_loop_bx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_sibling_block</span>(<span class="string">&quot;abort_loop&quot;</span>);
+        <span class="ident">abort_loop_bx</span>.<span class="ident">br</span>(<span class="ident">abort_loop_bx</span>.<span class="ident">llbb</span>());
+        <span class="self">self</span>.<span class="ident">br</span>(<span class="ident">abort_loop_bx</span>.<span class="ident">llbb</span>());
+        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_sibling_block</span>(<span class="string">&quot;abort_continue&quot;</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">assume</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="self">Self</span>::<span class="ident">Value</span>) {

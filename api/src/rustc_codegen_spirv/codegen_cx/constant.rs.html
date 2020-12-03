@@ -538,6 +538,13 @@
 <span id="535">535</span>
 <span id="536">536</span>
 <span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -545,7 +552,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::<span class="ident">Word</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">place</span>::<span class="ident">PlaceRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">ConstMethods</span>, <span class="ident">MiscMethods</span>, <span class="ident">StaticMethods</span>};
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">ConstMethods</span>, <span class="ident">MiscMethods</span>, <span class="ident">StaticMethods</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">mir</span>::<span class="ident">interpret</span>::{<span class="ident">read_target_uint</span>, <span class="ident">Allocation</span>, <span class="ident">GlobalAlloc</span>, <span class="ident">Pointer</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::<span class="ident">TyAndLayout</span>;
@@ -709,13 +716,14 @@
 
     <span class="kw">fn</span> <span class="ident">const_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="ident">Symbol</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>::<span class="ident">Value</span>, <span class="self">Self</span>::<span class="ident">Value</span>) {
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">as_str</span>().<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(
-            <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">types</span>.<span class="ident">str_</span>)
-                .<span class="ident">spirv_type</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>),
-        );
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">ty</span>);
-        <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="string">&quot;constant string&quot;</span>);
-        (<span class="ident">result</span>, <span class="self">self</span>.<span class="ident">const_usize</span>(<span class="ident">len</span> <span class="kw">as</span> <span class="ident">u64</span>))
+        <span class="kw">let</span> <span class="ident">str_ty</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">layout_of</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">types</span>.<span class="ident">str_</span>)
+            .<span class="ident">spirv_type</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
+        <span class="comment">// FIXME(eddyb) include the actual byte data.</span>
+        (
+            <span class="self">self</span>.<span class="ident">make_constant_pointer</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">str_ty</span>)),
+            <span class="self">self</span>.<span class="ident">const_usize</span>(<span class="ident">len</span> <span class="kw">as</span> <span class="ident">u64</span>),
+        )
     }
     <span class="kw">fn</span> <span class="ident">const_struct</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">elts</span>: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::<span class="ident">Value</span>], <span class="ident">_packed</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="comment">// Presumably this will get bitcasted to the right type?</span>
@@ -1012,7 +1020,13 @@
                 *data = *c + asdf-&gt;y[*c];
                 }
                 */</span>
-                <span class="self">self</span>.<span class="ident">zombie_no_span</span>(<span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>), <span class="string">&quot;constant runtime array value&quot;</span>);
+                <span class="comment">// HACK(eddyb) we don&#39;t know whether this constant originated</span>
+                <span class="comment">// in a system crate, so it&#39;s better to always zombie.</span>
+                <span class="self">self</span>.<span class="ident">zombie_even_in_user_code</span>(
+                    <span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>),
+                    <span class="ident">DUMMY_SP</span>,
+                    <span class="string">&quot;constant runtime array value&quot;</span>,
+                );
                 <span class="ident">result</span>
             }
             <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {

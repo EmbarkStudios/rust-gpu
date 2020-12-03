@@ -2020,6 +2020,15 @@
 <span id="2017">2017</span>
 <span id="2018">2018</span>
 <span id="2019">2019</span>
+<span id="2020">2020</span>
+<span id="2021">2021</span>
+<span id="2022">2022</span>
+<span id="2023">2023</span>
+<span id="2024">2024</span>
+<span id="2025">2025</span>
+<span id="2026">2026</span>
+<span id="2027">2027</span>
+<span id="2028">2028</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
@@ -2033,7 +2042,9 @@
 };
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">operand</span>::{<span class="ident">OperandRef</span>, <span class="ident">OperandValue</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">place</span>::<span class="ident">PlaceRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">BuilderMethods</span>, <span class="ident">ConstMethods</span>, <span class="ident">LayoutTypeMethods</span>, <span class="ident">OverflowOp</span>};
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{
+    <span class="ident">BuilderMethods</span>, <span class="ident">ConstMethods</span>, <span class="ident">IntrinsicCallMethods</span>, <span class="ident">LayoutTypeMethods</span>, <span class="ident">OverflowOp</span>,
+};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">MemFlags</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">Ty</span>;
@@ -4018,6 +4029,13 @@
                 );
             }
             <span class="ident">result</span>
+        } <span class="kw">else</span> <span class="kw">if</span> [<span class="self">self</span>.<span class="ident">panic_fn_id</span>.<span class="ident">get</span>(), <span class="self">self</span>.<span class="ident">panic_bounds_check_fn_id</span>.<span class="ident">get</span>()]
+            .<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="ident">llfn_def</span>))
+        {
+            <span class="comment">// HACK(eddyb) redirect builtin panic calls to an abort, to avoid</span>
+            <span class="comment">// needing to materialize `&amp;core::panic::Location` or `format_args!`.</span>
+            <span class="self">self</span>.<span class="ident">abort</span>();
+            <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>)
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">arg</span><span class="op">|</span> <span class="ident">arg</span>.<span class="ident">def</span>(<span class="self">self</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
             <span class="self">self</span>.<span class="ident">emit</span>()
