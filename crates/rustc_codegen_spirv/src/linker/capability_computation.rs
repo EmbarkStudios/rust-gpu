@@ -3,11 +3,26 @@ use rspirv::spirv::{Capability, Op};
 use std::collections::HashSet;
 
 pub fn remove_extra_capabilities(module: &mut Module) {
-    remove_capabilities(module, &compute_capabilities(module));
+    let used_capabilities = used_capabilities(module);
+    let removable_capabilities: HashSet<Capability> = [
+        Capability::Int8,
+        Capability::Int16,
+        Capability::Int64,
+        Capability::Float16,
+        Capability::Float64,
+        Capability::IntegerFunctions2INTEL,
+    ]
+    .iter()
+    .copied()
+    .collect();
+    let to_remove = removable_capabilities
+        .difference(&used_capabilities)
+        .copied()
+        .collect();
+    remove_capabilities(module, &to_remove);
 }
 
-// TODO: This is enormously unimplemented
-fn compute_capabilities(module: &Module) -> HashSet<Capability> {
+fn used_capabilities(module: &Module) -> HashSet<Capability> {
     let mut set = HashSet::new();
     for inst in module.all_inst_iter() {
         set.extend(inst.class.capabilities);
@@ -36,18 +51,12 @@ fn compute_capabilities(module: &Module) -> HashSet<Capability> {
             _ => {}
         }
     }
-    // always keep these capabilities, for now
-    set.insert(Capability::Addresses);
-    set.insert(Capability::Kernel);
-    set.insert(Capability::Shader);
-    set.insert(Capability::VariablePointers);
-    set.insert(Capability::VulkanMemoryModel);
     set
 }
 
 fn remove_capabilities(module: &mut Module, set: &HashSet<Capability>) {
     module.capabilities.retain(|inst| {
-        inst.class.opcode != Op::Capability || set.contains(&inst.operands[0].unwrap_capability())
+        inst.class.opcode != Op::Capability || !set.contains(&inst.operands[0].unwrap_capability())
     });
 }
 
