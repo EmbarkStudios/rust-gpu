@@ -202,15 +202,16 @@ impl<'tcx> CodegenCx<'tcx> {
         .def(span, self);
         let initializer = value.def_cx(self);
 
-        // Create these undefs up front instead of on demand in SpirvValue::def because
+        // Create these up front instead of on demand in SpirvValue::def because
         // SpirvValue::def can't use cx.emit()
-        // We want a unique ID for these undefs, so don't use the caching system.
-        let zombie = self.emit_global().undef(ty, None);
+        let global_var =
+            self.emit_global()
+                .variable(ty, None, StorageClass::Function, Some(initializer));
 
         SpirvValue {
             kind: SpirvValueKind::ConstantPointer {
                 initializer,
-                zombie,
+                global_var,
             },
             ty,
         }

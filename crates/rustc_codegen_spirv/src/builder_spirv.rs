@@ -23,7 +23,10 @@ pub enum SpirvValueKind {
     /// dereferenced, the "load" is instead a no-op that returns the underlying value directly.
     ConstantPointer {
         initializer: Word,
-        zombie: Word,
+
+        /// The global (module-scoped) `OpVariable` (with `initializer` set as
+        /// its initializer) to attach zombies to.
+        global_var: Word,
     },
 }
 
@@ -38,7 +41,7 @@ impl SpirvValue {
         match self.kind {
             SpirvValueKind::ConstantPointer {
                 initializer,
-                zombie: _,
+                global_var: _,
             } => {
                 let ty = match cx.lookup_type(self.ty) {
                     SpirvType::Pointer {
@@ -71,17 +74,17 @@ impl SpirvValue {
             SpirvValueKind::Def(word) => word,
             SpirvValueKind::ConstantPointer {
                 initializer: _,
-                zombie,
+                global_var,
             } => {
                 // HACK(eddyb) we don't know whether this constant originated
                 // in a system crate, so it's better to always zombie.
                 cx.zombie_even_in_user_code(
-                    zombie,
+                    global_var,
                     span,
                     "Cannot use this pointer directly, it must be dereferenced first",
                 );
 
-                zombie
+                global_var
             }
         }
     }
