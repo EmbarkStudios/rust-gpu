@@ -121,7 +121,15 @@ fn make_type_key(
         }
     }
     if let Some(id) = inst.result_id {
-        data.push(if zombies.contains(&id) { 1 } else { 0 });
+        data.push(if zombies.contains(&id) {
+            if inst.result_type.is_some() {
+                id
+            } else {
+                1
+            }
+        } else {
+            0
+        });
         if let Some(annos) = annotations.get(&id) {
             data.extend_from_slice(annos)
         }

@@ -27,7 +27,7 @@ use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 
@@ -53,8 +53,13 @@ pub struct CodegenCx<'tcx> {
     pub sym: Box<Symbols>,
     pub instruction_table: InstructionTable,
     pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
-    pub zombie_undefs_for_system_constant_pointers: RefCell<HashMap<Word, Word>>,
     pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
+
+    /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
+    pub panic_fn_id: Cell<Option<Word>>,
+    /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
+    pub panic_bounds_check_fn_id: Cell<Option<Word>>,
+
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
@@ -105,8 +110,9 @@ impl<'tcx> CodegenCx<'tcx> {
             sym,
             instruction_table: InstructionTable::new(),
             really_unsafe_ignore_bitcasts: Default::default(),
-            zombie_undefs_for_system_constant_pointers: Default::default(),
             libm_intrinsics: Default::default(),
+            panic_fn_id: Default::default(),
+            panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
         }
     }
@@ -163,6 +169,9 @@ impl<'tcx> CodegenCx<'tcx> {
             self.tcx.sess.err(reason);
         }
     }
+    pub fn zombie_even_in_user_code(&self, word: Word, span: Span, reason: &'static str) {
+        self.zombie_values.borrow_mut().insert(word, (reason, span));
+    }
 
     pub fn is_system_crate(&self) -> bool {
         self.tcx
@@ -199,19 +208,19 @@ impl<'tcx> CodegenCx<'tcx> {
             pointee: value.ty,
         }
         .def(span, self);
-        if self.is_system_crate() {
-            // Create these undefs up front instead of on demand in SpirvValue::def because
-            // SpirvValue::def can't use cx.emit()
-            self.zombie_undefs_for_system_constant_pointers
-                .borrow_mut()
-                .entry(ty)
-                .or_insert_with(|| {
-                    // We want a unique ID for these undefs, so don't use the caching system.
-                    self.emit_global().undef(ty, None)
-                });
-        }
+        let initializer = value.def_cx(self);
+
+        // Create these up front instead of on demand in SpirvValue::def because
+        // SpirvValue::def can't use cx.emit()
+        let global_var =
+            self.emit_global()
+                .variable(ty, None, StorageClass::Function, Some(initializer));
+
         SpirvValue {
-            kind: SpirvValueKind::ConstantPointer(value.def_cx(self)),
+            kind: SpirvValueKind::ConstantPointer {
+                initializer,
+                global_var,
+            },
             ty,
         }
     }

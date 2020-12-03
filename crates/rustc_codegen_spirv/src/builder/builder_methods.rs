@@ -10,7 +10,9 @@ use rustc_codegen_ssa::common::{
 };
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
-use rustc_codegen_ssa::traits::{BuilderMethods, ConstMethods, LayoutTypeMethods, OverflowOp};
+use rustc_codegen_ssa::traits::{
+    BuilderMethods, ConstMethods, IntrinsicCallMethods, LayoutTypeMethods, OverflowOp,
+};
 use rustc_codegen_ssa::MemFlags;
 use rustc_middle::bug;
 use rustc_middle::ty::Ty;
@@ -1995,6 +1997,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 );
             }
             result
+        } else if [self.panic_fn_id.get(), self.panic_bounds_check_fn_id.get()]
+            .contains(&Some(llfn_def))
+        {
+            // HACK(eddyb) redirect builtin panic calls to an abort, to avoid
+            // needing to materialize `&core::panic::Location` or `format_args!`.
+            self.abort();
+            self.undef(result_type)
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()

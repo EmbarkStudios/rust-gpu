@@ -240,8 +240,14 @@ impl Structurizer<'_> {
 
                 // Move all of the contents of the original `block` into the
                 // new loop body, but keep labels and indices intact.
+                // Also update the existing merge if it happens to be the `block`
+                // we just moved (this should only be relevant to infinite loops).
                 self.func.blocks_mut()[while_body_block].instructions =
                     mem::replace(&mut self.func.blocks_mut()[block].instructions, vec![]);
+                if region.merge == block {
+                    region.merge = while_body_block;
+                    region.merge_id = while_body_block_id;
+                }
 
                 // Create a separate merge block for the loop body, as the original
                 // one might be used by an `OpSelectionMerge` and cannot be reused.
