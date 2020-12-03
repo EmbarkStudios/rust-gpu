@@ -181,7 +181,6 @@ impl BuilderSpirv {
         }
         // The linker will always be ran on this module
         builder.capability(Capability::Linkage);
-        // TODO: Remove these eventually?
         builder.capability(Capability::Int8);
         builder.capability(Capability::Int16);
         builder.capability(Capability::Int64);

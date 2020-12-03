@@ -96,8 +96,9 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                             // There was a newline, add a new line.
                             tokens.push(vec![]);
                         }
-                        for word in line.split_whitespace() {
-                            tokens.last_mut().unwrap().push(Token::Word(word));
+                        let mut chars = line.chars();
+                        while let Some(token) = self.lex_word(&mut chars) {
+                            tokens.last_mut().unwrap().push(token);
                         }
                     }
                 }
@@ -143,6 +144,7 @@ enum TypeofKind {
 
 enum Token<'a, 'cx, 'tcx> {
     Word(&'a str),
+    String(String),
     Placeholder(&'a InlineAsmOperandRef<'tcx, Builder<'cx, 'tcx>>, Span),
     Typeof(
         &'a InlineAsmOperandRef<'tcx, Builder<'cx, 'tcx>>,
@@ -157,6 +159,65 @@ enum OutRegister<'a> {
 }
 
 impl<'cx, 'tcx> Builder<'cx, 'tcx> {
+    fn lex_word<'a>(&self, line: &mut std::str::Chars<'a>) -> Option<Token<'a, 'cx, 'tcx>> {
+        loop {
+            let start = line.as_str();
+            match line.next()? {
+                // skip over leading whitespace
+                ch if ch.is_whitespace() => continue,
+                // lex a string
+                '"' => {
+                    let mut cooked = String::new();
+                    loop {
+                        match line.next() {
+                            None => {
+                                self.err("Unterminated string in instruction");
+                                return None;
+                            }
+                            Some('"') => break,
+                            Some('\\') => {
+                                let escape = match line.next() {
+                                    None => {
+                                        self.err("Unterminated string in instruction");
+                                        return None;
+                                    }
+                                    Some('n') => '\n',
+                                    Some('r') => '\r',
+                                    Some('t') => '\t',
+                                    Some('0') => '\0',
+                                    Some('\\') => '\\',
+                                    Some('\'') => '\'',
+                                    Some('"') => '"',
+                                    Some(escape) => {
+                                        self.err(&format!("invalid escape '\\{}'", escape));
+                                        return None;
+                                    }
+                                };
+                                cooked.push(escape);
+                            }
+                            Some(ch) => {
+                                cooked.push(ch);
+                            }
+                        }
+                    }
+                    break Some(Token::String(cooked));
+                }
+                // lex a word
+                _ => {
+                    let end = loop {
+                        let end = line.as_str();
+                        match line.next() {
+                            Some(ch) if !ch.is_whitespace() => continue,
+                            _ => break end,
+                        }
+                    };
+                    let word = &start[..(start.len() - end.len())];
+                    break Some(Token::Word(word));
+                }
+            }
+        }
+    }
+
     fn insert_inst(&mut self, id_map: &mut HashMap<&str, Word>, inst: dr::Instruction) {
         // Types declared must be registered in our type system.
         let new_result_id = match inst.class.opcode {
@@ -219,6 +280,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Token::Placeholder(_, _) => true,
             Token::Word(id_str) if id_str.starts_with('%') => true,
             Token::Word(_) => false,
+            Token::String(_) => false,
             Token::Typeof(_, _, _) => false,
         } {
             let result_id = match self.parse_id_out(id_map, first_token) {
@@ -245,6 +307,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         };
         let inst_name = match first_token {
             Token::Word(inst_name) => inst_name,
+            Token::String(_) => {
+                self.err("cannot use a string as an instruction");
+                return;
+            }
             Token::Placeholder(_, span) | Token::Typeof(_, span, _) => {
                 self.tcx
                     .sess
@@ -369,6 +435,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     None
                 }
             },
+            Token::String(_) => {
+                self.err("expected ID, not string");
+                None
+            }
             Token::Typeof(_, span, _) => {
                 self.tcx
                     .sess
@@ -447,6 +517,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     None
                 }
             },
+            Token::String(_) => {
+                self.err("expected ID, not string");
+                None
+            }
             Token::Typeof(hole, span, kind) => match hole {
                 InlineAsmOperandRef::In { reg, value } => {
                     self.check_reg(span, reg);
@@ -589,6 +663,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         };
         let word = match token {
             Token::Word(word) => Some(word),
+            Token::String(_) => None,
             Token::Placeholder(_, _) => None,
             Token::Typeof(_, _, _) => None,
         };
@@ -619,7 +694,11 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
                 Err(e) => self.err(&format!("invalid integer: {}", e)),
             },
-            (OperandKind::LiteralString, _) => self.err("LiteralString not supported yet"),
+            (OperandKind::LiteralString, _) => {
+                if let Token::String(value) = token {
+                    inst.operands.push(dr::Operand::LiteralString(value));
+                }
+            }
             (OperandKind::LiteralContextDependentNumber, Some(word)) => {
                 assert!(matches!(inst.class.opcode, Op::Constant | Op::SpecConstant));
                 let ty = inst.result_type.unwrap();
@@ -690,6 +769,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                             Ok(v) => inst.operands.push(dr::Operand::LiteralInt32(v)),
                             Err(e) => self.err(&format!("invalid integer: {}", e)),
                         },
+                        Some(Token::String(_)) => self.err(&format!(
+                            "expected a literal, not a string for a {:?}",
+                            kind
+                        )),
                         Some(Token::Placeholder(_, span)) => self.tcx.sess.span_err(
                             span,
                             &format!("expected a literal, not a dynamic value for a {:?}", kind),
@@ -883,6 +966,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             },
             (kind, None) => match token {
                 Token::Word(_) => bug!(),
+                Token::String(_) => {
+                    self.err(&format!(
+                        "expected a literal, not a string for a {:?}",
+                        kind
+                    ));
+                }
                 Token::Placeholder(_, span) => {
                     self.tcx.sess.span_err(
                         span,
