@@ -1,21 +1,26 @@
 //! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
+use crate::finalizing_passes::ZombieDecoration;
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Decoration, Op, Word};
 use rustc_session::Session;
+use rustc_span::{Span, DUMMY_SP};
 use std::collections::HashMap;
 use std::env;
 use std::iter::once;
 
-pub fn collect_zombies(module: &Module) -> impl Iterator<Item = (Word, String)> + '_ {
+// HACK(eddyb) `impl FnOnce() -> ...` allows some callers to avoid deserialization.
+pub fn collect_zombies(
+    module: &Module,
+) -> impl Iterator<Item = (Word, impl FnOnce() -> ZombieDecoration + '_)> + '_ {
     module.annotations.iter().filter_map(|inst| {
         // TODO: Temp hack. We hijack UserTypeGOOGLE right now, since the compiler never emits this.
         if inst.class.opcode == Op::DecorateString
             && inst.operands[1].unwrap_decoration() == Decoration::UserTypeGOOGLE
         {
             let id = inst.operands[0].unwrap_id_ref();
-            let reason = inst.operands[2].unwrap_literal_string();
-            return Some((id, reason.to_string()));
+            let encoded = inst.operands[2].unwrap_literal_string();
+            return Some((id, move || serde_json::from_str(encoded).unwrap()));
         }
         None
     })
@@ -31,19 +36,22 @@ fn remove_zombie_annotations(module: &mut Module) {
 #[derive(Clone)]
 struct ZombieInfo<'a> {
     reason: &'a str,
+    span: Span,
     stack: Vec<Word>,
 }
 
 impl<'a> ZombieInfo<'a> {
-    fn from_reason(reason: &'a str) -> Self {
+    fn new(reason: &'a str, span: Span) -> Self {
         Self {
             reason,
+            span,
             stack: Vec::new(),
         }
     }
     fn push_stack(&self, word: Word) -> Self {
         Self {
             reason: self.reason,
+            span: self.span,
             stack: self.stack.iter().cloned().chain(once(word)).collect(),
         }
     }
@@ -151,16 +159,26 @@ fn report_error_zombies(sess: &Session, module: &Module, zombie: &HashMap<Word, 
                 .chain(stack)
                 .collect::<Vec<_>>()
                 .join("\n");
-            sess.struct_err(reason.reason).note(&stack_note).emit();
+            sess.struct_span_err(reason.span, reason.reason)
+                .note(&stack_note)
+                .emit();
         }
     }
 }
 
 pub fn remove_zombies(sess: &Session, module: &mut Module) {
-    let zombies_owned = collect_zombies(module).collect::<Vec<_>>();
+    let zombies_owned = collect_zombies(module)
+        .map(|(id, decode)| {
+            let ZombieDecoration { reason, span } = decode();
+            let span = span
+                .and_then(|span| span.to_rustc(sess.source_map()))
+                .unwrap_or(DUMMY_SP);
+            (id, (reason, span))
+        })
+        .collect::<Vec<_>>();
     let mut zombies = zombies_owned
         .iter()
-        .map(|(a, b)| (*a, ZombieInfo::from_reason(b)))
+        .map(|(id, (reason, span))| (*id, ZombieInfo::new(reason, *span)))
         .collect();
     remove_zombie_annotations(module);
     // Note: This is O(n^2).
