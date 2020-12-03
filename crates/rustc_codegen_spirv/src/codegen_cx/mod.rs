@@ -22,9 +22,8 @@ use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TyS};
 use rustc_session::Session;
 use rustc_span::def_id::LOCAL_CRATE;
-use rustc_span::source_map::Span;
 use rustc_span::symbol::{sym, Symbol};
-use rustc_span::SourceFile;
+use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
@@ -45,8 +44,10 @@ pub struct CodegenCx<'tcx> {
     /// Cache generated vtables
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
     pub ext_inst: RefCell<ExtInst>,
-    /// Invalid spir-v IDs that should be stripped from the final binary
-    zombie_values: RefCell<HashMap<Word, &'static str>>,
+    /// Invalid spir-v IDs that should be stripped from the final binary,
+    /// each with its own reason and span that should be used for reporting
+    /// (in the event that the value is actually needed)
+    zombie_values: RefCell<HashMap<Word, (&'static str, Span)>>,
     pub kernel_mode: bool,
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
@@ -148,14 +149,16 @@ impl<'tcx> CodegenCx<'tcx> {
     /// something that isn't supported, and should be an error.
     pub fn zombie_with_span(&self, word: Word, span: Span, reason: &'static str) {
         if self.is_system_crate() {
-            self.zombie_values.borrow_mut().insert(word, reason);
+            self.zombie_values.borrow_mut().insert(word, (reason, span));
         } else {
             self.tcx.sess.span_err(span, reason);
         }
     }
     pub fn zombie_no_span(&self, word: Word, reason: &'static str) {
         if self.is_system_crate() {
-            self.zombie_values.borrow_mut().insert(word, reason);
+            self.zombie_values
+                .borrow_mut()
+                .insert(word, (reason, DUMMY_SP));
         } else {
             self.tcx.sess.err(reason);
         }
@@ -173,7 +176,11 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
-        export_zombies(&mut result, &self.zombie_values.borrow());
+        export_zombies(
+            &mut result,
+            &self.zombie_values.borrow(),
+            self.tcx.sess.source_map(),
+        );
         result
     }
 
