@@ -186,7 +186,7 @@ fn main() { }
 <h2><a class="header" href="#builtins" id="builtins">Builtins</a></h2>
 <p>When declaring inputs and outputs, sometimes you want to declare it as a &quot;builtin&quot;. This means many things, but one example is <code>gl_Position</code> from glsl - the GPU assigns inherent meaning to the variable and uses it for placing the vertex in clip space. The equivalent in rust-gpu is called <code>position</code>.</p>
 <p>Example:</p>
-<pre><pre class="playground"><code class="language-rust:">#[spirv(fragment)]
+<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
 fn main(
     #[spirv(position)] mut out_pos: Output&lt;Vec4&gt;,
 ) { }
@@ -195,12 +195,31 @@ fn main(
 <h2><a class="header" href="#descriptor-set-and-binding" id="descriptor-set-and-binding">Descriptor set and binding</a></h2>
 <p>A SPIR-V shader must declare where uniform variables are located with explicit indices that match up with CPU-side code. This can be done with the <code>descriptor_set</code> and <code>binding</code> attributes. Note that <code>descriptor_set = 0</code> is reserved for future use, and cannot be used.</p>
 <p>Example:</p>
-<pre><pre class="playground"><code class="language-rust:">#[spirv(fragment)]
+<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
 fn main(
     #[spirv(descriptor_set = 2, binding = 5)] mut var: Uniform&lt;Vec4&gt;,
 ) { }
 </code></pre></pre>
 <p>Both descriptor_set and binding take an integer argument that specifies the uniform's index.</p>
+<h2><a class="header" href="#block" id="block">Block</a></h2>
+<p>This attribute is a temporary quick fix before we implement a more fully-featured binding model. If you get validation errors about missing a Block decoration on a struct due to being used as uniform block data, try adding this attribute to the struct definition. If you get errors around the struct definition not being an aggregate, but rather the type of the field, try adding <code>#[repr(C)]</code> to the struct definition.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust">#[spirv(block)]
+struct Thing {
+    a: Vec4,
+    b: Vec4,
+    c: Vec4,
+}
+
+#[spirv(fragment)]
+fn main(obj: PushConstant&lt;ShaderConstants&gt;) { }
+</code></pre></pre>
+<h2><a class="header" href="#flat" id="flat">Flat</a></h2>
+<p>The flat attribute corresponds to the flat keyword in glsl - in other words, the data is not interpolated across the triangle when invoking the fragment shader.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
+fn main(#[spirv(flat)] obj: Input&lt;u32&gt;) { }
+</code></pre></pre>
 <h1><a class="header" href="#building-rust-gpu" id="building-rust-gpu">Building Rust-GPU</a></h1>
 <h2><a class="header" href="#getting-started" id="getting-started">Getting started</a></h2>
 <ol>
