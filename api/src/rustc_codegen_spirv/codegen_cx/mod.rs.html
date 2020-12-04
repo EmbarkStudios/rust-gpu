@@ -387,6 +387,15 @@
 <span id="384">384</span>
 <span id="385">385</span>
 <span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
@@ -605,6 +614,15 @@
         <span class="kw">let</span> <span class="ident">global_var</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">emit_global</span>()
                 .<span class="ident">variable</span>(<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">StorageClass</span>::<span class="ident">Function</span>, <span class="prelude-val">Some</span>(<span class="ident">initializer</span>));
+
+        <span class="comment">// In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span</span>
+        <span class="comment">// to the use site of this constant. However, if this constant happens to never get used, we</span>
+        <span class="comment">// still want to zobmie it, so zombie here.</span>
+        <span class="self">self</span>.<span class="ident">zombie_even_in_user_code</span>(
+            <span class="ident">global_var</span>,
+            <span class="ident">span</span>,
+            <span class="string">&quot;Cannot use this pointer directly, it must be dereferenced first&quot;</span>,
+        );
 
         <span class="ident">SpirvValue</span> {
             <span class="ident">kind</span>: <span class="ident">SpirvValueKind</span>::<span class="ident">ConstantPointer</span> {

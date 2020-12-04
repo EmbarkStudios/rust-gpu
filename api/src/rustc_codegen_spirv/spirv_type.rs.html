@@ -609,6 +609,21 @@
 <span id="606">606</span>
 <span id="607">607</span>
 <span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">RecursivePointeeCache</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
@@ -801,12 +816,16 @@
                 <span class="ident">storage_class</span>,
                 <span class="ident">pointee</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// Note: pointers to functions are always illegal in SPIR-V. However, the type of a</span>
-                <span class="comment">// pointer to a function is sometimes used in e.g. get_fn_addr, which creates a</span>
-                <span class="comment">// `SpirvValueKind::ConstantPointer`. So, pointers to functions are made illegal by</span>
-                <span class="comment">// the fact it&#39;s impossible to create a pointer to function *value*, so the type</span>
-                <span class="comment">// existing is fine.</span>
-                <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_pointer</span>(<span class="prelude-val">None</span>, <span class="ident">storage_class</span>, <span class="ident">pointee</span>)
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_pointer</span>(<span class="prelude-val">None</span>, <span class="ident">storage_class</span>, <span class="ident">pointee</span>);
+                <span class="comment">// no pointers to functions</span>
+                <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span>::<span class="ident">Function</span> { .. } <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
+                    <span class="ident">cx</span>.<span class="ident">zombie_even_in_user_code</span>(
+                        <span class="ident">result</span>,
+                        <span class="ident">def_span</span>,
+                        <span class="string">&quot;function pointer types are not allowed&quot;</span>,
+                    )
+                }
+                <span class="ident">result</span>
             }
             <span class="self">Self</span>::<span class="ident">Function</span> {
                 <span class="ident">return_type</span>,
@@ -841,7 +860,7 @@
 
     <span class="doccomment">/// `def_with_id` is used by the `RecursivePointeeCache` to handle `OpTypeForwardPointer`: when</span>
     <span class="doccomment">/// emitting the subsequent `OpTypePointer`, the ID is already known and must be re-used.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_with_id</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">_def_span</span>: <span class="ident">Span</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_with_id</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">def_span</span>: <span class="ident">Span</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cached</span>) <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">type_cache</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
             <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">cached</span>, <span class="ident">id</span>);
             <span class="kw">return</span> <span class="ident">cached</span>;
@@ -850,9 +869,20 @@
             <span class="self">Self</span>::<span class="ident">Pointer</span> {
                 <span class="ident">storage_class</span>,
                 <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
-                .<span class="ident">emit_global</span>()
-                .<span class="ident">type_pointer</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">storage_class</span>, <span class="ident">pointee</span>),
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>
+                    .<span class="ident">emit_global</span>()
+                    .<span class="ident">type_pointer</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">storage_class</span>, <span class="ident">pointee</span>);
+                <span class="comment">// no pointers to functions</span>
+                <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span>::<span class="ident">Function</span> { .. } <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
+                    <span class="ident">cx</span>.<span class="ident">zombie_even_in_user_code</span>(
+                        <span class="ident">result</span>,
+                        <span class="ident">def_span</span>,
+                        <span class="string">&quot;function pointer types are not allowed&quot;</span>,
+                    )
+                }
+                <span class="ident">result</span>
+            }
             <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
                 .<span class="ident">tcx</span>
                 .<span class="ident">sess</span>
