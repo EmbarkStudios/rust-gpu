@@ -150,11 +150,42 @@ impl<'tcx> CodegenCx<'tcx> {
                 other.debug(arg, self)
             )),
         };
+
+        // Handles fn main(#[spirv(input)] x: &f32) // etc
+        // FIXME: This could be cleaned up and merged with the location logic
+        let mut parameter_storage_class = None;
+        for attr in parse_attrs(self, hir_param.attrs) {
+            match attr {
+                SpirvAttribute::StorageClass(s) => {
+                    if parameter_storage_class.is_none() {
+                        parameter_storage_class.replace(s);
+                    } else {
+                        // FIXME: Add span
+                        self.tcx
+                            .sess
+                            .fatal("Multiple storage class attributes for entry parameter!")
+                    }
+                }
+                _ => (),
+            }
+        }
+        // Only the new way as above or the old way via Input<T> are allowed, not both
+        let storage_class = match (storage_class, parameter_storage_class) {
+            (StorageClass::Function, Some(s)) => s,
+            (s, None) => s,
+            (_, Some(_)) => {
+                // FIXME: Add span
+                self.tcx
+                    .sess
+                    .fatal("Storage class specified with both type and on entry parameter!")
+            }
+        };
+
         let mut has_location = matches!(
             storage_class,
             StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
         );
-        // Note: this *declares* the variable too.
+        // Note: this *declares* the variable too
         let variable = self.emit_global().variable(arg, None, storage_class, None);
         if let PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
