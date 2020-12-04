@@ -338,6 +338,7 @@ impl Symbols {
             ("sampler", SpirvAttribute::Sampler),
             ("block", SpirvAttribute::Block),
             ("flat", SpirvAttribute::Flat),
+            ("sampled_image", SpirvAttribute::SampledImage),
         ]
         .iter()
         .cloned();
@@ -453,6 +454,7 @@ pub enum SpirvAttribute {
         access_qualifier: Option<AccessQualifier>,
     },
     Sampler,
+    SampledImage,
     Block,
     Flat,
 }

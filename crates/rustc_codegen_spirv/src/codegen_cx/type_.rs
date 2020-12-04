@@ -177,6 +177,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             SpirvType::Function { .. } => TypeKind::Function,
             SpirvType::Image { .. } => TypeKind::Integer,
             SpirvType::Sampler => TypeKind::Integer,
+            SpirvType::SampledImage { .. } => TypeKind::Integer,
         }
     }
     fn type_ptr_to(&self, ty: Self::Type) -> Self::Type {
