@@ -448,6 +448,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
             SpirvType::Sampler => f.debug_struct("Sampler").field("id", &self.id).finish(),
             SpirvType::SampledImage { image_type } => f
                 .debug_struct("SampledImage")
+                .field("id", &self.id)
                 .field("image_type", &self.cx.debug_type(image_type))
                 .finish(),
         };
