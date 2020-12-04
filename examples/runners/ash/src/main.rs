@@ -917,6 +917,8 @@ impl RenderCtx {
             },
         }];
 
+        // There should only be one pipeline because compile_shaders only loads the last spirv
+        // file it produced.
         for pipeline in self.pipelines.iter() {
             self.draw(pipeline, framebuffer, &clear_values);
         }
