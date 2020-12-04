@@ -185,7 +185,7 @@ impl<'tcx> CodegenCx<'tcx> {
             storage_class,
             StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
         );
-        // Note: this *declares* the variable too
+        // Note: this *declares* the variable too.
         let variable = self.emit_global().variable(arg, None, storage_class, None);
         if let PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
