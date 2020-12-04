@@ -821,7 +821,9 @@ fn trans_image<'tcx>(
         SpirvAttribute::SampledImage => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
-                cx.tcx.sess.err("#[spirv(sampled_image)] type must have size 4");
+                cx.tcx
+                    .sess
+                    .err("#[spirv(sampled_image)] type must have size 4");
                 return None;
             }
 
@@ -833,7 +835,9 @@ fn trans_image<'tcx>(
                 let image_type = trans_type_impl(cx, span, cx.layout_of(image_ty), false);
                 Some(SpirvType::SampledImage { image_type }.def(span, cx))
             } else {
-                cx.tcx.sess.err("#[spirv(sampled_image)] generic type must be an image");
+                cx.tcx
+                    .sess
+                    .err("#[spirv(sampled_image)] generic type must be an image");
                 None
             }
         }

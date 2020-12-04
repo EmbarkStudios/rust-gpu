@@ -71,7 +71,9 @@ pub enum SpirvType {
         access_qualifier: Option<AccessQualifier>,
     },
     Sampler,
-    SampledImage { image_type: Word },
+    SampledImage {
+        image_type: Word,
+    },
 }
 
 impl SpirvType {
