@@ -216,6 +216,15 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global()
                 .variable(ty, None, StorageClass::Function, Some(initializer));
 
+        // In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span
+        // to the use site of this constant. However, if this constant happens to never get used, we
+        // still want to zobmie it, so zombie here.
+        self.zombie_even_in_user_code(
+            global_var,
+            span,
+            "Cannot use this pointer directly, it must be dereferenced first",
+        );
+
         SpirvValue {
             kind: SpirvValueKind::ConstantPointer {
                 initializer,

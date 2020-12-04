@@ -4,7 +4,7 @@
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attrs, SpirvAttribute};
-use rspirv::spirv::{StorageClass, Word};
+use rspirv::spirv::{Capability, StorageClass, Word};
 use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind, TypeAndMut};
@@ -33,6 +33,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
     fn begin(
         &self,
         cx: &CodegenCx<'tcx>,
+        span: Span,
         pointee: PointeeTy<'tcx>,
         storage_class: StorageClass,
     ) -> Option<Word> {
@@ -52,6 +53,18 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                     let new_id = cx.emit_global().id();
                     cx.emit_global().type_forward_pointer(new_id, storage_class);
                     entry.insert(PointeeDefState::DefiningWithForward(new_id));
+                    if !cx.builder.has_capability(Capability::Addresses)
+                        && !cx
+                            .builder
+                            .has_capability(Capability::PhysicalStorageBufferAddresses)
+                    {
+                        cx.zombie_with_span(
+                            new_id,
+                            span,
+                            "OpTypeForwardPointer without OpCapability \
+                            Addresses or PhysicalStorageBufferAddresses",
+                        );
+                    }
                     Some(new_id)
                 }
                 // State: This is the third or more time we've seen this type, and we've already emitted an
@@ -459,7 +472,7 @@ fn trans_scalar<'tcx>(
             if let Some(predefined_result) =
                 cx.type_cache
                     .recursive_pointee_cache
-                    .begin(cx, pointee_ty, storage_class)
+                    .begin(cx, span, pointee_ty, storage_class)
             {
                 predefined_result
             } else {

@@ -189,12 +189,16 @@ impl SpirvType {
                 storage_class,
                 pointee,
             } => {
-                // Note: pointers to functions are always illegal in SPIR-V. However, the type of a
-                // pointer to a function is sometimes used in e.g. get_fn_addr, which creates a
-                // `SpirvValueKind::ConstantPointer`. So, pointers to functions are made illegal by
-                // the fact it's impossible to create a pointer to function *value*, so the type
-                // existing is fine.
-                cx.emit_global().type_pointer(None, storage_class, pointee)
+                let result = cx.emit_global().type_pointer(None, storage_class, pointee);
+                // no pointers to functions
+                if let Self::Function { .. } = cx.lookup_type(pointee) {
+                    cx.zombie_even_in_user_code(
+                        result,
+                        def_span,
+                        "function pointer types are not allowed",
+                    )
+                }
+                result
             }
             Self::Function {
                 return_type,
@@ -229,7 +233,7 @@ impl SpirvType {
 
     /// `def_with_id` is used by the `RecursivePointeeCache` to handle `OpTypeForwardPointer`: when
     /// emitting the subsequent `OpTypePointer`, the ID is already known and must be re-used.
-    pub fn def_with_id(self, cx: &CodegenCx<'_>, _def_span: Span, id: Word) -> Word {
+    pub fn def_with_id(self, cx: &CodegenCx<'_>, def_span: Span, id: Word) -> Word {
         if let Some(cached) = cx.type_cache.get(&self) {
             assert_eq!(cached, id);
             return cached;
@@ -238,9 +242,20 @@ impl SpirvType {
             Self::Pointer {
                 storage_class,
                 pointee,
-            } => cx
-                .emit_global()
-                .type_pointer(Some(id), storage_class, pointee),
+            } => {
+                let result = cx
+                    .emit_global()
+                    .type_pointer(Some(id), storage_class, pointee);
+                // no pointers to functions
+                if let Self::Function { .. } = cx.lookup_type(pointee) {
+                    cx.zombie_even_in_user_code(
+                        result,
+                        def_span,
+                        "function pointer types are not allowed",
+                    )
+                }
+                result
+            }
             ref other => cx
                 .tcx
                 .sess
