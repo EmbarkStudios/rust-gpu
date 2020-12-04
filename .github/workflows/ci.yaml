@@ -57,8 +57,8 @@ jobs:
         run: rustup component add rust-src rustc-dev llvm-tools-preview
       # Fetch dependencies in a separate step to clearly show how long each part
       # of the testing takes
-      - name: cargo fetch
-        run: cargo fetch --target ${{ matrix.target }}
+      - name: cargo fetch --locked
+        run: cargo fetch --locked --target ${{ matrix.target }}
       - name: Run tests
         shell: bash
         run: .github/workflows/test.sh ${{ runner.os }}
@@ -107,10 +107,10 @@ jobs:
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - name: Install rustup components
         run: rustup component add rustfmt clippy rust-src rustc-dev llvm-tools-preview
+      - name: cargo fetch --locked
+        run: cargo fetch --locked
       - name: Rustfmt
         run: cargo fmt --all -- --check
-      - name: cargo fetch
-        run: cargo fetch
       - name: Clippy
         run: .github/workflows/clippy.sh
 
