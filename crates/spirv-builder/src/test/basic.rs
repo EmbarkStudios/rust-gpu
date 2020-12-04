@@ -1,4 +1,23 @@
 use super::{dis_fn, val, val_vulkan};
+use std::ffi::OsStr;
+
+struct SetEnvVar<'a> {
+    k: &'a OsStr,
+}
+
+impl<'a> SetEnvVar<'a> {
+    fn new(k: &'a impl AsRef<OsStr>, v: impl AsRef<OsStr>) -> Self {
+        let k = k.as_ref();
+        std::env::set_var(k, v);
+        Self { k }
+    }
+}
+
+impl<'a> Drop for SetEnvVar<'a> {
+    fn drop(&mut self) {
+        std::env::remove_var(self.k)
+    }
+}
 
 #[test]
 fn hello_world() {
@@ -6,6 +25,19 @@ fn hello_world() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
+}
+"#);
+}
+
+#[test]
+// blocked on: https://github.com/EmbarkStudios/rust-gpu/issues/69
+#[ignore]
+fn no_dce() {
+    let _var = SetEnvVar::new(&"NO_DCE", "1");
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn no_dce() {
 }
 "#);
 }
