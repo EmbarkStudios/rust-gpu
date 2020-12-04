@@ -71,6 +71,7 @@ pub enum SpirvType {
         access_qualifier: Option<AccessQualifier>,
     },
     Sampler,
+    SampledImage { image_type: Word },
 }
 
 impl SpirvType {
@@ -222,6 +223,7 @@ impl SpirvType {
                 access_qualifier,
             ),
             Self::Sampler => cx.emit_global().type_sampler(),
+            Self::SampledImage { image_type } => cx.emit_global().type_sampled_image(image_type),
         };
         cx.type_cache.def(result, self);
         result
@@ -278,6 +280,7 @@ impl SpirvType {
             Self::Function { .. } => cx.tcx.data_layout.pointer_size,
             Self::Image { .. } => Size::from_bytes(4),
             Self::Sampler => Size::from_bytes(4),
+            Self::SampledImage { .. } => Size::from_bytes(4),
         };
         Some(result)
     }
@@ -303,6 +306,7 @@ impl SpirvType {
             Self::Function { .. } => cx.tcx.data_layout.pointer_align.abi,
             Self::Image { .. } => Align::from_bytes(4).unwrap(),
             Self::Sampler => Align::from_bytes(4).unwrap(),
+            Self::SampledImage { .. } => Align::from_bytes(4).unwrap(),
         }
     }
 }
@@ -440,6 +444,10 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("access_qualifier", &access_qualifier)
                 .finish(),
             SpirvType::Sampler => f.debug_struct("Sampler").field("id", &self.id).finish(),
+            SpirvType::SampledImage { image_type } => f
+                .debug_struct("SampledImage")
+                .field("image_type", &self.cx.debug_type(image_type))
+                .finish(),
         };
         {
             let mut debug_stack = DEBUG_STACK.lock().unwrap();
@@ -574,6 +582,10 @@ impl SpirvTypePrinter<'_, '_> {
                 .field("access_qualifier", &access_qualifier)
                 .finish(),
             SpirvType::Sampler => f.write_str("Sampler"),
+            SpirvType::SampledImage { image_type } => f
+                .debug_struct("SampledImage")
+                .field("image_type", &self.cx.debug_type(image_type))
+                .finish(),
         }
     }
 }

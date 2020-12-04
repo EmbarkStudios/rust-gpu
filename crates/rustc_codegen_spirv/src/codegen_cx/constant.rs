@@ -501,6 +501,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 .tcx
                 .sess
                 .fatal("Cannot create a constant sampler value"),
+            SpirvType::SampledImage { .. } => self
+                .tcx
+                .sess
+                .fatal("Cannot create a constant sampled image value"),
         }
     }
 

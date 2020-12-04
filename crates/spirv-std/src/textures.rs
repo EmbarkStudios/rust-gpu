@@ -94,3 +94,34 @@ impl Image2dArray {
         }
     }
 }
+
+#[allow(unused_attributes)]
+#[spirv(sampled_image)]
+#[derive(Copy, Clone)]
+pub struct SampledImage<I> {
+    _image: I,
+}
+
+impl SampledImage<Image2d> {
+    pub fn sample(&self, coord: Vec3A) -> Vec4 {
+        #[cfg(not(target_arch = "spirv"))]
+        {
+            let _ = coord;
+            panic!("Image sampling not supported on CPU");
+        }
+        #[cfg(target_arch = "spirv")]
+        unsafe {
+            let mut result = Default::default();
+            asm!(
+                "%sampledImage = OpLoad typeof*{1} {1}",
+                "%coord = OpLoad typeof*{2} {2}",
+                "%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord",
+                "OpStore {0} %result",
+                in(reg) &mut result,
+                in(reg) self,
+                in(reg) &coord
+            );
+            result
+        }
+    }
+}
