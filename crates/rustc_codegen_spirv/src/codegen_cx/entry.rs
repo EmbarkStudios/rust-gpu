@@ -155,18 +155,15 @@ impl<'tcx> CodegenCx<'tcx> {
         // FIXME: This could be cleaned up and merged with the location logic
         let mut parameter_storage_class = None;
         for attr in parse_attrs(self, hir_param.attrs) {
-            match attr {
-                SpirvAttribute::StorageClass(s) => {
-                    if parameter_storage_class.is_none() {
-                        parameter_storage_class.replace(s);
-                    } else {
-                        // FIXME: Add span
-                        self.tcx
-                            .sess
-                            .fatal("Multiple storage class attributes for entry parameter!")
-                    }
+            if let SpirvAttribute::StorageClass(s) = attr {
+                if parameter_storage_class.is_none() {
+                    parameter_storage_class.replace(s);
+                } else {
+                    // FIXME: Add span
+                    self.tcx
+                        .sess
+                        .fatal("Multiple storage class attributes for entry parameter!")
                 }
-                _ => (),
             }
         }
         // Only the new way as above or the old way via Input<T> are allowed, not both
