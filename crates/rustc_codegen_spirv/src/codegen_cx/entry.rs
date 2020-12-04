@@ -2,8 +2,8 @@ use super::CodegenCx;
 use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
-use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
+use rspirv::{dr::Operand, spirv};
 use rustc_hir::{Param, PatKind};
 use rustc_middle::ty::{Instance, Ty};
 use rustc_span::Span;
@@ -167,6 +167,9 @@ impl<'tcx> CodegenCx<'tcx> {
                         Decoration::BuiltIn,
                         std::iter::once(Operand::BuiltIn(builtin)),
                     );
+                    if builtin == spirv::BuiltIn::ViewportIndex {
+                        self.emit_global().capability(spirv::Capability::MultiView)
+                    }
                     has_location = false;
                 }
                 SpirvAttribute::DescriptorSet(index) => {
