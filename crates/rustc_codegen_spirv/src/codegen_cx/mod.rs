@@ -212,7 +212,9 @@ impl<'tcx> CodegenCx<'tcx> {
 
         // Create these up front instead of on demand in SpirvValue::def because
         // SpirvValue::def can't use cx.emit()
-        let global_var = self.emit_global().undef(ty, None);
+        let global_var =
+            self.emit_global()
+                .variable(ty, None, StorageClass::Function, Some(initializer));
 
         // In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span
         // to the use site of this constant. However, if this constant happens to never get used, we
