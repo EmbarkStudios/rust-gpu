@@ -103,7 +103,7 @@ pub struct SampledImage<I> {
 }
 
 impl SampledImage<Image2d> {
-    pub fn sample(&self, coord: Vec3A) -> Vec4 {
+    pub fn sample(&self, coord: Vec2) -> Vec4 {
         #[cfg(not(target_arch = "spirv"))]
         {
             let _ = coord;
