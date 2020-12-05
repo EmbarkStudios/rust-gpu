@@ -1,5 +1,5 @@
-use core::num::NonZeroU64;
 use super::{shader_module, Options};
+use core::num::NonZeroU64;
 
 fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
     async fn create_device_queue_async() -> (wgpu::Device, wgpu::Queue) {
@@ -52,8 +52,8 @@ pub fn start(options: &Options) {
                     dynamic: false,
                     min_binding_size: Some(NonZeroU64::new(1).unwrap()),
                     readonly: false,
-                }
-            }
+                },
+            },
         ],
     });
 
@@ -84,7 +84,7 @@ pub fn start(options: &Options) {
         layout: &bind_group_layout,
         entries: &[wgpu::BindGroupEntry {
             binding: 0,
-            resource: wgpu::BindingResource::Buffer(buf.slice(..))
+            resource: wgpu::BindingResource::Buffer(buf.slice(..)),
         }],
     });
 
