@@ -1,3 +1,4 @@
+use core::num::NonZeroU64;
 use super::{shader_module, Options};
 
 fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
@@ -40,7 +41,20 @@ pub fn start(options: &Options) {
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
-        entries: &[],
+        entries: &[
+            // XXX - some graphics cards do not support empty bind layout groups, so
+            // create a dummy entry.
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                count: None,
+                visibility: wgpu::ShaderStage::COMPUTE,
+                ty: wgpu::BindingType::StorageBuffer {
+                    dynamic: false,
+                    min_binding_size: Some(NonZeroU64::new(1).unwrap()),
+                    readonly: false,
+                }
+            }
+        ],
     });
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -58,10 +72,20 @@ pub fn start(options: &Options) {
         },
     });
 
+    let buf = device.create_buffer(&wgpu::BufferDescriptor {
+        label: None,
+        size: 1,
+        usage: wgpu::BufferUsage::STORAGE,
+        mapped_at_creation: false,
+    });
+
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
         label: None,
         layout: &bind_group_layout,
-        entries: &[],
+        entries: &[wgpu::BindGroupEntry {
+            binding: 0,
+            resource: wgpu::BindingResource::Buffer(buf.slice(..))
+        }],
     });
 
     let mut encoder =
