@@ -399,7 +399,7 @@ impl RenderBase {
         }
     }
 
-    pub fn create_swapchain(&self) -> vk::SwapchainKHR {
+    pub fn create_swapchain(&self, extent: vk::Extent2D) -> vk::SwapchainKHR {
         let surface_capabilities = self.surface_capabilities();
         let mut desired_image_count = surface_capabilities.min_image_count + 1;
         if surface_capabilities.max_image_count > 0
@@ -429,7 +429,7 @@ impl RenderBase {
             .min_image_count(desired_image_count)
             .image_color_space(self.surface_format.color_space)
             .image_format(self.surface_format.format)
-            .image_extent(self.surface_resolution())
+            .image_extent(extent)
             .image_usage(vk::ImageUsageFlags::COLOR_ATTACHMENT)
             .image_sharing_mode(vk::SharingMode::EXCLUSIVE)
             .pre_transform(pre_transform)
@@ -480,20 +480,20 @@ impl RenderBase {
         &self,
         image_views: &[vk::ImageView],
         render_pass: vk::RenderPass,
+        extent: vk::Extent2D,
     ) -> Vec<vk::Framebuffer> {
         image_views
             .iter()
             .map(|&present_image_view| {
                 let framebuffer_attachments = [present_image_view];
-                let surface_resolution = self.surface_resolution();
                 unsafe {
                     self.device
                         .create_framebuffer(
                             &vk::FramebufferCreateInfo::builder()
                                 .render_pass(render_pass)
                                 .attachments(&framebuffer_attachments)
-                                .width(surface_resolution.width)
-                                .height(surface_resolution.height)
+                                .width(extent.width)
+                                .height(extent.height)
                                 .layers(1),
                             None,
                         )
@@ -589,14 +589,14 @@ pub struct RenderCtx {
 impl RenderCtx {
     pub fn from_base(base: RenderBase) -> Self {
         let sync = RenderSync::new(&base);
+        let surface_resolution = base.surface_resolution();
 
-        let swapchain = base.create_swapchain();
+        let swapchain = base.create_swapchain(surface_resolution);
         let image_views = base.create_image_views(swapchain);
         let render_pass = base.create_render_pass();
-        let framebuffers = base.create_framebuffers(&image_views, render_pass);
+        let framebuffers = base.create_framebuffers(&image_views, render_pass, surface_resolution);
         let commands = RenderCommandPool::new(&base);
         let (viewports, scissors) = {
-            let surface_resolution = base.surface_resolution();
             (
                 Box::new([vk::Viewport {
                     x: 0.0,
@@ -799,7 +799,7 @@ impl RenderCtx {
 
         self.cleanup_swapchain();
 
-        self.swapchain = self.base.create_swapchain();
+        self.swapchain = self.base.create_swapchain(surface_resolution);
         self.image_views = self.base.create_image_views(self.swapchain);
         self.render_pass = self.base.create_render_pass();
         let command_buffers = {
@@ -817,9 +817,9 @@ impl RenderCtx {
         };
         self.commands.setup_command_buffer = command_buffers[0];
         self.commands.draw_command_buffer = command_buffers[1];
-        self.framebuffers = self
-            .base
-            .create_framebuffers(&self.image_views, self.render_pass);
+        self.framebuffers =
+            self.base
+                .create_framebuffers(&self.image_views, self.render_pass, surface_resolution);
         self.viewports = Box::new([vk::Viewport {
             x: 0.0,
             y: surface_resolution.height as f32,
@@ -836,6 +836,10 @@ impl RenderCtx {
 
     pub fn render(&mut self) {
         if self.rendering_paused {
+            let vk::Extent2D { width, height } = self.base.surface_resolution();
+            if height > 0 && width > 0 {
+                self.recreate_swapchain();
+            }
             return;
         };
         let present_index = unsafe {
