@@ -21,16 +21,11 @@ use std::{
     ops::Drop,
     path::PathBuf,
     process::{Command, Stdio},
-    sync::atomic::{AtomicBool, Ordering},
+    sync::mpsc::{sync_channel, TryRecvError, TrySendError},
+    thread,
 };
 
 use structopt::StructOpt;
-
-#[derive(Copy, Clone)]
-pub struct ShaderConstants {
-    pub width: u32,
-    pub height: u32,
-}
 
 #[derive(Debug, StructOpt)]
 #[structopt()]
@@ -39,11 +34,6 @@ pub struct Options {
     #[structopt(short, long)]
     debug_layer: bool,
 }
-
-// This is not an ideal solution, but it's simple and doesn't require an async runtime.
-static NEEDS_REBUILD: AtomicBool = AtomicBool::new(false);
-static IS_COMPILING: AtomicBool = AtomicBool::new(false);
-static mut NEW_SHADERS: Vec<SpirvShader> = Vec::<SpirvShader>::new();
 
 pub fn main() {
     let options = Options::from_args();
@@ -79,36 +69,38 @@ pub fn main() {
         )],
     );
 
+    let (compiler_sender, compiler_reciever) = sync_channel(1);
+
     event_loop.run(move |event, _window_target, control_flow| match event {
         Event::RedrawEventsCleared { .. } => {
-            if !IS_COMPILING.load(Ordering::SeqCst) && NEEDS_REBUILD.load(Ordering::SeqCst) {
-                // if a recompile isn't in progress, this is the only thread.
-                unsafe {
-                    for SpirvShader { name, spirv } in NEW_SHADERS.drain(..) {
+            match compiler_reciever.try_recv() {
+                Err(TryRecvError::Empty) => ctx.render(),
+                Ok(new_shaders) => {
+                    for SpirvShader { name, spirv } in new_shaders {
                         ctx.insert_shader_module(name, spirv);
                     }
+                    ctx.recompiling_shaders = false;
                 }
-                ctx.rebuild_pipelines(vk::PipelineCache::null());
-                NEEDS_REBUILD.store(false, Ordering::SeqCst);
-            }
-            ctx.render();
+                Err(TryRecvError::Disconnected) => {
+                    panic!("compiler reciever disconnected unexpectedly")
+                }
+            };
         }
         Event::WindowEvent { event, .. } => match event {
             WindowEvent::KeyboardInput { input, .. } => match input.virtual_keycode {
                 Some(VirtualKeyCode::Escape) => *control_flow = ControlFlow::Exit,
                 Some(VirtualKeyCode::F5) => {
-                    // cannot start multiple recompiles at once, cannot cancel either
-                    if !IS_COMPILING.compare_and_swap(false, true, Ordering::SeqCst) {
-                        std::thread::spawn(|| {
-                            // IS_COMPILING is set, main thread will not read this
-                            unsafe {
-                                NEW_SHADERS = compile_shaders();
-                            }
-                            NEEDS_REBUILD.store(true, Ordering::SeqCst);
-                            IS_COMPILING.store(false, Ordering::SeqCst);
+                    if !ctx.recompiling_shaders {
+                        ctx.recompiling_shaders = true;
+                        let compiler_sender = compiler_sender.clone();
+                        thread::spawn(move || {
+                            if let Err(TrySendError::Disconnected(_)) =
+                                compiler_sender.try_send(compile_shaders())
+                            {
+                                panic!("compiler sender disconnected unexpectedly");
+                            };
                         });
                     }
-                    *control_flow = ControlFlow::Wait;
                 }
                 _ => *control_flow = ControlFlow::Wait,
             },
@@ -386,11 +378,7 @@ impl RenderBase {
     }
 
     pub fn surface_resolution(&self) -> vk::Extent2D {
-        let surface_capabilities = unsafe {
-            self.surface_loader
-                .get_physical_device_surface_capabilities(self.pdevice, self.surface)
-                .unwrap()
-        };
+        let surface_capabilities = self.surface_capabilities();
         match surface_capabilities.current_extent.width {
             std::u32::MAX => {
                 let window_inner = self.window.inner_size();
@@ -401,10 +389,6 @@ impl RenderBase {
             }
             _ => surface_capabilities.current_extent,
         }
-    }
-
-    pub fn into_ctx(self) -> RenderCtx {
-        RenderCtx::from_base(self)
     }
 
     pub fn surface_capabilities(&self) -> vk::SurfaceCapabilitiesKHR {
@@ -562,6 +546,10 @@ impl RenderBase {
     pub fn create_render_command_pool(&self) -> RenderCommandPool {
         RenderCommandPool::new(self)
     }
+
+    pub fn into_ctx(self) -> RenderCtx {
+        RenderCtx::from_base(self)
+    }
 }
 
 impl Drop for RenderBase {
@@ -575,6 +563,469 @@ impl Drop for RenderBase {
                 debug_utils.destroy_debug_utils_messenger(call_back, None);
             }
             self.instance.destroy_instance(None);
+        }
+    }
+}
+
+pub struct RenderCtx {
+    pub base: RenderBase,
+    pub sync: RenderSync,
+
+    pub swapchain: vk::SwapchainKHR,
+    pub image_views: Vec<vk::ImageView>,
+    pub render_pass: vk::RenderPass,
+    pub framebuffers: Vec<vk::Framebuffer>,
+    pub commands: RenderCommandPool,
+    pub viewports: Box<[vk::Viewport]>,
+    pub scissors: Box<[vk::Rect2D]>,
+    pub pipelines: Vec<Pipeline>,
+    pub shader_modules: HashMap<String, vk::ShaderModule>,
+    pub shader_set: Vec<(VertexShaderEntryPoint, FragmentShaderEntryPoint)>,
+
+    pub rendering_paused: bool,
+    pub recompiling_shaders: bool,
+}
+
+impl RenderCtx {
+    pub fn from_base(base: RenderBase) -> Self {
+        let sync = RenderSync::new(&base);
+
+        let swapchain = base.create_swapchain();
+        let image_views = base.create_image_views(swapchain);
+        let render_pass = base.create_render_pass();
+        let framebuffers = base.create_framebuffers(&image_views, render_pass);
+        let commands = RenderCommandPool::new(&base);
+        let (viewports, scissors) = {
+            let surface_resolution = base.surface_resolution();
+            (
+                Box::new([vk::Viewport {
+                    x: 0.0,
+                    y: surface_resolution.height as f32,
+                    width: surface_resolution.width as f32,
+                    height: -(surface_resolution.height as f32),
+                    min_depth: 0.0,
+                    max_depth: 1.0,
+                }]),
+                Box::new([vk::Rect2D {
+                    offset: vk::Offset2D { x: 0, y: 0 },
+                    extent: surface_resolution,
+                }]),
+            )
+        };
+
+        RenderCtx {
+            sync,
+            base,
+            swapchain,
+            image_views,
+            commands,
+            render_pass,
+            framebuffers,
+            viewports,
+            scissors,
+            pipelines: Vec::new(),
+            shader_modules: HashMap::new(),
+            shader_set: Vec::new(),
+            rendering_paused: false,
+            recompiling_shaders: false,
+        }
+    }
+
+    pub fn create_pipeline_layout(&self) -> vk::PipelineLayout {
+        let push_constant_range = vk::PushConstantRange::builder()
+            .offset(0)
+            .size(std::mem::size_of::<ShaderConstants>() as u32)
+            .stage_flags(vk::ShaderStageFlags::all())
+            .build();
+        let layout_create_info = vk::PipelineLayoutCreateInfo::builder()
+            .push_constant_ranges(&[push_constant_range])
+            .build();
+        unsafe {
+            self.base
+                .device
+                .create_pipeline_layout(&layout_create_info, None)
+                .unwrap()
+        }
+    }
+
+    pub fn rebuild_pipelines(&mut self, pipeline_cache: vk::PipelineCache) {
+        self.cleanup_pipelines();
+        let pipeline_layout = self.create_pipeline_layout();
+        let viewport = vk::PipelineViewportStateCreateInfo::builder()
+            .scissor_count(1)
+            .viewport_count(1);
+        let modules_names = self
+            .shader_set
+            .iter()
+            .map(|(vert, frag)| {
+                let vert_module = *self.shader_modules.get(&vert.module).unwrap();
+                let vert_name = CString::new(vert.entry_point.clone()).unwrap();
+                let frag_module = *self.shader_modules.get(&frag.module).unwrap();
+                let frag_name = CString::new(frag.entry_point.clone()).unwrap();
+                ((frag_module, frag_name), (vert_module, vert_name))
+            })
+            .collect::<Vec<_>>();
+        let descs = modules_names
+            .iter()
+            .map(|((frag_module, frag_name), (vert_module, vert_name))| {
+                PipelineDescriptor::new(Box::new([
+                    vk::PipelineShaderStageCreateInfo {
+                        module: *vert_module,
+                        p_name: (*vert_name).as_ptr(),
+                        stage: vk::ShaderStageFlags::VERTEX,
+                        ..Default::default()
+                    },
+                    vk::PipelineShaderStageCreateInfo {
+                        s_type: vk::StructureType::PIPELINE_SHADER_STAGE_CREATE_INFO,
+                        module: *frag_module,
+                        p_name: (*frag_name).as_ptr(),
+                        stage: vk::ShaderStageFlags::FRAGMENT,
+                        ..Default::default()
+                    },
+                ]))
+            })
+            .collect::<Vec<_>>();
+        let pipeline_info = descs
+            .iter()
+            .map(|desc| {
+                vk::GraphicsPipelineCreateInfo::builder()
+                    .stages(&desc.shader_stages)
+                    .vertex_input_state(&desc.vertex_input)
+                    .input_assembly_state(&desc.input_assembly)
+                    .rasterization_state(&desc.rasterization)
+                    .multisample_state(&desc.multisample)
+                    .depth_stencil_state(&desc.depth_stencil)
+                    .color_blend_state(&desc.color_blend)
+                    .dynamic_state(&desc.dynamic_state_info)
+                    .viewport_state(&viewport)
+                    .layout(pipeline_layout)
+                    .render_pass(self.render_pass)
+                    .build()
+            })
+            .collect::<Vec<_>>();
+        self.pipelines = unsafe {
+            self.base
+                .device
+                .create_graphics_pipelines(pipeline_cache, &pipeline_info, None)
+                .expect("Unable to create graphics pipeline")
+        }
+        .iter()
+        .zip(descs)
+        .map(|(&pipeline, desc)| Pipeline {
+            pipeline,
+            pipeline_layout,
+            color_blend_attachments: desc.color_blend_attachments,
+            dynamic_state: desc.dynamic_state,
+        })
+        .collect();
+    }
+
+    pub fn cleanup_pipelines(&mut self) {
+        unsafe {
+            self.base.device.device_wait_idle().unwrap();
+            for pipeline in self.pipelines.drain(..) {
+                self.base.device.destroy_pipeline(pipeline.pipeline, None);
+                self.base
+                    .device
+                    .destroy_pipeline_layout(pipeline.pipeline_layout, None);
+            }
+        }
+    }
+
+    pub fn build_pipelines(
+        &mut self,
+        pipeline_cache: vk::PipelineCache,
+        shader_set: Vec<(VertexShaderEntryPoint, FragmentShaderEntryPoint)>,
+    ) {
+        self.shader_set = shader_set;
+        self.rebuild_pipelines(pipeline_cache);
+    }
+
+    /// Add a shader module to the hash map of shader modules.  returns a handle to the module, and the
+    /// old shader module if there was one with the same name already.  Does not rebuild pipelines
+    /// that may be using the shader module, nor does it invalidate them.
+    pub fn insert_shader_module(&mut self, name: String, spirv: Vec<u32>) {
+        let shader_info = vk::ShaderModuleCreateInfo::builder().code(&spirv);
+        let shader_module = unsafe {
+            self.base
+                .device
+                .create_shader_module(&shader_info, None)
+                .expect("Shader module error")
+        };
+        if let Some(old_module) = self.shader_modules.insert(name, shader_module) {
+            unsafe { self.base.device.destroy_shader_module(old_module, None) }
+        };
+    }
+
+    /// Destroys the swapchain, as well as the renderpass and frame and command buffers
+    pub fn cleanup_swapchain(&mut self) {
+        unsafe {
+            self.base.device.device_wait_idle().unwrap();
+            // framebuffers
+            for framebuffer in self.framebuffers.drain(..) {
+                self.base.device.destroy_framebuffer(framebuffer, None)
+            }
+            // command buffers
+            self.base.device.free_command_buffers(
+                self.commands.pool,
+                &[
+                    self.commands.draw_command_buffer,
+                    self.commands.setup_command_buffer,
+                ],
+            );
+            // render pass
+            self.base.device.destroy_render_pass(self.render_pass, None);
+            // image views
+            for image_view in self.image_views.drain(..) {
+                self.base.device.destroy_image_view(image_view, None);
+            }
+            // swapchain
+            self.base
+                .swapchain_loader
+                .destroy_swapchain(self.swapchain, None);
+        }
+    }
+
+    /// Recreates the swapchain, but does not recreate the pipelines because they use dynamic state.
+    pub fn recreate_swapchain(&mut self) {
+        let surface_resolution = self.base.surface_resolution();
+
+        if surface_resolution.width == 0 || surface_resolution.height == 0 {
+            self.rendering_paused = true;
+            return;
+        } else if self.rendering_paused {
+            self.rendering_paused = false
+        };
+
+        self.cleanup_swapchain();
+
+        self.swapchain = self.base.create_swapchain();
+        self.image_views = self.base.create_image_views(self.swapchain);
+        self.render_pass = self.base.create_render_pass();
+        let command_buffers = {
+            let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
+                .command_buffer_count(2)
+                .command_pool(self.commands.pool)
+                .level(vk::CommandBufferLevel::PRIMARY);
+
+            unsafe {
+                self.base
+                    .device
+                    .allocate_command_buffers(&command_buffer_allocate_info)
+                    .unwrap()
+            }
+        };
+        self.commands.setup_command_buffer = command_buffers[0];
+        self.commands.draw_command_buffer = command_buffers[1];
+        self.framebuffers = self
+            .base
+            .create_framebuffers(&self.image_views, self.render_pass);
+        self.viewports = Box::new([vk::Viewport {
+            x: 0.0,
+            y: surface_resolution.height as f32,
+            width: surface_resolution.width as f32,
+            height: -(surface_resolution.height as f32),
+            min_depth: 0.0,
+            max_depth: 1.0,
+        }]);
+        self.scissors = Box::new([vk::Rect2D {
+            offset: vk::Offset2D { x: 0, y: 0 },
+            extent: surface_resolution,
+        }]);
+    }
+
+    pub fn render(&mut self) {
+        if self.rendering_paused {
+            return;
+        };
+        let present_index = unsafe {
+            match self.base.swapchain_loader.acquire_next_image(
+                self.swapchain,
+                std::u64::MAX,
+                self.sync.present_complete_semaphore,
+                vk::Fence::null(),
+            ) {
+                Ok((idx, _)) => idx,
+                Err(vk::Result::ERROR_OUT_OF_DATE_KHR) => {
+                    self.recreate_swapchain();
+                    return;
+                }
+                Err(err) => panic!("failed to acquire next image: {:?}", err),
+            }
+        };
+
+        let framebuffer = self.framebuffers[present_index as usize];
+        let clear_values = [vk::ClearValue {
+            color: vk::ClearColorValue {
+                float32: [0.0, 0.0, 1.0, 0.0],
+            },
+        }];
+
+        // There should only be one pipeline because compile_shaders only loads the last spirv
+        // file it produced.
+        for pipeline in self.pipelines.iter() {
+            self.draw(pipeline, framebuffer, &clear_values);
+        }
+
+        let wait_semaphors = [self.sync.rendering_complete_semaphore];
+        let swapchains = [self.swapchain];
+        let image_indices = [present_index];
+        let present_info = vk::PresentInfoKHR::builder()
+            .wait_semaphores(&wait_semaphors)
+            .swapchains(&swapchains)
+            .image_indices(&image_indices);
+        unsafe {
+            match self
+                .base
+                .swapchain_loader
+                .queue_present(self.base.present_queue, &present_info)
+            {
+                Err(vk::Result::ERROR_OUT_OF_DATE_KHR) | Ok(true) => self.recreate_swapchain(),
+                Ok(false) => {}
+                Err(err) => panic!("failed to present queue: {:?}", err),
+            };
+        }
+    }
+
+    pub fn draw(
+        &self,
+        pipeline: &Pipeline,
+        framebuffer: vk::Framebuffer,
+        clear_values: &[vk::ClearValue],
+    ) {
+        let render_pass_begin_info = vk::RenderPassBeginInfo::builder()
+            .render_pass(self.render_pass)
+            .framebuffer(framebuffer)
+            .render_area(vk::Rect2D {
+                offset: vk::Offset2D { x: 0, y: 0 },
+                extent: self.scissors[0].extent,
+            })
+            .clear_values(clear_values)
+            .build();
+        self.record_submit_commandbuffer(
+            &[vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT],
+            |device, draw_command_buffer| unsafe {
+                device.cmd_begin_render_pass(
+                    draw_command_buffer,
+                    &render_pass_begin_info,
+                    vk::SubpassContents::INLINE,
+                );
+                device.cmd_bind_pipeline(
+                    draw_command_buffer,
+                    vk::PipelineBindPoint::GRAPHICS,
+                    pipeline.pipeline,
+                );
+                device.cmd_set_viewport(draw_command_buffer, 0, &self.viewports);
+                device.cmd_set_scissor(draw_command_buffer, 0, &self.scissors);
+
+                let push_constants = ShaderConstants {
+                    width: self.scissors[0].extent.width,
+                    height: self.scissors[0].extent.height,
+                };
+                device.cmd_push_constants(
+                    draw_command_buffer,
+                    pipeline.pipeline_layout,
+                    ash::vk::ShaderStageFlags::all(),
+                    0,
+                    any_as_u8_slice(&push_constants),
+                );
+
+                device.cmd_draw(draw_command_buffer, 3, 1, 0, 0);
+                device.cmd_end_render_pass(draw_command_buffer);
+            },
+        );
+    }
+
+    /// Helper function for submitting command buffers. Immediately waits for the fence before the command buffer
+    /// is executed. That way we can delay the waiting for the fences by 1 frame which is good for performance.
+    /// Make sure to create the fence in a signaled state on the first use.
+    pub fn record_submit_commandbuffer<F: FnOnce(&ash::Device, vk::CommandBuffer)>(
+        &self,
+        wait_mask: &[vk::PipelineStageFlags],
+        f: F,
+    ) {
+        unsafe {
+            self.base
+                .device
+                .wait_for_fences(&[self.sync.draw_commands_reuse_fence], true, std::u64::MAX)
+                .expect("Wait for fence failed.");
+
+            self.base
+                .device
+                .reset_fences(&[self.sync.draw_commands_reuse_fence])
+                .expect("Reset fences failed.");
+
+            self.base
+                .device
+                .reset_command_buffer(
+                    self.commands.draw_command_buffer,
+                    vk::CommandBufferResetFlags::RELEASE_RESOURCES,
+                )
+                .expect("Reset command buffer failed.");
+
+            let command_buffer_begin_info = vk::CommandBufferBeginInfo::builder()
+                .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
+
+            self.base
+                .device
+                .begin_command_buffer(
+                    self.commands.draw_command_buffer,
+                    &command_buffer_begin_info,
+                )
+                .expect("Begin commandbuffer");
+
+            f(&self.base.device, self.commands.draw_command_buffer);
+
+            self.base
+                .device
+                .end_command_buffer(self.commands.draw_command_buffer)
+                .expect("End commandbuffer");
+
+            let command_buffers = vec![self.commands.draw_command_buffer];
+            let wait_semaphores = &[self.sync.present_complete_semaphore];
+            let signal_semaphores = &[self.sync.rendering_complete_semaphore];
+            let submit_info = vk::SubmitInfo::builder()
+                .wait_semaphores(wait_semaphores)
+                .wait_dst_stage_mask(wait_mask)
+                .command_buffers(&command_buffers)
+                .signal_semaphores(signal_semaphores);
+
+            self.base
+                .device
+                .queue_submit(
+                    self.base.present_queue,
+                    &[submit_info.build()],
+                    self.sync.draw_commands_reuse_fence,
+                )
+                .expect("queue submit failed.");
+        }
+    }
+}
+
+impl Drop for RenderCtx {
+    fn drop(&mut self) {
+        unsafe {
+            self.base.device.device_wait_idle().unwrap();
+            self.base
+                .device
+                .destroy_semaphore(self.sync.present_complete_semaphore, None);
+            self.base
+                .device
+                .destroy_semaphore(self.sync.rendering_complete_semaphore, None);
+            self.base
+                .device
+                .destroy_fence(self.sync.draw_commands_reuse_fence, None);
+            self.base
+                .device
+                .destroy_fence(self.sync.setup_commands_reuse_fence, None);
+            self.cleanup_pipelines();
+            self.cleanup_swapchain();
+            self.base
+                .device
+                .destroy_command_pool(self.commands.pool, None);
+            for (_, shader_module) in self.shader_modules.drain() {
+                self.base.device.destroy_shader_module(shader_module, None)
+            }
         }
     }
 }
@@ -666,481 +1117,11 @@ impl RenderCommandPool {
     }
 }
 
-pub struct RenderCtx {
-    pub base: RenderBase,
-    pub sync: RenderSync,
-
-    pub swapchain: vk::SwapchainKHR,
-    pub image_views: Vec<vk::ImageView>,
-    pub render_pass: vk::RenderPass,
-    pub framebuffers: Vec<vk::Framebuffer>,
-    pub commands: RenderCommandPool,
-    pub viewports: Box<[vk::Viewport]>,
-    pub scissors: Box<[vk::Rect2D]>,
-    pub pipelines: Vec<Pipeline>,
-    pub shader_modules: HashMap<String, vk::ShaderModule>,
-    pub shader_set: Vec<(VertexShaderEntryPoint, FragmentShaderEntryPoint)>,
-
-    pub compiler_thread: Option<bool>,
-}
-
-impl RenderCtx {
-    pub fn from_base(base: RenderBase) -> Self {
-        let sync = RenderSync::new(&base);
-
-        let swapchain = base.create_swapchain();
-        let image_views = base.create_image_views(swapchain);
-        let render_pass = base.create_render_pass();
-        let framebuffers = base.create_framebuffers(&image_views, render_pass);
-        let commands = RenderCommandPool::new(&base);
-        let (viewports, scissors) = {
-            let surface_resolution = base.surface_resolution();
-            (
-                Box::new([vk::Viewport {
-                    x: 0.0,
-                    y: surface_resolution.height as f32,
-                    width: surface_resolution.width as f32,
-                    height: -(surface_resolution.height as f32),
-                    min_depth: 0.0,
-                    max_depth: 1.0,
-                }]),
-                Box::new([vk::Rect2D {
-                    offset: vk::Offset2D { x: 0, y: 0 },
-                    extent: surface_resolution,
-                }]),
-            )
-        };
-
-        RenderCtx {
-            sync,
-            base,
-            swapchain,
-            image_views,
-            commands,
-            render_pass,
-            framebuffers,
-            viewports,
-            scissors,
-            pipelines: Vec::new(),
-            shader_modules: HashMap::new(),
-            shader_set: Vec::new(),
-            compiler_thread: None,
-        }
-    }
-
-    pub fn create_pipeline_layout(&self) -> vk::PipelineLayout {
-        let push_constant_range = vk::PushConstantRange::builder()
-            .offset(0)
-            .size(std::mem::size_of::<ShaderConstants>() as u32)
-            .stage_flags(vk::ShaderStageFlags::all())
-            .build();
-        let layout_create_info = vk::PipelineLayoutCreateInfo::builder()
-            .push_constant_ranges(&[push_constant_range])
-            .build();
-        unsafe {
-            self.base
-                .device
-                .create_pipeline_layout(&layout_create_info, None)
-                .unwrap()
-        }
-    }
-
-    pub fn rebuild_pipelines(&mut self, pipeline_cache: vk::PipelineCache) {
-        let pipeline_layout = self.create_pipeline_layout();
-        let modules_names = self
-            .shader_set
-            .iter()
-            .map(|(vert, frag)| {
-                let vert_module = *self.shader_modules.get(&vert.module).unwrap();
-                let vert_name = CString::new(vert.entry_point.clone()).unwrap();
-                let frag_module = *self.shader_modules.get(&frag.module).unwrap();
-                let frag_name = CString::new(frag.entry_point.clone()).unwrap();
-                ((frag_module, frag_name), (vert_module, vert_name))
-            })
-            .collect::<Vec<_>>();
-        let viewport = vk::PipelineViewportStateCreateInfo::builder()
-            .scissor_count(1)
-            .viewport_count(1);
-        let descs = modules_names
-            .iter()
-            .map(|((frag_module, frag_name), (vert_module, vert_name))| {
-                PipelineDescriptor::new(Box::new([
-                    vk::PipelineShaderStageCreateInfo {
-                        module: *vert_module,
-                        p_name: (*vert_name).as_ptr(),
-                        stage: vk::ShaderStageFlags::VERTEX,
-                        ..Default::default()
-                    },
-                    vk::PipelineShaderStageCreateInfo {
-                        s_type: vk::StructureType::PIPELINE_SHADER_STAGE_CREATE_INFO,
-                        module: *frag_module,
-                        p_name: (*frag_name).as_ptr(),
-                        stage: vk::ShaderStageFlags::FRAGMENT,
-                        ..Default::default()
-                    },
-                ]))
-            })
-            .collect::<Vec<_>>();
-        let pipeline_info = descs
-            .iter()
-            .map(|desc| {
-                vk::GraphicsPipelineCreateInfo::builder()
-                    .stages(&desc.shader_stages)
-                    .vertex_input_state(&desc.vertex_input)
-                    .input_assembly_state(&desc.input_assembly)
-                    .rasterization_state(&desc.rasterization)
-                    .multisample_state(&desc.multisample)
-                    .depth_stencil_state(&desc.depth_stencil)
-                    .color_blend_state(&desc.color_blend)
-                    .dynamic_state(&desc.dynamic_state_info)
-                    .viewport_state(&viewport)
-                    .layout(pipeline_layout)
-                    .render_pass(self.render_pass)
-                    .build()
-            })
-            .collect::<Vec<_>>();
-        self.pipelines = unsafe {
-            self.base
-                .device
-                .create_graphics_pipelines(pipeline_cache, &pipeline_info, None)
-                .expect("Unable to create graphics pipeline")
-        }
-        .iter()
-        .zip(descs)
-        .map(|(&pipeline, desc)| Pipeline {
-            pipeline,
-            pipeline_layout,
-            color_blend_attachments: desc.color_blend_attachments,
-            dynamic_state: desc.dynamic_state,
-        })
-        .collect();
-    }
-
-    pub fn build_pipelines(
-        &mut self,
-        pipeline_cache: vk::PipelineCache,
-        shader_set: Vec<(VertexShaderEntryPoint, FragmentShaderEntryPoint)>,
-    ) {
-        self.shader_set = shader_set;
-        self.rebuild_pipelines(pipeline_cache);
-    }
-
-    /// Add a shader module to the hash map of shader modules.  returns a handle to the module, and the
-    /// old shader module if there was one with the same name already.  Does not rebuild pipelines
-    /// that may be using the shader module, nor does it invalidate them.
-    pub fn insert_shader_module(&mut self, name: String, spirv: Vec<u32>) {
-        let shader_info = vk::ShaderModuleCreateInfo::builder().code(&spirv);
-        let shader_module = unsafe {
-            self.base
-                .device
-                .create_shader_module(&shader_info, None)
-                .expect("Shader module error")
-        };
-        if let Some(old_module) = self.shader_modules.insert(name, shader_module) {
-            unsafe { self.base.device.destroy_shader_module(old_module, None) }
-        };
-    }
-
-    // Recreates the swapchain, but does not recreate the pipelines because they use dynamic state.
-    pub fn recreate_swapchain(&mut self) {
-        // cleanup
-        unsafe {
-            self.base.device.device_wait_idle().unwrap();
-            // framebuffers
-            for framebuffer in self.framebuffers.drain(..) {
-                self.base.device.destroy_framebuffer(framebuffer, None)
-            }
-            // command buffers
-            self.base.device.free_command_buffers(
-                self.commands.pool,
-                &[
-                    self.commands.draw_command_buffer,
-                    self.commands.setup_command_buffer,
-                ],
-            );
-            // render pass
-            self.base.device.destroy_render_pass(self.render_pass, None);
-            // image views
-            for image_view in self.image_views.drain(..) {
-                self.base.device.destroy_image_view(image_view, None);
-            }
-            // swapchain
-            self.base
-                .swapchain_loader
-                .destroy_swapchain(self.swapchain, None);
-        }
-        // swapchain
-        self.swapchain = self.base.create_swapchain();
-        // image_views
-        self.image_views = self.base.create_image_views(self.swapchain);
-        // render_pass
-        self.render_pass = self.base.create_render_pass();
-        // command buffers
-        let command_buffers = {
-            let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
-                .command_buffer_count(2)
-                .command_pool(self.commands.pool)
-                .level(vk::CommandBufferLevel::PRIMARY);
-
-            unsafe {
-                self.base
-                    .device
-                    .allocate_command_buffers(&command_buffer_allocate_info)
-                    .unwrap()
-            }
-        };
-        self.commands.setup_command_buffer = command_buffers[0];
-        self.commands.draw_command_buffer = command_buffers[1];
-        // framebuffers
-        self.framebuffers = self
-            .base
-            .create_framebuffers(&self.image_views, self.render_pass);
-    }
-
-    pub fn render(&mut self) {
-        let (present_index, _) = unsafe {
-            self.base
-                .swapchain_loader
-                .acquire_next_image(
-                    self.swapchain,
-                    std::u64::MAX,
-                    self.sync.present_complete_semaphore,
-                    vk::Fence::null(),
-                )
-                .expect("failed to acquire next image")
-        };
-
-        let framebuffer = self.framebuffers[present_index as usize];
-        let clear_values = [vk::ClearValue {
-            color: vk::ClearColorValue {
-                float32: [0.0, 0.0, 1.0, 0.0],
-            },
-        }];
-
-        // There should only be one pipeline because compile_shaders only loads the last spirv
-        // file it produced.
-        for pipeline in self.pipelines.iter() {
-            self.draw(pipeline, framebuffer, &clear_values);
-        }
-
-        let wait_semaphors = [self.sync.rendering_complete_semaphore];
-        let swapchains = [self.swapchain];
-        let image_indices = [present_index];
-        let present_info = vk::PresentInfoKHR::builder()
-            .wait_semaphores(&wait_semaphors)
-            .swapchains(&swapchains)
-            .image_indices(&image_indices);
-        unsafe {
-            self.base
-                .swapchain_loader
-                .queue_present(self.base.present_queue, &present_info)
-                .expect("failed to present queue");
-        }
-    }
-
-    pub fn draw(
-        &self,
-        pipeline: &Pipeline,
-        framebuffer: vk::Framebuffer,
-        clear_values: &[vk::ClearValue],
-    ) {
-        let render_pass_begin_info = vk::RenderPassBeginInfo::builder()
-            .render_pass(self.render_pass)
-            .framebuffer(framebuffer)
-            .render_area(vk::Rect2D {
-                offset: vk::Offset2D { x: 0, y: 0 },
-                extent: self.base.surface_resolution(),
-            })
-            .clear_values(clear_values)
-            .build();
-        self.record_submit_commandbuffer(
-            &[vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT],
-            |device, draw_command_buffer| {
-                unsafe {
-                    device.cmd_begin_render_pass(
-                        draw_command_buffer,
-                        &render_pass_begin_info,
-                        vk::SubpassContents::INLINE,
-                    );
-                    device.cmd_bind_pipeline(
-                        draw_command_buffer,
-                        vk::PipelineBindPoint::GRAPHICS,
-                        pipeline.pipeline,
-                    );
-                    device.cmd_set_viewport(draw_command_buffer, 0, &self.viewports);
-                    device.cmd_set_scissor(draw_command_buffer, 0, &self.scissors);
-
-                    let push_constants = ShaderConstants {
-                        width: 1920, // ash runner currently does not support resizing.
-                        height: 720,
-                    };
-                    device.cmd_push_constants(
-                        draw_command_buffer,
-                        pipeline.pipeline_layout,
-                        ash::vk::ShaderStageFlags::all(),
-                        0,
-                        any_as_u8_slice(&push_constants),
-                    );
-
-                    device.cmd_draw(draw_command_buffer, 3, 1, 0, 0);
-                    device.cmd_end_render_pass(draw_command_buffer);
-                }
-            },
-        );
-    }
-
-    /// Helper function for submitting command buffers. Immediately waits for the fence before the command buffer
-    /// is executed. That way we can delay the waiting for the fences by 1 frame which is good for performance.
-    /// Make sure to create the fence in a signaled state on the first use.
-    pub fn record_submit_commandbuffer<F: FnOnce(&ash::Device, vk::CommandBuffer)>(
-        &self,
-        wait_mask: &[vk::PipelineStageFlags],
-        f: F,
-    ) {
-        unsafe {
-            self.base
-                .device
-                .wait_for_fences(&[self.sync.draw_commands_reuse_fence], true, std::u64::MAX)
-                .expect("Wait for fence failed.");
-
-            self.base
-                .device
-                .reset_fences(&[self.sync.draw_commands_reuse_fence])
-                .expect("Reset fences failed.");
-
-            self.base
-                .device
-                .reset_command_buffer(
-                    self.commands.draw_command_buffer,
-                    vk::CommandBufferResetFlags::RELEASE_RESOURCES,
-                )
-                .expect("Reset command buffer failed.");
-
-            let command_buffer_begin_info = vk::CommandBufferBeginInfo::builder()
-                .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
-
-            self.base
-                .device
-                .begin_command_buffer(
-                    self.commands.draw_command_buffer,
-                    &command_buffer_begin_info,
-                )
-                .expect("Begin commandbuffer");
-
-            f(&self.base.device, self.commands.draw_command_buffer);
-
-            self.base
-                .device
-                .end_command_buffer(self.commands.draw_command_buffer)
-                .expect("End commandbuffer");
-
-            let command_buffers = vec![self.commands.draw_command_buffer];
-            let wait_semaphores = &[self.sync.present_complete_semaphore];
-            let signal_semaphores = &[self.sync.rendering_complete_semaphore];
-            let submit_info = vk::SubmitInfo::builder()
-                .wait_semaphores(wait_semaphores)
-                .wait_dst_stage_mask(wait_mask)
-                .command_buffers(&command_buffers)
-                .signal_semaphores(signal_semaphores);
-
-            self.base
-                .device
-                .queue_submit(
-                    self.base.present_queue,
-                    &[submit_info.build()],
-                    self.sync.draw_commands_reuse_fence,
-                )
-                .expect("queue submit failed.");
-        }
-    }
-}
-
-impl Drop for RenderCtx {
-    fn drop(&mut self) {
-        unsafe {
-            self.base.device.device_wait_idle().unwrap();
-            self.base
-                .device
-                .destroy_semaphore(self.sync.present_complete_semaphore, None);
-            self.base
-                .device
-                .destroy_semaphore(self.sync.rendering_complete_semaphore, None);
-            self.base
-                .device
-                .destroy_fence(self.sync.draw_commands_reuse_fence, None);
-            self.base
-                .device
-                .destroy_fence(self.sync.setup_commands_reuse_fence, None);
-            for &image_view in self.image_views.iter() {
-                self.base.device.destroy_image_view(image_view, None);
-            }
-            self.base
-                .device
-                .destroy_command_pool(self.commands.pool, None);
-            self.base
-                .swapchain_loader
-                .destroy_swapchain(self.swapchain, None);
-        }
-    }
-}
-
-pub struct VertexShaderEntryPoint {
-    pub module: String,
-    pub entry_point: String,
-}
-
-pub struct FragmentShaderEntryPoint {
-    module: String,
-    entry_point: String,
-}
-
 pub struct Pipeline {
     pub pipeline: vk::Pipeline,
     pub pipeline_layout: vk::PipelineLayout,
     pub color_blend_attachments: Box<[vk::PipelineColorBlendAttachmentState]>,
     pub dynamic_state: Box<[vk::DynamicState]>,
-}
-
-impl Pipeline {
-    pub fn new(
-        ctx: &RenderCtx,
-        desc: PipelineDescriptor,
-        pipeline_cache: vk::PipelineCache,
-    ) -> Self {
-        let viewport = vk::PipelineViewportStateCreateInfo::builder()
-            .scissor_count(1)
-            .viewport_count(1);
-        let pipeline_layout = ctx.create_pipeline_layout();
-
-        let pipeline_info = vk::GraphicsPipelineCreateInfo::builder()
-            .stages(&desc.shader_stages)
-            .vertex_input_state(&desc.vertex_input)
-            .input_assembly_state(&desc.input_assembly)
-            .rasterization_state(&desc.rasterization)
-            .multisample_state(&desc.multisample)
-            .depth_stencil_state(&desc.depth_stencil)
-            .color_blend_state(&desc.color_blend)
-            .dynamic_state(&desc.dynamic_state_info)
-            .viewport_state(&viewport)
-            .layout(pipeline_layout)
-            .render_pass(ctx.render_pass);
-
-        let pipeline = unsafe {
-            ctx.base
-                .device
-                .create_graphics_pipelines(pipeline_cache, &[pipeline_info.build()], None)
-                .expect("Unable to create graphics pipeline")
-                .pop()
-                .unwrap()
-        };
-
-        Self {
-            pipeline_layout,
-            pipeline,
-            color_blend_attachments: desc.color_blend_attachments,
-            dynamic_state: desc.dynamic_state,
-        }
-    }
 }
 
 pub struct PipelineDescriptor {
@@ -1227,6 +1208,22 @@ impl PipelineDescriptor {
             dynamic_state_info,
         }
     }
+}
+
+#[derive(Copy, Clone)]
+pub struct ShaderConstants {
+    pub width: u32,
+    pub height: u32,
+}
+
+pub struct VertexShaderEntryPoint {
+    pub module: String,
+    pub entry_point: String,
+}
+
+pub struct FragmentShaderEntryPoint {
+    module: String,
+    entry_point: String,
 }
 
 unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
