@@ -74,7 +74,17 @@ pub fn main() {
     event_loop.run(move |event, _window_target, control_flow| match event {
         Event::RedrawEventsCleared { .. } => {
             match compiler_reciever.try_recv() {
-                Err(TryRecvError::Empty) => ctx.render(),
+                Err(TryRecvError::Empty) => {
+                    if ctx.rendering_paused {
+                        let vk::Extent2D { width, height } = ctx.base.surface_resolution();
+                        if height > 0 && width > 0 {
+                            ctx.recreate_swapchain();
+                            ctx.render();
+                        }
+                    } else {
+                        ctx.render()
+                    }
+                }
                 Ok(new_shaders) => {
                     for SpirvShader { name, spirv } in new_shaders {
                         ctx.insert_shader_module(name, spirv);
@@ -399,7 +409,7 @@ impl RenderBase {
         }
     }
 
-    pub fn create_swapchain(&self, extent: vk::Extent2D) -> vk::SwapchainKHR {
+    pub fn create_swapchain(&self) -> (vk::SwapchainKHR, vk::Extent2D) {
         let surface_capabilities = self.surface_capabilities();
         let mut desired_image_count = surface_capabilities.min_image_count + 1;
         if surface_capabilities.max_image_count > 0
@@ -424,6 +434,7 @@ impl RenderBase {
                 .find(|&mode| mode == vk::PresentModeKHR::MAILBOX)
                 .unwrap_or(vk::PresentModeKHR::FIFO)
         };
+        let extent = self.surface_resolution();
         let swapchain_create_info = vk::SwapchainCreateInfoKHR::builder()
             .surface(self.surface)
             .min_image_count(desired_image_count)
@@ -437,11 +448,12 @@ impl RenderBase {
             .present_mode(present_mode)
             .clipped(true)
             .image_array_layers(1);
-        unsafe {
+        let swapchain = unsafe {
             self.swapchain_loader
                 .create_swapchain(&swapchain_create_info, None)
                 .unwrap()
-        }
+        };
+        (swapchain, extent)
     }
 
     pub fn create_image_views(&self, swapchain: vk::SwapchainKHR) -> Vec<vk::ImageView> {
@@ -572,6 +584,7 @@ pub struct RenderCtx {
     pub sync: RenderSync,
 
     pub swapchain: vk::SwapchainKHR,
+    pub extent: vk::Extent2D,
     pub image_views: Vec<vk::ImageView>,
     pub render_pass: vk::RenderPass,
     pub framebuffers: Vec<vk::Framebuffer>,
@@ -589,26 +602,25 @@ pub struct RenderCtx {
 impl RenderCtx {
     pub fn from_base(base: RenderBase) -> Self {
         let sync = RenderSync::new(&base);
-        let surface_resolution = base.surface_resolution();
 
-        let swapchain = base.create_swapchain(surface_resolution);
+        let (swapchain, extent) = base.create_swapchain();
         let image_views = base.create_image_views(swapchain);
         let render_pass = base.create_render_pass();
-        let framebuffers = base.create_framebuffers(&image_views, render_pass, surface_resolution);
+        let framebuffers = base.create_framebuffers(&image_views, render_pass, extent);
         let commands = RenderCommandPool::new(&base);
         let (viewports, scissors) = {
             (
                 Box::new([vk::Viewport {
                     x: 0.0,
-                    y: surface_resolution.height as f32,
-                    width: surface_resolution.width as f32,
-                    height: -(surface_resolution.height as f32),
+                    y: extent.height as f32,
+                    width: extent.width as f32,
+                    height: -(extent.height as f32),
                     min_depth: 0.0,
                     max_depth: 1.0,
                 }]),
                 Box::new([vk::Rect2D {
                     offset: vk::Offset2D { x: 0, y: 0 },
-                    extent: surface_resolution,
+                    extent,
                 }]),
             )
         };
@@ -617,6 +629,7 @@ impl RenderCtx {
             sync,
             base,
             swapchain,
+            extent,
             image_views,
             commands,
             render_pass,
@@ -799,7 +812,9 @@ impl RenderCtx {
 
         self.cleanup_swapchain();
 
-        self.swapchain = self.base.create_swapchain(surface_resolution);
+        let (swapchain, extent) = self.base.create_swapchain();
+        self.swapchain = swapchain;
+        self.extent = extent;
         self.image_views = self.base.create_image_views(self.swapchain);
         self.render_pass = self.base.create_render_pass();
         let command_buffers = {
@@ -819,29 +834,22 @@ impl RenderCtx {
         self.commands.draw_command_buffer = command_buffers[1];
         self.framebuffers =
             self.base
-                .create_framebuffers(&self.image_views, self.render_pass, surface_resolution);
+                .create_framebuffers(&self.image_views, self.render_pass, extent);
         self.viewports = Box::new([vk::Viewport {
             x: 0.0,
-            y: surface_resolution.height as f32,
-            width: surface_resolution.width as f32,
-            height: -(surface_resolution.height as f32),
+            y: extent.height as f32,
+            width: extent.width as f32,
+            height: -(extent.height as f32),
             min_depth: 0.0,
             max_depth: 1.0,
         }]);
         self.scissors = Box::new([vk::Rect2D {
             offset: vk::Offset2D { x: 0, y: 0 },
-            extent: surface_resolution,
+            extent,
         }]);
     }
 
     pub fn render(&mut self) {
-        if self.rendering_paused {
-            let vk::Extent2D { width, height } = self.base.surface_resolution();
-            if height > 0 && width > 0 {
-                self.recreate_swapchain();
-            }
-            return;
-        };
         let present_index = unsafe {
             match self.base.swapchain_loader.acquire_next_image(
                 self.swapchain,
