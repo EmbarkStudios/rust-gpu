@@ -20,7 +20,7 @@ async fn run(
     swapchain_format: wgpu::TextureFormat,
 ) {
     let size = window.inner_size();
-    let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+    let instance = wgpu::Instance::new(wgpu::BackendBit::VULKAN);
 
     // Wait for Resumed event on Android; the surface is only needed early to
     // find an adapter that can render to this surface.
