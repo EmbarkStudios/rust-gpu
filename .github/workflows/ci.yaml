@@ -4,7 +4,7 @@ on:
       - main
   pull_request:
 
-name: Continuous integration
+name: CI
 
 jobs:
   check:
@@ -22,12 +22,7 @@ jobs:
     env:
       spirv_tools_version: "20200928"
     steps:
-      # Note that we are explicitly NOT checking out submodules, to validate
-      # that we haven't accidentally enabled spirv-tools native compilation
-      # and regressed CI times
       - uses: actions/checkout@v2
-        with:
-          submodules: "false"
       # Ubuntu does have `brew install spirv-tools`, but it installs from
       # source and so takes >8 minutes.
       - if: ${{ runner.os == 'Linux' }}
@@ -53,8 +48,6 @@ jobs:
       - if: ${{ runner.os == 'Windows' }}
         # Runs separately to add spir-v tools to Powershell's Path.
         run: echo "$HOME/spirv-tools/install/bin" >> $env:GITHUB_PATH
-      - name: Install rustup components
-        run: rustup component add rust-src rustc-dev llvm-tools-preview
       # Fetch dependencies in a separate step to clearly show how long each part
       # of the testing takes
       - name: cargo fetch --locked
@@ -106,7 +99,7 @@ jobs:
           curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1305/20201026-063148/install.tgz | tar -xz -C "${HOME}/spirv-tools"
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - name: Install rustup components
-        run: rustup component add rustfmt clippy rust-src rustc-dev llvm-tools-preview
+        run: rustup component add rustfmt clippy
       - name: cargo fetch --locked
         run: cargo fetch --locked
       - name: Rustfmt
