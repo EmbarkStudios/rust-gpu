@@ -1,23 +1,119 @@
+//! SPIR-V decorations specific to `rustc_codegen_spirv`, produced during
+//! the original codegen of a crate, and consumed by the `linker`.
+
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Decoration, Op, Word};
 use rustc_span::{source_map::SourceMap, FileName, Pos, Span};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::marker::PhantomData;
 use std::path::PathBuf;
+use std::{iter, slice};
+
+/// Decorations not native to SPIR-V require some form of encoding into existing
+/// SPIR-V constructs, for which we use `OpDecorateString` with decoration type
+/// `UserTypeGOOGLE` and a JSON-encoded Rust value as the decoration string.
+///
+/// Each decoration type has to implement this trait, and use a different
+/// `ENCODING_PREFIX` from any other decoration type, to disambiguate them.
+///
+/// Also, all decorations have to be stripped by the linker at some point,
+/// ideally as soon as they're no longer needed, because no other tools
+/// processing the SPIR-V would understand them correctly.
+///
+/// TODO: uses non_semantic instead of piggybacking off of `UserTypeGOOGLE`
+/// <https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_non_semantic_info.html>
+pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
+    const ENCODING_PREFIX: &'static str;
+
+    fn encode(self, id: Word) -> Instruction {
+        // FIXME(eddyb) this allocates twice, because there is no functionality
+        // in `serde_json` for writing to something that impls `fmt::Write`,
+        // only for `io::Write`, which would require performing redundant UTF-8
+        // (re)validation, or relying on `unsafe` code, to use with `String`.
+        let json = serde_json::to_string(&self).unwrap();
+        let encoded = [Self::ENCODING_PREFIX, &json].concat();
+
+        Instruction::new(
+            Op::DecorateString,
+            None,
+            None,
+            vec![
+                Operand::IdRef(id),
+                Operand::Decoration(Decoration::UserTypeGOOGLE),
+                Operand::LiteralString(encoded),
+            ],
+        )
+    }
+
+    fn try_decode<'a>(inst: &'a Instruction) -> Option<(Word, LazilyDeserialized<'a, Self>)> {
+        if inst.class.opcode == Op::DecorateString
+            && inst.operands[1].unwrap_decoration() == Decoration::UserTypeGOOGLE
+        {
+            let id = inst.operands[0].unwrap_id_ref();
+            let encoded = inst.operands[2].unwrap_literal_string();
+            let json = encoded.strip_prefix(Self::ENCODING_PREFIX)?;
+
+            Some((
+                id,
+                LazilyDeserialized {
+                    json,
+                    _marker: PhantomData,
+                },
+            ))
+        } else {
+            None
+        }
+    }
+
+    fn decode_all<'a>(
+        module: &'a Module,
+    ) -> iter::FilterMap<
+        slice::Iter<'a, Instruction>,
+        fn(&'a Instruction) -> Option<(Word, LazilyDeserialized<'a, Self>)>,
+    > {
+        module
+            .annotations
+            .iter()
+            .filter_map(Self::try_decode as fn(_) -> _)
+    }
+
+    fn remove_all(module: &mut Module) {
+        module
+            .annotations
+            .retain(|inst| Self::try_decode(inst).is_none())
+    }
+}
+
+/// Helper allowing full deserialization to be avoided where possible.
+#[derive(Copy, Clone)]
+pub struct LazilyDeserialized<'a, D> {
+    json: &'a str,
+    _marker: PhantomData<D>,
+}
+
+impl<'a, D: Deserialize<'a>> LazilyDeserialized<'a, D> {
+    pub fn deserialize(self) -> D {
+        serde_json::from_str(self.json).unwrap()
+    }
+}
 
 #[derive(Deserialize, Serialize)]
 pub struct ZombieDecoration {
     pub reason: String,
 
     #[serde(flatten)]
-    pub span: Option<ZombieSpan>,
+    pub span: Option<SerializedSpan>,
+}
+
+impl CustomDecoration for ZombieDecoration {
+    const ENCODING_PREFIX: &'static str = "Z";
 }
 
 /// Representation of a `rustc` `Span` that can be turned into a `Span` again
 /// in another compilation, by reloading the file. However, note that this will
 /// fail if the file changed since, which is detected using the serialized `hash`.
 #[derive(Deserialize, Serialize)]
-pub struct ZombieSpan {
+pub struct SerializedSpan {
     file: PathBuf,
     hash: serde_adapters::SourceFileHash,
     lo: u32,
@@ -65,9 +161,9 @@ mod serde_adapters {
     }
 }
 
-impl ZombieSpan {
-    fn from_rustc(span: Span, source_map: &SourceMap) -> Option<Self> {
-        // Zombies may not always have valid spans.
+impl SerializedSpan {
+    pub fn from_rustc(span: Span, source_map: &SourceMap) -> Option<Self> {
+        // Decorations may not always have valid spans.
         // FIXME(eddyb) reduce the sources of this as much as possible.
         if span.is_dummy() {
             return None;
@@ -108,7 +204,7 @@ impl ZombieSpan {
             return None;
         }
 
-        // Sanity check - assuming `ZombieSpan` isn't corrupted, this assert
+        // Sanity check - assuming `SerializedSpan` isn't corrupted, this assert
         // could only ever fail because of a hash collision.
         assert!(self.lo <= self.hi && self.hi <= file.byte_length());
 
@@ -116,34 +212,5 @@ impl ZombieSpan {
             file.start_pos + Pos::from_u32(self.lo),
             file.start_pos + Pos::from_u32(self.hi),
         ))
-    }
-}
-
-pub fn export_zombies(
-    module: &mut Module,
-    zombies: &HashMap<Word, (&'static str, Span)>,
-    source_map: &SourceMap,
-) {
-    for (&id, &(reason, span)) in zombies {
-        let encoded = serde_json::to_string(&ZombieDecoration {
-            reason: reason.to_string(),
-            span: ZombieSpan::from_rustc(span, source_map),
-        })
-        .unwrap();
-
-        // TODO: Right now we just piggyback off UserTypeGOOGLE since we never use it elsewhere. We should, uh, fix this
-        // to use non_semantic or something.
-        // https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_non_semantic_info.html
-        let inst = Instruction::new(
-            Op::DecorateString,
-            None,
-            None,
-            vec![
-                Operand::IdRef(id),
-                Operand::Decoration(Decoration::UserTypeGOOGLE),
-                Operand::LiteralString(encoded),
-            ],
-        );
-        module.annotations.push(inst);
     }
 }
