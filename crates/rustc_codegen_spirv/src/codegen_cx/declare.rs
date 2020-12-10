@@ -1,6 +1,7 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
+use crate::decorations::UnrollLoopsDecoration;
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attrs, SpirvAttribute};
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
@@ -120,6 +121,11 @@ impl<'tcx> CodegenCx<'tcx> {
                     self.really_unsafe_ignore_bitcasts
                         .borrow_mut()
                         .insert(declared);
+                }
+                SpirvAttribute::UnrollLoops => {
+                    self.unroll_loops_decorations
+                        .borrow_mut()
+                        .insert(fn_id, UnrollLoopsDecoration {});
                 }
                 _ => {}
             }

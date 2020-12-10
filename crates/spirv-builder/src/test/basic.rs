@@ -237,3 +237,65 @@ pub fn main() {
     loop {}
 }"#);
 }
+
+#[test]
+fn unroll_loops() {
+    dis_fn(
+        // FIXME(eddyb) use `for _ in 0..10` here when that works.
+        r#"
+#[allow(unused_attributes)]
+#[spirv(unroll_loops)]
+fn java_hash_ten_times(mut x: u32, y: u32) -> u32 {
+    let mut i = 0;
+    while i < 10 {
+        x = 31 * x + y;
+        i += 1;
+    }
+    x
+}
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    java_hash_ten_times(7, 42);
+}
+"#,
+        "java_hash_ten_times",
+        // NOTE(eddyb) this is very verbose because of the new structurizer
+        // producing messier control-flow than necessary, but the important part
+        // being tested is `OpLoopMerge` having `Unroll` as its "Loop Control".
+        r#"%1 = OpFunction %2 None %3
+%4 = OpFunctionParameter %2
+%5 = OpFunctionParameter %2
+%6 = OpLabel
+OpBranch %7
+%7 = OpLabel
+OpBranch %8
+%8 = OpLabel
+%9 = OpPhi %10 %11 %7 %12 %13
+%14 = OpPhi %2 %4 %7 %15 %13
+%16 = OpPhi %17 %18 %7 %19 %13
+OpLoopMerge %20 %13 Unroll
+OpBranchConditional %16 %21 %20
+%21 = OpLabel
+%22 = OpSLessThan %17 %9 %23
+OpSelectionMerge %24 None
+OpBranchConditional %22 %25 %26
+%25 = OpLabel
+%27 = OpIMul %2 %28 %14
+%29 = OpIAdd %2 %27 %5
+%30 = OpIAdd %10 %9 %31
+OpBranch %24
+%26 = OpLabel
+OpReturnValue %14
+%24 = OpLabel
+%12 = OpPhi %10 %30 %25
+%15 = OpPhi %2 %29 %25
+%19 = OpPhi %17 %32 %25
+OpBranch %13
+%13 = OpLabel
+OpBranch %8
+%20 = OpLabel
+OpUnreachable
+OpFunctionEnd"#,
+    );
+}

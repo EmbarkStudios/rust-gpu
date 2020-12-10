@@ -84,7 +84,7 @@ mod abi;
 mod builder;
 mod builder_spirv;
 mod codegen_cx;
-mod finalizing_passes;
+mod decorations;
 mod link;
 mod linker;
 mod spirv_type;

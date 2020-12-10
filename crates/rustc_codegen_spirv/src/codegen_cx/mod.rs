@@ -5,7 +5,9 @@ mod type_;
 
 use crate::builder::{ExtInst, InstructionTable};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueKind};
-use crate::finalizing_passes::export_zombies;
+use crate::decorations::{
+    CustomDecoration, SerializedSpan, UnrollLoopsDecoration, ZombieDecoration,
+};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
@@ -47,7 +49,11 @@ pub struct CodegenCx<'tcx> {
     /// Invalid spir-v IDs that should be stripped from the final binary,
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
-    zombie_values: RefCell<HashMap<Word, (&'static str, Span)>>,
+    zombie_decorations: RefCell<HashMap<Word, ZombieDecoration>>,
+    /// Functions that have `#[spirv(unroll_loops)]`, and therefore should
+    /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
+    /// instructions, during structuralization.
+    unroll_loops_decorations: RefCell<HashMap<Word, UnrollLoopsDecoration>>,
     pub kernel_mode: bool,
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
@@ -105,7 +111,8 @@ impl<'tcx> CodegenCx<'tcx> {
             type_cache: Default::default(),
             vtables: Default::default(),
             ext_inst: Default::default(),
-            zombie_values: Default::default(),
+            zombie_decorations: Default::default(),
+            unroll_loops_decorations: Default::default(),
             kernel_mode,
             sym,
             instruction_table: InstructionTable::new(),
@@ -153,24 +160,24 @@ impl<'tcx> CodegenCx<'tcx> {
     ///
     /// Finally, if *user* code is marked as zombie, then this means that the user tried to do
     /// something that isn't supported, and should be an error.
-    pub fn zombie_with_span(&self, word: Word, span: Span, reason: &'static str) {
+    pub fn zombie_with_span(&self, word: Word, span: Span, reason: &str) {
         if self.is_system_crate() {
-            self.zombie_values.borrow_mut().insert(word, (reason, span));
+            self.zombie_even_in_user_code(word, span, reason);
         } else {
             self.tcx.sess.span_err(span, reason);
         }
     }
-    pub fn zombie_no_span(&self, word: Word, reason: &'static str) {
-        if self.is_system_crate() {
-            self.zombie_values
-                .borrow_mut()
-                .insert(word, (reason, DUMMY_SP));
-        } else {
-            self.tcx.sess.err(reason);
-        }
+    pub fn zombie_no_span(&self, word: Word, reason: &str) {
+        self.zombie_with_span(word, DUMMY_SP, reason)
     }
-    pub fn zombie_even_in_user_code(&self, word: Word, span: Span, reason: &'static str) {
-        self.zombie_values.borrow_mut().insert(word, (reason, span));
+    pub fn zombie_even_in_user_code(&self, word: Word, span: Span, reason: &str) {
+        self.zombie_decorations.borrow_mut().insert(
+            word,
+            ZombieDecoration {
+                reason: reason.to_string(),
+                span: SerializedSpan::from_rustc(span, self.tcx.sess.source_map()),
+            },
+        );
     }
 
     pub fn is_system_crate(&self) -> bool {
@@ -185,10 +192,17 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
-        export_zombies(
-            &mut result,
-            &self.zombie_values.borrow(),
-            self.tcx.sess.source_map(),
+        result.annotations.extend(
+            self.zombie_decorations
+                .into_inner()
+                .into_iter()
+                .map(|(id, zombie)| zombie.encode(id))
+                .chain(
+                    self.unroll_loops_decorations
+                        .into_inner()
+                        .into_iter()
+                        .map(|(id, unroll_loops)| unroll_loops.encode(id)),
+                ),
         );
         result
     }

@@ -1,3 +1,4 @@
+use crate::decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::binary::Assemble;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
@@ -154,7 +155,7 @@ pub fn remove_duplicate_types(module: &mut Module) {
     // Keep in mind, this algorithm requires forward type references to not exist - i.e. it's a valid spir-v module.
 
     // Include zombies in the key to not merge zombies with non-zombies
-    let zombies: HashSet<Word> = super::zombies::collect_zombies(module)
+    let zombies: HashSet<Word> = ZombieDecoration::decode_all(module)
         .map(|(z, _)| z)
         .collect();
 
