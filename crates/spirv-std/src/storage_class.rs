@@ -9,7 +9,7 @@
 
 macro_rules! storage_class {
     ($(#[$($meta:meta)+])* storage_class $name:ident ; $($tt:tt)*) => {
-        $(#[$($meta)+])*
+        $(#[cfg_attr(target_arch = "spirv", $($meta)+)])*
         #[allow(unused_attributes)]
         pub struct $name<'value, T> {
             value: &'value mut T,
@@ -19,7 +19,7 @@ macro_rules! storage_class {
             /// Load the value into memory.
             #[inline]
             #[allow(unused_attributes)]
-            #[spirv(really_unsafe_ignore_bitcasts)]
+            #[cfg_attr(target_arch = "spirv", spirv(really_unsafe_ignore_bitcasts))]
             pub fn load(&self) -> T {
                 *self.value
             }
@@ -36,7 +36,7 @@ macro_rules! storage_class {
             /// Store the value in storage.
             #[inline]
             #[allow(unused_attributes)]
-            #[spirv(really_unsafe_ignore_bitcasts)]
+            #[cfg_attr(target_arch = "spirv", spirv(really_unsafe_ignore_bitcasts))]
             pub fn store(&mut self, v: T) {
                 *self.value = v
             }

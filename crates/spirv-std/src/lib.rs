@@ -1,7 +1,10 @@
 #![no_std]
-#![feature(register_attr, repr_simd, core_intrinsics, lang_items)]
+#![cfg_attr(
+    target_arch = "spirv",
+    feature(register_attr, repr_simd, core_intrinsics, lang_items)
+)]
 #![cfg_attr(target_arch = "spirv", feature(asm))]
-#![register_attr(spirv)]
+#![cfg_attr(target_arch = "spirv", register_attr(spirv))]
 // Our standard Clippy lints that we use in Embark projects, we opt out of a few that are not appropriate for the specific crate (yet)
 #![warn(
     clippy::all,
