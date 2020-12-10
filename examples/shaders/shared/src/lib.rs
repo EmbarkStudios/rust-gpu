@@ -6,7 +6,7 @@
 #![register_attr(spirv)]
 
 use core::f32::consts::PI;
-use spirv_std::glam::Vec3;
+use spirv_std::glam::{vec3, Vec3};
 
 // Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
 // we tie #[no_std] above to the same condition, so it's fine.
@@ -27,11 +27,11 @@ pub fn saturate(x: f32) -> f32 {
 }
 
 pub fn pow(v: Vec3, power: f32) -> Vec3 {
-    Vec3::new(v.x.powf(power), v.y.powf(power), v.z.powf(power))
+    vec3(v.x.powf(power), v.y.powf(power), v.z.powf(power))
 }
 
 pub fn exp(v: Vec3) -> Vec3 {
-    Vec3::new(v.x.exp(), v.y.exp(), v.z.exp())
+    vec3(v.x.exp(), v.y.exp(), v.z.exp())
 }
 
 /// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
