@@ -20,7 +20,7 @@ use std::{iter, slice};
 /// ideally as soon as they're no longer needed, because no other tools
 /// processing the SPIR-V would understand them correctly.
 ///
-/// TODO: uses non_semantic instead of piggybacking off of `UserTypeGOOGLE`
+/// TODO: uses `non_semantic` instead of piggybacking off of `UserTypeGOOGLE`
 /// <https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_non_semantic_info.html>
 pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
     const ENCODING_PREFIX: &'static str;
@@ -45,7 +45,7 @@ pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
         )
     }
 
-    fn try_decode<'a>(inst: &'a Instruction) -> Option<(Word, LazilyDeserialized<'a, Self>)> {
+    fn try_decode(inst: &Instruction) -> Option<(Word, LazilyDeserialized<'_, Self>)> {
         if inst.class.opcode == Op::DecorateString
             && inst.operands[1].unwrap_decoration() == Decoration::UserTypeGOOGLE
         {
@@ -65,12 +65,7 @@ pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
         }
     }
 
-    fn decode_all<'a>(
-        module: &'a Module,
-    ) -> iter::FilterMap<
-        slice::Iter<'a, Instruction>,
-        fn(&'a Instruction) -> Option<(Word, LazilyDeserialized<'a, Self>)>,
-    > {
+    fn decode_all(module: &Module) -> DecodeAllIter<'_, Self> {
         module
             .annotations
             .iter()
@@ -83,6 +78,13 @@ pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
             .retain(|inst| Self::try_decode(inst).is_none())
     }
 }
+
+// HACK(eddyb) return type of `CustomDecoration::decode_all`, in lieu of
+// `-> impl Iterator<Item = (Word, LazilyDeserialized<'_, Self>)` in the trait.
+type DecodeAllIter<'a, D> = iter::FilterMap<
+    slice::Iter<'a, Instruction>,
+    fn(&'a Instruction) -> Option<(Word, LazilyDeserialized<'a, D>)>,
+>;
 
 /// Helper allowing full deserialization to be avoided where possible.
 #[derive(Copy, Clone)]
