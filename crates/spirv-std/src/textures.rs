@@ -1,14 +1,12 @@
 use glam::{Vec2, Vec3A, Vec4};
 
-#[allow(unused_attributes)]
-#[cfg_attr(target_arch = "spirv", spirv(sampler))]
+#[cfg_attr(target_arch = "spirv", allow(unused_attributes), spirv(sampler))]
 #[derive(Copy, Clone)]
 pub struct Sampler {
     _x: u32,
 }
 
-#[allow(unused_attributes)]
-#[cfg_attr(target_arch = "spirv", spirv(image(
+#[cfg_attr(target_arch = "spirv", allow(unused_attributes), spirv(image(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
     depth = 0,
@@ -51,8 +49,7 @@ impl Image2d {
     }
 }
 
-#[allow(unused_attributes)]
-#[cfg_attr(target_arch = "spirv", spirv(image(
+#[cfg_attr(target_arch = "spirv", allow(unused_attributes), spirv(image(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
     depth = 0,
@@ -95,8 +92,7 @@ impl Image2dArray {
     }
 }
 
-#[allow(unused_attributes)]
-#[cfg_attr(target_arch = "spirv", spirv(sampled_image))]
+#[cfg_attr(target_arch = "spirv", allow(unused_attributes), spirv(sampled_image))]
 #[derive(Copy, Clone)]
 pub struct SampledImage<I> {
     _image: I,
