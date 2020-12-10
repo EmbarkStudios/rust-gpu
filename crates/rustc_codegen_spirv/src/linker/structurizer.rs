@@ -1,6 +1,7 @@
 // This pass inserts merge instructions for structured control flow with the assumption the spir-v is reducible.
 
 use super::simple_passes::outgoing_edges;
+use crate::decorations::UnrollLoopsDecoration;
 use rspirv::spirv::{Op, SelectionControl, Word};
 use rspirv::{
     dr::{Block, Builder, InsertPoint, Module, Operand},
@@ -123,7 +124,11 @@ impl ControlFlowInfo {
     }
 }
 
-pub fn structurize(sess: &Session, module: Module) -> Module {
+pub fn structurize(
+    sess: &Session,
+    module: Module,
+    unroll_loops_decorations: HashMap<Word, UnrollLoopsDecoration>,
+) -> Module {
     let mut builder = Builder::new_from_module(module);
 
     for func_idx in 0..builder.module_ref().functions.len() {
@@ -131,7 +136,19 @@ pub fn structurize(sess: &Session, module: Module) -> Module {
 
         builder.select_function(Some(func_idx)).unwrap();
 
-        insert_loop_merge_on_conditional_branch(&mut builder, &mut cf_info);
+        let func_id = builder.module_ref().functions[func_idx]
+            .def
+            .as_ref()
+            .unwrap()
+            .result_id
+            .unwrap();
+
+        let loop_control = match unroll_loops_decorations.get(&func_id) {
+            Some(UnrollLoopsDecoration {}) => LoopControl::UNROLL,
+            None => LoopControl::NONE,
+        };
+
+        insert_loop_merge_on_conditional_branch(&mut builder, &mut cf_info, loop_control);
         retarget_loop_children_if_needed(&mut builder, &cf_info);
         insert_selection_merge_on_conditional_branch(sess, &mut builder, &mut cf_info);
         defer_loop_internals(&mut builder, &cf_info);
@@ -763,6 +780,7 @@ pub fn insert_selection_merge_on_conditional_branch(
 pub fn insert_loop_merge_on_conditional_branch(
     builder: &mut Builder,
     cf_info: &mut ControlFlowInfo,
+    loop_control: LoopControl,
 ) {
     let mut branch_conditional_ops = Vec::new();
 
@@ -825,7 +843,7 @@ pub fn insert_loop_merge_on_conditional_branch(
                 InsertPoint::FromEnd(1),
                 merge_block_id,
                 continue_block_id,
-                LoopControl::NONE,
+                loop_control,
                 None,
             )
             .unwrap();

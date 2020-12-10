@@ -5,7 +5,9 @@ mod type_;
 
 use crate::builder::{ExtInst, InstructionTable};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueKind};
-use crate::decorations::{CustomDecoration, SerializedSpan, ZombieDecoration};
+use crate::decorations::{
+    CustomDecoration, SerializedSpan, UnrollLoopsDecoration, ZombieDecoration,
+};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
@@ -48,6 +50,10 @@ pub struct CodegenCx<'tcx> {
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
     zombie_decorations: RefCell<HashMap<Word, ZombieDecoration>>,
+    /// Functions that have `#[spirv(unroll_loops)]`, and therefore should
+    /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
+    /// instructions, during structuralization.
+    unroll_loops_decorations: RefCell<HashMap<Word, UnrollLoopsDecoration>>,
     pub kernel_mode: bool,
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
@@ -106,6 +112,7 @@ impl<'tcx> CodegenCx<'tcx> {
             vtables: Default::default(),
             ext_inst: Default::default(),
             zombie_decorations: Default::default(),
+            unroll_loops_decorations: Default::default(),
             kernel_mode,
             sym,
             instruction_table: InstructionTable::new(),
@@ -189,7 +196,13 @@ impl<'tcx> CodegenCx<'tcx> {
             self.zombie_decorations
                 .into_inner()
                 .into_iter()
-                .map(|(id, zombie)| zombie.encode(id)),
+                .map(|(id, zombie)| zombie.encode(id))
+                .chain(
+                    self.unroll_loops_decorations
+                        .into_inner()
+                        .into_iter()
+                        .map(|(id, unroll_loops)| unroll_loops.encode(id)),
+                ),
         );
         result
     }

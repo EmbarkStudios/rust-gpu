@@ -12,6 +12,7 @@ mod simple_passes;
 mod structurizer;
 mod zombies;
 
+use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
 use rspirv::binary::Consumer;
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader};
 use rspirv::spirv::{Op, Word};
@@ -136,12 +137,17 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
         dce::dce(&mut output);
     }
 
+    let unroll_loops_decorations = UnrollLoopsDecoration::decode_all(&output)
+        .map(|(id, unroll_loops)| (id, unroll_loops.deserialize()))
+        .collect::<HashMap<_, _>>();
+    UnrollLoopsDecoration::remove_all(&mut output);
+
     let mut output = if opts.structurize {
         let _timer = sess.timer("link_structurize");
         if opts.use_new_structurizer {
-            new_structurizer::structurize(output)
+            new_structurizer::structurize(output, unroll_loops_decorations)
         } else {
-            structurizer::structurize(sess, output)
+            structurizer::structurize(sess, output, unroll_loops_decorations)
         }
     } else {
         output
