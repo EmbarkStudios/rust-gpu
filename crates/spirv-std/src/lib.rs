@@ -13,7 +13,7 @@
     clippy::empty_enum,
     clippy::enum_glob_use,
     clippy::pub_enum_variant_names,
-    clippy::mem_forget,
+    clippy::mem_forget, 
     clippy::filter_map_next,
     clippy::needless_continue,
     clippy::needless_borrow,
@@ -38,6 +38,9 @@
     future_incompatible,
     nonstandard_style
 )]
+
+#[cfg(not(target_arch = "spirv"))]
+#[macro_use] pub extern crate spirv_attrib;
 
 pub mod storage_class;
 mod textures;
