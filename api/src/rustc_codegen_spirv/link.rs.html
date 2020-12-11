@@ -478,6 +478,7 @@
 <span id="475">475</span>
 <span id="476">476</span>
 <span id="477">477</span>
+<span id="478">478</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">linker</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">back</span>::<span class="ident">lto</span>::{<span class="ident">LtoModuleCodegen</span>, <span class="ident">SerializedModule</span>, <span class="ident">ThinModule</span>, <span class="ident">ThinShared</span>};
@@ -619,7 +620,7 @@
 
     {
         <span class="kw">let</span> <span class="ident">save_modules_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_save_modules&quot;</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">write</span>(<span class="ident">out_filename</span>, <span class="kw">crate</span>::<span class="ident">slice_u32_to_u8</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>)) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">write</span>(<span class="ident">out_filename</span>, <span class="ident">spirv_tools</span>::<span class="ident">util</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>)) {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="string">&quot;failed to serialize spirv-binary to disk&quot;</span>);
             <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module {:?}&quot;</span>, <span class="ident">out_filename</span>));
             <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;I/O error: {:#}&quot;</span>, <span class="ident">e</span>));
@@ -876,7 +877,7 @@
         <span class="kw">for</span> (<span class="ident">num</span>, <span class="ident">module</span>) <span class="kw">in</span> <span class="ident">modules</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
             <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">path</span>.<span class="ident">join</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;mod_{}.spv&quot;</span>, <span class="ident">num</span>)))
                 .<span class="ident">unwrap</span>()
-                .<span class="ident">write_all</span>(<span class="kw">crate</span>::<span class="ident">slice_u32_to_u8</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">assemble</span>()))
+                .<span class="ident">write_all</span>(<span class="ident">spirv_tools</span>::<span class="ident">util</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">assemble</span>()))
                 .<span class="ident">unwrap</span>();
         }
     }
@@ -909,6 +910,7 @@
 
 <span class="doccomment">/// As of right now, this is essentially a no-op, just plumbing through all the files.</span>
 <span class="comment">// TODO: WorkProduct impl</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">unnecessary_wraps</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">run_thin</span>(
     <span class="ident">cgcx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenContext</span><span class="op">&lt;</span><span class="ident">SpirvCodegenBackend</span><span class="op">&gt;</span>,
     <span class="ident">modules</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">SpirvThinBuffer</span>)<span class="op">&gt;</span>,
