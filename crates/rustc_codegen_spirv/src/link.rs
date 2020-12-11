@@ -428,6 +428,7 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: boo
 
 /// As of right now, this is essentially a no-op, just plumbing through all the files.
 // TODO: WorkProduct impl
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn run_thin(
     cgcx: &CodegenContext<SpirvCodegenBackend>,
     modules: Vec<(String, SpirvThinBuffer)>,
