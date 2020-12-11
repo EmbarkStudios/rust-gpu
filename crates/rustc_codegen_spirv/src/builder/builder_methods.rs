@@ -1156,8 +1156,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .bitcast(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty);
-            let val_is_ptr = matches!(self.lookup_type(val.ty), SpirvType::Pointer{..});
-            let dest_is_ptr = matches!(self.lookup_type(dest_ty), SpirvType::Pointer{..});
+            let val_is_ptr = matches!(self.lookup_type(val.ty), SpirvType::Pointer { .. });
+            let dest_is_ptr = matches!(self.lookup_type(dest_ty), SpirvType::Pointer { .. });
             if val_is_ptr || dest_is_ptr {
                 self.zombie_bitcast_ptr(result.def(self), val.ty, dest_ty);
             }
