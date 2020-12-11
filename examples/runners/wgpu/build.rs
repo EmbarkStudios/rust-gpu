@@ -12,5 +12,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     build_shader("../../shaders/sky-shader")?;
     build_shader("../../shaders/simplest-shader")?;
     build_shader("../../shaders/compute-shader")?;
+    build_shader("../../shaders/mouse-shader")?;
     Ok(())
 }

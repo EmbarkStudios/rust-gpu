@@ -9,6 +9,7 @@ pub enum RustGPUShader {
     Simplest,
     Sky,
     Compute,
+    Mouse,
 }
 
 fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleSource<'static> {
@@ -16,6 +17,7 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleSource<'static> {
         RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),
         RustGPUShader::Sky => wgpu::include_spirv!(env!("sky_shader.spv")),
         RustGPUShader::Compute => wgpu::include_spirv!(env!("compute_shader.spv")),
+        RustGPUShader::Mouse => wgpu::include_spirv!(env!("mouse_shader.spv")),
     }
 }
 
