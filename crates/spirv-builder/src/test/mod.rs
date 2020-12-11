@@ -54,6 +54,7 @@ static SRC_PREFIX: &str = r#"#![no_std]
 #![allow(unused_imports)]
 use spirv_std::*;
 use spirv_std::storage_class::*;
+use spirv_std::num_traits::Float;
 "#;
 
 fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {
