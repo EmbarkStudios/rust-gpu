@@ -299,3 +299,13 @@ OpUnreachable
 OpFunctionEnd"#,
     );
 }
+
+#[test]
+fn signum() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(i: Input<f32>, mut o: Output<f32>) {
+    o.store(i.load().signum());
+}"#);
+}

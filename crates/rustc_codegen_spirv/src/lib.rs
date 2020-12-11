@@ -211,7 +211,7 @@ struct SpirvModuleBuffer(Vec<u32>);
 
 impl ModuleBufferMethods for SpirvModuleBuffer {
     fn data(&self) -> &[u8] {
-        crate::slice_u32_to_u8(&self.0)
+        spirv_tools::util::from_binary(&self.0)
     }
 }
 
@@ -220,7 +220,7 @@ struct SpirvThinBuffer(Vec<u32>);
 
 impl ThinBufferMethods for SpirvThinBuffer {
     fn data(&self) -> &[u8] {
-        crate::slice_u32_to_u8(&self.0)
+        spirv_tools::util::from_binary(&self.0)
     }
 }
 
@@ -364,25 +364,6 @@ impl CodegenBackend for SpirvCodegenBackend {
     }
 }
 
-// Note: endianness doesn't matter, readers deduce endianness from magic header.
-fn slice_u32_to_u8(slice: &[u32]) -> &[u8] {
-    unsafe {
-        std::slice::from_raw_parts(
-            slice.as_ptr() as *const u8,
-            slice.len() * std::mem::size_of::<u32>(),
-        )
-    }
-}
-
-fn slice_u8_to_u32(slice: &[u8]) -> &[u32] {
-    unsafe {
-        std::slice::from_raw_parts(
-            slice.as_ptr() as *const u32,
-            slice.len() / std::mem::size_of::<u32>(),
-        )
-    }
-}
-
 impl WriteBackendMethods for SpirvCodegenBackend {
     type Module = Vec<u32>;
     type TargetMachine = ();
@@ -434,7 +415,9 @@ impl WriteBackendMethods for SpirvCodegenBackend {
         thin_module: &mut ThinModule<Self>,
     ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
         let module = ModuleCodegen {
-            module_llvm: slice_u8_to_u32(thin_module.data()).to_vec(),
+            module_llvm: spirv_tools::util::to_binary(thin_module.data())
+                .unwrap()
+                .to_vec(),
             name: thin_module.name().to_string(),
             kind: ModuleKind::Regular,
         };
@@ -451,7 +434,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
             .output_filenames
             .temp_path(OutputType::Object, Some(&module.name));
         // Note: endianness doesn't matter, readers deduce endianness from magic header.
-        let spirv_module = slice_u32_to_u8(&module.module_llvm);
+        let spirv_module = spirv_tools::util::from_binary(&module.module_llvm);
         File::create(&path)
             .unwrap()
             .write_all(spirv_module)
