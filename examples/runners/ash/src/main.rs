@@ -90,6 +90,7 @@ pub fn main() {
                         ctx.insert_shader_module(name, spirv);
                     }
                     ctx.recompiling_shaders = false;
+                    ctx.rebuild_pipelines(vk::PipelineCache::null());
                 }
                 Err(TryRecvError::Disconnected) => {
                     panic!("compiler reciever disconnected unexpectedly")
