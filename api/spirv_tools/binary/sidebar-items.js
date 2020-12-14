@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Binary",""]]});
+initSidebarItems({"enum":[["Binary",""]],"fn":[["from_binary","Transmutes a SPIRV binary, which are stored as 32 bit words, into a more digestible byte array"],["to_binary","Transmutes a regular byte array into a SPIRV binary of 32 bit words. This will fail if the input is not `% sizeof(u32)`"]]});

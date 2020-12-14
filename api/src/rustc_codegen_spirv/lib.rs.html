@@ -614,16 +614,16 @@
 <span class="doccomment">//! the [Rust GPU Dev Guide][gpu-dev-guide] which contains more user-level</span>
 <span class="doccomment">//! information on how to use and setup `rust-gpu`.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! - [`spriv-builder`]</span>
-<span class="doccomment">//! - [`spriv-std`]</span>
-<span class="doccomment">//! - [`spriv-tools`]</span>
-<span class="doccomment">//! - [`spriv-tools-sys`]</span>
+<span class="doccomment">//! - [`spirv-builder`]</span>
+<span class="doccomment">//! - [`spirv-std`]</span>
+<span class="doccomment">//! - [`spirv-tools`]</span>
+<span class="doccomment">//! - [`spirv-tools-sys`]</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [gpu-dev-guide]: https://embarkstudios.github.io/rust-gpu/book</span>
-<span class="doccomment">//! [`spriv-builder`]: https://embarkstudios.github.io/rust-gpu/api/spirv_builder</span>
-<span class="doccomment">//! [`spriv-std`]: https://embarkstudios.github.io/rust-gpu/api/spirv_std</span>
-<span class="doccomment">//! [`spriv-tools`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools</span>
-<span class="doccomment">//! [`spriv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys</span>
+<span class="doccomment">//! [`spirv-builder`]: https://embarkstudios.github.io/rust-gpu/api/spirv_builder</span>
+<span class="doccomment">//! [`spirv-std`]: https://embarkstudios.github.io/rust-gpu/api/spirv_std</span>
+<span class="doccomment">//! [`spirv-tools`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools</span>
+<span class="doccomment">//! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys</span>
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">rustc_private</span>)]</span>
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">once_cell</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy</span>::<span class="ident">unimplemented</span>, <span class="ident">clippy</span>::<span class="ident">ok_expect</span>, <span class="ident">clippy</span>::<span class="ident">mem_forget</span>)]</span>
@@ -820,7 +820,7 @@
 
 <span class="kw">impl</span> <span class="ident">ModuleBufferMethods</span> <span class="kw">for</span> <span class="ident">SpirvModuleBuffer</span> {
     <span class="kw">fn</span> <span class="ident">data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="ident">spirv_tools</span>::<span class="ident">util</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
+        <span class="ident">spirv_tools</span>::<span class="ident">binary</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
@@ -829,7 +829,7 @@
 
 <span class="kw">impl</span> <span class="ident">ThinBufferMethods</span> <span class="kw">for</span> <span class="ident">SpirvThinBuffer</span> {
     <span class="kw">fn</span> <span class="ident">data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="ident">spirv_tools</span>::<span class="ident">util</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
+        <span class="ident">spirv_tools</span>::<span class="ident">binary</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
@@ -1024,7 +1024,7 @@
         <span class="ident">thin_module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ThinModule</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ModuleCodegen</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Module</span><span class="op">&gt;</span>, <span class="ident">FatalError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">ModuleCodegen</span> {
-            <span class="ident">module_llvm</span>: <span class="ident">spirv_tools</span>::<span class="ident">util</span>::<span class="ident">to_binary</span>(<span class="ident">thin_module</span>.<span class="ident">data</span>())
+            <span class="ident">module_llvm</span>: <span class="ident">spirv_tools</span>::<span class="ident">binary</span>::<span class="ident">to_binary</span>(<span class="ident">thin_module</span>.<span class="ident">data</span>())
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">to_vec</span>(),
             <span class="ident">name</span>: <span class="ident">thin_module</span>.<span class="ident">name</span>().<span class="ident">to_string</span>(),
@@ -1043,7 +1043,7 @@
             .<span class="ident">output_filenames</span>
             .<span class="ident">temp_path</span>(<span class="ident">OutputType</span>::<span class="ident">Object</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">name</span>));
         <span class="comment">// Note: endianness doesn&#39;t matter, readers deduce endianness from magic header.</span>
-        <span class="kw">let</span> <span class="ident">spirv_module</span> <span class="op">=</span> <span class="ident">spirv_tools</span>::<span class="ident">util</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">module_llvm</span>);
+        <span class="kw">let</span> <span class="ident">spirv_module</span> <span class="op">=</span> <span class="ident">spirv_tools</span>::<span class="ident">binary</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">module_llvm</span>);
         <span class="ident">File</span>::<span class="ident">create</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)
             .<span class="ident">unwrap</span>()
             .<span class="ident">write_all</span>(<span class="ident">spirv_module</span>)
