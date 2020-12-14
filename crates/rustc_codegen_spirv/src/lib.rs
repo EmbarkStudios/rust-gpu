@@ -5,16 +5,16 @@
 //! the [Rust GPU Dev Guide][gpu-dev-guide] which contains more user-level
 //! information on how to use and setup `rust-gpu`.
 //!
-//! - [`spriv-builder`]
-//! - [`spriv-std`]
-//! - [`spriv-tools`]
-//! - [`spriv-tools-sys`]
+//! - [`spirv-builder`]
+//! - [`spirv-std`]
+//! - [`spirv-tools`]
+//! - [`spirv-tools-sys`]
 //!
 //! [gpu-dev-guide]: https://embarkstudios.github.io/rust-gpu/book
-//! [`spriv-builder`]: https://embarkstudios.github.io/rust-gpu/api/spirv_builder
-//! [`spriv-std`]: https://embarkstudios.github.io/rust-gpu/api/spirv_std
-//! [`spriv-tools`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools
-//! [`spriv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
+//! [`spirv-builder`]: https://embarkstudios.github.io/rust-gpu/api/spirv_builder
+//! [`spirv-std`]: https://embarkstudios.github.io/rust-gpu/api/spirv_std
+//! [`spirv-tools`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools
+//! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
 #![feature(rustc_private)]
 #![feature(once_cell)]
 #![deny(clippy::unimplemented, clippy::ok_expect, clippy::mem_forget)]
@@ -211,7 +211,7 @@ struct SpirvModuleBuffer(Vec<u32>);
 
 impl ModuleBufferMethods for SpirvModuleBuffer {
     fn data(&self) -> &[u8] {
-        spirv_tools::util::from_binary(&self.0)
+        spirv_tools::binary::from_binary(&self.0)
     }
 }
 
@@ -220,7 +220,7 @@ struct SpirvThinBuffer(Vec<u32>);
 
 impl ThinBufferMethods for SpirvThinBuffer {
     fn data(&self) -> &[u8] {
-        spirv_tools::util::from_binary(&self.0)
+        spirv_tools::binary::from_binary(&self.0)
     }
 }
 
@@ -415,7 +415,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
         thin_module: &mut ThinModule<Self>,
     ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
         let module = ModuleCodegen {
-            module_llvm: spirv_tools::util::to_binary(thin_module.data())
+            module_llvm: spirv_tools::binary::to_binary(thin_module.data())
                 .unwrap()
                 .to_vec(),
             name: thin_module.name().to_string(),
@@ -434,7 +434,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
             .output_filenames
             .temp_path(OutputType::Object, Some(&module.name));
         // Note: endianness doesn't matter, readers deduce endianness from magic header.
-        let spirv_module = spirv_tools::util::from_binary(&module.module_llvm);
+        let spirv_module = spirv_tools::binary::from_binary(&module.module_llvm);
         File::create(&path)
             .unwrap()
             .write_all(spirv_module)
