@@ -201,6 +201,9 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! # Storage Classes</span>
 <span class="doccomment">//!</span>
@@ -213,7 +216,8 @@
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">storage_class</span> {
     ($(<span class="attribute">#[$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">meta</span>:<span class="ident">meta</span>)<span class="op">+</span>]</span>)<span class="op">*</span> <span class="ident">storage_class</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> ; $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tt</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        $(<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>, <span class="ident">allow</span>(<span class="ident">unused_attributes</span>), $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">meta</span>)<span class="op">+</span>)]</span>)<span class="op">*</span>
+        $(<span class="attribute">#[$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">meta</span>)<span class="op">+</span>]</span>)<span class="op">*</span>
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_attributes</span>)]</span>
         <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="lifetime">&#39;value</span>, <span class="ident">T</span><span class="op">&gt;</span> {
             <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;value</span> <span class="kw-2">mut</span> <span class="ident">T</span>,
         }
@@ -221,7 +225,8 @@
         <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span> {
             <span class="doccomment">/// Load the value into memory.</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>, <span class="ident">allow</span>(<span class="ident">unused_attributes</span>), <span class="ident">spirv</span>(<span class="ident">really_unsafe_ignore_bitcasts</span>))]</span>
+            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_attributes</span>)]</span>
+            <span class="attribute">#[<span class="ident">spirv</span>(<span class="ident">really_unsafe_ignore_bitcasts</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
                 <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">value</span>
             }
@@ -237,7 +242,8 @@
         <span class="kw">impl</span> <span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span> {
             <span class="doccomment">/// Store the value in storage.</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>, <span class="ident">allow</span>(<span class="ident">unused_attributes</span>), <span class="ident">spirv</span>(<span class="ident">really_unsafe_ignore_bitcasts</span>))]</span>
+            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_attributes</span>)]</span>
+            <span class="attribute">#[<span class="ident">spirv</span>(<span class="ident">really_unsafe_ignore_bitcasts</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">store</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">T</span>) {
                 <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">value</span> <span class="op">=</span> <span class="ident">v</span>
             }
