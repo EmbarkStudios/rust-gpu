@@ -4,9 +4,8 @@ use proc_macro::{Delimiter, Group, TokenStream, TokenTree};
 
 #[proc_macro_attribute]
 pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let mut iterator = item.into_iter();
     let mut tokens = Vec::new();
-    for tt in &mut iterator {
+    for tt in item.into_iter() {
         match tt {
             TokenTree::Group(group) => match group.delimiter() {
                 Delimiter::Parenthesis => {
