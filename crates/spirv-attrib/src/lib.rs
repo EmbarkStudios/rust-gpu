@@ -1,16 +1,15 @@
 use core::iter::FromIterator;
-use core::iter::IntoIterator;
 use proc_macro::{Delimiter, Group, TokenStream, TokenTree};
 
 #[proc_macro_attribute]
 pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut tokens = Vec::new();
-    for tt in item.into_iter() {
+    for tt in item {
         match tt {
             TokenTree::Group(group) => match group.delimiter() {
                 Delimiter::Parenthesis => {
                     let mut sub_tokens = Vec::new();
-                    for tt in group.stream().into_iter() {
+                    for tt in group.stream() {
                         match tt {
                             TokenTree::Group(group) => match group.delimiter() {
                                 Delimiter::Bracket => {
@@ -28,7 +27,7 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     tokens.push(TokenTree::from(Group::new(
                         Delimiter::Parenthesis,
-                        TokenStream::from_iter(sub_tokens.into_iter()),
+                        TokenStream::from_iter(sub_tokens),
                     )));
                 }
                 _ => tokens.push(TokenTree::from(group)),
@@ -37,5 +36,5 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     }
 
-    TokenStream::from_iter(tokens.into_iter())
+    TokenStream::from_iter(tokens)
 }
