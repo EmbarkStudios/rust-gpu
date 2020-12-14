@@ -39,6 +39,10 @@
     nonstandard_style
 )]
 
+#[cfg(not(target_arch = "spirv"))]
+#[macro_use]
+pub extern crate spirv_attrib;
+
 pub mod storage_class;
 mod textures;
 

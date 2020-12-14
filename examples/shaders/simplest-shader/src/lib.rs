@@ -1,7 +1,13 @@
-#![cfg_attr(target_arch = "spirv", no_std)]
-#![feature(register_attr)]
-#![register_attr(spirv)]
+#![cfg_attr(
+    target_arch = "spirv",
+    no_std,
+    feature(register_attr),
+    register_attr(spirv)
+)]
 
+#[cfg(not(target_arch = "spirv"))]
+#[macro_use]
+pub extern crate spirv_attrib;
 use spirv_std::glam::{vec4, Vec4};
 use spirv_std::storage_class::{Input, Output};
 
