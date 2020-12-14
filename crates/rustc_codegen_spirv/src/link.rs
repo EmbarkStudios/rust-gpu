@@ -138,7 +138,8 @@ fn link_exe(
 
     {
         let save_modules_timer = sess.timer("link_save_modules");
-        if let Err(e) = std::fs::write(out_filename, spirv_tools::binary::from_binary(&spv_binary)) {
+        if let Err(e) = std::fs::write(out_filename, spirv_tools::binary::from_binary(&spv_binary))
+        {
             let mut err = sess.struct_err("failed to serialize spirv-binary to disk");
             err.note(&format!("module {:?}", out_filename));
             err.note(&format!("I/O error: {:#}", e));
