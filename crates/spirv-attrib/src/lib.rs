@@ -1,16 +1,42 @@
-#![cfg_attr(target_arch = "spirv", feature(register_attr), register_attr(spirv))]
+use core::iter::FromIterator;
+use core::iter::IntoIterator;
+use proc_macro::{Delimiter, Group, TokenStream, TokenTree};
 
-use proc_macro::TokenStream;
-use std::str::FromStr;
-
-#[cfg(not(target_arch = "spirv"))]
 #[proc_macro_attribute]
 pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let mut item_str = item.to_string();
+    let mut iterator = item.into_iter();
+    let mut tokens = Vec::new();
+    for tt in &mut iterator {
+        match tt {
+            TokenTree::Group(group) => match group.delimiter() {
+                Delimiter::Parenthesis => {
+                    let mut sub_tokens = Vec::new();
+                    for tt in group.stream().into_iter() {
+                        match tt {
+                            TokenTree::Group(group) => match group.delimiter() {
+                                Delimiter::Bracket => {
+                                    if group.stream().to_string().starts_with("spirv") {
+                                        sub_tokens.pop();
+                                    } else {
+                                        sub_tokens.push(TokenTree::from(group));
+                                    }
+                                }
+                                _ => sub_tokens.push(TokenTree::from(group)),
+                            },
+                            _ => sub_tokens.push(tt),
+                        }
+                    }
 
-    while let Some(start) = item_str.find("#[spirv(") {
-        let end = item_str[start..item_str.len()].find(")]");
-        item_str.replace_range(start..start + end.unwrap() + 2, "");
+                    tokens.push(TokenTree::from(Group::new(
+                        Delimiter::Parenthesis,
+                        TokenStream::from_iter(sub_tokens.into_iter()),
+                    )));
+                }
+                _ => tokens.push(TokenTree::from(group)),
+            },
+            _ => tokens.push(tt),
+        }
     }
-    TokenStream::from_str(item_str.as_str()).unwrap()
+
+    TokenStream::from_iter(tokens.into_iter())
 }
