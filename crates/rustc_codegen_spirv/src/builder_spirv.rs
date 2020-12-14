@@ -218,7 +218,7 @@ impl BuilderSpirv {
         let spirv_module = module.assemble();
         File::create(path)
             .unwrap()
-            .write_all(spirv_tools::util::from_binary(&spirv_module))
+            .write_all(spirv_tools::binary::from_binary(&spirv_module))
             .unwrap();
     }
 

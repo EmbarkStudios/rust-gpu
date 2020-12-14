@@ -96,7 +96,7 @@ fn val(src: &str) {
 /// additional errors (such as missing Vulkan-specific decorations).
 fn val_vulkan(src: &str) {
     use rustc_codegen_spirv::spirv_tools::{
-        util::to_binary,
+        binary::to_binary,
         val::{self, Validator},
         TargetEnv,
     };
