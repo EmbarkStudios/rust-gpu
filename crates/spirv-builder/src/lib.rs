@@ -149,6 +149,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     );
     let mut cargo = Command::new("cargo");
     cargo.args(&[
+        "+nightly-2020-12-11",
         "build",
         "--message-format=json-render-diagnostics",
         "-Z",
