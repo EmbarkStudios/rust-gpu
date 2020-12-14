@@ -309,3 +309,60 @@ pub fn main(i: Input<f32>, mut o: Output<f32>) {
     o.store(i.load().signum());
 }"#);
 }
+
+#[test]
+fn allocate_const_scalar_pointer() {
+    val(r#"
+use core::ptr::Unique;
+const POINTER: Unique<[u8;4]> = Unique::<[u8; 4]>::dangling();
+
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    let _pointer = POINTER;
+}"#);
+}
+
+#[test]
+fn allocate_vec_like_pointer() {
+    val(r#"
+use core::ptr::Unique;
+const VEC_LIKE: (Unique<usize>, usize, usize) = (Unique::<usize>::dangling(), 0, 0);
+
+pub fn assign_vec_like() {
+    let _vec_like = VEC_LIKE;
+}
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {}"#);
+}
+
+#[test]
+fn allocate_null_pointer() {
+    val(r#"
+use core::ptr::null;
+const NULL_PTR: *const i32 = null();
+
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    let _null_ptr = NULL_PTR;
+}"#);
+}
+
+#[test]
+fn create_uninitialized_memory() {
+    val(r#"
+use core::mem::MaybeUninit;
+const MAYBEI32: MaybeUninit<&i32> = MaybeUninit::<&i32>::uninit();
+
+pub fn create_uninit_and_write() {
+    let mut maybei32 = MAYBEI32;
+    unsafe { maybei32.as_mut_ptr().write(&0); }
+    let _maybei32 = unsafe { maybei32.assume_init() };
+}
+
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {}"#);
+}
