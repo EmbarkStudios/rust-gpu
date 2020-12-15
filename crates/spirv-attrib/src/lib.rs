@@ -30,6 +30,5 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
         }
         tokens.push(tt);
     }
-
     TokenStream::from_iter(tokens)
 }
