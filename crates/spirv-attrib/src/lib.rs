@@ -2,7 +2,7 @@ use proc_macro::{Delimiter, Group, TokenStream, TokenTree};
 
 #[proc_macro_attribute]
 pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let mut tokens: Vec<TokenTree> = Vec::new();
+    let mut tokens = Vec::new();
     for tt in item {
         match tt {
             TokenTree::Group(group) if group.delimiter() == Delimiter::Parenthesis => {
