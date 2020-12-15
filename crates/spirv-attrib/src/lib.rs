@@ -10,7 +10,8 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
             if let Delimiter::Parenthesis = group.delimiter() {
                 let mut sub_tokens = Vec::new();
                 for tt in group.stream() {
-                    if matches!(tt.clone(), TokenTree::Group(group) if group.delimiter() == Delimiter::Bracket && matches!(group.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident.to_string() == "spirv"))
+                    if matches!(tt.clone(), TokenTree::Group(group) if group.delimiter() == Delimiter::Bracket 
+                        && matches!(group.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident.to_string() == "spirv"))
                         && matches!(sub_tokens.last(), Some(TokenTree::Punct(p)) if p.as_char() == '#')
                     {
                         sub_tokens.pop();
