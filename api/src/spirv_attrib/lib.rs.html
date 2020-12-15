@@ -17,22 +17,52 @@
 <span id="14">14</span>
 <span id="15">15</span>
 <span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>, <span class="ident">feature</span>(<span class="ident">register_attr</span>), <span class="ident">register_attr</span>(<span class="ident">spirv</span>))]</span>
+<span class="kw">use</span> <span class="ident">proc_macro</span>::{<span class="ident">Delimiter</span>, <span class="ident">Group</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenTree</span>};
 
-<span class="kw">use</span> <span class="ident">proc_macro</span>::<span class="ident">TokenStream</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">proc_macro_attribute</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spirv</span>(<span class="ident">_attr</span>: <span class="ident">TokenStream</span>, <span class="ident">item</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">item_str</span> <span class="op">=</span> <span class="ident">item</span>.<span class="ident">to_string</span>();
-
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">start</span>) <span class="op">=</span> <span class="ident">item_str</span>.<span class="ident">find</span>(<span class="string">&quot;#[spirv(&quot;</span>) {
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">item_str</span>[<span class="ident">start</span>..<span class="ident">item_str</span>.<span class="ident">len</span>()].<span class="ident">find</span>(<span class="string">&quot;)]&quot;</span>);
-        <span class="ident">item_str</span>.<span class="ident">replace_range</span>(<span class="ident">start</span>..<span class="ident">start</span> <span class="op">+</span> <span class="ident">end</span>.<span class="ident">unwrap</span>() <span class="op">+</span> <span class="number">2</span>, <span class="string">&quot;&quot;</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+    <span class="kw">for</span> <span class="ident">tt</span> <span class="kw">in</span> <span class="ident">item</span> {
+        <span class="kw">match</span> <span class="ident">tt</span> {
+            <span class="ident">TokenTree</span>::<span class="ident">Group</span>(<span class="ident">group</span>) <span class="kw">if</span> <span class="ident">group</span>.<span class="ident">delimiter</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">Delimiter</span>::<span class="ident">Parenthesis</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sub_tokens</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+                <span class="kw">for</span> <span class="ident">tt</span> <span class="kw">in</span> <span class="ident">group</span>.<span class="ident">stream</span>() {
+                    <span class="kw">match</span> <span class="ident">tt</span> {
+                        <span class="ident">TokenTree</span>::<span class="ident">Group</span>(<span class="ident">group</span>)
+                            <span class="kw">if</span> <span class="ident">group</span>.<span class="ident">delimiter</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">Delimiter</span>::<span class="ident">Bracket</span>
+                                <span class="op">&amp;&amp;</span> <span class="macro">matches</span><span class="macro">!</span>(<span class="ident">group</span>.<span class="ident">stream</span>().<span class="ident">into_iter</span>().<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="ident">TokenTree</span>::<span class="ident">Ident</span>(<span class="ident">ident</span>)) <span class="kw">if</span> <span class="ident">ident</span>.<span class="ident">to_string</span>() <span class="op">=</span><span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)
+                                <span class="op">&amp;&amp;</span> <span class="macro">matches</span><span class="macro">!</span>(<span class="ident">sub_tokens</span>.<span class="ident">last</span>(), <span class="prelude-val">Some</span>(<span class="ident">TokenTree</span>::<span class="ident">Punct</span>(<span class="ident">p</span>)) <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">as_char</span>() <span class="op">=</span><span class="op">=</span> <span class="string">&#39;#&#39;</span>) <span class="op">=</span><span class="op">&gt;</span>
+                        {
+                            <span class="ident">sub_tokens</span>.<span class="ident">pop</span>();
+                        }
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sub_tokens</span>.<span class="ident">push</span>(<span class="ident">tt</span>),
+                    }
+                }
+                <span class="ident">tokens</span>.<span class="ident">push</span>(<span class="ident">TokenTree</span>::<span class="ident">from</span>(<span class="ident">Group</span>::<span class="ident">new</span>(
+                    <span class="ident">Delimiter</span>::<span class="ident">Parenthesis</span>,
+                    <span class="ident">sub_tokens</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>(),
+                )));
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tokens</span>.<span class="ident">push</span>(<span class="ident">tt</span>),
+        }
     }
-    <span class="ident">TokenStream</span>::<span class="ident">from_str</span>(<span class="ident">item_str</span>.<span class="ident">as_str</span>()).<span class="ident">unwrap</span>()
+    <span class="ident">tokens</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>()
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "spirv_attrib";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
