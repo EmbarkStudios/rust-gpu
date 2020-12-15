@@ -3,13 +3,13 @@ use proc_macro::{Delimiter, Group, TokenStream, TokenTree};
 
 #[proc_macro_attribute]
 pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let mut tokens = Vec::new();
+    let mut tokens: Vec<TokenTree> = Vec::new();
     for tt in item {
-        match tt.clone() {
+        match tt {
             TokenTree::Group(group) if group.delimiter() == Delimiter::Parenthesis => {
                 let mut sub_tokens = Vec::new();
                 for tt in group.stream() {
-                    match tt.clone() {
+                    match tt {
                         TokenTree::Group(group)
                             if group.delimiter() == Delimiter::Bracket
                                 && matches!(group.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident.to_string() == "spirv")
@@ -28,5 +28,5 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
             _ => tokens.push(tt),
         }
     }
-    TokenStream::from_iter(tokens)
+    tokens.into_iter().collect()
 }
