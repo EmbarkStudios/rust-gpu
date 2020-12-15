@@ -1,5 +1,4 @@
 use core::iter::FromIterator;
-use core::iter::IntoIterator;
 use proc_macro::{Delimiter, Group, TokenStream, TokenTree};
 
 #[proc_macro_attribute]
