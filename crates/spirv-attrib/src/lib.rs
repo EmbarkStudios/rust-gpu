@@ -1,4 +1,3 @@
-use core::iter::FromIterator;
 use proc_macro::{Delimiter, Group, TokenStream, TokenTree};
 
 #[proc_macro_attribute]
@@ -22,7 +21,7 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 }
                 tokens.push(TokenTree::from(Group::new(
                     Delimiter::Parenthesis,
-                    TokenStream::from_iter(sub_tokens),
+                    sub_tokens.into_iter().collect(),
                 )));
             }
             _ => tokens.push(tt),
