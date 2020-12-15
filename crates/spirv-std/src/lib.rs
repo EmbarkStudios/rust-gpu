@@ -41,7 +41,7 @@
 
 #[cfg(not(target_arch = "spirv"))]
 #[macro_use]
-pub extern crate spirv_attrib;
+pub extern crate spirv_std_macros;
 
 pub mod storage_class;
 mod textures;
