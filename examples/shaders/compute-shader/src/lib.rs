@@ -9,7 +9,7 @@ extern crate spirv_std;
 
 #[cfg(not(target_arch = "spirv"))]
 #[macro_use]
-pub extern crate spirv_attrib;
+pub extern crate spirv_std_macros;
 
 #[allow(unused_attributes)]
 #[spirv(gl_compute)]
