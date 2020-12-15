@@ -6,8 +6,8 @@ use proc_macro::{Delimiter, Group, TokenStream, TokenTree};
 pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut tokens = Vec::new();
     for tt in item {
-        if let TokenTree::Group(group) = tt.clone() {
-            if let Delimiter::Parenthesis = group.delimiter() {
+        match tt.clone() {
+            TokenTree::Group(group) if group.delimiter() == Delimiter::Parenthesis => {
                 let mut sub_tokens = Vec::new();
                 for tt in group.stream() {
                     match tt.clone() {
@@ -25,10 +25,9 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     Delimiter::Parenthesis,
                     TokenStream::from_iter(sub_tokens),
                 )));
-                continue;
             }
+            _ => tokens.push(tt),
         }
-        tokens.push(tt);
     }
     TokenStream::from_iter(tokens)
 }
