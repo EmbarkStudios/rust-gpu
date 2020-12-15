@@ -4,6 +4,7 @@ use rspirv::spirv::{
     AccessQualifier, BuiltIn, Dim, ExecutionMode, ExecutionModel, ImageFormat, StorageClass,
 };
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
+use rustc_data_structures::captures::Captures;
 use rustc_span::symbol::{Ident, Symbol};
 use std::collections::HashMap;
 
@@ -460,76 +461,76 @@ pub enum SpirvAttribute {
 // reporting already happens even before we get here :(
 /// Returns empty if this attribute is not a spirv attribute, or if it's malformed (and an error is
 /// reported).
-pub fn parse_attrs(
-    cx: &CodegenCx<'_>,
-    attrs: &[Attribute],
-) -> impl Iterator<Item = SpirvAttribute> {
-    let result =
-        attrs.iter().flat_map(|attr| {
-            let is_spirv = match attr.kind {
-                AttrKind::Normal(ref item, _) => {
-                    // TODO: We ignore the rest of the path. Is this right?
-                    let last = item.path.segments.last();
-                    last.map_or(false, |seg| seg.ident.name == cx.sym.spirv)
+pub fn parse_attrs<'a, 'tcx>(
+    cx: &'a CodegenCx<'tcx>,
+    attrs: &'tcx [Attribute],
+) -> impl Iterator<Item = SpirvAttribute> + Captures<'tcx> + 'a {
+    attrs.iter().flat_map(move |attr| {
+        let is_spirv = match attr.kind {
+            AttrKind::Normal(ref item, _) => {
+                // TODO: We ignore the rest of the path. Is this right?
+                let last = item.path.segments.last();
+                last.map_or(false, |seg| seg.ident.name == cx.sym.spirv)
+            }
+            AttrKind::DocComment(..) => false,
+        };
+        let args = if !is_spirv {
+            // Use an empty vec here to return empty
+            Vec::new()
+        } else if let Some(args) = attr.meta_item_list() {
+            args
+        } else {
+            cx.tcx.sess.span_err(
+                attr.span,
+                "#[spirv(..)] attribute must have at least one argument",
+            );
+            Vec::new()
+        };
+        args.into_iter().filter_map(move |ref arg| {
+            if arg.has_name(cx.sym.image) {
+                parse_image(cx, arg)
+            } else if arg.has_name(cx.sym.descriptor_set) {
+                match parse_attr_int_value(cx, arg) {
+                    Some(x) => Some(SpirvAttribute::DescriptorSet(x)),
+                    None => None,
                 }
-                AttrKind::DocComment(..) => false,
-            };
-            let args = if !is_spirv {
-                // Use an empty vec here to return empty
-                Vec::new()
-            } else if let Some(args) = attr.meta_item_list() {
-                args
+            } else if arg.has_name(cx.sym.binding) {
+                match parse_attr_int_value(cx, arg) {
+                    Some(x) => Some(SpirvAttribute::Binding(x)),
+                    None => None,
+                }
             } else {
-                cx.tcx.sess.span_err(
-                    attr.span,
-                    "#[spirv(..)] attribute must have at least one argument",
-                );
-                Vec::new()
-            };
-            args.into_iter().filter_map(move |ref arg| {
-                if arg.has_name(cx.sym.image) {
-                    parse_image(cx, arg)
-                } else if arg.has_name(cx.sym.descriptor_set) {
-                    match parse_attr_int_value(cx, arg) {
-                        Some(x) => Some(SpirvAttribute::DescriptorSet(x)),
-                        None => None,
+                let name = match arg.ident() {
+                    Some(i) => i,
+                    None => {
+                        cx.tcx.sess.span_err(
+                            arg.span(),
+                            "#[spirv(..)] attribute argument must be single identifier",
+                        );
+                        return None;
                     }
-                } else if arg.has_name(cx.sym.binding) {
-                    match parse_attr_int_value(cx, arg) {
-                        Some(x) => Some(SpirvAttribute::Binding(x)),
-                        None => None,
-                    }
-                } else {
-                    let name = match arg.ident() {
-                        Some(i) => i,
-                        None => {
-                            cx.tcx.sess.span_err(
-                                arg.span(),
-                                "#[spirv(..)] attribute argument must be single identifier",
-                            );
-                            return None;
-                        }
-                    };
-                    cx.sym
-                        .attributes
-                        .get(&name.name)
-                        .map(|a| match a {
-                            SpirvAttribute::Entry(entry) => SpirvAttribute::Entry(
-                                parse_entry_attrs(cx, arg, &name, entry.execution_model),
-                            ),
-                            _ => a.clone(),
-                        })
-                        .or_else(|| {
-                            cx.tcx
-                                .sess
-                                .span_err(name.span, "unknown argument to spirv attribute");
-                            None
-                        })
-                }
-            })
-        });
-    // lifetimes are hard :(
-    result.collect::<Vec<_>>().into_iter()
+                };
+                cx.sym
+                    .attributes
+                    .get(&name.name)
+                    .map(|a| match a {
+                        SpirvAttribute::Entry(entry) => SpirvAttribute::Entry(parse_entry_attrs(
+                            cx,
+                            arg,
+                            &name,
+                            entry.execution_model,
+                        )),
+                        _ => a.clone(),
+                    })
+                    .or_else(|| {
+                        cx.tcx
+                            .sess
+                            .span_err(name.span, "unknown argument to spirv attribute");
+                        None
+                    })
+            }
+        })
+    })
 }
 
 fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribute> {
