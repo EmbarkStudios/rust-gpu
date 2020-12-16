@@ -10,8 +10,6 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
 };
 
-use serde::Deserialize;
-
 use std::{
     borrow::Cow,
     collections::HashMap,
@@ -20,12 +18,15 @@ use std::{
     fs::File,
     ops::Drop,
     path::PathBuf,
-    process::{Command, Stdio},
     sync::mpsc::{sync_channel, TryRecvError, TrySendError},
     thread,
 };
 
 use structopt::StructOpt;
+
+use spirv_builder::SpirvBuilder;
+
+use shared::ShaderConstants;
 
 #[derive(Debug, StructOpt)]
 #[structopt()]
@@ -52,8 +53,8 @@ pub fn main() {
     let mut ctx = RenderBase::new(window, &options).into_ctx();
 
     // Create shader module and pipelines
-    for SpirvShader { name, spirv } in shaders {
-        ctx.insert_shader_module(name, spirv);
+    for SpvFile { name, data } in shaders {
+        ctx.insert_shader_module(name, data);
     }
     ctx.build_pipelines(
         vk::PipelineCache::null(),
@@ -86,8 +87,8 @@ pub fn main() {
                     }
                 }
                 Ok(new_shaders) => {
-                    for SpirvShader { name, spirv } in new_shaders {
-                        ctx.insert_shader_module(name, spirv);
+                    for SpvFile { name, data } in new_shaders {
+                        ctx.insert_shader_module(name, data);
                     }
                     ctx.recompiling_shaders = false;
                     ctx.rebuild_pipelines(vk::PipelineCache::null());
@@ -125,71 +126,27 @@ pub fn main() {
     });
 }
 
-pub fn compile_shaders() -> Vec<SpirvShader> {
-    let spirv_codegen_backend = format!(
-        "codegen_backend={}rustc_codegen_spirv{}",
-        std::env::consts::DLL_PREFIX,
-        std::env::consts::DLL_SUFFIX
-    );
-    let rustflags = format!("-Z {} -Z symbol-mangling-version=v0", spirv_codegen_backend);
-    let manifest_path = "examples/shaders/sky-shader/Cargo.toml";
-    let target_dir = "target/shaders";
-
-    // run a cargo process with spirv codegen
-    let cargo_out = Command::new("cargo")
-        .args(&["build", "--release"])
-        .arg("--target-dir")
-        .arg(target_dir)
-        .arg("--manifest-path")
-        .arg(manifest_path)
-        .args(&["--target", "spirv-unknown-unknown"])
-        .args(&["--message-format", "json-render-diagnostics"])
-        .args(&["-Z", "build-std=core"])
-        .env("RUSTFLAGS", rustflags)
-        .stderr(Stdio::inherit())
-        .output()
-        .expect("cargo failed to execute build");
-
-    // parse the json output from cargo to get the artifact paths
-    let spv_paths: Vec<PathBuf> = String::from_utf8(cargo_out.stdout)
-        .unwrap()
-        .lines()
-        .filter_map(|line| match serde_json::from_str::<SpirvArtifacts>(line) {
-            Ok(line) => Some(line),
-            Err(_) => None,
-        })
-        .filter(|line| line.reason == "compiler-artifact")
-        .last()
-        .expect("No output artifacts")
-        .filenames
-        .expect("No artifact filenemaes")
-        .into_iter()
-        .filter(|filename| filename.ends_with(".spv"))
-        .map(Into::into)
-        .collect();
-
-    // load the spirv data into memory
-    let mut artifacts = Vec::<SpirvShader>::with_capacity(spv_paths.len());
-    for path in spv_paths {
-        let name = path.file_stem().unwrap().to_owned().into_string().unwrap();
-        let mut file = File::open(path).unwrap();
-        let spirv = read_spv(&mut file).unwrap();
-        artifacts.push(SpirvShader { name, spirv });
+pub fn compile_shaders() -> Vec<SpvFile> {
+    let spv_paths: Vec<PathBuf> = vec![SpirvBuilder::new("examples/shaders/sky-shader")
+        .print_metadata(false)
+        .build()
+        .unwrap()];
+    let mut spv_files = Vec::<SpvFile>::with_capacity(spv_paths.len());
+    for path in spv_paths.iter() {
+        spv_files.push(
+            SpvFile {
+                name: path.file_stem().unwrap().to_str().unwrap().to_owned(),
+                data: read_spv(&mut File::open(path).unwrap()).unwrap(),
+            }
+        )
     }
-
-    artifacts
-}
-
-#[derive(Deserialize)]
-struct SpirvArtifacts {
-    reason: String,
-    filenames: Option<Vec<String>>,
+    spv_files
 }
 
 #[derive(Debug)]
-pub struct SpirvShader {
+pub struct SpvFile {
     pub name: String,
-    pub spirv: Vec<u32>,
+    pub data: Vec<u32>,
 }
 
 pub struct RenderBase {
@@ -598,6 +555,7 @@ pub struct RenderCtx {
 
     pub rendering_paused: bool,
     pub recompiling_shaders: bool,
+    pub start: std::time::Instant,
 }
 
 impl RenderCtx {
@@ -642,6 +600,7 @@ impl RenderCtx {
             shader_set: Vec::new(),
             rendering_paused: false,
             recompiling_shaders: false,
+            start: std::time::Instant::now(),
         }
     }
 
@@ -934,6 +893,17 @@ impl RenderCtx {
                 let push_constants = ShaderConstants {
                     width: self.scissors[0].extent.width,
                     height: self.scissors[0].extent.height,
+                    time: self.start.elapsed().as_secs_f32(),
+
+                    // FIXME(eddyb) implement mouse support for the ash runner.
+                    cursor_x: 0.0,
+                    cursor_y: 0.0,
+                    drag_start_x: 0.0,
+                    drag_start_y: 0.0,
+                    drag_end_x: 0.0,
+                    drag_end_y: 0.0,
+                    mouse_button_pressed: 0,
+                    mouse_button_press_time: [f32::NEG_INFINITY; 3],
                 };
                 device.cmd_push_constants(
                     draw_command_buffer,
@@ -1221,12 +1191,6 @@ impl PipelineDescriptor {
             dynamic_state_info,
         }
     }
-}
-
-#[derive(Copy, Clone)]
-pub struct ShaderConstants {
-    pub width: u32,
-    pub height: u32,
 }
 
 pub struct VertexShaderEntryPoint {
