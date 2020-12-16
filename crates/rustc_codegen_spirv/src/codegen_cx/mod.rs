@@ -5,7 +5,9 @@ mod type_;
 
 use crate::builder::{ExtInst, InstructionTable};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueKind};
-use crate::finalizing_passes::export_zombies;
+use crate::decorations::{
+    CustomDecoration, SerializedSpan, UnrollLoopsDecoration, ZombieDecoration,
+};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
@@ -22,13 +24,12 @@ use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TyS};
 use rustc_session::Session;
 use rustc_span::def_id::LOCAL_CRATE;
-use rustc_span::source_map::Span;
 use rustc_span::symbol::{sym, Symbol};
-use rustc_span::SourceFile;
+use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 
@@ -45,15 +46,26 @@ pub struct CodegenCx<'tcx> {
     /// Cache generated vtables
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
     pub ext_inst: RefCell<ExtInst>,
-    /// Invalid spir-v IDs that should be stripped from the final binary
-    zombie_values: RefCell<HashMap<Word, &'static str>>,
+    /// Invalid spir-v IDs that should be stripped from the final binary,
+    /// each with its own reason and span that should be used for reporting
+    /// (in the event that the value is actually needed)
+    zombie_decorations: RefCell<HashMap<Word, ZombieDecoration>>,
+    /// Functions that have `#[spirv(unroll_loops)]`, and therefore should
+    /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
+    /// instructions, during structuralization.
+    unroll_loops_decorations: RefCell<HashMap<Word, UnrollLoopsDecoration>>,
     pub kernel_mode: bool,
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
     pub instruction_table: InstructionTable,
     pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
-    pub zombie_undefs_for_system_constant_pointers: RefCell<HashMap<Word, Word>>,
     pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
+
+    /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
+    pub panic_fn_id: Cell<Option<Word>>,
+    /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
+    pub panic_bounds_check_fn_id: Cell<Option<Word>>,
+
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
@@ -99,13 +111,15 @@ impl<'tcx> CodegenCx<'tcx> {
             type_cache: Default::default(),
             vtables: Default::default(),
             ext_inst: Default::default(),
-            zombie_values: Default::default(),
+            zombie_decorations: Default::default(),
+            unroll_loops_decorations: Default::default(),
             kernel_mode,
             sym,
             instruction_table: InstructionTable::new(),
             really_unsafe_ignore_bitcasts: Default::default(),
-            zombie_undefs_for_system_constant_pointers: Default::default(),
             libm_intrinsics: Default::default(),
+            panic_fn_id: Default::default(),
+            panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
         }
     }
@@ -146,19 +160,24 @@ impl<'tcx> CodegenCx<'tcx> {
     ///
     /// Finally, if *user* code is marked as zombie, then this means that the user tried to do
     /// something that isn't supported, and should be an error.
-    pub fn zombie_with_span(&self, word: Word, span: Span, reason: &'static str) {
+    pub fn zombie_with_span(&self, word: Word, span: Span, reason: &str) {
         if self.is_system_crate() {
-            self.zombie_values.borrow_mut().insert(word, reason);
+            self.zombie_even_in_user_code(word, span, reason);
         } else {
             self.tcx.sess.span_err(span, reason);
         }
     }
-    pub fn zombie_no_span(&self, word: Word, reason: &'static str) {
-        if self.is_system_crate() {
-            self.zombie_values.borrow_mut().insert(word, reason);
-        } else {
-            self.tcx.sess.err(reason);
-        }
+    pub fn zombie_no_span(&self, word: Word, reason: &str) {
+        self.zombie_with_span(word, DUMMY_SP, reason)
+    }
+    pub fn zombie_even_in_user_code(&self, word: Word, span: Span, reason: &str) {
+        self.zombie_decorations.borrow_mut().insert(
+            word,
+            ZombieDecoration {
+                reason: reason.to_string(),
+                span: SerializedSpan::from_rustc(span, self.tcx.sess.source_map()),
+            },
+        );
     }
 
     pub fn is_system_crate(&self) -> bool {
@@ -173,7 +192,18 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
-        export_zombies(&mut result, &self.zombie_values.borrow());
+        result.annotations.extend(
+            self.zombie_decorations
+                .into_inner()
+                .into_iter()
+                .map(|(id, zombie)| zombie.encode(id))
+                .chain(
+                    self.unroll_loops_decorations
+                        .into_inner()
+                        .into_iter()
+                        .map(|(id, unroll_loops)| unroll_loops.encode(id)),
+                ),
+        );
         result
     }
 
@@ -192,19 +222,28 @@ impl<'tcx> CodegenCx<'tcx> {
             pointee: value.ty,
         }
         .def(span, self);
-        if self.is_system_crate() {
-            // Create these undefs up front instead of on demand in SpirvValue::def because
-            // SpirvValue::def can't use cx.emit()
-            self.zombie_undefs_for_system_constant_pointers
-                .borrow_mut()
-                .entry(ty)
-                .or_insert_with(|| {
-                    // We want a unique ID for these undefs, so don't use the caching system.
-                    self.emit_global().undef(ty, None)
-                });
-        }
+        let initializer = value.def_cx(self);
+
+        // Create these up front instead of on demand in SpirvValue::def because
+        // SpirvValue::def can't use cx.emit()
+        let global_var =
+            self.emit_global()
+                .variable(ty, None, StorageClass::Function, Some(initializer));
+
+        // In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span
+        // to the use site of this constant. However, if this constant happens to never get used, we
+        // still want to zobmie it, so zombie here.
+        self.zombie_even_in_user_code(
+            global_var,
+            span,
+            "Cannot use this pointer directly, it must be dereferenced first",
+        );
+
         SpirvValue {
-            kind: SpirvValueKind::ConstantPointer(value.def_cx(self)),
+            kind: SpirvValueKind::ConstantPointer {
+                initializer,
+                global_var,
+            },
             ty,
         }
     }

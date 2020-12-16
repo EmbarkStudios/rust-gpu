@@ -1,7 +1,7 @@
 use super::{shader_module, Options};
 use shared::ShaderConstants;
 use winit::{
-    event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::Window,
 };
@@ -11,6 +11,15 @@ unsafe fn any_as_u32_slice<T: Sized>(p: &T) -> &[u32] {
         (p as *const T) as *const u32,
         ::std::mem::size_of::<T>() / 4,
     )
+}
+
+fn mouse_button_index(button: MouseButton) -> usize {
+    match button {
+        MouseButton::Left => 0,
+        MouseButton::Middle => 1,
+        MouseButton::Right => 2,
+        MouseButton::Other(i) => 3 + (i as usize),
+    }
 }
 
 async fn run(
@@ -109,6 +118,13 @@ async fn run(
 
     let start = std::time::Instant::now();
 
+    let (mut cursor_x, mut cursor_y) = (0.0, 0.0);
+    let (mut drag_start_x, mut drag_start_y) = (0.0, 0.0);
+    let (mut drag_end_x, mut drag_end_y) = (0.0, 0.0);
+    let mut mouse_button_pressed = 0;
+    let mut mouse_button_press_since_last_frame = 0;
+    let mut mouse_button_press_time = [f32::NEG_INFINITY; 3];
+
     event_loop.run(move |event, _, control_flow| {
         // Have the closure take ownership of the resources.
         // `event_loop.run` never returns, therefore we must do this to ensure
@@ -160,11 +176,29 @@ async fn run(
                             }],
                             depth_stencil_attachment: None,
                         });
+
+                        let time = start.elapsed().as_secs_f32();
+                        for (i, press_time) in mouse_button_press_time.iter_mut().enumerate() {
+                            if (mouse_button_press_since_last_frame & (1 << i)) != 0 {
+                                *press_time = time;
+                            }
+                        }
+                        mouse_button_press_since_last_frame = 0;
+
                         let push_constants = ShaderConstants {
                             width: window.inner_size().width,
                             height: window.inner_size().height,
-                            time: start.elapsed().as_secs_f32(),
+                            time,
+                            cursor_x,
+                            cursor_y,
+                            drag_start_x,
+                            drag_start_y,
+                            drag_end_x,
+                            drag_end_y,
+                            mouse_button_pressed,
+                            mouse_button_press_time,
                         };
+
                         rpass.set_pipeline(&render_pipeline);
                         rpass.set_push_constants(wgpu::ShaderStage::all(), 0, unsafe {
                             any_as_u32_slice(&push_constants)
@@ -191,6 +225,37 @@ async fn run(
                     },
                 ..
             } => *control_flow = ControlFlow::Exit,
+            Event::WindowEvent {
+                event: WindowEvent::MouseInput { state, button, .. },
+                ..
+            } => {
+                let mask = 1 << mouse_button_index(button);
+                match state {
+                    ElementState::Pressed => {
+                        mouse_button_pressed |= mask;
+                        mouse_button_press_since_last_frame |= mask;
+
+                        if button == MouseButton::Left {
+                            drag_start_x = cursor_x;
+                            drag_start_y = cursor_y;
+                            drag_end_x = cursor_x;
+                            drag_end_y = cursor_y;
+                        }
+                    }
+                    ElementState::Released => mouse_button_pressed &= !mask,
+                }
+            }
+            Event::WindowEvent {
+                event: WindowEvent::CursorMoved { position, .. },
+                ..
+            } => {
+                cursor_x = position.x as f32;
+                cursor_y = position.y as f32;
+                if (mouse_button_pressed & (1 << mouse_button_index(MouseButton::Left))) != 0 {
+                    drag_end_x = cursor_x;
+                    drag_end_y = cursor_y;
+                }
+            }
             _ => {}
         }
     });

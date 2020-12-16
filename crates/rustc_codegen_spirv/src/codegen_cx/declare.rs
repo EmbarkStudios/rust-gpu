@@ -1,6 +1,7 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
+use crate::decorations::UnrollLoopsDecoration;
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attrs, SpirvAttribute};
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
@@ -121,6 +122,11 @@ impl<'tcx> CodegenCx<'tcx> {
                         .borrow_mut()
                         .insert(declared);
                 }
+                SpirvAttribute::UnrollLoops => {
+                    self.unroll_loops_decorations
+                        .borrow_mut()
+                        .insert(fn_id, UnrollLoopsDecoration {});
+                }
                 _ => {}
             }
         }
@@ -140,6 +146,13 @@ impl<'tcx> CodegenCx<'tcx> {
                     )),
                 }
             }
+        }
+
+        if Some(instance_def_id) == self.tcx.lang_items().panic_fn() {
+            self.panic_fn_id.set(Some(fn_id));
+        }
+        if Some(instance_def_id) == self.tcx.lang_items().panic_bounds_check_fn() {
+            self.panic_bounds_check_fn_id.set(Some(fn_id));
         }
 
         declared

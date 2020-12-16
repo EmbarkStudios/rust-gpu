@@ -6,6 +6,7 @@ use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
 use rustc_middle::bug;
+use rustc_span::{Span, DUMMY_SP};
 use std::cell::{RefCell, RefMut};
 use std::{fs::File, io::Write, path::Path};
 
@@ -20,7 +21,13 @@ pub enum SpirvValueKind {
     /// pointers to constants, or function pointers. So, instead, we create this ConstantPointer
     /// "meta-value": directly using it is an error, however, if it is attempted to be
     /// dereferenced, the "load" is instead a no-op that returns the underlying value directly.
-    ConstantPointer(Word),
+    ConstantPointer {
+        initializer: Word,
+
+        /// The global (module-scoped) `OpVariable` (with `initializer` set as
+        /// its initializer) to attach zombies to.
+        global_var: Word,
+    },
 }
 
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -32,7 +39,10 @@ pub struct SpirvValue {
 impl SpirvValue {
     pub fn const_ptr_val(self, cx: &CodegenCx<'_>) -> Option<Self> {
         match self.kind {
-            SpirvValueKind::ConstantPointer(word) => {
+            SpirvValueKind::ConstantPointer {
+                initializer,
+                global_var: _,
+            } => {
                 let ty = match cx.lookup_type(self.ty) {
                     SpirvType::Pointer {
                         storage_class: _,
@@ -40,7 +50,7 @@ impl SpirvValue {
                     } => pointee,
                     ty => bug!("load called on variable that wasn't a pointer: {:?}", ty),
                 };
-                Some(word.with_type(ty))
+                Some(initializer.with_type(ty))
             }
             SpirvValueKind::Def(_) => None,
         }
@@ -50,43 +60,31 @@ impl SpirvValue {
     // contexts where the emitter is already locked. Doing so may cause subtle
     // rare bugs.
     pub fn def(self, bx: &builder::Builder<'_, '_>) -> Word {
-        match self.kind {
-            SpirvValueKind::Def(word) => word,
-            SpirvValueKind::ConstantPointer(_) => {
-                if bx.is_system_crate() {
-                    *bx.zombie_undefs_for_system_constant_pointers
-                        .borrow()
-                        .get(&self.ty)
-                        .expect("ConstantPointer didn't go through proper undef registration")
-                } else {
-                    bx.err("Cannot use this pointer directly, it must be dereferenced first");
-                    // Because we never get beyond compilation (into e.g. linking),
-                    // emitting an invalid ID reference here is OK.
-                    0
-                }
-            }
-        }
+        self.def_with_span(bx, bx.span())
     }
 
     // def and def_cx are separated, because Builder has a span associated with
     // what it's currently emitting.
     pub fn def_cx(self, cx: &CodegenCx<'_>) -> Word {
+        self.def_with_span(cx, DUMMY_SP)
+    }
+
+    pub fn def_with_span(self, cx: &CodegenCx<'_>, span: Span) -> Word {
         match self.kind {
             SpirvValueKind::Def(word) => word,
-            SpirvValueKind::ConstantPointer(_) => {
-                if cx.is_system_crate() {
-                    *cx.zombie_undefs_for_system_constant_pointers
-                        .borrow()
-                        .get(&self.ty)
-                        .expect("ConstantPointer didn't go through proper undef registration")
-                } else {
-                    cx.tcx
-                        .sess
-                        .err("Cannot use this pointer directly, it must be dereferenced first");
-                    // Because we never get beyond compilation (into e.g. linking),
-                    // emitting an invalid ID reference here is OK.
-                    0
-                }
+            SpirvValueKind::ConstantPointer {
+                initializer: _,
+                global_var,
+            } => {
+                // HACK(eddyb) we don't know whether this constant originated
+                // in a system crate, so it's better to always zombie.
+                cx.zombie_even_in_user_code(
+                    global_var,
+                    span,
+                    "Cannot use this pointer directly, it must be dereferenced first",
+                );
+
+                global_var
             }
         }
     }
@@ -181,7 +179,6 @@ impl BuilderSpirv {
         }
         // The linker will always be ran on this module
         builder.capability(Capability::Linkage);
-        // TODO: Remove these eventually?
         builder.capability(Capability::Int8);
         builder.capability(Capability::Int16);
         builder.capability(Capability::Int64);
@@ -221,7 +218,7 @@ impl BuilderSpirv {
         let spirv_module = module.assemble();
         File::create(path)
             .unwrap()
-            .write_all(crate::slice_u32_to_u8(&spirv_module))
+            .write_all(spirv_tools::binary::from_binary(&spirv_module))
             .unwrap();
     }
 

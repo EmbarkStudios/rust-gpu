@@ -1,4 +1,23 @@
 use super::{dis_fn, val, val_vulkan};
+use std::ffi::OsStr;
+
+struct SetEnvVar<'a> {
+    k: &'a OsStr,
+}
+
+impl<'a> SetEnvVar<'a> {
+    fn new(k: &'a impl AsRef<OsStr>, v: impl AsRef<OsStr>) -> Self {
+        let k = k.as_ref();
+        std::env::set_var(k, v);
+        Self { k }
+    }
+}
+
+impl<'a> Drop for SetEnvVar<'a> {
+    fn drop(&mut self) {
+        std::env::remove_var(self.k)
+    }
+}
 
 #[test]
 fn hello_world() {
@@ -6,6 +25,19 @@ fn hello_world() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
+}
+"#);
+}
+
+#[test]
+// blocked on: https://github.com/EmbarkStudios/rust-gpu/issues/69
+#[ignore]
+fn no_dce() {
+    let _var = SetEnvVar::new(&"NO_DCE", "1");
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn no_dce() {
 }
 "#);
 }
@@ -110,15 +142,43 @@ pub fn main() {
 }"#);
 }
 
-// TODO: Implement strings to make this compile
 #[test]
-#[ignore]
 fn panic() {
     val(r#"
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     panic!("aaa");
+}
+"#);
+}
+
+#[test]
+fn panic_builtin() {
+    val(r#"
+fn int_div(x: usize) -> usize {
+    1 / x
+}
+
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    int_div(0);
+}
+"#);
+}
+
+#[test]
+fn panic_builtin_bounds_check() {
+    val(r#"
+fn array_bounds_check(x: [u32; 4], i: usize) -> u32 {
+    x[i]
+}
+
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    array_bounds_check([0, 1, 2, 3], 5);
 }
 "#);
 }
@@ -166,4 +226,86 @@ pub fn main(constants: PushConstant<ShaderConstants>) {
 }
 "#,
     );
+}
+
+#[test]
+fn infinite_loop() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    loop {}
+}"#);
+}
+
+#[test]
+fn unroll_loops() {
+    dis_fn(
+        // FIXME(eddyb) use `for _ in 0..10` here when that works.
+        r#"
+#[allow(unused_attributes)]
+#[spirv(unroll_loops)]
+fn java_hash_ten_times(mut x: u32, y: u32) -> u32 {
+    let mut i = 0;
+    while i < 10 {
+        x = 31 * x + y;
+        i += 1;
+    }
+    x
+}
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    java_hash_ten_times(7, 42);
+}
+"#,
+        "java_hash_ten_times",
+        // NOTE(eddyb) this is very verbose because of the new structurizer
+        // producing messier control-flow than necessary, but the important part
+        // being tested is `OpLoopMerge` having `Unroll` as its "Loop Control".
+        r#"%1 = OpFunction %2 None %3
+%4 = OpFunctionParameter %2
+%5 = OpFunctionParameter %2
+%6 = OpLabel
+OpBranch %7
+%7 = OpLabel
+OpBranch %8
+%8 = OpLabel
+%9 = OpPhi %10 %11 %7 %12 %13
+%14 = OpPhi %2 %4 %7 %15 %13
+%16 = OpPhi %17 %18 %7 %19 %13
+OpLoopMerge %20 %13 Unroll
+OpBranchConditional %16 %21 %20
+%21 = OpLabel
+%22 = OpSLessThan %17 %9 %23
+OpSelectionMerge %24 None
+OpBranchConditional %22 %25 %26
+%25 = OpLabel
+%27 = OpIMul %2 %28 %14
+%29 = OpIAdd %2 %27 %5
+%30 = OpIAdd %10 %9 %31
+OpBranch %24
+%26 = OpLabel
+OpReturnValue %14
+%24 = OpLabel
+%12 = OpPhi %10 %30 %25
+%15 = OpPhi %2 %29 %25
+%19 = OpPhi %17 %32 %25
+OpBranch %13
+%13 = OpLabel
+OpBranch %8
+%20 = OpLabel
+OpUnreachable
+OpFunctionEnd"#,
+    );
+}
+
+#[test]
+fn signum() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(i: Input<f32>, mut o: Output<f32>) {
+    o.store(i.load().signum());
+}"#);
 }

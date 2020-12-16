@@ -71,6 +71,9 @@ pub enum SpirvType {
         access_qualifier: Option<AccessQualifier>,
     },
     Sampler,
+    SampledImage {
+        image_type: Word,
+    },
 }
 
 impl SpirvType {
@@ -189,12 +192,16 @@ impl SpirvType {
                 storage_class,
                 pointee,
             } => {
-                // Note: pointers to functions are always illegal in SPIR-V. However, the type of a
-                // pointer to a function is sometimes used in e.g. get_fn_addr, which creates a
-                // `SpirvValueKind::ConstantPointer`. So, pointers to functions are made illegal by
-                // the fact it's impossible to create a pointer to function *value*, so the type
-                // existing is fine.
-                cx.emit_global().type_pointer(None, storage_class, pointee)
+                let result = cx.emit_global().type_pointer(None, storage_class, pointee);
+                // no pointers to functions
+                if let Self::Function { .. } = cx.lookup_type(pointee) {
+                    cx.zombie_even_in_user_code(
+                        result,
+                        def_span,
+                        "function pointer types are not allowed",
+                    )
+                }
+                result
             }
             Self::Function {
                 return_type,
@@ -222,6 +229,7 @@ impl SpirvType {
                 access_qualifier,
             ),
             Self::Sampler => cx.emit_global().type_sampler(),
+            Self::SampledImage { image_type } => cx.emit_global().type_sampled_image(image_type),
         };
         cx.type_cache.def(result, self);
         result
@@ -229,7 +237,7 @@ impl SpirvType {
 
     /// `def_with_id` is used by the `RecursivePointeeCache` to handle `OpTypeForwardPointer`: when
     /// emitting the subsequent `OpTypePointer`, the ID is already known and must be re-used.
-    pub fn def_with_id(self, cx: &CodegenCx<'_>, _def_span: Span, id: Word) -> Word {
+    pub fn def_with_id(self, cx: &CodegenCx<'_>, def_span: Span, id: Word) -> Word {
         if let Some(cached) = cx.type_cache.get(&self) {
             assert_eq!(cached, id);
             return cached;
@@ -238,9 +246,20 @@ impl SpirvType {
             Self::Pointer {
                 storage_class,
                 pointee,
-            } => cx
-                .emit_global()
-                .type_pointer(Some(id), storage_class, pointee),
+            } => {
+                let result = cx
+                    .emit_global()
+                    .type_pointer(Some(id), storage_class, pointee);
+                // no pointers to functions
+                if let Self::Function { .. } = cx.lookup_type(pointee) {
+                    cx.zombie_even_in_user_code(
+                        result,
+                        def_span,
+                        "function pointer types are not allowed",
+                    )
+                }
+                result
+            }
             ref other => cx
                 .tcx
                 .sess
@@ -278,6 +297,7 @@ impl SpirvType {
             Self::Function { .. } => cx.tcx.data_layout.pointer_size,
             Self::Image { .. } => Size::from_bytes(4),
             Self::Sampler => Size::from_bytes(4),
+            Self::SampledImage { .. } => Size::from_bytes(4),
         };
         Some(result)
     }
@@ -303,6 +323,7 @@ impl SpirvType {
             Self::Function { .. } => cx.tcx.data_layout.pointer_align.abi,
             Self::Image { .. } => Align::from_bytes(4).unwrap(),
             Self::Sampler => Align::from_bytes(4).unwrap(),
+            Self::SampledImage { .. } => Align::from_bytes(4).unwrap(),
         }
     }
 }
@@ -440,6 +461,11 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("access_qualifier", &access_qualifier)
                 .finish(),
             SpirvType::Sampler => f.debug_struct("Sampler").field("id", &self.id).finish(),
+            SpirvType::SampledImage { image_type } => f
+                .debug_struct("SampledImage")
+                .field("id", &self.id)
+                .field("image_type", &self.cx.debug_type(image_type))
+                .finish(),
         };
         {
             let mut debug_stack = DEBUG_STACK.lock().unwrap();
@@ -574,6 +600,10 @@ impl SpirvTypePrinter<'_, '_> {
                 .field("access_qualifier", &access_qualifier)
                 .finish(),
             SpirvType::Sampler => f.write_str("Sampler"),
+            SpirvType::SampledImage { image_type } => f
+                .debug_struct("SampledImage")
+                .field("image_type", &self.cx.debug_type(image_type))
+                .finish(),
         }
     }
 }

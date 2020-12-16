@@ -1,3 +1,4 @@
+use crate::decorations::UnrollLoopsDecoration;
 use indexmap::{indexmap, IndexMap};
 use rspirv::dr::{Block, Builder, Function, InsertPoint, Module, Operand};
 use rspirv::spirv::{LoopControl, Op, SelectionControl, Word};
@@ -30,13 +31,23 @@ impl FuncBuilder<'_> {
     }
 }
 
-pub fn structurize(module: Module) -> Module {
+pub fn structurize(
+    module: Module,
+    unroll_loops_decorations: HashMap<Word, UnrollLoopsDecoration>,
+) -> Module {
     let mut builder = Builder::new_from_module(module);
 
     for func_idx in 0..builder.module_ref().functions.len() {
         builder.select_function(Some(func_idx)).unwrap();
         let func = FuncBuilder {
             builder: &mut builder,
+        };
+
+        let func_id = func.function().def.as_ref().unwrap().result_id.unwrap();
+
+        let loop_control = match unroll_loops_decorations.get(&func_id) {
+            Some(UnrollLoopsDecoration {}) => LoopControl::UNROLL,
+            None => LoopControl::NONE,
         };
 
         let block_id_to_idx = func
@@ -49,6 +60,7 @@ pub fn structurize(module: Module) -> Module {
         Structurizer {
             func,
             block_id_to_idx,
+            loop_control,
             incoming_edge_count: vec![],
             regions: HashMap::new(),
         }
@@ -89,6 +101,10 @@ struct Exit {
 struct Structurizer<'a> {
     func: FuncBuilder<'a>,
     block_id_to_idx: HashMap<BlockId, BlockIdx>,
+
+    /// `LoopControl` to use in all loops' `OpLoopMerge` instruction.
+    /// Currently only affected by function-scoped `#[spirv(unroll_loops)]`.
+    loop_control: LoopControl,
 
     /// Number of edges pointing to each block.
     /// Computed by `post_order` and updated when structuring loops
@@ -240,8 +256,14 @@ impl Structurizer<'_> {
 
                 // Move all of the contents of the original `block` into the
                 // new loop body, but keep labels and indices intact.
+                // Also update the existing merge if it happens to be the `block`
+                // we just moved (this should only be relevant to infinite loops).
                 self.func.blocks_mut()[while_body_block].instructions =
                     mem::replace(&mut self.func.blocks_mut()[block].instructions, vec![]);
+                if region.merge == block {
+                    region.merge = while_body_block;
+                    region.merge_id = while_body_block_id;
+                }
 
                 // Create a separate merge block for the loop body, as the original
                 // one might be used by an `OpSelectionMerge` and cannot be reused.
@@ -307,7 +329,7 @@ impl Structurizer<'_> {
                     .loop_merge(
                         while_exit_block_id,
                         while_body_merge_id,
-                        LoopControl::NONE,
+                        self.loop_control,
                         iter::empty(),
                     )
                     .unwrap();

@@ -8,7 +8,7 @@
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
-### Current Status: v0.1
+### Current Status: v0.2
 
 Compiling and running very simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
 

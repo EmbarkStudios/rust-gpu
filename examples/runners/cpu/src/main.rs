@@ -40,6 +40,16 @@ fn main() {
         width: WIDTH as u32,
         height: HEIGHT as u32,
         time: 0f32,
+
+        // FIXME(eddyb) implement mouse support for the cpu runner.
+        cursor_x: 0.0,
+        cursor_y: 0.0,
+        drag_start_x: 0.0,
+        drag_start_y: 0.0,
+        drag_end_x: 0.0,
+        drag_end_y: 0.0,
+        mouse_button_pressed: 0,
+        mouse_button_press_time: [f32::NEG_INFINITY; 3],
     };
 
     // Limit to max ~60 fps update rate

@@ -54,6 +54,7 @@ static SRC_PREFIX: &str = r#"#![no_std]
 #![allow(unused_imports)]
 use spirv_std::*;
 use spirv_std::storage_class::*;
+use spirv_std::num_traits::Float;
 "#;
 
 fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {
@@ -95,7 +96,7 @@ fn val(src: &str) {
 /// additional errors (such as missing Vulkan-specific decorations).
 fn val_vulkan(src: &str) {
     use rustc_codegen_spirv::spirv_tools::{
-        util::to_binary,
+        binary::to_binary,
         val::{self, Validator},
         TargetEnv,
     };

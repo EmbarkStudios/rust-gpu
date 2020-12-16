@@ -487,12 +487,13 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
     }
 
     fn abort(&mut self) {
-        // codegen_llvm uses call(llvm.trap) here, so it is not a block terminator
-        if !self.kernel_mode {
-            self.emit().kill().unwrap();
-            *self = self.build_sibling_block("abort_continue");
-        }
-        // TODO: Figure out an appropriate instruction for kernel mode.
+        // HACK(eddyb) there is no `abort` or `trap` instruction in SPIR-V,
+        // so the best thing we can do is inject an infinite loop.
+        // (While there is `OpKill`, it doesn't really have the right semantics)
+        let mut abort_loop_bx = self.build_sibling_block("abort_loop");
+        abort_loop_bx.br(abort_loop_bx.llbb());
+        self.br(abort_loop_bx.llbb());
+        *self = self.build_sibling_block("abort_continue");
     }
 
     fn assume(&mut self, _val: Self::Value) {

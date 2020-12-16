@@ -1,13 +1,19 @@
 //! Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
 
-#![cfg_attr(target_arch = "spirv", no_std)]
-#![feature(lang_items)]
-#![feature(register_attr)]
-#![register_attr(spirv)]
+#![cfg_attr(
+    target_arch = "spirv",
+    no_std,
+    feature(register_attr, lang_items),
+    register_attr(spirv)
+)]
+
+#[cfg(not(target_arch = "spirv"))]
+#[macro_use]
+pub extern crate spirv_std_macros;
 
 use core::f32::consts::PI;
 use shared::*;
-use spirv_std::glam::{const_vec3, Vec2, Vec3, Vec4};
+use spirv_std::glam::{const_vec3, vec2, vec3, Vec2, Vec3, Vec4};
 use spirv_std::storage_class::{Input, Output, PushConstant};
 
 // Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
@@ -73,7 +79,7 @@ fn sun_intensity(zenith_angle_cos: f32) -> f32 {
 }
 
 fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
-    let up = Vec3::new(0.0, 1.0, 0.0);
+    let up = vec3(0.0, 1.0, 0.0);
     let sunfade = 1.0 - (1.0 - saturate(sun_position.y / 450000.0).exp());
     let rayleigh_coefficient = RAYLEIGH - (1.0 * (1.0 - sunfade));
     let beta_r = total_rayleigh(PRIMARIES) * rayleigh_coefficient;
@@ -126,19 +132,19 @@ fn sky(dir: Vec3, sun_position: Vec3) -> Vec3 {
 
 fn get_ray_dir(uv: Vec2, pos: Vec3, look_at_pos: Vec3) -> Vec3 {
     let forward = (look_at_pos - pos).normalize();
-    let right = Vec3::new(0.0, 1.0, 0.0).cross(forward).normalize();
+    let right = vec3(0.0, 1.0, 0.0).cross(forward).normalize();
     let up = forward.cross(right);
     (forward + uv.x * right + uv.y * up).normalize()
 }
 
 pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
-    let mut uv = (frag_coord - 0.5 * Vec2::new(constants.width as f32, constants.height as f32))
+    let mut uv = (frag_coord - 0.5 * vec2(constants.width as f32, constants.height as f32))
         / constants.height as f32;
     uv.y = -uv.y;
 
     // hard-code information because we can't bind buffers at the moment
-    let eye_pos = Vec3::new(0.0, 0.0997, 0.2);
-    let sun_pos = Vec3::new(0.0, 75.0, -1000.0);
+    let eye_pos = vec3(0.0, 0.0997, 0.2);
+    let sun_pos = vec3(0.0, 75.0, -1000.0);
     let dir = get_ray_dir(uv, eye_pos, sun_pos);
 
     // evaluate Preetham sky model
@@ -159,7 +165,7 @@ pub fn main_fs(
 ) {
     let constants = constants.load();
 
-    let frag_coord = Vec2::new(in_frag_coord.load().x, in_frag_coord.load().y);
+    let frag_coord = vec2(in_frag_coord.load().x, in_frag_coord.load().y);
     let color = fs(&constants, frag_coord);
     output.store(color);
 }
@@ -174,7 +180,7 @@ pub fn main_vs(
 
     // Create a "full screen triangle" by mapping the vertex index.
     // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
-    let uv = Vec2::new(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
+    let uv = vec2(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
     let pos = 2.0 * uv - Vec2::one();
 
     builtin_pos.store(pos.extend(0.0).extend(1.0));

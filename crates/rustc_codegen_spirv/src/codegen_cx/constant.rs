@@ -4,7 +4,7 @@ use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::place::PlaceRef;
-use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
+use rustc_codegen_ssa::traits::{ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
 use rustc_middle::mir::interpret::{read_target_uint, Allocation, GlobalAlloc, Pointer};
 use rustc_middle::ty::layout::TyAndLayout;
@@ -168,13 +168,14 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
 
     fn const_str(&self, s: Symbol) -> (Self::Value, Self::Value) {
         let len = s.as_str().len();
-        let ty = self.type_ptr_to(
-            self.layout_of(self.tcx.types.str_)
-                .spirv_type(DUMMY_SP, self),
-        );
-        let result = self.undef(ty);
-        self.zombie_no_span(result.def_cx(self), "constant string");
-        (result, self.const_usize(len as u64))
+        let str_ty = self
+            .layout_of(self.tcx.types.str_)
+            .spirv_type(DUMMY_SP, self);
+        // FIXME(eddyb) include the actual byte data.
+        (
+            self.make_constant_pointer(DUMMY_SP, self.undef(str_ty)),
+            self.const_usize(len as u64),
+        )
     }
     fn const_struct(&self, elts: &[Self::Value], _packed: bool) -> Self::Value {
         // Presumably this will get bitcasted to the right type?
@@ -471,7 +472,13 @@ impl<'tcx> CodegenCx<'tcx> {
                 *data = *c + asdf->y[*c];
                 }
                 */
-                self.zombie_no_span(result.def_cx(self), "constant runtime array value");
+                // HACK(eddyb) we don't know whether this constant originated
+                // in a system crate, so it's better to always zombie.
+                self.zombie_even_in_user_code(
+                    result.def_cx(self),
+                    DUMMY_SP,
+                    "constant runtime array value",
+                );
                 result
             }
             SpirvType::Pointer { .. } => {
@@ -494,6 +501,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 .tcx
                 .sess
                 .fatal("Cannot create a constant sampler value"),
+            SpirvType::SampledImage { .. } => self
+                .tcx
+                .sess
+                .fatal("Cannot create a constant sampled image value"),
         }
     }
 

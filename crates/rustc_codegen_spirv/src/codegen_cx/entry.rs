@@ -185,6 +185,10 @@ impl<'tcx> CodegenCx<'tcx> {
                     );
                     has_location = false;
                 }
+                SpirvAttribute::Flat => {
+                    self.emit_global()
+                        .decorate(variable, Decoration::Flat, std::iter::empty());
+                }
                 _ => {}
             }
         }

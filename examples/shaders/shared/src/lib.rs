@@ -1,25 +1,49 @@
 //! Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
 
-#![cfg_attr(target_arch = "spirv", no_std)]
-#![feature(lang_items)]
-#![feature(register_attr)]
-#![register_attr(spirv)]
+#![cfg_attr(
+    target_arch = "spirv",
+    no_std,
+    feature(register_attr, lang_items),
+    register_attr(spirv)
+)]
+
+#[cfg(not(target_arch = "spirv"))]
+#[macro_use]
+pub extern crate spirv_std_macros;
 
 use core::f32::consts::PI;
-use spirv_std::glam::Vec3;
+use spirv_std::glam::{vec3, Vec3};
 
 // Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
 // we tie #[no_std] above to the same condition, so it's fine.
 #[cfg(target_arch = "spirv")]
 use spirv_std::num_traits::Float;
 
-#[derive(Copy, Clone)]
-#[allow(unused_attributes)]
 #[spirv(block)]
+#[derive(Copy, Clone)]
+#[repr(C)]
+#[allow(unused_attributes)]
 pub struct ShaderConstants {
     pub width: u32,
     pub height: u32,
     pub time: f32,
+
+    pub cursor_x: f32,
+    pub cursor_y: f32,
+    pub drag_start_x: f32,
+    pub drag_start_y: f32,
+    pub drag_end_x: f32,
+    pub drag_end_y: f32,
+
+    /// Bit mask of the pressed buttons (0 = Left, 1 = Middle, 2 = Right).
+    pub mouse_button_pressed: u32,
+
+    /// The last time each mouse button (Left, Middle or Right) was pressed,
+    /// or `f32::NEG_INFINITY` for buttons which haven't been pressed yet.
+    ///
+    /// If this is the first frame after the press of some button, that button's
+    /// entry in `mouse_button_press_time` will exactly equal `time`.
+    pub mouse_button_press_time: [f32; 3],
 }
 
 pub fn saturate(x: f32) -> f32 {
@@ -27,11 +51,11 @@ pub fn saturate(x: f32) -> f32 {
 }
 
 pub fn pow(v: Vec3, power: f32) -> Vec3 {
-    Vec3::new(v.x.powf(power), v.y.powf(power), v.z.powf(power))
+    vec3(v.x.powf(power), v.y.powf(power), v.z.powf(power))
 }
 
 pub fn exp(v: Vec3) -> Vec3 {
-    Vec3::new(v.x.exp(), v.y.exp(), v.z.exp())
+    vec3(v.x.exp(), v.y.exp(), v.z.exp())
 }
 
 /// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/

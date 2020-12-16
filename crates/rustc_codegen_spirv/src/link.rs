@@ -138,7 +138,8 @@ fn link_exe(
 
     {
         let save_modules_timer = sess.timer("link_save_modules");
-        if let Err(e) = std::fs::write(out_filename, crate::slice_u32_to_u8(&spv_binary)) {
+        if let Err(e) = std::fs::write(out_filename, spirv_tools::binary::from_binary(&spv_binary))
+        {
             let mut err = sess.struct_err("failed to serialize spirv-binary to disk");
             err.note(&format!("module {:?}", out_filename));
             err.note(&format!("I/O error: {:#}", e));
@@ -395,7 +396,7 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: boo
         for (num, module) in modules.iter().enumerate() {
             File::create(path.join(format!("mod_{}.spv", num)))
                 .unwrap()
-                .write_all(crate::slice_u32_to_u8(&module.assemble()))
+                .write_all(spirv_tools::binary::from_binary(&module.assemble()))
                 .unwrap();
         }
     }
@@ -428,6 +429,7 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: boo
 
 /// As of right now, this is essentially a no-op, just plumbing through all the files.
 // TODO: WorkProduct impl
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn run_thin(
     cgcx: &CodegenContext<SpirvCodegenBackend>,
     modules: Vec<(String, SpirvThinBuffer)>,
