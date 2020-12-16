@@ -133,12 +133,10 @@ pub fn compile_shaders() -> Vec<SpvFile> {
         .unwrap()];
     let mut spv_files = Vec::<SpvFile>::with_capacity(spv_paths.len());
     for path in spv_paths.iter() {
-        spv_files.push(
-            SpvFile {
-                name: path.file_stem().unwrap().to_str().unwrap().to_owned(),
-                data: read_spv(&mut File::open(path).unwrap()).unwrap(),
-            }
-        )
+        spv_files.push(SpvFile {
+            name: path.file_stem().unwrap().to_str().unwrap().to_owned(),
+            data: read_spv(&mut File::open(path).unwrap()).unwrap(),
+        })
     }
     spv_files
 }
