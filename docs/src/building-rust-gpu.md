@@ -24,7 +24,7 @@
 For our Linux users who would like to contribute, it's worth noting that these dependencies are required to have installed.
 
 ```
-dnf install gcc-c++ remmina libX11-devel libxkbcommon-x11-devel
+sudo apt install pkg-config libx11-dev
 ```
 
 ## Using installed SPIRV-Tools
