@@ -18,6 +18,8 @@ jobs:
             target: x86_64-pc-windows-msvc
           - os: macOS-latest
             target: x86_64-apple-darwin
+          - os: ubuntu-latest
+            target: aarch64-linux-android
     runs-on: ${{ matrix.os }}
     env:
       spirv_tools_version: "20200928"
@@ -53,33 +55,25 @@ jobs:
       - name: cargo fetch --locked
         run: cargo fetch --locked --target ${{ matrix.target }}
       - name: Run tests
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
         shell: bash
         run: .github/workflows/test.sh ${{ runner.os }}
 
-      - name: Install cargo-apk
-        run: cargo install cargo-apk
-
-      - if: runner.os == 'Windows'
-        name: Create symlink to Android SDK/NDK without spaces
+      - name: Build WGPU Example for Android
+        if: ${{ matrix.target == 'aarch64-linux-android' }}
+        shell: bash
         run: |
-          $oldAndroidPath = $env:ANDROID_HOME
-          $sdk_root = "C:\Android"
-          New-Item -Path $sdk_root -ItemType SymbolicLink -Value $oldAndroidPath
+          echo "::group::Install cargo-apk"
+          cargo install cargo-apk
+          echo "::endgroup::"
 
-          echo "ANDROID_SDK_ROOT=$sdk_root" >> $env:GITHUB_ENV
-          echo "ANDROID_NDK_ROOT=$sdk_root\ndk-bundle" >> $env:GITHUB_ENV
-
-          # Update legacy path for ndk-build:
-          echo "ANDROID_HOME=$sdk_root" >> $env:GITHUB_ENV
-
-          # Unset legacy paths:
-          echo "ANDROID_NDK_HOME=" >> $env:GITHUB_ENV
-          echo "ANDROID_NDK_PATH=" >> $env:GITHUB_ENV
-
-      - name: Compile WGPU example for Android
-        run: |
+          echo "::group::Add aarch64-linux-android target"
           rustup target add aarch64-linux-android
+          echo "::endgroup::"
+
+          echo "::group::Build WGPU example for Android"
           cargo apk build --manifest-path examples/runners/wgpu/Cargo.toml --features use-installed-tools --no-default-features
+          echo "::endgroup::"
 
   lint:
     name: Lint
