@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["create",""]],"mod":[["tool",""]],"struct":[["ValidatorOptions",""]],"trait":[["Validator",""]]});
+initSidebarItems({"enum":[["ValidatorLimits",""]],"fn":[["create",""]],"mod":[["tool",""]],"struct":[["ValidatorOptions",""]],"trait":[["Validator",""]]});
