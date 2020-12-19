@@ -30,6 +30,7 @@ pub struct Symbols {
     pub spirv13: Symbol,
     pub spirv14: Symbol,
     pub spirv15: Symbol,
+    location: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
     image: Symbol,
@@ -383,6 +384,7 @@ impl Symbols {
             spirv13: Symbol::intern("spirv1.3"),
             spirv14: Symbol::intern("spirv1.4"),
             spirv15: Symbol::intern("spirv1.5"),
+            location: Symbol::intern("location"),
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             image: Symbol::intern("image"),
@@ -442,6 +444,7 @@ pub enum SpirvAttribute {
     Builtin(BuiltIn),
     StorageClass(StorageClass),
     Entry(Entry),
+    Location(u32),
     DescriptorSet(u32),
     Binding(u32),
     ReallyUnsafeIgnoreBitcasts,
@@ -497,6 +500,11 @@ pub fn parse_attrs(
                 } else if arg.has_name(cx.sym.descriptor_set) {
                     match parse_attr_int_value(cx, arg) {
                         Some(x) => Some(SpirvAttribute::DescriptorSet(x)),
+                        None => None,
+                    }
+                } else if arg.has_name(cx.sym.location) {
+                    match parse_attr_int_value(cx, arg) {
+                        Some(x) => Some(SpirvAttribute::Location(x)),
                         None => None,
                     }
                 } else if arg.has_name(cx.sym.binding) {

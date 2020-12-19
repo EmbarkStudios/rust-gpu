@@ -169,6 +169,11 @@ impl<'tcx> CodegenCx<'tcx> {
                     );
                     has_location = false;
                 }
+                SpirvAttribute::Location(index) => {
+                    // Overwrite the current location value for the given storage class.
+                    // The decoration will be assigned below.
+                    decoration_locations.insert(storage_class, index);
+                }
                 SpirvAttribute::DescriptorSet(index) => {
                     self.emit_global().decorate(
                         variable,
@@ -195,7 +200,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // Assign locations from left to right, incrementing each storage class
         // individually.
         // TODO: Is this right for UniformConstant? Do they share locations with
-        // input/outpus?
+        // input/outputs?
         if has_location {
             let location = decoration_locations
                 .entry(storage_class)
