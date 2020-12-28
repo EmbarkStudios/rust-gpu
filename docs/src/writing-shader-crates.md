@@ -60,7 +60,10 @@ default installation.
 ```toml
 [build]
 target = "spirv-unknown-unknown"
-rustflags = ["-Zcodegen-backend=<path_to_librustc_codegen_spirv>"]
+rustflags = [
+   "-Zcodegen-backend=<path_to_librustc_codegen_spirv>",
+   "-Zsymbol-mangling-version=v0"
+]
 
 [unstable]
 build-std=["core"]
