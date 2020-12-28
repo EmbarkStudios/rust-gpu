@@ -44,7 +44,8 @@ automatically compile the SPIR-V binary at build time, you can use
 need to do a couple of steps first to build the compiler backend.
 
 1. Clone the `rust-gpu` repository
-2. `cargo build --release`
+2. Copy the [`rust-toolchain`] file to your project. (You must use the same version of Rust as `rust-gpu`.)
+2. `cargo build --release` in `rust-gpu`.
 
 Now you should have a `librustc_codegen_spirv` dynamic library available in
 `target/release`. You'll need to keep this somewhere stable that you can
@@ -55,7 +56,6 @@ Now we need to add our `.cargo/config` file. This tells cargo to build for the
 that target. We have to also provide `-Zbuild-std` as the
 `spirv-unknown-unknown` sysroot is not currently available in the
 default installation.
-
 
 ```toml
 [build]
@@ -76,3 +76,5 @@ cargo build
 
 Now you should have `<project_name>.spv` SPIR-V file in `target/debug` that you
 can give to a renderer.
+
+[`rust-toolchain`]: https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain
