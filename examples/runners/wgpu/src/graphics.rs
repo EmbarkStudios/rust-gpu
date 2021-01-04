@@ -261,7 +261,7 @@ async fn run(
     });
 }
 
-pub fn start(options: &Options) {
+pub async fn start(options: &Options) {
     let event_loop = EventLoop::new();
     let window = winit::window::WindowBuilder::new()
         .with_title("Rust GPU - wgpu")
@@ -282,16 +282,16 @@ pub fn start(options: &Options) {
                     body.append_child(&web_sys::Element::from(window.canvas()))
                         .ok()
                 })
-                .expect("couldn't append canvas to document body");
+            .expect("couldn't append canvas to document body");
             // Temporarily avoid srgb formats for the swapchain on the web
             wasm_bindgen_futures::spawn_local(run(
-                event_loop,
-                window,
-                wgpu::TextureFormat::Bgra8Unorm,
+                    event_loop,
+                    window,
+                    wgpu::TextureFormat::Bgra8Unorm,
             ));
         } else {
             wgpu_subscriber::initialize_default_subscriber(None);
-            futures::executor::block_on(run(
+            run(
                 options,
                 event_loop,
                 window,
@@ -300,7 +300,7 @@ pub fn start(options: &Options) {
                 } else {
                     wgpu::TextureFormat::Bgra8UnormSrgb
                 },
-            ));
+            ).await;
         }
     }
 }

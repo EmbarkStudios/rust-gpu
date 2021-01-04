@@ -1,3 +1,3 @@
 fn main() {
-    example_runner_wgpu::main()
+    example_runner_wgpu::main();
 }

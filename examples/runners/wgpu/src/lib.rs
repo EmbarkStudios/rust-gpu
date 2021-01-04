@@ -36,8 +36,8 @@ pub fn main() {
     let options: Options = Options::parse();
 
     if is_compute_shader(options.shader) {
-        compute::start(&options)
+        futures::executor::block_on(compute::start(&options));
     } else {
-        graphics::start(&options);
+        futures::executor::block_on(graphics::start(&options));
     }
 }
