@@ -45,7 +45,7 @@ need to do a couple of steps first to build the compiler backend.
 
 1. Clone the `rust-gpu` repository
 2. Copy the [`rust-toolchain`] file to your project. (You must use the same version of Rust as `rust-gpu`.)
-2. `cargo build --release` in `rust-gpu`.
+3. `cargo build --release` in `rust-gpu`.
 
 Now you should have a `librustc_codegen_spirv` dynamic library available in
 `target/release`. You'll need to keep this somewhere stable that you can
