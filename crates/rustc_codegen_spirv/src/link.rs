@@ -1,14 +1,13 @@
 use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
-use rustc_codegen_ssa::CodegenResults;
+use rustc_codegen_ssa::{CodegenResults, NativeLib};
 use rustc_data_structures::owning_ref::OwningRef;
 use rustc_data_structures::rustc_erase_owner;
 use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::FatalError;
 use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
-use rustc_middle::middle::cstore::NativeLib;
 use rustc_middle::middle::dependency_format::Linkage;
 use rustc_session::config::{CrateType, Lto, OutputFilenames, OutputType};
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
