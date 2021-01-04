@@ -184,7 +184,12 @@ shader crate.</li>
 <h3><a class="header" href="#using-spirv-builder" id="using-spirv-builder">Using <code>spirv-builder</code></a></h3>
 <p>If you're writing a bigger application and you want to integrate SPIR-V shader
 crates to display, it's recommended to use <code>spirv-builder</code> in a build script.</p>
+<ol>
+<li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain"><code>rust-toolchain</code></a> file to your project. (You must use the same version of Rust as <code>rust-gpu</code>.)</li>
+<li>Create a <code>build.rs</code> in your project root.</li>
+</ol>
 <h4><a class="header" href="#buildrs" id="buildrs"><code>build.rs</code></a></h4>
+<p>Paste the following into the <code>main</code> for your build script.</p>
 <pre><pre class="playground"><code class="language-rust no_run">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -202,13 +207,17 @@ crates to display, it's recommended to use <code>spirv-builder</code> in a build
 <span class="boring">}
 </span></code></pre></pre>
 <h3><a class="header" href="#using-cargoconfig" id="using-cargoconfig">Using <code>.cargo/config</code></a></h3>
+<blockquote>
+<p><strong>Note</strong> This method will require manually rebuilding <code>rust-gpu</code> each
+time there has been changes to the repository.</p>
+</blockquote>
 <p>If you just want to compile a build a shader crate, and don't need to
 automatically compile the SPIR-V binary at build time, you can use
 <code>.cargo/config</code> to set the necessary flags. Before you can do that however you
 need to do a couple of steps first to build the compiler backend.</p>
 <ol>
 <li>Clone the <code>rust-gpu</code> repository</li>
-<li><code>cargo build --release</code></li>
+<li><code>cargo build --release</code> in <code>rust-gpu</code>.</li>
 </ol>
 <p>Now you should have a <code>librustc_codegen_spirv</code> dynamic library available in
 <code>target/release</code>. You'll need to keep this somewhere stable that you can
