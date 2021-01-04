@@ -1,6 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.11.2/src/macros.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>macros.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.11.3/src/macros.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>macros.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../glam/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../glam/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -189,6 +189,11 @@
 <span id="186">186</span>
 <span id="187">187</span>
 <span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(
     <span class="ident">all</span>(<span class="ident">debug_assertions</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;debug-glam-assert&quot;</span>),
@@ -220,101 +225,6 @@
             .<span class="ident">abs</span>()
             .<span class="ident">cmple</span>(<span class="self">Self</span>::<span class="ident">splat</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">max_abs_diff</span>))
             .<span class="ident">all</span>()
-    };
-}
-
-<span class="doccomment">/// Creates a `Mat2` from two column vectors that can be used to initialize a constant value.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use glam::{const_mat2, Mat2};</span>
-<span class="doccomment">/// const ZERO: Mat2 = const_mat2!([0.0; 4]);</span>
-<span class="doccomment">/// const IDENTITY: Mat2 = const_mat2!([1.0, 0.0], [0.0, 1.0]);</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_mat2</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x4Cast</span> { <span class="ident">f32x4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span> }.<span class="ident">mat2</span> }
-    };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> {
-            <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x4Cast</span> {
-                <span class="ident">f32x2x2</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>],
-            }
-            .<span class="ident">mat2</span>
-        }
-    };
-}
-
-<span class="doccomment">/// Creates a `Mat3` from three column vectors that can be used to initialize a constant value.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use glam::{const_mat3, Mat3};</span>
-<span class="doccomment">/// const ZERO: Mat3 = const_mat3!([0.0; 9]);</span>
-<span class="doccomment">/// const IDENTITY: Mat3 = const_mat3!([1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]);</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_mat3</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x9Cast</span> { <span class="ident">f32x9</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span> }.<span class="ident">mat3</span> }
-    };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> {
-            <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x9Cast</span> {
-                <span class="ident">f32x3x3</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>],
-            }
-            .<span class="ident">mat3</span>
-        }
-    };
-}
-
-<span class="doccomment">/// Creates a `Mat4` from four column vectors that can be used to initialize a constant value.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use glam::{const_mat4, Mat4};</span>
-<span class="doccomment">/// const ZERO: Mat4 = const_mat4!([0.0; 16]);</span>
-<span class="doccomment">/// const IDENTITY: Mat4 = const_mat4!(</span>
-<span class="doccomment">///     [1.0, 0.0, 0.0, 0.0],</span>
-<span class="doccomment">///     [0.0, 1.0, 0.0, 0.0],</span>
-<span class="doccomment">///     [0.0, 0.0, 1.0, 0.0],</span>
-<span class="doccomment">///     [0.0, 0.0, 0.0, 1.0]</span>
-<span class="doccomment">/// );</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_mat4</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x16</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x16Cast</span> { <span class="ident">f32x16</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x16</span> }.<span class="ident">mat4</span> }
-    };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col3</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> {
-            <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x16Cast</span> {
-                <span class="ident">f32x4x4</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col3</span>],
-            }
-            .<span class="ident">mat4</span>
-        }
-    };
-}
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-    <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;scalar-math&quot;</span>),
-    <span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)
-))]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_m128</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x4Cast</span> { <span class="ident">f32x4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span> }.<span class="ident">m128</span> }
-    };
-}
-
-<span class="doccomment">/// Creates a `Quat` from `x`, `y`, `z` and `w` values that can be used to initialize a constant</span>
-<span class="doccomment">/// value.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use glam::{const_quat, Quat};</span>
-<span class="doccomment">/// const IDENTITY: Quat = const_quat!([0.0, 0.0, 0.0, 1.0]);</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_quat</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x4Cast</span> { <span class="ident">f32x4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span> }.<span class="ident">quat</span> }
     };
 }
 
@@ -376,6 +286,106 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_vec4</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x4Cast</span> { <span class="ident">f32x4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span> }.<span class="ident">vec4</span> }
+    };
+}
+
+<span class="doccomment">/// Creates a `Mat2` from two column vectors that can be used to initialize a constant value.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use glam::{const_mat2, Mat2};</span>
+<span class="doccomment">/// const ZERO: Mat2 = const_mat2!([0.0; 4]);</span>
+<span class="doccomment">/// const IDENTITY: Mat2 = const_mat2!([1.0, 0.0], [0.0, 1.0]);</span>
+<span class="doccomment">/// ```</span>
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_mat2</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x4Cast</span> { <span class="ident">f32x4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span> }.<span class="ident">mat2</span> }
+    };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">unsafe</span> {
+            <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x4Cast</span> {
+                <span class="ident">f32x2x2</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>],
+            }
+            .<span class="ident">mat2</span>
+        }
+    };
+}
+
+
+<span class="doccomment">/// Creates a `Mat3` from three column vectors that can be used to initialize a constant value.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// # #[macro_use] extern crate glam;</span>
+<span class="doccomment">/// use glam::{const_mat3, Mat3};</span>
+<span class="doccomment">/// const ZERO: Mat3 = const_mat3!([0.0; 9]);</span>
+<span class="doccomment">/// const IDENTITY: Mat3 = const_mat3!([1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]);</span>
+<span class="doccomment">/// ```</span>
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_mat3</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Mat3</span> {
+            <span class="ident">x_axis</span>: <span class="macro">const_vec3</span><span class="macro">!</span>([<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>[<span class="number">0</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>[<span class="number">1</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>[<span class="number">2</span>]]),
+            <span class="ident">y_axis</span>: <span class="macro">const_vec3</span><span class="macro">!</span>([<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>[<span class="number">3</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>[<span class="number">4</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>[<span class="number">5</span>]]),
+            <span class="ident">z_axis</span>: <span class="macro">const_vec3</span><span class="macro">!</span>([<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>[<span class="number">6</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>[<span class="number">7</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x9</span>[<span class="number">8</span>]]),
+        }
+    };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Mat3</span> {
+            <span class="ident">x_axis</span>: <span class="macro">const_vec3</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>),
+            <span class="ident">y_axis</span>: <span class="macro">const_vec3</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>),
+            <span class="ident">z_axis</span>: <span class="macro">const_vec3</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>),
+        }
+    };
+}
+
+<span class="doccomment">/// Creates a `Mat4` from four column vectors that can be used to initialize a constant value.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use glam::{const_mat4, Mat4};</span>
+<span class="doccomment">/// const ZERO: Mat4 = const_mat4!([0.0; 16]);</span>
+<span class="doccomment">/// const IDENTITY: Mat4 = const_mat4!(</span>
+<span class="doccomment">///     [1.0, 0.0, 0.0, 0.0],</span>
+<span class="doccomment">///     [0.0, 1.0, 0.0, 0.0],</span>
+<span class="doccomment">///     [0.0, 0.0, 1.0, 0.0],</span>
+<span class="doccomment">///     [0.0, 0.0, 0.0, 1.0]</span>
+<span class="doccomment">/// );</span>
+<span class="doccomment">/// ```</span>
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_mat4</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x16</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x16Cast</span> { <span class="ident">f32x16</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x16</span> }.<span class="ident">mat4</span> }
+    };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col3</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">unsafe</span> {
+            <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x16Cast</span> {
+                <span class="ident">f32x4x4</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">col0</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col1</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col2</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">col3</span>],
+            }
+            .<span class="ident">mat4</span>
+        }
+    };
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
+    <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;scalar-math&quot;</span>),
+    <span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)
+))]</span>
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_m128</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x4Cast</span> { <span class="ident">f32x4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span> }.<span class="ident">m128</span> }
+    };
+}
+
+<span class="doccomment">/// Creates a `Quat` from `x`, `y`, `z` and `w` values that can be used to initialize a constant</span>
+<span class="doccomment">/// value.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use glam::{const_quat, Quat};</span>
+<span class="doccomment">/// const IDENTITY: Quat = const_quat!([0.0, 0.0, 0.0, 1.0]);</span>
+<span class="doccomment">/// ```</span>
+<span class="attribute">#[<span class="ident">macro_export</span>]</span>
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">const_quat</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">unsafe</span> { <span class="macro-nonterminal">$</span><span class="kw">crate</span>::<span class="macro-nonterminal">f32</span>::<span class="ident">F32x4Cast</span> { <span class="ident">f32x4</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f32x4</span> }.<span class="ident">quat</span> }
     };
 }
 </pre></div>
