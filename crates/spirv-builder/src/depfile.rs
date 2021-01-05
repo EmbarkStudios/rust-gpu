@@ -1,5 +1,5 @@
 //! Reading Makefile-style dependency files.
-//! Taken with permission from https://github.com/m-ou-se/ninj/blob/master/lib/depfile/mod.rs
+//! Taken with permission from <https://github.com/m-ou-se/ninj/blob/master/lib/depfile/mod.rs>
 
 use raw_string::{RawStr, RawString};
 use std::fs::File;
