@@ -34,9 +34,9 @@ async fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
     }
 }
 
-pub async fn start(options: &Options) -> Vec<u32> {
+pub async fn start(options: &Options, numbers: Vec<u32>) -> Vec<u32> {
     wgpu_subscriber::initialize_default_subscriber(None);
-    let numbers: Vec<u32> = vec![1, 2, 3, 4];
+
     let slice_size = numbers.len() * std::mem::size_of::<u32>();
     let size = slice_size as wgpu::BufferAddress;
 
@@ -136,5 +136,23 @@ pub async fn start(options: &Options) -> Vec<u32> {
         result
     } else {
         panic!("failed to run compute on gpu!")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_compute_1() {
+        let input = vec![1, 2, 3, 4];
+        futures::executor::block_on(assert_start(input, vec![0, 1, 7, 2]));
+    }
+
+    async fn assert_start(input: Vec<u32>, expected: Vec<u32>) {
+        let options: Options = Options {
+            shader: crate::RustGPUShader::Compute,
+        };
+        assert_eq!(start(&options, input).await, expected);
     }
 }

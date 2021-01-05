@@ -51,3 +51,4 @@ cargo_test examples/runners/wgpu
 cargo_test_no_features examples/runners/cpu
 cargo_test_no_features examples/shaders/sky-shader
 cargo_test_no_features examples/shaders/simplest-shader
+cargo_test_no_features examples/shaders/compute-shader
