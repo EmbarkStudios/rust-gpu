@@ -1,4 +1,4 @@
-//! Ported to Rust from https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment
+//! Ported to Rust from <https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment>
 
 #![cfg_attr(
     target_arch = "spirv",
@@ -58,7 +58,7 @@ pub fn exp(v: Vec3) -> Vec3 {
     vec3(v.x.exp(), v.y.exp(), v.z.exp())
 }
 
-/// Based on: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
+/// Based on: <https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/>
 pub fn acos_approx(v: f32) -> f32 {
     let x = v.abs();
     let mut res = -0.155972 * x + 1.56467; // p(x)
