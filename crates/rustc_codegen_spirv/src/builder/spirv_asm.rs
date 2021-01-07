@@ -951,7 +951,23 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
             (OperandKind::ImageOperands, Some(word)) => {
                 match parse_bitflags_operand(IMAGE_OPERANDS, word) {
-                    Some(x) => inst.operands.push(dr::Operand::ImageOperands(x)),
+                    Some(x) => {
+                        inst.operands.push(dr::Operand::ImageOperands(x));
+                        for _ in 0..x.bits().count_ones() {
+                            match tokens
+                                .next()
+                                .and_then(|token| self.parse_id_in(id_map, token))
+                            {
+                                Some(id) => {
+                                    inst.operands.push(dr::Operand::IdRef(id));
+                                }
+                                None => {
+                                    self.err("expected operand id after image operand");
+                                    break;
+                                }
+                            }
+                        }
+                    }
                     None => self.err(&format!("Unknown ImageOperands {}", word)),
                 }
             }
