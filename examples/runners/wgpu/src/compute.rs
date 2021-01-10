@@ -139,7 +139,7 @@ pub async fn start(options: &Options, numbers: Vec<u32>) -> Vec<u32> {
     }
 }
 
-#[cfg(test)]
+// #[cfg(test)]
 mod tests {
     use super::*;
 
