@@ -35,14 +35,14 @@ pub trait Derivative {
     /// given area, the implementation can compute Y derivatives in fewer
     /// unique locations than would be allowed by [`Derivative::ddy_fine`].
     fn ddy_coarse(self) -> Self;
-    /// Returns the sum of [`Self::ddx`] and [`Self::ddy`] as a
-    /// single operation.
+    /// Returns the sum of the absolute values of [`Self::ddx`] and
+    /// [`Self::ddy`] as a single operation.
     fn fwidth(self) -> Self;
-    /// Returns the sum of [`Self::ddx_fine`] and [`Self::ddy_fine`] as a
-    /// single operation.
+    /// Returns the sum of the absolute values of [`Self::ddx_fine`] and
+    /// [`Self::ddy_fine`] as a single operation.
     fn fwidth_fine(self) -> Self;
-    /// Returns the sum of [`Self::ddx_coarse`] and [`Self::ddy_coarse`] as a
-    /// single operation.
+    /// Returns the sum of the absolute values of [`Self::ddx_coarse`] and
+    /// [`Self::ddy_coarse`] as a single operation.
     fn fwidth_coarse(self) -> Self;
 }
 
