@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/bimap-0.5.3/src/hash.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>hash.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/bimap-0.6.0/src/hash.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>hash.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../bimap/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1047,16 +1047,62 @@
 <span id="1044">1044</span>
 <span id="1045">1045</span>
 <span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A bimap backed by two `HashMap`s.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">Overwritten</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">mem</span>::{<span class="ident">Ref</span>, <span class="ident">Wrapper</span>},
+    <span class="ident">Overwritten</span>,
+};
 <span class="kw">use</span> <span class="ident">std</span>::{
+    <span class="ident">borrow</span>::<span class="ident">Borrow</span>,
     <span class="ident">collections</span>::{<span class="ident">hash_map</span>, <span class="ident">HashMap</span>},
     <span class="ident">fmt</span>,
     <span class="ident">hash</span>::{<span class="ident">BuildHasher</span>, <span class="ident">Hash</span>},
     <span class="ident">iter</span>::{<span class="ident">Extend</span>, <span class="ident">FromIterator</span>, <span class="ident">FusedIterator</span>},
-    <span class="ident">ops</span>::<span class="ident">Deref</span>,
     <span class="ident">rc</span>::<span class="ident">Rc</span>,
 };
 
@@ -1066,8 +1112,8 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [module-level documentation]: crate</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BiHashMap</span><span class="op">&lt;</span><span class="ident">L</span>, <span class="ident">R</span>, <span class="ident">LS</span> <span class="op">=</span> <span class="ident">hash_map</span>::<span class="ident">RandomState</span>, <span class="ident">RS</span> <span class="op">=</span> <span class="ident">hash_map</span>::<span class="ident">RandomState</span><span class="op">&gt;</span> {
-    <span class="ident">left2right</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>, <span class="ident">LS</span><span class="op">&gt;</span>,
-    <span class="ident">right2left</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">RS</span><span class="op">&gt;</span>,
+    <span class="ident">left2right</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>, <span class="ident">LS</span><span class="op">&gt;</span>,
+    <span class="ident">right2left</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>, <span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">RS</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> <span class="ident">BiHashMap</span><span class="op">&lt;</span><span class="ident">L</span>, <span class="ident">R</span>, <span class="ident">hash_map</span>::<span class="ident">RandomState</span>, <span class="ident">hash_map</span>::<span class="ident">RandomState</span><span class="op">&gt;</span>
@@ -1317,6 +1363,9 @@
     <span class="doccomment">/// Returns a reference to the right value corresponding to the given left</span>
     <span class="doccomment">/// value.</span>
     <span class="doccomment">///</span>
+    <span class="doccomment">/// The input may be any borrowed form of the bimap&#39;s left type, but `Eq`</span>
+    <span class="doccomment">/// and `Hash` on the borrowed form *must* match those for the left type.</span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// ```</span>
@@ -1327,12 +1376,19 @@
     <span class="doccomment">/// assert_eq!(bimap.get_by_left(&amp;&#39;a&#39;), Some(&amp;1));</span>
     <span class="doccomment">/// assert_eq!(bimap.get_by_left(&amp;&#39;z&#39;), None);</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_by_left</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="ident">L</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">R</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">get</span>(<span class="ident">left</span>).<span class="ident">map</span>(<span class="ident">Deref</span>::<span class="ident">deref</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_by_left</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">R</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">L</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
+        <span class="ident">Q</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
+    {
+        <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">get</span>(<span class="ident">Wrapper</span>::<span class="ident">wrap</span>(<span class="ident">left</span>)).<span class="ident">map</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">r</span>.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Returns a reference to the left value corresponding to the given right</span>
     <span class="doccomment">/// value.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The input may be any borrowed form of the bimap&#39;s right type, but `Eq`</span>
+    <span class="doccomment">/// and `Hash` on the borrowed form *must* match those for the right type.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -1344,12 +1400,19 @@
     <span class="doccomment">/// assert_eq!(bimap.get_by_right(&amp;1), Some(&amp;&#39;a&#39;));</span>
     <span class="doccomment">/// assert_eq!(bimap.get_by_right(&amp;2), None);</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_by_right</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">L</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">right2left</span>.<span class="ident">get</span>(<span class="ident">right</span>).<span class="ident">map</span>(<span class="ident">Deref</span>::<span class="ident">deref</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_by_right</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">L</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">R</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
+        <span class="ident">Q</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
+    {
+        <span class="self">self</span>.<span class="ident">right2left</span>.<span class="ident">get</span>(<span class="ident">Wrapper</span>::<span class="ident">wrap</span>(<span class="ident">right</span>)).<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">l</span>.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Returns `true` if the bimap contains the given left value and `false`</span>
     <span class="doccomment">/// otherwise.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The input may be any borrowed form of the bimap&#39;s left type, but `Eq`</span>
+    <span class="doccomment">/// and `Hash` on the borrowed form *must* match those for the left type.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -1361,12 +1424,19 @@
     <span class="doccomment">/// assert!(bimap.contains_left(&amp;&#39;a&#39;));</span>
     <span class="doccomment">/// assert!(!bimap.contains_left(&amp;&#39;b&#39;));</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains_left</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="ident">L</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">contains_key</span>(<span class="ident">left</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains_left</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
+    <span class="kw">where</span>
+        <span class="ident">L</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
+        <span class="ident">Q</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
+    {
+        <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">contains_key</span>(<span class="ident">Wrapper</span>::<span class="ident">wrap</span>(<span class="ident">left</span>))
     }
 
     <span class="doccomment">/// Returns `true` if the map contains the given right value and `false`</span>
     <span class="doccomment">/// otherwise.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The input may be any borrowed form of the bimap&#39;s right type, but `Eq`</span>
+    <span class="doccomment">/// and `Hash` on the borrowed form *must* match those for the right type.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -1378,14 +1448,21 @@
     <span class="doccomment">/// assert!(bimap.contains_right(&amp;1));</span>
     <span class="doccomment">/// assert!(!bimap.contains_right(&amp;2));</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains_right</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">right2left</span>.<span class="ident">contains_key</span>(<span class="ident">right</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains_right</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
+    <span class="kw">where</span>
+        <span class="ident">R</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
+        <span class="ident">Q</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
+    {
+        <span class="self">self</span>.<span class="ident">right2left</span>.<span class="ident">contains_key</span>(<span class="ident">Wrapper</span>::<span class="ident">wrap</span>(<span class="ident">right</span>))
     }
 
     <span class="doccomment">/// Removes the left-right pair corresponding to the given left value.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the previous left-right pair if the map contained the left value</span>
     <span class="doccomment">/// and `None` otherwise.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The input may be any borrowed form of the bimap&#39;s left type, but `Eq`</span>
+    <span class="doccomment">/// and `Hash` on the borrowed form *must* match those for the left type.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -1400,14 +1477,18 @@
     <span class="doccomment">/// assert_eq!(bimap.remove_by_left(&amp;&#39;b&#39;), Some((&#39;b&#39;, 2)));</span>
     <span class="doccomment">/// assert_eq!(bimap.remove_by_left(&amp;&#39;b&#39;), None);</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_by_left</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="ident">L</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">L</span>, <span class="ident">R</span>)<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">remove</span>(<span class="ident">left</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">right_rc</span><span class="op">|</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_by_left</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">left</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">L</span>, <span class="ident">R</span>)<span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">L</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
+        <span class="ident">Q</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
+    {
+        <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">remove</span>(<span class="ident">Wrapper</span>::<span class="ident">wrap</span>(<span class="ident">left</span>)).<span class="ident">map</span>(<span class="op">|</span><span class="ident">right_rc</span><span class="op">|</span> {
             <span class="comment">// unwrap is safe because we know right2left contains the key (it&#39;s a bimap)</span>
             <span class="kw">let</span> <span class="ident">left_rc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">right2left</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">right_rc</span>).<span class="ident">unwrap</span>();
             <span class="comment">// at this point we can safely unwrap because the other pointers are gone</span>
             (
-                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">left_rc</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
-                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">right_rc</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">left_rc</span>.<span class="number">0</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">right_rc</span>.<span class="number">0</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
             )
         })
     }
@@ -1416,6 +1497,9 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the previous left-right pair if the map contained the right</span>
     <span class="doccomment">/// value and `None` otherwise.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The input may be any borrowed form of the bimap&#39;s right type, but `Eq`</span>
+    <span class="doccomment">/// and `Hash` on the borrowed form *must* match those for the right type.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -1430,14 +1514,18 @@
     <span class="doccomment">/// assert_eq!(bimap.remove_by_right(&amp;2), Some((&#39;b&#39;, 2)));</span>
     <span class="doccomment">/// assert_eq!(bimap.remove_by_right(&amp;2), None);</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_by_right</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">L</span>, <span class="ident">R</span>)<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">right2left</span>.<span class="ident">remove</span>(<span class="ident">right</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">left_rc</span><span class="op">|</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_by_right</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">right</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">L</span>, <span class="ident">R</span>)<span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">R</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
+        <span class="ident">Q</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
+    {
+        <span class="self">self</span>.<span class="ident">right2left</span>.<span class="ident">remove</span>(<span class="ident">Wrapper</span>::<span class="ident">wrap</span>(<span class="ident">right</span>)).<span class="ident">map</span>(<span class="op">|</span><span class="ident">left_rc</span><span class="op">|</span> {
             <span class="comment">// unwrap is safe because we know left2right contains the key (it&#39;s a bimap)</span>
             <span class="kw">let</span> <span class="ident">right_rc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">left_rc</span>).<span class="ident">unwrap</span>();
             <span class="comment">// at this point we can safely unwrap because the other pointers are gone</span>
             (
-                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">left_rc</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
-                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">right_rc</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">left_rc</span>.<span class="number">0</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">right_rc</span>.<span class="number">0</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
             )
         })
     }
@@ -1564,7 +1652,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">f</span>;
         <span class="kw">let</span> <span class="ident">right2left</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">right2left</span>;
         <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">l</span>, <span class="ident">r</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">to_retain</span> <span class="op">=</span> <span class="ident">f</span>(<span class="ident">l</span>, <span class="ident">r</span>);
+            <span class="kw">let</span> <span class="ident">to_retain</span> <span class="op">=</span> <span class="ident">f</span>(<span class="kw-2">&amp;</span><span class="ident">l</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="number">0</span>);
             <span class="kw">if</span> <span class="op">!</span><span class="ident">to_retain</span> {
                 <span class="ident">right2left</span>.<span class="ident">remove</span>(<span class="ident">r</span>);
             }
@@ -1575,10 +1663,10 @@
     <span class="doccomment">/// Inserts the given left-right pair into the bimap without checking if the</span>
     <span class="doccomment">/// pair already exists.</span>
     <span class="kw">fn</span> <span class="ident">insert_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">left</span>: <span class="ident">L</span>, <span class="ident">right</span>: <span class="ident">R</span>) {
-        <span class="kw">let</span> <span class="ident">left_rc</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">left</span>);
-        <span class="kw">let</span> <span class="ident">right_rc</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">right</span>);
-        <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">insert</span>(<span class="ident">left_rc</span>.<span class="ident">clone</span>(), <span class="ident">right_rc</span>.<span class="ident">clone</span>());
-        <span class="self">self</span>.<span class="ident">right2left</span>.<span class="ident">insert</span>(<span class="ident">right_rc</span>, <span class="ident">left_rc</span>);
+        <span class="kw">let</span> <span class="ident">left</span> <span class="op">=</span> <span class="ident">Ref</span>(<span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">left</span>));
+        <span class="kw">let</span> <span class="ident">right</span> <span class="op">=</span> <span class="ident">Ref</span>(<span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">right</span>));
+        <span class="self">self</span>.<span class="ident">left2right</span>.<span class="ident">insert</span>(<span class="ident">left</span>.<span class="ident">clone</span>(), <span class="ident">right</span>.<span class="ident">clone</span>());
+        <span class="self">self</span>.<span class="ident">right2left</span>.<span class="ident">insert</span>(<span class="ident">right</span>, <span class="ident">left</span>);
     }
 }
 
@@ -1740,7 +1828,7 @@
 
 <span class="doccomment">/// An owning iterator over the left-right pairs in a `BiHashMap`.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntoIter</span><span class="op">&lt;</span><span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="ident">hash_map</span>::<span class="ident">IntoIter</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">inner</span>: <span class="ident">hash_map</span>::<span class="ident">IntoIter</span><span class="op">&lt;</span><span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> <span class="ident">ExactSizeIterator</span> <span class="kw">for</span> <span class="ident">IntoIter</span><span class="op">&lt;</span><span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> {}
@@ -1753,8 +1841,8 @@
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">l</span>, <span class="ident">r</span>)<span class="op">|</span> {
             (
-                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">l</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
-                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">r</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">l</span>.<span class="number">0</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">Rc</span>::<span class="ident">try_unwrap</span>(<span class="ident">r</span>.<span class="number">0</span>).<span class="ident">ok</span>().<span class="ident">unwrap</span>(),
             )
         })
     }
@@ -1770,7 +1858,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`iter`]: BiHashMap::iter</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="ident">hash_map</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">inner</span>: <span class="ident">hash_map</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> <span class="ident">ExactSizeIterator</span> <span class="kw">for</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> {}
@@ -1781,9 +1869,7 @@
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">L</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">R</span>);
 
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>
-            .<span class="ident">next</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">l</span>, <span class="ident">r</span>)<span class="op">|</span> (<span class="ident">Deref</span>::<span class="ident">deref</span>(<span class="ident">l</span>), <span class="ident">Deref</span>::<span class="ident">deref</span>(<span class="ident">r</span>)))
+        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">l</span>, <span class="ident">r</span>)<span class="op">|</span> (<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">l</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">r</span>.<span class="number">0</span>))
     }
 
     <span class="kw">fn</span> <span class="ident">size_hint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
@@ -1797,7 +1883,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`left_values`]: BiHashMap::left_values</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LeftValues</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="ident">hash_map</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">inner</span>: <span class="ident">hash_map</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>, <span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> <span class="ident">ExactSizeIterator</span> <span class="kw">for</span> <span class="ident">LeftValues</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> {}
@@ -1808,7 +1894,7 @@
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">L</span>;
 
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">l</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">Deref</span>::<span class="ident">deref</span>(<span class="ident">l</span>))
+        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">l</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">l</span>.<span class="number">0</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">size_hint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
@@ -1822,7 +1908,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`right_values`]: BiHashMap::right_values</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RightValues</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="ident">hash_map</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">inner</span>: <span class="ident">hash_map</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>, <span class="ident">Ref</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> <span class="ident">ExactSizeIterator</span> <span class="kw">for</span> <span class="ident">RightValues</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span> {}
@@ -1833,7 +1919,7 @@
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">R</span>;
 
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">r</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">Deref</span>::<span class="ident">deref</span>(<span class="ident">r</span>))
+        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">r</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">r</span>.<span class="number">0</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">size_hint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
