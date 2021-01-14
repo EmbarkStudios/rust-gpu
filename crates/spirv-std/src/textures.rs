@@ -35,11 +35,11 @@ impl Image2d {
             let mut result = Default::default();
             asm!(
                 "%typeSampledImage = OpTypeSampledImage typeof*{1}",
-                "%image = OpLoad typeof*{1} {1}",
-                "%sampler = OpLoad typeof*{2} {2}",
-                "%coord = OpLoad typeof*{3} {3}",
+                "%image = OpLoad _ {1}",
+                "%sampler = OpLoad _ {2}",
+                "%coord = OpLoad _ {3}",
                 "%sampledImage = OpSampledImage %typeSampledImage %image %sampler",
-                "%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord",
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
                 "OpStore {0} %result",
                 in(reg) &mut result,
                 in(reg) self,
@@ -79,11 +79,11 @@ impl Image2dArray {
             let mut result = Default::default();
             asm!(
                 "%typeSampledImage = OpTypeSampledImage typeof*{1}",
-                "%image = OpLoad typeof*{1} {1}",
-                "%sampler = OpLoad typeof*{2} {2}",
-                "%coord = OpLoad typeof*{3} {3}",
+                "%image = OpLoad _ {1}",
+                "%sampler = OpLoad _ {2}",
+                "%coord = OpLoad _ {3}",
                 "%sampledImage = OpSampledImage %typeSampledImage %image %sampler",
-                "%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord",
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
                 "OpStore {0} %result",
                 in(reg) &mut result,
                 in(reg) self,
@@ -113,9 +113,9 @@ impl SampledImage<Image2d> {
         unsafe {
             let mut result = Default::default();
             asm!(
-                "%sampledImage = OpLoad typeof*{1} {1}",
-                "%coord = OpLoad typeof*{2} {2}",
-                "%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord",
+                "%sampledImage = OpLoad _ {1}",
+                "%coord = OpLoad _ {2}",
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
                 "OpStore {0} %result",
                 in(reg) &mut result,
                 in(reg) self,
