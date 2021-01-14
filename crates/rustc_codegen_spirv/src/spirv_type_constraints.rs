@@ -126,6 +126,7 @@ impl TyListPat<'_> {
 }
 
 /// Instruction "signature", dynamic representation (see module-level docs).
+#[derive(Copy, Clone)]
 pub struct InstSig<'a> {
     /// Patterns for the complete list of types of the instruction's value operands.
     pub inputs: &'a TyListPat<'a>,
