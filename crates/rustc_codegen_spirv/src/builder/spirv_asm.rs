@@ -554,6 +554,9 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 }
                 .def(self.span(), self),
             ),
+            TyPat::SampledImage(&TyPat::T) => {
+                Some(SpirvType::SampledImage { image_type: var }.def(self.span(), self))
+            }
             _ => None,
         }
     }

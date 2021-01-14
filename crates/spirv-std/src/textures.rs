@@ -34,11 +34,10 @@ impl Image2d {
         unsafe {
             let mut result = Default::default();
             asm!(
-                "%typeSampledImage = OpTypeSampledImage typeof*{1}",
                 "%image = OpLoad _ {1}",
                 "%sampler = OpLoad _ {2}",
                 "%coord = OpLoad _ {3}",
-                "%sampledImage = OpSampledImage %typeSampledImage %image %sampler",
+                "%sampledImage = OpSampledImage _ %image %sampler",
                 "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
                 "OpStore {0} %result",
                 in(reg) &mut result,
@@ -78,11 +77,10 @@ impl Image2dArray {
         unsafe {
             let mut result = Default::default();
             asm!(
-                "%typeSampledImage = OpTypeSampledImage typeof*{1}",
                 "%image = OpLoad _ {1}",
                 "%sampler = OpLoad _ {2}",
                 "%coord = OpLoad _ {3}",
-                "%sampledImage = OpSampledImage %typeSampledImage %image %sampler",
+                "%sampledImage = OpSampledImage _ %image %sampler",
                 "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
                 "OpStore {0} %result",
                 in(reg) &mut result,
