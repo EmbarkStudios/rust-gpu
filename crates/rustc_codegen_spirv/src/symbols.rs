@@ -619,8 +619,8 @@ fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribu
     let multisampled = parse_lit(3, "multisampled")?;
     let sampled = parse_lit(4, "sampled")?;
     let image_format = match arg_values[5].kind {
-        LitKind::Str(dim, _) => match dim.with(|s| s.parse()) {
-            Ok(dim) => dim,
+        LitKind::Str(image_format, _) => match image_format.with(|s| s.parse()) {
+            Ok(image_format) => image_format,
             Err(()) => {
                 cx.tcx
                     .sess
@@ -637,8 +637,8 @@ fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribu
     };
     let access_qualifier = if args.len() == 7 {
         Some(match arg_values[6].kind {
-            LitKind::Str(dim, _) => match dim.with(|s| s.parse()) {
-                Ok(dim) => dim,
+            LitKind::Str(access_qualifier, _) => match access_qualifier.with(|s| s.parse()) {
+                Ok(access_qualifier) => access_qualifier,
                 Err(()) => {
                     cx.tcx
                         .sess
