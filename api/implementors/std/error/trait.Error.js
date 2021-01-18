@@ -1,11 +1,8 @@
 (function() {var implementors = {};
-implementors["aho_corasick"] = [{"text":"impl Error for Error","synthetic":false,"types":[]}];
 implementors["getrandom"] = [{"text":"impl Error for Error","synthetic":false,"types":[]}];
 implementors["proc_macro2"] = [{"text":"impl Error for LexError","synthetic":false,"types":[]}];
 implementors["rand"] = [{"text":"impl Error for BernoulliError","synthetic":false,"types":[]},{"text":"impl Error for WeightedError","synthetic":false,"types":[]},{"text":"impl Error for ReadError","synthetic":false,"types":[]}];
 implementors["rand_core"] = [{"text":"impl Error for Error","synthetic":false,"types":[]}];
-implementors["regex"] = [{"text":"impl Error for Error","synthetic":false,"types":[]}];
-implementors["regex_syntax"] = [{"text":"impl Error for Error","synthetic":false,"types":[]},{"text":"impl Error for Error","synthetic":false,"types":[]},{"text":"impl Error for Error","synthetic":false,"types":[]},{"text":"impl Error for CaseFoldError","synthetic":false,"types":[]},{"text":"impl Error for UnicodeWordError","synthetic":false,"types":[]}];
 implementors["rspirv"] = [{"text":"impl Error for Error","synthetic":false,"types":[]},{"text":"impl Error for State","synthetic":false,"types":[]},{"text":"impl Error for Error","synthetic":false,"types":[]}];
 implementors["serde"] = [{"text":"impl Error for Error","synthetic":false,"types":[]}];
 implementors["serde_json"] = [{"text":"impl Error for Error","synthetic":false,"types":[]}];

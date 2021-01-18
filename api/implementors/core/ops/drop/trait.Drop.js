@@ -1,8 +1,6 @@
 (function() {var implementors = {};
 implementors["hashbrown"] = [{"text":"impl&lt;T&gt; Drop for RawTable&lt;T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;T&gt; Drop for RawIntoIter&lt;T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;T&gt; Drop for RawDrain&lt;'_, T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a, K, V, F&gt; Drop for DrainFilter&lt;'a, K, V, F&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;F: FnMut(&amp;K, &amp;mut V) -&gt; bool,&nbsp;</span>","synthetic":false,"types":[]},{"text":"impl&lt;'a, K, F&gt; Drop for DrainFilter&lt;'a, K, F&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;F: FnMut(&amp;K) -&gt; bool,&nbsp;</span>","synthetic":false,"types":[]}];
-implementors["regex_syntax"] = [{"text":"impl Drop for Ast","synthetic":false,"types":[]},{"text":"impl Drop for ClassSet","synthetic":false,"types":[]},{"text":"impl Drop for Hir","synthetic":false,"types":[]}];
 implementors["syn"] = [{"text":"impl&lt;'a&gt; Drop for ParseBuffer&lt;'a&gt;","synthetic":false,"types":[]}];
 implementors["tar"] = [{"text":"impl&lt;W:&nbsp;Write&gt; Drop for Builder&lt;W&gt;","synthetic":false,"types":[]}];
 implementors["tempfile"] = [{"text":"impl Drop for TempDir","synthetic":false,"types":[]},{"text":"impl Drop for TempPath","synthetic":false,"types":[]}];
-implementors["thread_local"] = [{"text":"impl&lt;T:&nbsp;Send&gt; Drop for ThreadLocal&lt;T&gt;","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

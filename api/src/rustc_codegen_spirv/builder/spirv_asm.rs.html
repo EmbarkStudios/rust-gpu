@@ -1146,6 +1146,24 @@
 <span id="1143">1143</span>
 <span id="1144">1144</span>
 <span id="1145">1145</span>
+<span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
+<span id="1149">1149</span>
+<span id="1150">1150</span>
+<span id="1151">1151</span>
+<span id="1152">1152</span>
+<span id="1153">1153</span>
+<span id="1154">1154</span>
+<span id="1155">1155</span>
+<span id="1156">1156</span>
+<span id="1157">1157</span>
+<span id="1158">1158</span>
+<span id="1159">1159</span>
+<span id="1160">1160</span>
+<span id="1161">1161</span>
+<span id="1162">1162</span>
+<span id="1163">1163</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
@@ -1154,8 +1172,8 @@
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">grammar</span>::{<span class="ident">LogicalOperand</span>, <span class="ident">OperandKind</span>, <span class="ident">OperandQuantifier</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{
-    <span class="ident">FPFastMathMode</span>, <span class="ident">FunctionControl</span>, <span class="ident">ImageOperands</span>, <span class="ident">KernelProfilingInfo</span>, <span class="ident">LoopControl</span>, <span class="ident">MemoryAccess</span>,
-    <span class="ident">MemorySemantics</span>, <span class="ident">Op</span>, <span class="ident">RayFlags</span>, <span class="ident">SelectionControl</span>, <span class="ident">Word</span>,
+    <span class="ident">FPFastMathMode</span>, <span class="ident">FragmentShadingRate</span>, <span class="ident">FunctionControl</span>, <span class="ident">ImageOperands</span>, <span class="ident">KernelProfilingInfo</span>,
+    <span class="ident">LoopControl</span>, <span class="ident">MemoryAccess</span>, <span class="ident">MemorySemantics</span>, <span class="ident">Op</span>, <span class="ident">RayFlags</span>, <span class="ident">SelectionControl</span>, <span class="ident">Word</span>,
 };
 <span class="kw">use</span> <span class="ident">rustc_ast</span>::<span class="ident">ast</span>::{<span class="ident">InlineAsmOptions</span>, <span class="ident">InlineAsmTemplatePiece</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">place</span>::<span class="ident">PlaceRef</span>;
@@ -2000,6 +2018,12 @@
                 <span class="prelude-val">Some</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">push</span>(<span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">RayFlags</span>(<span class="ident">x</span>)),
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Unknown RayFlags {}&quot;</span>, <span class="ident">word</span>)),
             },
+            (<span class="ident">OperandKind</span>::<span class="ident">FragmentShadingRate</span>, <span class="prelude-val">Some</span>(<span class="ident">word</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">match</span> <span class="ident">parse_bitflags_operand</span>(<span class="ident">FRAGMENT_SHADING_RATE</span>, <span class="ident">word</span>) {
+                    <span class="prelude-val">Some</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">push</span>(<span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">FragmentShadingRate</span>(<span class="ident">x</span>)),
+                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Unknown FragmentShadingRate {}&quot;</span>, <span class="ident">word</span>)),
+                }
+            }
 
             (<span class="ident">OperandKind</span>::<span class="ident">SourceLanguage</span>, <span class="prelude-val">Some</span>(<span class="ident">word</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">word</span>.<span class="ident">parse</span>() {
                 <span class="prelude-val">Ok</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">push</span>(<span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">SourceLanguage</span>(<span class="ident">x</span>)),
@@ -2274,6 +2298,18 @@
     (<span class="string">&quot;CullNoOpaqueKHR&quot;</span>, <span class="ident">RayFlags</span>::<span class="ident">CULL_NO_OPAQUE_KHR</span>),
     (<span class="string">&quot;SkipTrianglesKHR&quot;</span>, <span class="ident">RayFlags</span>::<span class="ident">SKIP_TRIANGLES_KHR</span>),
     (<span class="string">&quot;SkipAabBsKHR&quot;</span>, <span class="ident">RayFlags</span>::<span class="ident">SKIP_AAB_BS_KHR</span>),
+];
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FRAGMENT_SHADING_RATE</span>: <span class="kw-2">&amp;</span>[(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">FragmentShadingRate</span>)] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+    (<span class="string">&quot;VERTICAL2_PIXELS&quot;</span>, <span class="ident">FragmentShadingRate</span>::<span class="ident">VERTICAL2_PIXELS</span>),
+    (<span class="string">&quot;VERTICAL4_PIXELS&quot;</span>, <span class="ident">FragmentShadingRate</span>::<span class="ident">VERTICAL4_PIXELS</span>),
+    (
+        <span class="string">&quot;HORIZONTAL2_PIXELS&quot;</span>,
+        <span class="ident">FragmentShadingRate</span>::<span class="ident">HORIZONTAL2_PIXELS</span>,
+    ),
+    (
+        <span class="string">&quot;HORIZONTAL4_PIXELS&quot;</span>,
+        <span class="ident">FragmentShadingRate</span>::<span class="ident">HORIZONTAL4_PIXELS</span>,
+    ),
 ];
 
 <span class="kw">fn</span> <span class="ident">parse_bitflags_operand</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">BitOr</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(
