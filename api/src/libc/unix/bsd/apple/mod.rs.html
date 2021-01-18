@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.81/src/unix/bsd/apple/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.82/src/unix/bsd/apple/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../../libc/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../../settings.html"><img src="../../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -3730,6 +3730,24 @@
 <span id="3727">3727</span>
 <span id="3728">3728</span>
 <span id="3729">3729</span>
+<span id="3730">3730</span>
+<span id="3731">3731</span>
+<span id="3732">3732</span>
+<span id="3733">3733</span>
+<span id="3734">3734</span>
+<span id="3735">3735</span>
+<span id="3736">3736</span>
+<span id="3737">3737</span>
+<span id="3738">3738</span>
+<span id="3739">3739</span>
+<span id="3740">3740</span>
+<span id="3741">3741</span>
+<span id="3742">3742</span>
+<span id="3743">3743</span>
+<span id="3744">3744</span>
+<span id="3745">3745</span>
+<span id="3746">3746</span>
+<span id="3747">3747</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Apple (ios/darwin)-specific definitions</span>
 <span class="doccomment">//!</span>
@@ -4422,6 +4440,10 @@
 
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">si_uid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> ::<span class="ident">uid_t</span> {
         <span class="self">self</span>.<span class="ident">si_uid</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">si_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> ::<span class="ident">c_int</span> {
+        <span class="self">self</span>.<span class="ident">si_status</span>
     }
 }
 
@@ -5636,6 +5658,9 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PTHREAD_PROCESS_SHARED</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PTHREAD_CREATE_JOINABLE</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PTHREAD_CREATE_DETACHED</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PTHREAD_STACK_MIN</span>: ::<span class="ident">size_t</span> <span class="op">=</span> <span class="number">16384</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PTHREAD_STACK_MIN</span>: ::<span class="ident">size_t</span> <span class="op">=</span> <span class="number">8192</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RLIMIT_CPU</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0</span>;
@@ -6572,7 +6597,9 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HW_TB_FREQ</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">23</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HW_MEMSIZE</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">24</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HW_AVAILCPU</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">25</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HW_MAXID</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">26</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HW_TARGET</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">26</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HW_PRODUCT</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">27</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HW_MAXID</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">28</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">USER_CS_PATH</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">USER_BC_BASE_MAX</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">2</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">USER_BC_DIM_MAX</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">3</span>;
@@ -6858,6 +6885,9 @@
 <span class="comment">// sys/shm.h</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SHM_RDONLY</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0x1000</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SHM_RND</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0x2000</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SHMLBA</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">16</span> <span class="op">*</span> <span class="number">1024</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SHMLBA</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">4096</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SHM_R</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="ident">IPC_R</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SHM_W</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="ident">IPC_W</span>;
@@ -7002,7 +7032,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">setgrent</span>();
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
     <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.49&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Deprecated in MacOSX 10.5&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;daemon$1050&quot;</span>]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>), <span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;daemon$1050&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">daemon</span>(<span class="ident">nochdir</span>: ::<span class="ident">c_int</span>, <span class="ident">noclose</span>: ::<span class="ident">c_int</span>) <span class="op">-</span><span class="op">&gt;</span> ::<span class="ident">c_int</span>;
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
     <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.49&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Deprecated in MacOSX 10.10&quot;</span>)]</span>
@@ -7170,9 +7200,15 @@
     ) <span class="op">-</span><span class="op">&gt;</span> ::<span class="ident">c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">__error</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">backtrace</span>(<span class="ident">buf</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">c_void</span>, <span class="ident">sz</span>: ::<span class="ident">c_int</span>) <span class="op">-</span><span class="op">&gt;</span> ::<span class="ident">c_int</span>;
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;statfs$INODE64&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(
+        <span class="ident">all</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>)),
+        <span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;statfs$INODE64&quot;</span>
+    )]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">statfs</span>(<span class="ident">path</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">c_char</span>, <span class="ident">buf</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">statfs</span>) <span class="op">-</span><span class="op">&gt;</span> ::<span class="ident">c_int</span>;
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;fstatfs$INODE64&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(
+        <span class="ident">all</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>)),
+        <span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;fstatfs$INODE64&quot;</span>
+    )]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fstatfs</span>(<span class="ident">fd</span>: ::<span class="ident">c_int</span>, <span class="ident">buf</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">statfs</span>) <span class="op">-</span><span class="op">&gt;</span> ::<span class="ident">c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kevent</span>(
         <span class="ident">kq</span>: ::<span class="ident">c_int</span>,
