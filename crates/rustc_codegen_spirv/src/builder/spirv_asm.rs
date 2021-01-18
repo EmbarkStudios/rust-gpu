@@ -5,8 +5,8 @@ use super::Builder;
 use rspirv::dr;
 use rspirv::grammar::{LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{
-    FPFastMathMode, FunctionControl, ImageOperands, KernelProfilingInfo, LoopControl, MemoryAccess,
-    MemorySemantics, Op, RayFlags, SelectionControl, Word,
+    FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
+    LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, Word,
 };
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -851,6 +851,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Some(x) => inst.operands.push(dr::Operand::RayFlags(x)),
                 None => self.err(&format!("Unknown RayFlags {}", word)),
             },
+            (OperandKind::FragmentShadingRate, Some(word)) => {
+                match parse_bitflags_operand(FRAGMENT_SHADING_RATE, word) {
+                    Some(x) => inst.operands.push(dr::Operand::FragmentShadingRate(x)),
+                    None => self.err(&format!("Unknown FragmentShadingRate {}", word)),
+                }
+            }
 
             (OperandKind::SourceLanguage, Some(word)) => match word.parse() {
                 Ok(x) => inst.operands.push(dr::Operand::SourceLanguage(x)),
@@ -1125,6 +1131,18 @@ pub const RAY_FLAGS: &[(&str, RayFlags)] = &[
     ("CullNoOpaqueKHR", RayFlags::CULL_NO_OPAQUE_KHR),
     ("SkipTrianglesKHR", RayFlags::SKIP_TRIANGLES_KHR),
     ("SkipAabBsKHR", RayFlags::SKIP_AAB_BS_KHR),
+];
+pub const FRAGMENT_SHADING_RATE: &[(&str, FragmentShadingRate)] = &[
+    ("VERTICAL2_PIXELS", FragmentShadingRate::VERTICAL2_PIXELS),
+    ("VERTICAL4_PIXELS", FragmentShadingRate::VERTICAL4_PIXELS),
+    (
+        "HORIZONTAL2_PIXELS",
+        FragmentShadingRate::HORIZONTAL2_PIXELS,
+    ),
+    (
+        "HORIZONTAL4_PIXELS",
+        FragmentShadingRate::HORIZONTAL4_PIXELS,
+    ),
 ];
 
 fn parse_bitflags_operand<T: std::ops::BitOr<Output = T> + Copy>(
