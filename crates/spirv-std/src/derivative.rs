@@ -61,12 +61,14 @@ macro_rules! deriv_fn {
             panic!(concat!(stringify!($name), " is not supported on the CPU"));
             #[cfg(target_arch = "spirv")]
             unsafe {
-                let o;
+                let mut o = Default::default();
                 deriv_caps!($needs_caps);
                 asm!(
-                    concat!("{1} = ", stringify!($inst), " typeof{0} {0}"),
-                    in(reg) self,
-                    out(reg) o,
+                    "%input = OpLoad typeof*{0} {0}",
+                    concat!("%result = ", stringify!($inst), " typeof*{0} %input"),
+                    "OpStore {1} %result",
+                    in(reg) &self,
+                    in(reg) &mut o,
                 );
                 o
             }
@@ -92,7 +94,7 @@ macro_rules! deriv_impl {
 
 // "must be a scalar or vector of floating-point type. The component width must be 32 bits."
 deriv_impl!(f32);
-// TODO: Fix rustc to support these
-// deriv_impl!(glam::Vec2);
-// deriv_impl!(glam::Vec3);
-// deriv_impl!(glam::Vec4);
+deriv_impl!(glam::Vec2);
+deriv_impl!(glam::Vec3);
+deriv_impl!(glam::Vec3A);
+deriv_impl!(glam::Vec4);
