@@ -64,8 +64,8 @@ macro_rules! deriv_fn {
                 let mut o = Default::default();
                 deriv_caps!($needs_caps);
                 asm!(
-                    "%input = OpLoad typeof*{0} {0}",
-                    concat!("%result = ", stringify!($inst), " typeof*{0} %input"),
+                    "%input = OpLoad _ {0}",
+                    concat!("%result = ", stringify!($inst), " _ %input"),
                     "OpStore {1} %result",
                     in(reg) &self,
                     in(reg) &mut o,

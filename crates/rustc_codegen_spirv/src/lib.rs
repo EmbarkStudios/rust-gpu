@@ -88,6 +88,7 @@ mod decorations;
 mod link;
 mod linker;
 mod spirv_type;
+mod spirv_type_constraints;
 mod symbols;
 
 use builder::Builder;
