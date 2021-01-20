@@ -549,6 +549,16 @@
 <span id="546">546</span>
 <span id="547">547</span>
 <span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -558,12 +568,12 @@
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">place</span>::<span class="ident">PlaceRef</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">ConstMethods</span>, <span class="ident">MiscMethods</span>, <span class="ident">StaticMethods</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">mir</span>::<span class="ident">interpret</span>::{<span class="ident">read_target_uint</span>, <span class="ident">Allocation</span>, <span class="ident">GlobalAlloc</span>, <span class="ident">Pointer</span>};
+<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">mir</span>::<span class="ident">interpret</span>::{<span class="ident">AllocId</span>, <span class="ident">Allocation</span>, <span class="ident">GlobalAlloc</span>, <span class="ident">Pointer</span>, <span class="ident">ScalarMaybeUninit</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::<span class="ident">TyAndLayout</span>;
 <span class="kw">use</span> <span class="ident">rustc_mir</span>::<span class="ident">interpret</span>::<span class="ident">Scalar</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">symbol</span>::<span class="ident">Symbol</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
-<span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{<span class="self">self</span>, <span class="ident">AddressSpace</span>, <span class="ident">HasDataLayout</span>, <span class="ident">LayoutOf</span>, <span class="ident">Primitive</span>, <span class="ident">Size</span>};
+<span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{<span class="self">self</span>, <span class="ident">AddressSpace</span>, <span class="ident">HasDataLayout</span>, <span class="ident">Integer</span>, <span class="ident">LayoutOf</span>, <span class="ident">Primitive</span>, <span class="ident">Size</span>};
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
@@ -767,7 +777,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">match</span> <span class="ident">scalar</span> {
             <span class="ident">Scalar</span>::<span class="ident">Int</span>(<span class="ident">int</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">int</span>.<span class="ident">size</span>(), <span class="ident">layout</span>.<span class="ident">value</span>.<span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tcx</span>));
+                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">int</span>.<span class="ident">size</span>(), <span class="ident">layout</span>.<span class="ident">value</span>.<span class="ident">size</span>(<span class="self">self</span>));
                 <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">int</span>.<span class="ident">to_bits</span>(<span class="ident">int</span>.<span class="ident">size</span>()).<span class="ident">unwrap</span>();
 
                 <span class="kw">match</span> <span class="ident">layout</span>.<span class="ident">value</span> {
@@ -803,7 +813,19 @@
                         <span class="ident">res</span>
                     }
                     <span class="ident">Primitive</span>::<span class="ident">Pointer</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">bug</span><span class="macro">!</span>(<span class="string">&quot;scalar_to_backend Primitive::Ptr is an invalid state&quot;</span>)
+                        <span class="kw">if</span> <span class="ident">data</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                            <span class="self">self</span>.<span class="ident">constant_null</span>(<span class="ident">ty</span>)
+                        } <span class="kw">else</span> {
+                            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">ty</span>);
+                            <span class="comment">// HACK(eddyb) we don&#39;t know whether this constant originated</span>
+                            <span class="comment">// in a system crate, so it&#39;s better to always zombie.</span>
+                            <span class="self">self</span>.<span class="ident">zombie_even_in_user_code</span>(
+                                <span class="ident">result</span>.<span class="ident">def_cx</span>(<span class="self">self</span>),
+                                <span class="ident">DUMMY_SP</span>,
+                                <span class="string">&quot;pointer has non-null integer address&quot;</span>,
+                            );
+                            <span class="ident">result</span>
+                        }
                     }
                 }
             }
@@ -899,6 +921,17 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+    <span class="comment">// This function comes from https://doc.rust-lang.org/nightly/nightly-rustc/src/rustc_middle/ty/layout.rs.html,</span>
+    <span class="comment">// and is a lambda in the `layout_raw_uncached` function in Version 1.50.0-nightly (eb4fc71dc 2020-12-17)</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">primitive_to_scalar</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Primitive</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">abi</span>::<span class="ident">Scalar</span> {
+        <span class="kw">let</span> <span class="ident">bits</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">size</span>(<span class="self">self</span>.<span class="ident">data_layout</span>()).<span class="ident">bits</span>();
+        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">bits</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">128</span>);
+        <span class="ident">abi</span>::<span class="ident">Scalar</span> {
+            <span class="ident">value</span>,
+            <span class="ident">valid_range</span>: <span class="number">0</span>..<span class="op">=</span>(<span class="op">!</span><span class="number">0</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">128</span> <span class="op">-</span> <span class="ident">bits</span>)),
+        }
+    }
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_const_alloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">alloc</span>: <span class="kw-2">&amp;</span><span class="ident">Allocation</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="comment">// println!(</span>
         <span class="comment">//     &quot;Creating const alloc of type {} with {} bytes&quot;,</span>
@@ -926,23 +959,59 @@
                 .<span class="ident">tcx</span>
                 .<span class="ident">sess</span>
                 .<span class="ident">fatal</span>(<span class="string">&quot;Cannot create const alloc of type void&quot;</span>),
-            <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">constant_bool</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>.<span class="ident">read_alloc_val</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>)
-            }
-            <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_alloc_val</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, (<span class="ident">width</span> <span class="op">/</span> <span class="number">8</span>) <span class="kw">as</span> <span class="ident">usize</span>);
-                <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">ty</span>, <span class="ident">v</span> <span class="kw">as</span> <span class="ident">u64</span>)
-            }
-            <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_alloc_val</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, (<span class="ident">width</span> <span class="op">/</span> <span class="number">8</span>) <span class="kw">as</span> <span class="ident">usize</span>);
-                <span class="kw">match</span> <span class="ident">width</span> {
-                    <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_f32</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">f32</span>::<span class="ident">from_bits</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>)),
-                    <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_f64</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u64</span>)),
-                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
-                        .<span class="ident">tcx</span>
-                        .<span class="ident">sess</span>
-                        .<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;invalid float width {}&quot;</span>, <span class="ident">other</span>)),
-                }
+            <span class="ident">SpirvType</span>::<span class="ident">Bool</span>
+            <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(..)
+            <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">ty_concrete</span>.<span class="ident">sizeof</span>(<span class="self">self</span>).<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">primitive</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ty_concrete</span> {
+                    <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Primitive</span>::<span class="ident">Int</span>(<span class="ident">Integer</span>::<span class="ident">fit_unsigned</span>(<span class="number">0</span>), <span class="bool-val">false</span>),
+                    <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">int_size</span>, <span class="ident">int_signedness</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">integer</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">int_size</span> {
+                            <span class="number">8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Integer</span>::<span class="ident">I8</span>,
+                            <span class="number">16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Integer</span>::<span class="ident">I16</span>,
+                            <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Integer</span>::<span class="ident">I32</span>,
+                            <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Integer</span>::<span class="ident">I64</span>,
+                            <span class="number">128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Integer</span>::<span class="ident">I128</span>,
+                            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="self">self</span>.<span class="ident">tcx</span>
+                                    .<span class="ident">sess</span>
+                                    .<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;invalid size for integer: {}&quot;</span>, <span class="ident">other</span>));
+                            }
+                        };
+                        <span class="ident">Primitive</span>::<span class="ident">Int</span>(<span class="ident">integer</span>, <span class="ident">int_signedness</span>)
+                    }
+                    <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="ident">float_size</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">float_size</span> {
+                        <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Primitive</span>::<span class="ident">F32</span>,
+                        <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Primitive</span>::<span class="ident">F64</span>,
+                        <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="self">self</span>.<span class="ident">tcx</span>
+                                .<span class="ident">sess</span>
+                                .<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;invalid size for float: {}&quot;</span>, <span class="ident">other</span>));
+                        }
+                    },
+                    <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Primitive</span>::<span class="ident">Pointer</span>,
+                    <span class="ident">unsupported_spirv_type</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug</span><span class="macro">!</span>(
+                        <span class="string">&quot;invalid spirv type internal to create_alloc_const2: {:?}&quot;</span>,
+                        <span class="ident">unsupported_spirv_type</span>
+                    ),
+                };
+                <span class="comment">// alloc_id is not needed by read_scalar, so we just use 0. If the context</span>
+                <span class="comment">// refers to a pointer, read_scalar will find the the actual alloc_id. It</span>
+                <span class="comment">// only uses the input alloc_id in the case that the scalar is uninitilized</span>
+                <span class="comment">// as part of the error output</span>
+                <span class="comment">// tldr, the pointer here is only needed for the offset</span>
+                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">alloc</span>
+                    .<span class="ident">read_scalar</span>(<span class="self">self</span>, <span class="ident">Pointer</span>::<span class="ident">new</span>(<span class="ident">AllocId</span>(<span class="number">0</span>), <span class="kw-2">*</span><span class="ident">offset</span>), <span class="ident">size</span>)
+                    .<span class="ident">unwrap</span>()
+                {
+                    <span class="ident">ScalarMaybeUninit</span>::<span class="ident">Scalar</span>(<span class="ident">scalar</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">scalar_to_backend</span>(<span class="ident">scalar</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">primitive_to_scalar</span>(<span class="ident">primitive</span>), <span class="ident">ty</span>)
+                    }
+                    <span class="ident">ScalarMaybeUninit</span>::<span class="ident">Uninit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">ty</span>),
+                };
+                <span class="kw-2">*</span><span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">size</span>;
+                <span class="ident">value</span>
             }
             <span class="ident">SpirvType</span>::<span class="ident">Adt</span> {
                 <span class="ident">size</span>,
@@ -1033,17 +1102,6 @@
                 );
                 <span class="ident">result</span>
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_alloc_ptr</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>);
-                <span class="self">self</span>.<span class="ident">scalar_to_backend</span>(
-                    <span class="ident">ptr</span>.<span class="ident">into</span>(),
-                    <span class="kw-2">&amp;</span><span class="ident">abi</span>::<span class="ident">Scalar</span> {
-                        <span class="ident">value</span>: <span class="ident">Primitive</span>::<span class="ident">Pointer</span>,
-                        <span class="ident">valid_range</span>: <span class="number">0</span>..<span class="op">=</span><span class="op">!</span><span class="number">0</span>,
-                    },
-                    <span class="ident">ty</span>,
-                )
-            }
             <span class="ident">SpirvType</span>::<span class="ident">Function</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                 .<span class="ident">tcx</span>
                 .<span class="ident">sess</span>
@@ -1058,44 +1116,6 @@
                 .<span class="ident">sess</span>
                 .<span class="ident">fatal</span>(<span class="string">&quot;Cannot create a constant sampled image value&quot;</span>),
         }
-    }
-
-    <span class="comment">// Advances offset by len</span>
-    <span class="kw">fn</span> <span class="ident">read_alloc_val</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">alloc</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Allocation</span>, <span class="ident">offset</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Size</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u128</span> {
-        <span class="kw">let</span> <span class="ident">off</span> <span class="op">=</span> <span class="ident">offset</span>.<span class="ident">bytes_usize</span>();
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">alloc</span>.<span class="ident">inspect_with_uninit_and_ptr_outside_interpreter</span>(<span class="ident">off</span>..(<span class="ident">off</span> <span class="op">+</span> <span class="ident">len</span>));
-        <span class="comment">// check relocations (pointer values)</span>
-        <span class="macro">assert</span><span class="macro">!</span>({
-            <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">off</span>.<span class="ident">saturating_sub</span>(<span class="self">self</span>.<span class="ident">data_layout</span>().<span class="ident">pointer_size</span>.<span class="ident">bytes_usize</span>() <span class="op">-</span> <span class="number">1</span>);
-            <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">off</span> <span class="op">+</span> <span class="ident">len</span>;
-            <span class="ident">alloc</span>
-                .<span class="ident">relocations</span>()
-                .<span class="ident">range</span>(<span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">start</span>)..<span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">end</span>))
-                .<span class="ident">is_empty</span>()
-        });
-        <span class="comment">// check init</span>
-        <span class="ident">alloc</span>
-            .<span class="ident">init_mask</span>()
-            .<span class="ident">is_range_initialized</span>(<span class="kw-2">*</span><span class="ident">offset</span>, <span class="kw-2">*</span><span class="ident">offset</span> <span class="op">+</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">len</span>))
-            .<span class="ident">unwrap</span>();
-        <span class="kw-2">*</span><span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">len</span>);
-        <span class="ident">read_target_uint</span>(<span class="self">self</span>.<span class="ident">data_layout</span>().<span class="ident">endian</span>, <span class="ident">bytes</span>).<span class="ident">unwrap</span>()
-    }
-
-    <span class="comment">// Advances offset by ptr size</span>
-    <span class="kw">fn</span> <span class="ident">read_alloc_ptr</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">alloc</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Allocation</span>, <span class="ident">offset</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Size</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span> {
-        <span class="kw">let</span> <span class="ident">off</span> <span class="op">=</span> <span class="ident">offset</span>.<span class="ident">bytes_usize</span>();
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data_layout</span>().<span class="ident">pointer_size</span>.<span class="ident">bytes_usize</span>();
-        <span class="comment">// check init</span>
-        <span class="ident">alloc</span>
-            .<span class="ident">init_mask</span>()
-            .<span class="ident">is_range_initialized</span>(<span class="kw-2">*</span><span class="ident">offset</span>, <span class="kw-2">*</span><span class="ident">offset</span> <span class="op">+</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">len</span>))
-            .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">alloc</span>.<span class="ident">inspect_with_uninit_and_ptr_outside_interpreter</span>(<span class="ident">off</span>..(<span class="ident">off</span> <span class="op">+</span> <span class="ident">len</span>));
-        <span class="kw">let</span> <span class="ident">inner_offset</span> <span class="op">=</span> <span class="ident">read_target_uint</span>(<span class="self">self</span>.<span class="ident">data_layout</span>().<span class="ident">endian</span>, <span class="ident">bytes</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="kw-2">&amp;</span>((), <span class="ident">alloc_id</span>) <span class="op">=</span> <span class="ident">alloc</span>.<span class="ident">relocations</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">off</span>)).<span class="ident">unwrap</span>();
-        <span class="kw-2">*</span><span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">len</span>);
-        <span class="ident">Pointer</span>::<span class="ident">new_with_tag</span>(<span class="ident">alloc_id</span>, <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="ident">inner_offset</span>), ())
     }
 }
 </pre></div>
