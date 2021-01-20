@@ -49,7 +49,7 @@ spirv-std = { path = "../../crates/spirv-std" }
 "#;
 
 static SRC_PREFIX: &str = r#"#![no_std]
-#![feature(register_attr, asm)]
+#![feature(register_attr, asm, ptr_internals)]
 #![register_attr(spirv)]
 #![allow(unused_imports)]
 use spirv_std::*;

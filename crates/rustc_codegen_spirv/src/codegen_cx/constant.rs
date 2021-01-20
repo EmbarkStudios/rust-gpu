@@ -6,12 +6,12 @@ use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
-use rustc_middle::mir::interpret::{read_target_uint, Allocation, GlobalAlloc, Pointer};
+use rustc_middle::mir::interpret::{AllocId, Allocation, GlobalAlloc, Pointer, ScalarMaybeUninit};
 use rustc_middle::ty::layout::TyAndLayout;
 use rustc_mir::interpret::Scalar;
 use rustc_span::symbol::Symbol;
 use rustc_span::{Span, DUMMY_SP};
-use rustc_target::abi::{self, AddressSpace, HasDataLayout, LayoutOf, Primitive, Size};
+use rustc_target::abi::{self, AddressSpace, HasDataLayout, Integer, LayoutOf, Primitive, Size};
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn constant_u8(&self, span: Span, val: u8) -> SpirvValue {
@@ -215,7 +215,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     ) -> Self::Value {
         match scalar {
             Scalar::Int(int) => {
-                assert_eq!(int.size(), layout.value.size(&self.tcx));
+                assert_eq!(int.size(), layout.value.size(self));
                 let data = int.to_bits(int.size()).unwrap();
 
                 match layout.value {
@@ -251,7 +251,19 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         res
                     }
                     Primitive::Pointer => {
-                        bug!("scalar_to_backend Primitive::Ptr is an invalid state")
+                        if data == 0 {
+                            self.constant_null(ty)
+                        } else {
+                            let result = self.undef(ty);
+                            // HACK(eddyb) we don't know whether this constant originated
+                            // in a system crate, so it's better to always zombie.
+                            self.zombie_even_in_user_code(
+                                result.def_cx(self),
+                                DUMMY_SP,
+                                "pointer has non-null integer address",
+                            );
+                            result
+                        }
                     }
                 }
             }
@@ -347,6 +359,17 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
 }
 
 impl<'tcx> CodegenCx<'tcx> {
+    // This function comes from https://doc.rust-lang.org/nightly/nightly-rustc/src/rustc_middle/ty/layout.rs.html,
+    // and is a lambda in the `layout_raw_uncached` function in Version 1.50.0-nightly (eb4fc71dc 2020-12-17)
+    pub fn primitive_to_scalar(&self, value: Primitive) -> abi::Scalar {
+        let bits = value.size(self.data_layout()).bits();
+        assert!(bits <= 128);
+        abi::Scalar {
+            value,
+            valid_range: 0..=(!0 >> (128 - bits)),
+        }
+    }
+
     pub fn create_const_alloc(&self, alloc: &Allocation, ty: Word) -> SpirvValue {
         // println!(
         //     "Creating const alloc of type {} with {} bytes",
@@ -374,23 +397,59 @@ impl<'tcx> CodegenCx<'tcx> {
                 .tcx
                 .sess
                 .fatal("Cannot create const alloc of type void"),
-            SpirvType::Bool => {
-                self.constant_bool(DUMMY_SP, self.read_alloc_val(alloc, offset, 1) != 0)
-            }
-            SpirvType::Integer(width, _) => {
-                let v = self.read_alloc_val(alloc, offset, (width / 8) as usize);
-                self.constant_int(ty, v as u64)
-            }
-            SpirvType::Float(width) => {
-                let v = self.read_alloc_val(alloc, offset, (width / 8) as usize);
-                match width {
-                    32 => self.constant_f32(DUMMY_SP, f32::from_bits(v as u32)),
-                    64 => self.constant_f64(DUMMY_SP, f64::from_bits(v as u64)),
-                    other => self
-                        .tcx
-                        .sess
-                        .fatal(&format!("invalid float width {}", other)),
-                }
+            SpirvType::Bool
+            | SpirvType::Integer(..)
+            | SpirvType::Float(_)
+            | SpirvType::Pointer { .. } => {
+                let size = ty_concrete.sizeof(self).unwrap();
+                let primitive = match ty_concrete {
+                    SpirvType::Bool => Primitive::Int(Integer::fit_unsigned(0), false),
+                    SpirvType::Integer(int_size, int_signedness) => {
+                        let integer = match int_size {
+                            8 => Integer::I8,
+                            16 => Integer::I16,
+                            32 => Integer::I32,
+                            64 => Integer::I64,
+                            128 => Integer::I128,
+                            other => {
+                                self.tcx
+                                    .sess
+                                    .fatal(&format!("invalid size for integer: {}", other));
+                            }
+                        };
+                        Primitive::Int(integer, int_signedness)
+                    }
+                    SpirvType::Float(float_size) => match float_size {
+                        32 => Primitive::F32,
+                        64 => Primitive::F64,
+                        other => {
+                            self.tcx
+                                .sess
+                                .fatal(&format!("invalid size for float: {}", other));
+                        }
+                    },
+                    SpirvType::Pointer { .. } => Primitive::Pointer,
+                    unsupported_spirv_type => bug!(
+                        "invalid spirv type internal to create_alloc_const2: {:?}",
+                        unsupported_spirv_type
+                    ),
+                };
+                // alloc_id is not needed by read_scalar, so we just use 0. If the context
+                // refers to a pointer, read_scalar will find the the actual alloc_id. It
+                // only uses the input alloc_id in the case that the scalar is uninitilized
+                // as part of the error output
+                // tldr, the pointer here is only needed for the offset
+                let value = match alloc
+                    .read_scalar(self, Pointer::new(AllocId(0), *offset), size)
+                    .unwrap()
+                {
+                    ScalarMaybeUninit::Scalar(scalar) => {
+                        self.scalar_to_backend(scalar, &self.primitive_to_scalar(primitive), ty)
+                    }
+                    ScalarMaybeUninit::Uninit => self.undef(ty),
+                };
+                *offset += size;
+                value
             }
             SpirvType::Adt {
                 size,
@@ -481,17 +540,6 @@ impl<'tcx> CodegenCx<'tcx> {
                 );
                 result
             }
-            SpirvType::Pointer { .. } => {
-                let ptr = self.read_alloc_ptr(alloc, offset);
-                self.scalar_to_backend(
-                    ptr.into(),
-                    &abi::Scalar {
-                        value: Primitive::Pointer,
-                        valid_range: 0..=!0,
-                    },
-                    ty,
-                )
-            }
             SpirvType::Function { .. } => self
                 .tcx
                 .sess
@@ -506,43 +554,5 @@ impl<'tcx> CodegenCx<'tcx> {
                 .sess
                 .fatal("Cannot create a constant sampled image value"),
         }
-    }
-
-    // Advances offset by len
-    fn read_alloc_val<'a>(&self, alloc: &'a Allocation, offset: &mut Size, len: usize) -> u128 {
-        let off = offset.bytes_usize();
-        let bytes = alloc.inspect_with_uninit_and_ptr_outside_interpreter(off..(off + len));
-        // check relocations (pointer values)
-        assert!({
-            let start = off.saturating_sub(self.data_layout().pointer_size.bytes_usize() - 1);
-            let end = off + len;
-            alloc
-                .relocations()
-                .range(Size::from_bytes(start)..Size::from_bytes(end))
-                .is_empty()
-        });
-        // check init
-        alloc
-            .init_mask()
-            .is_range_initialized(*offset, *offset + Size::from_bytes(len))
-            .unwrap();
-        *offset += Size::from_bytes(len);
-        read_target_uint(self.data_layout().endian, bytes).unwrap()
-    }
-
-    // Advances offset by ptr size
-    fn read_alloc_ptr<'a>(&self, alloc: &'a Allocation, offset: &mut Size) -> Pointer {
-        let off = offset.bytes_usize();
-        let len = self.data_layout().pointer_size.bytes_usize();
-        // check init
-        alloc
-            .init_mask()
-            .is_range_initialized(*offset, *offset + Size::from_bytes(len))
-            .unwrap();
-        let bytes = alloc.inspect_with_uninit_and_ptr_outside_interpreter(off..(off + len));
-        let inner_offset = read_target_uint(self.data_layout().endian, bytes).unwrap();
-        let &((), alloc_id) = alloc.relocations().get(&Size::from_bytes(off)).unwrap();
-        *offset += Size::from_bytes(len);
-        Pointer::new_with_tag(alloc_id, Size::from_bytes(inner_offset), ())
     }
 }
