@@ -7,8 +7,20 @@ Be aware that this project is in a very early phase, please [file an
 issue](https://github.com/EmbarkStudios/rust-gpu/issues) if there's something
 not working or unclear.
 
-## Setup
-There are two main ways to setup your shader project.
+## Online
+
+You can now test out and try building shaders with rust-gpu from the browser!
+
+- [SHADERed] A shader IDE which has a lite version, which allows you to build
+  and run shaders on the web.
+- [Shader Playground] A playground for building and checking the output of
+  shader code similar to godbolt or play.rust-lang.org.
+  
+[SHADERed]: https://shadered.org/template
+[shader playground]: http://shader-playground.timjones.io/9d744d5893beb6a8f129fda50ad4aeeb
+
+## Local Setup
+There are two main ways to setup your shader project locally.
 
 1. Using the `spirv-builder` crate.
    The `spirv-builder` is a crate designed to automate the process of building
