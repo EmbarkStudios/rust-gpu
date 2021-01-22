@@ -56,10 +56,8 @@ macro_rules! deriv_caps {
 
 macro_rules! deriv_fn {
     ($name:ident, $inst:ident, $needs_caps:tt) => {
+        #[spirv_std_macros::gpu_only]
         fn $name(self) -> Self {
-            #[cfg(not(target_arch = "spirv"))]
-            panic!(concat!(stringify!($name), " is not supported on the CPU"));
-            #[cfg(target_arch = "spirv")]
             unsafe {
                 let mut o = Default::default();
                 deriv_caps!($needs_caps);

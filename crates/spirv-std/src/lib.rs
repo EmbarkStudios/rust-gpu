@@ -52,8 +52,8 @@ pub use num_traits;
 pub use textures::*;
 
 /// Calls the `OpDemoteToHelperInvocationEXT` instruction, which corresponds to discard() in HLSL
+#[spirv_std_macros::gpu_only]
 pub fn demote_to_helper_invocation() {
-    #[cfg(target_arch = "spirv")]
     unsafe {
         asm!(
             "OpExtension \"SPV_EXT_demote_to_helper_invocation\"",
@@ -64,8 +64,8 @@ pub fn demote_to_helper_invocation() {
 }
 
 /// Calls the `OpKill` instruction, which corresponds to discard() in GLSL
+#[spirv_std_macros::gpu_only]
 pub fn discard() {
-    #[cfg(target_arch = "spirv")]
     unsafe {
         asm!("OpKill", "%unused = OpLabel");
     }

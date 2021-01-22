@@ -29,3 +29,28 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
     }
     tokens.into_iter().collect()
 }
+
+#[proc_macro_attribute]
+pub fn gpu_only(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let syn::ItemFn {
+        attrs,
+        vis,
+        sig,
+        block,
+    } = syn::parse_macro_input!(item as syn::ItemFn);
+
+    let fn_name = sig.ident.clone();
+
+    let output = quote::quote! {
+        // Don't warn on unused arguments on the CPU side.
+        #[cfg_attr(not(target_arch = "spirv"), allow(unused_variables))]
+        #(#attrs)* #vis #sig {
+            #[cfg(target_arch="spirv")] { #block }
+            #[cfg(not(target_arch="spirv"))] {
+                unimplemented!(concat!("`", stringify!(#fn_name), "` is only available on SPIR-V platforms."))
+            }
+        }
+    };
+
+    output.into()
+}
