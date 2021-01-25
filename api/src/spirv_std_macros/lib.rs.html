@@ -32,6 +32,31 @@
 <span id="29">29</span>
 <span id="30">30</span>
 <span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">proc_macro</span>::{<span class="ident">Delimiter</span>, <span class="ident">Group</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenTree</span>};
 
@@ -63,6 +88,31 @@
         }
     }
     <span class="ident">tokens</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>()
+}
+
+<span class="attribute">#[<span class="ident">proc_macro_attribute</span>]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gpu_only</span>(<span class="ident">_attr</span>: <span class="ident">TokenStream</span>, <span class="ident">item</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+    <span class="kw">let</span> <span class="ident">syn</span>::<span class="ident">ItemFn</span> {
+        <span class="ident">attrs</span>,
+        <span class="ident">vis</span>,
+        <span class="ident">sig</span>,
+        <span class="ident">block</span>,
+    } <span class="op">=</span> <span class="ident">syn</span>::<span class="macro">parse_macro_input</span><span class="macro">!</span>(<span class="ident">item</span> <span class="kw">as</span> <span class="ident">syn</span>::<span class="ident">ItemFn</span>);
+
+    <span class="kw">let</span> <span class="ident">fn_name</span> <span class="op">=</span> <span class="ident">sig</span>.<span class="ident">ident</span>.<span class="ident">clone</span>();
+
+    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">quote</span>::<span class="macro">quote</span><span class="macro">!</span> {
+        <span class="comment">// Don&#39;t warn on unused arguments on the CPU side.</span>
+        <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>), <span class="ident">allow</span>(<span class="ident">unused_variables</span>))]</span>
+        #(#<span class="ident">attrs</span>)<span class="op">*</span> #<span class="ident">vis</span> #<span class="ident">sig</span> {
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;spirv&quot;</span>)]</span> { #<span class="ident">block</span> }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;spirv&quot;</span>))]</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="macro">concat</span><span class="macro">!</span>(<span class="string">&quot;`&quot;</span>, <span class="macro">stringify</span><span class="macro">!</span>(#<span class="ident">fn_name</span>), <span class="string">&quot;` is only available on SPIR-V platforms.&quot;</span>))
+            }
+        }
+    };
+
+    <span class="ident">output</span>.<span class="ident">into</span>()
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "spirv_std_macros";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

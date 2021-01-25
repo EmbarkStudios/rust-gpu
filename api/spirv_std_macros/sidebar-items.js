@@ -1,1 +1,1 @@
-initSidebarItems({"attr":[["spirv",""]]});
+initSidebarItems({"attr":[["gpu_only",""],["spirv",""]]});
