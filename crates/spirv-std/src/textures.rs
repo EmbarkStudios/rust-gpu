@@ -23,14 +23,8 @@ pub struct Image2d {
 }
 
 impl Image2d {
+    #[spirv_std_macros::gpu_only]
     pub fn sample(&self, sampler: Sampler, coord: Vec2) -> Vec4 {
-        #[cfg(not(target_arch = "spirv"))]
-        {
-            let _ = sampler;
-            let _ = coord;
-            panic!("Image sampling not supported on CPU");
-        }
-        #[cfg(target_arch = "spirv")]
         unsafe {
             let mut result = Default::default();
             asm!(
@@ -66,14 +60,8 @@ pub struct Image2dArray {
 }
 
 impl Image2dArray {
+    #[spirv_std_macros::gpu_only]
     pub fn sample(&self, sampler: Sampler, coord: Vec3A) -> Vec4 {
-        #[cfg(not(target_arch = "spirv"))]
-        {
-            let _ = sampler;
-            let _ = coord;
-            panic!("Image sampling not supported on CPU");
-        }
-        #[cfg(target_arch = "spirv")]
         unsafe {
             let mut result = Default::default();
             asm!(
@@ -101,13 +89,8 @@ pub struct SampledImage<I> {
 }
 
 impl SampledImage<Image2d> {
+    #[spirv_std_macros::gpu_only]
     pub fn sample(&self, coord: Vec2) -> Vec4 {
-        #[cfg(not(target_arch = "spirv"))]
-        {
-            let _ = coord;
-            panic!("Image sampling not supported on CPU");
-        }
-        #[cfg(target_arch = "spirv")]
         unsafe {
             let mut result = Default::default();
             asm!(
