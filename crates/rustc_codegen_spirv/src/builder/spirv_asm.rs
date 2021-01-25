@@ -565,8 +565,17 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
         let mut ids = instruction.operands.iter().filter_map(|o| o.id_ref_any());
         while let TyListPat::Cons { first: pat, suffix } = *sig.inputs {
-            let &ty = id_to_type_map.get(&ids.next()?)?;
-            match apply_ty_pat(self, pat, ty) {
+            let apply_result = match id_to_type_map.get(&ids.next()?) {
+                Some(&ty) => apply_ty_pat(self, pat, ty),
+
+                // Non-value ID operand (or value operand of unknown type),
+                // only `TyPat::Any` is valid.
+                None => match pat {
+                    TyPat::Any => Ok(None),
+                    _ => Err(Mismatch),
+                },
+            };
+            match apply_result {
                 Ok(Some(var)) => match combined_var {
                     Some(combined_var) => {
                         // FIXME(eddyb) this could use some error reporting

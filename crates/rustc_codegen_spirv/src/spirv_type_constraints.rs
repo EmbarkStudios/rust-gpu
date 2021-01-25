@@ -107,9 +107,9 @@ pub enum TyListPat<'a> {
     /// * `TyListPat::TS` for `TyListPat::Var(0)`
     Var(usize),
 
-    /// Uniform repeat type list: all types in the list must be identical with
-    /// eachother, and each of them must also match the inner pattern.
-    Repeat(&'a TyPat<'a>),
+    /// Uniform repeat type list: equivalent to repeating the inner type list
+    /// pattern (which must be finite), enough times to cover the whole list.
+    Repeat(&'a TyListPat<'a>),
 
     /// Empty type list.
     Nil,
@@ -128,7 +128,9 @@ impl TyListPat<'_> {
 /// Instruction "signature", dynamic representation (see module-level docs).
 #[derive(Copy, Clone, Debug)]
 pub struct InstSig<'a> {
-    /// Patterns for the complete list of types of the instruction's value operands.
+    /// Patterns for the complete list of types of the instruction's ID operands,
+    /// where non-value operands (i.e. IDs of instructions without a *Result Type*)
+    /// can only match `TyPat::Any`.
     pub inputs: &'a TyListPat<'a>,
 
     /// Pattern for the instruction's *Result Type* operand, if applicable.
@@ -247,9 +249,9 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::ConstantTrue | Op::ConstantFalse | Op::Constant => {}
         Op::ConstantComposite | Op::SpecConstantComposite => sig! {
             (...TS) -> Struct([...TS]) |
-            (...Repeat(T)) -> Array(T) |
-            (...Repeat(T)) -> Vector(T) |
-            (...Repeat(T)) -> Matrix(T)
+            (...Repeat([T])) -> Array(T) |
+            (...Repeat([T])) -> Vector(T) |
+            (...Repeat([T])) -> Matrix(T)
         },
         Op::ConstantSampler
         | Op::ConstantNull
@@ -380,9 +382,9 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::VectorShuffle => sig! { (Vector(T), Vector(T)) -> Vector(T) },
         Op::CompositeConstruct => sig! {
             (...TS) -> Struct([...TS]) |
-            (...Repeat(T)) -> Array(T) |
-            (...Repeat(T)) -> Matrix(T) |
-            (...Repeat(Either(Vector(T), T))) -> Vector(T)
+            (...Repeat([T])) -> Array(T) |
+            (...Repeat([T])) -> Matrix(T) |
+            (...Repeat([Either(Vector(T), T)])) -> Vector(T)
         },
         Op::CompositeExtract => sig! { (T, ../*indices*/) -> IndexComposite(T) },
         Op::CompositeInsert => sig! { (IndexComposite(T), T, ../*indices*/) -> T },
@@ -496,7 +498,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::FwidthCoarse => sig! { (T) -> T },
 
         // 3.37.17. Control-Flow Instructions
-        Op::Phi => sig! { (...Repeat(T)) -> T },
+        Op::Phi => sig! { (...Repeat([T, _])) -> T },
         Op::LoopMerge
         | Op::SelectionMerge
         | Op::Label
