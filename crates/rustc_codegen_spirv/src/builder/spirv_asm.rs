@@ -530,7 +530,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 }
                 _ => match (pat, cx.lookup_type(ty)) {
                     (TyPat::Void, SpirvType::Void) => Ok(None),
-                    (TyPat::Pointer(pat), SpirvType::Pointer { pointee: ty, .. })
+                    (TyPat::Pointer(_, pat), SpirvType::Pointer { pointee: ty, .. })
                     | (TyPat::Vector(pat), SpirvType::Vector { element: ty, .. })
                     | (
                         TyPat::Vector4(pat),
@@ -555,8 +555,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
         // FIXME(eddyb) try multiple signatures until one fits.
         let mut sig = match instruction_signatures(instruction.class.opcode)? {
-            [sig @ InstSig {
-                output: Some(_), ..
+            [sig
+            @ InstSig {
+                output_type: Some(_),
+                ..
             }] => *sig,
             _ => return None,
         };
@@ -564,7 +566,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         let mut combined_var = None;
 
         let mut ids = instruction.operands.iter().filter_map(|o| o.id_ref_any());
-        while let TyListPat::Cons { first: pat, suffix } = *sig.inputs {
+        while let TyListPat::Cons { first: pat, suffix } = *sig.input_types {
             let apply_result = match id_to_type_map.get(&ids.next()?) {
                 Some(&ty) => apply_ty_pat(self, pat, ty),
 
@@ -591,9 +593,9 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 Ok(None) => {}
                 Err(Mismatch) => return None,
             }
-            sig.inputs = suffix;
+            sig.input_types = suffix;
         }
-        match sig.inputs {
+        match sig.input_types {
             TyListPat::Any => {}
             TyListPat::Nil => {
                 if ids.next().is_some() {
@@ -604,7 +606,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
 
         let var = combined_var?;
-        match sig.output.unwrap() {
+        match sig.output_type.unwrap() {
             &TyPat::T => Some(var),
             TyPat::Vector4(&TyPat::T) => Some(
                 SpirvType::Vector {
