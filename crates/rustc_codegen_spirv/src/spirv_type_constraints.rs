@@ -1,9 +1,10 @@
 //! SPIR-V type constraints. Can be used to perform a subset of validation,
 //! or for inference purposes.
 //!
-//! Only type equality is currently handled here, no concrete type constraints,
-//! nor anything involving non-type operands. While more constraints could be
-//! supported, encoding all the possible rules for them may be challenging.
+//! Only type/storage-class equality is currently handled here, no concrete
+//! type/storage-class constraints, nor anything involving non-type/storage-class
+//! operands. While more constraints could be supported, encoding all the possible
+//! rules for them may be challenging.
 //!
 //! Type constraints could be provided in two representations:
 //! * static/generic: the constraints are built up from generic types
@@ -27,6 +28,26 @@ trait Pat {
     const ANY: Self;
 }
 
+/// Pattern for a SPIR-V storage class, dynamic representation (see module-level docs).
+#[derive(PartialEq, Eq)]
+pub enum StorageClassPat {
+    /// Unconstrained storage class.
+    Any,
+
+    /// Storage class variable: all occurrences of `Var(i)` with the same `i` must be
+    /// identical storage classes. For convenience, these associated consts are provided:
+    /// * `StorageClassPat::S` for `StorageClassPat::Var(0)`
+    Var(usize),
+}
+
+impl Pat for StorageClassPat {
+    const ANY: Self = Self::Any;
+}
+
+impl StorageClassPat {
+    pub const S: Self = Self::Var(0);
+}
+
 /// Pattern for a SPIR-V type, dynamic representation (see module-level docs).
 #[derive(Debug, PartialEq, Eq)]
 pub enum TyPat<'a> {
@@ -48,11 +69,12 @@ pub enum TyPat<'a> {
     /// > `OpTypeImage` (unless that underlying *Sampled Type* is `OpTypeVoid`).
     Void,
 
+    /// `OpTypePointer`, with an inner pattern for its *Storage Class* operand,
+    /// and another for its *Type* operand.
+    Pointer(&'a StorageClassPat, &'a TyPat<'a>),
+
     // FIXME(eddyb) try to DRY the same-shape patterns below.
     //
-    /// `OpTypePointer`, with an inner pattern for its *Type* operand.
-    Pointer(&'a TyPat<'a>),
-
     /// `OpTypeArray`, with an inner pattern for its *Element Type* operand.
     Array(&'a TyPat<'a>),
 
@@ -142,13 +164,18 @@ impl TyListPat<'_> {
 /// Instruction "signature", dynamic representation (see module-level docs).
 #[derive(Copy, Clone, Debug)]
 pub struct InstSig<'a> {
+    /// Pattern for an instruction's sole storage class operand, if applicable.
+    // FIXME(eddyb) integrate this with `input_types` - it's non-trivial because
+    // that matches *the types of* ID operands, not the operands themselves.
+    pub storage_class: Option<&'a StorageClassPat>,
+
     /// Patterns for the complete list of types of the instruction's ID operands,
     /// where non-value operands (i.e. IDs of instructions without a *Result Type*)
     /// can only match `TyPat::Any`.
-    pub inputs: &'a TyListPat<'a>,
+    pub input_types: &'a TyListPat<'a>,
 
     /// Pattern for the instruction's *Result Type* operand, if applicable.
-    pub output: Option<&'a TyPat<'a>>,
+    pub output_type: Option<&'a TyPat<'a>>,
 }
 
 /// Returns an array of valid signatures for an instruction with opcode `op`,
@@ -156,6 +183,7 @@ pub struct InstSig<'a> {
 pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
     // Restrict the names the `pat!` macro can take as pattern constructors.
     mod pat_ctors {
+        pub const S: super::StorageClassPat = super::StorageClassPat::S;
         // NOTE(eddyb) it would be really nice if we could import `TyPat::{* - Any, Var}`,
         // i.e. all but those two variants.
         pub use super::TyPat::{
@@ -191,10 +219,15 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         };
     }
     macro_rules! sig {
-        ($(($($in_tys:tt)*) $(-> $out_ty:tt $(($($out_ty_args:tt)+))?)?)|+) => {
+        ($(
+            $({$($storage_class:tt)*})?
+            ($($in_tys:tt)*)
+            $(-> $out_ty:tt $(($($out_ty_args:tt)+))?)?
+        )|+) => {
             return Some(&[$(InstSig {
-                inputs: pat!([$($in_tys)*]),
-                output: optionify!($(pat!($out_ty $(($($out_ty_args)+))?))?),
+                storage_class: optionify!($(pat!($($storage_class)*))?),
+                input_types: pat!([$($in_tys)*]),
+                output_type: optionify!($(pat!($out_ty $(($($out_ty_args)+))?))?),
             }),*]);
         };
     }
@@ -292,24 +325,24 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
 
         // 3.37.8. Memory Instructions
         Op::Variable => sig! {
-            () -> _ |
-            (T) -> Pointer(T)
+            {S} () -> Pointer(S, _) |
+            {S} (T) -> Pointer(S, T)
         },
-        Op::ImageTexelPointer => sig! { (Pointer(Image(T)), _, _) -> Pointer(T) },
-        Op::Load => sig! { (Pointer(T)) -> T },
-        Op::Store => sig! { (Pointer(T), T) },
-        Op::CopyMemory => sig! { (Pointer(T), Pointer(T)) },
+        Op::ImageTexelPointer => sig! { (Pointer(_, Image(T)), _, _) -> Pointer(_, T) },
+        Op::Load => sig! { (Pointer(_, T)) -> T },
+        Op::Store => sig! { (Pointer(_, T), T) },
+        Op::CopyMemory => sig! { (Pointer(_, T), Pointer(_, T)) },
         Op::CopyMemorySized => {}
         Op::AccessChain | Op::InBoundsAccessChain => sig! {
-            (Pointer(T), ../*indices*/) -> Pointer(IndexComposite(T))
+            (Pointer(S, T), ../*indices*/) -> Pointer(S, IndexComposite(T))
         },
         Op::PtrAccessChain | Op::InBoundsPtrAccessChain => sig! {
-            (Pointer(T), _, ../*indices*/) -> Pointer(IndexComposite(T))
+            (Pointer(S, T), _, ../*indices*/) -> Pointer(S, IndexComposite(T))
         },
         Op::ArrayLength | Op::GenericPtrMemSemantics => {}
         // SPIR-V 1.4
         Op::PtrEqual | Op::PtrNotEqual | Op::PtrDiff => sig! {
-            (Pointer(T), Pointer(T)) -> _
+            (Pointer(_, T), Pointer(_, T)) -> _
         },
 
         // 3.37.9. Function Instructions
@@ -390,9 +423,8 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::FConvert => {}
         Op::QuantizeToF16 => sig! { (T) -> T },
         Op::ConvertPtrToU | Op::SatConvertSToU | Op::SatConvertUToS | Op::ConvertUToPtr => {}
-        Op::PtrCastToGeneric | Op::GenericCastToPtr | Op::GenericCastToPtrExplicit => sig! {
-            (Pointer(T)) -> Pointer(T)
-        },
+        Op::PtrCastToGeneric | Op::GenericCastToPtr => sig! { (Pointer(_, T)) -> Pointer(_, T) },
+        Op::GenericCastToPtrExplicit => sig! { {S} (Pointer(_, T)) -> Pointer(S, T) },
         Op::Bitcast => {}
 
         // 3.37.12. Composite Instructions
@@ -541,9 +573,9 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
 
         // 3.37.18. Atomic Instructions
         Op::AtomicLoad | Op::AtomicIIncrement | Op::AtomicIDecrement => sig! {
-            (Pointer(T), _, _) -> T
+            (Pointer(_, T), _, _) -> T
         },
-        Op::AtomicStore => sig! { (Pointer(T), _, _, T) },
+        Op::AtomicStore => sig! { (Pointer(_, T), _, _, T) },
         Op::AtomicExchange
         | Op::AtomicIAdd
         | Op::AtomicISub
@@ -553,14 +585,14 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::AtomicUMax
         | Op::AtomicAnd
         | Op::AtomicOr
-        | Op::AtomicXor => sig! { (Pointer(T), _, _, T) -> T },
+        | Op::AtomicXor => sig! { (Pointer(_, T), _, _, T) -> T },
         Op::AtomicCompareExchange | Op::AtomicCompareExchangeWeak => sig! {
-            (Pointer(T), _, _, _, T, T) -> T
+            (Pointer(_, T), _, _, _, T, T) -> T
         },
         // Capability: Kernel
         Op::AtomicFlagTestAndSet | Op::AtomicFlagClear => {}
         // SPV_EXT_shader_atomic_float_add
-        Op::AtomicFAddEXT => sig! { (Pointer(T), _, _, T) -> T },
+        Op::AtomicFAddEXT => sig! { (Pointer(_, T), _, _, T) -> T },
 
         // 3.37.19. Primitive Instructions
         Op::EmitVertex | Op::EndPrimitive | Op::EmitStreamVertex | Op::EndStreamPrimitive => {}
@@ -571,7 +603,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::NamedBarrierInitialize | Op::MemoryNamedBarrier => {}
 
         // 3.37.21. Group and Subgroup Instructions
-        Op::GroupAsyncCopy => sig! { (_, Pointer(T), Pointer(T), _, _, _) -> _ },
+        Op::GroupAsyncCopy => sig! { (_, Pointer(_, T), Pointer(_, T), _, _, _) -> _ },
         Op::GroupWaitEvents => {}
         Op::GroupAll | Op::GroupAny => {}
         Op::GroupBroadcast => sig! { (_, T, _) -> T },
@@ -602,8 +634,8 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         // SPV_INTEL_subgroups
         Op::SubgroupShuffleINTEL | Op::SubgroupShuffleXorINTEL => sig! { (T, _) -> T },
         Op::SubgroupShuffleDownINTEL | Op::SubgroupShuffleUpINTEL => sig! { (T, T, _) -> T },
-        Op::SubgroupBlockReadINTEL => sig! { (Pointer(T)) -> T },
-        Op::SubgroupBlockWriteINTEL => sig! { (Pointer(T), T) },
+        Op::SubgroupBlockReadINTEL => sig! { (Pointer(_, T)) -> T },
+        Op::SubgroupBlockWriteINTEL => sig! { (Pointer(_, T), T) },
         Op::SubgroupImageBlockReadINTEL | Op::SubgroupImageBlockWriteINTEL => {}
         // SPV_INTEL_media_block_io
         Op::SubgroupImageMediaBlockReadINTEL | Op::SubgroupImageMediaBlockWriteINTEL => {}
@@ -627,9 +659,9 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::GetKernelLocalSizeForSubgroupCount | Op::GetKernelMaxNumSubgroups => {}
 
         // 3.37.23. Pipe Instructions
-        Op::ReadPipe | Op::WritePipe => sig! { (Pipe(T), Pointer(T), _, _) -> _ },
+        Op::ReadPipe | Op::WritePipe => sig! { (Pipe(T), Pointer(_, T), _, _) -> _ },
         Op::ReservedReadPipe | Op::ReservedWritePipe => sig! {
-            (Pipe(T), _, _, Pointer(T), _, _) -> _
+            (Pipe(T), _, _, Pointer(_, T), _, _) -> _
         },
         Op::ReserveReadPipePackets
         | Op::ReserveWritePipePackets
@@ -646,7 +678,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::ConstantPipeStorage | Op::CreatePipeFromPipeStorage => {}
         // SPV_INTEL_blocking_pipes
         Op::ReadPipeBlockingINTEL | Op::WritePipeBlockingINTEL => sig! {
-            (Pipe(T), Pointer(T), _, _)
+            (Pipe(T), Pointer(_, T), _, _)
         },
 
         // 3.37.24. Non-Uniform Instructions
