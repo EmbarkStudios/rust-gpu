@@ -2,6 +2,7 @@ use crate::decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::binary::Assemble;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
+use rustc_middle::bug;
 use std::collections::{hash_map, HashMap, HashSet};
 
 pub fn remove_duplicate_extensions(module: &mut Module) {
@@ -93,11 +94,25 @@ fn gather_annotations(annotations: &[Instruction]) -> HashMap<Word, Vec<u32>> {
         .collect()
 }
 
-fn make_type_key(
+fn gather_names(debugs: &[Instruction]) -> HashMap<Word, String> {
+    debugs
+        .iter()
+        .filter(|inst| inst.class.opcode == Op::Name)
+        .map(|inst| {
+            (
+                inst.operands[0].unwrap_id_ref(),
+                inst.operands[1].unwrap_literal_string().to_owned(),
+            )
+        })
+        .collect()
+}
+
+fn make_dedupe_key(
     inst: &Instruction,
     unresolved_forward_pointers: &HashSet<Word>,
     zombies: &HashSet<Word>,
     annotations: &HashMap<Word, Vec<u32>>,
+    names: &HashMap<Word, String>,
 ) -> Vec<u32> {
     let mut data = vec![];
 
@@ -133,6 +148,22 @@ fn make_type_key(
         });
         if let Some(annos) = annotations.get(&id) {
             data.extend_from_slice(annos)
+        }
+        if inst.class.opcode == Op::Variable {
+            // Names only matter for OpVariable.
+            if let Some(name) = names.get(&id) {
+                // Jump through some hoops to shove a String into a Vec<u32>.
+                for chunk in name.as_bytes().chunks(4) {
+                    let slice = match *chunk {
+                        [a] => [a, 0, 0, 0],
+                        [a, b] => [a, b, 0, 0],
+                        [a, b, c] => [a, b, c, 0],
+                        [a, b, c, d] => [a, b, c, d],
+                        _ => bug!(),
+                    };
+                    data.push(u32::from_le_bytes(slice));
+                }
+            }
         }
     }
 
@@ -170,11 +201,9 @@ pub fn remove_duplicate_types(module: &mut Module) {
 
     // Collect a map from type ID to an annotation "key blob" (to append to the type key)
     let annotations = gather_annotations(&module.annotations);
+    let names = gather_names(&module.debugs);
 
     for inst in &mut module.types_global_values {
-        if inst.class.opcode == Op::Variable {
-            continue;
-        }
         if inst.class.opcode == Op::TypeForwardPointer {
             if let Operand::IdRef(id) = inst.operands[0] {
                 unresolved_forward_pointers.insert(id);
@@ -196,7 +225,13 @@ pub fn remove_duplicate_types(module: &mut Module) {
         // all_inst_iter_mut pass below. However, the code is a lil bit cleaner this way I guess.
         rewrite_inst_with_rules(inst, &rewrite_rules);
 
-        let key = make_type_key(inst, &unresolved_forward_pointers, &zombies, &annotations);
+        let key = make_dedupe_key(
+            inst,
+            &unresolved_forward_pointers,
+            &zombies,
+            &annotations,
+            &names,
+        );
 
         match key_to_result_id.entry(key) {
             hash_map::Entry::Vacant(entry) => {
@@ -233,4 +268,9 @@ pub fn remove_duplicate_types(module: &mut Module) {
     module
         .annotations
         .retain(|inst| anno_set.insert(inst.assemble()));
+    // Same thing with OpName
+    let mut debug_set = HashSet::new();
+    module
+        .debugs
+        .retain(|inst| debug_set.insert(inst.assemble()));
 }
