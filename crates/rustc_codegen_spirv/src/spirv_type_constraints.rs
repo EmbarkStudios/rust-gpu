@@ -21,6 +21,12 @@
 
 use rspirv::spirv::Op;
 
+/// Helper trait to allow macros to work uniformly across different pattern types.
+trait Pat {
+    /// Unconstrained pattern, i.e. that matches everything.
+    const ANY: Self;
+}
+
 /// Pattern for a SPIR-V type, dynamic representation (see module-level docs).
 #[derive(Debug, PartialEq, Eq)]
 pub enum TyPat<'a> {
@@ -89,6 +95,10 @@ pub enum TyPat<'a> {
     IndexComposite(&'a TyPat<'a>),
 }
 
+impl Pat for TyPat<'_> {
+    const ANY: Self = Self::Any;
+}
+
 impl TyPat<'_> {
     pub const T: Self = Self::Var(0);
 }
@@ -121,6 +131,10 @@ pub enum TyListPat<'a> {
     },
 }
 
+impl Pat for TyListPat<'_> {
+    const ANY: Self = Self::Any;
+}
+
 impl TyListPat<'_> {
     pub const TS: Self = Self::Var(0);
 }
@@ -140,16 +154,27 @@ pub struct InstSig<'a> {
 /// Returns an array of valid signatures for an instruction with opcode `op`,
 /// or `None` if there aren't any known type constraints for that instruction.
 pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
+    // Restrict the names the `pat!` macro can take as pattern constructors.
+    mod pat_ctors {
+        // NOTE(eddyb) it would be really nice if we could import `TyPat::{* - Any, Var}`,
+        // i.e. all but those two variants.
+        pub use super::TyPat::{
+            Array, Either, Function, Image, IndexComposite, Matrix, Pipe, Pointer, SampledImage,
+            Struct, Vector, Vector4, Void,
+        };
+        pub const T: super::TyPat<'_> = super::TyPat::T;
+        pub use super::TyListPat::Repeat;
+        pub const TS: super::TyListPat<'_> = super::TyListPat::TS;
+    }
+
     macro_rules! pat {
-        (_) => { &TyPat::Any };
+        (_) => { &Pat::ANY };
         ($ctor:ident $(($($inner:tt $(($($inner_args:tt)+))?),+))?) => {
-            &TyPat::$ctor $(($(pat!($inner $(($($inner_args)+))?)),+))?
+            &pat_ctors::$ctor $(($(pat!($inner $(($($inner_args)+))?)),+))?
         };
         ([]) => { &TyListPat::Nil };
         ([..]) => { &TyListPat::Any };
-        ([...$ctor:ident $(($($inner:tt $(($($inner_args:tt)+))?),+))?]) => {
-            &TyListPat::$ctor $(($(pat!($inner $(($($inner_args)+))?)),+))?
-        };
+        ([...$($rest:tt)+]) => { pat!($($rest)+) };
         ([$first:tt $(($($first_args:tt)+))? $(, $($rest:tt)*)?]) => {
             &TyListPat::Cons {
                 first: pat!($first $(($($first_args)+))?),
@@ -248,7 +273,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         // 3.37.7. Constant-Creation Instructions
         Op::ConstantTrue | Op::ConstantFalse | Op::Constant => {}
         Op::ConstantComposite | Op::SpecConstantComposite => sig! {
-            (...TS) -> Struct([...TS]) |
+            (...TS) -> Struct(TS) |
             (...Repeat([T])) -> Array(T) |
             (...Repeat([T])) -> Vector(T) |
             (...Repeat([T])) -> Matrix(T)
@@ -294,7 +319,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
                 op
             );
         }
-        Op::FunctionCall => sig! { (Function(T, [...TS]), ...TS) -> T },
+        Op::FunctionCall => sig! { (Function(T, TS), ...TS) -> T },
 
         // 3.37.10. Image Instructions
         Op::SampledImage => sig! { (T, _) -> SampledImage(T) },
@@ -381,7 +406,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         },
         Op::VectorShuffle => sig! { (Vector(T), Vector(T)) -> Vector(T) },
         Op::CompositeConstruct => sig! {
-            (...TS) -> Struct([...TS]) |
+            (...TS) -> Struct(TS) |
             (...Repeat([T])) -> Array(T) |
             (...Repeat([T])) -> Matrix(T) |
             (...Repeat([Either(Vector(T), T)])) -> Vector(T)
@@ -394,7 +419,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::CopyLogical => sig! {
             // FIXME(eddyb) this is shallow right now, it should recurse instead
             (Array(T)) -> Array(T) |
-            (Struct([...TS])) -> Struct([...TS])
+            (Struct(TS)) -> Struct(TS)
         },
 
         // 3.37.13. Arithmetic Instructions
