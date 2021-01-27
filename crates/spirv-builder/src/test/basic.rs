@@ -366,3 +366,16 @@ pub fn create_uninit_and_write() {
 #[spirv(fragment)]
 pub fn main() {}"#);
 }
+
+#[test]
+fn vector_extract_dynamic() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    let vector = glam::Vec2::new(1.0, 2.0);
+    let element = unsafe { spirv_std::arch::vector_extract_dynamic(vector, 1) };
+    assert!(2.0 == element);
+}
+"#);
+}

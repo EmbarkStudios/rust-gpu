@@ -43,9 +43,13 @@
 #[macro_use]
 pub extern crate spirv_std_macros;
 
+pub mod arch;
 pub mod derivative;
+pub mod scalar;
+pub(crate) mod sealed;
 pub mod storage_class;
 mod textures;
+pub mod vector;
 
 pub use glam;
 pub use num_traits;
