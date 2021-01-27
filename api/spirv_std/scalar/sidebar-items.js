@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["Scalar","Abstract trait representing a SPIR-V scalar type."]]});

@@ -2,7 +2,7 @@
 implementors["bimap"] = [{"text":"impl&lt;L, R&gt; Ord for BiBTreeMap&lt;L, R&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;L: Ord,<br>&nbsp;&nbsp;&nbsp;&nbsp;R: Ord,&nbsp;</span>","synthetic":false,"types":[]}];
 implementors["byteorder"] = [{"text":"impl Ord for BigEndian","synthetic":false,"types":[]},{"text":"impl Ord for LittleEndian","synthetic":false,"types":[]}];
 implementors["filetime"] = [{"text":"impl Ord for FileTime","synthetic":false,"types":[]}];
-implementors["glam"] = [{"text":"impl Ord for Vec2Mask","synthetic":false,"types":[]},{"text":"impl Ord for Vec3Mask","synthetic":false,"types":[]},{"text":"impl Ord for Vec3AMask","synthetic":false,"types":[]},{"text":"impl Ord for Vec4Mask","synthetic":false,"types":[]}];
+implementors["glam"] = [{"text":"impl Ord for BVec2","synthetic":false,"types":[]},{"text":"impl Ord for BVec3","synthetic":false,"types":[]},{"text":"impl Ord for BVec4","synthetic":false,"types":[]}];
 implementors["proc_macro2"] = [{"text":"impl Ord for Ident","synthetic":false,"types":[]}];
 implementors["raw_string"] = [{"text":"impl Ord for RawStr","synthetic":false,"types":[]},{"text":"impl Ord for RawString","synthetic":false,"types":[]}];
 implementors["rspirv"] = [{"text":"impl Ord for Decoration","synthetic":false,"types":[]}];

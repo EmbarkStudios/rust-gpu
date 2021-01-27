@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["Vec2Swizzles",""],["Vec3ASwizzles",""],["Vec3Swizzles",""],["Vec4Swizzles",""]]});
+initSidebarItems({"trait":[["Vec2Swizzles","Swizzle methods for 2-dimensional vector types. "],["Vec3Swizzles","Swizzle methods for 3-dimensional vector types. "],["Vec4Swizzles","Swizzle methods for 3-dimensional vector types. "]]});

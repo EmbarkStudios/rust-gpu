@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["vector_extract_dynamic","Extract a single, dynamically selected, component of a vector."]]});

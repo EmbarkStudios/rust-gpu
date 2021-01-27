@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.11.3/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.12.0/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../glam/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -233,6 +233,68 @@
 <span id="230">230</span>
 <span id="231">231</span>
 <span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/*!
 # glam
@@ -244,10 +306,11 @@
 `glam` is built with SIMD in mind. Currently only SSE2 on x86/x86_64 is
 supported as this is what stable Rust supports.
 
-* Single precision float `f32` support only (for now)
-* SSE2 storage and optimization for many types, including `Mat2`, `Mat4`,
-  `Quat`, `Vec3A` and `Vec4`
-* Scalar fallback implementations exist when SSE2 is not available
+* Vector, quaternion and matrix types support for [`f32`](mod@f32) and [`f64`](mod@f64)
+* Vector types supported for [`i32`](mod@i32), [`u32`](mod@u32) and [`bool`](mod@bool)
+* SSE2 storage and optimization for many [`f32`](mod@f32) types, including [`Mat2`], [`Mat4`],
+  [`Quat`], [`Vec3A`] and [`Vec4`]
+* Scalar math fallback implementations exist when SSE2 is not available
 * Most functionality includes unit tests and benchmarks
 
 ## Linear algebra conventions
@@ -265,10 +328,26 @@ assert_eq!(v, x);
 
 Matrices are stored in memory in column-major order.
 
+## Direct element access
+
+Because some types may internally be implemeted using SIMD types, direct access to vector elements
+is supported by implementing the [`Deref`] and [`DerefMut`] traits.
+
+```
+use glam::Vec3A;
+let mut v = Vec3A::new(1.0, 2.0, 3.0);
+assert_eq!(3.0, v.z);
+v.z += 1.0;
+assert_eq!(4.0, v.z);
+```
+
+[`Deref`]: https://doc.rust-lang.org/std/ops/trait.Deref.html
+[`DerefMut`]: https://doc.rust-lang.org/std/ops/trait.DerefMut.html
+
 ## Size and alignment of types
 
 Some `glam` types use SIMD for storage meaning they are 16 byte aligned, these
-types include `Mat2`, `Mat4`, `Quat`, `Vec3A` and `Vec4`.
+types include [`Mat2`], [`Mat4`], [`Quat`], [`Vec3A`] and [`Vec4`].
 
 When SSE2 is not available on the target architecture this type will still be 16
 byte aligned so that object sizes and layouts will not change between
@@ -284,26 +363,25 @@ though.
 
 ## Vec3A
 
-`Vec3A` is a SIMD optimized version of the `Vec3` type, which due to 16 byte
-alignment results in `Vec3A` containing 4 bytes of padding making it 16 bytes
+[`Vec3A`] is a SIMD optimized version of the [`Vec3`] type, which due to 16 byte
+alignment results in [`Vec3A`] containing 4 bytes of padding making it 16 bytes
 in size in total.
 
-| Type  | `f32` bytes | Align bytes | Padding | Size bytes |
-|:------|------------:|------------:|--------:|-----------:|
-|`Vec3` |           12|            4|        0|          12|
-|`Vec3A`|           12|           16|        4|          16|
+| Type    | `f32` bytes | Align bytes | Padding | Size bytes |
+|:--------|------------:|------------:|--------:|-----------:|
+|[`Vec3`] |           12|            4|        0|          12|
+|[`Vec3A`]|           12|           16|        4|          16|
 
 Despite this wasted space the SIMD version tends to outperform the `f32`
 implementation in [**mathbench**](https://github.com/bitshifter/mathbench-rs)
 benchmarks.
 
-`glam` treats `Vec3` as the default vector 3 type and `Vec3A` a special case for
+`glam` treats [`Vec3`] as the default vector 3 type and [`Vec3A`] a special case for
 optimization. When methods need to return a vector 3 type they will generally
-return `Vec3`.
+return [`Vec3`].
 
-There are `From` trait implementations for converting from `Vec4` to a `Vec3A`
-and between `Vec3` and `Vec3A` (and vice versa).
-
+There are [`From`] trait implementations for converting from [`Vec4`] to a [`Vec3A`]
+and between [`Vec3`] and [`Vec3A`] (and vice versa).
 ```
 use glam::{Vec3, Vec3A, Vec4};
 
@@ -330,11 +408,10 @@ this includes creating a vector of a different size from the vectors elements.
 The swizzle functions are implemented using traits to add them to each vector
 type. This is primarily because there are a lot of swizzle functions which can
 obfuscate the other vector functions in documentation and so on. The traits are
-`Vec2Swizzles`, `Vec3Swizzles`, `Vec3ASwizzles` and `Vec4Swizzles`.
+[`Vec2Swizzles`], [`Vec3Swizzles`] and [`Vec4Swizzles`].
 
-Note that `Vec2Swizzles`, `Vec3Swizzles` and `Vec4Swizzles` will return a `Vec3`
-type for 3 element swizzles. `Vec3ASwizzles` will return a `Vec3A` for 3 element
-swizzles.
+Note that the [`Vec3Swizzles`] implementation for [`Vec3A`] will return a [`Vec3A`]
+for 3 element swizzles, all other implementations will return [`Vec3`].
 
 ```
 use glam::{swizzles::*, Vec2, Vec3, Vec3A, Vec4};
@@ -395,12 +472,12 @@ and benchmarks.
 * `glam-assert` - adds assertions to all builds which check the validity of
   parameters passed to `glam` to help catch runtime errors.
 
-### Minimum Supported Version or Rust (MSVR)
+## Minimum Supported Version or Rust (MSVR)
 
 The minimum supported version of Rust for `glam` is `1.36.0`.
 
 */</span>
-<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.rs/glam/0.11.3&quot;</span>)]</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.rs/glam/0.12.0&quot;</span>)]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>, <span class="ident">feature</span>(<span class="ident">register_attr</span>, <span class="ident">repr_simd</span>))]</span>
 
@@ -424,47 +501,94 @@ The minimum supported version of Rust for `glam` is `1.36.0`.
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">mod</span> <span class="ident">macros</span>;
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">mod</span> <span class="ident">vec</span>;
 
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">f32</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cast</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">f32</span>::{
-    <span class="ident">mat2</span>, <span class="ident">mat3</span>, <span class="ident">mat4</span>, <span class="ident">quat</span>, <span class="ident">vec2</span>, <span class="ident">vec3</span>, <span class="ident">vec3a</span>, <span class="ident">vec4</span>, <span class="ident">Mat2</span>, <span class="ident">Mat3</span>, <span class="ident">Mat4</span>, <span class="ident">Quat</span>, <span class="ident">Vec2</span>, <span class="ident">Vec2Mask</span>, <span class="ident">Vec3</span>,
-    <span class="ident">Vec3A</span>, <span class="ident">Vec3AMask</span>, <span class="ident">Vec3Mask</span>, <span class="ident">Vec4</span>, <span class="ident">Vec4Mask</span>,
-};
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">swizzles</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">f32</span>::{<span class="ident">Vec2Swizzles</span>, <span class="ident">Vec3ASwizzles</span>, <span class="ident">Vec3Swizzles</span>, <span class="ident">Vec4Swizzles</span>};
-}
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">swizzles</span>::{<span class="ident">Vec2Swizzles</span>, <span class="ident">Vec3ASwizzles</span>, <span class="ident">Vec3Swizzles</span>, <span class="ident">Vec4Swizzles</span>};
+<span class="kw">mod</span> <span class="ident">core</span>;
+<span class="kw">mod</span> <span class="ident">mat2</span>;
+<span class="kw">mod</span> <span class="ident">mat3</span>;
+<span class="kw">mod</span> <span class="ident">mat4</span>;
+<span class="kw">mod</span> <span class="ident">quat</span>;
+<span class="kw">mod</span> <span class="ident">vec2</span>;
+<span class="kw">mod</span> <span class="ident">vec3</span>;
+<span class="kw">mod</span> <span class="ident">vec4</span>;
+<span class="kw">mod</span> <span class="ident">vec_mask</span>;
+
+<span class="kw">mod</span> <span class="ident">features</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transform-types&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">f32</span>::{<span class="ident">TransformRT</span>, <span class="ident">TransformSRT</span>};
+<span class="kw">mod</span> <span class="ident">transform</span>;
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">align</span>(<span class="number">16</span>))]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Align16</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">T</span>);
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">core</span>::<span class="ident">storage</span>::{<span class="ident">XY</span>, <span class="ident">XYZ</span>, <span class="ident">XYZW</span>};
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Align16</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ptr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>
-    }
-
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_mut_ptr</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>
-    }
+<span class="doccomment">/** `bool` vector mask types. */</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec_mask</span>::{<span class="ident">BVec2</span>, <span class="ident">BVec3</span>, <span class="ident">BVec3A</span>, <span class="ident">BVec4</span>, <span class="ident">BVec4A</span>};
 }
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">bool</span>::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">test</span>]</span>
-<span class="kw">fn</span> <span class="ident">test_align16</span>() {
-    <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">mem</span>, <span class="ident">ptr</span>};
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Align16</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>(<span class="number">1.0</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">mem</span>::<span class="ident">align_of_val</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>), <span class="number">16</span>);
-    <span class="kw">unsafe</span> {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ptr</span>::<span class="ident">read</span>(<span class="ident">a</span>.<span class="ident">as_ptr</span>()), <span class="number">1.0</span>);
-        <span class="ident">ptr</span>::<span class="ident">write</span>(<span class="ident">a</span>.<span class="ident">as_mut_ptr</span>(), <span class="op">-</span><span class="number">1.0</span>);
-    }
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>.<span class="number">0</span>, <span class="op">-</span><span class="number">1.0</span>);
+<span class="doccomment">/** `f32` vector, quaternion and matrix types. */</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">f32</span> {
+    <span class="comment">// pub use super::cast::{</span>
+    <span class="comment">//     F32x16Cast, F32x9Cast, Mat2Cast, Mat3Cast, Mat4Cast, Vec2Cast, Vec3Cast, Vec4Cast,</span>
+    <span class="comment">// };</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mat2</span>::{<span class="ident">mat2</span>, <span class="ident">Mat2</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mat3</span>::{<span class="ident">mat3</span>, <span class="ident">Mat3</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mat4</span>::{<span class="ident">mat4</span>, <span class="ident">Mat4</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">quat</span>::{<span class="ident">quat</span>, <span class="ident">Quat</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec2</span>::{<span class="ident">vec2</span>, <span class="ident">Vec2</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec3</span>::{<span class="ident">vec3</span>, <span class="ident">vec3a</span>, <span class="ident">Vec3</span>, <span class="ident">Vec3A</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec4</span>::{<span class="ident">vec4</span>, <span class="ident">Vec4</span>};
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transform-types&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">transform</span>::{<span class="ident">TransformRT</span>, <span class="ident">TransformSRT</span>};
 }
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">f32</span>::<span class="kw-2">*</span>;
+
+<span class="doccomment">/** `f64` vector, quaternion and matrix types. */</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">f64</span> {
+    <span class="comment">// pub use super::cast::{</span>
+    <span class="comment">//     DMat2Cast, DMat3Cast, DMat4Cast, DVec2Cast, DVec3Cast, DVec4Cast, F64x16Cast, F64x9Cast,</span>
+    <span class="comment">// };</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mat2</span>::{<span class="ident">dmat2</span>, <span class="ident">DMat2</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mat3</span>::{<span class="ident">dmat3</span>, <span class="ident">DMat3</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mat4</span>::{<span class="ident">dmat4</span>, <span class="ident">DMat4</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">quat</span>::{<span class="ident">dquat</span>, <span class="ident">DQuat</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec2</span>::{<span class="ident">dvec2</span>, <span class="ident">DVec2</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec3</span>::{<span class="ident">dvec3</span>, <span class="ident">DVec3</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec4</span>::{<span class="ident">dvec4</span>, <span class="ident">DVec4</span>};
+}
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">f64</span>::<span class="kw-2">*</span>;
+
+<span class="doccomment">/** `i32` vector types. */</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">i32</span> {
+    <span class="comment">// pub use super::cast::{</span>
+    <span class="comment">//     IVec2Cast, IVec3Cast, IVec4Cast,</span>
+    <span class="comment">// };</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec2</span>::{<span class="ident">ivec2</span>, <span class="ident">IVec2</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec3</span>::{<span class="ident">ivec3</span>, <span class="ident">IVec3</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec4</span>::{<span class="ident">ivec4</span>, <span class="ident">IVec4</span>};
+}
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">i32</span>::<span class="kw-2">*</span>;
+
+<span class="doccomment">/** `u32` vector types. */</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">u32</span> {
+    <span class="comment">// pub use super::cast::{</span>
+    <span class="comment">//     UVec2Cast, UVec3Cast, UVec4Cast,</span>
+    <span class="comment">// };</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec2</span>::{<span class="ident">uvec2</span>, <span class="ident">UVec2</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec3</span>::{<span class="ident">uvec3</span>, <span class="ident">UVec3</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vec4</span>::{<span class="ident">uvec4</span>, <span class="ident">UVec4</span>};
+}
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">u32</span>::<span class="kw-2">*</span>;
+
+<span class="doccomment">/** Traits adding swizzle methods to all vector types. */</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">swizzles</span>;
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">swizzles</span>::{<span class="ident">Vec2Swizzles</span>, <span class="ident">Vec3Swizzles</span>, <span class="ident">Vec4Swizzles</span>};
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "glam";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
