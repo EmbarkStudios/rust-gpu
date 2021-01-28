@@ -176,7 +176,7 @@ pub fn remove_zombies(sess: &Session, module: &mut Module) {
     if env::var("PRINT_ZOMBIE").is_ok() {
         for f in &module.functions {
             if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
-                let name_id = f.def.as_ref().unwrap().result_id.unwrap();
+                let name_id = f.def_id().unwrap();
                 let name = module.debugs.iter().find(|inst| {
                     inst.class.opcode == Op::Name && inst.operands[0].unwrap_id_ref() == name_id
                 });

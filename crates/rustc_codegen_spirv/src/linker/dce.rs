@@ -26,7 +26,7 @@ fn spread_roots(module: &Module, rooted: &mut HashSet<Word>) -> bool {
         }
     }
     for func in &module.functions {
-        if rooted.contains(&func.def.as_ref().unwrap().result_id.unwrap()) {
+        if rooted.contains(&func.def_id().unwrap()) {
             for inst in &func.def {
                 any |= root(inst, rooted);
             }
