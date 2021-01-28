@@ -43,7 +43,7 @@ pub fn structurize(
             builder: &mut builder,
         };
 
-        let func_id = func.function().def.as_ref().unwrap().result_id.unwrap();
+        let func_id = func.function().def_id().unwrap();
 
         let loop_control = match unroll_loops_decorations.get(&func_id) {
             Some(UnrollLoopsDecoration {}) => LoopControl::UNROLL,

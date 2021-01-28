@@ -17,7 +17,7 @@ pub fn inline(module: &mut Module) {
     let functions = module
         .functions
         .iter()
-        .map(|f| (f.def.as_ref().unwrap().result_id.unwrap(), f.clone()))
+        .map(|f| (f.def_id().unwrap(), f.clone()))
         .collect();
     let disallowed_argument_types = compute_disallowed_argument_types(module);
     let void = module
@@ -32,7 +32,7 @@ pub fn inline(module: &mut Module) {
     module.functions.retain(|f| {
         if should_inline(&disallowed_argument_types, f) {
             // TODO: We should insert all defined IDs in this function.
-            dropped_ids.insert(f.def.as_ref().unwrap().result_id.unwrap());
+            dropped_ids.insert(f.def_id().unwrap());
             false
         } else {
             true

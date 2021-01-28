@@ -139,7 +139,7 @@ fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &HashMap<u32, u
     // drop imported functions
     module
         .functions
-        .retain(|f| !rewrite_rules.contains_key(&f.def.as_ref().unwrap().result_id.unwrap()));
+        .retain(|f| !rewrite_rules.contains_key(&f.def_id().unwrap()));
 
     // drop imported variables
     module.types_global_values.retain(|v| {
