@@ -269,8 +269,8 @@ pub fn remove_duplicate_types(module: &mut Module) {
         .annotations
         .retain(|inst| anno_set.insert(inst.assemble()));
     // Same thing with OpName
-    let mut debug_set = HashSet::new();
-    module
-        .debugs
-        .retain(|inst| debug_set.insert(inst.assemble()));
+    let mut name_ids = HashSet::new();
+    module.debugs.retain(|inst| {
+        inst.class.opcode != Op::Name || name_ids.insert(inst.operands[0].unwrap_id_ref())
+    });
 }
