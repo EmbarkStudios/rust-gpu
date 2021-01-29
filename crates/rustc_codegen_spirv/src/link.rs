@@ -9,7 +9,7 @@ use rustc_errors::FatalError;
 use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
 use rustc_middle::middle::dependency_format::Linkage;
-use rustc_session::config::{CrateType, Lto, OutputFilenames, OutputType};
+use rustc_session::config::{CrateType, DebugInfo, Lto, OptLevel, OutputFilenames, OutputType};
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
@@ -124,7 +124,8 @@ fn link_exe(
 
     let spv_binary = do_link(sess, &objects, &rlibs, legalize);
 
-    let spv_binary = if env::var("SPIRV_OPT").is_ok() {
+    let spv_binary = if sess.opts.optimize != OptLevel::No || sess.opts.debuginfo == DebugInfo::None
+    {
         let _timer = sess.timer("link_spirv_opt");
         do_spirv_opt(sess, spv_binary, out_filename)
     } else {
@@ -157,10 +158,21 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
 
     let mut optimizer = opt::create(None);
 
-    optimizer
-        .register_size_passes()
-        .register_pass(opt::Passes::EliminateDeadConstant)
-        .register_pass(opt::Passes::StripDebugInfo);
+    match sess.opts.optimize {
+        OptLevel::No => {}
+        OptLevel::Less | OptLevel::Default | OptLevel::Aggressive => {
+            optimizer.register_performance_passes();
+        }
+        OptLevel::Size | OptLevel::SizeMin => {
+            optimizer.register_size_passes();
+        }
+    }
+
+    if sess.opts.debuginfo == DebugInfo::None {
+        optimizer
+            .register_pass(opt::Passes::EliminateDeadConstant)
+            .register_pass(opt::Passes::StripDebugInfo);
+    }
 
     let result = optimizer.optimize(
         &spv_binary,
