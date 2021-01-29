@@ -36,6 +36,7 @@ pub enum MemoryModel {
 pub struct SpirvBuilder {
     path_to_crate: PathBuf,
     print_metadata: bool,
+    release: bool,
     spirv_version: Option<(u8, u8)>,
     memory_model: Option<MemoryModel>,
 }
@@ -44,6 +45,7 @@ impl SpirvBuilder {
         Self {
             path_to_crate: path_to_crate.as_ref().to_owned(),
             print_metadata: true,
+            release: true,
             spirv_version: None,
             memory_model: None,
         }
@@ -52,6 +54,12 @@ impl SpirvBuilder {
     /// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to true.
     pub fn print_metadata(mut self, v: bool) -> Self {
         self.print_metadata = v;
+        self
+    }
+
+    /// Build in release. Defaults to true.
+    pub fn release(mut self, v: bool) -> Self {
+        self.release = v;
         self
     }
 
@@ -155,8 +163,10 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         "build-std=core",
         "--target",
         "spirv-unknown-unknown",
-        "--release",
     ]);
+    if builder.release {
+        cargo.arg("--release");
+    }
 
     // If we're nested in `cargo` invocation, use a different `--target-dir`,
     // to avoid waiting on the same lock (which effectively dead-locks us).
