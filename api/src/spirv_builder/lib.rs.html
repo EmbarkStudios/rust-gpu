@@ -256,6 +256,16 @@
 <span id="253">253</span>
 <span id="254">254</span>
 <span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span>;
@@ -295,6 +305,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpirvBuilder</span> {
     <span class="ident">path_to_crate</span>: <span class="ident">PathBuf</span>,
     <span class="ident">print_metadata</span>: <span class="ident">bool</span>,
+    <span class="ident">release</span>: <span class="ident">bool</span>,
     <span class="ident">spirv_version</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">u8</span>, <span class="ident">u8</span>)<span class="op">&gt;</span>,
     <span class="ident">memory_model</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MemoryModel</span><span class="op">&gt;</span>,
 }
@@ -303,6 +314,7 @@
         <span class="self">Self</span> {
             <span class="ident">path_to_crate</span>: <span class="ident">path_to_crate</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>(),
             <span class="ident">print_metadata</span>: <span class="bool-val">true</span>,
+            <span class="ident">release</span>: <span class="bool-val">true</span>,
             <span class="ident">spirv_version</span>: <span class="prelude-val">None</span>,
             <span class="ident">memory_model</span>: <span class="prelude-val">None</span>,
         }
@@ -311,6 +323,12 @@
     <span class="doccomment">/// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to true.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print_metadata</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">print_metadata</span> <span class="op">=</span> <span class="ident">v</span>;
+        <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// Build in release. Defaults to true.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">release</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">release</span> <span class="op">=</span> <span class="ident">v</span>;
         <span class="self">self</span>
     }
 
@@ -414,8 +432,10 @@
         <span class="string">&quot;build-std=core&quot;</span>,
         <span class="string">&quot;--target&quot;</span>,
         <span class="string">&quot;spirv-unknown-unknown&quot;</span>,
-        <span class="string">&quot;--release&quot;</span>,
     ]);
+    <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">release</span> {
+        <span class="ident">cargo</span>.<span class="ident">arg</span>(<span class="string">&quot;--release&quot;</span>);
+    }
 
     <span class="comment">// If we&#39;re nested in `cargo` invocation, use a different `--target-dir`,</span>
     <span class="comment">// to avoid waiting on the same lock (which effectively dead-locks us).</span>

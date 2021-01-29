@@ -479,6 +479,18 @@
 <span id="476">476</span>
 <span id="477">477</span>
 <span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">linker</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">back</span>::<span class="ident">lto</span>::{<span class="ident">LtoModuleCodegen</span>, <span class="ident">SerializedModule</span>, <span class="ident">ThinModule</span>, <span class="ident">ThinShared</span>};
@@ -491,7 +503,7 @@
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">dep_graph</span>::<span class="ident">WorkProduct</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">middle</span>::<span class="ident">dependency_format</span>::<span class="ident">Linkage</span>;
-<span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">config</span>::{<span class="ident">CrateType</span>, <span class="ident">Lto</span>, <span class="ident">OutputFilenames</span>, <span class="ident">OutputType</span>};
+<span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">config</span>::{<span class="ident">CrateType</span>, <span class="ident">DebugInfo</span>, <span class="ident">Lto</span>, <span class="ident">OptLevel</span>, <span class="ident">OutputFilenames</span>, <span class="ident">OutputType</span>};
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">output</span>::{<span class="ident">check_file_is_writeable</span>, <span class="ident">invalid_output_for_target</span>, <span class="ident">out_filename</span>};
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">utils</span>::<span class="ident">NativeLibKind</span>;
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
@@ -606,7 +618,8 @@
 
     <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="ident">do_link</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">objects</span>, <span class="kw-2">&amp;</span><span class="ident">rlibs</span>, <span class="ident">legalize</span>);
 
-    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;SPIRV_OPT&quot;</span>).<span class="ident">is_ok</span>() {
+    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">OptLevel</span>::<span class="ident">No</span> <span class="op">|</span><span class="op">|</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo</span>::<span class="prelude-val">None</span>
+    {
         <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_spirv_opt&quot;</span>);
         <span class="ident">do_spirv_opt</span>(<span class="ident">sess</span>, <span class="ident">spv_binary</span>, <span class="ident">out_filename</span>)
     } <span class="kw">else</span> {
@@ -639,10 +652,21 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">optimizer</span> <span class="op">=</span> <span class="ident">opt</span>::<span class="ident">create</span>(<span class="prelude-val">None</span>);
 
-    <span class="ident">optimizer</span>
-        .<span class="ident">register_size_passes</span>()
-        .<span class="ident">register_pass</span>(<span class="ident">opt</span>::<span class="ident">Passes</span>::<span class="ident">EliminateDeadConstant</span>)
-        .<span class="ident">register_pass</span>(<span class="ident">opt</span>::<span class="ident">Passes</span>::<span class="ident">StripDebugInfo</span>);
+    <span class="kw">match</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> {
+        <span class="ident">OptLevel</span>::<span class="ident">No</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">OptLevel</span>::<span class="ident">Less</span> <span class="op">|</span> <span class="ident">OptLevel</span>::<span class="ident">Default</span> <span class="op">|</span> <span class="ident">OptLevel</span>::<span class="ident">Aggressive</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">optimizer</span>.<span class="ident">register_performance_passes</span>();
+        }
+        <span class="ident">OptLevel</span>::<span class="ident">Size</span> <span class="op">|</span> <span class="ident">OptLevel</span>::<span class="ident">SizeMin</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">optimizer</span>.<span class="ident">register_size_passes</span>();
+        }
+    }
+
+    <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo</span>::<span class="prelude-val">None</span> {
+        <span class="ident">optimizer</span>
+            .<span class="ident">register_pass</span>(<span class="ident">opt</span>::<span class="ident">Passes</span>::<span class="ident">EliminateDeadConstant</span>)
+            .<span class="ident">register_pass</span>(<span class="ident">opt</span>::<span class="ident">Passes</span>::<span class="ident">StripDebugInfo</span>);
+    }
 
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">optimizer</span>.<span class="ident">optimize</span>(
         <span class="kw-2">&amp;</span><span class="ident">spv_binary</span>,
