@@ -42,6 +42,10 @@ edition = "2018"
 [lib]
 crate-type = ["dylib"]
 
+[profile.dev]
+overflow-checks = false
+debug-assertions = false
+
 [dependencies]
 spirv-std = { path = "../../crates/spirv-std" }
 
@@ -74,6 +78,7 @@ fn build(src: &str) -> PathBuf {
     let project = setup(src).expect("Failed to set up project");
     crate::SpirvBuilder::new(&project)
         .print_metadata(false)
+        .release(false)
         .build()
         .expect("Failed to build test")
 }
