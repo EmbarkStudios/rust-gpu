@@ -5,9 +5,9 @@ use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_hir::{Param, PatKind};
-use rustc_middle::ty::{Instance, Ty};
+use rustc_middle::ty::{layout::HasParamEnv, Instance, Ty, TyKind};
 use rustc_span::Span;
-use rustc_target::abi::call::{FnAbi, PassMode};
+use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use std::collections::HashMap;
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -18,7 +18,7 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn entry_stub(
         &self,
         instance: &Instance<'_>,
-        fn_abi: &FnAbi<'_, Ty<'_>>,
+        fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
         entry_func: SpirvValue,
         name: String,
         entry: Entry,
@@ -34,6 +34,7 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(local_id);
         let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
+        //const EMPTY: ArgAttribute = ArgAttribute::empty();
         for (abi, arg) in fn_abi.args.iter().zip(body.params) {
             if let PassMode::Direct(_) = abi.mode {
             } else {
@@ -57,10 +58,20 @@ impl<'tcx> CodegenCx<'tcx> {
         let fn_id = if execution_model == ExecutionModel::Kernel {
             self.kernel_entry_stub(entry_func, name, execution_model)
         } else {
+            /*
             self.shader_entry_stub(
                 self.tcx.def_span(instance.def_id()),
                 entry_func,
                 body.params,
+                name,
+                execution_model,
+            )
+            */
+            self.shader_entry_stub(
+                self.tcx.def_span(instance.def_id()),
+                entry_func,
+                body.params,
+                &fn_abi.args,
                 name,
                 execution_model,
             )
@@ -79,6 +90,7 @@ impl<'tcx> CodegenCx<'tcx> {
         span: Span,
         entry_func: SpirvValue,
         hir_params: &[Param<'tcx>],
+        arg_abis: &[ArgAbi<'tcx, Ty<'tcx>>],
         name: String,
         execution_model: ExecutionModel,
     ) -> Word {
@@ -103,8 +115,14 @@ impl<'tcx> CodegenCx<'tcx> {
         let arguments = entry_func_args
             .iter()
             .zip(hir_params)
-            .map(|(&arg, hir_param)| {
-                self.declare_parameter(arg, hir_param, &mut decoration_locations)
+            .zip(arg_abis)
+            .map(|((&arg, hir_param), arg_abi)| {
+                self.declare_parameter(
+                    arg,
+                    hir_param,
+                    arg_abi.layout.ty.kind(),
+                    &mut decoration_locations,
+                )
             })
             .collect::<Vec<_>>();
         let mut emit = self.emit_global();
@@ -116,7 +134,7 @@ impl<'tcx> CodegenCx<'tcx> {
             entry_func_return,
             None,
             entry_func.def_cx(self),
-            arguments.iter().map(|&(a, _)| a),
+            arguments.iter().map(|&(a, _, _)| a),
         )
         .unwrap();
         emit.ret().unwrap();
@@ -124,13 +142,13 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let interface: Vec<_> = if emit.version().unwrap() > (1, 3) {
             // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            arguments.into_iter().map(|(a, _)| a).collect()
+            arguments.into_iter().map(|(a, _, _)| a).collect()
         } else {
             // SPIR-V <= v1.3 only includes Input and Output in the interface.
             arguments
                 .into_iter()
-                .filter(|&(_, s)| s == StorageClass::Input || s == StorageClass::Output)
-                .map(|(a, _)| a)
+                .filter(|&(_, s, _)| s == StorageClass::Input || s == StorageClass::Output)
+                .map(|(a, _, _)| a)
                 .collect()
         };
         emit.entry_point(execution_model, fn_id, name, interface);
@@ -141,8 +159,9 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         arg: Word,
         hir_param: &Param<'tcx>,
+        ty_kind: &TyKind<'tcx>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
-    ) -> (Word, StorageClass) {
+    ) -> (Word, StorageClass, SpirvBinding) {
         let storage_class = match self.lookup_type(arg) {
             SpirvType::Pointer { storage_class, .. } => storage_class,
             other => self.tcx.sess.fatal(&format!(
@@ -150,15 +169,9 @@ impl<'tcx> CodegenCx<'tcx> {
                 other.debug(arg, self)
             )),
         };
-        let mut has_location = matches!(
-            storage_class,
-            StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
-        );
         // Note: this *declares* the variable too.
         let variable = self.emit_global().variable(arg, None, storage_class, None);
-        if let PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
-            self.emit_global().name(variable, ident.to_string());
-        }
+        let mut spirv_binding = self.parse_storage_class_binding(storage_class, ty_kind);
         for attr in parse_attrs(self, hir_param.attrs) {
             match attr {
                 SpirvAttribute::Builtin(builtin) => {
@@ -167,23 +180,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         Decoration::BuiltIn,
                         std::iter::once(Operand::BuiltIn(builtin)),
                     );
-                    has_location = false;
-                }
-                SpirvAttribute::DescriptorSet(index) => {
-                    self.emit_global().decorate(
-                        variable,
-                        Decoration::DescriptorSet,
-                        std::iter::once(Operand::LiteralInt32(index)),
-                    );
-                    has_location = false;
-                }
-                SpirvAttribute::Binding(index) => {
-                    self.emit_global().decorate(
-                        variable,
-                        Decoration::Binding,
-                        std::iter::once(Operand::LiteralInt32(index)),
-                    );
-                    has_location = false;
+                    spirv_binding = SpirvBinding::Builtin;
                 }
                 SpirvAttribute::Flat => {
                     self.emit_global()
@@ -192,22 +189,137 @@ impl<'tcx> CodegenCx<'tcx> {
                 _ => {}
             }
         }
-        // Assign locations from left to right, incrementing each storage class
-        // individually.
-        // TODO: Is this right for UniformConstant? Do they share locations with
-        // input/outpus?
-        if has_location {
-            let location = decoration_locations
-                .entry(storage_class)
-                .or_insert_with(|| 0);
-            self.emit_global().decorate(
-                variable,
-                Decoration::Location,
-                std::iter::once(Operand::LiteralInt32(*location)),
-            );
-            *location += 1;
+        match spirv_binding {
+            SpirvBinding::DescriptorSet { set, binding } => {
+                self.emit_global().decorate(
+                    variable,
+                    Decoration::DescriptorSet,
+                    std::iter::once(Operand::LiteralInt32(set)),
+                );
+                self.emit_global().decorate(
+                    variable,
+                    Decoration::Binding,
+                    std::iter::once(Operand::LiteralInt32(binding)),
+                );
+            }
+            SpirvBinding::Location(location) => {
+                self.emit_global().decorate(
+                    variable,
+                    Decoration::Location,
+                    std::iter::once(Operand::LiteralInt32(location)),
+                );
+            }
+            SpirvBinding::InferredLocation => {
+                // Assign locations from left to right, incrementing each storage class
+                // individually.
+                // TODO: Is this right for UniformConstant? Do they share locations with
+                // input/outpus?
+                let location = decoration_locations
+                    .entry(storage_class)
+                    .or_insert_with(|| 0);
+                self.emit_global().decorate(
+                    variable,
+                    Decoration::Location,
+                    std::iter::once(Operand::LiteralInt32(*location)),
+                );
+                *location += 1;
+            }
+            _ => {}
         }
-        (variable, storage_class)
+        if let PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
+            self.emit_global().name(variable, ident.to_string());
+        }
+        (variable, storage_class, spirv_binding)
+    }
+
+    fn parse_storage_class_binding(
+        &self,
+        storage_class: StorageClass,
+        ty_kind: &TyKind<'tcx>,
+    ) -> SpirvBinding {
+        if let TyKind::Adt(adt, substs) = ty_kind {
+            match storage_class {
+                StorageClass::Uniform | StorageClass::StorageBuffer => {
+                    if let Some(desc_set) = substs.types().last() {
+                        if let TyKind::Adt(_, substs2) = desc_set.kind() {
+                            let consts = substs2.consts().collect::<Vec<_>>();
+                            if consts.len() != 2 {
+                                self.tcx.sess.fatal(&format!(
+                                    "Uniform & Storage Buffer storage class bindings must have set and binding const usize parameters.
+                                    desc set: {:?} has const params: {:?}",
+                                    desc_set, consts
+                            ))
+                            };
+                            let set = consts[0].eval_usize(self.tcx, self.param_env());
+                            let binding = consts[1].eval_usize(self.tcx, self.param_env());
+                            assert!(set < u32::MAX as u64 && binding < u32::MAX as u64);
+                            SpirvBinding::DescriptorSet {
+                                set: set as u32,
+                                binding: binding as u32,
+                            }
+                        } else {
+                            self.tcx.sess.fatal(&format!(
+                                "Uniform or Storage Buffer storage class binding type parameter must be an ADT.
+                                desc set: {:?} is kind: {:?}",
+                                desc_set, desc_set.kind()
+                        ))
+                        }
+                    } else {
+                        self.tcx.sess.fatal(&format!(
+                            "Uniform or Storage Buffer storage class ADT last type parameter must be binding information.
+                            ADT: {:?} | substs types: {:?}",
+                            adt, substs.types().collect::<Vec<_>>()
+                    ))
+                    }
+                }
+                StorageClass::Input | StorageClass::Output => {
+                    if let Some(location) = substs.types().last() {
+                        if let TyKind::Adt(_, substs2) = location.kind() {
+                            let consts = substs2.consts().collect::<Vec<_>>();
+                            if consts.is_empty() {
+                                SpirvBinding::InferredLocation
+                            } else if consts.len() == 1 {
+                                let location = consts[0].eval_usize(self.tcx, self.param_env());
+                                assert!(location < u32::MAX as u64);
+                                SpirvBinding::Location(location as u32)
+                            } else {
+                                self.tcx.sess.fatal(&format!(
+                                    "Input storage class binding type parameter must have zero (inferred/builtin) or one (explicit) location const parameter.
+                                    location: {:?} is kind: {:?}",
+                                    location, location.kind()
+                            ))
+                            }
+                        } else {
+                            self.tcx.sess.fatal(&format!(
+                                "Input storage class binding type parameter must be an ADT.
+                                desc set: {:?} is kind: {:?}",
+                                location,
+                                location.kind()
+                            ))
+                        }
+                    } else {
+                        self.tcx.sess.fatal(&format!(
+                            "Input storage class ADT must have second type parameter for binding.
+                            ADT: {:?} | substs types: {:?}",
+                            adt,
+                            substs.types().collect::<Vec<_>>()
+                        ))
+                    }
+                }
+                StorageClass::PushConstant => SpirvBinding::PushConstant,
+                _ => self.tcx.sess.fatal(&format!(
+                    "Storage class binding not yet implemented.
+                    storage_class: {:?}",
+                    storage_class
+                )),
+            }
+        } else {
+            self.tcx.sess.fatal(&format!(
+                "Function parameter type kind must be ADT.
+                Type kind: {:?}",
+                ty_kind
+            ))
+        }
     }
 
     // Kernel mode takes its interface as function parameters(??)
@@ -255,4 +367,13 @@ impl<'tcx> CodegenCx<'tcx> {
         emit.entry_point(execution_model, fn_id, name, &[]);
         fn_id
     }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+pub enum SpirvBinding {
+    DescriptorSet { set: u32, binding: u32 },
+    Location(u32),
+    InferredLocation,
+    Builtin,
+    PushConstant,
 }
