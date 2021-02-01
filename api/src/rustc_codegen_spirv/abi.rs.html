@@ -861,6 +861,39 @@
 <span id="858">858</span>
 <span id="859">859</span>
 <span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s</span>
 <span class="doccomment">//! surprisingly difficult.</span>
@@ -873,16 +906,16 @@
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::{<span class="ident">FnAbiExt</span>, <span class="ident">TyAndLayout</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">subst</span>::<span class="ident">SubstsRef</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::{<span class="ident">GeneratorSubsts</span>, <span class="ident">PolyFnSig</span>, <span class="ident">Ty</span>, <span class="ident">TyKind</span>, <span class="ident">TypeAndMut</span>};
+<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">def_id</span>::<span class="ident">DefId</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">Span</span>;
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::<span class="ident">call</span>::{<span class="ident">CastTarget</span>, <span class="ident">FnAbi</span>, <span class="ident">PassMode</span>, <span class="ident">Reg</span>, <span class="ident">RegKind</span>};
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{
-    <span class="ident">Abi</span>, <span class="ident">Align</span>, <span class="ident">FieldsShape</span>, <span class="ident">LayoutOf</span>, <span class="ident">Primitive</span>, <span class="ident">Scalar</span>, <span class="ident">Size</span>, <span class="ident">TagEncoding</span>, <span class="ident">Variants</span>,
+    <span class="ident">Abi</span>, <span class="ident">Align</span>, <span class="ident">FieldsShape</span>, <span class="ident">LayoutOf</span>, <span class="ident">Primitive</span>, <span class="ident">Scalar</span>, <span class="ident">Size</span>, <span class="ident">TagEncoding</span>, <span class="ident">VariantIdx</span>, <span class="ident">Variants</span>,
 };
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">Entry</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
 
 <span class="doccomment">/// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk</span>
 <span class="doccomment">/// of the fields will result in an infinite loop. Because pointers are the only thing that are</span>
@@ -1101,7 +1134,7 @@
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size</span>, <span class="ident">computed_size</span>, <span class="string">&quot;{:#?}&quot;</span>, <span class="self">self</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">align</span>, <span class="ident">computed_align</span>, <span class="string">&quot;{:#?}&quot;</span>, <span class="self">self</span>);
         <span class="ident">SpirvType</span>::<span class="ident">Adt</span> {
-            <span class="ident">name</span>: <span class="string">&quot;&lt;cast_target&gt;&quot;</span>.<span class="ident">to_string</span>(),
+            <span class="ident">def_id</span>: <span class="prelude-val">None</span>,
             <span class="ident">size</span>,
             <span class="ident">align</span>,
             <span class="ident">field_types</span>: <span class="ident">args</span>,
@@ -1242,7 +1275,7 @@
     <span class="comment">// There&#39;s a few layers that we go through here. First we inspect layout.abi, then if relevant, layout.fields, etc.</span>
     <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">abi</span> {
         <span class="ident">Abi</span>::<span class="ident">Uninhabited</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">Adt</span> {
-            <span class="ident">name</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;&lt;uninhabited={}&gt;&quot;</span>, <span class="ident">ty</span>.<span class="ident">ty</span>),
+            <span class="ident">def_id</span>: <span class="ident">def_id_for_spirv_type_adt</span>(<span class="ident">ty</span>),
             <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="ident">Size</span>::<span class="ident">ZERO</span>),
             <span class="ident">align</span>: <span class="ident">Align</span>::<span class="ident">from_bytes</span>(<span class="number">0</span>).<span class="ident">unwrap</span>(),
             <span class="ident">field_types</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
@@ -1250,7 +1283,7 @@
             <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
             <span class="ident">is_block</span>: <span class="bool-val">false</span>,
         }
-        .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
+        .<span class="ident">def_with_name</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">TyLayoutNameKey</span>::<span class="ident">from</span>(<span class="ident">ty</span>)),
         <span class="ident">Abi</span>::<span class="ident">Scalar</span>(<span class="kw-2">ref</span> <span class="ident">scalar</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">trans_scalar</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ty</span>, <span class="ident">scalar</span>, <span class="prelude-val">None</span>, <span class="ident">is_immediate</span>),
         <span class="ident">Abi</span>::<span class="ident">ScalarPair</span>(<span class="kw-2">ref</span> <span class="ident">one</span>, <span class="kw-2">ref</span> <span class="ident">two</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// Note! Do not pass through is_immediate here - they&#39;re wrapped in a struct, hence, not immediate.</span>
@@ -1262,7 +1295,7 @@
             <span class="kw">let</span> <span class="ident">two_offset</span> <span class="op">=</span> <span class="ident">one</span>.<span class="ident">value</span>.<span class="ident">size</span>(<span class="ident">cx</span>).<span class="ident">align_to</span>(<span class="ident">two</span>.<span class="ident">value</span>.<span class="ident">align</span>(<span class="ident">cx</span>).<span class="ident">abi</span>);
             <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">is_unsized</span>() { <span class="prelude-val">None</span> } <span class="kw">else</span> { <span class="prelude-val">Some</span>(<span class="ident">ty</span>.<span class="ident">size</span>) };
             <span class="ident">SpirvType</span>::<span class="ident">Adt</span> {
-                <span class="ident">name</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ty</span>.<span class="ident">ty</span>),
+                <span class="ident">def_id</span>: <span class="ident">def_id_for_spirv_type_adt</span>(<span class="ident">ty</span>),
                 <span class="ident">size</span>,
                 <span class="ident">align</span>: <span class="ident">ty</span>.<span class="ident">align</span>.<span class="ident">abi</span>,
                 <span class="ident">field_types</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">one_spirv</span>, <span class="ident">two_spirv</span>],
@@ -1270,7 +1303,7 @@
                 <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
                 <span class="ident">is_block</span>: <span class="bool-val">false</span>,
             }
-            .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
+            .<span class="ident">def_with_name</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">TyLayoutNameKey</span>::<span class="ident">from</span>(<span class="ident">ty</span>))
         }
         <span class="ident">Abi</span>::<span class="ident">Vector</span> { <span class="kw-2">ref</span> <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">elem_spirv</span> <span class="op">=</span> <span class="ident">trans_scalar</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ty</span>, <span class="ident">element</span>, <span class="prelude-val">None</span>, <span class="ident">is_immediate</span>);
@@ -1522,7 +1555,7 @@
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">count</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="comment">// spir-v doesn&#39;t support zero-sized arrays</span>
                 <span class="ident">SpirvType</span>::<span class="ident">Adt</span> {
-                    <span class="ident">name</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;&lt;zero-sized-array={}&gt;&quot;</span>, <span class="ident">ty</span>.<span class="ident">ty</span>),
+                    <span class="ident">def_id</span>: <span class="ident">def_id_for_spirv_type_adt</span>(<span class="ident">ty</span>),
                     <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="ident">Size</span>::<span class="ident">ZERO</span>),
                     <span class="ident">align</span>: <span class="ident">Align</span>::<span class="ident">from_bytes</span>(<span class="number">0</span>).<span class="ident">unwrap</span>(),
                     <span class="ident">field_types</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
@@ -1530,7 +1563,7 @@
                     <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
                     <span class="ident">is_block</span>: <span class="bool-val">false</span>,
                 }
-                .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
+                .<span class="ident">def_with_name</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">TyLayoutNameKey</span>::<span class="ident">from</span>(<span class="ident">ty</span>))
             } <span class="kw">else</span> {
                 <span class="kw">let</span> <span class="ident">count_const</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">constant_u32</span>(<span class="ident">span</span>, <span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>);
                 <span class="kw">let</span> <span class="ident">element_spv</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">element_type</span>);
@@ -1585,7 +1618,6 @@
     <span class="ident">ty</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
     <span class="ident">is_block</span>: <span class="ident">bool</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-    <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">name_of_struct</span>(<span class="ident">ty</span>);
     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TyKind</span>::<span class="ident">Foreign</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">ty</span>.<span class="ident">kind</span>() {
         <span class="comment">// &quot;An unsized FFI type that is opaque to Rust&quot;, `extern type A;` (currently unstable)</span>
         <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">kernel_mode</span> {
@@ -1628,7 +1660,7 @@
         };
     }
     <span class="ident">SpirvType</span>::<span class="ident">Adt</span> {
-        <span class="ident">name</span>,
+        <span class="ident">def_id</span>: <span class="ident">def_id_for_spirv_type_adt</span>(<span class="ident">ty</span>),
         <span class="ident">size</span>,
         <span class="ident">align</span>,
         <span class="ident">field_types</span>,
@@ -1636,21 +1668,55 @@
         <span class="ident">field_names</span>: <span class="prelude-val">Some</span>(<span class="ident">field_names</span>),
         <span class="ident">is_block</span>,
     }
-    .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
+    .<span class="ident">def_with_name</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">TyLayoutNameKey</span>::<span class="ident">from</span>(<span class="ident">ty</span>))
 }
 
-<span class="kw">fn</span> <span class="ident">name_of_struct</span>(<span class="ident">ty</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">ty</span>.<span class="ident">to_string</span>();
-    <span class="kw">if</span> <span class="kw">let</span> (<span class="kw-2">&amp;</span><span class="ident">TyKind</span>::<span class="ident">Adt</span>(<span class="ident">def</span>, <span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="ident">Variants</span>::<span class="ident">Single</span> { <span class="ident">index</span> }) <span class="op">=</span> (<span class="ident">ty</span>.<span class="ident">ty</span>.<span class="ident">kind</span>(), <span class="kw-2">&amp;</span><span class="ident">ty</span>.<span class="ident">variants</span>) {
-        <span class="kw">if</span> <span class="ident">def</span>.<span class="ident">is_enum</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">def</span>.<span class="ident">variants</span>.<span class="ident">is_empty</span>() {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name</span>, <span class="string">&quot;::{}&quot;</span>, <span class="ident">def</span>.<span class="ident">variants</span>[<span class="ident">index</span>].<span class="ident">ident</span>).<span class="ident">unwrap</span>();
+<span class="doccomment">/// Grab a `DefId` from the type if possible to avoid too much deduplication,</span>
+<span class="doccomment">/// which could result in one SPIR-V `OpType*` having many names</span>
+<span class="doccomment">/// (not in itself an issue, but it makes error reporting harder).</span>
+<span class="kw">fn</span> <span class="ident">def_id_for_spirv_type_adt</span>(<span class="ident">layout</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DefId</span><span class="op">&gt;</span> {
+    <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">layout</span>.<span class="ident">ty</span>.<span class="ident">kind</span>() {
+        <span class="ident">TyKind</span>::<span class="ident">Adt</span>(<span class="ident">def</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">def</span>.<span class="ident">did</span>),
+        <span class="ident">TyKind</span>::<span class="ident">Foreign</span>(<span class="ident">def_id</span>) <span class="op">|</span> <span class="ident">TyKind</span>::<span class="ident">Closure</span>(<span class="ident">def_id</span>, <span class="kw">_</span>) <span class="op">|</span> <span class="ident">TyKind</span>::<span class="ident">Generator</span>(<span class="ident">def_id</span>, ..) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">def_id</span>)
+        }
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+    }
+}
+
+<span class="doccomment">/// Minimal and cheaply comparable/hashable subset of the information contained</span>
+<span class="doccomment">/// in `TyLayout` that can be used to generate a name (assuming a nominal type).</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TyLayoutNameKey</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+    <span class="ident">ty</span>: <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
+    <span class="ident">variant</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VariantIdx</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TyLayoutNameKey</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">layout</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">TyLayoutNameKey</span> {
+            <span class="ident">ty</span>: <span class="ident">layout</span>.<span class="ident">ty</span>,
+            <span class="ident">variant</span>: <span class="kw">match</span> <span class="ident">layout</span>.<span class="ident">variants</span> {
+                <span class="ident">Variants</span>::<span class="ident">Single</span> { <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>),
+                <span class="ident">Variants</span>::<span class="ident">Multiple</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            },
         }
     }
-    <span class="kw">if</span> <span class="kw">let</span> (<span class="kw-2">&amp;</span><span class="ident">TyKind</span>::<span class="ident">Generator</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="ident">Variants</span>::<span class="ident">Single</span> { <span class="ident">index</span> }) <span class="op">=</span> (<span class="ident">ty</span>.<span class="ident">ty</span>.<span class="ident">kind</span>(), <span class="kw-2">&amp;</span><span class="ident">ty</span>.<span class="ident">variants</span>)
-    {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name</span>, <span class="string">&quot;::{}&quot;</span>, <span class="ident">GeneratorSubsts</span>::<span class="ident">variant_name</span>(<span class="ident">index</span>)).<span class="ident">unwrap</span>();
+}
+
+<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">TyLayoutNameKey</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">ty</span>)<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="kw">let</span> (<span class="ident">TyKind</span>::<span class="ident">Adt</span>(<span class="ident">def</span>, <span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="ident">index</span>)) <span class="op">=</span> (<span class="self">self</span>.<span class="ident">ty</span>.<span class="ident">kind</span>(), <span class="self">self</span>.<span class="ident">variant</span>) {
+            <span class="kw">if</span> <span class="ident">def</span>.<span class="ident">is_enum</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">def</span>.<span class="ident">variants</span>.<span class="ident">is_empty</span>() {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;::{}&quot;</span>, <span class="ident">def</span>.<span class="ident">variants</span>[<span class="ident">index</span>].<span class="ident">ident</span>)<span class="question-mark">?</span>;
+            }
+        }
+        <span class="kw">if</span> <span class="kw">let</span> (<span class="ident">TyKind</span>::<span class="ident">Generator</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="ident">index</span>)) <span class="op">=</span> (<span class="self">self</span>.<span class="ident">ty</span>.<span class="ident">kind</span>(), <span class="self">self</span>.<span class="ident">variant</span>) {
+            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;::{}&quot;</span>, <span class="ident">GeneratorSubsts</span>::<span class="ident">variant_name</span>(<span class="ident">index</span>))<span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(())
     }
-    <span class="ident">name</span>
 }
 
 <span class="kw">fn</span> <span class="ident">trans_image</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(
