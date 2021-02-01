@@ -144,7 +144,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
         let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, els);
         SpirvType::Adt {
-            name: "<generated_struct>".to_string(),
+            def_id: None,
             align,
             size,
             field_types: els.to_vec(),

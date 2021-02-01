@@ -382,3 +382,16 @@ pub fn main() {
 }
 "#);
 }
+
+#[test]
+fn mat3_vec3_multiply() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(input: Input<glam::Mat3>, mut output: Output<glam::Vec3>) {
+    let input = input.load();
+    let vector = input * glam::Vec3::new(1.0, 2.0, 3.0);
+    output.store(vector);
+}
+"#);
+}

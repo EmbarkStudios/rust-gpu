@@ -9,16 +9,16 @@ use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::subst::SubstsRef;
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind, TypeAndMut};
+use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{
-    Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, TagEncoding, Variants,
+    Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, TagEncoding, VariantIdx, Variants,
 };
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fmt;
-use std::fmt::Write;
 
 /// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk
 /// of the fields will result in an infinite loop. Because pointers are the only thing that are
@@ -237,7 +237,7 @@ impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
         assert_eq!(size, computed_size, "{:#?}", self);
         assert_eq!(align, computed_align, "{:#?}", self);
         SpirvType::Adt {
-            name: "<cast_target>".to_string(),
+            def_id: None,
             size,
             align,
             field_types: args,
@@ -378,7 +378,7 @@ fn trans_type_impl<'tcx>(
     // There's a few layers that we go through here. First we inspect layout.abi, then if relevant, layout.fields, etc.
     match ty.abi {
         Abi::Uninhabited => SpirvType::Adt {
-            name: format!("<uninhabited={}>", ty.ty),
+            def_id: def_id_for_spirv_type_adt(ty),
             size: Some(Size::ZERO),
             align: Align::from_bytes(0).unwrap(),
             field_types: Vec::new(),
@@ -386,7 +386,7 @@ fn trans_type_impl<'tcx>(
             field_names: None,
             is_block: false,
         }
-        .def(span, cx),
+        .def_with_name(cx, span, TyLayoutNameKey::from(ty)),
         Abi::Scalar(ref scalar) => trans_scalar(cx, span, ty, scalar, None, is_immediate),
         Abi::ScalarPair(ref one, ref two) => {
             // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
@@ -398,7 +398,7 @@ fn trans_type_impl<'tcx>(
             let two_offset = one.value.size(cx).align_to(two.value.align(cx).abi);
             let size = if ty.is_unsized() { None } else { Some(ty.size) };
             SpirvType::Adt {
-                name: format!("{}", ty.ty),
+                def_id: def_id_for_spirv_type_adt(ty),
                 size,
                 align: ty.align.abi,
                 field_types: vec![one_spirv, two_spirv],
@@ -406,7 +406,7 @@ fn trans_type_impl<'tcx>(
                 field_names: None,
                 is_block: false,
             }
-            .def(span, cx)
+            .def_with_name(cx, span, TyLayoutNameKey::from(ty))
         }
         Abi::Vector { ref element, count } => {
             let elem_spirv = trans_scalar(cx, span, ty, element, None, is_immediate);
@@ -658,7 +658,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
             } else if count == 0 {
                 // spir-v doesn't support zero-sized arrays
                 SpirvType::Adt {
-                    name: format!("<zero-sized-array={}>", ty.ty),
+                    def_id: def_id_for_spirv_type_adt(ty),
                     size: Some(Size::ZERO),
                     align: Align::from_bytes(0).unwrap(),
                     field_types: Vec::new(),
@@ -666,7 +666,7 @@ fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>
                     field_names: None,
                     is_block: false,
                 }
-                .def(span, cx)
+                .def_with_name(cx, span, TyLayoutNameKey::from(ty))
             } else {
                 let count_const = cx.constant_u32(span, count as u32);
                 let element_spv = cx.lookup_type(element_type);
@@ -721,7 +721,6 @@ fn trans_struct<'tcx>(
     ty: TyAndLayout<'tcx>,
     is_block: bool,
 ) -> Word {
-    let name = name_of_struct(ty);
     if let TyKind::Foreign(_) = ty.ty.kind() {
         // "An unsized FFI type that is opaque to Rust", `extern type A;` (currently unstable)
         if cx.kernel_mode {
@@ -764,7 +763,7 @@ fn trans_struct<'tcx>(
         };
     }
     SpirvType::Adt {
-        name,
+        def_id: def_id_for_spirv_type_adt(ty),
         size,
         align,
         field_types,
@@ -772,21 +771,55 @@ fn trans_struct<'tcx>(
         field_names: Some(field_names),
         is_block,
     }
-    .def(span, cx)
+    .def_with_name(cx, span, TyLayoutNameKey::from(ty))
 }
 
-fn name_of_struct(ty: TyAndLayout<'_>) -> String {
-    let mut name = ty.ty.to_string();
-    if let (&TyKind::Adt(def, _), &Variants::Single { index }) = (ty.ty.kind(), &ty.variants) {
-        if def.is_enum() && !def.variants.is_empty() {
-            write!(&mut name, "::{}", def.variants[index].ident).unwrap();
+/// Grab a `DefId` from the type if possible to avoid too much deduplication,
+/// which could result in one SPIR-V `OpType*` having many names
+/// (not in itself an issue, but it makes error reporting harder).
+fn def_id_for_spirv_type_adt(layout: TyAndLayout<'_>) -> Option<DefId> {
+    match *layout.ty.kind() {
+        TyKind::Adt(def, _) => Some(def.did),
+        TyKind::Foreign(def_id) | TyKind::Closure(def_id, _) | TyKind::Generator(def_id, ..) => {
+            Some(def_id)
+        }
+        _ => None,
+    }
+}
+
+/// Minimal and cheaply comparable/hashable subset of the information contained
+/// in `TyLayout` that can be used to generate a name (assuming a nominal type).
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+pub struct TyLayoutNameKey<'tcx> {
+    ty: Ty<'tcx>,
+    variant: Option<VariantIdx>,
+}
+
+impl<'tcx> From<TyAndLayout<'tcx>> for TyLayoutNameKey<'tcx> {
+    fn from(layout: TyAndLayout<'tcx>) -> Self {
+        TyLayoutNameKey {
+            ty: layout.ty,
+            variant: match layout.variants {
+                Variants::Single { index } => Some(index),
+                Variants::Multiple { .. } => None,
+            },
         }
     }
-    if let (&TyKind::Generator(_, _, _), &Variants::Single { index }) = (ty.ty.kind(), &ty.variants)
-    {
-        write!(&mut name, "::{}", GeneratorSubsts::variant_name(index)).unwrap();
+}
+
+impl fmt::Display for TyLayoutNameKey<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.ty)?;
+        if let (TyKind::Adt(def, _), Some(index)) = (self.ty.kind(), self.variant) {
+            if def.is_enum() && !def.variants.is_empty() {
+                write!(f, "::{}", def.variants[index].ident)?;
+            }
+        }
+        if let (TyKind::Generator(_, _, _), Some(index)) = (self.ty.kind(), self.variant) {
+            write!(f, "::{}", GeneratorSubsts::variant_name(index))?;
+        }
+        Ok(())
     }
-    name
 }
 
 fn trans_image<'tcx>(
