@@ -98,7 +98,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                             tokens.push(vec![]);
                         }
                         let mut chars = line.chars();
-                        while let Some(token) = self.lex_word(&mut chars) {
+                        while let Some(token) = InlineAsmCx::Local(self).lex_word(&mut chars) {
                             tokens.last_mut().unwrap().push(token);
                         }
                     }
@@ -132,25 +132,35 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         }
 
         let mut id_map = HashMap::new();
-        let mut id_to_type_map = HashMap::new();
+        let global_id_map = self.cx.global_asm_id_map.borrow();
+        for (k, v) in global_id_map.iter() {
+            id_map.insert(k.as_str(), *v);
+        }
+        let mut id_to_type_map = self.cx.global_asm_id_to_type_map.borrow().clone();
+
         for operand in operands {
             if let InlineAsmOperandRef::In { reg: _, value } = operand {
                 let value = value.immediate();
                 id_to_type_map.insert(value.def(self), value.ty);
             }
         }
+        
         for line in tokens {
-            self.codegen_asm(&mut id_map, &mut id_to_type_map, line.into_iter());
+            InlineAsmCx::Local(self).codegen_asm(
+                &mut id_map,
+                &mut id_to_type_map,
+                line.into_iter(),
+            );
         }
     }
 }
 
-enum TypeofKind {
+pub enum TypeofKind {
     Plain,
     Dereference,
 }
 
-enum Token<'a, 'cx, 'tcx> {
+pub enum Token<'a, 'cx, 'tcx> {
     Word(&'a str),
     String(String),
     Placeholder(&'a InlineAsmOperandRef<'tcx, Builder<'cx, 'tcx>>, Span),
@@ -166,8 +176,56 @@ enum OutRegister<'a> {
     Place(PlaceRef<'a, SpirvValue>),
 }
 
-impl<'cx, 'tcx> Builder<'cx, 'tcx> {
-    fn lex_word<'a>(&self, line: &mut std::str::Chars<'a>) -> Option<Token<'a, 'cx, 'tcx>> {
+pub enum InlineAsmCx<'a, 'cx, 'tcx> {
+    Global(&'cx CodegenCx<'tcx>, Span),
+    Local(&'a mut Builder<'cx, 'tcx>),
+}
+
+impl<'cx, 'tcx> std::ops::Deref for InlineAsmCx<'_, 'cx, 'tcx> {
+    type Target = &'cx CodegenCx<'tcx>;
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Global(cx, _) | Self::Local(Builder { cx, .. }) => cx,
+        }
+    }
+}
+
+impl InlineAsmCx<'_, '_, '_> {
+    fn span(&self) -> Span {
+        match self {
+            &Self::Global(_, span) => span,
+            Self::Local(bx) => bx.span(),
+        }
+    }
+
+    fn err(&self, msg: &str) {
+        self.tcx.sess.span_err(self.span(), msg)
+    }
+
+    fn emit(&self) -> std::cell::RefMut<'_, rspirv::dr::Builder> {
+        match self {
+            Self::Global(cx, _) => cx.emit_global(),
+            Self::Local(bx) => bx.emit(),
+        }
+    }
+
+    fn emit_append(&self, inst: dr::Instruction){
+        match self {
+            Self::Global(cx, _) => cx.emit_global().insert_types_global_values(dr::InsertPoint::End, inst),
+            Self::Local(bx) => bx.emit().insert_into_block(dr::InsertPoint::End, inst).unwrap(),
+        }
+    }
+    
+    fn emit_global(&self, inst: dr::Instruction){
+        match self {
+            Self::Global(cx, _) => cx.emit_global().insert_types_global_values(dr::InsertPoint::End, inst),
+            Self::Local(bx) => bx.emit_global().insert_types_global_values(dr::InsertPoint::End, inst),
+        }
+    }
+}
+
+impl<'cx, 'tcx> InlineAsmCx<'_, 'cx, 'tcx> {
+    pub fn lex_word<'a>(&self, line: &mut std::str::Chars<'a>) -> Option<Token<'a, 'cx, 'tcx>> {
         loop {
             let start = line.as_str();
             match line.next()? {
@@ -228,6 +286,8 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
     fn insert_inst(&mut self, id_map: &mut HashMap<&str, Word>, inst: dr::Instruction) {
         // Types declared must be registered in our type system.
+        println!("{:?}", &inst);
+
         let new_result_id = match inst.class.opcode {
             Op::TypeVoid => SpirvType::Void.def(self.span(), self),
             Op::TypeBool => SpirvType::Bool.def(self.span(), self),
@@ -255,15 +315,34 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Op::TypeArray => {
                 self.err("OpTypeArray in asm! is not supported yet");
                 return;
-            }
+            },
+            Op::TypeRuntimeArray => SpirvType::RuntimeArray {
+                element: inst.operands[0].unwrap_id_ref()
+            }.def(self.span(), self),
+            Op::TypePointer => SpirvType::Pointer {
+                storage_class: inst.operands[0].unwrap_storage_class(),
+                pointee: inst.operands[1].unwrap_id_ref(),
+            }.def(self.span(), self),
+            Op::TypeImage => SpirvType::Image {
+                sampled_type: inst.operands[0].unwrap_id_ref(),
+                dim: inst.operands[1].unwrap_dim(),
+                depth: inst.operands[2].unwrap_literal_int32(),
+                arrayed: inst.operands[3].unwrap_literal_int32(),
+                multisampled: inst.operands[4].unwrap_literal_int32(),
+                sampled: inst.operands[5].unwrap_literal_int32(),
+                image_format: inst.operands[6].unwrap_image_format(),
+                access_qualifier: None,
+            }.def(self.span(), self),
             Op::TypeSampledImage => SpirvType::SampledImage {
                 image_type: inst.operands[0].unwrap_id_ref(),
             }
             .def(self.span(), self),
+            Op::Variable => {
+                self.emit_global(inst);
+                return;
+            },
             _ => {
-                self.emit()
-                    .insert_into_block(dr::InsertPoint::End, inst)
-                    .unwrap();
+                self.emit_append(inst);
                 return;
             }
         };
@@ -274,7 +353,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
     }
 
-    fn codegen_asm<'a>(
+    pub fn codegen_asm<'a>(
         &mut self,
         id_map: &mut HashMap<&'a str, Word>,
         id_to_type_map: &mut HashMap<Word, Word>,
@@ -358,13 +437,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
         self.insert_inst(id_map, instruction);
         if let Some(OutRegister::Place(place)) = out_register {
+            let place = match self {
+                Self::Global(..) => unreachable!(),
+                Self::Local(bx) => place.llval.def(bx),
+            };
             self.emit()
-                .store(
-                    place.llval.def(self),
-                    result_id.unwrap(),
-                    None,
-                    std::iter::empty(),
-                )
+                .store(place, result_id.unwrap(), None, std::iter::empty())
                 .unwrap();
         }
     }
@@ -755,7 +833,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Token::Placeholder(hole, span) => match hole {
                 InlineAsmOperandRef::In { reg, value } => {
                     self.check_reg(span, reg);
-                    Some(value.immediate().def(self))
+                    match self {
+                        Self::Global(..) => unreachable!(),
+                        Self::Local(bx) => Some(value.immediate().def(bx)),
+                    }
                 }
                 InlineAsmOperandRef::Out {
                     reg,
@@ -775,7 +856,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     out_place: _,
                 } => {
                     self.check_reg(span, reg);
-                    Some(in_value.immediate().def(self))
+                    match self {
+                        Self::Global(..) => unreachable!(),
+                        Self::Local(bx) => Some(in_value.immediate().def(bx)),
+                    }
                 }
                 InlineAsmOperandRef::Const { string: _ } => {
                     self.tcx
@@ -890,6 +974,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         _ => return Err("expected number literal in OpConstant".to_string()),
                     })
                 }
+                println!("{} {}", ty, word);
                 match parse(self.lookup_type(ty), word) {
                     Ok(op) => inst.operands.push(op),
                     Err(err) => self.err(&err),

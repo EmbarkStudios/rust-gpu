@@ -69,6 +69,9 @@ pub struct CodegenCx<'tcx> {
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
+
+    pub global_asm_id_map: RefCell<HashMap<String, Word>>,
+    pub global_asm_id_to_type_map: RefCell<HashMap<Word, Word>>,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -121,6 +124,8 @@ impl<'tcx> CodegenCx<'tcx> {
             panic_fn_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
+            global_asm_id_map: Default::default(),
+            global_asm_id_to_type_map: Default::default(),
         }
     }
 
@@ -402,8 +407,52 @@ impl<'tcx> CoverageInfoMethods for CodegenCx<'tcx> {
     }
 }
 
+use crate::builder::spirv_asm::InlineAsmCx;
+
 impl<'tcx> AsmMethods for CodegenCx<'tcx> {
-    fn codegen_global_asm(&self, _ga: &GlobalAsm) {
-        todo!()
+    fn codegen_global_asm(&self, ga: &GlobalAsm) {
+        use rustc_span::DUMMY_SP;
+
+        // vec of lines, and each line is vec of tokens
+        let mut tokens = vec![vec![]];
+
+        let asm = ga.asm.as_str().to_string();
+
+        let lines = asm.split('\n').map(|line| {
+            let l = line.len();
+            if l > 0 && line.as_bytes()[l - 1] == b'\r' {
+                &line[0..l - 1]
+            } else {
+                line
+            }
+        });
+
+        for (index, line) in lines.enumerate() {
+            if index != 0 {
+                // There was a newline, add a new line.
+                tokens.push(vec![]);
+            }
+            let mut chars = line.chars();
+
+            // passing around DUMMY_SP in here now, because it's unclear how to create a Span from a Symbol
+            while let Some(token) = InlineAsmCx::Global(self, DUMMY_SP).lex_word(&mut chars) {
+                tokens.last_mut().unwrap().push(token);
+            }
+        }
+
+        let mut id_map = HashMap::new();
+
+        for line in tokens {
+            // passing around DUMMY_SP in here now, because it's unclear how to create a Span from a Symbol
+            InlineAsmCx::Global(self, DUMMY_SP).codegen_asm(
+                &mut id_map,
+                &mut self.global_asm_id_to_type_map.borrow_mut(),
+                line.into_iter(),
+            );
+        }
+        
+        for (k, v) in id_map {
+            self.global_asm_id_map.borrow_mut().insert(k.to_owned(), v);
+        }
     }
 }

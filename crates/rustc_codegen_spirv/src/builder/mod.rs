@@ -2,7 +2,7 @@ mod builder_methods;
 mod ext_inst;
 mod intrinsics;
 pub mod libm_intrinsics;
-mod spirv_asm;
+pub mod spirv_asm;
 
 pub use ext_inst::ExtInst;
 use rustc_span::DUMMY_SP;
