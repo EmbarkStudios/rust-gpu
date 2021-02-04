@@ -7,7 +7,7 @@ use rspirv::dr;
 use rspirv::grammar::{LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{
     FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
-    LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, Word,
+    LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, StorageClass, Word,
 };
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -256,10 +256,37 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 self.err("OpTypeArray in asm! is not supported yet");
                 return;
             }
+            Op::TypeRuntimeArray => SpirvType::RuntimeArray {
+                element: inst.operands[0].unwrap_id_ref(),
+            }
+            .def(self.span(), self),
+            Op::TypePointer => SpirvType::Pointer {
+                storage_class: inst.operands[0].unwrap_storage_class(),
+                pointee: inst.operands[1].unwrap_id_ref(),
+            }
+            .def(self.span(), self),
+            Op::TypeImage => SpirvType::Image {
+                sampled_type: inst.operands[0].unwrap_id_ref(),
+                dim: inst.operands[1].unwrap_dim(),
+                depth: inst.operands[2].unwrap_literal_int32(),
+                arrayed: inst.operands[3].unwrap_literal_int32(),
+                multisampled: inst.operands[4].unwrap_literal_int32(),
+                sampled: inst.operands[5].unwrap_literal_int32(),
+                image_format: inst.operands[6].unwrap_image_format(),
+                access_qualifier: None,
+            }
+            .def(self.span(), self),
             Op::TypeSampledImage => SpirvType::SampledImage {
                 image_type: inst.operands[0].unwrap_id_ref(),
             }
             .def(self.span(), self),
+            Op::Variable if inst.operands[0].unwrap_storage_class() != StorageClass::Function => {
+                // OpVariable with Function storage class should be emitted inside the function,
+                // however, all other OpVariables should appear in the global scope instead.
+                self.emit_global()
+                    .insert_types_global_values(dr::InsertPoint::End, inst);
+                return;
+            }
             _ => {
                 self.emit()
                     .insert_into_block(dr::InsertPoint::End, inst)
@@ -381,6 +408,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
     {
         let mut saw_id_result = false;
         let mut need_result_type_infer = false;
+        println!("{:#?}", &instruction);
         for &LogicalOperand { kind, quantifier } in instruction.class.operands {
             if kind == OperandKind::IdResult {
                 assert_eq!(quantifier, OperandQuantifier::One);
