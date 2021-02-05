@@ -461,6 +461,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         // however, rspirv (and the spirv .json file it depends on) don't seem to contain this
         // (because I think the .json format can't express the fact that these can be of
         // different types. However, most common seems to be a single integer literal.
+        // Ticket: https://github.com/KhronosGroup/SPIRV-Headers/issues/185
         if instruction.class.opcode == Op::Decorate {
             self.parse_one_operand(id_map, instruction, OperandKind::LiteralInteger, &mut tokens);
         }
