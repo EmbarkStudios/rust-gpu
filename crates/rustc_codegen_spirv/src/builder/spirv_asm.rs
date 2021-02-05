@@ -456,6 +456,15 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 }
             }
         }
+        
+        // OpDecorate has a bunch of optional add-on operands that also need to get parsed
+        // however, rspirv (and the spirv .json file it depends on) don't seem to contain this
+        // (because I think the .json format can't express the fact that these can be of
+        // different types. However, most common seems to be a single integer literal.
+        if instruction.class.opcode == Op::Decorate {
+            self.parse_one_operand(id_map, instruction, OperandKind::LiteralInteger, &mut tokens);
+        }
+
         if !saw_id_result && instruction.result_id.is_some() {
             self.err(&format!(
                 "instruction {} does not expect a result id",
