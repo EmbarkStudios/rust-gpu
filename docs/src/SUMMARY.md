@@ -3,6 +3,7 @@
 - [Introduction](./introduction.md)
 - [Attribute syntax](./attributes.md)
 - [Building Rust-GPU](./building-rust-gpu.md)
+- [Inline Assembly](./inline-asm.md)
 - [Platform Support](./platform-support.md)
 - [Writing Shader Crates](./writing-shader-crates.md)
 - [RFCs]()
