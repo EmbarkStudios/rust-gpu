@@ -51,11 +51,11 @@ pub unsafe fn vector_extract_dynamic<T: Scalar, V: Vector<T>>(vector: V, index: 
 
     asm! {
         "%vector = OpLoad _ {vector}",
-            "%element = OpVectorExtractDynamic _ %vector {index}",
-            "OpStore {element} %element",
-            vector = in(reg) &vector,
-            index = in(reg) index,
-            element = in(reg) &mut result
+        "%element = OpVectorExtractDynamic _ %vector {index}",
+        "OpStore {element} %element",
+        vector = in(reg) &vector,
+        index = in(reg) index,
+        element = in(reg) &mut result
     }
 
     result
