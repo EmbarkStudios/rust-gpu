@@ -9,6 +9,7 @@ mod inline;
 mod mem2reg;
 mod new_structurizer;
 mod simple_passes;
+mod specializer;
 mod structurizer;
 mod zombies;
 
