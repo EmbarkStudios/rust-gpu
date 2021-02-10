@@ -13,7 +13,7 @@ pub extern crate spirv_std_macros;
 
 use core::f32::consts::PI;
 use shared::*;
-use spirv_std::glam::{const_vec3, vec2, vec3, Vec2, Vec3, Vec4};
+use spirv_std::glam::{const_vec3, vec2, vec3, Mat4, Vec2, Vec3, Vec4};
 use spirv_std::storage_class::{Input, Output, PushConstant};
 
 // Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
@@ -173,15 +173,24 @@ pub fn main_fs(
 #[allow(unused_attributes)]
 #[spirv(vertex)]
 pub fn main_vs(
+    in_pos: Input<Vec3>,
+    in_normal: Input<Vec3>,
+    in_color: Input<Vec4>,
+    in_instance_diffuse_tint: Input<Vec4>,
     #[spirv(vertex_index)] vert_idx: Input<i32>,
     #[spirv(position)] mut builtin_pos: Output<Vec4>,
 ) {
-    let vert_idx = vert_idx.load();
+    /*let instance = MeshInstanceDataEntry {
+        flags: in_instance_diffuse_tint.load().x,
+    };*/
 
-    // Create a "full screen triangle" by mapping the vertex index.
-    // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
-    let uv = vec2(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
-    let pos = 2.0 * uv - Vec2::one();
+    let flags = in_instance_diffuse_tint.load().x;
 
-    builtin_pos.store(pos.extend(0.0).extend(1.0));
+    let mut diffuse_display = if flags == 0.0 {
+        in_color.load()
+    } else {
+        Vec4::one()
+    };
+
+    builtin_pos.store(diffuse_display);
 }
