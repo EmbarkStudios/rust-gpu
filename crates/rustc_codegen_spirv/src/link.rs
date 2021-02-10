@@ -202,6 +202,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
             let mut err = sess.struct_warn(&e.to_string());
             err.note("spirv-opt failed, leaving as unoptimized");
             err.note(&format!("module {:?}", filename));
+            err.emit();
             spv_binary
         }
     }
