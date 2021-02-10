@@ -19,7 +19,6 @@ macro_rules! storage_class {
             /// Load the value into memory.
             #[inline]
             #[allow(unused_attributes)]
-            #[spirv(really_unsafe_ignore_bitcasts)]
             pub fn load(&self) -> T {
                 *self.value
             }
@@ -36,7 +35,6 @@ macro_rules! storage_class {
             /// Store the value in storage.
             #[inline]
             #[allow(unused_attributes)]
-            #[spirv(really_unsafe_ignore_bitcasts)]
             pub fn store(&mut self, v: T) {
                 *self.value = v
             }

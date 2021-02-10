@@ -117,11 +117,6 @@ impl<'tcx> CodegenCx<'tcx> {
                     let crate_relative_name = instance.to_string();
                     self.entry_stub(&instance, &fn_abi, declared, crate_relative_name, entry)
                 }
-                SpirvAttribute::ReallyUnsafeIgnoreBitcasts => {
-                    self.really_unsafe_ignore_bitcasts
-                        .borrow_mut()
-                        .insert(declared);
-                }
                 SpirvAttribute::UnrollLoops => {
                     self.unroll_loops_decorations
                         .borrow_mut()
