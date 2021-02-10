@@ -54,6 +54,9 @@ pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T>>(vector: V, index: u
 }
 
 /// Make a copy of `object`.
+/// 
+/// # Safety
+/// `T` must be a composite type (vector, array, or matrix).
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpCopyObject")]
 #[inline]
