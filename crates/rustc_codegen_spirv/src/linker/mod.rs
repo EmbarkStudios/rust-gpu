@@ -15,8 +15,8 @@ mod zombies;
 
 use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
 use rspirv::binary::Consumer;
-use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader};
-use rspirv::spirv::{Op, Word};
+use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
+use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_errors::ErrorReported;
 use rustc_session::Session;
 use std::collections::HashMap;
@@ -107,6 +107,17 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
         output
     };
 
+    if let Ok(ref path) = std::env::var("DUMP_POST_MERGE") {
+        use rspirv::binary::Assemble;
+        use std::fs::File;
+        use std::io::Write;
+
+        File::create(path)
+            .unwrap()
+            .write_all(spirv_tools::binary::from_binary(&output.assemble()))
+            .unwrap();
+    }
+
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
     {
         let _timer = sess.timer("link_remove_duplicates");
@@ -126,6 +137,45 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
     {
         let _timer = sess.timer("link_remove_zombies");
         zombies::remove_zombies(sess, &mut output);
+    }
+
+    // HACK(eddyb) run DCE before specialization, not just after inlining,
+    // to remove needed work and chance of conflicts (in dead code).
+    // We can't do specialization before inlining because inlining assumes
+    // it can rely on storage classes being the correct final ones.
+    if opts.dce {
+        let _timer = sess.timer("link_dce");
+        dce::dce(&mut output);
+    }
+
+    {
+        let _timer = sess.timer("specialize_generic_storage_class");
+        // HACK(eddyb) `specializer` requires functions' blocks to be in RPO order
+        // (i.e. `block_ordering_pass`) - this could be relaxed by using RPO visit
+        // inside `specializer`, but this is easier.
+        for func in &mut output.functions {
+            simple_passes::block_ordering_pass(func);
+        }
+        output = specializer::specialize(
+            output,
+            specializer::SimpleSpecialization {
+                specialize_operand: |operand| {
+                    matches!(operand, Operand::StorageClass(StorageClass::Generic))
+                },
+
+                // NOTE(eddyb) this can be anything that is guaranteed to pass
+                // validation - there are no constraints so this is either some
+                // unused pointer, or perhaps one created using `OpConstantNull`
+                // and simply never mixed with pointers that have a storage class.
+                // It would be nice to use `Generic` itself here so that we leave
+                // some kind of indication of it being unconstrained, but `Generic`
+                // requires additional capabilities, so we use `Function` instead.
+                // TODO(eddyb) investigate whether this can end up in a pointer
+                // type that's the value of a module-scoped variable, and whether
+                // `Function` is actually invalid! (may need `Private`)
+                concrete_fallback: Operand::StorageClass(StorageClass::Function),
+            },
+        );
     }
 
     if opts.inline {

@@ -60,7 +60,6 @@ pub enum SpirvType {
         element: Word,
     },
     Pointer {
-        storage_class: StorageClass,
         pointee: Word,
     },
     Function {
@@ -194,11 +193,13 @@ impl SpirvType {
                 }
                 result
             }
-            Self::Pointer {
-                storage_class,
-                pointee,
-            } => {
-                let result = cx.emit_global().type_pointer(None, storage_class, pointee);
+            Self::Pointer { pointee } => {
+                // NOTE(eddyb) we emit `StorageClass::Generic` here, but later
+                // the linker will specialize the entire SPIR-V module to use
+                // storage classes inferred from `OpVariable`s.
+                let result = cx
+                    .emit_global()
+                    .type_pointer(None, StorageClass::Generic, pointee);
                 // no pointers to functions
                 if let Self::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(
@@ -249,13 +250,13 @@ impl SpirvType {
             return cached;
         }
         let result = match self {
-            Self::Pointer {
-                storage_class,
-                pointee,
-            } => {
-                let result = cx
-                    .emit_global()
-                    .type_pointer(Some(id), storage_class, pointee);
+            Self::Pointer { pointee } => {
+                // NOTE(eddyb) we emit `StorageClass::Generic` here, but later
+                // the linker will specialize the entire SPIR-V module to use
+                // storage classes inferred from `OpVariable`s.
+                let result =
+                    cx.emit_global()
+                        .type_pointer(Some(id), StorageClass::Generic, pointee);
                 // no pointers to functions
                 if let Self::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(
@@ -440,13 +441,9 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("id", &self.id)
                 .field("element", &self.cx.debug_type(element))
                 .finish(),
-            SpirvType::Pointer {
-                storage_class,
-                pointee,
-            } => f
+            SpirvType::Pointer { pointee } => f
                 .debug_struct("Pointer")
                 .field("id", &self.id)
-                .field("storage_class", &storage_class)
                 .field("pointee", &self.cx.debug_type(pointee))
                 .finish(),
             SpirvType::Function {
@@ -599,11 +596,8 @@ impl SpirvTypePrinter<'_, '_> {
                 ty(self.cx, stack, f, element)?;
                 f.write_str("]")
             }
-            SpirvType::Pointer {
-                storage_class,
-                pointee,
-            } => {
-                write!(f, "*{{{:?}}} ", storage_class)?;
+            SpirvType::Pointer { pointee } => {
+                f.write_str("*")?;
                 ty(self.cx, stack, f, pointee)
             }
             SpirvType::Function {

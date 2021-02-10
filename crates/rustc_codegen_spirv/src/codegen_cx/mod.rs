@@ -217,18 +217,15 @@ impl<'tcx> CodegenCx<'tcx> {
 
     /// See note on `SpirvValueKind::ConstantPointer`
     pub fn make_constant_pointer(&self, span: Span, value: SpirvValue) -> SpirvValue {
-        let ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: value.ty,
-        }
-        .def(span, self);
+        let ty = SpirvType::Pointer { pointee: value.ty }.def(span, self);
         let initializer = value.def_cx(self);
 
         // Create these up front instead of on demand in SpirvValue::def because
         // SpirvValue::def can't use cx.emit()
+        // FIXME(eddyb) figure out what the correct storage class is.
         let global_var =
             self.emit_global()
-                .variable(ty, None, StorageClass::Function, Some(initializer));
+                .variable(ty, None, StorageClass::Private, Some(initializer));
 
         // In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span
         // to the use site of this constant. However, if this constant happens to never get used, we
