@@ -953,7 +953,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 match parse_bitflags_operand(IMAGE_OPERANDS, word) {
                     Some(x) => {
                         inst.operands.push(dr::Operand::ImageOperands(x));
-                        while let Some(token) = tokens.next() {
+                        for token in tokens {
                             match self.parse_id_in(id_map, token) {
                                 Some(id) => {
                                     inst.operands.push(dr::Operand::IdRef(id));
