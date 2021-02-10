@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Rust GPU Dev Guide</title>
+        <title>Inline Assembly - Rust GPU Dev Guide</title>
         
         
 
@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">3.</strong> Building Rust-GPU</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">4.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">5.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">6.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">7.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">3.</strong> Building Rust-GPU</a></li><li class="chapter-item expanded "><a href="inline-asm.html" class="active"><strong aria-hidden="true">4.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">5.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">6.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">7.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -163,23 +163,86 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
-<p>Welcome to the Rust-GPU dev guide! This documentation is meant for documenting
-how to use and develop on Rust-GPU.</p>
-<p>If you're looking to get started with writing your own shaders in Rust, 
-check out the <a href="./writing-shader-crates.html"><em>&quot;Writing Shader Crates&quot;</em></a> section for
-more information on how to get started.</p>
-<p>Alternatively if you're looking to contribute to the <code>rust-gpu</code> project, have
-a look at <a href="./building-rust-gpu.html"><em>&quot;Building Rust-GPU&quot;</em></a> section.</p>
+                        <h1><a class="header" href="#inline-assembly" id="inline-assembly">Inline Assembly</a></h1>
+<p>Rust-GPU has support for inline SPIR-V assembly. In addition the backend
+provides several conveniences for writing inline assembly that are documented
+below. For more information on specific instruction behaviour and syntax, please
+refer to the <a href="https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html">SPIR-V specification</a>.</p>
+<h3><a class="header" href="#basic-syntax--usage" id="basic-syntax--usage">Basic syntax &amp; usage.</a></h3>
+<p>You can write inline assembly using the new <code>asm!</code> macro available with the
+<code>asm</code> feature on nightly. Refer to the <a href="https://doc.rust-lang.org/unstable-book/library-features/asm.html">Rust unstable book</a> for more
+information on how to use the macro.</p>
+<p>Non-ID arguments are written as-is, e.g.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asm! {
+    &quot;OpCapability DerivativeControl&quot;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>ID based arguments are prefixed with <code>%</code> and their name. <code>Result&lt;id&gt;</code>s accessed
+with a <code>=</code> and a ID on the left hand side of the expression. E.g.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let vector = spirv_std::glam::Vec2::new(1.0, 0.0);
+let mut result = f32::default();
+
+asm! {
+    &quot;%vector = OpLoad _ {vector}&quot;,
+    &quot;%element = OpVectorExtractDynamic _ %vector {index}&quot;,
+    &quot;OpStore {element} %element&quot;,
+    vector = in(reg) &amp;vector,
+    index = in(reg) index,
+    element = in(reg) &amp;mut result
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p><code>asm!</code> only accepts integers, floats, SIMD vectors, pointers and
+function pointers as input variables. However you can have the pointer point
+to a generic variable, so you can write generic assembly code like so.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use spirv_std::{scalar::Scalar, vector::Vector};
+
+// This fn is available as `spirv_std::arch::vector_extract_dynamic`
+pub unsafe fn vector_extract_dynamic&lt;T: Scalar, V: Vector&lt;T&gt;&gt;(vector: V, index: usize) -&gt; T {
+    let mut result = T::default();
+
+    asm! {
+        &quot;%vector = OpLoad _ {vector}&quot;,
+        &quot;%element = OpVectorExtractDynamic _ %vector {index}&quot;,
+        &quot;OpStore {element} %element&quot;,
+        vector = in(reg) &amp;vector,
+        index = in(reg) index,
+        element = in(reg) &amp;mut result
+    }
+
+    result
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3><a class="header" href="#additional-syntax" id="additional-syntax">Additional syntax</a></h3>
+<table><thead><tr><th>Syntax</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>%&lt;name&gt;</code></td><td>Used to refer to an abstract ID, every unique <code>&lt;name&gt;</code> use generates a new ID.</td></tr>
+<tr><td><code>typeof{&lt;variable&gt;}</code></td><td>Returns the type of <code>variable</code></td></tr>
+<tr><td><code>_</code> (underscore)</td><td>Equivalent to <code>typeof{&lt;variable&gt;}</code>, but uses inference to determine the variable</td></tr>
+</tbody></table>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
+                            <a rel="prev" href="building-rust-gpu.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
 
                         
-                            <a rel="next" href="attributes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="platform-support.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -191,9 +254,13 @@ a look at <a href="./building-rust-gpu.html"><em>&quot;Building Rust-GPU&quot;</
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
+                    <a rel="prev" href="building-rust-gpu.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
 
                 
-                    <a rel="next" href="attributes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="platform-support.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

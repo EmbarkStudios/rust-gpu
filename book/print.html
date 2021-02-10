@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">3.</strong> Building Rust-GPU</a></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">4.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">5.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">3.</strong> Building Rust-GPU</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">4.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">5.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">6.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">7.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -247,6 +247,73 @@ fn main(#[spirv(flat)] obj: Input&lt;u32&gt;) { }
     --no-default-features
 </code></pre>
 <p>You should see <code>warning: use-installed-tools feature on, skipping compilation of C++ code</code> during the compilation, but otherwise the build will function just the same as if you compiled the C++ code, with the exception that it will fail if you don't have SPIRV-Tools installed correctly.</p>
+<h1><a class="header" href="#inline-assembly" id="inline-assembly">Inline Assembly</a></h1>
+<p>Rust-GPU has support for inline SPIR-V assembly. In addition the backend
+provides several conveniences for writing inline assembly that are documented
+below. For more information on specific instruction behaviour and syntax, please
+refer to the <a href="https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html">SPIR-V specification</a>.</p>
+<h3><a class="header" href="#basic-syntax--usage" id="basic-syntax--usage">Basic syntax &amp; usage.</a></h3>
+<p>You can write inline assembly using the new <code>asm!</code> macro available with the
+<code>asm</code> feature on nightly. Refer to the <a href="https://doc.rust-lang.org/unstable-book/library-features/asm.html">Rust unstable book</a> for more
+information on how to use the macro.</p>
+<p>Non-ID arguments are written as-is, e.g.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asm! {
+    &quot;OpCapability DerivativeControl&quot;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>ID based arguments are prefixed with <code>%</code> and their name. <code>Result&lt;id&gt;</code>s accessed
+with a <code>=</code> and a ID on the left hand side of the expression. E.g.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let vector = spirv_std::glam::Vec2::new(1.0, 0.0);
+let mut result = f32::default();
+
+asm! {
+    &quot;%vector = OpLoad _ {vector}&quot;,
+    &quot;%element = OpVectorExtractDynamic _ %vector {index}&quot;,
+    &quot;OpStore {element} %element&quot;,
+    vector = in(reg) &amp;vector,
+    index = in(reg) index,
+    element = in(reg) &amp;mut result
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p><code>asm!</code> only accepts integers, floats, SIMD vectors, pointers and
+function pointers as input variables. However you can have the pointer point
+to a generic variable, so you can write generic assembly code like so.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use spirv_std::{scalar::Scalar, vector::Vector};
+
+// This fn is available as `spirv_std::arch::vector_extract_dynamic`
+pub unsafe fn vector_extract_dynamic&lt;T: Scalar, V: Vector&lt;T&gt;&gt;(vector: V, index: usize) -&gt; T {
+    let mut result = T::default();
+
+    asm! {
+        &quot;%vector = OpLoad _ {vector}&quot;,
+        &quot;%element = OpVectorExtractDynamic _ %vector {index}&quot;,
+        &quot;OpStore {element} %element&quot;,
+        vector = in(reg) &amp;vector,
+        index = in(reg) index,
+        element = in(reg) &amp;mut result
+    }
+
+    result
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3><a class="header" href="#additional-syntax" id="additional-syntax">Additional syntax</a></h3>
+<table><thead><tr><th>Syntax</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>%&lt;name&gt;</code></td><td>Used to refer to an abstract ID, every unique <code>&lt;name&gt;</code> use generates a new ID.</td></tr>
+<tr><td><code>typeof{&lt;variable&gt;}</code></td><td>Returns the type of <code>variable</code></td></tr>
+<tr><td><code>_</code> (underscore)</td><td>Equivalent to <code>typeof{&lt;variable&gt;}</code>, but uses inference to determine the variable</td></tr>
+</tbody></table>
 <h1><a class="header" href="#platform-support" id="platform-support">Platform Support</a></h1>
 <p>The <code>rust-gpu</code> project currently supports a limited number of platforms and graphics APIs. Right now we're not distributing build artifacts and we're primarily focused on the development of the project, so this is based on the current <code>main</code> branch. There are a lot of different configurations and hardware out there to support, this document is intended to document what is currently supported, what we intend to support, and what isn't supported. Over time as the project stabilises and our CI improves, more platforms and APIs will be supported and tested. Currently support for each topic is divided into the following three categories.</p>
 <ul>
