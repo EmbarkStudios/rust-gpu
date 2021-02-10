@@ -29,7 +29,7 @@ trait Pat {
 }
 
 /// Pattern for a SPIR-V storage class, dynamic representation (see module-level docs).
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum StorageClassPat {
     /// Unconstrained storage class.
     Any,
@@ -318,7 +318,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::SpecConstant => {}
         Op::SpecConstantOp => {
             unreachable!(
-                "Op{:?} should be specially handled outside type_constraints",
+                "Op{:?} should be specially handled outside spirv_type_constraints",
                 op
             );
         }
@@ -346,9 +346,10 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         },
 
         // 3.37.9. Function Instructions
-        Op::Function | Op::FunctionParameter | Op::FunctionEnd => {
+        Op::Function => {}
+        Op::FunctionParameter | Op::FunctionEnd => {
             unreachable!(
-                "Op{:?} should be specially handled outside type_constraints",
+                "Op{:?} should be specially handled outside spirv_type_constraints",
                 op
             );
         }
@@ -565,7 +566,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::Kill => {}
         Op::Return | Op::ReturnValue => {
             unreachable!(
-                "Op{:?} should be specially handled outside type_constraints",
+                "Op{:?} should be specially handled outside spirv_type_constraints",
                 op
             );
         }
@@ -759,7 +760,8 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         }
         // SPV_EXT_demote_to_helper_invocation
         Op::DemoteToHelperInvocationEXT | Op::IsHelperInvocationEXT => {
-            reserved!(SPV_EXT_demote_to_helper_invocation)
+            // NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_EXT_demote_to_helper_invocation)
         }
         // SPV_INTEL_shader_integer_functions2
         Op::UCountLeadingZerosINTEL
