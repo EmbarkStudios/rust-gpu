@@ -398,19 +398,6 @@ pub fn main() {
 }
 
 #[test]
-fn copy_object() {
-    val(r#"
-#[allow(unused_attributes)]
-#[spirv(fragment)]
-pub fn main() {
-    let vector = glam::Vec2::new(1.0, 2.0);
-    let new_vector = unsafe { spirv_std::arch::copy_object(vector) };
-    assert!(new_vector == vector);
-}
-"#);
-}
-
-#[test]
 fn mat3_vec3_multiply() {
     val(r#"
 #[allow(unused_attributes)]
