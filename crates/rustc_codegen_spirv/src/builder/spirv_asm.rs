@@ -461,6 +461,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
     ) -> Option<Word> {
         use crate::spirv_type_constraints::{instruction_signatures, InstSig, TyListPat, TyPat};
 
+        #[derive(Debug)]
         struct Mismatch;
 
         /// Recursively match `ty` against `pat`, returning one of:

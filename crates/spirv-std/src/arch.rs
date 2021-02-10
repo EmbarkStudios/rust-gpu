@@ -37,12 +37,17 @@ pub unsafe fn vector_extract_dynamic<T: Scalar, V: Vector<T>>(vector: V, index: 
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpVectorInsertDynamic")]
 #[inline]
-pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T>>(vector: V, index: usize, element: T) -> V {
+pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T>>(
+    vector: V,
+    index: usize,
+    element: T,
+) -> V {
     let mut result = V::default();
 
     asm! {
         "%vector = OpLoad _ {vector}",
-        "%new_vector = OpVectorInsertDynamic _ %vector {element} {index}",
+        "%element = OpLoad _ {element}",
+        "%new_vector = OpVectorInsertDynamic _ %vector %element {index}",
         "OpStore {result} %new_vector",
         vector = in(reg) &vector,
         index = in(reg) index,
@@ -51,23 +56,4 @@ pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T>>(vector: V, index: u
     }
 
     result
-}
-
-/// Make a copy of `object`.
-/// 
-/// # Safety
-/// `T` must be a composite type (vector, array, or matrix).
-#[spirv_std_macros::gpu_only]
-#[doc(alias = "OpCopyObject")]
-#[inline]
-pub unsafe fn copy_object<T>(object: T) -> T {
-    let mut result = core::mem::MaybeUninit::uninit();
-
-    asm! {
-        "{copy} = OpCopyObject {object}",
-        object = in(reg) &object,
-        copy = in(reg) result.as_mut_ptr(),
-    }
-
-    result.assume_init()
 }
