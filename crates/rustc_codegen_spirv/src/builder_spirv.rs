@@ -44,10 +44,7 @@ impl SpirvValue {
                 global_var: _,
             } => {
                 let ty = match cx.lookup_type(self.ty) {
-                    SpirvType::Pointer {
-                        storage_class: _,
-                        pointee,
-                    } => pointee,
+                    SpirvType::Pointer { pointee } => pointee,
                     ty => bug!("load called on variable that wasn't a pointer: {:?}", ty),
                 };
                 Some(initializer.with_type(ty))

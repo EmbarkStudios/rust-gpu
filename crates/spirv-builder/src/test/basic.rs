@@ -148,9 +148,12 @@ fn asm_op_decorate() {
                         "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
                         "%sampled_image_2d      = OpTypeSampledImage %image_2d",
                         "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
-                        "%ptr_image_array       = OpTypePointer UniformConstant %image_array",
+                        // NOTE(eddyb) `Generic` is used here because it's the placeholder
+                        // for storage class inference - both of the two `OpTypePointer`
+                        // types below should end up inferring to `UniformConstant`.
+                        "%ptr_image_array       = OpTypePointer Generic %image_array",
                         "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
-                        "%ptr_sampled_image_2d  = OpTypePointer UniformConstant %sampled_image_2d",
+                        "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
                         "", // ^^ type preamble
                         "%offset                = OpLoad _ {0}",
                         "%24                    = OpAccessChain %ptr_sampled_image_2d %image_2d_var %offset",
@@ -516,9 +519,12 @@ fn complex_image_sample_inst() {
                     "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
                     "%sampled_image_2d      = OpTypeSampledImage %image_2d",
                     "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
-                    "%ptr_image_array       = OpTypePointer UniformConstant %image_array",
+                    // NOTE(eddyb) `Generic` is used here because it's the placeholder
+                    // for storage class inference - both of the two `OpTypePointer`
+                    // types below should end up inferring to `UniformConstant`.
+                    "%ptr_image_array       = OpTypePointer Generic %image_array",
                     "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
-                    "%ptr_sampled_image_2d  = OpTypePointer UniformConstant %sampled_image_2d",
+                    "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
                     "", // ^^ type preamble
                     "%offset                = OpLoad _ {1}",
                     "%24                    = OpAccessChain %ptr_sampled_image_2d %image_2d_var %offset",

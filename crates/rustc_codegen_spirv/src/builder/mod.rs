@@ -12,7 +12,7 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::{StorageClass, Word};
+use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::operand::OperandValue;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
@@ -104,11 +104,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         // "An OpAccessChain instruction is the equivalent of an LLVM getelementptr instruction where the first index element is zero."
         // https://github.com/gpuweb/gpuweb/issues/33
         let mut result_indices = Vec::with_capacity(indices.len() - 1);
-        let (storage_class, mut result_pointee_type) = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer {
-                storage_class,
-                pointee,
-            } => (storage_class, pointee),
+        let mut result_pointee_type = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => pointee,
             other_type => self.fatal(&format!(
                 "GEP first deref not implemented for type {:?}",
                 other_type
@@ -125,7 +122,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             };
         }
         let result_type = SpirvType::Pointer {
-            storage_class,
             pointee: result_pointee_type,
         }
         .def(self.span(), self);
@@ -330,11 +326,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
             self.fatal("unsized `ArgAbi` must be handled through `store_fn_arg`");
         } else if let PassMode::Cast(cast) = arg_abi.mode {
             let cast_ty = cast.spirv_type(self.span(), self);
-            let cast_ptr_ty = SpirvType::Pointer {
-                storage_class: StorageClass::Function,
-                pointee: cast_ty,
-            }
-            .def(self.span(), self);
+            let cast_ptr_ty = SpirvType::Pointer { pointee: cast_ty }.def(self.span(), self);
             let cast_dst = self.pointercast(dst.llval, cast_ptr_ty);
             self.store(val, cast_dst, arg_abi.layout.align.abi);
         } else {

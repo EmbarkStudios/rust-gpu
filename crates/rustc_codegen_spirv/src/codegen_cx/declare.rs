@@ -184,14 +184,11 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     fn declare_global(&self, span: Span, ty: Word) -> SpirvValue {
-        let ptr_ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: ty,
-        }
-        .def(span, self);
+        let ptr_ty = SpirvType::Pointer { pointee: ty }.def(span, self);
+        // FIXME(eddyb) figure out what the correct storage class is.
         let result = self
             .emit_global()
-            .variable(ptr_ty, None, StorageClass::Function, None)
+            .variable(ptr_ty, None, StorageClass::Private, None)
             .with_type(ptr_ty);
         // TODO: These should be StorageClass::Private, so just zombie for now.
         self.zombie_with_span(result.def_cx(self), span, "Globals are not supported yet");
@@ -264,7 +261,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
             Err(_) => return,
         };
         let value_ty = match self.lookup_type(g.ty) {
-            SpirvType::Pointer { pointee, .. } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             other => self.tcx.sess.fatal(&format!(
                 "global had non-pointer type {}",
                 other.debug(g.ty, self)

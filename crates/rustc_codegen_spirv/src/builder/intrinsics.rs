@@ -3,7 +3,7 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::{CLOp, GLOp, StorageClass};
+use rspirv::spirv::{CLOp, GLOp};
 use rustc_codegen_ssa::mir::operand::OperandRef;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BuilderMethods, IntrinsicCallMethods};
@@ -103,11 +103,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 let mut ptr = args[0].immediate();
                 if let PassMode::Cast(ty) = fn_abi.ret.mode {
                     let pointee = ty.spirv_type(self.span(), self);
-                    let pointer = SpirvType::Pointer {
-                        storage_class: StorageClass::Function,
-                        pointee,
-                    }
-                    .def(self.span(), self);
+                    let pointer = SpirvType::Pointer { pointee }.def(self.span(), self);
                     ptr = self.pointercast(ptr, pointer);
                 }
                 let load = self.volatile_load(ptr);

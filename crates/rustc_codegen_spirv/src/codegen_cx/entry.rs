@@ -1,10 +1,12 @@
 use super::CodegenCx;
+use crate::abi::ConvSpirvType;
 use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
-use rustc_hir::{Param, PatKind};
+use rustc_hir as hir;
+use rustc_middle::ty::layout::TyAndLayout;
 use rustc_middle::ty::{Instance, Ty};
 use rustc_span::Span;
 use rustc_target::abi::call::{FnAbi, PassMode};
@@ -18,7 +20,7 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn entry_stub(
         &self,
         instance: &Instance<'_>,
-        fn_abi: &FnAbi<'_, Ty<'_>>,
+        fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
         entry_func: SpirvValue,
         name: String,
         entry: Entry,
@@ -60,6 +62,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.shader_entry_stub(
                 self.tcx.def_span(instance.def_id()),
                 entry_func,
+                fn_abi,
                 body.params,
                 name,
                 execution_model,
@@ -78,7 +81,8 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         span: Span,
         entry_func: SpirvValue,
-        hir_params: &[Param<'tcx>],
+        entry_fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
+        hir_params: &[hir::Param<'tcx>],
         name: String,
         execution_model: ExecutionModel,
     ) -> Word {
@@ -88,11 +92,11 @@ impl<'tcx> CodegenCx<'tcx> {
             arguments: vec![],
         }
         .def(span, self);
-        let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
+        let entry_func_return_type = match self.lookup_type(entry_func.ty) {
             SpirvType::Function {
                 return_type,
-                arguments,
-            } => (return_type, arguments),
+                arguments: _,
+            } => return_type,
             other => self.tcx.sess.fatal(&format!(
                 "Invalid entry_stub type: {}",
                 other.debug(entry_func.ty, self)
@@ -100,11 +104,12 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let mut decoration_locations = HashMap::new();
         // Create OpVariables before OpFunction so they're global instead of local vars.
-        let arguments = entry_func_args
+        let arguments = entry_fn_abi
+            .args
             .iter()
             .zip(hir_params)
-            .map(|(&arg, hir_param)| {
-                self.declare_parameter(arg, hir_param, &mut decoration_locations)
+            .map(|(entry_fn_arg, hir_param)| {
+                self.declare_parameter(entry_fn_arg.layout, hir_param, &mut decoration_locations)
             })
             .collect::<Vec<_>>();
         let mut emit = self.emit_global();
@@ -113,7 +118,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .unwrap();
         emit.begin_block(None).unwrap();
         emit.function_call(
-            entry_func_return,
+            entry_func_return_type,
             None,
             entry_func.def_cx(self),
             arguments.iter().map(|&(a, _)| a),
@@ -139,24 +144,26 @@ impl<'tcx> CodegenCx<'tcx> {
 
     fn declare_parameter(
         &self,
-        arg: Word,
-        hir_param: &Param<'tcx>,
+        layout: TyAndLayout<'tcx>,
+        hir_param: &hir::Param<'tcx>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
     ) -> (Word, StorageClass) {
-        let storage_class = match self.lookup_type(arg) {
-            SpirvType::Pointer { storage_class, .. } => storage_class,
-            other => self.tcx.sess.fatal(&format!(
-                "Invalid entry arg type {}",
-                other.debug(arg, self)
-            )),
-        };
+        let storage_class = crate::abi::get_storage_class(self, layout).unwrap_or_else(|| {
+            self.tcx.sess.span_fatal(
+                hir_param.span,
+                &format!("invalid entry param type `{}`", layout.ty),
+            );
+        });
         let mut has_location = matches!(
             storage_class,
             StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
         );
         // Note: this *declares* the variable too.
-        let variable = self.emit_global().variable(arg, None, storage_class, None);
-        if let PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
+        let spirv_type = layout.spirv_type(hir_param.span, self);
+        let variable = self
+            .emit_global()
+            .variable(spirv_type, None, storage_class, None);
+        if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
         }
         for attr in parse_attrs(self, hir_param.attrs) {

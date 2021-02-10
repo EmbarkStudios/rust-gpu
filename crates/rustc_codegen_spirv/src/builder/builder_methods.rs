@@ -727,11 +727,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn alloca(&mut self, ty: Self::Type, _align: Align) -> Self::Value {
-        let ptr_ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: ty,
-        }
-        .def(self.span(), self);
+        let ptr_ty = SpirvType::Pointer { pointee: ty }.def(self.span(), self);
         // "All OpVariable instructions in a function must be the first instructions in the first block."
         let mut builder = self.emit();
         builder.select_block(Some(0)).unwrap();
@@ -779,10 +775,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             return value;
         }
         let ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer {
-                storage_class: _,
-                pointee,
-            } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             ty => self.fatal(&format!(
                 "load called on variable that wasn't a pointer: {:?}",
                 ty
@@ -803,10 +796,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn atomic_load(&mut self, ptr: Self::Value, order: AtomicOrdering, _size: Size) -> Self::Value {
         let ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer {
-                storage_class: _,
-                pointee,
-            } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             ty => self.fatal(&format!(
                 "atomic_load called on variable that wasn't a pointer: {:?}",
                 ty
@@ -906,10 +896,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn store(&mut self, val: Self::Value, ptr: Self::Value, _align: Align) -> Self::Value {
         let ptr_elem_ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer {
-                storage_class: _,
-                pointee,
-            } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             ty => self.fatal(&format!(
                 "store called on variable that wasn't a pointer: {:?}",
                 ty
@@ -946,10 +933,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         _size: Size,
     ) {
         let ptr_elem_ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer {
-                storage_class: _,
-                pointee,
-            } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             ty => self.fatal(&format!(
                 "atomic_store called on variable that wasn't a pointer: {:?}",
                 ty
@@ -979,15 +963,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn struct_gep(&mut self, ptr: Self::Value, idx: u64) -> Self::Value {
-        let (storage_class, result_pointee_type) = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer {
-                storage_class,
-                pointee,
-            } => match self.lookup_type(pointee) {
-                SpirvType::Adt { field_types, .. } => (storage_class, field_types[idx as usize]),
+        let result_pointee_type = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => match self.lookup_type(pointee) {
+                SpirvType::Adt { field_types, .. } => field_types[idx as usize],
                 SpirvType::Array { element, .. }
                 | SpirvType::RuntimeArray { element, .. }
-                | SpirvType::Vector { element, .. } => (storage_class, element),
+                | SpirvType::Vector { element, .. } => element,
                 other => self.fatal(&format!(
                     "struct_gep not on struct, array, or vector type: {:?}, index {}",
                     other, idx
@@ -999,7 +980,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             )),
         };
         let result_type = SpirvType::Pointer {
-            storage_class,
             pointee: result_pointee_type,
         }
         .def(self.span(), self);
@@ -1225,14 +1205,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         let val_pointee = match self.lookup_type(val.ty) {
-            SpirvType::Pointer { pointee, .. } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             other => self.fatal(&format!(
                 "pointercast called on non-pointer source type: {:?}",
                 other
             )),
         };
         let dest_pointee = match self.lookup_type(dest_ty) {
-            SpirvType::Pointer { pointee, .. } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             other => self.fatal(&format!(
                 "pointercast called on non-pointer dest type: {:?}",
                 other
@@ -1531,7 +1511,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             return;
         }
         let src_pointee = match self.lookup_type(src.ty) {
-            SpirvType::Pointer { pointee, .. } => Some(pointee),
+            SpirvType::Pointer { pointee } => Some(pointee),
             _ => None,
         };
         let src_element_size = src_pointee.and_then(|p| self.lookup_type(p).sizeof(self));
@@ -1592,7 +1572,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             ));
         }
         let elem_ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee, .. } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             _ => self.fatal(&format!(
                 "memset called on non-pointer type: {}",
                 self.debug_type(ptr.ty)
@@ -1780,10 +1760,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         _weak: bool,
     ) -> Self::Value {
         let dst_pointee_ty = match self.lookup_type(dst.ty) {
-            SpirvType::Pointer {
-                storage_class: _,
-                pointee,
-            } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             ty => self.fatal(&format!(
                 "atomic_cmpxchg called on variable that wasn't a pointer: {:?}",
                 ty
@@ -1820,10 +1797,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         order: AtomicOrdering,
     ) -> Self::Value {
         let dst_pointee_ty = match self.lookup_type(dst.ty) {
-            SpirvType::Pointer {
-                storage_class: _,
-                pointee,
-            } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             ty => self.fatal(&format!(
                 "atomic_rmw called on variable that wasn't a pointer: {:?}",
                 ty
