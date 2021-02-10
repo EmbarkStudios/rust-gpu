@@ -1229,12 +1229,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .access_chain(dest_ty, None, val.def(self), indices)
                 .unwrap()
                 .with_type(dest_ty)
-        } else if self
-            .really_unsafe_ignore_bitcasts
-            .borrow()
-            .contains(&self.current_fn)
-        {
-            val
         } else {
             let result = self
                 .emit()
