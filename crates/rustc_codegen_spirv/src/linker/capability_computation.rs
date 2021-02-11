@@ -96,11 +96,11 @@ pub fn remove_extra_extensions(module: &mut Module) {
         .copied()
         .collect();
 
-    set.extend(module
-        .all_inst_iter()
-        .flat_map(|inst| {
-            inst.operands.iter().flat_map(|op| op.required_extensions())
-        }));
+    set.extend(
+        module
+            .all_inst_iter()
+            .flat_map(|inst| inst.operands.iter().flat_map(|op| op.required_extensions())),
+    );
 
     module.extensions.retain(|inst| {
         inst.class.opcode != Op::Extension || set.contains(inst.operands[0].unwrap_literal_string())
