@@ -1,4 +1,4 @@
-use rspirv::dr::{Instruction, Module, Operand};
+use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Op};
 use std::collections::HashSet;
 
