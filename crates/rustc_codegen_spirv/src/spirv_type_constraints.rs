@@ -22,7 +22,7 @@
 use rspirv::spirv::Op;
 
 /// Pattern for a SPIR-V type, dynamic representation (see module-level docs).
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TyPat<'a> {
     /// Unconstrained type.
     Any,
@@ -97,7 +97,7 @@ impl TyPat<'_> {
 ///
 /// "Type lists" are used for `OpTypeStruct` fields, `OpTypeFunction` parameters,
 /// and operand types of instructions signatures.
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TyListPat<'a> {
     /// Unconstrained type list (any length, and the types can freely vary).
     Any,
@@ -126,7 +126,7 @@ impl TyListPat<'_> {
 }
 
 /// Instruction "signature", dynamic representation (see module-level docs).
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct InstSig<'a> {
     /// Patterns for the complete list of types of the instruction's value operands.
     pub inputs: &'a TyListPat<'a>,
@@ -371,8 +371,11 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         // 3.37.12. Composite Instructions
         Op::VectorExtractDynamic => sig! { (Vector(T), _) -> T },
         Op::VectorInsertDynamic => sig! {
-            // FIXME(eddyb) missing equality constraint between input and output vectors.
-            (Vector(T), T, _) -> Vector(T)
+            // FIXME(eddyb) was `(Vector(T), T, _) -> Vector(T)` but that was
+            // missing an equality constraint between input and output vectors;
+            // we should use `(Vector(T, N), T, _) -> Vector(T, N)`, or constrain
+            // input and output vectors to have the same type some other way.
+            (T, _, _) -> T
         },
         Op::VectorShuffle => sig! { (Vector(T), Vector(T)) -> Vector(T) },
         Op::CompositeConstruct => sig! {

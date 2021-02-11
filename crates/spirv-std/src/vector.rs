@@ -1,5 +1,5 @@
 /// Abstract trait representing a SPIR-V vector type.
-pub trait Vector<T: crate::scalar::Scalar>: crate::sealed::Sealed {}
+pub trait Vector<T: crate::scalar::Scalar>: crate::sealed::Sealed + Default {}
 
 impl Vector<bool> for glam::BVec2 {}
 impl Vector<bool> for glam::BVec3 {}
