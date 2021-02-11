@@ -426,65 +426,61 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             .cloned()
             .collect::<std::collections::VecDeque<_>>();
 
-        loop {
-            if let Some(LogicalOperand { kind, quantifier }) = logical_operand_stack.pop_front() {
-                if kind == OperandKind::IdResult {
-                    assert_eq!(quantifier, OperandQuantifier::One);
-                    if instruction.result_id == None {
+        while let Some(LogicalOperand { kind, quantifier }) = logical_operand_stack.pop_front() {
+            if kind == OperandKind::IdResult {
+                assert_eq!(quantifier, OperandQuantifier::One);
+                if instruction.result_id == None {
+                    self.err(&format!(
+                        "instruction {} expects a result id",
+                        instruction.class.opname
+                    ));
+                }
+                saw_id_result = true;
+                continue;
+            }
+
+            if kind == OperandKind::IdResultType {
+                assert_eq!(quantifier, OperandQuantifier::One);
+                if let Some(token) = tokens.next() {
+                    if let Token::Word("_") = token {
+                        need_result_type_infer = true;
+                    } else if let Some(id) = self.parse_id_in(id_map, token) {
+                        instruction.result_type = Some(id);
+                    }
+                } else {
+                    self.err(&format!(
+                        "instruction {} expects a result type",
+                        instruction.class.opname
+                    ));
+                }
+                continue;
+            }
+
+            let operands_start = instruction.operands.len();
+
+            match quantifier {
+                OperandQuantifier::One => {
+                    if !self.parse_one_operand(id_map, instruction, kind, &mut tokens) {
                         self.err(&format!(
-                            "instruction {} expects a result id",
+                            "expected operand after instruction: {}",
                             instruction.class.opname
                         ));
-                    }
-                    saw_id_result = true;
-                    continue;
-                }
-
-                if kind == OperandKind::IdResultType {
-                    assert_eq!(quantifier, OperandQuantifier::One);
-                    if let Some(token) = tokens.next() {
-                        if let Token::Word("_") = token {
-                            need_result_type_infer = true;
-                        } else if let Some(id) = self.parse_id_in(id_map, token) {
-                            instruction.result_type = Some(id);
-                        }
-                    } else {
-                        self.err(&format!(
-                            "instruction {} expects a result type",
-                            instruction.class.opname
-                        ));
-                    }
-                    continue;
-                }
-
-                let operands_start = instruction.operands.len();
-
-                match quantifier {
-                    OperandQuantifier::One => {
-                        if !self.parse_one_operand(id_map, instruction, kind, &mut tokens) {
-                            self.err(&format!(
-                                "expected operand after instruction: {}",
-                                instruction.class.opname
-                            ));
-                            return;
-                        }
-                    }
-                    OperandQuantifier::ZeroOrOne => {
-                        let _ = self.parse_one_operand(id_map, instruction, kind, &mut tokens);
-                        // If this return false, well, it's optional, do nothing
-                    }
-                    OperandQuantifier::ZeroOrMore => {
-                        while self.parse_one_operand(id_map, instruction, kind, &mut tokens) {}
+                        return;
                     }
                 }
-
-                // Parsed operands can add more optional operands that need to be parsed
-                // to an instruction - so push then on the stack here, after parsing
-                for op in instruction.operands[operands_start..].iter() {
-                    logical_operand_stack.extend(op.additional_operands());
+                OperandQuantifier::ZeroOrOne => {
+                    let _ = self.parse_one_operand(id_map, instruction, kind, &mut tokens);
+                    // If this return false, well, it's optional, do nothing
                 }
-            } else {
-                break;
+                OperandQuantifier::ZeroOrMore => {
+                    while self.parse_one_operand(id_map, instruction, kind, &mut tokens) {}
+                }
+            }
+
+            // Parsed operands can add more optional operands that need to be parsed
+            // to an instruction - so push then on the stack here, after parsing
+            for op in instruction.operands[operands_start..].iter() {
+                logical_operand_stack.extend(op.additional_operands());
             }
         }
 
