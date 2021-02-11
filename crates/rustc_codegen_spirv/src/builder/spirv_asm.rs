@@ -280,6 +280,16 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 image_type: inst.operands[0].unwrap_id_ref(),
             }
             .def(self.span(), self),
+            Op::Extension => {
+                self.emit_global()
+                    .extension(inst.operands[0].unwrap_literal_string());
+                return;
+            }
+            Op::Capability => {
+                self.emit_global()
+                    .capability(inst.operands[0].unwrap_capability());
+                return;
+            }
             Op::Variable if inst.operands[0].unwrap_storage_class() != StorageClass::Function => {
                 // OpVariable with Function storage class should be emitted inside the function,
                 // however, all other OpVariables should appear in the global scope instead.
@@ -408,62 +418,74 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
     {
         let mut saw_id_result = false;
         let mut need_result_type_infer = false;
-        println!("{:#?}", &instruction);
-        for &LogicalOperand { kind, quantifier } in instruction.class.operands {
-            if kind == OperandKind::IdResult {
-                assert_eq!(quantifier, OperandQuantifier::One);
-                if instruction.result_id == None {
-                    self.err(&format!(
-                        "instruction {} expects a result id",
-                        instruction.class.opname
-                    ));
-                }
-                saw_id_result = true;
-                continue;
-            }
-            if kind == OperandKind::IdResultType {
-                assert_eq!(quantifier, OperandQuantifier::One);
-                if let Some(token) = tokens.next() {
-                    if let Token::Word("_") = token {
-                        need_result_type_infer = true;
-                    } else if let Some(id) = self.parse_id_in(id_map, token) {
-                        instruction.result_type = Some(id);
-                    }
-                } else {
-                    self.err(&format!(
-                        "instruction {} expects a result type",
-                        instruction.class.opname
-                    ));
-                }
-                continue;
-            }
-            match quantifier {
-                OperandQuantifier::One => {
-                    if !self.parse_one_operand(id_map, instruction, kind, &mut tokens) {
+
+        let mut logical_operand_stack = instruction
+            .class
+            .operands
+            .iter()
+            .cloned()
+            .collect::<std::collections::VecDeque<_>>();
+
+        loop {
+            if let Some(LogicalOperand { kind, quantifier }) = logical_operand_stack.pop_front() {
+                if kind == OperandKind::IdResult {
+                    assert_eq!(quantifier, OperandQuantifier::One);
+                    if instruction.result_id == None {
                         self.err(&format!(
-                            "expected operand after instruction: {}",
+                            "instruction {} expects a result id",
                             instruction.class.opname
                         ));
-                        return;
+                    }
+                    saw_id_result = true;
+                    continue;
+                }
+
+                if kind == OperandKind::IdResultType {
+                    assert_eq!(quantifier, OperandQuantifier::One);
+                    if let Some(token) = tokens.next() {
+                        if let Token::Word("_") = token {
+                            need_result_type_infer = true;
+                        } else if let Some(id) = self.parse_id_in(id_map, token) {
+                            instruction.result_type = Some(id);
+                        }
+                    } else {
+                        self.err(&format!(
+                            "instruction {} expects a result type",
+                            instruction.class.opname
+                        ));
+                    }
+                    continue;
+                }
+
+                let operands_start = instruction.operands.len();
+
+                match quantifier {
+                    OperandQuantifier::One => {
+                        if !self.parse_one_operand(id_map, instruction, kind, &mut tokens) {
+                            self.err(&format!(
+                                "expected operand after instruction: {}",
+                                instruction.class.opname
+                            ));
+                            return;
+                        }
+                    }
+                    OperandQuantifier::ZeroOrOne => {
+                        let _ = self.parse_one_operand(id_map, instruction, kind, &mut tokens);
+                        // If this return false, well, it's optional, do nothing
+                    }
+                    OperandQuantifier::ZeroOrMore => {
+                        while self.parse_one_operand(id_map, instruction, kind, &mut tokens) {}
                     }
                 }
-                OperandQuantifier::ZeroOrOne => {
-                    let _ = self.parse_one_operand(id_map, instruction, kind, &mut tokens);
-                    // If this return false, well, it's optional, do nothing
+
+                // Parsed operands can add more optional operands that need to be parsed
+                // to an instruction - so push then on the stack here, after parsing
+                for op in instruction.operands[operands_start..].iter() {
+                    logical_operand_stack.extend(op.additional_operands());
                 }
-                OperandQuantifier::ZeroOrMore => {
-                    while self.parse_one_operand(id_map, instruction, kind, &mut tokens) {}
-                }
+            } else {
+                break;
             }
-        }
-        
-        // OpDecorate has a bunch of optional add-on operands that also need to get parsed
-        // however, rspirv (and the spirv .json file it depends on) don't seem to contain this
-        // (because I think the .json format can't express the fact that these can be of
-        // different types. However, most common seems to be a single integer literal.
-        // Ticket: https://github.com/KhronosGroup/SPIRV-Headers/issues/185
-        if instruction.class.opcode == Op::Decorate {
-            self.parse_one_operand(id_map, instruction, OperandKind::LiteralInteger, &mut tokens);
         }
 
         if !saw_id_result && instruction.result_id.is_some() {
@@ -474,8 +496,8 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
         if tokens.next().is_some() {
             self.tcx.sess.err(&format!(
-                "too many operands to instruction: {}",
-                instruction.class.opname
+                "too many operands to instruction: {} {:?}",
+                instruction.class.opname, instruction
             ));
         }
 
