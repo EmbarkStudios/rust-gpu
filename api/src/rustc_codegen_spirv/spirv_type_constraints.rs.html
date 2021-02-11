@@ -870,6 +870,9 @@
 <span id="867">867</span>
 <span id="868">868</span>
 <span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! SPIR-V type constraints. Can be used to perform a subset of validation,</span>
 <span class="doccomment">//! or for inference purposes.</span>
@@ -895,7 +898,7 @@
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::<span class="ident">Op</span>;
 
 <span class="doccomment">/// Pattern for a SPIR-V type, dynamic representation (see module-level docs).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Unconstrained type.</span>
     <span class="ident">Any</span>,
@@ -970,7 +973,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// &quot;Type lists&quot; are used for `OpTypeStruct` fields, `OpTypeFunction` parameters,</span>
 <span class="doccomment">/// and operand types of instructions signatures.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Unconstrained type list (any length, and the types can freely vary).</span>
     <span class="ident">Any</span>,
@@ -999,7 +1002,7 @@
 }
 
 <span class="doccomment">/// Instruction &quot;signature&quot;, dynamic representation (see module-level docs).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstSig</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Patterns for the complete list of types of the instruction&#39;s value operands.</span>
     <span class="kw">pub</span> <span class="ident">inputs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
@@ -1244,8 +1247,11 @@
         <span class="comment">// 3.37.12. Composite Instructions</span>
         <span class="ident">Op</span>::<span class="ident">VectorExtractDynamic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
         <span class="ident">Op</span>::<span class="ident">VectorInsertDynamic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            <span class="comment">// FIXME(eddyb) missing equality constraint between input and output vectors.</span>
-            (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>)
+            <span class="comment">// FIXME(eddyb) was `(Vector(T), T, _) -&gt; Vector(T)` but that was</span>
+            <span class="comment">// missing an equality constraint between input and output vectors;</span>
+            <span class="comment">// we should use `(Vector(T, N), T, _) -&gt; Vector(T, N)`, or constrain</span>
+            <span class="comment">// input and output vectors to have the same type some other way.</span>
+            (<span class="ident">T</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
         },
         <span class="ident">Op</span>::<span class="ident">VectorShuffle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Vector</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>) },
         <span class="ident">Op</span>::<span class="ident">CompositeConstruct</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
