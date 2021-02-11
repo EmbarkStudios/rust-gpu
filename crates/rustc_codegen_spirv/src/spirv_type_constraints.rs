@@ -371,8 +371,10 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         // 3.37.12. Composite Instructions
         Op::VectorExtractDynamic => sig! { (Vector(T), _) -> T },
         Op::VectorInsertDynamic => sig! {
-            // FIXME(eddyb) missing equality constraint between input and output vectors.
-            // (Vector(T), T, _) -> Vector(T)
+            // FIXME(eddyb) was `(Vector(T), T, _) -> Vector(T)` but that was
+            // missing an equality constraint between input and output vectors;
+            // we should use `(Vector(T, N), T, _) -> Vector(T, N)`, or constrain
+            // input and output vectors to have the same type some other way.
             (T, _, _) -> T
         },
         Op::VectorShuffle => sig! { (Vector(T), Vector(T)) -> Vector(T) },
