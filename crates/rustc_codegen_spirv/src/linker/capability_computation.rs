@@ -87,22 +87,17 @@ fn additional_extensions(module: &Module, inst: &Instruction) -> &'static [&'sta
 }
 
 pub fn remove_extra_extensions(module: &mut Module) {
-    let mut set: HashSet<&str> = module
+    let set: HashSet<&str> = module
         .all_inst_iter()
         .flat_map(|inst| {
-            inst.class
-                .extensions
-                .iter()
-                .chain(additional_extensions(module, inst))
+            let extensions = inst.class.extensions.iter().copied();
+            let operand_extensions = inst.operands.iter().flat_map(|op| op.required_extensions());
+            let additional_extensions = additional_extensions(module, inst).iter().copied();
+            extensions
+                .chain(operand_extensions)
+                .chain(additional_extensions)
         })
-        .copied()
         .collect();
-
-    set.extend(
-        module
-            .all_inst_iter()
-            .flat_map(|inst| inst.operands.iter().flat_map(|op| op.required_extensions())),
-    );
 
     module.extensions.retain(|inst| {
         inst.class.opcode != Op::Extension || set.contains(inst.operands[0].unwrap_literal_string())
