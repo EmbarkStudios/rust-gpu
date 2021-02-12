@@ -280,16 +280,6 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 image_type: inst.operands[0].unwrap_id_ref(),
             }
             .def(self.span(), self),
-            Op::Extension => {
-                self.emit_global()
-                    .extension(inst.operands[0].unwrap_literal_string());
-                return;
-            }
-            Op::Capability => {
-                self.emit_global()
-                    .capability(inst.operands[0].unwrap_capability());
-                return;
-            }
             Op::Variable if inst.operands[0].unwrap_storage_class() != StorageClass::Function => {
                 // OpVariable with Function storage class should be emitted inside the function,
                 // however, all other OpVariables should appear in the global scope instead.
