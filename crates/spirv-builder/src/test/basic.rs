@@ -130,6 +130,27 @@ OpFunctionEnd"#,
 }
 
 #[test]
+fn asm_const_arg() {
+    val(r#"
+fn asm() {
+    unsafe {
+        const N: usize = 3;
+        asm!(
+            "%int = OpTypeInt 32 0",
+            "%type = OpTypeVector %int {len}",
+            len = const N,
+        );
+    }
+}
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    asm();
+}
+"#);
+}
+
+#[test]
 fn logical_and() {
     val(r#"
 fn f(x: bool, y: bool) -> bool {
