@@ -72,11 +72,13 @@ fn remove_capabilities(module: &mut Module, set: &HashSet<Capability>) {
 // It says no. We strip it. Things explode.
 // So, this function is to encode any special version-specific rules that aren't in rspirv.
 fn additional_extensions(module: &Module, inst: &Instruction) -> &'static [&'static str] {
-    let version = module.header.as_ref().unwrap().version();
     if inst.class.opcode == Op::Capability {
+        let version = module.header.as_ref().unwrap().version();
         match inst.operands[0].unwrap_capability() {
             Capability::VulkanMemoryModel if version < (1, 5) => &["SPV_KHR_vulkan_memory_model"],
-            Capability::RuntimeDescriptorArray => &["SPV_EXT_descriptor_indexing"],
+            Capability::RuntimeDescriptorArray if version < (1, 5) => {
+                &["SPV_EXT_descriptor_indexing"]
+            }
             _ => &[],
         }
     } else {
