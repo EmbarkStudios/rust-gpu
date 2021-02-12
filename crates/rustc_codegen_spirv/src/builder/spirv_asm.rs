@@ -492,8 +492,8 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
         if tokens.next().is_some() {
             self.tcx.sess.err(&format!(
-                "too many operands to instruction: {} {:?}",
-                instruction.class.opname, instruction
+                "too many operands to instruction: {}",
+                instruction.class.opname
             ));
         }
 
