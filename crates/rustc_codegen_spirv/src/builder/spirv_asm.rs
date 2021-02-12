@@ -125,7 +125,10 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                             *line.last_mut().unwrap() =
                                 Token::Typeof(&operands[operand_idx], span, kind)
                         }
-                        None => line.push(Token::Placeholder(&operands[operand_idx], span)),
+                        None => match &operands[operand_idx] {
+                            InlineAsmOperandRef::Const { string } => line.push(Token::Word(string)),
+                            item => line.push(Token::Placeholder(item, span)),
+                        },
                     }
                 }
             }
@@ -249,7 +252,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             .def(self.span(), self),
             Op::TypeVector => SpirvType::Vector {
                 element: inst.operands[0].unwrap_id_ref(),
-                count: inst.operands[0].unwrap_literal_int32(),
+                count: inst.operands[1].unwrap_literal_int32(),
             }
             .def(self.span(), self),
             Op::TypeArray => {
