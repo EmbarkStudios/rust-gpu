@@ -1,4 +1,4 @@
-use super::{shader_module, Options};
+use super::{compile_shader, Options};
 use core::num::NonZeroU64;
 
 fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
@@ -36,9 +36,6 @@ fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
 pub fn start(options: &Options) {
     let (device, queue) = create_device_queue();
 
-    // Load the shaders from disk
-    let module = device.create_shader_module(shader_module(options.shader));
-
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
         entries: &[
@@ -63,14 +60,18 @@ pub fn start(options: &Options) {
         push_constant_ranges: &[],
     });
 
-    let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-        label: None,
-        layout: Some(&pipeline_layout),
-        compute_stage: wgpu::ProgrammableStageDescriptor {
-            module: &module,
-            entry_point: "main_cs",
-        },
-    });
+    let compute_pipeline = {
+        let module =
+            device.create_shader_module(wgpu::util::make_spirv(&compile_shader(options.shader)));
+        device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: None,
+            layout: Some(&pipeline_layout),
+            compute_stage: wgpu::ProgrammableStageDescriptor {
+                module: &module,
+                entry_point: "main_cs",
+            },
+        })
+    };
 
     let buf = device.create_buffer(&wgpu::BufferDescriptor {
         label: None,
