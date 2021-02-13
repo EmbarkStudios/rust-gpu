@@ -1,5 +1,10 @@
-#[cfg(any(target_os = "android", target_arch = "wasm32"))]
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS")?;
+    let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH")?;
+    if target_os != "android" && target_arch != "wasm32" {
+        return Ok(());
+    }
+
     use spirv_builder::SpirvBuilder;
     use std::error::Error;
 
@@ -16,6 +21,3 @@ fn main() -> Result<(), Box<dyn Error>> {
     build_shader("../../shaders/mouse-shader")?;
     Ok(())
 }
-
-#[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
-fn main() {}
