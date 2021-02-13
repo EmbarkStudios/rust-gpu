@@ -1,10 +1,10 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // build.rs target_os and target_arch is the compiling computer, not the target so #[cfg] won't work
     let target_os = std::env::var("CARGO_CFG_TARGET_OS")?;
     let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH")?;
     if target_os != "android" && target_arch != "wasm32" {
         return Ok(());
     }
-
     use spirv_builder::SpirvBuilder;
     use std::error::Error;
 

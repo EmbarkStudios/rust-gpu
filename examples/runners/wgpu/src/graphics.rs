@@ -125,6 +125,8 @@ async fn run(
         })
     }
 
+    // not mutated on Android/wasm32 targets
+    #[allow(unused_mut)]
     let mut render_pipeline =
         create_render_pipeline(&device, module, &pipeline_layout, swapchain_format);
 
