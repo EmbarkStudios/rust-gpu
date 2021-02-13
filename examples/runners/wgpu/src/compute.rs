@@ -1,4 +1,4 @@
-use super::{compile_shader, Options};
+use super::Options;
 use core::num::NonZeroU64;
 
 fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
@@ -33,7 +33,7 @@ fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
     }
 }
 
-pub fn start(options: &Options) {
+pub fn start(options: Options) {
     let (device, queue) = create_device_queue();
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -60,9 +60,20 @@ pub fn start(options: &Options) {
         push_constant_ranges: &[],
     });
 
+    #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+    let module = {
+        let spv = super::compile_shader(options.shader);
+        let source = wgpu::util::make_spirv(&spv);
+        device.create_shader_module(source)
+    };
+
+    #[cfg(any(target_os = "android", target_arch = "wasm32"))]
+    let module = {
+        let source = super::shader_module(options.shader);
+        device.create_shader_module(source)
+    };
+
     let compute_pipeline = {
-        let module =
-            device.create_shader_module(wgpu::util::make_spirv(&compile_shader(options.shader)));
         device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: None,
             layout: Some(&pipeline_layout),

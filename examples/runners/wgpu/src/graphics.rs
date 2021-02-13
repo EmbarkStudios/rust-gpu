@@ -1,4 +1,4 @@
-use super::{compile_shader, Options};
+use super::Options;
 use shared::ShaderConstants;
 use winit::{
     event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
@@ -73,17 +73,32 @@ async fn run(
         }],
     });
 
-    let (compile_sndr, compile_rcvr) = std::sync::mpsc::sync_channel::<Vec<u8>>(1);
-    let mut is_compiling = false;
-    let proxy = event_loop.create_proxy();
+    #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+    let ((compile_sndr, compile_rcvr), mut is_compiling, proxy) = (
+        std::sync::mpsc::sync_channel::<Vec<u8>>(1),
+        false,
+        event_loop.create_proxy(),
+    );
+
+    #[cfg(any(target_os = "android", target_arch = "wasm32"))]
+    let module = {
+        let source = super::shader_module(options.shader);
+        device.create_shader_module(source)
+    };
+
+    #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+    let module = {
+        let spv = super::compile_shader(options.shader);
+        let source = wgpu::util::make_spirv(&spv);
+        device.create_shader_module(source)
+    };
 
     fn create_render_pipeline(
         device: &wgpu::Device,
-        spv: wgpu::ShaderModuleSource,
+        module: wgpu::ShaderModule,
         pipeline_layout: &wgpu::PipelineLayout,
         swapchain_format: wgpu::TextureFormat,
     ) -> wgpu::RenderPipeline {
-        let module = device.create_shader_module(spv);
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: None,
             layout: Some(&pipeline_layout),
@@ -110,12 +125,8 @@ async fn run(
         })
     }
 
-    let mut render_pipeline = create_render_pipeline(
-        &device,
-        wgpu::util::make_spirv(&compile_shader(options.shader)),
-        &pipeline_layout,
-        swapchain_format,
-    );
+    let mut render_pipeline =
+        create_render_pipeline(&device, module, &pipeline_layout, swapchain_format);
 
     let mut sc_desc = wgpu::SwapChainDescriptor {
         usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
@@ -243,6 +254,7 @@ async fn run(
                     },
                 ..
             } => *control_flow = ControlFlow::Exit,
+            #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
             Event::WindowEvent {
                 event:
                     WindowEvent::KeyboardInput {
@@ -260,16 +272,18 @@ async fn run(
                     let sndr = compile_sndr.clone();
                     let proxy = proxy.clone();
                     std::thread::spawn(move || {
-                        sndr.try_send(compile_shader(options.shader)).unwrap();
+                        sndr.try_send(super::compile_shader(options.shader))
+                            .unwrap();
                         proxy.send_event(()).unwrap();
                     });
                 }
             }
+            #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
             Event::UserEvent(()) => match compile_rcvr.try_recv() {
                 Ok(spv) => {
                     render_pipeline = create_render_pipeline(
                         &device,
-                        wgpu::util::make_spirv(&spv),
+                        device.create_shader_module(wgpu::util::make_spirv(&spv)),
                         &pipeline_layout,
                         swapchain_format,
                     );
