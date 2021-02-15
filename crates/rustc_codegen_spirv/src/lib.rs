@@ -193,6 +193,7 @@ fn target_options() -> Target {
         data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".to_string(),
         arch: "spirv".to_string(),
         options: TargetOptions {
+            simd_types_indirect: false,
             allows_weak_linkage: false,
             crt_static_allows_dylibs: true,
             dll_prefix: "".to_string(),
