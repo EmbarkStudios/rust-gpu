@@ -151,7 +151,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         format!(" -C target-feature={}", target_features.join(","))
     };
     let rustflags = format!(
-        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}",
+        "-Z codegen-backend={} {}",
         rustc_codegen_spirv.display(),
         feature_flag,
     );
