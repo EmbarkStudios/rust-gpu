@@ -156,6 +156,19 @@ fn dis_fn(src: &str, func: &str, expect: &str) {
     assert_str_eq(expect, &func.disassemble())
 }
 
+fn dis_globals(src: &str, expect: &str) {
+    let _lock = global_lock();
+    let module = read_module(&build(src)).unwrap();
+
+    use rspirv::binary::Disassemble;
+    let dis = module
+        .global_inst_iter()
+        .map(|inst| inst.disassemble())
+        .collect::<Vec<String>>()
+        .join("\n");
+    assert_str_eq(expect, &dis);
+}
+
 fn compact_ids(module: &mut rspirv::dr::Function) -> u32 {
     let mut remap = std::collections::HashMap::new();
     let mut insert = |current_id: &mut u32| {

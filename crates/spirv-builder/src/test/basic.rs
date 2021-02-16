@@ -1,4 +1,4 @@
-use super::{dis_fn, val, val_vulkan};
+use super::{dis_fn, dis_globals, val, val_vulkan};
 use std::ffi::OsStr;
 
 struct SetEnvVar<'a> {
@@ -126,6 +126,69 @@ pub fn main() {
 %7 = OpIAdd %2 %4 %5
 OpReturnValue %7
 OpFunctionEnd"#,
+    );
+}
+
+#[test]
+fn asm_op_decorate() {
+    // Tests that OpDecorate gets parsed and emitted properly since it's a vararg style instruction
+    dis_globals(
+        r#"
+        fn add_decorate() {
+            unsafe {
+                let offset = 1u32;
+                asm!(
+                        "OpExtension \"SPV_EXT_descriptor_indexing\"",
+                        "OpCapability RuntimeDescriptorArray",
+                        "OpDecorate %image_2d_var DescriptorSet 0",
+                        "OpDecorate %image_2d_var Binding 0",
+                        "%uint                  = OpTypeInt 32 0",
+                        "%float                 = OpTypeFloat 32",
+                        "%uint_0                = OpConstant %uint 0",
+                        "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
+                        "%sampled_image_2d      = OpTypeSampledImage %image_2d",
+                        "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
+                        "%ptr_image_array       = OpTypePointer UniformConstant %image_array",
+                        "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
+                        "%ptr_sampled_image_2d  = OpTypePointer UniformConstant %sampled_image_2d",
+                        "", // ^^ type preamble
+                        "%offset                = OpLoad _ {0}",
+                        "%24                    = OpAccessChain %ptr_sampled_image_2d %image_2d_var %offset",
+                        "%25                    = OpLoad %sampled_image_2d %24",
+                        in(reg) &offset,
+                    );
+            }
+        }
+        #[allow(unused_attributes)]
+        #[spirv(fragment)]
+        pub fn main() {
+            add_decorate();
+        }"#,
+        r#"OpCapability Shader
+OpCapability VulkanMemoryModel
+OpCapability VariablePointers
+OpCapability RuntimeDescriptorArray
+OpExtension "SPV_KHR_vulkan_memory_model"
+OpExtension "SPV_EXT_descriptor_indexing"
+OpMemoryModel Logical Vulkan
+OpEntryPoint Fragment %1 "main"
+OpExecutionMode %1 OriginUpperLeft
+OpName %2 "test_project::add_decorate"
+OpName %3 "test_project::main"
+OpDecorate %4 DescriptorSet 0
+OpDecorate %4 Binding 0
+%5 = OpTypeVoid
+%6 = OpTypeFunction %5
+%7 = OpTypeInt 32 0
+%8 = OpTypePointer Function %7
+%9 = OpConstant %7 1
+%10 = OpTypeFloat 32
+%11 = OpTypeImage %10 2D 0 0 0 1 Unknown
+%12 = OpTypeSampledImage %11
+%13 = OpTypeRuntimeArray %12
+%14 = OpTypePointer UniformConstant %13
+%4 = OpVariable %14 UniformConstant
+%15 = OpTypePointer UniformConstant %12"#,
     );
 }
 
