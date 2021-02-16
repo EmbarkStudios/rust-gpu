@@ -190,6 +190,26 @@ OpDecorate %4 Binding 0
 %4 = OpVariable %14 UniformConstant
 %15 = OpTypePointer UniformConstant %12"#,
     );
+
+#[test]
+fn asm_const_arg() {
+    val(r#"
+fn asm() {
+    unsafe {
+        const N: usize = 3;
+        asm!(
+            "%int = OpTypeInt 32 0",
+            "%type = OpTypeVector %int {len}",
+            len = const N,
+        );
+    }
+}
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    asm();
+}
+"#);
 }
 
 #[test]
@@ -442,6 +462,20 @@ pub fn main() {
     let vector = glam::Vec2::new(1.0, 2.0);
     let element = unsafe { spirv_std::arch::vector_extract_dynamic(vector, 1) };
     assert!(2.0 == element);
+}
+"#);
+}
+
+#[test]
+fn vector_insert_dynamic() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    let vector = glam::Vec2::new(1.0, 2.0);
+    let expected = glam::Vec2::new(1.0, 3.0);
+    let new_vector = unsafe { spirv_std::arch::vector_insert_dynamic(vector, 1, 3.0) };
+    assert!(new_vector == expected);
 }
 "#);
 }

@@ -122,9 +122,11 @@ storage_class! {
 
     /// Image memory.
     ///
-    /// A traditional texture or image; SPIR-V has this single name for these.
-    /// An image does not include any information about how to access, filter,
-    /// or sample it.
+    /// Holds a pointer to a single texel, obtained via OpImageTexelPointer. Use of a pointer
+    /// obtained via OpImageTexelPointer is limited to atomic operations.
+    ///
+    /// If you're looking to create a pointer to an entire image instead of a texel, you probably
+    /// want UniformConstant instead.
     #[spirv(image)] writeable storage_class Image;
 
     /// Graphics storage buffers (buffer blocks).

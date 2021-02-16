@@ -149,11 +149,16 @@ async fn run(
                 event: WindowEvent::Resized(size),
                 ..
             } => {
-                // Recreate the swap chain with the new size
-                sc_desc.width = size.width;
-                sc_desc.height = size.height;
-                if let Some(surface) = &surface {
-                    swap_chain = Some(device.create_swap_chain(surface, &sc_desc));
+                if size.width != 0 && size.height != 0 {
+                    // Recreate the swap chain with the new size
+                    sc_desc.width = size.width;
+                    sc_desc.height = size.height;
+                    if let Some(surface) = &surface {
+                        swap_chain = Some(device.create_swap_chain(surface, &sc_desc));
+                    }
+                } else {
+                    // Swap chains must have non-zero dimensions
+                    swap_chain = None;
                 }
             }
             Event::RedrawRequested(_) => {

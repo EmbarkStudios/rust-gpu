@@ -27,3 +27,33 @@ pub unsafe fn vector_extract_dynamic<T: Scalar, V: Vector<T>>(vector: V, index: 
 
     result
 }
+
+/// Make a copy of a vector, with a single, variably selected,
+/// component modified.
+///
+/// # Safety
+/// Behavior is undefined if `index`’s value is greater than or equal to the
+/// number of components in `vector`.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "OpVectorInsertDynamic")]
+#[inline]
+pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T>>(
+    vector: V,
+    index: usize,
+    element: T,
+) -> V {
+    let mut result = V::default();
+
+    asm! {
+        "%vector = OpLoad _ {vector}",
+        "%element = OpLoad _ {element}",
+        "%new_vector = OpVectorInsertDynamic _ %vector %element {index}",
+        "OpStore {result} %new_vector",
+        vector = in(reg) &vector,
+        index = in(reg) index,
+        element = in(reg) &element,
+        result = in(reg) &mut result,
+    }
+
+    result
+}
