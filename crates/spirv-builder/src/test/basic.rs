@@ -190,6 +190,7 @@ OpDecorate %4 Binding 0
 %4 = OpVariable %14 UniformConstant
 %15 = OpTypePointer UniformConstant %12"#,
     );
+}
 
 #[test]
 fn asm_const_arg() {
