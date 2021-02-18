@@ -1318,6 +1318,52 @@
 <span id="1315">1315</span>
 <span id="1316">1316</span>
 <span id="1317">1317</span>
+<span id="1318">1318</span>
+<span id="1319">1319</span>
+<span id="1320">1320</span>
+<span id="1321">1321</span>
+<span id="1322">1322</span>
+<span id="1323">1323</span>
+<span id="1324">1324</span>
+<span id="1325">1325</span>
+<span id="1326">1326</span>
+<span id="1327">1327</span>
+<span id="1328">1328</span>
+<span id="1329">1329</span>
+<span id="1330">1330</span>
+<span id="1331">1331</span>
+<span id="1332">1332</span>
+<span id="1333">1333</span>
+<span id="1334">1334</span>
+<span id="1335">1335</span>
+<span id="1336">1336</span>
+<span id="1337">1337</span>
+<span id="1338">1338</span>
+<span id="1339">1339</span>
+<span id="1340">1340</span>
+<span id="1341">1341</span>
+<span id="1342">1342</span>
+<span id="1343">1343</span>
+<span id="1344">1344</span>
+<span id="1345">1345</span>
+<span id="1346">1346</span>
+<span id="1347">1347</span>
+<span id="1348">1348</span>
+<span id="1349">1349</span>
+<span id="1350">1350</span>
+<span id="1351">1351</span>
+<span id="1352">1352</span>
+<span id="1353">1353</span>
+<span id="1354">1354</span>
+<span id="1355">1355</span>
+<span id="1356">1356</span>
+<span id="1357">1357</span>
+<span id="1358">1358</span>
+<span id="1359">1359</span>
+<span id="1360">1360</span>
+<span id="1361">1361</span>
+<span id="1362">1362</span>
+<span id="1363">1363</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
@@ -1328,7 +1374,7 @@
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">grammar</span>::{<span class="ident">LogicalOperand</span>, <span class="ident">OperandKind</span>, <span class="ident">OperandQuantifier</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{
     <span class="ident">FPFastMathMode</span>, <span class="ident">FragmentShadingRate</span>, <span class="ident">FunctionControl</span>, <span class="ident">ImageOperands</span>, <span class="ident">KernelProfilingInfo</span>,
-    <span class="ident">LoopControl</span>, <span class="ident">MemoryAccess</span>, <span class="ident">MemorySemantics</span>, <span class="ident">Op</span>, <span class="ident">RayFlags</span>, <span class="ident">SelectionControl</span>, <span class="ident">Word</span>,
+    <span class="ident">LoopControl</span>, <span class="ident">MemoryAccess</span>, <span class="ident">MemorySemantics</span>, <span class="ident">Op</span>, <span class="ident">RayFlags</span>, <span class="ident">SelectionControl</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>,
 };
 <span class="kw">use</span> <span class="ident">rustc_ast</span>::<span class="ident">ast</span>::{<span class="ident">InlineAsmOptions</span>, <span class="ident">InlineAsmTemplatePiece</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">place</span>::<span class="ident">PlaceRef</span>;
@@ -1580,10 +1626,37 @@
                 <span class="self">self</span>.<span class="ident">err</span>(<span class="string">&quot;OpTypeArray in asm! is not supported yet&quot;</span>);
                 <span class="kw">return</span>;
             }
+            <span class="ident">Op</span>::<span class="ident">TypeRuntimeArray</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> {
+                <span class="ident">element</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
+            }
+            .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
+            <span class="ident">Op</span>::<span class="ident">TypePointer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
+                <span class="ident">storage_class</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>(),
+                <span class="ident">pointee</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>(),
+            }
+            .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
+            <span class="ident">Op</span>::<span class="ident">TypeImage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">Image</span> {
+                <span class="ident">sampled_type</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
+                <span class="ident">dim</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_dim</span>(),
+                <span class="ident">depth</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">2</span>].<span class="ident">unwrap_literal_int32</span>(),
+                <span class="ident">arrayed</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">3</span>].<span class="ident">unwrap_literal_int32</span>(),
+                <span class="ident">multisampled</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">4</span>].<span class="ident">unwrap_literal_int32</span>(),
+                <span class="ident">sampled</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">5</span>].<span class="ident">unwrap_literal_int32</span>(),
+                <span class="ident">image_format</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">6</span>].<span class="ident">unwrap_image_format</span>(),
+                <span class="ident">access_qualifier</span>: <span class="prelude-val">None</span>,
+            }
+            .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
             <span class="ident">Op</span>::<span class="ident">TypeSampledImage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> {
                 <span class="ident">image_type</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
             }
             .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
+            <span class="ident">Op</span>::<span class="ident">Variable</span> <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">StorageClass</span>::<span class="ident">Function</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// OpVariable with Function storage class should be emitted inside the function,</span>
+                <span class="comment">// however, all other OpVariables should appear in the global scope instead.</span>
+                <span class="self">self</span>.<span class="ident">emit_global</span>()
+                    .<span class="ident">insert_types_global_values</span>(<span class="ident">dr</span>::<span class="ident">InsertPoint</span>::<span class="ident">End</span>, <span class="ident">inst</span>);
+                <span class="kw">return</span>;
+            }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">emit</span>()
                     .<span class="ident">insert_into_block</span>(<span class="ident">dr</span>::<span class="ident">InsertPoint</span>::<span class="ident">End</span>, <span class="ident">inst</span>)
@@ -1705,7 +1778,15 @@
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">saw_id_result</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">need_result_type_infer</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">LogicalOperand</span> { <span class="ident">kind</span>, <span class="ident">quantifier</span> } <span class="kw">in</span> <span class="ident">instruction</span>.<span class="ident">class</span>.<span class="ident">operands</span> {
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">logical_operand_stack</span> <span class="op">=</span> <span class="ident">instruction</span>
+            .<span class="ident">class</span>
+            .<span class="ident">operands</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">cloned</span>()
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">VecDeque</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+
+        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">LogicalOperand</span> { <span class="ident">kind</span>, <span class="ident">quantifier</span> }) <span class="op">=</span> <span class="ident">logical_operand_stack</span>.<span class="ident">pop_front</span>() {
             <span class="kw">if</span> <span class="ident">kind</span> <span class="op">=</span><span class="op">=</span> <span class="ident">OperandKind</span>::<span class="ident">IdResult</span> {
                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">quantifier</span>, <span class="ident">OperandQuantifier</span>::<span class="ident">One</span>);
                 <span class="kw">if</span> <span class="ident">instruction</span>.<span class="ident">result_id</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">None</span> {
@@ -1717,6 +1798,7 @@
                 <span class="ident">saw_id_result</span> <span class="op">=</span> <span class="bool-val">true</span>;
                 <span class="kw">continue</span>;
             }
+
             <span class="kw">if</span> <span class="ident">kind</span> <span class="op">=</span><span class="op">=</span> <span class="ident">OperandKind</span>::<span class="ident">IdResultType</span> {
                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">quantifier</span>, <span class="ident">OperandQuantifier</span>::<span class="ident">One</span>);
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">token</span>) <span class="op">=</span> <span class="ident">tokens</span>.<span class="ident">next</span>() {
@@ -1733,6 +1815,9 @@
                 }
                 <span class="kw">continue</span>;
             }
+
+            <span class="kw">let</span> <span class="ident">operands_start</span> <span class="op">=</span> <span class="ident">instruction</span>.<span class="ident">operands</span>.<span class="ident">len</span>();
+
             <span class="kw">match</span> <span class="ident">quantifier</span> {
                 <span class="ident">OperandQuantifier</span>::<span class="ident">One</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">parse_one_operand</span>(<span class="ident">id_map</span>, <span class="ident">instruction</span>, <span class="ident">kind</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tokens</span>) {
@@ -1751,7 +1836,14 @@
                     <span class="kw">while</span> <span class="self">self</span>.<span class="ident">parse_one_operand</span>(<span class="ident">id_map</span>, <span class="ident">instruction</span>, <span class="ident">kind</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tokens</span>) {}
                 }
             }
+
+            <span class="comment">// Parsed operands can add more optional operands that need to be parsed</span>
+            <span class="comment">// to an instruction - so push then on the stack here, after parsing</span>
+            <span class="kw">for</span> <span class="ident">op</span> <span class="kw">in</span> <span class="ident">instruction</span>.<span class="ident">operands</span>[<span class="ident">operands_start</span>..].<span class="ident">iter</span>() {
+                <span class="ident">logical_operand_stack</span>.<span class="ident">extend</span>(<span class="ident">op</span>.<span class="ident">additional_operands</span>());
+            }
         }
+
         <span class="kw">if</span> <span class="op">!</span><span class="ident">saw_id_result</span> <span class="op">&amp;&amp;</span> <span class="ident">instruction</span>.<span class="ident">result_id</span>.<span class="ident">is_some</span>() {
             <span class="self">self</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;instruction {} does not expect a result id&quot;</span>,
