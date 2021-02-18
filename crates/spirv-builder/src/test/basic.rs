@@ -562,3 +562,29 @@ OpReturnValue %18
 OpFunctionEnd",
     );
 }
+
+#[test]
+fn image_read() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(input: UniformConstant<StorageImage2d>, mut output: Output<glam::Vec2>) {
+    let image = input.load();
+    let coords = image.read(glam::IVec2::new(0, 1));
+    output.store(coords);
+}
+"#);
+}
+
+#[test]
+fn image_write() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(input: Input<glam::Vec2>, image: UniformConstant<StorageImage2d>) {
+    let texels = input.load();
+    let image = image.load();
+    image.write(glam::UVec2::new(0, 1), texels);
+}
+"#);
+}
