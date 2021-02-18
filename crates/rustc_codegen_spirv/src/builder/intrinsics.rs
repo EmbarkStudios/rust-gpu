@@ -379,6 +379,9 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 if self.kernel_mode {
                     self.cl_op(CLOp::ctz, ret_ty, [args[0].immediate()])
                 } else {
+                    self.ext_inst
+                        .borrow_mut()
+                        .import_integer_functions_2_intel(self);
                     self.emit()
                         .u_count_trailing_zeros_intel(
                             args[0].immediate().ty,
