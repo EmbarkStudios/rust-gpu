@@ -764,9 +764,11 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
             // reserved!(SPV_EXT_demote_to_helper_invocation)
         }
         // SPV_INTEL_shader_integer_functions2
-        Op::UCountLeadingZerosINTEL
-        | Op::UCountTrailingZerosINTEL
-        | Op::AbsISubINTEL
+        Op::UCountLeadingZerosINTEL | Op::UCountTrailingZerosINTEL => {
+            // NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_INTEL_shader_integer_functions2)
+        }
+        Op::AbsISubINTEL
         | Op::AbsUSubINTEL
         | Op::IAddSatINTEL
         | Op::UAddSatINTEL
