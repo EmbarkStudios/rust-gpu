@@ -280,10 +280,6 @@ impl Into<Operand> for CopyOperand {
     }
 }
 
-// NOTE(eddyb) unlike `fmt::Display for Operand`, this prints `%` for IDs, i.e.
-// `CopyOperand::IdRef(123)` is `%123`, while `Operand::IdRef(123)` is `123`.
-// FIXME(eddyb) either rename `CopyOperand` to something more specific, or fix
-// `rspirv` to properly pretty-print `Operand` in its own `fmt::Display` impl.
 impl fmt::Display for CopyOperand {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -1421,7 +1417,7 @@ impl InferError {
             .iter()
             .chain(inst.operands.iter())
         {
-            eprint!(" {}{}", operand.id_ref_any().map_or("", |_| "%"), operand);
+            eprint!(" {}", operand);
         }
         eprintln!();
 
@@ -2296,7 +2292,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
 
             write!(
                 w,
-                "%{} = Op{:?}",
+                "{} = Op{:?}",
                 Instance {
                     generic_id,
                     generic_args: Param(0)..Param(generic.param_count)
@@ -2334,7 +2330,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
                 } else if needed == 1 {
                     write!(w, "{}", params.start)?;
                 } else {
-                    write!(w, "{}{}", operand.id_ref_any().map_or("", |_| "%"), operand)?;
+                    write!(w, "{}", operand)?;
                 }
             }
             writeln!(w)?;
