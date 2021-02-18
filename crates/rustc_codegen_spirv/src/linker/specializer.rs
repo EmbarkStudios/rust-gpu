@@ -107,11 +107,28 @@ impl<SO: Fn(&Operand) -> bool> Specialization for SimpleSpecialization<SO> {
 pub fn specialize(module: Module, specialization: impl Specialization) -> Module {
     // FIXME(eddyb) use `log`/`tracing` instead.
     let debug = std::env::var("SPECIALIZER_DEBUG").is_ok();
+    let dump_instances = std::env::var("SPECIALIZER_DUMP_INSTANCES").ok();
+
+    let mut debug_names = HashMap::new();
+    if debug || dump_instances.is_some() {
+        debug_names = module
+            .debugs
+            .iter()
+            .filter(|inst| inst.class.opcode == Op::Name)
+            .map(|inst| {
+                (
+                    inst.operands[0].unwrap_id_ref(),
+                    inst.operands[1].unwrap_literal_string().to_string(),
+                )
+            })
+            .collect();
+    }
 
     let mut specializer = Specializer {
         specialization,
 
         debug,
+        debug_names,
 
         generics: IndexMap::new(),
     };
@@ -158,7 +175,7 @@ pub fn specialize(module: Module, specialization: impl Specialization) -> Module
     }
     expander.propagate_instances();
 
-    if let Ok(path) = std::env::var("SPECIALIZER_DUMP_INSTANCES") {
+    if let Some(path) = dump_instances {
         expander
             .dump_instances(&mut std::fs::File::create(path).unwrap())
             .unwrap();
@@ -563,6 +580,9 @@ struct Specializer<S: Specialization> {
 
     // FIXME(eddyb) use `log`/`tracing` instead.
     debug: bool,
+
+    // HACK(eddyb) if debugging is requested, this is used to quickly get `OpName`s.
+    debug_names: HashMap<Word, String>,
 
     // FIXME(eddyb) compact SPIR-V IDs to allow flatter maps.
     generics: IndexMap<Word, Generic>,
@@ -1849,7 +1869,11 @@ impl<'a, S: Specialization> InferCx<'a, S> {
 
         if self.specializer.debug {
             eprintln!();
-            eprintln!("specializer::instantiate_function(%{}):", func_id);
+            eprint!("specializer::instantiate_function(%{}", func_id);
+            if let Some(name) = self.specializer.debug_names.get(&func_id) {
+                eprint!(" {}", name);
+            }
+            eprintln!("):");
         }
 
         // Instantiate the defining `OpFunction` first, so that the first
@@ -2260,23 +2284,9 @@ impl<'a, S: Specialization> Expander<'a, S> {
         writeln!(w, "; All specializer \"generic\"s and their instances:")?;
         writeln!(w)?;
 
-        let names: HashMap<_, _> = self
-            .builder
-            .module_ref()
-            .debugs
-            .iter()
-            .filter(|inst| inst.class.opcode == Op::Name)
-            .map(|inst| {
-                (
-                    inst.operands[0].unwrap_id_ref(),
-                    inst.operands[1].unwrap_literal_string(),
-                )
-            })
-            .collect();
-
         // FIXME(eddyb) maybe dump (transitive) dependencies? could use a def-use graph.
         for (&generic_id, generic) in &self.specializer.generics {
-            if let Some(name) = names.get(&generic_id) {
+            if let Some(name) = self.specializer.debug_names.get(&generic_id) {
                 writeln!(w, "; {}", name)?;
             }
 
