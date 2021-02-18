@@ -131,6 +131,7 @@ pub fn specialize(module: Module, specialization: impl Specialization) -> Module
         debug_names,
 
         generics: IndexMap::new(),
+        int_consts: HashMap::new(),
     };
 
     specializer.collect_generics(&module);
@@ -586,6 +587,10 @@ struct Specializer<S: Specialization> {
 
     // FIXME(eddyb) compact SPIR-V IDs to allow flatter maps.
     generics: IndexMap<Word, Generic>,
+
+    /// Integer `OpConstant`s (i.e. containing a `LiteralInt32`), to be used
+    /// for interpreting `TyPat::IndexComposite` (such as for `OpAccessChain`).
+    int_consts: HashMap<Word, u32>,
 }
 
 impl<S: Specialization> Specializer<S> {
@@ -634,6 +639,13 @@ impl<S: Specialization> Specializer<S> {
                 // handled in the future to support recursive data types.
                 assert_eq!(inst.class.opcode, Op::TypePointer);
                 continue;
+            }
+
+            // Record all integer `OpConstant`s (used for `IndexComposite`).
+            if inst.class.opcode == Op::Constant {
+                if let Operand::LiteralInt32(x) = inst.operands[0] {
+                    self.int_consts.insert(result_id, x);
+                }
             }
 
             // Instantiate `inst` in a fresh inference context, to determine
@@ -1045,6 +1057,15 @@ impl<'a, A: smallvec::Array> IntoIterator for &'a mut SmallIntMap<A> {
     }
 }
 
+#[derive(PartialEq)]
+struct IndexCompositeMatch<'a> {
+    /// *Indexes* `Operand`s (see `TyPat::IndexComposite`'s doc comment for details).
+    indices: &'a [Operand],
+
+    /// The result of indexing the composite type with all `indices`.
+    leaf: InferOperand,
+}
+
 /// Inference success (e.g. type matched type pattern).
 #[must_use]
 #[derive(Default)]
@@ -1066,6 +1087,10 @@ struct Match<'a> {
     /// `TyPat::Var(i)` (currently `i` is always `0`, aka `TyPat::T`).
     ty_var_found: SmallIntMap<[SmallVec<[InferOperand; 4]>; 1]>,
 
+    /// `index_composite_found[i][..]` holds all the `InferOperand`s matched by
+    /// `TyPat::IndexComposite(TyPat::Var(i))` (currently `i` is always `0`, aka `TyPat::T`).
+    index_composite_ty_var_found: SmallIntMap<[SmallVec<[IndexCompositeMatch<'a>; 1]>; 1]>,
+
     /// `ty_list_var_found[i][..]` holds all the `InferOperandList`s matched by
     /// `TyListPat::Var(i)` (currently `i` is always `0`, aka `TyListPat::TS`).
     ty_list_var_found: SmallIntMap<[SmallVec<[InferOperandList<'a>; 2]>; 1]>,
@@ -1075,19 +1100,30 @@ impl<'a> Match<'a> {
     /// Combine two `Match`es such that the result implies both of them apply,
     /// i.e. contains the union of their constraints.
     fn and(mut self, other: Self) -> Self {
-        self.ambiguous |= other.ambiguous;
+        let Match {
+            ambiguous,
+            storage_class_var_found,
+            ty_var_found,
+            index_composite_ty_var_found,
+            ty_list_var_found,
+        } = &mut self;
+
+        *ambiguous |= other.ambiguous;
         for (i, other_found) in other.storage_class_var_found {
-            self.storage_class_var_found
+            storage_class_var_found
                 .get_mut_or_default(i)
                 .extend(other_found);
         }
         for (i, other_found) in other.ty_var_found {
-            self.ty_var_found.get_mut_or_default(i).extend(other_found);
+            ty_var_found.get_mut_or_default(i).extend(other_found);
         }
-        for (i, other_found) in other.ty_list_var_found {
-            self.ty_list_var_found
+        for (i, other_found) in other.index_composite_ty_var_found {
+            index_composite_ty_var_found
                 .get_mut_or_default(i)
                 .extend(other_found);
+        }
+        for (i, other_found) in other.ty_list_var_found {
+            ty_list_var_found.get_mut_or_default(i).extend(other_found);
         }
         self
     }
@@ -1095,8 +1131,16 @@ impl<'a> Match<'a> {
     /// Combine two `Match`es such that the result allows for either applying,
     /// i.e. contains the intersection of their constraints.
     fn or(mut self, other: Self) -> Self {
-        self.ambiguous |= other.ambiguous;
-        for (i, self_found) in &mut self.storage_class_var_found {
+        let Match {
+            ambiguous,
+            storage_class_var_found,
+            ty_var_found,
+            index_composite_ty_var_found,
+            ty_list_var_found,
+        } = &mut self;
+
+        *ambiguous |= other.ambiguous;
+        for (i, self_found) in storage_class_var_found {
             let other_found = other
                 .storage_class_var_found
                 .get(i)
@@ -1104,11 +1148,19 @@ impl<'a> Match<'a> {
                 .unwrap_or(&[]);
             self_found.retain(|x| other_found.contains(x));
         }
-        for (i, self_found) in &mut self.ty_var_found {
+        for (i, self_found) in ty_var_found {
             let other_found = other.ty_var_found.get(i).map(|xs| &xs[..]).unwrap_or(&[]);
             self_found.retain(|x| other_found.contains(x));
         }
-        for (i, self_found) in &mut self.ty_list_var_found {
+        for (i, self_found) in index_composite_ty_var_found {
+            let other_found = other
+                .index_composite_ty_var_found
+                .get(i)
+                .map(|xs| &xs[..])
+                .unwrap_or(&[]);
+            self_found.retain(|x| other_found.contains(x));
+        }
+        for (i, self_found) in ty_list_var_found {
             let other_found = other
                 .ty_list_var_found
                 .get(i)
@@ -1147,20 +1199,63 @@ impl<'a> Match<'a> {
                 ambiguous,
                 storage_class_var_found,
                 ty_var_found,
+                index_composite_ty_var_found,
                 ty_list_var_found,
             } = self;
             write!(f, "Match{} ", if *ambiguous { " (ambiguous)" } else { "" })?;
-            f.debug_list()
-                .entries(debug_var_found(storage_class_var_found, &move |operand| {
-                    operand.display_with_infer_cx(cx)
-                }))
-                .entries(debug_var_found(ty_var_found, &move |operand| {
-                    operand.display_with_infer_cx(cx)
-                }))
-                .entries(debug_var_found(ty_list_var_found, &move |list| {
-                    list.display_with_infer_cx(cx)
-                }))
-                .finish()
+            let mut list = f.debug_list();
+            list.entries(debug_var_found(storage_class_var_found, &move |operand| {
+                operand.display_with_infer_cx(cx)
+            }));
+            list.entries(debug_var_found(ty_var_found, &move |operand| {
+                operand.display_with_infer_cx(cx)
+            }));
+            list.entries(
+                index_composite_ty_var_found
+                    .0
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, found)| !found.is_empty())
+                    .flat_map(|(i, found)| found.iter().map(move |x| (i, x)))
+                    .map(move |(i, IndexCompositeMatch { indices, leaf })| {
+                        FmtBy(move |f| {
+                            match ty_var_found.get(i) {
+                                Some(found) if found.len() == 1 => {
+                                    write!(f, "{}", found[0].display_with_infer_cx(cx))?;
+                                }
+                                found => {
+                                    let found = found.map_or(&[][..], |xs| &xs[..]);
+                                    write!(f, "(")?;
+                                    for (j, operand) in found.iter().enumerate() {
+                                        if j != 0 {
+                                            write!(f, " = ")?;
+                                        }
+                                        write!(f, "{}", operand.display_with_infer_cx(cx))?;
+                                    }
+                                    write!(f, ")")?;
+                                }
+                            }
+                            for operand in &indices[..] {
+                                // Show the value for literals and IDs pointing to
+                                // known `OpConstant`s (e.g. struct field indices).
+                                let maybe_idx = match operand {
+                                    Operand::IdRef(id) => cx.specializer.int_consts.get(id),
+                                    Operand::LiteralInt32(idx) => Some(idx),
+                                    _ => None,
+                                };
+                                match maybe_idx {
+                                    Some(idx) => write!(f, ".{}", idx)?,
+                                    None => write!(f, "[{}]", operand)?,
+                                }
+                            }
+                            write!(f, " = {}", leaf.display_with_infer_cx(cx))
+                        })
+                    }),
+            );
+            list.entries(debug_var_found(ty_list_var_found, &move |list| {
+                list.display_with_infer_cx(cx)
+            }));
+            list.finish()
         })
     }
 }
@@ -1204,6 +1299,26 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                     (Err(Unapplicable), Err(Unapplicable)) => Err(Unapplicable),
                 },
             },
+            TyPat::IndexComposite(composite_pat) => match composite_pat {
+                TyPat::Var(i) => {
+                    let mut m = Match::default();
+                    m.index_composite_ty_var_found.get_mut_or_default(*i).push(
+                        IndexCompositeMatch {
+                            // HACK(eddyb) leave empty `indices` in here for
+                            // `match_inst_sig` to fill in, as it has access
+                            // to the whole `Instruction` but we don't.
+                            indices: &[],
+                            leaf: ty,
+                        },
+                    );
+                    Ok(m)
+                }
+                _ => unreachable!(
+                    "`IndexComposite({:?})` isn't supported, only type variable
+                     patterns are (for the composite type), e.g. `IndexComposite(T)`",
+                    composite_pat
+                ),
+            },
             _ => {
                 let instance = match ty {
                     InferOperand::Unknown | InferOperand::Concrete(_) => {
@@ -1230,7 +1345,9 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                     }
                 };
                 match pat {
-                    TyPat::Any | TyPat::Var(_) | TyPat::Either(..) => unreachable!(),
+                    TyPat::Any | TyPat::Var(_) | TyPat::Either(..) | TyPat::IndexComposite(_) => {
+                        unreachable!()
+                    }
 
                     // HACK(eddyb) `TyPat::Void` can't be observed because it's
                     // not "generic", so it would return early as ambiguous.
@@ -1266,10 +1383,6 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                         Ok(self
                             .match_ty_pat(ret_pat, ret_ty)?
                             .and(self.match_ty_list_pat(params_pat, params_ty_list)?))
-                    }
-                    TyPat::IndexComposite(_base_pat) => {
-                        // TODO(eddyb) do this (seems hard)?
-                        panic!("TODO IndexComposite")
                     }
                 }
             }
@@ -1354,14 +1467,13 @@ impl<'a, S: Specialization> InferCx<'a, S> {
             m = m.and(self.match_storage_class_pat(pat, storage_class));
         }
 
-        m = m.and(self.match_ty_list_pat(
-            sig.input_types,
-            InferOperandList {
-                operands: &inst.operands,
-                all_generic_args: inputs_generic_args,
-                transform: Some(InferOperandListTransform::TypeOfId),
-            },
-        )?);
+        let input_ty_list = InferOperandList {
+            operands: &inst.operands,
+            all_generic_args: inputs_generic_args,
+            transform: Some(InferOperandListTransform::TypeOfId),
+        };
+
+        m = m.and(self.match_ty_list_pat(sig.input_types, input_ty_list.clone())?);
 
         match (sig.output_type, result_type) {
             (Some(pat), Some(result_type)) => {
@@ -1369,6 +1481,38 @@ impl<'a, S: Specialization> InferCx<'a, S> {
             }
             (None, None) => {}
             _ => return Err(Unapplicable),
+        }
+
+        if !m.index_composite_ty_var_found.0.is_empty() {
+            let composite_indices = {
+                // Drain the `input_types` prefix (everything before `..`).
+                let mut ty_list = input_ty_list;
+                let mut list_pat = sig.input_types;
+                while let TyListPat::Cons { first: _, suffix } = list_pat {
+                    list_pat = suffix;
+                    ty_list = ty_list.split_first(self).ok_or(Unapplicable)?.1;
+                }
+
+                assert_eq!(
+                    list_pat,
+                    &TyListPat::Any,
+                    "`IndexComposite` must have input types end in `..`"
+                );
+
+                // Extract the underlying remaining `operands` - while iterating on
+                // the `TypeOfId` list would skip over non-ID operands, and replace
+                // ID operands with their types, the `operands` slice is still a
+                // subslice of `inst.operands` (minus the prefix we drained above).
+                ty_list.operands
+            };
+
+            // Fill in all the `indices` fields left empty by `match_ty_pat`.
+            for (_, found) in &mut m.index_composite_ty_var_found {
+                for index_composite_match in found {
+                    let empty = mem::replace(&mut index_composite_match.indices, composite_indices);
+                    assert_eq!(empty, &[]);
+                }
+            }
         }
 
         Ok(m)
@@ -1590,6 +1734,57 @@ impl<'a, S: Specialization> InferCx<'a, S> {
         })
     }
 
+    /// Compute the result ("leaf") type for a `TyPat::IndexComposite` pattern,
+    /// by applying each index in `indices` to `composite_ty`, extracting the
+    /// element type (for `OpType{Array,RuntimeArray,Vector,Matrix}`), or the
+    /// field type for `OpTypeStruct`, where `indices` contains the field index.
+    fn index_composite(&self, composite_ty: InferOperand, indices: &[Operand]) -> InferOperand {
+        let mut ty = composite_ty;
+        for idx in &indices[..] {
+            let instance = match ty {
+                InferOperand::Unknown | InferOperand::Concrete(_) | InferOperand::Var(_) => {
+                    return InferOperand::Unknown;
+                }
+                InferOperand::Instance(instance) => instance,
+            };
+            let generic = &self.specializer.generics[&instance.generic_id];
+
+            let ty_opcode = generic.def.class.opcode;
+            let ty_operands = InferOperandList {
+                operands: &generic.def.operands,
+                all_generic_args: instance.generic_args,
+                transform: None,
+            };
+
+            let ty_operands_idx = match ty_opcode {
+                Op::TypeArray | Op::TypeRuntimeArray | Op::TypeVector | Op::TypeMatrix => 0,
+                Op::TypeStruct => match idx {
+                    Operand::IdRef(id) => {
+                        *self.specializer.int_consts.get(id).unwrap_or_else(|| {
+                            unreachable!("non-constant `OpTypeStruct` field index {}", id);
+                        })
+                    }
+                    &Operand::LiteralInt32(i) => i,
+                    _ => {
+                        unreachable!("invalid `OpTypeStruct` field index operand {:?}", idx);
+                    }
+                },
+                _ => unreachable!("indexing non-composite type `Op{:?}`", ty_opcode),
+            };
+
+            ty = ty_operands
+                .iter(self)
+                .nth(ty_operands_idx as usize)
+                .unwrap_or_else(|| {
+                    unreachable!(
+                        "out of bounds index {} for `Op{:?}`",
+                        ty_operands_idx, ty_opcode
+                    );
+                });
+        }
+        ty
+    }
+
     /// Enforce that all the `InferOperand`/`InferOperandList`s found for the
     /// same pattern variable (i.e. `*Pat::Var(i)` with the same `i`), are equal.
     fn equate_match_findings(&mut self, m: Match<'_>) -> Result<(), InferError> {
@@ -1598,6 +1793,7 @@ impl<'a, S: Specialization> InferCx<'a, S> {
 
             storage_class_var_found,
             ty_var_found,
+            index_composite_ty_var_found,
             ty_list_var_found,
         } = m;
 
@@ -1608,10 +1804,20 @@ impl<'a, S: Specialization> InferCx<'a, S> {
             }
         }
 
-        for (_, found) in ty_var_found {
+        for (i, found) in ty_var_found {
             let mut found = found.into_iter();
             if let Some(first) = found.next() {
-                found.try_fold(first, |a, b| self.equate_infer_operands(a, b))?;
+                let equated_ty = found.try_fold(first, |a, b| self.equate_infer_operands(a, b))?;
+
+                // Apply any `IndexComposite(Var(i))`'s indices to `equated_ty`,
+                // and equate the resulting "leaf" type with the found "leaf" type.
+                let index_composite_found = index_composite_ty_var_found
+                    .get(i)
+                    .map_or(&[][..], |xs| &xs[..]);
+                for IndexCompositeMatch { indices, leaf } in index_composite_found {
+                    let indexing_result_ty = self.index_composite(equated_ty.clone(), indices);
+                    self.equate_infer_operands(indexing_result_ty, leaf.clone())?;
+                }
             }
         }
 
