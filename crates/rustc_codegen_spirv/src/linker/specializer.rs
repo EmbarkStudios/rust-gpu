@@ -858,29 +858,29 @@ impl fmt::Display for InferOperand {
     }
 }
 
-#[derive(Clone, PartialEq)]
-enum InferOperandList<'a> {
-    AllOperands {
-        operands: &'a [Operand],
-
-        /// Joined ranges of all `InferVar`s needed by individual `Operand`s,
-        /// either for `InferOperand::Instance` or `InferOperand::Var`.
-        all_generic_args: Range<InferVar>,
-    },
-
+/// How to filter and/or map the operands in an `InferOperandList`, while iterating.
+///
+/// Having this in `InferOperandList` itself, instead of using iterator combinators,
+/// allows storing `InferOperandList`s directly in `Match`, for `TyPatList` matches.
+#[derive(Copy, Clone, PartialEq, Eq)]
+enum InferOperandListTransform {
     /// The list is the result of keeping only ID operands, and mapping them to
     /// their types (or `InferOperand::Unknown` for non-value operands, or
     /// value operands which don't have a "generic" type).
     ///
     /// This is used to match against the `inputs` `TyListPat` of `InstSig`.
-    // FIXME(eddyb) DRY with `InferOperandList::AllOperands`.
-    TypeOfIdOperands {
-        operands: &'a [Operand],
+    TypeOfId,
+}
 
-        /// Joined ranges of all `InferVar`s needed by individual `Operand`s,
-        /// either for `InferOperand::Instance` or `InferOperand::Var`.
-        all_generic_args: Range<InferVar>,
-    },
+#[derive(Clone, PartialEq)]
+struct InferOperandList<'a> {
+    operands: &'a [Operand],
+
+    /// Joined ranges of all `InferVar`s needed by individual `Operand`s,
+    /// either for `InferOperand::Instance` or `InferOperand::Var`.
+    all_generic_args: Range<InferVar>,
+
+    transform: Option<InferOperandListTransform>,
 }
 
 impl<'a> InferOperandList<'a> {
@@ -890,46 +890,34 @@ impl<'a> InferOperandList<'a> {
     ) -> Option<(InferOperand, InferOperandList<'a>)> {
         let mut list = self.clone();
         loop {
-            let first = match &mut list {
-                InferOperandList::AllOperands {
-                    operands,
-                    all_generic_args,
-                }
-                | InferOperandList::TypeOfIdOperands {
-                    operands,
-                    all_generic_args,
-                } => {
-                    let (first_operand, rest) = operands.split_first()?;
-                    *operands = rest;
+            let (first_operand, rest) = list.operands.split_first()?;
+            list.operands = rest;
 
-                    let (first, rest_args) = InferOperand::from_operand_and_generic_args(
-                        first_operand,
-                        all_generic_args.clone(),
-                        cx,
-                    );
-                    *all_generic_args = rest_args;
+            let (first, rest_args) = InferOperand::from_operand_and_generic_args(
+                first_operand,
+                list.all_generic_args.clone(),
+                cx,
+            );
+            list.all_generic_args = rest_args;
 
-                    // Maybe skip this operand (specifically for `TypeOfIdOperands`),
-                    // but only *after* consuming the "generic" args for it.
-                    match self {
-                        InferOperandList::AllOperands { .. } => {}
+            // Maybe filter this operand, but only *after* consuming the "generic" args for it.
+            match self.transform {
+                None => {}
 
-                        InferOperandList::TypeOfIdOperands { .. } => {
-                            if first_operand.id_ref_any().is_none() {
-                                continue;
-                            }
-                        }
+                // Skip a non-ID operand.
+                Some(InferOperandListTransform::TypeOfId) => {
+                    if first_operand.id_ref_any().is_none() {
+                        continue;
                     }
-
-                    first
                 }
-            };
+            }
 
-            let first = match self {
-                InferOperandList::AllOperands { .. } => first,
+            // Maybe replace this operand with a different one.
+            let first = match self.transform {
+                None => first,
 
                 // Map `first` to its type.
-                InferOperandList::TypeOfIdOperands { .. } => match first {
+                Some(InferOperandListTransform::TypeOfId) => match first {
                     InferOperand::Concrete(CopyOperand::IdRef(id)) => cx
                         .type_of_result
                         .get(&id)
@@ -1209,9 +1197,10 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                 };
                 let generic = &self.specializer.generics[&instance.generic_id];
 
-                let ty_operands = InferOperandList::AllOperands {
+                let ty_operands = InferOperandList {
                     operands: &generic.def.operands,
                     all_generic_args: instance.generic_args,
+                    transform: None,
                 };
                 let simple = |op, inner_pat| {
                     if generic.def.class.opcode == op {
@@ -1237,11 +1226,8 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                     }
                     TyPat::Array(pat) => simple(Op::TypeArray, pat),
                     TyPat::Vector(pat) => simple(Op::TypeVector, pat),
-                    TyPat::Vector4(pat) => match ty_operands {
-                        InferOperandList::AllOperands {
-                            operands: [_, Operand::LiteralInt32(4)],
-                            ..
-                        } => simple(Op::TypeVector, pat),
+                    TyPat::Vector4(pat) => match ty_operands.operands {
+                        [_, Operand::LiteralInt32(4)] => simple(Op::TypeVector, pat),
                         _ => Err(Unapplicable),
                     },
                     TyPat::Matrix(pat) => simple(Op::TypeMatrix, pat),
@@ -1333,9 +1319,10 @@ impl<'a, S: Specialization> InferCx<'a, S> {
             // FIXME(eddyb) going through all the operands to find the one that
             // is a storage class is inefficient, storage classes should be part
             // of a single unified list of operand patterns.
-            let all_operands = InferOperandList::AllOperands {
+            let all_operands = InferOperandList {
                 operands: &inst.operands,
                 all_generic_args: inputs_generic_args.clone(),
+                transform: None,
             };
             let storage_class = all_operands
                 .iter(self)
@@ -1349,9 +1336,10 @@ impl<'a, S: Specialization> InferCx<'a, S> {
 
         m = m.and(self.match_ty_list_pat(
             sig.input_types,
-            InferOperandList::TypeOfIdOperands {
+            InferOperandList {
                 operands: &inst.operands,
                 all_generic_args: inputs_generic_args,
+                transform: Some(InferOperandListTransform::TypeOfId),
             },
         )?);
 
@@ -1777,9 +1765,10 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                     ),
                     _ => type_of_result.clone(),
                 };
-                let inputs = InferOperandList::AllOperands {
+                let inputs = InferOperandList {
                     operands: &inst.operands,
                     all_generic_args: inputs_generic_args.clone(),
+                    transform: None,
                 };
 
                 if inst_loc != InstructionLocation::Module {
@@ -1880,9 +1869,10 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                 let generic = &self.specializer.generics[&instance.generic_id];
                 assert_eq!(generic.def.class.opcode, Op::TypeFunction);
 
-                let (ret_ty, mut params_ty_list) = InferOperandList::AllOperands {
+                let (ret_ty, mut params_ty_list) = InferOperandList {
                     operands: &generic.def.operands,
                     all_generic_args: instance.generic_args,
+                    transform: None,
                 }
                 .split_first(self)
                 .unwrap();
