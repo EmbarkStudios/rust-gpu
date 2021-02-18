@@ -182,8 +182,7 @@ async fn run(
                         swap_chain = Some(device.create_swap_chain(surface, &sc_desc));
                     }
                 } else {
-                    // window is either minimzed or has been shrunk to zero height
-                    // Vulkan swapchains must have non-zero dimensions so no swapchain may exist
+                    // Swap chains must have non-zero dimensions
                     swap_chain = None;
                 }
             }

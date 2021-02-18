@@ -409,7 +409,7 @@ fn trans_type_impl<'tcx>(
             .def_with_name(cx, span, TyLayoutNameKey::from(ty))
         }
         Abi::Vector { ref element, count } => {
-            let elem_spirv = trans_scalar(cx, span, ty, element, None, is_immediate);
+            let elem_spirv = trans_scalar(cx, span, ty, element, None, false);
             SpirvType::Vector {
                 element: elem_spirv,
                 count: count as u32,
