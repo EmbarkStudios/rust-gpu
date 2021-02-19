@@ -612,6 +612,19 @@
 <span id="609">609</span>
 <span id="610">610</span>
 <span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is</span>
 <span class="doccomment">//! unstable and mainly intended for developing on the project itself. This is</span>
@@ -736,7 +749,6 @@
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">symbol</span>::{<span class="ident">sym</span>, <span class="ident">Symbol</span>};
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">spec</span>::<span class="ident">abi</span>::<span class="ident">Abi</span>;
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">spec</span>::{<span class="ident">LinkerFlavor</span>, <span class="ident">PanicStrategy</span>, <span class="ident">Target</span>, <span class="ident">TargetOptions</span>, <span class="ident">TargetTriple</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">spirv_tools</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">Any</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::{<span class="ident">create_dir_all</span>, <span class="ident">File</span>};
@@ -1223,6 +1235,20 @@
     }));
 
     <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">SpirvCodegenBackend</span>)
+}
+
+<span class="comment">// HACK(eddyb) this allows `spirv-builder` to use `spirv-tools::val` without</span>
+<span class="comment">// risking linker errors (especially when compiled with optimizations) - this</span>
+<span class="comment">// also means the function can&#39;t be generic or `#[inline]`.</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">spirv_tools</span>::<span class="ident">TargetEnv</span> <span class="kw">as</span> <span class="ident">SpirvToolsTargetEnv</span>;
+<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">never</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spirv_tools_validate</span>(
+    <span class="ident">target_env</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv_tools</span>::<span class="ident">TargetEnv</span><span class="op">&gt;</span>,
+    <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
+    <span class="ident">options</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv_tools</span>::<span class="ident">val</span>::<span class="ident">ValidatorOptions</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">spirv_tools</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">use</span> <span class="ident">spirv_tools</span>::<span class="ident">val</span>::<span class="ident">Validator</span> <span class="kw">as</span> <span class="kw">_</span>;
+    <span class="ident">spirv_tools</span>::<span class="ident">val</span>::<span class="ident">create</span>(<span class="ident">target_env</span>).<span class="ident">validate</span>(<span class="ident">spirv_tools</span>::<span class="ident">binary</span>::<span class="ident">to_binary</span>(<span class="ident">bytes</span>)<span class="question-mark">?</span>, <span class="ident">options</span>)
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "rustc_codegen_spirv";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

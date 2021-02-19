@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["__rustc_codegen_backend","This is the entrypoint for a hot plugged `rustc_codegen_spirv`"]]});
+initSidebarItems({"enum":[["SpirvToolsTargetEnv","Certain target environments impose additional restrictions on SPIR-V, so it's often necessary to specify which one applies. `Universal_*` implies an environment-agnostic SPIR-V."]],"fn":[["__rustc_codegen_backend","This is the entrypoint for a hot plugged `rustc_codegen_spirv`"],["spirv_tools_validate",""]]});
