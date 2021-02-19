@@ -100,17 +100,11 @@ fn val(src: &str) {
 /// stricter Vulkan validation (`vulkan1.2` specifically), which may produce
 /// additional errors (such as missing Vulkan-specific decorations).
 fn val_vulkan(src: &str) {
-    use rustc_codegen_spirv::spirv_tools::{
-        binary::to_binary,
-        val::{self, Validator},
-        TargetEnv,
-    };
-
-    let validator = val::create(Some(TargetEnv::Vulkan_1_2));
+    use rustc_codegen_spirv::{spirv_tools_validate as validate, SpirvToolsTargetEnv as TargetEnv};
 
     let _lock = global_lock();
     let bytes = std::fs::read(build(src)).unwrap();
-    if let Err(e) = validator.validate(to_binary(&bytes).unwrap(), None) {
+    if let Err(e) = validate(Some(TargetEnv::Vulkan_1_2), &bytes, None) {
         panic!("Vulkan validation failed:\n{}", e.to_string());
     }
 }
