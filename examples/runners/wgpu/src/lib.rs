@@ -64,7 +64,7 @@ fn compile_shader(shader: RustGPUShader) -> Vec<u8> {
 
     std::fs::read(&format!(
         "target/spirv-unknown-unknown/release/{}.spv",
-        path_to_src.split("/").last().unwrap().replace("-", "_")
+        path_to_src.split('/').last().unwrap().replace("-", "_")
     ))
     .expect("failed to read .spv file")
 }
