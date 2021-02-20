@@ -6,6 +6,8 @@
     feature(register_attr, lang_items),
     register_attr(spirv)
 )]
+// HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
+#![deny(warnings)]
 
 #[cfg(not(target_arch = "spirv"))]
 #[macro_use]
@@ -163,11 +165,8 @@ pub fn main_fs(
     constants: PushConstant<ShaderConstants>,
     mut output: Output<Vec4>,
 ) {
-    let constants = constants.load();
-
-    let frag_coord = vec2(in_frag_coord.load().x, in_frag_coord.load().y);
-    let color = fs(&constants, frag_coord);
-    output.store(color);
+    let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
+    *output = fs(&constants, frag_coord);
 }
 
 #[allow(unused_attributes)]
@@ -176,12 +175,12 @@ pub fn main_vs(
     #[spirv(vertex_index)] vert_idx: Input<i32>,
     #[spirv(position)] mut builtin_pos: Output<Vec4>,
 ) {
-    let vert_idx = vert_idx.load();
+    let vert_idx = *vert_idx;
 
     // Create a "full screen triangle" by mapping the vertex index.
     // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
     let uv = vec2(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
     let pos = 2.0 * uv - Vec2::one();
 
-    builtin_pos.store(pos.extend(0.0).extend(1.0));
+    *builtin_pos = pos.extend(0.0).extend(1.0);
 }

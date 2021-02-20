@@ -4,6 +4,8 @@
     feature(register_attr),
     register_attr(spirv)
 )]
+// HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
+#![deny(warnings)]
 
 extern crate spirv_std;
 

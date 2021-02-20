@@ -285,7 +285,7 @@ pub struct ShaderConstants {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(constants: PushConstant<ShaderConstants>) {
-    let _constants = constants.load();
+    let _constants = *constants;
 }
 "#);
 }
@@ -309,7 +309,7 @@ pub struct ShaderConstants {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(constants: PushConstant<ShaderConstants>) {
-    let _constants = constants.load();
+    let _constants = *constants;
 }
 "#,
     );
@@ -393,7 +393,7 @@ fn signum() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<f32>, mut o: Output<f32>) {
-    o.store(i.load().signum());
+    *o = i.signum();
 }"#);
 }
 
@@ -490,9 +490,9 @@ fn mat3_vec3_multiply() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(input: Input<glam::Mat3>, mut output: Output<glam::Vec3>) {
-    let input = input.load();
+    let input = *input;
     let vector = input * glam::Vec3::new(1.0, 2.0, 3.0);
-    output.store(vector);
+    *output = vector;
 }
 "#);
 }
@@ -574,10 +574,9 @@ fn image_read() {
     val(r#"
 #[allow(unused_attributes)]
 #[spirv(fragment)]
-pub fn main(input: UniformConstant<StorageImage2d>, mut output: Output<glam::Vec2>) {
-    let image = input.load();
+pub fn main(image: UniformConstant<StorageImage2d>, mut output: Output<glam::Vec2>) {
     let coords = image.read(glam::IVec2::new(0, 1));
-    output.store(coords);
+    *output = coords;
 }
 "#);
 }
@@ -588,8 +587,7 @@ fn image_write() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(input: Input<glam::Vec2>, image: UniformConstant<StorageImage2d>) {
-    let texels = input.load();
-    let image = image.load();
+    let texels = *input;
     image.write(glam::UVec2::new(0, 1), texels);
 }
 "#);

@@ -1,7 +1,11 @@
-#![cfg_attr(target_arch = "spirv", no_std)]
-#![feature(lang_items)]
-#![feature(register_attr)]
-#![register_attr(spirv)]
+#![cfg_attr(
+    target_arch = "spirv",
+    no_std,
+    feature(register_attr),
+    register_attr(spirv)
+)]
+// HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
+#![deny(warnings)]
 
 use core::f32::consts::PI;
 use shared::*;
@@ -145,9 +149,7 @@ pub fn main_fs(
     constants: PushConstant<ShaderConstants>,
     mut output: Output<Vec4>,
 ) {
-    let constants = constants.load();
-
-    let frag_coord = vec2(in_frag_coord.load().x, in_frag_coord.load().y);
+    let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
 
     let cursor = vec2(constants.cursor_x, constants.cursor_y);
     let drag_start = vec2(constants.drag_start_x, constants.drag_start_y);
@@ -250,7 +252,7 @@ pub fn main_fs(
         WHITE,
     );
 
-    output.store(painter.color.extend(1.0));
+    *output = painter.color.extend(1.0);
 }
 
 #[allow(unused_attributes)]
@@ -259,12 +261,12 @@ pub fn main_vs(
     #[spirv(vertex_index)] vert_idx: Input<i32>,
     #[spirv(position)] mut builtin_pos: Output<Vec4>,
 ) {
-    let vert_idx = vert_idx.load();
+    let vert_idx = *vert_idx;
 
     // Create a "full screen triangle" by mapping the vertex index.
     // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
     let uv = vec2(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
     let pos = 2.0 * uv - Vec2::one();
 
-    builtin_pos.store(pos.extend(0.0).extend(1.0));
+    *builtin_pos = pos.extend(0.0).extend(1.0);
 }
