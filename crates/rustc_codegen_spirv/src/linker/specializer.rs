@@ -2454,6 +2454,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
         for func in functions {
             let func_id = func.def_id().unwrap();
             if let Some(generic) = self.specializer.generics.get(&func_id) {
+                let old_expanded_functions_len = expanded_functions.len();
                 expanded_functions.extend(self.all_instances_of(func_id).map(
                     |(instance, &instance_id)| {
                         let mut expanded_func = func.clone();
@@ -2467,6 +2468,44 @@ impl<'a, S: Specialization> Expander<'a, S> {
                         expanded_func
                     },
                 ));
+
+                // Renumber all of the IDs defined within the function itself,
+                // to avoid conflicts between all the expanded copies.
+                // While some passes (such as inlining) may handle IDs reuse
+                // between different function bodies (mostly because they do
+                // their own renumbering), it's better not to tempt fate here.
+                // FIXME(eddyb) use compact IDs for more efficient renumbering.
+                let newly_expanded_functions =
+                    &mut expanded_functions[old_expanded_functions_len..];
+                if newly_expanded_functions.len() > 1 {
+                    // NOTE(eddyb) this is defined outside the loop to avoid
+                    // allocating it for every expanded copy of the function.
+                    let mut rewrite_rules = HashMap::new();
+
+                    for func in newly_expanded_functions {
+                        rewrite_rules.extend(func.parameters.iter_mut().map(|param| {
+                            let old_id = param.result_id.unwrap();
+                            let new_id = self.builder.id();
+
+                            // HACK(eddyb) this is only needed because we're using
+                            // `apply_rewrite_rules` and that only works on `Block`s,
+                            // it should be generalized to handle `Function`s too.
+                            param.result_id = Some(new_id);
+
+                            (old_id, new_id)
+                        }));
+                        rewrite_rules.extend(
+                            func.blocks
+                                .iter()
+                                .flat_map(|b| b.label.iter().chain(b.instructions.iter()))
+                                .filter_map(|inst| inst.result_id)
+                                .map(|old_id| (old_id, self.builder.id())),
+                        );
+
+                        super::apply_rewrite_rules(&rewrite_rules, &mut func.blocks);
+                    }
+                }
+
                 continue;
             }
             expanded_functions.push(func);
