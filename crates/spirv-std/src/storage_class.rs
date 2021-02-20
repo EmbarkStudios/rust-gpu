@@ -7,12 +7,21 @@
 //! form a storage class, and unless stated otherwise, storage class-based
 //! restrictions are not restrictions on intermediate objects and their types.
 
+use core::ops::{Deref, DerefMut};
+
 macro_rules! storage_class {
     ($(#[$($meta:meta)+])* storage_class $name:ident ; $($tt:tt)*) => {
         $(#[$($meta)+])*
         #[allow(unused_attributes)]
-        pub struct $name<'value, T> {
-            value: &'value mut T,
+        pub struct $name<'value, T: ?Sized> {
+            reference: &'value mut T,
+        }
+
+        impl<T: ?Sized> Deref for $name<'_, T> {
+            type Target = T;
+            fn deref(&self) -> &T {
+                self.reference
+            }
         }
 
         impl<T: Copy> $name<'_, T> {
@@ -20,7 +29,7 @@ macro_rules! storage_class {
             #[inline]
             #[allow(unused_attributes)]
             pub fn load(&self) -> T {
-                *self.value
+                **self
             }
         }
 
@@ -31,17 +40,23 @@ macro_rules! storage_class {
     ($(#[$($meta:meta)+])* writeable storage_class $name:ident $($tt:tt)+) => {
         storage_class!($(#[$($meta)+])* storage_class $name $($tt)+);
 
-        impl <T: Copy> $name<'_, T> {
+        impl<T: ?Sized> DerefMut for $name<'_, T> {
+            fn deref_mut(&mut self) -> &mut T {
+                self.reference
+            }
+        }
+
+        impl<T: Copy> $name<'_, T> {
             /// Store the value in storage.
             #[inline]
             #[allow(unused_attributes)]
             pub fn store(&mut self, v: T) {
-                *self.value = v
+                **self = v
             }
 
             /// A convenience function to load a value into memory and store it.
-            pub fn then(&mut self, then: impl FnOnce(T) -> T) {
-                self.store((then)(self.load()));
+            pub fn then(&mut self, f: impl FnOnce(T) -> T) {
+                **self = f(**self);
             }
         }
     };
