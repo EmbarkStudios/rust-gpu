@@ -139,15 +139,6 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
         zombies::remove_zombies(sess, &mut output);
     }
 
-    // HACK(eddyb) run DCE before specialization, not just after inlining,
-    // to remove needed work and chance of conflicts (in dead code).
-    // We can't do specialization before inlining because inlining assumes
-    // it can rely on storage classes being the correct final ones.
-    if opts.dce {
-        let _timer = sess.timer("link_dce");
-        dce::dce(&mut output);
-    }
-
     {
         let _timer = sess.timer("specialize_generic_storage_class");
         // HACK(eddyb) `specializer` requires functions' blocks to be in RPO order
