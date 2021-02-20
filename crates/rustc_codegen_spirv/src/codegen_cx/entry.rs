@@ -1,5 +1,4 @@
 use super::CodegenCx;
-use crate::abi::ConvSpirvType;
 use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
@@ -123,7 +122,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 self.declare_parameter(
                     arg,
                     hir_param,
-                    arg_abi.layout.ty.kind(),
+                    arg_abi.layout,
                     &mut decoration_locations,
                 )
             })
@@ -137,7 +136,7 @@ impl<'tcx> CodegenCx<'tcx> {
             entry_func_return,
             None,
             entry_func.def_cx(self),
-            arguments.iter().map(|&(a, _, _)| a),
+            arguments.iter().map(|&(a, _)| a),
         )
         .unwrap();
         emit.ret().unwrap();
@@ -145,13 +144,13 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let interface: Vec<_> = if emit.version().unwrap() > (1, 3) {
             // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            arguments.into_iter().map(|(a, _, _)| a).collect()
+            arguments.into_iter().map(|(a, _)| a).collect()
         } else {
             // SPIR-V <= v1.3 only includes Input and Output in the interface.
             arguments
                 .into_iter()
-                .filter(|&(_, s, _)| s == StorageClass::Input || s == StorageClass::Output)
-                .map(|(a, _, _)| a)
+                .filter(|&(_, s)| s == StorageClass::Input || s == StorageClass::Output)
+                .map(|(a, _)| a)
                 .collect()
         };
         emit.entry_point(execution_model, fn_id, name, interface);
@@ -162,9 +161,10 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         arg: Word,
         hir_param: &Param<'tcx>,
-        ty_kind: &TyKind<'tcx>,
+        layout: TyAndLayout<'tcx>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
     ) -> (Word, StorageClass) {
+        /*
         let storage_class = match self.lookup_type(arg) {
             SpirvType::Pointer { storage_class, .. } => storage_class,
             other => self.tcx.sess.fatal(&format!(
@@ -172,9 +172,16 @@ impl<'tcx> CodegenCx<'tcx> {
                 other.debug(arg, self)
             )),
         };
+        */
+        let storage_class = crate::abi::get_storage_class(self, layout).unwrap_or_else(|| {
+            self.tcx.sess.span_fatal(
+                hir_param.span,
+                &format!("invalid entry param type `{}`", layout.ty),
+            );
+        });
         // Note: this *declares* the variable too.
         let variable = self.emit_global().variable(arg, None, storage_class, None);
-        let mut spirv_binding = self.parse_storage_class_binding(storage_class, ty_kind);
+        let mut spirv_binding = self.parse_storage_class_binding(storage_class, layout.ty.kind());
         if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
         }

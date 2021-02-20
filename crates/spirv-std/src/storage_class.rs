@@ -7,7 +7,10 @@
 //! form a storage class, and unless stated otherwise, storage class-based
 //! restrictions are not restrictions on intermediate objects and their types.
 
-use core::marker::PhantomData;
+use core::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+};
 
 /// Graphics uniform blocks and buffer blocks.
 ///
@@ -18,6 +21,20 @@ use core::marker::PhantomData;
 pub struct Uniform<'a, T: ?Sized, Binding: sealed::UniformBinding> {
     ptr: &'a mut T,
     binding: PhantomData<Binding>,
+}
+
+impl<'a, T: ?Sized, Binding: sealed::UniformBinding> Deref for Uniform<'a, T, Binding> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.ptr
+    }
+}
+
+impl<'a, T: ?Sized, Binding: sealed::UniformBinding> DerefMut for Uniform<'a, T, Binding> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.ptr
+    }
 }
 
 impl<'a, T: Copy, Binding: sealed::UniformBinding> Uniform<'a, T, Binding> {
@@ -49,9 +66,23 @@ impl<'a, T: Copy, Binding: sealed::UniformBinding> Uniform<'a, T, Binding> {
 /// in all invocations in all work groups.
 #[allow(unused_attributes)]
 #[spirv(storage_buffer)]
-pub struct StorageBuffer<'a, T, Binding: sealed::StorageBufferBinding> {
+pub struct StorageBuffer<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> {
     ptr: &'a mut T,
     binding: PhantomData<Binding>,
+}
+
+impl<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> Deref for StorageBuffer<'a, T, Binding> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.ptr
+    }
+}
+
+impl<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> DerefMut for StorageBuffer<'a, T, Binding> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.ptr
+    }
 }
 
 impl<'a, T: Copy, Binding: sealed::StorageBufferBinding> StorageBuffer<'a, T, Binding> {
@@ -84,9 +115,17 @@ impl<'a, T: Copy, Binding: sealed::StorageBufferBinding> StorageBuffer<'a, T, Bi
 /// have initializers.
 #[allow(unused_attributes)]
 #[spirv(input)]
-pub struct Input<'a, T, Binding: sealed::InputBinding = sealed::CompilerInferred> {
-    ptr: &'a mut T,
+pub struct Input<'a, T: ?Sized, Binding: sealed::InputBinding = sealed::CompilerInferred> {
+    ptr: &'a T,
     binding: PhantomData<Binding>,
+}
+
+impl<'a, T: ?Sized, Binding: sealed::InputBinding> Deref for Input<'a, T, Binding> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.ptr
+    }
 }
 
 impl<'a, T: Copy, Binding: sealed::InputBinding> Input<'a, T, Binding> {
@@ -104,9 +143,23 @@ impl<'a, T: Copy, Binding: sealed::InputBinding> Input<'a, T, Binding> {
 /// Visible across all functions in the current invocation.
 #[allow(unused_attributes)]
 #[spirv(output)]
-pub struct Output<'a, T, Binding: sealed::OutputBinding = sealed::CompilerInferred> {
+pub struct Output<'a, T: ?Sized, Binding: sealed::OutputBinding = sealed::CompilerInferred> {
     ptr: &'a mut T,
     binding: PhantomData<Binding>,
+}
+
+impl<'a, T: ?Sized, Binding: sealed::OutputBinding> Deref for Output<'a, T, Binding> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.ptr
+    }
+}
+
+impl<'a, T: ?Sized, Binding: sealed::OutputBinding> DerefMut for Output<'a, T, Binding> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.ptr
+    }
 }
 
 impl<'a, T: Copy, Binding: sealed::OutputBinding> Output<'a, T, Binding> {
@@ -161,7 +214,6 @@ mod sealed {
     impl OutputBinding for CompilerInferred {}
     impl<const LOCATION: usize> OutputBinding for super::Location<LOCATION> {}
 }
-use core::ops::{Deref, DerefMut};
 
 macro_rules! storage_class {
     ($(#[$($meta:meta)+])* storage_class $name:ident ; $($tt:tt)*) => {

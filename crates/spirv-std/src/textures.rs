@@ -66,20 +66,8 @@ impl Image2d {
     }
 }
 
-#[allow(unused_attributes)]
-#[spirv(image(
-    // sampled_type is hardcoded to f32 for now
-    dim = "Dim2D",
-    depth = 0,
-    arrayed = 0,
-    multisampled = 0,
-    sampled = 2,
-    image_format = "Unknown"
-))]
-#[derive(Copy, Clone)]
-pub struct StorageImage2d {
-    _x: u32,
-}
+pub type StorageImage2d = 
+    Image<f32, dims::D2, depth::No, sample::No, format::Unknown, array::No, multisample::No>;
 
 impl StorageImage2d {
     /// Read a texel from an image without a sampler.

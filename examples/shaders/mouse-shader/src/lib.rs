@@ -7,6 +7,10 @@
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
 
+#[cfg(not(target_arch = "spirv"))]
+#[macro_use]
+pub extern crate spirv_std_macros;
+
 use core::f32::consts::PI;
 use shared::*;
 use spirv_std::glam::{const_vec4, vec2, vec3, Mat2, Vec2, Vec3, Vec4, Vec4Swizzles};
