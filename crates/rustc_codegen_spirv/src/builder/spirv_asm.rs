@@ -7,7 +7,7 @@ use rspirv::dr;
 use rspirv::grammar::{LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{
     FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
-    LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, Word,
+    LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, StorageClass, Word,
 };
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
@@ -125,7 +125,10 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                             *line.last_mut().unwrap() =
                                 Token::Typeof(&operands[operand_idx], span, kind)
                         }
-                        None => line.push(Token::Placeholder(&operands[operand_idx], span)),
+                        None => match &operands[operand_idx] {
+                            InlineAsmOperandRef::Const { string } => line.push(Token::Word(string)),
+                            item => line.push(Token::Placeholder(item, span)),
+                        },
                     }
                 }
             }
@@ -249,17 +252,58 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             .def(self.span(), self),
             Op::TypeVector => SpirvType::Vector {
                 element: inst.operands[0].unwrap_id_ref(),
-                count: inst.operands[0].unwrap_literal_int32(),
+                count: inst.operands[1].unwrap_literal_int32(),
             }
             .def(self.span(), self),
             Op::TypeArray => {
                 self.err("OpTypeArray in asm! is not supported yet");
                 return;
             }
+            Op::TypeRuntimeArray => SpirvType::RuntimeArray {
+                element: inst.operands[0].unwrap_id_ref(),
+            }
+            .def(self.span(), self),
+            Op::TypePointer => {
+                let storage_class = inst.operands[0].unwrap_storage_class();
+                if storage_class != StorageClass::Generic {
+                    self.struct_err("TypePointer in asm! requires `Generic` storage class")
+                        .note(&format!(
+                            "`{:?}` storage class was specified",
+                            storage_class
+                        ))
+                        .help(&format!(
+                            "the storage class will be inferred automatically (e.g. to `{:?}`)",
+                            storage_class
+                        ))
+                        .emit();
+                }
+                SpirvType::Pointer {
+                    pointee: inst.operands[1].unwrap_id_ref(),
+                }
+                .def(self.span(), self)
+            }
+            Op::TypeImage => SpirvType::Image {
+                sampled_type: inst.operands[0].unwrap_id_ref(),
+                dim: inst.operands[1].unwrap_dim(),
+                depth: inst.operands[2].unwrap_literal_int32(),
+                arrayed: inst.operands[3].unwrap_literal_int32(),
+                multisampled: inst.operands[4].unwrap_literal_int32(),
+                sampled: inst.operands[5].unwrap_literal_int32(),
+                image_format: inst.operands[6].unwrap_image_format(),
+                access_qualifier: None,
+            }
+            .def(self.span(), self),
             Op::TypeSampledImage => SpirvType::SampledImage {
                 image_type: inst.operands[0].unwrap_id_ref(),
             }
             .def(self.span(), self),
+            Op::Variable if inst.operands[0].unwrap_storage_class() != StorageClass::Function => {
+                // OpVariable with Function storage class should be emitted inside the function,
+                // however, all other OpVariables should appear in the global scope instead.
+                self.emit_global()
+                    .insert_types_global_values(dr::InsertPoint::End, inst);
+                return;
+            }
             _ => {
                 self.emit()
                     .insert_into_block(dr::InsertPoint::End, inst)
@@ -381,7 +425,15 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
     {
         let mut saw_id_result = false;
         let mut need_result_type_infer = false;
-        for &LogicalOperand { kind, quantifier } in instruction.class.operands {
+
+        let mut logical_operand_stack = instruction
+            .class
+            .operands
+            .iter()
+            .cloned()
+            .collect::<std::collections::VecDeque<_>>();
+
+        while let Some(LogicalOperand { kind, quantifier }) = logical_operand_stack.pop_front() {
             if kind == OperandKind::IdResult {
                 assert_eq!(quantifier, OperandQuantifier::One);
                 if instruction.result_id == None {
@@ -393,6 +445,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 saw_id_result = true;
                 continue;
             }
+
             if kind == OperandKind::IdResultType {
                 assert_eq!(quantifier, OperandQuantifier::One);
                 if let Some(token) = tokens.next() {
@@ -409,6 +462,9 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 }
                 continue;
             }
+
+            let operands_start = instruction.operands.len();
+
             match quantifier {
                 OperandQuantifier::One => {
                     if !self.parse_one_operand(id_map, instruction, kind, &mut tokens) {
@@ -427,7 +483,14 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     while self.parse_one_operand(id_map, instruction, kind, &mut tokens) {}
                 }
             }
+
+            // Parsed operands can add more optional operands that need to be parsed
+            // to an instruction - so push then on the stack here, after parsing
+            for op in instruction.operands[operands_start..].iter() {
+                logical_operand_stack.extend(op.additional_operands());
+            }
         }
+
         if !saw_id_result && instruction.result_id.is_some() {
             self.err(&format!(
                 "instruction {} does not expect a result id",
@@ -461,26 +524,29 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
     ) -> Option<Word> {
         use crate::spirv_type_constraints::{instruction_signatures, InstSig, TyListPat, TyPat};
 
-        struct Mismatch;
+        #[derive(Debug)]
+        struct Unapplicable;
 
         /// Recursively match `ty` against `pat`, returning one of:
         /// * `Ok(None)`: `pat` matched but contained no type variables
         /// * `Ok(Some(var))`: `pat` matched and `var` is the type variable
         /// * `Err(Mismatch)`: `pat` didn't match or isn't supported right now
-        fn apply_ty_pat(
+        fn match_ty_pat(
             cx: &CodegenCx<'_>,
             pat: &TyPat<'_>,
             ty: Word,
-        ) -> Result<Option<Word>, Mismatch> {
+        ) -> Result<Option<Word>, Unapplicable> {
             match pat {
                 TyPat::Any => Ok(None),
                 &TyPat::T => Ok(Some(ty)),
                 TyPat::Either(a, b) => {
-                    apply_ty_pat(cx, a, ty).or_else(|Mismatch| apply_ty_pat(cx, b, ty))
+                    match_ty_pat(cx, a, ty).or_else(|Unapplicable| match_ty_pat(cx, b, ty))
                 }
                 _ => match (pat, cx.lookup_type(ty)) {
+                    (TyPat::Any, _) | (&TyPat::T, _) | (TyPat::Either(..), _) => unreachable!(),
+
                     (TyPat::Void, SpirvType::Void) => Ok(None),
-                    (TyPat::Pointer(pat), SpirvType::Pointer { pointee: ty, .. })
+                    (TyPat::Pointer(_, pat), SpirvType::Pointer { pointee: ty, .. })
                     | (TyPat::Vector(pat), SpirvType::Vector { element: ty, .. })
                     | (
                         TyPat::Vector4(pat),
@@ -496,17 +562,19 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         },
                     )
                     | (TyPat::SampledImage(pat), SpirvType::SampledImage { image_type: ty }) => {
-                        apply_ty_pat(cx, pat, ty)
+                        match_ty_pat(cx, pat, ty)
                     }
-                    _ => Err(Mismatch),
+                    _ => Err(Unapplicable),
                 },
             }
         }
 
         // FIXME(eddyb) try multiple signatures until one fits.
         let mut sig = match instruction_signatures(instruction.class.opcode)? {
-            [sig @ InstSig {
-                output: Some(_), ..
+            [sig
+            @ InstSig {
+                output_type: Some(_),
+                ..
             }] => *sig,
             _ => return None,
         };
@@ -514,9 +582,20 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         let mut combined_var = None;
 
         let mut ids = instruction.operands.iter().filter_map(|o| o.id_ref_any());
-        while let TyListPat::Cons { first: pat, suffix } = *sig.inputs {
-            let &ty = id_to_type_map.get(&ids.next()?)?;
-            match apply_ty_pat(self, pat, ty) {
+        while let TyListPat::Cons { first: pat, suffix } = *sig.input_types {
+            sig.input_types = suffix;
+
+            let match_result = match id_to_type_map.get(&ids.next()?) {
+                Some(&ty) => match_ty_pat(self, pat, ty),
+
+                // Non-value ID operand (or value operand of unknown type),
+                // only `TyPat::Any` is valid.
+                None => match pat {
+                    TyPat::Any => Ok(None),
+                    _ => Err(Unapplicable),
+                },
+            };
+            match match_result {
                 Ok(Some(var)) => match combined_var {
                     Some(combined_var) => {
                         // FIXME(eddyb) this could use some error reporting
@@ -530,11 +609,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     None => combined_var = Some(var),
                 },
                 Ok(None) => {}
-                Err(Mismatch) => return None,
+                Err(Unapplicable) => return None,
             }
-            sig.inputs = suffix;
         }
-        match sig.inputs {
+        match sig.input_types {
+            TyListPat::Cons { .. } => unreachable!(),
+
             TyListPat::Any => {}
             TyListPat::Nil => {
                 if ids.next().is_some() {
@@ -545,7 +625,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
 
         let var = combined_var?;
-        match sig.output.unwrap() {
+        match sig.output_type.unwrap() {
             &TyPat::T => Some(var),
             TyPat::Vector4(&TyPat::T) => Some(
                 SpirvType::Vector {
@@ -681,7 +761,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     Some(match kind {
                         TypeofKind::Plain => ty,
                         TypeofKind::Dereference => match self.lookup_type(ty) {
-                            SpirvType::Pointer { pointee, .. } => pointee,
+                            SpirvType::Pointer { pointee } => pointee,
                             other => {
                                 self.tcx.sess.span_err(
                                     span,
@@ -703,7 +783,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     self.check_reg(span, reg);
                     match place {
                         Some(place) => match self.lookup_type(place.llval.ty) {
-                            SpirvType::Pointer { pointee, .. } => Some(pointee),
+                            SpirvType::Pointer { pointee } => Some(pointee),
                             other => {
                                 self.tcx.sess.span_err(
                                     span,

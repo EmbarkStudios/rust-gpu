@@ -161,22 +161,28 @@ mod sealed {
     impl OutputBinding for CompilerInferred {}
     impl<const LOCATION: usize> OutputBinding for super::Location<LOCATION> {}
 }
+use core::ops::{Deref, DerefMut};
 
 macro_rules! storage_class {
     ($(#[$($meta:meta)+])* storage_class $name:ident ; $($tt:tt)*) => {
         $(#[$($meta)+])*
         #[allow(unused_attributes)]
-        pub struct $name<'value, T> {
-            value: &'value mut T,
+        pub struct $name<'value, T: ?Sized> {
+            reference: &'value mut T,
+        }
+
+        impl<T: ?Sized> Deref for $name<'_, T> {
+            type Target = T;
+            fn deref(&self) -> &T {
+                self.reference
+            }
         }
 
         impl<T: Copy> $name<'_, T> {
             /// Load the value into memory.
-            #[inline]
-            #[allow(unused_attributes)]
-            #[spirv(really_unsafe_ignore_bitcasts)]
+            #[deprecated(note = "storage_class::Foo<T> types now implement Deref, and can be used like &T")]
             pub fn load(&self) -> T {
-                *self.value
+                **self
             }
         }
 
@@ -187,18 +193,23 @@ macro_rules! storage_class {
     ($(#[$($meta:meta)+])* writeable storage_class $name:ident $($tt:tt)+) => {
         storage_class!($(#[$($meta)+])* storage_class $name $($tt)+);
 
-        impl <T: Copy> $name<'_, T> {
+        impl<T: ?Sized> DerefMut for $name<'_, T> {
+            fn deref_mut(&mut self) -> &mut T {
+                self.reference
+            }
+        }
+
+        impl<T: Copy> $name<'_, T> {
             /// Store the value in storage.
-            #[inline]
-            #[allow(unused_attributes)]
-            #[spirv(really_unsafe_ignore_bitcasts)]
+            #[deprecated(note = "storage_class::Foo<T> types now implement DerefMut, and can be used like &mut T")]
             pub fn store(&mut self, v: T) {
-                *self.value = v
+                **self = v
             }
 
             /// A convenience function to load a value into memory and store it.
-            pub fn then(&mut self, then: impl FnOnce(T) -> T) {
-                self.store((then)(self.load()));
+            #[deprecated(note = "storage_class::Foo<T> types now implement DerefMut, and can be used like &mut T")]
+            pub fn then(&mut self, f: impl FnOnce(T) -> T) {
+                **self = f(**self);
             }
         }
     };
@@ -259,9 +270,11 @@ storage_class! {
 
     /// Image memory.
     ///
-    /// A traditional texture or image; SPIR-V has this single name for these.
-    /// An image does not include any information about how to access, filter,
-    /// or sample it.
+    /// Holds a pointer to a single texel, obtained via OpImageTexelPointer. Use of a pointer
+    /// obtained via OpImageTexelPointer is limited to atomic operations.
+    ///
+    /// If you're looking to create a pointer to an entire image instead of a texel, you probably
+    /// want UniformConstant instead.
     #[spirv(image)] writeable storage_class Image;
 
     /// Used for storing arbitrary data associated with a ray to pass

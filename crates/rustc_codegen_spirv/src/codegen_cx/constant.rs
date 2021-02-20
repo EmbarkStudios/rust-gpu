@@ -182,7 +182,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         let field_types = elts.iter().map(|f| f.ty).collect::<Vec<_>>();
         let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, &field_types);
         let struct_ty = SpirvType::Adt {
-            name: "<const_struct>".to_string(),
+            def_id: None,
             size,
             align,
             field_types,
@@ -271,7 +271,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                 let (base_addr, _base_addr_space) = match self.tcx.global_alloc(ptr.alloc_id) {
                     GlobalAlloc::Memory(alloc) => {
                         let pointee = match self.lookup_type(ty) {
-                            SpirvType::Pointer { pointee, .. } => pointee,
+                            SpirvType::Pointer { pointee } => pointee,
                             other => self.tcx.sess.fatal(&format!(
                                 "GlobalAlloc::Memory type not implemented: {}",
                                 other.debug(ty, self)
@@ -306,28 +306,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         .fatal("Non-pointer-typed scalar_to_backend Scalar::Ptr not supported");
                 // unsafe { llvm::LLVMConstPtrToInt(llval, llty) }
                 } else {
-                    match (self.lookup_type(value.ty), self.lookup_type(ty)) {
-                        (
-                            SpirvType::Pointer {
-                                storage_class: a_space,
-                                pointee: a,
-                            },
-                            SpirvType::Pointer {
-                                storage_class: b_space,
-                                pointee: b,
-                            },
-                        ) => {
-                            if a_space != b_space {
-                                // TODO: Emit the correct type that is passed into this function.
-                                self.zombie_no_span(
-                                    value.def_cx(self),
-                                    "invalid pointer space in constant",
-                                );
-                            }
-                            assert_ty_eq!(self, a, b);
-                        }
-                        _ => assert_ty_eq!(self, value.ty, ty),
-                    }
+                    assert_ty_eq!(self, value.ty, ty);
                     value
                 }
             }

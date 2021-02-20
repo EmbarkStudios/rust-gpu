@@ -322,10 +322,6 @@ impl Symbols {
             .iter()
             .map(|&(a, b)| (a, SpirvAttribute::Entry(b.into())));
         let custom_attributes = [
-            (
-                "really_unsafe_ignore_bitcasts",
-                SpirvAttribute::ReallyUnsafeIgnoreBitcasts,
-            ),
             ("sampler", SpirvAttribute::Sampler),
             ("block", SpirvAttribute::Block),
             ("flat", SpirvAttribute::Flat),
@@ -428,7 +424,6 @@ pub enum SpirvAttribute {
     Entry(Entry),
     DescriptorSet(u32),
     Binding(u32),
-    ReallyUnsafeIgnoreBitcasts,
     Image,
     Sampler,
     SampledImage,

@@ -1,4 +1,4 @@
-use super::{dis_fn, val, val_vulkan};
+use super::{dis_fn, dis_globals, val, val_vulkan};
 use std::ffi::OsStr;
 
 struct SetEnvVar<'a> {
@@ -130,6 +130,93 @@ OpFunctionEnd"#,
 }
 
 #[test]
+fn asm_op_decorate() {
+    // Tests that OpDecorate gets parsed and emitted properly since it's a vararg style instruction
+    dis_globals(
+        r#"
+        fn add_decorate() {
+            unsafe {
+                let offset = 1u32;
+                asm!(
+                        "OpExtension \"SPV_EXT_descriptor_indexing\"",
+                        "OpCapability RuntimeDescriptorArray",
+                        "OpDecorate %image_2d_var DescriptorSet 0",
+                        "OpDecorate %image_2d_var Binding 0",
+                        "%uint                  = OpTypeInt 32 0",
+                        "%float                 = OpTypeFloat 32",
+                        "%uint_0                = OpConstant %uint 0",
+                        "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
+                        "%sampled_image_2d      = OpTypeSampledImage %image_2d",
+                        "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
+                        // NOTE(eddyb) `Generic` is used here because it's the placeholder
+                        // for storage class inference - both of the two `OpTypePointer`
+                        // types below should end up inferring to `UniformConstant`.
+                        "%ptr_image_array       = OpTypePointer Generic %image_array",
+                        "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
+                        "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
+                        "", // ^^ type preamble
+                        "%offset                = OpLoad _ {0}",
+                        "%24                    = OpAccessChain %ptr_sampled_image_2d %image_2d_var %offset",
+                        "%25                    = OpLoad %sampled_image_2d %24",
+                        in(reg) &offset,
+                    );
+            }
+        }
+        #[allow(unused_attributes)]
+        #[spirv(fragment)]
+        pub fn main() {
+            add_decorate();
+        }"#,
+        r#"OpCapability Shader
+OpCapability VulkanMemoryModel
+OpCapability VariablePointers
+OpCapability RuntimeDescriptorArray
+OpExtension "SPV_KHR_vulkan_memory_model"
+OpExtension "SPV_EXT_descriptor_indexing"
+OpMemoryModel Logical Vulkan
+OpEntryPoint Fragment %1 "main"
+OpExecutionMode %1 OriginUpperLeft
+OpName %2 "test_project::add_decorate"
+OpName %3 "test_project::main"
+OpDecorate %4 DescriptorSet 0
+OpDecorate %4 Binding 0
+%5 = OpTypeVoid
+%6 = OpTypeFunction %5
+%7 = OpTypeInt 32 0
+%8 = OpTypePointer Function %7
+%9 = OpConstant %7 1
+%10 = OpTypeFloat 32
+%11 = OpTypeImage %10 2D 0 0 0 1 Unknown
+%12 = OpTypeSampledImage %11
+%13 = OpTypeRuntimeArray %12
+%14 = OpTypePointer UniformConstant %13
+%4 = OpVariable %14 UniformConstant
+%15 = OpTypePointer UniformConstant %12"#,
+    );
+}
+
+#[test]
+fn asm_const_arg() {
+    val(r#"
+fn asm() {
+    unsafe {
+        const N: usize = 3;
+        asm!(
+            "%int = OpTypeInt 32 0",
+            "%type = OpTypeVector %int {len}",
+            len = const N,
+        );
+    }
+}
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    asm();
+}
+"#);
+}
+
+#[test]
 fn logical_and() {
     val(r#"
 fn f(x: bool, y: bool) -> bool {
@@ -198,7 +285,7 @@ pub struct ShaderConstants {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(constants: PushConstant<ShaderConstants>) {
-    let _constants = constants.load();
+    let _constants = *constants;
 }
 "#);
 }
@@ -222,7 +309,7 @@ pub struct ShaderConstants {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(constants: PushConstant<ShaderConstants>) {
-    let _constants = constants.load();
+    let _constants = *constants;
 }
 "#,
     );
@@ -306,7 +393,7 @@ fn signum() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<f32>, mut o: Output<f32>) {
-    o.store(i.load().signum());
+    *o = i.signum();
 }"#);
 }
 
@@ -379,6 +466,129 @@ pub fn main() {
     let vector = glam::Vec2::new(1.0, 2.0);
     let element = unsafe { spirv_std::arch::vector_extract_dynamic(vector, 1) };
     assert!(2.0 == element);
+}
+"#);
+}
+
+#[test]
+fn vector_insert_dynamic() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main() {
+    let vector = glam::Vec2::new(1.0, 2.0);
+    let expected = glam::Vec2::new(1.0, 3.0);
+    let new_vector = unsafe { spirv_std::arch::vector_insert_dynamic(vector, 1, 3.0) };
+    assert!(new_vector == expected);
+}
+"#);
+}
+
+#[test]
+fn mat3_vec3_multiply() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(input: Input<glam::Mat3>, mut output: Output<glam::Vec3>) {
+    let input = *input;
+    let vector = input * glam::Vec3::new(1.0, 2.0, 3.0);
+    *output = vector;
+}
+"#);
+}
+
+#[test]
+fn complex_image_sample_inst() {
+    dis_fn(
+        r#"
+    fn sample_proj_lod(coord: glam::Vec4, ddx: glam::Vec2, ddy: glam::Vec2, offset_x: i32, offset_y: i32) -> glam::Vec4 {
+        unsafe {
+            let mut result = glam::Vec4::default();
+            let index = 0u32;
+            asm!(
+                    "OpExtension \"SPV_EXT_descriptor_indexing\"",
+                    "OpCapability RuntimeDescriptorArray",
+                    "OpDecorate %image_2d_var DescriptorSet 0",
+                    "OpDecorate %image_2d_var Binding 0",
+                    "%uint                  = OpTypeInt 32 0",
+                    "%int                   = OpTypeInt 32 1",
+                    "%float                 = OpTypeFloat 32",
+                    "%v2int                 = OpTypeVector %int 2",
+                    "%uint_0                = OpConstant %uint 0",
+                    "%int_0                 = OpConstant %int 0",
+                    "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
+                    "%sampled_image_2d      = OpTypeSampledImage %image_2d",
+                    "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
+                    // NOTE(eddyb) `Generic` is used here because it's the placeholder
+                    // for storage class inference - both of the two `OpTypePointer`
+                    // types below should end up inferring to `UniformConstant`.
+                    "%ptr_image_array       = OpTypePointer Generic %image_array",
+                    "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
+                    "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
+                    "", // ^^ type preamble
+                    "%offset                = OpLoad _ {1}",
+                    "%24                    = OpAccessChain %ptr_sampled_image_2d %image_2d_var %offset",
+                    "%25                    = OpLoad %sampled_image_2d %24",
+                    "%coord                 = OpLoad _ {0}",
+                    "%ddx                   = OpLoad _ {3}",
+                    "%ddy                   = OpLoad _ {4}",
+                    "%offset_x              = OpLoad _ {5}",
+                    "%offset_y              = OpLoad _ {6}",
+                    "%const_offset          = OpConstantComposite %v2int %int_0 %int_0",
+                    "%result                = OpImageSampleProjExplicitLod _ %25 %coord Grad|ConstOffset %ddx %ddy %const_offset",
+                    "OpStore {2} %result",
+                    in(reg) &coord,
+                    in(reg) &index,
+                    in(reg) &mut result,
+                    in(reg) &ddx,
+                    in(reg) &ddy,
+                    in(reg) &offset_x,
+                    in(reg) &offset_y,
+                );
+            result
+        }
+    }
+    #[allow(unused_attributes)]
+    #[spirv(fragment)]
+    pub fn main() {
+        sample_proj_lod(glam::Vec4::zero(), glam::Vec2::zero(), glam::Vec2::zero(), 0, 0);
+    }"#,
+        "sample_proj_lod",
+        "%1 = OpFunction %2 None %3
+%4 = OpFunctionParameter %2
+%5 = OpFunctionParameter %6
+%7 = OpFunctionParameter %6
+%8 = OpFunctionParameter %9
+%10 = OpFunctionParameter %9
+%11 = OpLabel
+%12 = OpAccessChain %13 %14 %15
+%16 = OpLoad %17 %12
+%18 = OpImageSampleProjExplicitLod %2 %16 %4 Grad|ConstOffset %5 %7 %19
+OpReturnValue %18
+OpFunctionEnd",
+    );
+}
+
+#[test]
+fn image_read() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(image: UniformConstant<StorageImage2d>, mut output: Output<glam::Vec2>) {
+    let coords = image.read(glam::IVec2::new(0, 1));
+    *output = coords;
+}
+"#);
+}
+
+#[test]
+fn image_write() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment)]
+pub fn main(input: Input<glam::Vec2>, image: UniformConstant<StorageImage2d>) {
+    let texels = *input;
+    image.write(glam::UVec2::new(0, 1), texels);
 }
 "#);
 }

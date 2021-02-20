@@ -124,6 +124,13 @@ fn link_exe(
 
     let spv_binary = do_link(sess, &objects, &rlibs, legalize);
 
+    if let Ok(ref path) = std::env::var("DUMP_POST_LINK") {
+        File::create(path)
+            .unwrap()
+            .write_all(spirv_tools::binary::from_binary(&spv_binary))
+            .unwrap();
+    }
+
     let spv_binary = if sess.opts.optimize != OptLevel::No || sess.opts.debuginfo == DebugInfo::None
     {
         let _timer = sess.timer("link_spirv_opt");
@@ -202,6 +209,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
             let mut err = sess.struct_warn(&e.to_string());
             err.note("spirv-opt failed, leaving as unoptimized");
             err.note(&format!("module {:?}", filename));
+            err.emit();
             spv_binary
         }
     }

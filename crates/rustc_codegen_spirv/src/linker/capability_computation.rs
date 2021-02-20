@@ -1,4 +1,4 @@
-use rspirv::dr::{Instruction, Module, Operand};
+use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Op};
 use std::collections::HashSet;
 
@@ -62,38 +62,6 @@ fn remove_capabilities(module: &mut Module, set: &HashSet<Capability>) {
     });
 }
 
-// TODO: Move this to rspirv
-fn operand_required_extensions(op: &Operand) -> &'static [&'static str] {
-    match op {
-        Operand::SourceLanguage(x) => x.required_extensions(),
-        Operand::ExecutionModel(x) => x.required_extensions(),
-        Operand::AddressingModel(x) => x.required_extensions(),
-        Operand::MemoryModel(x) => x.required_extensions(),
-        Operand::ExecutionMode(x) => x.required_extensions(),
-        Operand::StorageClass(x) => x.required_extensions(),
-        Operand::Dim(x) => x.required_extensions(),
-        Operand::SamplerAddressingMode(x) => x.required_extensions(),
-        Operand::SamplerFilterMode(x) => x.required_extensions(),
-        Operand::ImageFormat(x) => x.required_extensions(),
-        Operand::ImageChannelOrder(x) => x.required_extensions(),
-        Operand::ImageChannelDataType(x) => x.required_extensions(),
-        Operand::FPRoundingMode(x) => x.required_extensions(),
-        Operand::LinkageType(x) => x.required_extensions(),
-        Operand::AccessQualifier(x) => x.required_extensions(),
-        Operand::FunctionParameterAttribute(x) => x.required_extensions(),
-        Operand::Decoration(x) => x.required_extensions(),
-        Operand::BuiltIn(x) => x.required_extensions(),
-        Operand::Scope(x) => x.required_extensions(),
-        Operand::GroupOperation(x) => x.required_extensions(),
-        Operand::KernelEnqueueFlags(x) => x.required_extensions(),
-        Operand::Capability(x) => x.required_extensions(),
-        Operand::RayQueryIntersection(x) => x.required_extensions(),
-        Operand::RayQueryCommittedIntersectionType(x) => x.required_extensions(),
-        Operand::RayQueryCandidateIntersectionType(x) => x.required_extensions(),
-        _ => &[],
-    }
-}
-
 // rspirv pulls its spec information from the latest version. However, we might not be compiling for
 // the latest version.
 // For example, we might run into this situation:
@@ -104,11 +72,15 @@ fn operand_required_extensions(op: &Operand) -> &'static [&'static str] {
 // It says no. We strip it. Things explode.
 // So, this function is to encode any special version-specific rules that aren't in rspirv.
 fn additional_extensions(module: &Module, inst: &Instruction) -> &'static [&'static str] {
-    if module.header.as_ref().unwrap().version() < (1, 5)
-        && inst.class.opcode == Op::Capability
-        && inst.operands[0].unwrap_capability() == Capability::VulkanMemoryModel
-    {
-        &["SPV_KHR_vulkan_memory_model"]
+    if inst.class.opcode == Op::Capability {
+        let version = module.header.as_ref().unwrap().version();
+        match inst.operands[0].unwrap_capability() {
+            Capability::VulkanMemoryModel if version < (1, 5) => &["SPV_KHR_vulkan_memory_model"],
+            Capability::RuntimeDescriptorArray if version < (1, 5) => {
+                &["SPV_EXT_descriptor_indexing"]
+            }
+            _ => &[],
+        }
     } else {
         &[]
     }
@@ -118,14 +90,15 @@ pub fn remove_extra_extensions(module: &mut Module) {
     let set: HashSet<&str> = module
         .all_inst_iter()
         .flat_map(|inst| {
-            inst.class
-                .extensions
-                .iter()
-                .chain(inst.operands.iter().flat_map(operand_required_extensions))
-                .chain(additional_extensions(module, inst))
+            let extensions = inst.class.extensions.iter().copied();
+            let operand_extensions = inst.operands.iter().flat_map(|op| op.required_extensions());
+            let additional_extensions = additional_extensions(module, inst).iter().copied();
+            extensions
+                .chain(operand_extensions)
+                .chain(additional_extensions)
         })
-        .copied()
         .collect();
+
     module.extensions.retain(|inst| {
         inst.class.opcode != Op::Extension || set.contains(inst.operands[0].unwrap_literal_string())
     })

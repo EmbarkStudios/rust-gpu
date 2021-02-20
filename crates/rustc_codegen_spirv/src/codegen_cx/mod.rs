@@ -30,7 +30,7 @@ use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::iter::once;
 
 pub struct CodegenCx<'tcx> {
@@ -58,7 +58,6 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Box<Symbols>,
     pub instruction_table: InstructionTable,
-    pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
     pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
@@ -116,7 +115,6 @@ impl<'tcx> CodegenCx<'tcx> {
             kernel_mode,
             sym,
             instruction_table: InstructionTable::new(),
-            really_unsafe_ignore_bitcasts: Default::default(),
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
@@ -217,18 +215,15 @@ impl<'tcx> CodegenCx<'tcx> {
 
     /// See note on `SpirvValueKind::ConstantPointer`
     pub fn make_constant_pointer(&self, span: Span, value: SpirvValue) -> SpirvValue {
-        let ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: value.ty,
-        }
-        .def(span, self);
+        let ty = SpirvType::Pointer { pointee: value.ty }.def(span, self);
         let initializer = value.def_cx(self);
 
         // Create these up front instead of on demand in SpirvValue::def because
         // SpirvValue::def can't use cx.emit()
+        // FIXME(eddyb) figure out what the correct storage class is.
         let global_var =
             self.emit_global()
-                .variable(ty, None, StorageClass::Function, Some(initializer));
+                .variable(ty, None, StorageClass::Private, Some(initializer));
 
         // In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span
         // to the use site of this constant. However, if this constant happens to never get used, we

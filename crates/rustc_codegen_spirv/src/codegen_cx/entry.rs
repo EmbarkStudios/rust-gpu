@@ -1,11 +1,13 @@
 use super::CodegenCx;
+use crate::abi::ConvSpirvType;
 use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
 use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
-use rustc_hir::{Param, PatKind};
-use rustc_middle::ty::{layout::HasParamEnv, Instance, Ty, TyKind};
+use rustc_middle::ty::{layout::{HasParamEnv, TyAndLayout}, Instance, Ty, TyKind};
+use rustc_hir as hir;
+use hir::{Param, PatKind};
 use rustc_span::Span;
 use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
 use std::collections::HashMap;
@@ -62,6 +64,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.shader_entry_stub(
                 self.tcx.def_span(instance.def_id()),
                 entry_func,
+                fn_abi,
                 body.params,
                 name,
                 execution_model,
@@ -161,7 +164,7 @@ impl<'tcx> CodegenCx<'tcx> {
         hir_param: &Param<'tcx>,
         ty_kind: &TyKind<'tcx>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
-    ) -> (Word, StorageClass, SpirvBinding) {
+    ) -> (Word, StorageClass) {
         let storage_class = match self.lookup_type(arg) {
             SpirvType::Pointer { storage_class, .. } => storage_class,
             other => self.tcx.sess.fatal(&format!(
@@ -172,6 +175,9 @@ impl<'tcx> CodegenCx<'tcx> {
         // Note: this *declares* the variable too.
         let variable = self.emit_global().variable(arg, None, storage_class, None);
         let mut spirv_binding = self.parse_storage_class_binding(storage_class, ty_kind);
+        if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
+            self.emit_global().name(variable, ident.to_string());
+        }
         for attr in parse_attrs(self, hir_param.attrs) {
             match attr {
                 SpirvAttribute::Builtin(builtin) => {
@@ -229,7 +235,7 @@ impl<'tcx> CodegenCx<'tcx> {
         if let PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
         }
-        (variable, storage_class, spirv_binding)
+        (variable, storage_class)
     }
 
     fn parse_storage_class_binding(

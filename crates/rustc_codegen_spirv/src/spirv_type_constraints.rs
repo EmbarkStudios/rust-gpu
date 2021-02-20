@@ -1,9 +1,10 @@
 //! SPIR-V type constraints. Can be used to perform a subset of validation,
 //! or for inference purposes.
 //!
-//! Only type equality is currently handled here, no concrete type constraints,
-//! nor anything involving non-type operands. While more constraints could be
-//! supported, encoding all the possible rules for them may be challenging.
+//! Only type/storage-class equality is currently handled here, no concrete
+//! type/storage-class constraints, nor anything involving non-type/storage-class
+//! operands. While more constraints could be supported, encoding all the possible
+//! rules for them may be challenging.
 //!
 //! Type constraints could be provided in two representations:
 //! * static/generic: the constraints are built up from generic types
@@ -21,8 +22,34 @@
 
 use rspirv::spirv::Op;
 
+/// Helper trait to allow macros to work uniformly across different pattern types.
+trait Pat {
+    /// Unconstrained pattern, i.e. that matches everything.
+    const ANY: Self;
+}
+
+/// Pattern for a SPIR-V storage class, dynamic representation (see module-level docs).
+#[derive(Debug, PartialEq, Eq)]
+pub enum StorageClassPat {
+    /// Unconstrained storage class.
+    Any,
+
+    /// Storage class variable: all occurrences of `Var(i)` with the same `i` must be
+    /// identical storage classes. For convenience, these associated consts are provided:
+    /// * `StorageClassPat::S` for `StorageClassPat::Var(0)`
+    Var(usize),
+}
+
+impl Pat for StorageClassPat {
+    const ANY: Self = Self::Any;
+}
+
+impl StorageClassPat {
+    pub const S: Self = Self::Var(0);
+}
+
 /// Pattern for a SPIR-V type, dynamic representation (see module-level docs).
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TyPat<'a> {
     /// Unconstrained type.
     Any,
@@ -42,11 +69,12 @@ pub enum TyPat<'a> {
     /// > `OpTypeImage` (unless that underlying *Sampled Type* is `OpTypeVoid`).
     Void,
 
+    /// `OpTypePointer`, with an inner pattern for its *Storage Class* operand,
+    /// and another for its *Type* operand.
+    Pointer(&'a StorageClassPat, &'a TyPat<'a>),
+
     // FIXME(eddyb) try to DRY the same-shape patterns below.
     //
-    /// `OpTypePointer`, with an inner pattern for its *Type* operand.
-    Pointer(&'a TyPat<'a>),
-
     /// `OpTypeArray`, with an inner pattern for its *Element Type* operand.
     Array(&'a TyPat<'a>),
 
@@ -89,6 +117,10 @@ pub enum TyPat<'a> {
     IndexComposite(&'a TyPat<'a>),
 }
 
+impl Pat for TyPat<'_> {
+    const ANY: Self = Self::Any;
+}
+
 impl TyPat<'_> {
     pub const T: Self = Self::Var(0);
 }
@@ -97,7 +129,7 @@ impl TyPat<'_> {
 ///
 /// "Type lists" are used for `OpTypeStruct` fields, `OpTypeFunction` parameters,
 /// and operand types of instructions signatures.
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TyListPat<'a> {
     /// Unconstrained type list (any length, and the types can freely vary).
     Any,
@@ -107,9 +139,9 @@ pub enum TyListPat<'a> {
     /// * `TyListPat::TS` for `TyListPat::Var(0)`
     Var(usize),
 
-    /// Uniform repeat type list: all types in the list must be identical with
-    /// eachother, and each of them must also match the inner pattern.
-    Repeat(&'a TyPat<'a>),
+    /// Uniform repeat type list: equivalent to repeating the inner type list
+    /// pattern (which must be finite), enough times to cover the whole list.
+    Repeat(&'a TyListPat<'a>),
 
     /// Empty type list.
     Nil,
@@ -121,33 +153,56 @@ pub enum TyListPat<'a> {
     },
 }
 
+impl Pat for TyListPat<'_> {
+    const ANY: Self = Self::Any;
+}
+
 impl TyListPat<'_> {
     pub const TS: Self = Self::Var(0);
 }
 
 /// Instruction "signature", dynamic representation (see module-level docs).
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct InstSig<'a> {
-    /// Patterns for the complete list of types of the instruction's value operands.
-    pub inputs: &'a TyListPat<'a>,
+    /// Pattern for an instruction's sole storage class operand, if applicable.
+    // FIXME(eddyb) integrate this with `input_types` - it's non-trivial because
+    // that matches *the types of* ID operands, not the operands themselves.
+    pub storage_class: Option<&'a StorageClassPat>,
+
+    /// Patterns for the complete list of types of the instruction's ID operands,
+    /// where non-value operands (i.e. IDs of instructions without a *Result Type*)
+    /// can only match `TyPat::Any`.
+    pub input_types: &'a TyListPat<'a>,
 
     /// Pattern for the instruction's *Result Type* operand, if applicable.
-    pub output: Option<&'a TyPat<'a>>,
+    pub output_type: Option<&'a TyPat<'a>>,
 }
 
 /// Returns an array of valid signatures for an instruction with opcode `op`,
 /// or `None` if there aren't any known type constraints for that instruction.
 pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
+    // Restrict the names the `pat!` macro can take as pattern constructors.
+    mod pat_ctors {
+        pub const S: super::StorageClassPat = super::StorageClassPat::S;
+        // NOTE(eddyb) it would be really nice if we could import `TyPat::{* - Any, Var}`,
+        // i.e. all but those two variants.
+        pub use super::TyPat::{
+            Array, Either, Function, Image, IndexComposite, Matrix, Pipe, Pointer, SampledImage,
+            Struct, Vector, Vector4, Void,
+        };
+        pub const T: super::TyPat<'_> = super::TyPat::T;
+        pub use super::TyListPat::Repeat;
+        pub const TS: super::TyListPat<'_> = super::TyListPat::TS;
+    }
+
     macro_rules! pat {
-        (_) => { &TyPat::Any };
+        (_) => { &Pat::ANY };
         ($ctor:ident $(($($inner:tt $(($($inner_args:tt)+))?),+))?) => {
-            &TyPat::$ctor $(($(pat!($inner $(($($inner_args)+))?)),+))?
+            &pat_ctors::$ctor $(($(pat!($inner $(($($inner_args)+))?)),+))?
         };
         ([]) => { &TyListPat::Nil };
         ([..]) => { &TyListPat::Any };
-        ([...$ctor:ident $(($($inner:tt $(($($inner_args:tt)+))?),+))?]) => {
-            &TyListPat::$ctor $(($(pat!($inner $(($($inner_args)+))?)),+))?
-        };
+        ([...$($rest:tt)+]) => { pat!($($rest)+) };
         ([$first:tt $(($($first_args:tt)+))? $(, $($rest:tt)*)?]) => {
             &TyListPat::Cons {
                 first: pat!($first $(($($first_args)+))?),
@@ -164,10 +219,15 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         };
     }
     macro_rules! sig {
-        ($(($($in_tys:tt)*) $(-> $out_ty:tt $(($($out_ty_args:tt)+))?)?)|+) => {
+        ($(
+            $({$($storage_class:tt)*})?
+            ($($in_tys:tt)*)
+            $(-> $out_ty:tt $(($($out_ty_args:tt)+))?)?
+        )|+) => {
             return Some(&[$(InstSig {
-                inputs: pat!([$($in_tys)*]),
-                output: optionify!($(pat!($out_ty $(($($out_ty_args)+))?))?),
+                storage_class: optionify!($(pat!($($storage_class)*))?),
+                input_types: pat!([$($in_tys)*]),
+                output_type: optionify!($(pat!($out_ty $(($($out_ty_args)+))?))?),
             }),*]);
         };
     }
@@ -246,10 +306,10 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         // 3.37.7. Constant-Creation Instructions
         Op::ConstantTrue | Op::ConstantFalse | Op::Constant => {}
         Op::ConstantComposite | Op::SpecConstantComposite => sig! {
-            (...TS) -> Struct([...TS]) |
-            (...Repeat(T)) -> Array(T) |
-            (...Repeat(T)) -> Vector(T) |
-            (...Repeat(T)) -> Matrix(T)
+            (...TS) -> Struct(TS) |
+            (...Repeat([T])) -> Array(T) |
+            (...Repeat([T])) -> Vector(T) |
+            (...Repeat([T])) -> Matrix(T)
         },
         Op::ConstantSampler
         | Op::ConstantNull
@@ -258,41 +318,42 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::SpecConstant => {}
         Op::SpecConstantOp => {
             unreachable!(
-                "Op{:?} should be specially handled outside type_constraints",
+                "Op{:?} should be specially handled outside spirv_type_constraints",
                 op
             );
         }
 
         // 3.37.8. Memory Instructions
         Op::Variable => sig! {
-            () -> _ |
-            (T) -> Pointer(T)
+            {S} () -> Pointer(S, _) |
+            {S} (T) -> Pointer(S, T)
         },
-        Op::ImageTexelPointer => sig! { (Pointer(Image(T)), _, _) -> Pointer(T) },
-        Op::Load => sig! { (Pointer(T)) -> T },
-        Op::Store => sig! { (Pointer(T), T) },
-        Op::CopyMemory => sig! { (Pointer(T), Pointer(T)) },
+        Op::ImageTexelPointer => sig! { (Pointer(_, Image(T)), _, _) -> Pointer(_, T) },
+        Op::Load => sig! { (Pointer(_, T)) -> T },
+        Op::Store => sig! { (Pointer(_, T), T) },
+        Op::CopyMemory => sig! { (Pointer(_, T), Pointer(_, T)) },
         Op::CopyMemorySized => {}
         Op::AccessChain | Op::InBoundsAccessChain => sig! {
-            (Pointer(T), ../*indices*/) -> Pointer(IndexComposite(T))
+            (Pointer(S, T), ../*indices*/) -> Pointer(S, IndexComposite(T))
         },
         Op::PtrAccessChain | Op::InBoundsPtrAccessChain => sig! {
-            (Pointer(T), _, ../*indices*/) -> Pointer(IndexComposite(T))
+            (Pointer(S, T), _, ../*indices*/) -> Pointer(S, IndexComposite(T))
         },
         Op::ArrayLength | Op::GenericPtrMemSemantics => {}
         // SPIR-V 1.4
         Op::PtrEqual | Op::PtrNotEqual | Op::PtrDiff => sig! {
-            (Pointer(T), Pointer(T)) -> _
+            (Pointer(_, T), Pointer(_, T)) -> _
         },
 
         // 3.37.9. Function Instructions
-        Op::Function | Op::FunctionParameter | Op::FunctionEnd => {
+        Op::Function => {}
+        Op::FunctionParameter | Op::FunctionEnd => {
             unreachable!(
-                "Op{:?} should be specially handled outside type_constraints",
+                "Op{:?} should be specially handled outside spirv_type_constraints",
                 op
             );
         }
-        Op::FunctionCall => sig! { (Function(T, [...TS]), ...TS) -> T },
+        Op::FunctionCall => sig! { (Function(T, TS), ...TS) -> T },
 
         // 3.37.10. Image Instructions
         Op::SampledImage => sig! { (T, _) -> SampledImage(T) },
@@ -363,23 +424,25 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::FConvert => {}
         Op::QuantizeToF16 => sig! { (T) -> T },
         Op::ConvertPtrToU | Op::SatConvertSToU | Op::SatConvertUToS | Op::ConvertUToPtr => {}
-        Op::PtrCastToGeneric | Op::GenericCastToPtr | Op::GenericCastToPtrExplicit => sig! {
-            (Pointer(T)) -> Pointer(T)
-        },
+        Op::PtrCastToGeneric | Op::GenericCastToPtr => sig! { (Pointer(_, T)) -> Pointer(_, T) },
+        Op::GenericCastToPtrExplicit => sig! { {S} (Pointer(_, T)) -> Pointer(S, T) },
         Op::Bitcast => {}
 
         // 3.37.12. Composite Instructions
         Op::VectorExtractDynamic => sig! { (Vector(T), _) -> T },
         Op::VectorInsertDynamic => sig! {
-            // FIXME(eddyb) missing equality constraint between input and output vectors.
-            (Vector(T), T, _) -> Vector(T)
+            // FIXME(eddyb) was `(Vector(T), T, _) -> Vector(T)` but that was
+            // missing an equality constraint between input and output vectors;
+            // we should use `(Vector(T, N), T, _) -> Vector(T, N)`, or constrain
+            // input and output vectors to have the same type some other way.
+            (T, _, _) -> T
         },
         Op::VectorShuffle => sig! { (Vector(T), Vector(T)) -> Vector(T) },
         Op::CompositeConstruct => sig! {
-            (...TS) -> Struct([...TS]) |
-            (...Repeat(T)) -> Array(T) |
-            (...Repeat(T)) -> Matrix(T) |
-            (...Repeat(Either(Vector(T), T))) -> Vector(T)
+            (...TS) -> Struct(TS) |
+            (...Repeat([T])) -> Array(T) |
+            (...Repeat([T])) -> Matrix(T) |
+            (...Repeat([Either(Vector(T), T)])) -> Vector(T)
         },
         Op::CompositeExtract => sig! { (T, ../*indices*/) -> IndexComposite(T) },
         Op::CompositeInsert => sig! { (IndexComposite(T), T, ../*indices*/) -> T },
@@ -389,7 +452,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::CopyLogical => sig! {
             // FIXME(eddyb) this is shallow right now, it should recurse instead
             (Array(T)) -> Array(T) |
-            (Struct([...TS])) -> Struct([...TS])
+            (Struct(TS)) -> Struct(TS)
         },
 
         // 3.37.13. Arithmetic Instructions
@@ -493,7 +556,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::FwidthCoarse => sig! { (T) -> T },
 
         // 3.37.17. Control-Flow Instructions
-        Op::Phi => sig! { (...Repeat(T)) -> T },
+        Op::Phi => sig! { (...Repeat([T, _])) -> T },
         Op::LoopMerge
         | Op::SelectionMerge
         | Op::Label
@@ -503,7 +566,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::Kill => {}
         Op::Return | Op::ReturnValue => {
             unreachable!(
-                "Op{:?} should be specially handled outside type_constraints",
+                "Op{:?} should be specially handled outside spirv_type_constraints",
                 op
             );
         }
@@ -511,9 +574,9 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
 
         // 3.37.18. Atomic Instructions
         Op::AtomicLoad | Op::AtomicIIncrement | Op::AtomicIDecrement => sig! {
-            (Pointer(T), _, _) -> T
+            (Pointer(_, T), _, _) -> T
         },
-        Op::AtomicStore => sig! { (Pointer(T), _, _, T) },
+        Op::AtomicStore => sig! { (Pointer(_, T), _, _, T) },
         Op::AtomicExchange
         | Op::AtomicIAdd
         | Op::AtomicISub
@@ -523,14 +586,14 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::AtomicUMax
         | Op::AtomicAnd
         | Op::AtomicOr
-        | Op::AtomicXor => sig! { (Pointer(T), _, _, T) -> T },
+        | Op::AtomicXor => sig! { (Pointer(_, T), _, _, T) -> T },
         Op::AtomicCompareExchange | Op::AtomicCompareExchangeWeak => sig! {
-            (Pointer(T), _, _, _, T, T) -> T
+            (Pointer(_, T), _, _, _, T, T) -> T
         },
         // Capability: Kernel
         Op::AtomicFlagTestAndSet | Op::AtomicFlagClear => {}
         // SPV_EXT_shader_atomic_float_add
-        Op::AtomicFAddEXT => sig! { (Pointer(T), _, _, T) -> T },
+        Op::AtomicFAddEXT => sig! { (Pointer(_, T), _, _, T) -> T },
 
         // 3.37.19. Primitive Instructions
         Op::EmitVertex | Op::EndPrimitive | Op::EmitStreamVertex | Op::EndStreamPrimitive => {}
@@ -541,7 +604,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::NamedBarrierInitialize | Op::MemoryNamedBarrier => {}
 
         // 3.37.21. Group and Subgroup Instructions
-        Op::GroupAsyncCopy => sig! { (_, Pointer(T), Pointer(T), _, _, _) -> _ },
+        Op::GroupAsyncCopy => sig! { (_, Pointer(_, T), Pointer(_, T), _, _, _) -> _ },
         Op::GroupWaitEvents => {}
         Op::GroupAll | Op::GroupAny => {}
         Op::GroupBroadcast => sig! { (_, T, _) -> T },
@@ -572,8 +635,8 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         // SPV_INTEL_subgroups
         Op::SubgroupShuffleINTEL | Op::SubgroupShuffleXorINTEL => sig! { (T, _) -> T },
         Op::SubgroupShuffleDownINTEL | Op::SubgroupShuffleUpINTEL => sig! { (T, T, _) -> T },
-        Op::SubgroupBlockReadINTEL => sig! { (Pointer(T)) -> T },
-        Op::SubgroupBlockWriteINTEL => sig! { (Pointer(T), T) },
+        Op::SubgroupBlockReadINTEL => sig! { (Pointer(_, T)) -> T },
+        Op::SubgroupBlockWriteINTEL => sig! { (Pointer(_, T), T) },
         Op::SubgroupImageBlockReadINTEL | Op::SubgroupImageBlockWriteINTEL => {}
         // SPV_INTEL_media_block_io
         Op::SubgroupImageMediaBlockReadINTEL | Op::SubgroupImageMediaBlockWriteINTEL => {}
@@ -597,9 +660,9 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::GetKernelLocalSizeForSubgroupCount | Op::GetKernelMaxNumSubgroups => {}
 
         // 3.37.23. Pipe Instructions
-        Op::ReadPipe | Op::WritePipe => sig! { (Pipe(T), Pointer(T), _, _) -> _ },
+        Op::ReadPipe | Op::WritePipe => sig! { (Pipe(T), Pointer(_, T), _, _) -> _ },
         Op::ReservedReadPipe | Op::ReservedWritePipe => sig! {
-            (Pipe(T), _, _, Pointer(T), _, _) -> _
+            (Pipe(T), _, _, Pointer(_, T), _, _) -> _
         },
         Op::ReserveReadPipePackets
         | Op::ReserveWritePipePackets
@@ -616,7 +679,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         Op::ConstantPipeStorage | Op::CreatePipeFromPipeStorage => {}
         // SPV_INTEL_blocking_pipes
         Op::ReadPipeBlockingINTEL | Op::WritePipeBlockingINTEL => sig! {
-            (Pipe(T), Pointer(T), _, _)
+            (Pipe(T), Pointer(_, T), _, _)
         },
 
         // 3.37.24. Non-Uniform Instructions
@@ -697,12 +760,15 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         }
         // SPV_EXT_demote_to_helper_invocation
         Op::DemoteToHelperInvocationEXT | Op::IsHelperInvocationEXT => {
-            reserved!(SPV_EXT_demote_to_helper_invocation)
+            // NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_EXT_demote_to_helper_invocation)
         }
         // SPV_INTEL_shader_integer_functions2
-        Op::UCountLeadingZerosINTEL
-        | Op::UCountTrailingZerosINTEL
-        | Op::AbsISubINTEL
+        Op::UCountLeadingZerosINTEL | Op::UCountTrailingZerosINTEL => {
+            // NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_INTEL_shader_integer_functions2)
+        }
+        Op::AbsISubINTEL
         | Op::AbsUSubINTEL
         | Op::IAddSatINTEL
         | Op::UAddSatINTEL

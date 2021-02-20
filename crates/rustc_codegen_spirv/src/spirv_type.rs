@@ -1,14 +1,17 @@
-use crate::abi::RecursivePointeeCache;
+use crate::abi::{RecursivePointeeCache, TyLayoutNameKey};
 use crate::builder_spirv::SpirvValue;
 use crate::codegen_cx::CodegenCx;
 use bimap::BiHashMap;
+use indexmap::IndexSet;
 use rspirv::dr::Operand;
 use rspirv::spirv::{
     AccessQualifier, Capability, Decoration, Dim, ImageFormat, StorageClass, Word,
 };
+use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::{Align, Size};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt;
 use std::iter;
 use std::lazy::SyncLazy;
@@ -28,7 +31,11 @@ pub enum SpirvType {
     Float(u32),
     /// This uses the rustc definition of "adt", i.e. a struct, enum, or union
     Adt {
-        name: String,
+        /// Not emitted into SPIR-V, but used to avoid too much deduplication,
+        /// which could result in one SPIR-V `OpType*` having many names
+        /// (not in itself an issue, but it makes error reporting harder).
+        def_id: Option<DefId>,
+
         align: Align,
         size: Option<Size>,
         field_types: Vec<Word>,
@@ -53,7 +60,6 @@ pub enum SpirvType {
         element: Word,
     },
     Pointer {
-        storage_class: StorageClass,
         pointee: Word,
     },
     Function {
@@ -124,7 +130,7 @@ impl SpirvType {
                 result
             }
             Self::Adt {
-                ref name,
+                def_id: _,
                 align: _,
                 size: _,
                 ref field_types,
@@ -136,7 +142,6 @@ impl SpirvType {
                 // Ensure a unique struct is emitted each time, due to possibly having different OpMemberDecorates
                 let id = emit.id();
                 let result = emit.type_struct_id(Some(id), field_types.iter().cloned());
-                emit.name(result, name);
                 // The struct size is only used in our own sizeof_in_bits() (used in e.g. ArrayStride decoration)
                 if !cx.kernel_mode {
                     // TODO: kernel mode can't do this??
@@ -188,11 +193,13 @@ impl SpirvType {
                 }
                 result
             }
-            Self::Pointer {
-                storage_class,
-                pointee,
-            } => {
-                let result = cx.emit_global().type_pointer(None, storage_class, pointee);
+            Self::Pointer { pointee } => {
+                // NOTE(eddyb) we emit `StorageClass::Generic` here, but later
+                // the linker will specialize the entire SPIR-V module to use
+                // storage classes inferred from `OpVariable`s.
+                let result = cx
+                    .emit_global()
+                    .type_pointer(None, StorageClass::Generic, pointee);
                 // no pointers to functions
                 if let Self::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(
@@ -243,13 +250,13 @@ impl SpirvType {
             return cached;
         }
         let result = match self {
-            Self::Pointer {
-                storage_class,
-                pointee,
-            } => {
-                let result = cx
-                    .emit_global()
-                    .type_pointer(Some(id), storage_class, pointee);
+            Self::Pointer { pointee } => {
+                // NOTE(eddyb) we emit `StorageClass::Generic` here, but later
+                // the linker will specialize the entire SPIR-V module to use
+                // storage classes inferred from `OpVariable`s.
+                let result =
+                    cx.emit_global()
+                        .type_pointer(Some(id), StorageClass::Generic, pointee);
                 // no pointers to functions
                 if let Self::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(
@@ -267,6 +274,24 @@ impl SpirvType {
         };
         cx.type_cache.def(result, self);
         result
+    }
+
+    /// In addition to `SpirvType::def`, also name the resulting type (with `OpName`).
+    pub fn def_with_name<'tcx>(
+        self,
+        cx: &CodegenCx<'tcx>,
+        def_span: Span,
+        name_key: TyLayoutNameKey<'tcx>,
+    ) -> Word {
+        let id = self.def(def_span, cx);
+
+        // Only emit `OpName` if this is the first time we see this name.
+        let mut type_names = cx.type_cache.type_names.borrow_mut();
+        if type_names.entry(id).or_default().insert(name_key) {
+            cx.emit_global().name(id, name_key.to_string());
+        }
+
+        id
     }
 
     /// Use this if you want a pretty type printing that recursively prints the types within (e.g. struct fields)
@@ -364,7 +389,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("width", &width)
                 .finish(),
             SpirvType::Adt {
-                ref name,
+                def_id,
                 align,
                 size,
                 ref field_types,
@@ -378,7 +403,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                     .collect::<Vec<_>>();
                 f.debug_struct("Adt")
                     .field("id", &self.id)
-                    .field("name", &name)
+                    .field("def_id", &def_id)
                     .field("align", &align)
                     .field("size", &size)
                     .field("field_types", &fields)
@@ -416,13 +441,9 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("id", &self.id)
                 .field("element", &self.cx.debug_type(element))
                 .finish(),
-            SpirvType::Pointer {
-                storage_class,
-                pointee,
-            } => f
+            SpirvType::Pointer { pointee } => f
                 .debug_struct("Pointer")
                 .field("id", &self.id)
-                .field("storage_class", &storage_class)
                 .field("pointee", &self.cx.debug_type(pointee))
                 .finish(),
             SpirvType::Function {
@@ -512,7 +533,7 @@ impl SpirvTypePrinter<'_, '_> {
             }
             SpirvType::Float(width) => write!(f, "f{}", width),
             SpirvType::Adt {
-                ref name,
+                def_id: _,
                 align: _,
                 size: _,
                 ref field_types,
@@ -523,7 +544,27 @@ impl SpirvTypePrinter<'_, '_> {
                 if is_block {
                     write!(f, "#[spirv(block)] ")?;
                 }
-                write!(f, "struct {} {{ ", name)?;
+
+                write!(f, "struct")?;
+
+                // HACK(eddyb) use the first name (in insertion order, i.e.
+                // from the first invocation of `def_with_name` for this type)
+                // even when this may not be correct - a better solution could
+                // be to pick the shortest name (which could work well when
+                // newtypes are involved).
+                let first_name = {
+                    let type_names = self.cx.type_cache.type_names.borrow();
+                    type_names
+                        .get(&self.id)
+                        .and_then(|names| names.iter().next().copied())
+                };
+
+                if let Some(name) = first_name {
+                    write!(f, " {}", name)?;
+                }
+
+                write!(f, " {{ ")?;
+
                 for (index, &field) in field_types.iter().enumerate() {
                     let suffix = if index + 1 == field_types.len() {
                         ""
@@ -555,11 +596,8 @@ impl SpirvTypePrinter<'_, '_> {
                 ty(self.cx, stack, f, element)?;
                 f.write_str("]")
             }
-            SpirvType::Pointer {
-                storage_class,
-                pointee,
-            } => {
-                write!(f, "*{{{:?}}} ", storage_class)?;
+            SpirvType::Pointer { pointee } => {
+                f.write_str("*")?;
                 ty(self.cx, stack, f, pointee)
             }
             SpirvType::Function {
@@ -614,6 +652,10 @@ pub struct TypeCache<'tcx> {
     pub type_defs: RefCell<BiHashMap<Word, SpirvType>>,
     /// Recursive pointer breaking
     pub recursive_pointee_cache: RecursivePointeeCache<'tcx>,
+    /// Set of names for a type (only `SpirvType::Adt` currently).
+    /// The same `OpType*` may have multiple names if it's e.g. a generic
+    /// `struct` where the generic parameters result in the same field types.
+    type_names: RefCell<HashMap<Word, IndexSet<TyLayoutNameKey<'tcx>>>>,
 }
 
 impl TypeCache<'_> {
