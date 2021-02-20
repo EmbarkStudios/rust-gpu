@@ -6,7 +6,7 @@ fn cf_while() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 10 {
+    while *i < 10 {
     }
 }
 "#);
@@ -18,8 +18,8 @@ fn cf_while_while() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 20 {
-        while i.load() < 10 {
+    while *i < 20 {
+        while *i < 10 {
         }
     }
 }
@@ -32,8 +32,8 @@ fn cf_while_while_break() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 20 {
-        while i.load() < 10 {
+    while *i < 20 {
+        while *i < 10 {
             break;
         }
     }
@@ -47,9 +47,9 @@ fn cf_while_while_if_break() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 20 {
-        while i.load() < 10 {
-            if i.load() > 10 {
+    while *i < 20 {
+        while *i < 10 {
+            if *i > 10 {
                 break;
             }
         }
@@ -64,7 +64,7 @@ fn cf_while_break() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 10 {
+    while *i < 10 {
         break;
     }
 }
@@ -77,8 +77,8 @@ fn cf_while_if_break() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 10 {
-        if i.load() == 0 {
+    while *i < 10 {
+        if *i == 0 {
             break;
         }
     }
@@ -92,8 +92,8 @@ fn cf_while_if_break_else_break() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 10 {
-        if i.load() == 0 {
+    while *i < 10 {
+        if *i == 0 {
             break;
         } else {
             break;
@@ -109,11 +109,11 @@ fn cf_while_if_break_if_break() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 10 {
-        if i.load() == 0 {
+    while *i < 10 {
+        if *i == 0 {
             break;
         }
-        if i.load() == 1 {
+        if *i == 1 {
             break;
         }
     }
@@ -127,8 +127,8 @@ fn cf_while_while_continue() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 20 {
-        while i.load() < 10 {
+    while *i < 20 {
+        while *i < 10 {
             continue;
         }
     }
@@ -142,9 +142,9 @@ fn cf_while_while_if_continue() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 20 {
-        while i.load() < 10 {
-            if i.load() > 5 {
+    while *i < 20 {
+        while *i < 10 {
+            if *i > 5 {
                 continue;
             }
         }
@@ -159,7 +159,7 @@ fn cf_while_continue() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 10 {
+    while *i < 10 {
         continue;
     }
 }
@@ -172,8 +172,8 @@ fn cf_while_if_continue() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 10 {
-        if i.load() == 0 {
+    while *i < 10 {
+        if *i == 0 {
             continue;
         }
     }
@@ -187,8 +187,8 @@ fn cf_while_if_continue_else_continue() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 10 {
-        if i.load() == 0 {
+    while *i < 10 {
+        if *i == 0 {
             continue;
         } else {
             continue;
@@ -204,7 +204,7 @@ fn cf_while_return() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 10 {
+    while *i < 10 {
         return;
     }
 }
@@ -217,7 +217,7 @@ fn cf_if_return_else() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    if i.load() < 10 {
+    if *i < 10 {
         return;
     } else {
     }
@@ -231,7 +231,7 @@ fn cf_if_return_else_return() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    if i.load() < 10 {
+    if *i < 10 {
         return;
     } else {
         return;
@@ -246,8 +246,8 @@ fn cf_if_while() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    if i.load() == 0 {
-        while i.load() < 10 {
+    if *i == 0 {
+        while *i < 10 {
         }
     }
 }
@@ -260,7 +260,7 @@ fn cf_if() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    if i.load() > 0 {
+    if *i > 0 {
 
     }
 }
@@ -272,10 +272,10 @@ fn cf_ifx2() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    if i.load() > 0 {
+    if *i > 0 {
 
     }
-    if i.load() > 1 {
+    if *i > 1 {
 
     }
 }
@@ -288,7 +288,7 @@ fn cf_if_else() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    if i.load() > 0 {
+    if *i > 0 {
 
     } else {
 
@@ -303,9 +303,9 @@ fn cf_if_elseif_else() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    if i.load() > 0 {
+    if *i > 0 {
 
-    } else if i.load() < 0 {
+    } else if *i < 0 {
 
     } else {
 
@@ -320,8 +320,8 @@ fn cf_if_if() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    if i.load() > 0 {
-        if i.load() < 10 {
+    if *i > 0 {
+        if *i < 10 {
 
         }
     }
@@ -335,12 +335,12 @@ fn cf_defer() {
 #[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
-    while i.load() < 32 {
+    while *i < 32 {
         let current_position = 0;
-        if i.load() < current_position {
+        if *i < current_position {
             break;
         }
-        if i.load() < current_position {
+        if *i < current_position {
             break;
         }
     }

@@ -26,8 +26,7 @@ macro_rules! storage_class {
 
         impl<T: Copy> $name<'_, T> {
             /// Load the value into memory.
-            #[inline]
-            #[allow(unused_attributes)]
+            #[deprecated(note = "storage_class::Foo<T> types now implement Deref, and can be used like &T")]
             pub fn load(&self) -> T {
                 **self
             }
@@ -48,13 +47,13 @@ macro_rules! storage_class {
 
         impl<T: Copy> $name<'_, T> {
             /// Store the value in storage.
-            #[inline]
-            #[allow(unused_attributes)]
+            #[deprecated(note = "storage_class::Foo<T> types now implement DerefMut, and can be used like &mut T")]
             pub fn store(&mut self, v: T) {
                 **self = v
             }
 
             /// A convenience function to load a value into memory and store it.
+            #[deprecated(note = "storage_class::Foo<T> types now implement DerefMut, and can be used like &mut T")]
             pub fn then(&mut self, f: impl FnOnce(T) -> T) {
                 **self = f(**self);
             }
