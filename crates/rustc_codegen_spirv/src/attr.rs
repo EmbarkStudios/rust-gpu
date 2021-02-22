@@ -79,7 +79,6 @@ pub enum IntrinsicType {
 #[derive(Debug, Clone)]
 pub enum SpirvAttribute {
     // `struct` attributes:
-    StorageClass(StorageClass),
     IntrinsicType(IntrinsicType),
     Block,
 
@@ -87,6 +86,7 @@ pub enum SpirvAttribute {
     Entry(Entry),
 
     // (entry) `fn` parameter attributes:
+    StorageClass(StorageClass),
     Builtin(BuiltIn),
     DescriptorSet(u32),
     Binding(u32),
@@ -110,7 +110,6 @@ pub struct Spanned<T> {
 #[derive(Default)]
 pub struct AggregatedSpirvAttributes {
     // `struct` attributes:
-    pub storage_class: Option<Spanned<StorageClass>>,
     pub intrinsic_type: Option<Spanned<IntrinsicType>>,
     pub block: Option<Spanned<()>>,
 
@@ -118,6 +117,7 @@ pub struct AggregatedSpirvAttributes {
     pub entry: Option<Spanned<Entry>>,
 
     // (entry) `fn` parameter attributes:
+    pub storage_class: Option<Spanned<StorageClass>>,
     pub builtin: Option<Spanned<BuiltIn>>,
     pub descriptor_set: Option<Spanned<u32>>,
     pub binding: Option<Spanned<u32>>,
@@ -187,14 +187,14 @@ impl AggregatedSpirvAttributes {
 
         use SpirvAttribute::*;
         match attr {
-            StorageClass(value) => {
-                try_insert(&mut self.storage_class, value, span, "storage class")
-            }
             IntrinsicType(value) => {
                 try_insert(&mut self.intrinsic_type, value, span, "intrinsic type")
             }
             Block => try_insert(&mut self.block, (), span, "#[spirv(block)]"),
             Entry(value) => try_insert(&mut self.entry, value, span, "entry-point"),
+            StorageClass(value) => {
+                try_insert(&mut self.storage_class, value, span, "storage class")
+            }
             Builtin(value) => try_insert(&mut self.builtin, value, span, "builtin"),
             DescriptorSet(value) => try_insert(
                 &mut self.descriptor_set,
@@ -259,9 +259,7 @@ impl CheckSpirvAttrVisitor<'_> {
             struct Expected<T>(T);
 
             let valid_target = match parsed_attr {
-                SpirvAttribute::StorageClass(_)
-                | SpirvAttribute::IntrinsicType(_)
-                | SpirvAttribute::Block => match target {
+                SpirvAttribute::IntrinsicType(_) | SpirvAttribute::Block => match target {
                     Target::Struct => {
                         // FIXME(eddyb) further check type attribute validity,
                         // e.g. layout, generics, other attributes, etc.
@@ -283,7 +281,8 @@ impl CheckSpirvAttrVisitor<'_> {
                     _ => Err(Expected("function")),
                 },
 
-                SpirvAttribute::Builtin(_)
+                SpirvAttribute::StorageClass(_)
+                | SpirvAttribute::Builtin(_)
                 | SpirvAttribute::DescriptorSet(_)
                 | SpirvAttribute::Binding(_)
                 | SpirvAttribute::Flat => match target {

@@ -5,12 +5,12 @@
 
 #![feature(ptr_internals)]
 
-use spirv_std::storage_class::Output;
+use spirv_std as _;
 
 use core::ptr::Unique;
 const POINTER: Unique<[u8;4]> = Unique::<[u8; 4]>::dangling();
 
 #[spirv(fragment)]
-pub fn main(mut output: Output<u8>) {
+pub fn main() {
     let _pointer = POINTER;
 }

@@ -1,7 +1,7 @@
 // Test using `&&` operator.
 // build-pass
 
-extern crate spirv_std;
+use spirv_std as _;
 
 fn f(x: bool, y: bool) -> bool {
     x && y

@@ -16,7 +16,6 @@ pub extern crate spirv_std_macros;
 use core::f32::consts::PI;
 use glam::{const_vec3, vec2, vec3, Vec2, Vec3, Vec4};
 use shared::*;
-use spirv_std::storage_class::{Input, Output, PushConstant};
 
 // Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
 // we tie #[no_std] above to the same condition, so it's fine.
@@ -160,19 +159,16 @@ pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
 
 #[spirv(fragment)]
 pub fn main_fs(
-    #[spirv(frag_coord)] in_frag_coord: Input<Vec4>,
-    constants: PushConstant<ShaderConstants>,
-    mut output: Output<Vec4>,
+    #[spirv(frag_coord)] in_frag_coord: &Vec4,
+    #[spirv(push_constant)] constants: &ShaderConstants,
+    output: &mut Vec4,
 ) {
     let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
-    *output = fs(&constants, frag_coord);
+    *output = fs(constants, frag_coord);
 }
 
 #[spirv(vertex)]
-pub fn main_vs(
-    #[spirv(vertex_index)] vert_idx: Input<i32>,
-    #[spirv(position)] mut builtin_pos: Output<Vec4>,
-) {
+pub fn main_vs(#[spirv(vertex_index)] vert_idx: &i32, #[spirv(position)] builtin_pos: &mut Vec4) {
     let vert_idx = *vert_idx;
 
     // Create a "full screen triangle" by mapping the vertex index.

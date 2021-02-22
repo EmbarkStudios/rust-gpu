@@ -5,12 +5,6 @@
 
 use spirv_std as _;
 
-#[spirv(uniform, uniform)]
-struct _SameStorageClass {}
-
-#[spirv(uniform, push_constant)]
-struct _DiffStorageClass {}
-
 #[spirv(sampler, sampler)]
 struct _SameIntrinsicType {}
 
@@ -31,6 +25,9 @@ fn _diff_entry() {}
 
 #[spirv(vertex)]
 fn _entry(
+    #[spirv(uniform, uniform)] _same_storage_class: (),
+    #[spirv(uniform, push_constant)] _diff_storage_class: (),
+
     #[spirv(position, position)] _same_builtin: (),
     #[spirv(position, vertex_index)] _diff_builtin: (),
 
