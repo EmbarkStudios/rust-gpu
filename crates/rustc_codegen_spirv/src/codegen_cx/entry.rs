@@ -7,7 +7,7 @@ use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_hir as hir;
 use rustc_middle::ty::layout::TyAndLayout;
-use rustc_middle::ty::{Instance, Ty};
+use rustc_middle::ty::{Instance, Ty, TyKind};
 use rustc_span::Span;
 use rustc_target::abi::call::{FnAbi, PassMode};
 use std::collections::HashMap;
@@ -148,33 +148,38 @@ impl<'tcx> CodegenCx<'tcx> {
         hir_param: &hir::Param<'tcx>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
     ) -> (Word, StorageClass) {
-        let storage_class = crate::abi::get_storage_class(self, layout).unwrap_or_else(|| {
-            self.tcx.sess.span_fatal(
+        let writable = match layout.ty.kind() {
+            // FIXME(eddyb) also take into account `&T` interior mutability,
+            // i.e. it's only immutable if `T: Freeze`, which we should check.
+            // FIXME(eddyb) also check the type for compatibility with being
+            // part of the interface, including potentially `Sync`ness etc.
+            TyKind::Ref(_, _, m) => *m == hir::Mutability::Mut,
+
+            _ => self.tcx.sess.span_fatal(
                 hir_param.span,
-                &format!("invalid entry param type `{}`", layout.ty),
-            );
-        });
-        let mut has_location = matches!(
-            storage_class,
-            StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
-        );
-        // Note: this *declares* the variable too.
-        let spirv_type = layout.spirv_type(hir_param.span, self);
-        let variable = self
-            .emit_global()
-            .variable(spirv_type, None, storage_class, None);
+                &format!(
+                    "invalid entry param type `{}` (expected `&T` or `&mut T`)",
+                    layout.ty
+                ),
+            ),
+        };
+
+        // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
+        let variable = self.emit_global().id();
+
         if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
         }
 
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
+        let mut decoration_supersedes_location = false;
         if let Some(builtin) = attrs.builtin.map(|attr| attr.value) {
             self.emit_global().decorate(
                 variable,
                 Decoration::BuiltIn,
                 std::iter::once(Operand::BuiltIn(builtin)),
             );
-            has_location = false;
+            decoration_supersedes_location = true;
         }
         if let Some(index) = attrs.descriptor_set.map(|attr| attr.value) {
             self.emit_global().decorate(
@@ -182,7 +187,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 Decoration::DescriptorSet,
                 std::iter::once(Operand::LiteralInt32(index)),
             );
-            has_location = false;
+            decoration_supersedes_location = true;
         }
         if let Some(index) = attrs.binding.map(|attr| attr.value) {
             self.emit_global().decorate(
@@ -190,17 +195,62 @@ impl<'tcx> CodegenCx<'tcx> {
                 Decoration::Binding,
                 std::iter::once(Operand::LiteralInt32(index)),
             );
-            has_location = false;
+            decoration_supersedes_location = true;
         }
         if attrs.flat.is_some() {
             self.emit_global()
                 .decorate(variable, Decoration::Flat, std::iter::empty());
         }
 
+        let storage_class = if let Some(storage_class_attr) = attrs.storage_class {
+            // FIXME(eddyb) attribute validation should be done ahead of time.
+            let valid = match storage_class_attr.value {
+                StorageClass::UniformConstant
+                | StorageClass::Input
+                | StorageClass::PushConstant
+                    if writable =>
+                {
+                    Err("can only be used with immutable references")
+                }
+
+                StorageClass::Input | StorageClass::Output => {
+                    Err("is the default and should not be explicitly specified")
+                }
+
+                StorageClass::Private | StorageClass::Function | StorageClass::Generic => {
+                    Err("can not be used as part of an entry's interface")
+                }
+
+                _ => Ok(()),
+            };
+
+            if let Err(msg) = valid {
+                self.tcx.sess.span_err(
+                    storage_class_attr.span,
+                    &format!("`{:?}` storage class {}", storage_class_attr.value, msg),
+                );
+            }
+
+            storage_class_attr.value
+        } else if writable {
+            StorageClass::Output
+        } else {
+            StorageClass::Input
+        };
+
+        // FIXME(eddyb) check whether the storage class is compatible with the
+        // specific shader stage of this entry-point, and any decorations
+        // (e.g. Vulkan has specific rules for builtin storage classes).
+
         // Assign locations from left to right, incrementing each storage class
         // individually.
         // TODO: Is this right for UniformConstant? Do they share locations with
         // input/outpus?
+        let has_location = !decoration_supersedes_location
+            && matches!(
+                storage_class,
+                StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
+            );
         if has_location {
             let location = decoration_locations
                 .entry(storage_class)
@@ -212,6 +262,12 @@ impl<'tcx> CodegenCx<'tcx> {
             );
             *location += 1;
         }
+
+        // Emit the `OpVariable` with its *Result* ID set to `variable`.
+        let spirv_type = layout.spirv_type(hir_param.span, self);
+        self.emit_global()
+            .variable(spirv_type, Some(variable), storage_class, None);
+
         (variable, storage_class)
     }
 

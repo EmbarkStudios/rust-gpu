@@ -585,22 +585,6 @@ fn dig_scalar_pointee_adt<'tcx>(
     }
 }
 
-/// Handles `#[spirv(storage_class="blah")]`. Note this is only called in the entry interface variables code, because this is only
-/// used for spooky builtin stuff, and we pinky promise to never have more than one pointer field in one of these.
-// TODO: Enforce this is only used in spirv-std.
-pub(crate) fn get_storage_class<'tcx>(
-    cx: &CodegenCx<'tcx>,
-    ty: TyAndLayout<'tcx>,
-) -> Option<StorageClass> {
-    if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
-        AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did))
-            .storage_class
-            .map(|attr| attr.value)
-    } else {
-        None
-    }
-}
-
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
     match ty.fields {
         FieldsShape::Primitive => cx.tcx.sess.fatal(&format!(
