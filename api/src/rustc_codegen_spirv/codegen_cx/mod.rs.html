@@ -405,11 +405,6 @@
 <span id="402">402</span>
 <span id="403">403</span>
 <span id="404">404</span>
-<span id="405">405</span>
-<span id="406">406</span>
-<span id="407">407</span>
-<span id="408">408</span>
-<span id="409">409</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
@@ -443,7 +438,7 @@
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{<span class="ident">HasDataLayout</span>, <span class="ident">TargetDataLayout</span>};
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">spec</span>::{<span class="ident">HasTargetSpec</span>, <span class="ident">Target</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::{<span class="ident">Cell</span>, <span class="ident">RefCell</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">once</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
@@ -471,7 +466,6 @@
     <span class="doccomment">/// Cache of all the builtin symbols we need</span>
     <span class="kw">pub</span> <span class="ident">sym</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Symbols</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">instruction_table</span>: <span class="ident">InstructionTable</span>,
-    <span class="kw">pub</span> <span class="ident">really_unsafe_ignore_bitcasts</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">SpirvValue</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">libm_intrinsics</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw">super</span>::<span class="ident">builder</span>::<span class="ident">libm_intrinsics</span>::<span class="ident">LibmIntrinsic</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 
     <span class="doccomment">/// Simple `panic!(&quot;...&quot;)` and builtin panics (from MIR `Assert`s) call `#[lang = &quot;panic&quot;]`.</span>
@@ -529,7 +523,6 @@
             <span class="ident">kernel_mode</span>,
             <span class="ident">sym</span>,
             <span class="ident">instruction_table</span>: <span class="ident">InstructionTable</span>::<span class="ident">new</span>(),
-            <span class="ident">really_unsafe_ignore_bitcasts</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">libm_intrinsics</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">panic_fn_id</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">panic_bounds_check_fn_id</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
@@ -630,18 +623,15 @@
 
     <span class="doccomment">/// See note on `SpirvValueKind::ConstantPointer`</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_constant_pointer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">value</span>: <span class="ident">SpirvValue</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-            <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
-            <span class="ident">pointee</span>: <span class="ident">value</span>.<span class="ident">ty</span>,
-        }
-        .<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>: <span class="ident">value</span>.<span class="ident">ty</span> }.<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="kw">let</span> <span class="ident">initializer</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">def_cx</span>(<span class="self">self</span>);
 
         <span class="comment">// Create these up front instead of on demand in SpirvValue::def because</span>
         <span class="comment">// SpirvValue::def can&#39;t use cx.emit()</span>
+        <span class="comment">// FIXME(eddyb) figure out what the correct storage class is.</span>
         <span class="kw">let</span> <span class="ident">global_var</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">emit_global</span>()
-                .<span class="ident">variable</span>(<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">StorageClass</span>::<span class="ident">Function</span>, <span class="prelude-val">Some</span>(<span class="ident">initializer</span>));
+                .<span class="ident">variable</span>(<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">StorageClass</span>::<span class="ident">Private</span>, <span class="prelude-val">Some</span>(<span class="ident">initializer</span>));
 
         <span class="comment">// In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span</span>
         <span class="comment">// to the use site of this constant. However, if this constant happens to never get used, we</span>

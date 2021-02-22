@@ -1364,6 +1364,36 @@
 <span id="1361">1361</span>
 <span id="1362">1362</span>
 <span id="1363">1363</span>
+<span id="1364">1364</span>
+<span id="1365">1365</span>
+<span id="1366">1366</span>
+<span id="1367">1367</span>
+<span id="1368">1368</span>
+<span id="1369">1369</span>
+<span id="1370">1370</span>
+<span id="1371">1371</span>
+<span id="1372">1372</span>
+<span id="1373">1373</span>
+<span id="1374">1374</span>
+<span id="1375">1375</span>
+<span id="1376">1376</span>
+<span id="1377">1377</span>
+<span id="1378">1378</span>
+<span id="1379">1379</span>
+<span id="1380">1380</span>
+<span id="1381">1381</span>
+<span id="1382">1382</span>
+<span id="1383">1383</span>
+<span id="1384">1384</span>
+<span id="1385">1385</span>
+<span id="1386">1386</span>
+<span id="1387">1387</span>
+<span id="1388">1388</span>
+<span id="1389">1389</span>
+<span id="1390">1390</span>
+<span id="1391">1391</span>
+<span id="1392">1392</span>
+<span id="1393">1393</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
@@ -1630,11 +1660,25 @@
                 <span class="ident">element</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
             }
             .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
-            <span class="ident">Op</span>::<span class="ident">TypePointer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>(),
-                <span class="ident">pointee</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>(),
+            <span class="ident">Op</span>::<span class="ident">TypePointer</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">storage_class</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>();
+                <span class="kw">if</span> <span class="ident">storage_class</span> <span class="op">!</span><span class="op">=</span> <span class="ident">StorageClass</span>::<span class="ident">Generic</span> {
+                    <span class="self">self</span>.<span class="ident">struct_err</span>(<span class="string">&quot;TypePointer in asm! requires `Generic` storage class&quot;</span>)
+                        .<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                            <span class="string">&quot;`{:?}` storage class was specified&quot;</span>,
+                            <span class="ident">storage_class</span>
+                        ))
+                        .<span class="ident">help</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                            <span class="string">&quot;the storage class will be inferred automatically (e.g. to `{:?}`)&quot;</span>,
+                            <span class="ident">storage_class</span>
+                        ))
+                        .<span class="ident">emit</span>();
+                }
+                <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
+                    <span class="ident">pointee</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>(),
+                }
+                .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>)
             }
-            .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
             <span class="ident">Op</span>::<span class="ident">TypeImage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">Image</span> {
                 <span class="ident">sampled_type</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
                 <span class="ident">dim</span>: <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_dim</span>(),
@@ -1878,26 +1922,28 @@
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type_constraints</span>::{<span class="ident">instruction_signatures</span>, <span class="ident">InstSig</span>, <span class="ident">TyListPat</span>, <span class="ident">TyPat</span>};
 
         <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Mismatch</span>;
+        <span class="kw">struct</span> <span class="ident">Unapplicable</span>;
 
         <span class="doccomment">/// Recursively match `ty` against `pat`, returning one of:</span>
         <span class="doccomment">/// * `Ok(None)`: `pat` matched but contained no type variables</span>
         <span class="doccomment">/// * `Ok(Some(var))`: `pat` matched and `var` is the type variable</span>
         <span class="doccomment">/// * `Err(Mismatch)`: `pat` didn&#39;t match or isn&#39;t supported right now</span>
-        <span class="kw">fn</span> <span class="ident">apply_ty_pat</span>(
+        <span class="kw">fn</span> <span class="ident">match_ty_pat</span>(
             <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
             <span class="ident">pat</span>: <span class="kw-2">&amp;</span><span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
             <span class="ident">ty</span>: <span class="ident">Word</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">Mismatch</span><span class="op">&gt;</span> {
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">Unapplicable</span><span class="op">&gt;</span> {
             <span class="kw">match</span> <span class="ident">pat</span> {
                 <span class="ident">TyPat</span>::<span class="ident">Any</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
                 <span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">ty</span>)),
                 <span class="ident">TyPat</span>::<span class="ident">Either</span>(<span class="ident">a</span>, <span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">apply_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">a</span>, <span class="ident">ty</span>).<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">Mismatch</span><span class="op">|</span> <span class="ident">apply_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">b</span>, <span class="ident">ty</span>))
+                    <span class="ident">match_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">a</span>, <span class="ident">ty</span>).<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">Unapplicable</span><span class="op">|</span> <span class="ident">match_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">b</span>, <span class="ident">ty</span>))
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">pat</span>, <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>)) {
+                    (<span class="ident">TyPat</span>::<span class="ident">Any</span>, <span class="kw">_</span>) <span class="op">|</span> (<span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span>, <span class="kw">_</span>) <span class="op">|</span> (<span class="ident">TyPat</span>::<span class="ident">Either</span>(..), <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+
                     (<span class="ident">TyPat</span>::<span class="ident">Void</span>, <span class="ident">SpirvType</span>::<span class="ident">Void</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-                    (<span class="ident">TyPat</span>::<span class="ident">Pointer</span>(<span class="ident">pat</span>), <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>: <span class="ident">ty</span>, .. })
+                    (<span class="ident">TyPat</span>::<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">pat</span>), <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>: <span class="ident">ty</span>, .. })
                     <span class="op">|</span> (<span class="ident">TyPat</span>::<span class="ident">Vector</span>(<span class="ident">pat</span>), <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>: <span class="ident">ty</span>, .. })
                     <span class="op">|</span> (
                         <span class="ident">TyPat</span>::<span class="ident">Vector4</span>(<span class="ident">pat</span>),
@@ -1913,17 +1959,19 @@
                         },
                     )
                     <span class="op">|</span> (<span class="ident">TyPat</span>::<span class="ident">SampledImage</span>(<span class="ident">pat</span>), <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { <span class="ident">image_type</span>: <span class="ident">ty</span> }) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">apply_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">pat</span>, <span class="ident">ty</span>)
+                        <span class="ident">match_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">pat</span>, <span class="ident">ty</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Mismatch</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Unapplicable</span>),
                 },
             }
         }
 
         <span class="comment">// FIXME(eddyb) try multiple signatures until one fits.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sig</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">instruction_signatures</span>(<span class="ident">instruction</span>.<span class="ident">class</span>.<span class="ident">opcode</span>)<span class="question-mark">?</span> {
-            [<span class="ident">sig</span> @ <span class="ident">InstSig</span> {
-                <span class="ident">output</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>), ..
+            [<span class="ident">sig</span>
+            @ <span class="ident">InstSig</span> {
+                <span class="ident">output_type</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
+                ..
             }] <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">sig</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
         };
@@ -1931,9 +1979,20 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined_var</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ids</span> <span class="op">=</span> <span class="ident">instruction</span>.<span class="ident">operands</span>.<span class="ident">iter</span>().<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span>.<span class="ident">id_ref_any</span>());
-        <span class="kw">while</span> <span class="kw">let</span> <span class="ident">TyListPat</span>::<span class="ident">Cons</span> { <span class="ident">first</span>: <span class="ident">pat</span>, <span class="ident">suffix</span> } <span class="op">=</span> <span class="kw-2">*</span><span class="ident">sig</span>.<span class="ident">inputs</span> {
-            <span class="kw">let</span> <span class="kw-2">&amp;</span><span class="ident">ty</span> <span class="op">=</span> <span class="ident">id_to_type_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">ids</span>.<span class="ident">next</span>()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-            <span class="kw">match</span> <span class="ident">apply_ty_pat</span>(<span class="self">self</span>, <span class="ident">pat</span>, <span class="ident">ty</span>) {
+        <span class="kw">while</span> <span class="kw">let</span> <span class="ident">TyListPat</span>::<span class="ident">Cons</span> { <span class="ident">first</span>: <span class="ident">pat</span>, <span class="ident">suffix</span> } <span class="op">=</span> <span class="kw-2">*</span><span class="ident">sig</span>.<span class="ident">input_types</span> {
+            <span class="ident">sig</span>.<span class="ident">input_types</span> <span class="op">=</span> <span class="ident">suffix</span>;
+
+            <span class="kw">let</span> <span class="ident">match_result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">id_to_type_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">ids</span>.<span class="ident">next</span>()<span class="question-mark">?</span>) {
+                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">match_ty_pat</span>(<span class="self">self</span>, <span class="ident">pat</span>, <span class="ident">ty</span>),
+
+                <span class="comment">// Non-value ID operand (or value operand of unknown type),</span>
+                <span class="comment">// only `TyPat::Any` is valid.</span>
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">pat</span> {
+                    <span class="ident">TyPat</span>::<span class="ident">Any</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Unapplicable</span>),
+                },
+            };
+            <span class="kw">match</span> <span class="ident">match_result</span> {
                 <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">var</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">combined_var</span> {
                     <span class="prelude-val">Some</span>(<span class="ident">combined_var</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="comment">// FIXME(eddyb) this could use some error reporting</span>
@@ -1947,11 +2006,12 @@
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">combined_var</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">var</span>),
                 },
                 <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-                <span class="prelude-val">Err</span>(<span class="ident">Mismatch</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
+                <span class="prelude-val">Err</span>(<span class="ident">Unapplicable</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
             }
-            <span class="ident">sig</span>.<span class="ident">inputs</span> <span class="op">=</span> <span class="ident">suffix</span>;
         }
-        <span class="kw">match</span> <span class="ident">sig</span>.<span class="ident">inputs</span> {
+        <span class="kw">match</span> <span class="ident">sig</span>.<span class="ident">input_types</span> {
+            <span class="ident">TyListPat</span>::<span class="ident">Cons</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+
             <span class="ident">TyListPat</span>::<span class="ident">Any</span> <span class="op">=</span><span class="op">&gt;</span> {}
             <span class="ident">TyListPat</span>::<span class="ident">Nil</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">ids</span>.<span class="ident">next</span>().<span class="ident">is_some</span>() {
@@ -1962,7 +2022,7 @@
         }
 
         <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">combined_var</span><span class="question-mark">?</span>;
-        <span class="kw">match</span> <span class="ident">sig</span>.<span class="ident">output</span>.<span class="ident">unwrap</span>() {
+        <span class="kw">match</span> <span class="ident">sig</span>.<span class="ident">output_type</span>.<span class="ident">unwrap</span>() {
             <span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">var</span>),
             <span class="ident">TyPat</span>::<span class="ident">Vector4</span>(<span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(
                 <span class="ident">SpirvType</span>::<span class="ident">Vector</span> {
@@ -2098,7 +2158,7 @@
                     <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">kind</span> {
                         <span class="ident">TypeofKind</span>::<span class="ident">Plain</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty</span>,
                         <span class="ident">TypeofKind</span>::<span class="ident">Dereference</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
-                            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+                            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
                             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
                                     <span class="ident">span</span>,
@@ -2120,7 +2180,7 @@
                     <span class="self">self</span>.<span class="ident">check_reg</span>(<span class="ident">span</span>, <span class="ident">reg</span>);
                     <span class="kw">match</span> <span class="ident">place</span> {
                         <span class="prelude-val">Some</span>(<span class="ident">place</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">place</span>.<span class="ident">llval</span>.<span class="ident">ty</span>) {
-                            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">pointee</span>),
+                            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">pointee</span>),
                             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
                                     <span class="ident">span</span>,

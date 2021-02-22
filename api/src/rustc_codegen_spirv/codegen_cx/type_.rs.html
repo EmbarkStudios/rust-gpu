@@ -235,23 +235,10 @@
 <span id="232">232</span>
 <span id="233">233</span>
 <span id="234">234</span>
-<span id="235">235</span>
-<span id="236">236</span>
-<span id="237">237</span>
-<span id="238">238</span>
-<span id="239">239</span>
-<span id="240">240</span>
-<span id="241">241</span>
-<span id="242">242</span>
-<span id="243">243</span>
-<span id="244">244</span>
-<span id="245">245</span>
-<span id="246">246</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::<span class="ident">StorageClass</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::<span class="ident">Word</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">common</span>::<span class="ident">TypeKind</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">LayoutTypeMethods</span>};
@@ -431,25 +418,14 @@
         }
     }
     <span class="kw">fn</span> <span class="ident">type_ptr_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="self">Self</span>::<span class="ident">Type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Type</span> {
-        <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-            <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
-            <span class="ident">pointee</span>: <span class="ident">ty</span>,
-        }
-        .<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>)
+        <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>: <span class="ident">ty</span> }.<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>)
     }
     <span class="kw">fn</span> <span class="ident">type_ptr_to_ext</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="self">Self</span>::<span class="ident">Type</span>, <span class="ident">_address_space</span>: <span class="ident">AddressSpace</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Type</span> {
-        <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-            <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
-            <span class="ident">pointee</span>: <span class="ident">ty</span>,
-        }
-        .<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>)
+        <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>: <span class="ident">ty</span> }.<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>)
     }
     <span class="kw">fn</span> <span class="ident">element_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="self">Self</span>::<span class="ident">Type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>: <span class="kw">_</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">element</span>,
             <span class="ident">spirv_type</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;element_type called on invalid type: {:?}&quot;</span>,

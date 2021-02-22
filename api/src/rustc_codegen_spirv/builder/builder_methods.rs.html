@@ -1999,38 +1999,6 @@
 <span id="1996">1996</span>
 <span id="1997">1997</span>
 <span id="1998">1998</span>
-<span id="1999">1999</span>
-<span id="2000">2000</span>
-<span id="2001">2001</span>
-<span id="2002">2002</span>
-<span id="2003">2003</span>
-<span id="2004">2004</span>
-<span id="2005">2005</span>
-<span id="2006">2006</span>
-<span id="2007">2007</span>
-<span id="2008">2008</span>
-<span id="2009">2009</span>
-<span id="2010">2010</span>
-<span id="2011">2011</span>
-<span id="2012">2012</span>
-<span id="2013">2013</span>
-<span id="2014">2014</span>
-<span id="2015">2015</span>
-<span id="2016">2016</span>
-<span id="2017">2017</span>
-<span id="2018">2018</span>
-<span id="2019">2019</span>
-<span id="2020">2020</span>
-<span id="2021">2021</span>
-<span id="2022">2022</span>
-<span id="2023">2023</span>
-<span id="2024">2024</span>
-<span id="2025">2025</span>
-<span id="2026">2026</span>
-<span id="2027">2027</span>
-<span id="2028">2028</span>
-<span id="2029">2029</span>
-<span id="2030">2030</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
@@ -2761,11 +2729,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">alloca</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="self">Self</span>::<span class="ident">Type</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="kw">let</span> <span class="ident">ptr_ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-            <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
-            <span class="ident">pointee</span>: <span class="ident">ty</span>,
-        }
-        .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">ptr_ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>: <span class="ident">ty</span> }.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="comment">// &quot;All OpVariable instructions in a function must be the first instructions in the first block.&quot;</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit</span>();
         <span class="ident">builder</span>.<span class="ident">select_block</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>)).<span class="ident">unwrap</span>();
@@ -2813,10 +2777,7 @@
             <span class="kw">return</span> <span class="ident">value</span>;
         }
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>: <span class="kw">_</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;load called on variable that wasn&#39;t a pointer: {:?}&quot;</span>,
                 <span class="ident">ty</span>
@@ -2837,10 +2798,7 @@
 
     <span class="kw">fn</span> <span class="ident">atomic_load</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ptr</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">order</span>: <span class="ident">AtomicOrdering</span>, <span class="ident">_size</span>: <span class="ident">Size</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>: <span class="kw">_</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;atomic_load called on variable that wasn&#39;t a pointer: {:?}&quot;</span>,
                 <span class="ident">ty</span>
@@ -2940,10 +2898,7 @@
 
     <span class="kw">fn</span> <span class="ident">store</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">ptr</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">let</span> <span class="ident">ptr_elem_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>: <span class="kw">_</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;store called on variable that wasn&#39;t a pointer: {:?}&quot;</span>,
                 <span class="ident">ty</span>
@@ -2980,10 +2935,7 @@
         <span class="ident">_size</span>: <span class="ident">Size</span>,
     ) {
         <span class="kw">let</span> <span class="ident">ptr_elem_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>: <span class="kw">_</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;atomic_store called on variable that wasn&#39;t a pointer: {:?}&quot;</span>,
                 <span class="ident">ty</span>
@@ -3013,15 +2965,12 @@
     }
 
     <span class="kw">fn</span> <span class="ident">struct_gep</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ptr</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">idx</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="kw">let</span> (<span class="ident">storage_class</span>, <span class="ident">result_pointee_type</span>) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
-                <span class="ident">SpirvType</span>::<span class="ident">Adt</span> { <span class="ident">field_types</span>, .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">storage_class</span>, <span class="ident">field_types</span>[<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>]),
+        <span class="kw">let</span> <span class="ident">result_pointee_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
+                <span class="ident">SpirvType</span>::<span class="ident">Adt</span> { <span class="ident">field_types</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">field_types</span>[<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>],
                 <span class="ident">SpirvType</span>::<span class="ident">Array</span> { <span class="ident">element</span>, .. }
                 <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span>, .. }
-                <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">storage_class</span>, <span class="ident">element</span>),
+                <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">element</span>,
                 <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                     <span class="string">&quot;struct_gep not on struct, array, or vector type: {:?}, index {}&quot;</span>,
                     <span class="ident">other</span>, <span class="ident">idx</span>
@@ -3033,7 +2982,6 @@
             )),
         };
         <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-            <span class="ident">storage_class</span>,
             <span class="ident">pointee</span>: <span class="ident">result_pointee_type</span>,
         }
         .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
@@ -3259,14 +3207,14 @@
 
     <span class="kw">fn</span> <span class="ident">pointercast</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">dest_ty</span>: <span class="self">Self</span>::<span class="ident">Type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">let</span> <span class="ident">val_pointee</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;pointercast called on non-pointer source type: {:?}&quot;</span>,
                 <span class="ident">other</span>
             )),
         };
         <span class="kw">let</span> <span class="ident">dest_pointee</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">dest_ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;pointercast called on non-pointer dest type: {:?}&quot;</span>,
                 <span class="ident">other</span>
@@ -3283,12 +3231,6 @@
                 .<span class="ident">access_chain</span>(<span class="ident">dest_ty</span>, <span class="prelude-val">None</span>, <span class="ident">val</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">indices</span>)
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">with_type</span>(<span class="ident">dest_ty</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>
-            .<span class="ident">really_unsafe_ignore_bitcasts</span>
-            .<span class="ident">borrow</span>()
-            .<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">current_fn</span>)
-        {
-            <span class="ident">val</span>
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
                 .<span class="ident">emit</span>()
@@ -3565,7 +3507,7 @@
             <span class="kw">return</span>;
         }
         <span class="kw">let</span> <span class="ident">src_pointee</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">src</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">pointee</span>),
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">pointee</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         };
         <span class="kw">let</span> <span class="ident">src_element_size</span> <span class="op">=</span> <span class="ident">src_pointee</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">p</span>).<span class="ident">sizeof</span>(<span class="self">self</span>));
@@ -3626,7 +3568,7 @@
             ));
         }
         <span class="kw">let</span> <span class="ident">elem_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;memset called on non-pointer type: {}&quot;</span>,
                 <span class="self">self</span>.<span class="ident">debug_type</span>(<span class="ident">ptr</span>.<span class="ident">ty</span>)
@@ -3814,10 +3756,7 @@
         <span class="ident">_weak</span>: <span class="ident">bool</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">let</span> <span class="ident">dst_pointee_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">dst</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>: <span class="kw">_</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;atomic_cmpxchg called on variable that wasn&#39;t a pointer: {:?}&quot;</span>,
                 <span class="ident">ty</span>
@@ -3854,10 +3793,7 @@
         <span class="ident">order</span>: <span class="ident">AtomicOrdering</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
         <span class="kw">let</span> <span class="ident">dst_pointee_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">dst</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>: <span class="kw">_</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
             <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;atomic_rmw called on variable that wasn&#39;t a pointer: {:?}&quot;</span>,
                 <span class="ident">ty</span>

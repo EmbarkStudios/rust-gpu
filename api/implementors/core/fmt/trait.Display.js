@@ -11,6 +11,7 @@ implementors["rspirv"] = [{"text":"impl Display for Error","synthetic":false,"ty
 implementors["rustc_demangle"] = [{"text":"impl&lt;'a&gt; Display for Demangle&lt;'a&gt;","synthetic":false,"types":[]}];
 implementors["serde"] = [{"text":"impl Display for Error","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Display for Unexpected&lt;'a&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Display for dyn Expected + 'a","synthetic":false,"types":[]}];
 implementors["serde_json"] = [{"text":"impl Display for Error","synthetic":false,"types":[]},{"text":"impl Display for Value","synthetic":false,"types":[]},{"text":"impl Display for Number","synthetic":false,"types":[]}];
+implementors["smallvec"] = [{"text":"impl Display for CollectionAllocErr","synthetic":false,"types":[]}];
 implementors["spirv_builder"] = [{"text":"impl Display for SpirvBuilderError","synthetic":false,"types":[]}];
 implementors["spirv_tools"] = [{"text":"impl Display for Error","synthetic":false,"types":[]}];
 implementors["spirv_tools_sys"] = [{"text":"impl Display for TargetEnv","synthetic":false,"types":[]},{"text":"impl Display for SpirvResult","synthetic":false,"types":[]}];

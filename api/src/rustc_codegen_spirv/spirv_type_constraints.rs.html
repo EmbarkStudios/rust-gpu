@@ -873,13 +873,77 @@
 <span id="870">870</span>
 <span id="871">871</span>
 <span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! SPIR-V type constraints. Can be used to perform a subset of validation,</span>
 <span class="doccomment">//! or for inference purposes.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! Only type equality is currently handled here, no concrete type constraints,</span>
-<span class="doccomment">//! nor anything involving non-type operands. While more constraints could be</span>
-<span class="doccomment">//! supported, encoding all the possible rules for them may be challenging.</span>
+<span class="doccomment">//! Only type/storage-class equality is currently handled here, no concrete</span>
+<span class="doccomment">//! type/storage-class constraints, nor anything involving non-type/storage-class</span>
+<span class="doccomment">//! operands. While more constraints could be supported, encoding all the possible</span>
+<span class="doccomment">//! rules for them may be challenging.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Type constraints could be provided in two representations:</span>
 <span class="doccomment">//! * static/generic: the constraints are built up from generic types</span>
@@ -896,6 +960,32 @@
 <span class="doccomment">//! the &quot;dynamic representation&quot; could be generated from it using associated `const`s.</span>
 
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::<span class="ident">Op</span>;
+
+<span class="doccomment">/// Helper trait to allow macros to work uniformly across different pattern types.</span>
+<span class="kw">trait</span> <span class="ident">Pat</span> {
+    <span class="doccomment">/// Unconstrained pattern, i.e. that matches everything.</span>
+    <span class="kw">const</span> <span class="ident">ANY</span>: <span class="self">Self</span>;
+}
+
+<span class="doccomment">/// Pattern for a SPIR-V storage class, dynamic representation (see module-level docs).</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StorageClassPat</span> {
+    <span class="doccomment">/// Unconstrained storage class.</span>
+    <span class="ident">Any</span>,
+
+    <span class="doccomment">/// Storage class variable: all occurrences of `Var(i)` with the same `i` must be</span>
+    <span class="doccomment">/// identical storage classes. For convenience, these associated consts are provided:</span>
+    <span class="doccomment">/// * `StorageClassPat::S` for `StorageClassPat::Var(0)`</span>
+    <span class="ident">Var</span>(<span class="ident">usize</span>),
+}
+
+<span class="kw">impl</span> <span class="ident">Pat</span> <span class="kw">for</span> <span class="ident">StorageClassPat</span> {
+    <span class="kw">const</span> <span class="ident">ANY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Any</span>;
+}
+
+<span class="kw">impl</span> <span class="ident">StorageClassPat</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">S</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Var</span>(<span class="number">0</span>);
+}
 
 <span class="doccomment">/// Pattern for a SPIR-V type, dynamic representation (see module-level docs).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
@@ -918,11 +1008,12 @@
     <span class="doccomment">/// &gt; `OpTypeImage` (unless that underlying *Sampled Type* is `OpTypeVoid`).</span>
     <span class="ident">Void</span>,
 
+    <span class="doccomment">/// `OpTypePointer`, with an inner pattern for its *Storage Class* operand,</span>
+    <span class="doccomment">/// and another for its *Type* operand.</span>
+    <span class="ident">Pointer</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StorageClassPat</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+
     <span class="comment">// FIXME(eddyb) try to DRY the same-shape patterns below.</span>
     <span class="comment">//</span>
-    <span class="doccomment">/// `OpTypePointer`, with an inner pattern for its *Type* operand.</span>
-    <span class="ident">Pointer</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
-
     <span class="doccomment">/// `OpTypeArray`, with an inner pattern for its *Element Type* operand.</span>
     <span class="ident">Array</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
 
@@ -965,6 +1056,10 @@
     <span class="ident">IndexComposite</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
 }
 
+<span class="kw">impl</span> <span class="ident">Pat</span> <span class="kw">for</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+    <span class="kw">const</span> <span class="ident">ANY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Any</span>;
+}
+
 <span class="kw">impl</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">T</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Var</span>(<span class="number">0</span>);
 }
@@ -983,9 +1078,9 @@
     <span class="doccomment">/// * `TyListPat::TS` for `TyListPat::Var(0)`</span>
     <span class="ident">Var</span>(<span class="ident">usize</span>),
 
-    <span class="doccomment">/// Uniform repeat type list: all types in the list must be identical with</span>
-    <span class="doccomment">/// eachother, and each of them must also match the inner pattern.</span>
-    <span class="ident">Repeat</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// Uniform repeat type list: equivalent to repeating the inner type list</span>
+    <span class="doccomment">/// pattern (which must be finite), enough times to cover the whole list.</span>
+    <span class="ident">Repeat</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
 
     <span class="doccomment">/// Empty type list.</span>
     <span class="ident">Nil</span>,
@@ -997,6 +1092,10 @@
     },
 }
 
+<span class="kw">impl</span> <span class="ident">Pat</span> <span class="kw">for</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+    <span class="kw">const</span> <span class="ident">ANY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Any</span>;
+}
+
 <span class="kw">impl</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Var</span>(<span class="number">0</span>);
 }
@@ -1004,26 +1103,45 @@
 <span class="doccomment">/// Instruction &quot;signature&quot;, dynamic representation (see module-level docs).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstSig</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Patterns for the complete list of types of the instruction&#39;s value operands.</span>
-    <span class="kw">pub</span> <span class="ident">inputs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Pattern for an instruction&#39;s sole storage class operand, if applicable.</span>
+    <span class="comment">// FIXME(eddyb) integrate this with `input_types` - it&#39;s non-trivial because</span>
+    <span class="comment">// that matches *the types of* ID operands, not the operands themselves.</span>
+    <span class="kw">pub</span> <span class="ident">storage_class</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StorageClassPat</span><span class="op">&gt;</span>,
+
+    <span class="doccomment">/// Patterns for the complete list of types of the instruction&#39;s ID operands,</span>
+    <span class="doccomment">/// where non-value operands (i.e. IDs of instructions without a *Result Type*)</span>
+    <span class="doccomment">/// can only match `TyPat::Any`.</span>
+    <span class="kw">pub</span> <span class="ident">input_types</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
 
     <span class="doccomment">/// Pattern for the instruction&#39;s *Result Type* operand, if applicable.</span>
-    <span class="kw">pub</span> <span class="ident">output</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">output_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Returns an array of valid signatures for an instruction with opcode `op`,</span>
 <span class="doccomment">/// or `None` if there aren&#39;t any known type constraints for that instruction.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">instruction_signatures</span>(<span class="ident">op</span>: <span class="ident">Op</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">InstSig</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>]<span class="op">&gt;</span> {
+    <span class="comment">// Restrict the names the `pat!` macro can take as pattern constructors.</span>
+    <span class="kw">mod</span> <span class="ident">pat_ctors</span> {
+        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">S</span>: <span class="kw">super</span>::<span class="ident">StorageClassPat</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">StorageClassPat</span>::<span class="ident">S</span>;
+        <span class="comment">// NOTE(eddyb) it would be really nice if we could import `TyPat::{* - Any, Var}`,</span>
+        <span class="comment">// i.e. all but those two variants.</span>
+        <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">TyPat</span>::{
+            <span class="ident">Array</span>, <span class="ident">Either</span>, <span class="ident">Function</span>, <span class="ident">Image</span>, <span class="ident">IndexComposite</span>, <span class="ident">Matrix</span>, <span class="ident">Pipe</span>, <span class="ident">Pointer</span>, <span class="ident">SampledImage</span>,
+            <span class="ident">Struct</span>, <span class="ident">Vector</span>, <span class="ident">Vector4</span>, <span class="ident">Void</span>,
+        };
+        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">T</span>: <span class="kw">super</span>::<span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">TyPat</span>::<span class="ident">T</span>;
+        <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">TyListPat</span>::<span class="ident">Repeat</span>;
+        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TS</span>: <span class="kw">super</span>::<span class="ident">TyListPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">TyListPat</span>::<span class="ident">TS</span>;
+    }
+
     <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">pat</span> {
-        (<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> { <span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">Any</span> };
+        (<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> { <span class="kw-2">&amp;</span><span class="ident">Pat</span>::<span class="ident">ANY</span> };
         (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span>:<span class="ident">ident</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>),<span class="op">+</span>))<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span> $(($(<span class="macro">pat</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>)),<span class="op">+</span>))<span class="question-mark">?</span>
+            <span class="kw-2">&amp;</span><span class="ident">pat_ctors</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span> $(($(<span class="macro">pat</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>)),<span class="op">+</span>))<span class="question-mark">?</span>
         };
         ([]) <span class="op">=</span><span class="op">&gt;</span> { <span class="kw-2">&amp;</span><span class="ident">TyListPat</span>::<span class="ident">Nil</span> };
         ([..]) <span class="op">=</span><span class="op">&gt;</span> { <span class="kw-2">&amp;</span><span class="ident">TyListPat</span>::<span class="ident">Any</span> };
-        ([...<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span>:<span class="ident">ident</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>),<span class="op">+</span>))<span class="question-mark">?</span>]) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw-2">&amp;</span><span class="ident">TyListPat</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ctor</span> $(($(<span class="macro">pat</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inner_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>)),<span class="op">+</span>))<span class="question-mark">?</span>
-        };
+        ([...$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="op">+</span>]) <span class="op">=</span><span class="op">&gt;</span> { <span class="macro">pat</span><span class="macro">!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>)<span class="op">+</span>) };
         ([<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span> $(, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">rest</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>)<span class="question-mark">?</span>]) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw-2">&amp;</span><span class="ident">TyListPat</span>::<span class="ident">Cons</span> {
                 <span class="ident">first</span>: <span class="macro">pat</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">first_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>),
@@ -1040,10 +1158,15 @@
         };
     }
     <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">sig</span> {
-        ($(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_tys</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) $(<span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="op">|</span><span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        ($(
+            $({$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">storage_class</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>})<span class="question-mark">?</span>
+            ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_tys</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>)
+            $(<span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty</span>:<span class="ident">tt</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty_args</span>:<span class="ident">tt</span>)<span class="op">+</span>))<span class="question-mark">?</span>)<span class="question-mark">?</span>
+        )<span class="op">|</span><span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[$(<span class="ident">InstSig</span> {
-                <span class="ident">inputs</span>: <span class="macro">pat</span><span class="macro">!</span>([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_tys</span>)<span class="kw-2">*</span>]),
-                <span class="ident">output</span>: <span class="macro">optionify</span><span class="macro">!</span>($(<span class="macro">pat</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>))<span class="question-mark">?</span>),
+                <span class="ident">storage_class</span>: <span class="macro">optionify</span><span class="macro">!</span>($(<span class="macro">pat</span><span class="macro">!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">storage_class</span>)<span class="kw-2">*</span>))<span class="question-mark">?</span>),
+                <span class="ident">input_types</span>: <span class="macro">pat</span><span class="macro">!</span>([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">in_tys</span>)<span class="kw-2">*</span>]),
+                <span class="ident">output_type</span>: <span class="macro">optionify</span><span class="macro">!</span>($(<span class="macro">pat</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty</span> $(($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">out_ty_args</span>)<span class="op">+</span>))<span class="question-mark">?</span>))<span class="question-mark">?</span>),
             }),<span class="kw-2">*</span>]);
         };
     }
@@ -1122,10 +1245,10 @@
         <span class="comment">// 3.37.7. Constant-Creation Instructions</span>
         <span class="ident">Op</span>::<span class="ident">ConstantTrue</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">ConstantFalse</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">Constant</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="ident">Op</span>::<span class="ident">ConstantComposite</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">SpecConstantComposite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (...<span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>([...<span class="ident">TS</span>]) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">T</span>)
+            (...<span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>(<span class="ident">TS</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">T</span>)
         },
         <span class="ident">Op</span>::<span class="ident">ConstantSampler</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">ConstantNull</span>
@@ -1134,41 +1257,42 @@
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">SpecConstant</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="ident">Op</span>::<span class="ident">SpecConstantOp</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="macro">unreachable</span><span class="macro">!</span>(
-                <span class="string">&quot;Op{:?} should be specially handled outside type_constraints&quot;</span>,
+                <span class="string">&quot;Op{:?} should be specially handled outside spirv_type_constraints&quot;</span>,
                 <span class="ident">op</span>
             );
         }
 
         <span class="comment">// 3.37.8. Memory Instructions</span>
         <span class="ident">Op</span>::<span class="ident">Variable</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            () <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> <span class="op">|</span>
-            (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">T</span>)
+            {<span class="ident">S</span>} () <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="kw">_</span>) <span class="op">|</span>
+            {<span class="ident">S</span>} (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>)
         },
-        <span class="ident">Op</span>::<span class="ident">ImageTexelPointer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="ident">Image</span>(<span class="ident">T</span>)), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">T</span>) },
-        <span class="ident">Op</span>::<span class="ident">Load</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op</span>::<span class="ident">Store</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="ident">T</span>) },
-        <span class="ident">Op</span>::<span class="ident">CopyMemory</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="ident">T</span>)) },
+        <span class="ident">Op</span>::<span class="ident">ImageTexelPointer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">Image</span>(<span class="ident">T</span>)), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>) },
+        <span class="ident">Op</span>::<span class="ident">Load</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op</span>::<span class="ident">Store</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">T</span>) },
+        <span class="ident">Op</span>::<span class="ident">CopyMemory</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) },
         <span class="ident">Op</span>::<span class="ident">CopyMemorySized</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="ident">Op</span>::<span class="ident">AccessChain</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">InBoundsAccessChain</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">T</span>), ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">IndexComposite</span>(<span class="ident">T</span>))
+            (<span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>), ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">IndexComposite</span>(<span class="ident">T</span>))
         },
         <span class="ident">Op</span>::<span class="ident">PtrAccessChain</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">InBoundsPtrAccessChain</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">IndexComposite</span>(<span class="ident">T</span>))
+            (<span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>), <span class="kw">_</span>, ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">IndexComposite</span>(<span class="ident">T</span>))
         },
         <span class="ident">Op</span>::<span class="ident">ArrayLength</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">GenericPtrMemSemantics</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="comment">// SPIR-V 1.4</span>
         <span class="ident">Op</span>::<span class="ident">PtrEqual</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">PtrNotEqual</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">PtrDiff</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span>
+            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span>
         },
 
         <span class="comment">// 3.37.9. Function Instructions</span>
-        <span class="ident">Op</span>::<span class="ident">Function</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">FunctionParameter</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">FunctionEnd</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Op</span>::<span class="ident">Function</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">Op</span>::<span class="ident">FunctionParameter</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">FunctionEnd</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="macro">unreachable</span><span class="macro">!</span>(
-                <span class="string">&quot;Op{:?} should be specially handled outside type_constraints&quot;</span>,
+                <span class="string">&quot;Op{:?} should be specially handled outside spirv_type_constraints&quot;</span>,
                 <span class="ident">op</span>
             );
         }
-        <span class="ident">Op</span>::<span class="ident">FunctionCall</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Function</span>(<span class="ident">T</span>, [...<span class="ident">TS</span>]), ...<span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op</span>::<span class="ident">FunctionCall</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Function</span>(<span class="ident">T</span>, <span class="ident">TS</span>), ...<span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
 
         <span class="comment">// 3.37.10. Image Instructions</span>
         <span class="ident">Op</span>::<span class="ident">SampledImage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SampledImage</span>(<span class="ident">T</span>) },
@@ -1239,9 +1363,8 @@
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">FConvert</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="ident">Op</span>::<span class="ident">QuantizeToF16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
         <span class="ident">Op</span>::<span class="ident">ConvertPtrToU</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">SatConvertSToU</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">SatConvertUToS</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">ConvertUToPtr</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">Op</span>::<span class="ident">PtrCastToGeneric</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">GenericCastToPtr</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">GenericCastToPtrExplicit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">T</span>)
-        },
+        <span class="ident">Op</span>::<span class="ident">PtrCastToGeneric</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">GenericCastToPtr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>) },
+        <span class="ident">Op</span>::<span class="ident">GenericCastToPtrExplicit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { {<span class="ident">S</span>} (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pointer</span>(<span class="ident">S</span>, <span class="ident">T</span>) },
         <span class="ident">Op</span>::<span class="ident">Bitcast</span> <span class="op">=</span><span class="op">&gt;</span> {}
 
         <span class="comment">// 3.37.12. Composite Instructions</span>
@@ -1255,10 +1378,10 @@
         },
         <span class="ident">Op</span>::<span class="ident">VectorShuffle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">Vector</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>) },
         <span class="ident">Op</span>::<span class="ident">CompositeConstruct</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (...<span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>([...<span class="ident">TS</span>]) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (...<span class="ident">Repeat</span>(<span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>))) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>)
+            (...<span class="ident">TS</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>(<span class="ident">TS</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">T</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Matrix</span>(<span class="ident">T</span>) <span class="op">|</span>
+            (...<span class="ident">Repeat</span>([<span class="ident">Either</span>(<span class="ident">Vector</span>(<span class="ident">T</span>), <span class="ident">T</span>)])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vector</span>(<span class="ident">T</span>)
         },
         <span class="ident">Op</span>::<span class="ident">CompositeExtract</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">T</span>, ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IndexComposite</span>(<span class="ident">T</span>) },
         <span class="ident">Op</span>::<span class="ident">CompositeInsert</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">IndexComposite</span>(<span class="ident">T</span>), <span class="ident">T</span>, ..<span class="comment">/*indices*/</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
@@ -1268,7 +1391,7 @@
         <span class="ident">Op</span>::<span class="ident">CopyLogical</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
             <span class="comment">// FIXME(eddyb) this is shallow right now, it should recurse instead</span>
             (<span class="ident">Array</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Array</span>(<span class="ident">T</span>) <span class="op">|</span>
-            (<span class="ident">Struct</span>([...<span class="ident">TS</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>([...<span class="ident">TS</span>])
+            (<span class="ident">Struct</span>(<span class="ident">TS</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Struct</span>(<span class="ident">TS</span>)
         },
 
         <span class="comment">// 3.37.13. Arithmetic Instructions</span>
@@ -1372,7 +1495,7 @@
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">FwidthCoarse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
 
         <span class="comment">// 3.37.17. Control-Flow Instructions</span>
-        <span class="ident">Op</span>::<span class="ident">Phi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (...<span class="ident">Repeat</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op</span>::<span class="ident">Phi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (...<span class="ident">Repeat</span>([<span class="ident">T</span>, <span class="kw">_</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
         <span class="ident">Op</span>::<span class="ident">LoopMerge</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">SelectionMerge</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">Label</span>
@@ -1382,7 +1505,7 @@
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">Kill</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="ident">Op</span>::<span class="ident">Return</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">ReturnValue</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="macro">unreachable</span><span class="macro">!</span>(
-                <span class="string">&quot;Op{:?} should be specially handled outside type_constraints&quot;</span>,
+                <span class="string">&quot;Op{:?} should be specially handled outside spirv_type_constraints&quot;</span>,
                 <span class="ident">op</span>
             );
         }
@@ -1390,9 +1513,9 @@
 
         <span class="comment">// 3.37.18. Atomic Instructions</span>
         <span class="ident">Op</span>::<span class="ident">AtomicLoad</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicIIncrement</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicIDecrement</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
         },
-        <span class="ident">Op</span>::<span class="ident">AtomicStore</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) },
+        <span class="ident">Op</span>::<span class="ident">AtomicStore</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) },
         <span class="ident">Op</span>::<span class="ident">AtomicExchange</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicIAdd</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicISub</span>
@@ -1402,14 +1525,14 @@
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicUMax</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicAnd</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicOr</span>
-        <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicXor</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicXor</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
         <span class="ident">Op</span>::<span class="ident">AtomicCompareExchange</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicCompareExchangeWeak</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+            (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
         },
         <span class="comment">// Capability: Kernel</span>
         <span class="ident">Op</span>::<span class="ident">AtomicFlagTestAndSet</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AtomicFlagClear</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="comment">// SPV_EXT_shader_atomic_float_add</span>
-        <span class="ident">Op</span>::<span class="ident">AtomicFAddEXT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op</span>::<span class="ident">AtomicFAddEXT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
 
         <span class="comment">// 3.37.19. Primitive Instructions</span>
         <span class="ident">Op</span>::<span class="ident">EmitVertex</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">EndPrimitive</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">EmitStreamVertex</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">EndStreamPrimitive</span> <span class="op">=</span><span class="op">&gt;</span> {}
@@ -1420,7 +1543,7 @@
         <span class="ident">Op</span>::<span class="ident">NamedBarrierInitialize</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">MemoryNamedBarrier</span> <span class="op">=</span><span class="op">&gt;</span> {}
 
         <span class="comment">// 3.37.21. Group and Subgroup Instructions</span>
-        <span class="ident">Op</span>::<span class="ident">GroupAsyncCopy</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> },
+        <span class="ident">Op</span>::<span class="ident">GroupAsyncCopy</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> },
         <span class="ident">Op</span>::<span class="ident">GroupWaitEvents</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="ident">Op</span>::<span class="ident">GroupAll</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">GroupAny</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="ident">Op</span>::<span class="ident">GroupBroadcast</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="kw">_</span>, <span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
@@ -1451,8 +1574,8 @@
         <span class="comment">// SPV_INTEL_subgroups</span>
         <span class="ident">Op</span>::<span class="ident">SubgroupShuffleINTEL</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">SubgroupShuffleXorINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
         <span class="ident">Op</span>::<span class="ident">SubgroupShuffleDownINTEL</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">SubgroupShuffleUpINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">T</span>, <span class="ident">T</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op</span>::<span class="ident">SubgroupBlockReadINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
-        <span class="ident">Op</span>::<span class="ident">SubgroupBlockWriteINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="ident">T</span>) },
+        <span class="ident">Op</span>::<span class="ident">SubgroupBlockReadINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> },
+        <span class="ident">Op</span>::<span class="ident">SubgroupBlockWriteINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="ident">T</span>) },
         <span class="ident">Op</span>::<span class="ident">SubgroupImageBlockReadINTEL</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">SubgroupImageBlockWriteINTEL</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="comment">// SPV_INTEL_media_block_io</span>
         <span class="ident">Op</span>::<span class="ident">SubgroupImageMediaBlockReadINTEL</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">SubgroupImageMediaBlockWriteINTEL</span> <span class="op">=</span><span class="op">&gt;</span> {}
@@ -1476,9 +1599,9 @@
         <span class="ident">Op</span>::<span class="ident">GetKernelLocalSizeForSubgroupCount</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">GetKernelMaxNumSubgroups</span> <span class="op">=</span><span class="op">&gt;</span> {}
 
         <span class="comment">// 3.37.23. Pipe Instructions</span>
-        <span class="ident">Op</span>::<span class="ident">ReadPipe</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">WritePipe</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> },
+        <span class="ident">Op</span>::<span class="ident">ReadPipe</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">WritePipe</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> { (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span> },
         <span class="ident">Op</span>::<span class="ident">ReservedReadPipe</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">ReservedWritePipe</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span>
+            (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span>
         },
         <span class="ident">Op</span>::<span class="ident">ReserveReadPipePackets</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">ReserveWritePipePackets</span>
@@ -1495,7 +1618,7 @@
         <span class="ident">Op</span>::<span class="ident">ConstantPipeStorage</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">CreatePipeFromPipeStorage</span> <span class="op">=</span><span class="op">&gt;</span> {}
         <span class="comment">// SPV_INTEL_blocking_pipes</span>
         <span class="ident">Op</span>::<span class="ident">ReadPipeBlockingINTEL</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">WritePipeBlockingINTEL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">sig</span><span class="macro">!</span> {
-            (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>)
+            (<span class="ident">Pipe</span>(<span class="ident">T</span>), <span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">T</span>), <span class="kw">_</span>, <span class="kw">_</span>)
         },
 
         <span class="comment">// 3.37.24. Non-Uniform Instructions</span>
@@ -1576,12 +1699,15 @@
         }
         <span class="comment">// SPV_EXT_demote_to_helper_invocation</span>
         <span class="ident">Op</span>::<span class="ident">DemoteToHelperInvocationEXT</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">IsHelperInvocationEXT</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="macro">reserved</span><span class="macro">!</span>(<span class="ident">SPV_EXT_demote_to_helper_invocation</span>)
+            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
+            <span class="comment">// reserved!(SPV_EXT_demote_to_helper_invocation)</span>
         }
         <span class="comment">// SPV_INTEL_shader_integer_functions2</span>
-        <span class="ident">Op</span>::<span class="ident">UCountLeadingZerosINTEL</span>
-        <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">UCountTrailingZerosINTEL</span>
-        <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AbsISubINTEL</span>
+        <span class="ident">Op</span>::<span class="ident">UCountLeadingZerosINTEL</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">UCountTrailingZerosINTEL</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="comment">// NOTE(eddyb) we actually use these despite not being in the standard yet.</span>
+            <span class="comment">// reserved!(SPV_INTEL_shader_integer_functions2)</span>
+        }
+        <span class="ident">Op</span>::<span class="ident">AbsISubINTEL</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">AbsUSubINTEL</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">IAddSatINTEL</span>
         <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">UAddSatINTEL</span>

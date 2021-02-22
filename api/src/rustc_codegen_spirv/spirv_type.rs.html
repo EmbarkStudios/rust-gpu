@@ -681,12 +681,6 @@
 <span id="678">678</span>
 <span id="679">679</span>
 <span id="680">680</span>
-<span id="681">681</span>
-<span id="682">682</span>
-<span id="683">683</span>
-<span id="684">684</span>
-<span id="685">685</span>
-<span id="686">686</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::{<span class="ident">RecursivePointeeCache</span>, <span class="ident">TyLayoutNameKey</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
@@ -750,7 +744,6 @@
         <span class="ident">element</span>: <span class="ident">Word</span>,
     },
     <span class="ident">Pointer</span> {
-        <span class="ident">storage_class</span>: <span class="ident">StorageClass</span>,
         <span class="ident">pointee</span>: <span class="ident">Word</span>,
     },
     <span class="ident">Function</span> {
@@ -884,11 +877,13 @@
                 }
                 <span class="ident">result</span>
             }
-            <span class="self">Self</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_pointer</span>(<span class="prelude-val">None</span>, <span class="ident">storage_class</span>, <span class="ident">pointee</span>);
+            <span class="self">Self</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// NOTE(eddyb) we emit `StorageClass::Generic` here, but later</span>
+                <span class="comment">// the linker will specialize the entire SPIR-V module to use</span>
+                <span class="comment">// storage classes inferred from `OpVariable`s.</span>
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>
+                    .<span class="ident">emit_global</span>()
+                    .<span class="ident">type_pointer</span>(<span class="prelude-val">None</span>, <span class="ident">StorageClass</span>::<span class="ident">Generic</span>, <span class="ident">pointee</span>);
                 <span class="comment">// no pointers to functions</span>
                 <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span>::<span class="ident">Function</span> { .. } <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
                     <span class="ident">cx</span>.<span class="ident">zombie_even_in_user_code</span>(
@@ -939,13 +934,13 @@
             <span class="kw">return</span> <span class="ident">cached</span>;
         }
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>
-                    .<span class="ident">emit_global</span>()
-                    .<span class="ident">type_pointer</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">storage_class</span>, <span class="ident">pointee</span>);
+            <span class="self">Self</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// NOTE(eddyb) we emit `StorageClass::Generic` here, but later</span>
+                <span class="comment">// the linker will specialize the entire SPIR-V module to use</span>
+                <span class="comment">// storage classes inferred from `OpVariable`s.</span>
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
+                    <span class="ident">cx</span>.<span class="ident">emit_global</span>()
+                        .<span class="ident">type_pointer</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">StorageClass</span>::<span class="ident">Generic</span>, <span class="ident">pointee</span>);
                 <span class="comment">// no pointers to functions</span>
                 <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span>::<span class="ident">Function</span> { .. } <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
                     <span class="ident">cx</span>.<span class="ident">zombie_even_in_user_code</span>(
@@ -1130,13 +1125,9 @@
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;element&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">element</span>))
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;Pointer&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
-                .<span class="ident">field</span>(<span class="string">&quot;storage_class&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">storage_class</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;pointee&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">pointee</span>))
                 .<span class="ident">finish</span>(),
             <span class="ident">SpirvType</span>::<span class="ident">Function</span> {
@@ -1289,11 +1280,8 @@
                 <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">element</span>)<span class="question-mark">?</span>;
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;]&quot;</span>)
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
-                <span class="ident">storage_class</span>,
-                <span class="ident">pointee</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;*{{{:?}}} &quot;</span>, <span class="ident">storage_class</span>)<span class="question-mark">?</span>;
+            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;*&quot;</span>)<span class="question-mark">?</span>;
                 <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">pointee</span>)
             }
             <span class="ident">SpirvType</span>::<span class="ident">Function</span> {
