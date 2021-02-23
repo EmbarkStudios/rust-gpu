@@ -228,7 +228,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
                 storage_class: optionify!($(pat!($($storage_class)*))?),
                 input_types: pat!([$($in_tys)*]),
                 output_type: optionify!($(pat!($out_ty $(($($out_ty_args)+))?))?),
-            }),*]);
+            }),*])
         };
     }
 
