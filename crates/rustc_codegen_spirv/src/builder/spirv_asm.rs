@@ -16,7 +16,7 @@ use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::bug;
 use rustc_span::source_map::Span;
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub struct InstructionTable {
     table: HashMap<&'static str, &'static rspirv::grammar::Instruction<'static>>,
@@ -135,6 +135,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         }
 
         let mut id_map = HashMap::new();
+        let mut defined_ids = HashSet::new();
         let mut id_to_type_map = HashMap::new();
         for operand in operands {
             if let InlineAsmOperandRef::In { reg: _, value } = operand {
@@ -143,7 +144,17 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
             }
         }
         for line in tokens {
-            self.codegen_asm(&mut id_map, &mut id_to_type_map, line.into_iter());
+            self.codegen_asm(
+                &mut id_map,
+                &mut defined_ids,
+                &mut id_to_type_map,
+                line.into_iter(),
+            );
+        }
+        for (id, num) in id_map {
+            if !defined_ids.contains(&num) {
+                self.err(&format!("%{} is used but not defined", id));
+            }
         }
     }
 }
@@ -229,7 +240,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
     }
 
-    fn insert_inst(&mut self, id_map: &mut HashMap<&str, Word>, inst: dr::Instruction) {
+    fn insert_inst(
+        &mut self,
+        id_map: &mut HashMap<&str, Word>,
+        defined_ids: &mut HashSet<Word>,
+        inst: dr::Instruction,
+    ) {
         // Types declared must be registered in our type system.
         let new_result_id = match inst.class.opcode {
             Op::TypeVoid => SpirvType::Void.def(self.span(), self),
@@ -316,11 +332,16 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 *value = new_result_id;
             }
         }
+        if defined_ids.remove(&inst.result_id.unwrap()) {
+            // Note this may be a duplicate insert, if the type was deduplicated.
+            defined_ids.insert(new_result_id);
+        }
     }
 
     fn codegen_asm<'a>(
         &mut self,
         id_map: &mut HashMap<&'a str, Word>,
+        defined_ids: &mut HashSet<Word>,
         id_to_type_map: &mut HashMap<Word, Word>,
         mut tokens: impl Iterator<Item = Token<'a, 'cx, 'tcx>>,
     ) where
@@ -340,7 +361,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Token::String(_) => false,
             Token::Typeof(_, _, _) => false,
         } {
-            let result_id = match self.parse_id_out(id_map, first_token) {
+            let result_id = match self.parse_id_out(id_map, defined_ids, first_token) {
                 Some(result_id) => result_id,
                 None => return,
             };
@@ -400,7 +421,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         if let Some(result_type) = instruction.result_type {
             id_to_type_map.insert(instruction.result_id.unwrap(), result_type);
         }
-        self.insert_inst(id_map, instruction);
+        self.insert_inst(id_map, defined_ids, instruction);
         if let Some(OutRegister::Place(place)) = out_register {
             self.emit()
                 .store(
@@ -656,13 +677,18 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
     fn parse_id_out<'a>(
         &mut self,
         id_map: &mut HashMap<&'a str, Word>,
+        defined_ids: &mut HashSet<Word>,
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<OutRegister<'a>> {
         match token {
             Token::Word(word) => match word.strip_prefix("%") {
-                Some(id) => Some(OutRegister::Regular(
-                    *id_map.entry(id).or_insert_with(|| self.emit().id()),
-                )),
+                Some(id) => Some(OutRegister::Regular({
+                    let num = *id_map.entry(id).or_insert_with(|| self.emit().id());
+                    if !defined_ids.insert(num) {
+                        self.err(&format!("%{} is defined more than once", id));
+                    }
+                    num
+                })),
                 None => {
                     self.err("expected ID");
                     None
