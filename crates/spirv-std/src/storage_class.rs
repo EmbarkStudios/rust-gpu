@@ -37,29 +37,6 @@ impl<'a, T: ?Sized, Binding: sealed::UniformBinding> DerefMut for Uniform<'a, T,
     }
 }
 
-impl<'a, T: Copy, Binding: sealed::UniformBinding> Uniform<'a, T, Binding> {
-    /// Load the value into memory.
-    #[inline]
-    #[allow(unused_attributes)]
-    #[spirv(really_unsafe_ignore_bitcasts)]
-    pub fn load(&self) -> T {
-        *self.ptr
-    }
-
-    /// Store the value in storage.
-    #[inline]
-    #[allow(unused_attributes)]
-    #[spirv(really_unsafe_ignore_bitcasts)]
-    pub fn store(&mut self, v: T) {
-        *self.ptr = v
-    }
-
-    /// A convenience function to load a value into memory and store it.
-    pub fn then(&mut self, then: impl FnOnce(T) -> T) {
-        self.store((then)(self.load()));
-    }
-}
-
 /// Graphics storage buffers (buffer blocks).
 ///
 /// Shared externally, readable and writable, visible across all functions
@@ -71,6 +48,16 @@ pub struct StorageBuffer<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> {
     binding: PhantomData<Binding>,
 }
 
+impl<'a, T, Binding: sealed::StorageBufferBinding> core::ops::Index<usize>
+    for StorageBuffer<'a, [T], Binding>
+{
+    type Output = T;
+
+    fn index(&self, idx: usize) -> &Self::Output {
+        &self.ptr[idx]
+    }
+}
+
 impl<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> Deref for StorageBuffer<'a, T, Binding> {
     type Target = T;
 
@@ -79,32 +66,37 @@ impl<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> Deref for StorageBuff
     }
 }
 
-impl<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> DerefMut for StorageBuffer<'a, T, Binding> {
+impl<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> DerefMut
+    for StorageBuffer<'a, T, Binding>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.ptr
     }
 }
 
-impl<'a, T: Copy, Binding: sealed::StorageBufferBinding> StorageBuffer<'a, T, Binding> {
-    /// Load the value into memory.
-    #[inline]
-    #[allow(unused_attributes)]
-    #[spirv(really_unsafe_ignore_bitcasts)]
-    pub fn load(&self) -> T {
-        *self.ptr
-    }
+/// Graphics uniform memory. OpenCL constant memory.
+///
+/// Shared externally, visible across all functions in all invocations in
+/// all work groups. Variables declared with this storage class are
+/// read-only. They may have initializers, as allowed by the client API.
+#[allow(unused_attributes)]
+#[spirv(uniform_constant)]
+pub struct UniformConstant<
+    'a,
+    T: ?Sized,
+    Binding: sealed::UniformConstantBinding = sealed::CompilerInferred,
+> {
+    ptr: &'a T,
+    binding: PhantomData<Binding>,
+}
 
-    /// Store the value in storage.
-    #[inline]
-    #[allow(unused_attributes)]
-    #[spirv(really_unsafe_ignore_bitcasts)]
-    pub fn store(&mut self, v: T) {
-        *self.ptr = v
-    }
+impl<'a, T: ?Sized, Binding: sealed::UniformConstantBinding> Deref
+    for UniformConstant<'a, T, Binding>
+{
+    type Target = T;
 
-    /// A convenience function to load a value into memory and store it.
-    pub fn then(&mut self, then: impl FnOnce(T) -> T) {
-        self.store((then)(self.load()));
+    fn deref(&self) -> &Self::Target {
+        self.ptr
     }
 }
 
@@ -125,16 +117,6 @@ impl<'a, T: ?Sized, Binding: sealed::InputBinding> Deref for Input<'a, T, Bindin
 
     fn deref(&self) -> &Self::Target {
         self.ptr
-    }
-}
-
-impl<'a, T: Copy, Binding: sealed::InputBinding> Input<'a, T, Binding> {
-    /// Load the value into memory.
-    #[inline]
-    #[allow(unused_attributes)]
-    #[spirv(really_unsafe_ignore_bitcasts)]
-    pub fn load(&self) -> T {
-        *self.ptr
     }
 }
 
@@ -162,29 +144,6 @@ impl<'a, T: ?Sized, Binding: sealed::OutputBinding> DerefMut for Output<'a, T, B
     }
 }
 
-impl<'a, T: Copy, Binding: sealed::OutputBinding> Output<'a, T, Binding> {
-    /// Load the value into memory.
-    #[inline]
-    #[allow(unused_attributes)]
-    #[spirv(really_unsafe_ignore_bitcasts)]
-    pub fn load(&self) -> T {
-        *self.ptr
-    }
-
-    /// Store the value in storage.
-    #[inline]
-    #[allow(unused_attributes)]
-    #[spirv(really_unsafe_ignore_bitcasts)]
-    pub fn store(&mut self, v: T) {
-        *self.ptr = v
-    }
-
-    /// A convenience function to load a value into memory and store it.
-    pub fn then(&mut self, then: impl FnOnce(T) -> T) {
-        self.store((then)(self.load()));
-    }
-}
-
 pub struct DescriptorSet<const SET: usize, const BINDING: usize>;
 impl<const SET: usize, const BINDING: usize> DescriptorSet<SET, BINDING> {
     pub const SET: usize = SET;
@@ -207,6 +166,9 @@ mod sealed {
         for super::DescriptorSet<SET, BINDING>
     {
     }
+    pub trait UniformConstantBinding {}
+    impl UniformConstantBinding for CompilerInferred {}
+    impl<const LOCATION: usize> UniformConstantBinding for super::Location<LOCATION> {}
     pub trait InputBinding {}
     impl InputBinding for CompilerInferred {}
     impl<const LOCATION: usize> InputBinding for super::Location<LOCATION> {}
@@ -273,13 +235,6 @@ macro_rules! storage_class {
 // Make sure the `#[spirv(<string>)]` strings stay synced with symbols.rs
 // in `rustc_codegen_spirv`.
 storage_class! {
-    /// Graphics uniform memory. OpenCL constant memory.
-    ///
-    /// Shared externally, visible across all functions in all invocations in
-    /// all work groups. Variables declared with this storage class are
-    /// read-only. They may have initializers, as allowed by the client API.
-    #[spirv(uniform_constant)] storage_class UniformConstant;
-
     /// The OpenGL "shared" storage qualifier. OpenCL local memory.
     ///
     /// Shared across all invocations within a work group. Visible across

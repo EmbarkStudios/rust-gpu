@@ -39,10 +39,10 @@ pub struct Image<
 }
 
 pub type Image2d =
-    Image<f32, dims::D2, depth::No, sample::No, format::Unknown, array::No, multisample::No>;
+    Image<f32, dims::D2, depth::No, sample::Yes, format::Unknown, array::No, multisample::No>;
 
 pub type Image2dArray =
-    Image<f32, dims::D2, depth::No, sample::No, format::Unknown, array::Yes, multisample::No>;
+    Image<f32, dims::D2, depth::No, sample::Yes, format::Unknown, array::Yes, multisample::No>;
 
 impl Image2d {
     #[spirv_std_macros::gpu_only]
@@ -66,7 +66,7 @@ impl Image2d {
     }
 }
 
-pub type StorageImage2d = 
+pub type StorageImage2d =
     Image<f32, dims::D2, depth::No, sample::No, format::Unknown, array::No, multisample::No>;
 
 impl StorageImage2d {
