@@ -103,7 +103,7 @@ impl<'tcx> CodegenCx<'tcx> {
             arguments: vec![],
         }
         .def(span, self);
-        let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
+        let (entry_func_return_type, entry_func_args) = match self.lookup_type(entry_func.ty) {
             SpirvType::Function {
                 return_type,
                 arguments,
@@ -178,7 +178,7 @@ impl<'tcx> CodegenCx<'tcx> {
             arguments[len_idx as usize] =
                 emit.array_length(len_t, None, ptr_struct_rta, 0).unwrap();
         }
-        emit.function_call(entry_func_return, None, entry_func.def_cx(self), arguments)
+        emit.function_call(entry_func_return_type, None, entry_func.def_cx(self), arguments)
             .unwrap();
         emit.ret().unwrap();
         emit.end_function().unwrap();
