@@ -1955,6 +1955,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             assert_ty_eq!(self, argument.ty, argument_type);
         }
         let llfn_def = llfn.def(self);
+
         let libm_intrinsic = self.libm_intrinsics.borrow().get(&llfn_def).cloned();
         if let Some(libm_intrinsic) = libm_intrinsic {
             let result = self.call_libm_intrinsic(libm_intrinsic, result_type, args);
@@ -1974,6 +1975,128 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // needing to materialize `&core::panic::Location` or `format_args!`.
             self.abort();
             self.undef(result_type)
+        } else if self.internal_buffer_load_id.borrow().contains(&llfn_def) {
+            // simple structs are returned as values, complex ones are returned as out parameters
+            if let SpirvType::Pointer { .. } = self.lookup_type(args[0].ty) {
+                let pointer = self.load(args[0], Align::from_bytes(0).unwrap());
+                let data = self.lookup_type(pointer.ty);
+
+                // jb-todo: a large chunk of these types should just always be generated
+                let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
+
+                let runtime_array_uint =
+                    SpirvType::RuntimeArray { element: uint_ty }.def(rustc_span::DUMMY_SP, self);
+
+                let buffer_struct = SpirvType::Adt {
+                    def_id: None,
+                    size: Some(Size::from_bytes(4)),
+                    align: Align::from_bytes(4).unwrap(),
+                    field_types: vec![runtime_array_uint],
+                    field_offsets: vec![],
+                    field_names: None,
+                    is_block: false,
+                }
+                .def(rustc_span::DUMMY_SP, self);
+
+                let runtime_array_struct = SpirvType::RuntimeArray {
+                    element: buffer_struct,
+                }
+                .def(rustc_span::DUMMY_SP, self);
+
+                let uniform_ptr_runtime_array = SpirvType::Pointer {
+                    pointee: runtime_array_struct,
+                }
+                .def(rustc_span::DUMMY_SP, self);
+
+                let uniform_uint_ptr =
+                    SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
+
+                let zero = self.constant_int(uint_ty, 0).def(self);
+
+                let mut emit_global = self.emit_global();
+                let buffer = emit_global
+                    .variable(uniform_ptr_runtime_array, None, StorageClass::Uniform, None)
+                    .with_type(uniform_ptr_runtime_array)
+                    .def(self);
+
+                emit_global.decorate(
+                    buffer,
+                    rspirv::spirv::Decoration::DescriptorSet,
+                    std::iter::once(Operand::LiteralInt32(0)),
+                );
+                emit_global.decorate(
+                    buffer,
+                    rspirv::spirv::Decoration::Binding,
+                    std::iter::once(Operand::LiteralInt32(0)),
+                );
+                drop(emit_global);
+
+                let bindless_idx = args[1].def(self);
+                let offset_arg = args[2].def(self);
+                let mut composite_components = vec![];
+
+                let two = self.constant_int(uint_ty, 2).def(self);
+
+                let dword_offset = self
+                    .emit()
+                    .shift_right_arithmetic(uint_ty, None, offset_arg, two)
+                    .unwrap();
+
+                match &data {
+                    &SpirvType::Adt {
+                        ref field_types,
+                        ref field_offsets,
+                        ..
+                    } => {
+                        for (ty, offset) in field_types.iter().zip(field_offsets.iter()) {
+                            // assert!(offset % 4 == 0, "Field elements need to be 4 byte aligned");
+                            // jb-todo: need to check size is a multiple of 4 as well
+                            // jb-todo: need to handle for eg. 64-bit types
+                            // jb-todo: need to handle vector types and nested ADTs
+                            let offset = if offset > &Size::ZERO {
+                                let element_offset = self
+                                    .constant_int(uint_ty, offset.bytes() as u64 / 4)
+                                    .def(self);
+
+                                self.emit()
+                                    .i_add(uint_ty, None, dword_offset, element_offset)
+                                    .unwrap()
+                            } else {
+                                dword_offset
+                            };
+
+                            let indices = vec![bindless_idx, zero, offset];
+
+                            let result = self
+                                .emit()
+                                .access_chain(uniform_uint_ptr, None, buffer, indices)
+                                .unwrap();
+
+                            let load_res = self
+                                .emit()
+                                .load(uint_ty, None, result, None, std::iter::empty())
+                                .unwrap();
+
+                            let bitcast_res = self.emit().bitcast(*ty, None, load_res).unwrap();
+
+                            composite_components.push(bitcast_res as u32);
+                        }
+
+                        let adt = data.def(rustc_span::DUMMY_SP, self);
+
+                        let constructed_adt = self
+                            .emit()
+                            .composite_construct(adt, None, composite_components)
+                            .unwrap()
+                            .with_type(adt);
+
+                        return self.store(constructed_adt, args[0], Align::from_bytes(0).unwrap());
+                    }
+                    _ => {}
+                }
+            }
+
+            bug!("Unhandled case for `internal_buffer_load` intrinsic");
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()

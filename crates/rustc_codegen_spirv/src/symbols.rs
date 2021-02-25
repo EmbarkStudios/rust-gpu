@@ -342,6 +342,7 @@ impl Symbols {
             ("flat", SpirvAttribute::Flat),
             ("sampled_image", SpirvAttribute::SampledImage),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
+            ("internal_buffer_load", SpirvAttribute::InternalBufferLoad),
         ]
         .iter()
         .cloned();
@@ -474,6 +475,7 @@ pub enum SpirvAttribute {
     Block,
     Flat,
     UnrollLoops,
+    InternalBufferLoad,
 }
 
 // FIXME(eddyb) maybe move this to `attr`?

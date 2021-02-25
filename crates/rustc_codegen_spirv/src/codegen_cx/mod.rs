@@ -30,7 +30,7 @@ use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
 
@@ -63,6 +63,7 @@ pub struct CodegenCx<'tcx> {
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
     pub panic_fn_id: Cell<Option<Word>>,
+    pub internal_buffer_load_id: RefCell<HashSet<Word>>,
     /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
     pub panic_bounds_check_fn_id: Cell<Option<Word>>,
 
@@ -118,6 +119,7 @@ impl<'tcx> CodegenCx<'tcx> {
             instruction_table: InstructionTable::new(),
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
+            internal_buffer_load_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
         }

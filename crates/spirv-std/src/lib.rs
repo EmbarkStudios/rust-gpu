@@ -44,6 +44,7 @@
 pub extern crate spirv_std_macros;
 
 pub mod arch;
+pub mod bindless;
 pub mod derivative;
 pub mod integer;
 pub mod scalar;
