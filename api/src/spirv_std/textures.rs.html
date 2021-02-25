@@ -241,11 +241,11 @@
 <span class="kw">impl</span> <span class="ident">StorageImage2d</span> {
     <span class="doccomment">/// Read a texel from an image without a sampler.</span>
     <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">V</span>, <span class="ident">V2</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coordinate</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V2</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">V</span>, <span class="ident">V2</span>, <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">usize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coordinate</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V2</span>
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">Integer</span>,
-        <span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
-        <span class="ident">V2</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>,
+        <span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">N</span><span class="op">&gt;</span>,
+        <span class="ident">V2</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">N</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">V2</span>::<span class="ident">default</span>();
 
@@ -266,11 +266,11 @@
 
     <span class="doccomment">/// Write a texel to an image without a sampler.</span>
     <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">V</span>, <span class="ident">V2</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coordinate</span>: <span class="ident">V</span>, <span class="ident">texels</span>: <span class="ident">V2</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">V</span>, <span class="ident">V2</span>, <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">usize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coordinate</span>: <span class="ident">V</span>, <span class="ident">texels</span>: <span class="ident">V2</span>)
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">Integer</span>,
-        <span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
-        <span class="ident">V2</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>,
+        <span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">N</span><span class="op">&gt;</span>,
+        <span class="ident">V2</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">N</span><span class="op">&gt;</span>,
     {
         <span class="kw">unsafe</span> {
             <span class="macro">asm</span><span class="macro">!</span> {
