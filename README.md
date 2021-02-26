@@ -93,9 +93,9 @@ Right now because the project is in a very early state of development, we might 
 There are a few different components to this repo:
 
 - [rfcs](docs/src/rfcs) for in-depth discussion and specs.
-- [rustc_codegen_spirv](rustc_codegen_spirv) for the compiler itself.
-- [spirv-std](spirv-std) for GPU intrinsics, types, and other library items used by GPU crates.
-- [spirv-builder](spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
+- [rustc_codegen_spirv](crates/rustc_codegen_spirv) for the compiler itself.
+- [spirv-std](crates/spirv-std) for GPU intrinsics, types, and other library items used by GPU crates.
+- [spirv-builder](crates/spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
 
 ## Contributing
 
