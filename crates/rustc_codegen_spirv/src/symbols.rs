@@ -584,7 +584,7 @@ fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribu
         )
         .collect::<Option<Vec<_>>>()?;
     let dim = match arg_values[0].kind {
-        LitKind::Str(dim, _) => match dim.with(|s| s.parse()) {
+        LitKind::Str(dim, _) => match dim.as_str().parse() {
             Ok(dim) => dim,
             Err(()) => {
                 cx.tcx.sess.span_err(args[0].span(), "invalid dim value");
@@ -614,7 +614,7 @@ fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribu
     let multisampled = parse_lit(3, "multisampled")?;
     let sampled = parse_lit(4, "sampled")?;
     let image_format = match arg_values[5].kind {
-        LitKind::Str(image_format, _) => match image_format.with(|s| s.parse()) {
+        LitKind::Str(image_format, _) => match image_format.as_str().parse() {
             Ok(image_format) => image_format,
             Err(()) => {
                 cx.tcx
@@ -632,7 +632,7 @@ fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribu
     };
     let access_qualifier = if args.len() == 7 {
         Some(match arg_values[6].kind {
-            LitKind::Str(access_qualifier, _) => match access_qualifier.with(|s| s.parse()) {
+            LitKind::Str(access_qualifier, _) => match access_qualifier.as_str().parse() {
                 Ok(access_qualifier) => access_qualifier,
                 Err(()) => {
                     cx.tcx

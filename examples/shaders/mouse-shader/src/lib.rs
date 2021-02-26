@@ -17,6 +17,9 @@ use spirv_std::storage_class::{Input, Output, PushConstant};
 #[cfg(target_arch = "spirv")]
 use spirv_std::num_traits::Float;
 
+#[cfg(not(target_arch = "spirv"))]
+use spirv_std::spirv_std_macros::spirv;
+
 trait Shape: Copy {
     /// Distances indicate where the point is in relation to the shape:
     /// * negative distance: the point is "inside" the shape
