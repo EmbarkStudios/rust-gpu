@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">2.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">3.</strong> Building Rust-GPU</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">4.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">5.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">6.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">7.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building Rust-GPU</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.2.</strong> Minimizing bugs in SPIR-V</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -173,53 +173,6 @@ check out the <a href="./writing-shader-crates.html"><em>&quot;Writing Shader Cr
 more information on how to get started.</p>
 <p>Alternatively if you're looking to contribute to the <code>rust-gpu</code> project, have
 a look at <a href="./building-rust-gpu.html"><em>&quot;Building Rust-GPU&quot;</em></a> section.</p>
-<h1><a class="header" href="#attribute-syntax" id="attribute-syntax">Attribute syntax</a></h1>
-<p>rust-gpu introduces a number of SPIR-V related attributes to express behavior specific to SPIR-V not exposed in the base rust language.</p>
-<p>There are a few different categories of attributes:</p>
-<h2><a class="header" href="#entry-points" id="entry-points">Entry points</a></h2>
-<p>When declaring an entry point to your shader, SPIR-V needs to know what type of function it is. For example, it could be a fragment shader, or vertex shader. Specifying this attribute is also the way rust-gpu knows that you would like to export a function as an entry point, no other functions are exported.</p>
-<p>Example:</p>
-<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
-fn main() { }
-</code></pre></pre>
-<p>Common values are <code>#[spirv(fragment)]</code> and <code>#[spirv(vertex)]</code>. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.ExecutionModel.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
-<h2><a class="header" href="#builtins" id="builtins">Builtins</a></h2>
-<p>When declaring inputs and outputs, sometimes you want to declare it as a &quot;builtin&quot;. This means many things, but one example is <code>gl_Position</code> from glsl - the GPU assigns inherent meaning to the variable and uses it for placing the vertex in clip space. The equivalent in rust-gpu is called <code>position</code>.</p>
-<p>Example:</p>
-<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
-fn main(
-    #[spirv(position)] mut out_pos: Output&lt;Vec4&gt;,
-) { }
-</code></pre></pre>
-<p>Common values are <code>#[spirv(position)]</code>, <code>#[spirv(vertex_id)]</code>, and many more. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.BuiltIn.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
-<h2><a class="header" href="#descriptor-set-and-binding" id="descriptor-set-and-binding">Descriptor set and binding</a></h2>
-<p>A SPIR-V shader must declare where uniform variables are located with explicit indices that match up with CPU-side code. This can be done with the <code>descriptor_set</code> and <code>binding</code> attributes. Note that <code>descriptor_set = 0</code> is reserved for future use, and cannot be used.</p>
-<p>Example:</p>
-<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
-fn main(
-    #[spirv(descriptor_set = 2, binding = 5)] mut var: Uniform&lt;Vec4&gt;,
-) { }
-</code></pre></pre>
-<p>Both descriptor_set and binding take an integer argument that specifies the uniform's index.</p>
-<h2><a class="header" href="#block" id="block">Block</a></h2>
-<p>This attribute is a temporary quick fix before we implement a more fully-featured binding model. If you get validation errors about missing a Block decoration on a struct due to being used as uniform block data, try adding this attribute to the struct definition. If you get errors around the struct definition not being an aggregate, but rather the type of the field, try adding <code>#[repr(C)]</code> to the struct definition.</p>
-<p>Example:</p>
-<pre><pre class="playground"><code class="language-rust">#[spirv(block)]
-struct Thing {
-    a: Vec4,
-    b: Vec4,
-    c: Vec4,
-}
-
-#[spirv(fragment)]
-fn main(obj: PushConstant&lt;ShaderConstants&gt;) { }
-</code></pre></pre>
-<h2><a class="header" href="#flat" id="flat">Flat</a></h2>
-<p>The flat attribute corresponds to the flat keyword in glsl - in other words, the data is not interpolated across the triangle when invoking the fragment shader.</p>
-<p>Example:</p>
-<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
-fn main(#[spirv(flat)] obj: Input&lt;u32&gt;) { }
-</code></pre></pre>
 <h1><a class="header" href="#building-rust-gpu" id="building-rust-gpu">Building Rust-GPU</a></h1>
 <h2><a class="header" href="#getting-started" id="getting-started">Getting started</a></h2>
 <ol>
@@ -247,73 +200,61 @@ fn main(#[spirv(flat)] obj: Input&lt;u32&gt;) { }
     --no-default-features
 </code></pre>
 <p>You should see <code>warning: use-installed-tools feature on, skipping compilation of C++ code</code> during the compilation, but otherwise the build will function just the same as if you compiled the C++ code, with the exception that it will fail if you don't have SPIRV-Tools installed correctly.</p>
-<h1><a class="header" href="#inline-assembly" id="inline-assembly">Inline Assembly</a></h1>
-<p>Rust-GPU has support for inline SPIR-V assembly. In addition the backend
-provides several conveniences for writing inline assembly that are documented
-below. For more information on specific instruction behaviour and syntax, please
-refer to the <a href="https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html">SPIR-V specification</a>.</p>
-<h3><a class="header" href="#basic-syntax--usage" id="basic-syntax--usage">Basic syntax &amp; usage.</a></h3>
-<p>You can write inline assembly using the new <code>asm!</code> macro available with the
-<code>asm</code> feature on nightly. Refer to the <a href="https://doc.rust-lang.org/unstable-book/library-features/asm.html">Rust unstable book</a> for more
-information on how to use the macro.</p>
-<p>Non-ID arguments are written as-is, e.g.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>asm! {
-    &quot;OpCapability DerivativeControl&quot;
-}
-<span class="boring">}
-</span></code></pre></pre>
-<p>ID based arguments are prefixed with <code>%</code> and their name. <code>Result&lt;id&gt;</code>s accessed
-with a <code>=</code> and a ID on the left hand side of the expression. E.g.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>let vector = spirv_std::glam::Vec2::new(1.0, 0.0);
-let mut result = f32::default();
+<h1><a class="header" href="#minimizing-bugs-in-spir-v" id="minimizing-bugs-in-spir-v">Minimizing bugs in SPIR-V</a></h1>
+<p>When debugging problems with SPIR-V generated by rust-gpu, you occasionally need
+to reduce the SPIR-V in order to make it easily shareable with others. We've
+created a short guide on how to do that.</p>
+<h2><a class="header" href="#prerequisites" id="prerequisites">Prerequisites</a></h2>
+<p>In order to build and validate SPIR-V you're going to install <a href="https://github.com/KhronosGroup/SPIRV-Tools#downloads">SPIR-V
+tools</a>.</p>
+<h2><a class="header" href="#spir-v-template" id="spir-v-template">SPIR-V Template</a></h2>
+<p>SPIR-V has some amount of required boilerplate in order to be considered valid,
+we've created a small template to help to get started. This file creates a
+single empty vertex entry-point with a single floating-point constant.</p>
+<pre><code class="language-spirv">; bug.spvasm
+OpCapability Shader
+OpCapability VulkanMemoryModel
+OpMemoryModel Logical Vulkan
 
-asm! {
-    &quot;%vector = OpLoad _ {vector}&quot;,
-    &quot;%element = OpVectorExtractDynamic _ %vector {index}&quot;,
-    &quot;OpStore {element} %element&quot;,
-    vector = in(reg) &amp;vector,
-    index = in(reg) index,
-    element = in(reg) &amp;mut result
-}
-<span class="boring">}
-</span></code></pre></pre>
-<p><code>asm!</code> only accepts integers, floats, SIMD vectors, pointers and
-function pointers as input variables. However you can have the pointer point
-to a generic variable, so you can write generic assembly code like so.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use spirv_std::{scalar::Scalar, vector::Vector};
+; == Entry-points ==
+OpEntryPoint Vertex %vert_fn &quot;vert&quot;
 
-// This fn is available as `spirv_std::arch::vector_extract_dynamic`
-pub unsafe fn vector_extract_dynamic&lt;T: Scalar, V: Vector&lt;T&gt;&gt;(vector: V, index: usize) -&gt; T {
-    let mut result = T::default();
+; == Types ==
+%void = OpTypeVoid
+%f32 = OpTypeFloat 32
 
-    asm! {
-        &quot;%vector = OpLoad _ {vector}&quot;,
-        &quot;%element = OpVectorExtractDynamic _ %vector {index}&quot;,
-        &quot;OpStore {element} %element&quot;,
-        vector = in(reg) &amp;vector,
-        index = in(reg) index,
-        element = in(reg) &amp;mut result
-    }
+; Function Types
+%void_fn = OpTypeFunction %void
 
-    result
-}
-<span class="boring">}
-</span></code></pre></pre>
-<h3><a class="header" href="#additional-syntax" id="additional-syntax">Additional syntax</a></h3>
-<table><thead><tr><th>Syntax</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>%&lt;name&gt;</code></td><td>Used to refer to an abstract ID, every unique <code>&lt;name&gt;</code> use generates a new ID.</td></tr>
-<tr><td><code>typeof{&lt;variable&gt;}</code></td><td>Returns the type of <code>variable</code></td></tr>
-<tr><td><code>_</code> (underscore)</td><td>Equivalent to <code>typeof{&lt;variable&gt;}</code>, but uses inference to determine the variable</td></tr>
-</tbody></table>
+; == Constants ==
+%f32_1 = OpConstant %f32 1
+
+; == Functions ==
+%vert_fn = OpFunction %void None %void_fn
+  %block = OpLabel
+    OpReturn
+OpFunctionEnd
+</code></pre>
+<h2><a class="header" href="#steps" id="steps">Steps</a></h2>
+<ol>
+<li>
+<p>Assemble your spirv with <code>spirv-as ./bug.spvasm</code>, this will produce a
+<code>out.spv</code> file containing the assembled code.</p>
+</li>
+<li>
+<p>The assembled code also needs to be validated with <code>spirv-val out.spv</code></p>
+</li>
+<li>
+<p>Once the code has been validated as having no issues, you can use
+<code>spirv-cross</code> to compile the code to various outputs.</p>
+<ul>
+<li><strong>GLSL</strong> <code>spirv-cross out.spv</code></li>
+<li><strong>HLSL</strong> <code>spirv-cross --hlsl out.spv</code></li>
+<li><strong>MSL</strong> <code>spirv-cross --msl out.spv</code></li>
+<li><strong>Vulkan GLSL</strong> <code>spirv-cross -V out.spv</code></li>
+</ul>
+</li>
+</ol>
 <h1><a class="header" href="#platform-support" id="platform-support">Platform Support</a></h1>
 <p>The <code>rust-gpu</code> project currently supports a limited number of platforms and graphics APIs. Right now we're not distributing build artifacts and we're primarily focused on the development of the project, so this is based on the current <code>main</code> branch. There are a lot of different configurations and hardware out there to support, this document is intended to document what is currently supported, what we intend to support, and what isn't supported. Over time as the project stabilises and our CI improves, more platforms and APIs will be supported and tested. Currently support for each topic is divided into the following three categories.</p>
 <ul>
@@ -430,6 +371,120 @@ build-std=[&quot;core&quot;]
 </code></pre>
 <p>Now you should have <code>&lt;project_name&gt;.spv</code> SPIR-V file in <code>target/debug</code> that you
 can give to a renderer.</p>
+<h1><a class="header" href="#attribute-syntax" id="attribute-syntax">Attribute syntax</a></h1>
+<p>rust-gpu introduces a number of SPIR-V related attributes to express behavior specific to SPIR-V not exposed in the base rust language.</p>
+<p>There are a few different categories of attributes:</p>
+<h2><a class="header" href="#entry-points" id="entry-points">Entry points</a></h2>
+<p>When declaring an entry point to your shader, SPIR-V needs to know what type of function it is. For example, it could be a fragment shader, or vertex shader. Specifying this attribute is also the way rust-gpu knows that you would like to export a function as an entry point, no other functions are exported.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
+fn main() { }
+</code></pre></pre>
+<p>Common values are <code>#[spirv(fragment)]</code> and <code>#[spirv(vertex)]</code>. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.ExecutionModel.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
+<h2><a class="header" href="#builtins" id="builtins">Builtins</a></h2>
+<p>When declaring inputs and outputs, sometimes you want to declare it as a &quot;builtin&quot;. This means many things, but one example is <code>gl_Position</code> from glsl - the GPU assigns inherent meaning to the variable and uses it for placing the vertex in clip space. The equivalent in rust-gpu is called <code>position</code>.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
+fn main(
+    #[spirv(position)] mut out_pos: Output&lt;Vec4&gt;,
+) { }
+</code></pre></pre>
+<p>Common values are <code>#[spirv(position)]</code>, <code>#[spirv(vertex_id)]</code>, and many more. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.BuiltIn.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
+<h2><a class="header" href="#descriptor-set-and-binding" id="descriptor-set-and-binding">Descriptor set and binding</a></h2>
+<p>A SPIR-V shader must declare where uniform variables are located with explicit indices that match up with CPU-side code. This can be done with the <code>descriptor_set</code> and <code>binding</code> attributes. Note that <code>descriptor_set = 0</code> is reserved for future use, and cannot be used.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
+fn main(
+    #[spirv(descriptor_set = 2, binding = 5)] mut var: Uniform&lt;Vec4&gt;,
+) { }
+</code></pre></pre>
+<p>Both descriptor_set and binding take an integer argument that specifies the uniform's index.</p>
+<h2><a class="header" href="#block" id="block">Block</a></h2>
+<p>This attribute is a temporary quick fix before we implement a more fully-featured binding model. If you get validation errors about missing a Block decoration on a struct due to being used as uniform block data, try adding this attribute to the struct definition. If you get errors around the struct definition not being an aggregate, but rather the type of the field, try adding <code>#[repr(C)]</code> to the struct definition.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust">#[spirv(block)]
+struct Thing {
+    a: Vec4,
+    b: Vec4,
+    c: Vec4,
+}
+
+#[spirv(fragment)]
+fn main(obj: PushConstant&lt;ShaderConstants&gt;) { }
+</code></pre></pre>
+<h2><a class="header" href="#flat" id="flat">Flat</a></h2>
+<p>The flat attribute corresponds to the flat keyword in glsl - in other words, the data is not interpolated across the triangle when invoking the fragment shader.</p>
+<p>Example:</p>
+<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
+fn main(#[spirv(flat)] obj: Input&lt;u32&gt;) { }
+</code></pre></pre>
+<h1><a class="header" href="#inline-assembly" id="inline-assembly">Inline Assembly</a></h1>
+<p>Rust-GPU has support for inline SPIR-V assembly. In addition the backend
+provides several conveniences for writing inline assembly that are documented
+below. For more information on specific instruction behaviour and syntax, please
+refer to the <a href="https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html">SPIR-V specification</a>.</p>
+<h3><a class="header" href="#basic-syntax--usage" id="basic-syntax--usage">Basic syntax &amp; usage.</a></h3>
+<p>You can write inline assembly using the new <code>asm!</code> macro available with the
+<code>asm</code> feature on nightly. Refer to the <a href="https://doc.rust-lang.org/unstable-book/library-features/asm.html">Rust unstable book</a> for more
+information on how to use the macro.</p>
+<p>Non-ID arguments are written as-is, e.g.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asm! {
+    &quot;OpCapability DerivativeControl&quot;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>ID based arguments are prefixed with <code>%</code> and their name. <code>Result&lt;id&gt;</code>s accessed
+with a <code>=</code> and a ID on the left hand side of the expression. E.g.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let vector = spirv_std::glam::Vec2::new(1.0, 0.0);
+let mut result = f32::default();
+
+asm! {
+    &quot;%vector = OpLoad _ {vector}&quot;,
+    &quot;%element = OpVectorExtractDynamic _ %vector {index}&quot;,
+    &quot;OpStore {element} %element&quot;,
+    vector = in(reg) &amp;vector,
+    index = in(reg) index,
+    element = in(reg) &amp;mut result
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p><code>asm!</code> only accepts integers, floats, SIMD vectors, pointers and
+function pointers as input variables. However you can have the pointer point
+to a generic variable, so you can write generic assembly code like so.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use spirv_std::{scalar::Scalar, vector::Vector};
+
+// This fn is available as `spirv_std::arch::vector_extract_dynamic`
+pub unsafe fn vector_extract_dynamic&lt;T: Scalar, V: Vector&lt;T&gt;&gt;(vector: V, index: usize) -&gt; T {
+    let mut result = T::default();
+
+    asm! {
+        &quot;%vector = OpLoad _ {vector}&quot;,
+        &quot;%element = OpVectorExtractDynamic _ %vector {index}&quot;,
+        &quot;OpStore {element} %element&quot;,
+        vector = in(reg) &amp;vector,
+        index = in(reg) index,
+        element = in(reg) &amp;mut result
+    }
+
+    result
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3><a class="header" href="#additional-syntax" id="additional-syntax">Additional syntax</a></h3>
+<table><thead><tr><th>Syntax</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>%&lt;name&gt;</code></td><td>Used to refer to an abstract ID, every unique <code>&lt;name&gt;</code> use generates a new ID.</td></tr>
+<tr><td><code>typeof{&lt;variable&gt;}</code></td><td>Returns the type of <code>variable</code></td></tr>
+<tr><td><code>_</code> (underscore)</td><td>Equivalent to <code>typeof{&lt;variable&gt;}</code>, but uses inference to determine the variable</td></tr>
+</tbody></table>
 <h1><a class="header" href="#summary" id="summary">Summary</a></h1>
 <p>We aught to discuss how we want resource binding to work on a language syntax level.</p>
 <h1><a class="header" href="#explanation" id="explanation">Explanation</a></h1>
