@@ -511,10 +511,6 @@ impl RenderBase {
         RenderSync::new(self)
     }
 
-    pub fn create_render_command_pool(&self) -> RenderCommandPool {
-        RenderCommandPool::new(self)
-    }
-
     pub fn into_ctx(self) -> RenderCtx {
         RenderCtx::from_base(self)
     }
