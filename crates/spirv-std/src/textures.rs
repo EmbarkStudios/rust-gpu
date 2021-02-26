@@ -95,16 +95,14 @@ impl StorageImage2d {
         V: Vector<I, N>,
         V2: Vector<f32, N>,
     {
-        unsafe {
-            asm! {
-                "%image = OpLoad _ {this}",
-                "%coordinate = OpLoad _ {coordinate}",
-                "%texels = OpLoad _ {texels}",
-                "OpImageWrite %image %coordinate %texels",
-                this = in(reg) self,
-                coordinate = in(reg) &coordinate,
-                texels = in(reg) &texels,
-            }
+        asm! {
+            "%image = OpLoad _ {this}",
+            "%coordinate = OpLoad _ {coordinate}",
+            "%texels = OpLoad _ {texels}",
+            "OpImageWrite %image %coordinate %texels",
+            this = in(reg) self,
+            coordinate = in(reg) &coordinate,
+            texels = in(reg) &texels,
         }
     }
 }
