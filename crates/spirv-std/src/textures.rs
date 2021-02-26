@@ -89,7 +89,7 @@ impl StorageImage2d {
 
     /// Write a texel to an image without a sampler.
     #[spirv_std_macros::gpu_only]
-    pub fn write<I, V, V2, const N: usize>(&self, coordinate: V, texels: V2)
+    pub unsafe fn write<I, V, V2, const N: usize>(&self, coordinate: V, texels: V2)
     where
         I: Integer,
         V: Vector<I, N>,
