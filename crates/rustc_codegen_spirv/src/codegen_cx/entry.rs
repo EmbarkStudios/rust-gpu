@@ -145,8 +145,12 @@ impl<'tcx> CodegenCx<'tcx> {
             if let SpirvType::Pointer { pointee } = self.lookup_type(arg) {
                 let spv_ty = self.lookup_type(pointee);
                 // TODO check if the RTA elem type is an Image and do not generate a len
-                if let SpirvType::RuntimeArray { element: _ } = spv_ty {
+                if let SpirvType::RuntimeArray { element } = spv_ty {
                     let len_t = *entry_args.next().unwrap();
+                    if let SpirvType::Image {..} = self.lookup_type(element) {
+                        arguments.push(u32::MAX);
+                        continue;
+                    }
                     let struct_rta_t = SpirvType::Adt {
                         def_id: None,
                         align: spv_ty.alignof(self),

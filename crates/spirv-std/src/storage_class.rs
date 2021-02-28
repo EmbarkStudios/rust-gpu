@@ -158,10 +158,8 @@ impl<const LOCATION: usize> Location<LOCATION> {
 mod sealed {
     pub struct CompilerInferred;
     pub trait UniformBinding {}
-    //impl UniformBinding for CompilerInferred {}
     impl<const SET: usize, const BINDING: usize> UniformBinding for super::DescriptorSet<SET, BINDING> {}
     pub trait StorageBufferBinding {}
-    //impl StorageBufferBinding for CompilerInferred {}
     impl<const SET: usize, const BINDING: usize> StorageBufferBinding
         for super::DescriptorSet<SET, BINDING>
     {
@@ -169,6 +167,7 @@ mod sealed {
     pub trait UniformConstantBinding {}
     impl UniformConstantBinding for CompilerInferred {}
     impl<const LOCATION: usize> UniformConstantBinding for super::Location<LOCATION> {}
+    impl<const SET: usize, const BINDING: usize> UniformConstantBinding for super::DescriptorSet<SET, BINDING> {}
     pub trait InputBinding {}
     impl InputBinding for CompilerInferred {}
     impl<const LOCATION: usize> InputBinding for super::Location<LOCATION> {}
