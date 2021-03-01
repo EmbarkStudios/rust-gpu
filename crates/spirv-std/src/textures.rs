@@ -67,7 +67,7 @@ impl StorageImage2d {
     pub fn read<I, V, V2, const N: usize>(&self, coordinate: V) -> V2
     where
         I: Integer,
-        V: Vector<I, N>,
+        V: Vector<I, 2>,
         V2: Vector<f32, N>,
     {
         let mut result = V2::default();
@@ -92,7 +92,7 @@ impl StorageImage2d {
     pub fn write<I, V, V2, const N: usize>(&self, coordinate: V, texels: V2)
     where
         I: Integer,
-        V: Vector<I, N>,
+        V: Vector<I, 2>,
         V2: Vector<f32, N>,
     {
         unsafe {
