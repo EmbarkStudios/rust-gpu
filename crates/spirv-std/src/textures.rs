@@ -64,11 +64,10 @@ pub struct StorageImage2d {
 impl StorageImage2d {
     /// Read a texel from an image without a sampler.
     #[spirv_std_macros::gpu_only]
-    pub fn read<I, V, V2, const N: usize>(&self, coordinate: V) -> V2
+    pub fn read<V, V2, const N: usize>(&self, coordinate: V) -> V2
     where
-        I: Integer,
-        V: Vector<I, N>,
-        V2: Vector<f32, 2>,
+        V: Vector<f32, 2>,
+        V2: Vector<f32, N>,
     {
         let mut result = V2::default();
 
@@ -89,11 +88,10 @@ impl StorageImage2d {
 
     /// Write a texel to an image without a sampler.
     #[spirv_std_macros::gpu_only]
-    pub fn write<I, V, V2, const N: usize, const N2: usize>(&self, coordinate: V, texels: V2)
+    pub fn write<V, V2, const N: usize>(&self, coordinate: V, texels: V2)
     where
-        I: Integer,
-        V: Vector<I, N>,
-        V2: Vector<f32, N2>,
+        V: Vector<f32, 2>,
+        V2: Vector<f32, N>,
     {
         unsafe {
             asm! {
