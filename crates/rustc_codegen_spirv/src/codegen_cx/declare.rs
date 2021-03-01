@@ -114,8 +114,8 @@ impl<'tcx> CodegenCx<'tcx> {
         for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
             match attr {
                 SpirvAttribute::Entry(entry) => {
-                    let crate_relative_name = instance.to_string();
-                    self.entry_stub(&instance, &fn_abi, declared, crate_relative_name, entry)
+                    let entry_name = entry.name.as_ref().map(ToString::to_string).unwrap_or_else(|| instance.to_string());
+                    self.entry_stub(&instance, &fn_abi, declared, entry_name, entry)
                 }
                 SpirvAttribute::UnrollLoops => {
                     self.unroll_loops_decorations

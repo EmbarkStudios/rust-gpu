@@ -29,6 +29,16 @@ pub fn main() {
 }
 
 #[test]
+fn custom_entry_point() {
+    val(r#"
+#[allow(unused_attributes)]
+#[spirv(fragment(entry_point="hello_world"))]
+pub fn main() {
+}
+"#);
+}
+
+#[test]
 // blocked on: https://github.com/EmbarkStudios/rust-gpu/issues/69
 #[ignore]
 fn no_dce() {

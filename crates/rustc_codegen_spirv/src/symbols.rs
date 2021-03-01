@@ -33,6 +33,7 @@ pub struct Symbols {
     pub spirv13: Symbol,
     pub spirv14: Symbol,
     pub spirv15: Symbol,
+    pub entry_point: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
     image_type: Symbol,
@@ -370,6 +371,7 @@ impl Symbols {
         Self {
             fmt_decimal: Symbol::intern("fmt_decimal"),
 
+            entry_point: Symbol::intern("entry_point"),
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
             libm: Symbol::intern("libm"),
@@ -437,6 +439,7 @@ impl AsRef<[u32]> for ExecutionModeExtra {
 pub struct Entry {
     pub execution_model: ExecutionModel,
     pub execution_modes: Vec<(ExecutionMode, ExecutionModeExtra)>,
+    pub name: Option<Symbol>,
 }
 
 impl From<ExecutionModel> for Entry {
@@ -444,6 +447,7 @@ impl From<ExecutionModel> for Entry {
         Self {
             execution_model,
             execution_modes: Vec::new(),
+            name: None,
         }
     }
 }
@@ -789,6 +793,18 @@ fn parse_entry_attrs(
                                     .execution_modes
                                     .push((*execution_mode, ExecutionModeExtra::new([])));
                             }
+                        }
+                    }
+                } else if attr_name.name == cx.sym.entry_point {
+                    match attr.value_str() {
+                        Some(sym) => {
+                            entry.name = Some(sym);
+                        }
+                        None => {
+                            cx.tcx.sess.span_err(
+                                attr_name.span,
+                                r#"#[spirv(entrypoint = "...")] expects a valid str literal."#,
+                            );
                         }
                     }
                 } else {
