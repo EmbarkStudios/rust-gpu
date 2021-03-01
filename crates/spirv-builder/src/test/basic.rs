@@ -613,7 +613,9 @@ fn image_write() {
 #[spirv(fragment)]
 pub fn main(input: Input<glam::Vec2>, image: UniformConstant<StorageImage2d>) {
     let texels = *input;
-    image.write(glam::UVec2::new(0, 1), texels);
+    unsafe {
+        image.write(glam::UVec2::new(0, 1), texels);
+    }
 }
 "#);
 }
