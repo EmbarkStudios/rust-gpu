@@ -24,8 +24,7 @@ pub struct InstructionTable {
 
 impl InstructionTable {
     pub fn new() -> Self {
-        let table = (0..u16::MAX)
-            .filter_map(rspirv::grammar::CoreInstructionTable::lookup_opcode)
+        let table = rspirv::grammar::CoreInstructionTable::iter()
             .map(|inst| (inst.opname, inst))
             .collect();
         Self { table }
