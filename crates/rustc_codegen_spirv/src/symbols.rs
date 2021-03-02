@@ -795,16 +795,20 @@ fn parse_entry_attrs(
                             }
                         }
                     }
-                } else if attr_name.name == cx.sym.entry_point_name {
+                } else if attr_name.name == sym.entry_point_name {
                     match attr.value_str() {
                         Some(sym) => {
                             entry.name = Some(sym);
                         }
                         None => {
-                            cx.tcx.sess.span_err(
-                                attr_name.span,
-                                r#"#[spirv(entrypoint = "...")] expects a valid str literal."#,
-                            );
+                            return Err((
+                                    attr_name.span,
+                                    format!(
+                                        "#[spirv({}(..))] unknown attribute argument {}",
+                                        name.name.to_ident_string(),
+                                        attr_name.name.to_ident_string()
+                                    ),
+                            ))
                         }
                     }
                 } else {
