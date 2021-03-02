@@ -802,12 +802,12 @@ fn parse_entry_attrs(
                         }
                         None => {
                             return Err((
-                                    attr_name.span,
-                                    format!(
-                                        "#[spirv({}(..))] unknown attribute argument {}",
-                                        name.name.to_ident_string(),
-                                        attr_name.name.to_ident_string()
-                                    ),
+                                attr_name.span,
+                                format!(
+                                    "#[spirv({}(..))] unknown attribute argument {}",
+                                    name.name.to_ident_string(),
+                                    attr_name.name.to_ident_string()
+                                ),
                             ))
                         }
                     }
