@@ -448,6 +448,7 @@ impl From<ExecutionModel> for Entry {
     }
 }
 
+// FIXME(eddyb) maybe move this to `attr`?
 #[derive(Debug, Clone)]
 pub enum SpirvAttribute {
     Builtin(BuiltIn),
@@ -471,28 +472,32 @@ pub enum SpirvAttribute {
     UnrollLoops,
 }
 
-// Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused
-// reporting already happens even before we get here :(
+// FIXME(eddyb) maybe move this to `attr`?
 /// Returns only the spirv attributes that could successfully parsed.
-/// For any malformed ones, an error is reported.
+/// For any malformed ones, an error is reported prior to codegen, by a check pass.
 pub fn parse_attrs<'a, 'tcx>(
     cx: &'a CodegenCx<'tcx>,
     attrs: &'tcx [Attribute],
 ) -> impl Iterator<Item = SpirvAttribute> + Captures<'tcx> + 'a {
-    parse_attrs_with_errors(&cx.sym, attrs).filter_map(move |parse_attr_result| {
-        parse_attr_result
-            .map_err(|(span, msg)| cx.tcx.sess.span_err(span, &msg))
-            .ok()
-    })
+    parse_attrs_for_checking(&cx.sym, attrs)
+        .filter_map(move |parse_attr_result| {
+            // NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails
+            // to see an attribute error, it will cause an ICE instead.
+            parse_attr_result
+                .map_err(|(span, msg)| cx.tcx.sess.delay_span_bug(span, &msg))
+                .ok()
+        })
+        .map(|(_span, parsed_attr)| parsed_attr)
 }
 
 // FIXME(eddyb) find something nicer for the error type.
 type ParseAttrError = (Span, String);
 
-fn parse_attrs_with_errors<'a>(
+// FIXME(eddyb) maybe move this to `attr`?
+pub(crate) fn parse_attrs_for_checking<'a>(
     sym: &'a Symbols,
     attrs: &'a [Attribute],
-) -> impl Iterator<Item = Result<SpirvAttribute, ParseAttrError>> + 'a {
+) -> impl Iterator<Item = Result<(Span, SpirvAttribute), ParseAttrError>> + 'a {
     attrs.iter().flat_map(move |attr| {
         let is_spirv = match attr.kind {
             AttrKind::Normal(ref item, _) => {
@@ -519,18 +524,19 @@ fn parse_attrs_with_errors<'a>(
         whole_attr_error
             .into_iter()
             .chain(args.into_iter().map(move |ref arg| {
-                if arg.has_name(sym.image_type) {
-                    parse_image_type(sym, arg)
+                let span = arg.span();
+                let parsed_attr = if arg.has_name(sym.image_type) {
+                    parse_image_type(sym, arg)?
                 } else if arg.has_name(sym.descriptor_set) {
-                    Ok(SpirvAttribute::DescriptorSet(parse_attr_int_value(arg)?))
+                    SpirvAttribute::DescriptorSet(parse_attr_int_value(arg)?)
                 } else if arg.has_name(sym.binding) {
-                    Ok(SpirvAttribute::Binding(parse_attr_int_value(arg)?))
+                    SpirvAttribute::Binding(parse_attr_int_value(arg)?)
                 } else {
                     let name = match arg.ident() {
                         Some(i) => i,
                         None => {
                             return Err((
-                                arg.span(),
+                                span,
                                 "#[spirv(..)] attribute argument must be single identifier"
                                     .to_string(),
                             ));
@@ -548,8 +554,9 @@ fn parse_attrs_with_errors<'a>(
                         })
                         .unwrap_or_else(|| {
                             Err((name.span, "unknown argument to spirv attribute".to_string()))
-                        })
-                }
+                        })?
+                };
+                Ok((span, parsed_attr))
             }))
     })
 }
