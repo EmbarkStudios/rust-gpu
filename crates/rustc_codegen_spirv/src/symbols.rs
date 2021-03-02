@@ -8,6 +8,7 @@ use rustc_data_structures::captures::Captures;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 /// Various places in the codebase (mostly attribute parsing) need to compare rustc Symbols to particular keywords.
 /// Symbols are interned, as in, they don't actually store the string itself inside them, but rather an index into a
@@ -321,8 +322,10 @@ const EXECUTION_MODES: &[(&str, ExecutionMode, ExecutionModeExtraDim)] = {
     ]
 };
 
+// FIXME(eddyb) clippy bug suggests `Self` even when it couldn't possibly work.
+#[allow(clippy::use_self)]
 impl Symbols {
-    pub fn new() -> Self {
+    fn new() -> Self {
         let builtins = BUILTINS
             .iter()
             .map(|&(a, b)| (a, SpirvAttribute::Builtin(b)));
@@ -395,6 +398,16 @@ impl Symbols {
             execution_modes,
             libm_intrinsics,
         }
+    }
+
+    /// Obtain an `Rc` handle to the current thread's `Symbols` instance, which
+    /// will be shared between all `Symbols::get()` calls on the same thread.
+    ///
+    /// While this is relatively cheap, prefer caching it in e.g. `CodegenCx`,
+    /// rather than calling `get()` every time a field of `Symbols` is needed.
+    pub fn get() -> Rc<Self> {
+        thread_local!(static SYMBOLS: Rc<Symbols> = Rc::new(Symbols::new()));
+        SYMBOLS.with(Rc::clone)
     }
 }
 

@@ -32,6 +32,7 @@ use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::iter::once;
+use std::rc::Rc;
 
 pub struct CodegenCx<'tcx> {
     pub tcx: TyCtxt<'tcx>,
@@ -56,7 +57,7 @@ pub struct CodegenCx<'tcx> {
     unroll_loops_decorations: RefCell<HashMap<Word, UnrollLoopsDecoration>>,
     pub kernel_mode: bool,
     /// Cache of all the builtin symbols we need
-    pub sym: Box<Symbols>,
+    pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
     pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
@@ -72,7 +73,7 @@ pub struct CodegenCx<'tcx> {
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
-        let sym = Box::new(Symbols::new());
+        let sym = Symbols::get();
         let mut spirv_version = None;
         let mut memory_model = None;
         let mut kernel_mode = false;
