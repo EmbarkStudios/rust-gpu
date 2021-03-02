@@ -32,7 +32,6 @@ pub fn main() {
 fn custom_entry_point() {
     dis_globals(
         r#"
-#[allow(unused_attributes)]
 #[spirv(fragment(entry_point_name="hello_world"))]
 pub fn main() { }
 "#,
