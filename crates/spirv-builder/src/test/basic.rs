@@ -30,12 +30,13 @@ pub fn main() {
 
 #[test]
 fn custom_entry_point() {
-    dis_globals(r#"
+    dis_globals(
+        r#"
 #[allow(unused_attributes)]
 #[spirv(fragment(entry_point_name="hello_world"))]
 pub fn main() { }
 "#,
-r#"OpCapability Shader
+        r#"OpCapability Shader
 OpCapability VulkanMemoryModel
 OpCapability VariablePointers
 OpExtension "SPV_KHR_vulkan_memory_model"
@@ -44,7 +45,8 @@ OpEntryPoint Fragment %1 "hello_world"
 OpExecutionMode %1 OriginUpperLeft
 OpName %2 "test_project::main"
 %3 = OpTypeVoid
-%4 = OpTypeFunction %3"#);
+%4 = OpTypeFunction %3"#,
+    );
 }
 
 #[test]
