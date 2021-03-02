@@ -81,6 +81,7 @@ macro_rules! assert_ty_eq {
 }
 
 mod abi;
+mod attr;
 mod builder;
 mod builder_spirv;
 mod codegen_cx;
@@ -299,6 +300,9 @@ impl CodegenBackend for SpirvCodegenBackend {
                 inner
             })
         };
+
+        // Extra hooks provided by other parts of `rustc_codegen_spirv`.
+        crate::attr::provide(providers);
     }
 
     fn provide_extern(&self, providers: &mut query::Providers) {
