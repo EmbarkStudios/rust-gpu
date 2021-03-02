@@ -3,7 +3,6 @@ use super::val;
 #[test]
 fn cf_while() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 10 {
@@ -15,7 +14,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_while() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 20 {
@@ -29,7 +27,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_while_break() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 20 {
@@ -44,7 +41,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_while_if_break() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 20 {
@@ -61,7 +57,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_break() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 10 {
@@ -74,7 +69,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_if_break() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 10 {
@@ -89,7 +83,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_if_break_else_break() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 10 {
@@ -106,7 +99,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_if_break_if_break() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 10 {
@@ -124,7 +116,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_while_continue() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 20 {
@@ -139,7 +130,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_while_if_continue() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 20 {
@@ -156,7 +146,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_continue() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 10 {
@@ -169,7 +158,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_if_continue() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 10 {
@@ -184,7 +172,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_if_continue_else_continue() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 10 {
@@ -201,7 +188,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_while_return() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 10 {
@@ -214,7 +200,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_if_return_else() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     if *i < 10 {
@@ -228,7 +213,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_if_return_else_return() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     if *i < 10 {
@@ -243,7 +227,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_if_while() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     if *i == 0 {
@@ -257,7 +240,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_if() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     if *i > 0 {
@@ -269,7 +251,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_ifx2() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     if *i > 0 {
@@ -285,7 +266,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_if_else() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     if *i > 0 {
@@ -300,7 +280,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_if_elseif_else() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     if *i > 0 {
@@ -317,7 +296,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_if_if() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     if *i > 0 {
@@ -332,7 +310,6 @@ pub fn main(i: Input<i32>) {
 #[test]
 fn cf_defer() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     while *i < 32 {
@@ -393,7 +370,6 @@ fn render(eye: Vec3, dir: Vec3, start: f32, end: f32) -> f32 {
     end
 }
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     let v = Vec3::new(1.0, 1.0, 1.0);

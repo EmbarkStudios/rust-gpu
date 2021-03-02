@@ -88,9 +88,13 @@ impl CheckSpirvAttrVisitor<'_> {
         let parse_attrs = |attrs| crate::symbols::parse_attrs_for_checking(&self.sym, attrs);
 
         let target = target.into();
-        for parse_attr_result in parse_attrs(attrs) {
-            let (span, attr) = match parse_attr_result {
-                Ok(span_and_attr) => span_and_attr,
+        for (attr, parse_attr_result) in parse_attrs(attrs) {
+            // Make sure to mark the whole `#[spirv(...)]` attribute as used,
+            // to avoid warnings about unused attributes.
+            self.tcx.sess.mark_attr_used(attr);
+
+            let (span, parsed_attr) = match parse_attr_result {
+                Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
                     self.tcx.sess.span_err(span, &msg);
                     continue;
@@ -100,7 +104,7 @@ impl CheckSpirvAttrVisitor<'_> {
             /// Error newtype marker used below for readability.
             struct Expected<T>(T);
 
-            let valid_target = match attr {
+            let valid_target = match parsed_attr {
                 SpirvAttribute::Builtin(_)
                 | SpirvAttribute::DescriptorSet(_)
                 | SpirvAttribute::Binding(_)
@@ -109,7 +113,7 @@ impl CheckSpirvAttrVisitor<'_> {
                         let parent_hir_id = self.tcx.hir().get_parent_node(hir_id);
                         let parent_is_entry_point =
                             parse_attrs(self.tcx.hir().attrs(parent_hir_id))
-                                .filter_map(|r| r.ok())
+                                .filter_map(|(_, r)| r.ok())
                                 .any(|(_, attr)| matches!(attr, SpirvAttribute::Entry(_)));
                         if !parent_is_entry_point {
                             self.tcx.sess.span_err(
