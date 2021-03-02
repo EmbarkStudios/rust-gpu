@@ -19,21 +19,26 @@ However, many things aren't implemented yet: for example, loops and switches are
 ![Sky shader](docs/assets/sky.jpg)
 
 ```rust
-#[spirv(entry = "fragment")]
-pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
-    let dir: Vec3 = input.load().truncate();
+use spirv_std::{glam::{Vec3, Vec4, vec2, vec3}, storage_class::{Input, Output}};
 
-    let cs_pos = Vec4(dir.0, -dir.1, 1.0, 1.0);
-    let ws_pos = {
-        let p = clip_to_world.mul_vec4(cs_pos);
-        p.truncate() / p.3
-    };
-    let dir = (ws_pos - eye_pos).normalize();
-    
+#[spirv(fragment)]
+pub fn main(
+    #[spirv(frag_coord)] in_frag_coord: Input<Vec4>,
+    mut output: Output<Vec4>,
+) {
+    let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
+    let mut uv = (frag_coord - 0.5 * vec2(constants.width as f32, constants.height as f32))
+        / constants.height as f32;
+    uv.y = -uv.y;
+
+    let eye_pos = vec3(0.0, 0.0997, 0.2);
+    let sun_pos = vec3(0.0, 75.0, -1000.0);
+    let dir = get_ray_dir(uv, eye_pos, sun_pos);
+
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
 
-    output.store(color.extend(0.0))
+    *output = tonemap(color).extend(1.0)
 }
 ```
 
