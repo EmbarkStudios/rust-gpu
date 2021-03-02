@@ -801,7 +801,7 @@ fn trans_image<'tcx>(
     attr: SpirvAttribute,
 ) -> Option<Word> {
     match attr {
-        SpirvAttribute::Image {
+        SpirvAttribute::ImageType {
             dim,
             depth,
             arrayed,

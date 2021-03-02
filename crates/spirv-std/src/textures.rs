@@ -10,7 +10,7 @@ pub struct Sampler {
 }
 
 #[allow(unused_attributes)]
-#[spirv(image(
+#[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
     depth = 0,
@@ -47,7 +47,7 @@ impl Image2d {
 }
 
 #[allow(unused_attributes)]
-#[spirv(image(
+#[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
     depth = 0,
@@ -110,7 +110,7 @@ impl StorageImage2d {
 }
 
 #[allow(unused_attributes)]
-#[spirv(image(
+#[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
     depth = 0,
