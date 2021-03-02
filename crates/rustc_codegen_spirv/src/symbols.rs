@@ -33,7 +33,7 @@ pub struct Symbols {
     pub spirv13: Symbol,
     pub spirv14: Symbol,
     pub spirv15: Symbol,
-    pub entry_point: Symbol,
+    pub entry_point_name: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
     image_type: Symbol,
@@ -371,7 +371,7 @@ impl Symbols {
         Self {
             fmt_decimal: Symbol::intern("fmt_decimal"),
 
-            entry_point: Symbol::intern("entry_point"),
+            entry_point_name: Symbol::intern("entry_point_name"),
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
             libm: Symbol::intern("libm"),
@@ -795,7 +795,7 @@ fn parse_entry_attrs(
                             }
                         }
                     }
-                } else if attr_name.name == cx.sym.entry_point {
+                } else if attr_name.name == cx.sym.entry_point_name {
                     match attr.value_str() {
                         Some(sym) => {
                             entry.name = Some(sym);
