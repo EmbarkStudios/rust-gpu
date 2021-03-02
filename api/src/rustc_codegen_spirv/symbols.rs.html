@@ -849,6 +849,26 @@
 <span id="846">846</span>
 <span id="847">847</span>
 <span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder</span>::<span class="ident">libm_intrinsics</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">codegen_cx</span>::<span class="ident">CodegenCx</span>;
@@ -885,6 +905,7 @@
     <span class="kw">pub</span> <span class="ident">spirv13</span>: <span class="ident">Symbol</span>,
     <span class="kw">pub</span> <span class="ident">spirv14</span>: <span class="ident">Symbol</span>,
     <span class="kw">pub</span> <span class="ident">spirv15</span>: <span class="ident">Symbol</span>,
+    <span class="kw">pub</span> <span class="ident">entry_point_name</span>: <span class="ident">Symbol</span>,
     <span class="ident">descriptor_set</span>: <span class="ident">Symbol</span>,
     <span class="ident">binding</span>: <span class="ident">Symbol</span>,
     <span class="ident">image_type</span>: <span class="ident">Symbol</span>,
@@ -1222,6 +1243,7 @@
         <span class="self">Self</span> {
             <span class="ident">fmt_decimal</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;fmt_decimal&quot;</span>),
 
+            <span class="ident">entry_point_name</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;entry_point_name&quot;</span>),
             <span class="ident">spirv</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;spirv&quot;</span>),
             <span class="ident">spirv_std</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;spirv_std&quot;</span>),
             <span class="ident">libm</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;libm&quot;</span>),
@@ -1289,6 +1311,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Entry</span> {
     <span class="kw">pub</span> <span class="ident">execution_model</span>: <span class="ident">ExecutionModel</span>,
     <span class="kw">pub</span> <span class="ident">execution_modes</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">ExecutionMode</span>, <span class="ident">ExecutionModeExtra</span>)<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Symbol</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ExecutionModel</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Entry</span> {
@@ -1296,6 +1319,7 @@
         <span class="self">Self</span> {
             <span class="ident">execution_model</span>,
             <span class="ident">execution_modes</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+            <span class="ident">name</span>: <span class="prelude-val">None</span>,
         }
     }
 }
@@ -1641,6 +1665,22 @@
                                     .<span class="ident">execution_modes</span>
                                     .<span class="ident">push</span>((<span class="kw-2">*</span><span class="ident">execution_mode</span>, <span class="ident">ExecutionModeExtra</span>::<span class="ident">new</span>([])));
                             }
+                        }
+                    }
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">attr_name</span>.<span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sym</span>.<span class="ident">entry_point_name</span> {
+                    <span class="kw">match</span> <span class="ident">attr</span>.<span class="ident">value_str</span>() {
+                        <span class="prelude-val">Some</span>(<span class="ident">sym</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">entry</span>.<span class="ident">name</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">sym</span>);
+                        }
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>((
+                                <span class="ident">attr_name</span>.<span class="ident">span</span>,
+                                <span class="macro">format</span><span class="macro">!</span>(
+                                    <span class="string">&quot;#[spirv({}(..))] unknown attribute argument {}&quot;</span>,
+                                    <span class="ident">name</span>.<span class="ident">name</span>.<span class="ident">to_ident_string</span>(),
+                                    <span class="ident">attr_name</span>.<span class="ident">name</span>.<span class="ident">to_ident_string</span>()
+                                ),
+                            ))
                         }
                     }
                 } <span class="kw">else</span> {
