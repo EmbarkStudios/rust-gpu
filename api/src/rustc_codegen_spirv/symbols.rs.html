@@ -848,6 +848,7 @@
 <span id="845">845</span>
 <span id="846">846</span>
 <span id="847">847</span>
+<span id="848">848</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder</span>::<span class="ident">libm_intrinsics</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">codegen_cx</span>::<span class="ident">CodegenCx</span>;
@@ -855,8 +856,11 @@
     <span class="ident">AccessQualifier</span>, <span class="ident">BuiltIn</span>, <span class="ident">Dim</span>, <span class="ident">ExecutionMode</span>, <span class="ident">ExecutionModel</span>, <span class="ident">ImageFormat</span>, <span class="ident">StorageClass</span>,
 };
 <span class="kw">use</span> <span class="ident">rustc_ast</span>::<span class="ident">ast</span>::{<span class="ident">AttrKind</span>, <span class="ident">Attribute</span>, <span class="ident">Lit</span>, <span class="ident">LitIntType</span>, <span class="ident">LitKind</span>, <span class="ident">NestedMetaItem</span>};
+<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">captures</span>::<span class="ident">Captures</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">symbol</span>::{<span class="ident">Ident</span>, <span class="ident">Symbol</span>};
+<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">Span</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
 
 <span class="doccomment">/// Various places in the codebase (mostly attribute parsing) need to compare rustc Symbols to particular keywords.</span>
 <span class="doccomment">/// Symbols are interned, as in, they don&#39;t actually store the string itself inside them, but rather an index into a</span>
@@ -883,7 +887,7 @@
     <span class="kw">pub</span> <span class="ident">spirv15</span>: <span class="ident">Symbol</span>,
     <span class="ident">descriptor_set</span>: <span class="ident">Symbol</span>,
     <span class="ident">binding</span>: <span class="ident">Symbol</span>,
-    <span class="ident">image</span>: <span class="ident">Symbol</span>,
+    <span class="ident">image_type</span>: <span class="ident">Symbol</span>,
     <span class="ident">dim</span>: <span class="ident">Symbol</span>,
     <span class="ident">depth</span>: <span class="ident">Symbol</span>,
     <span class="ident">arrayed</span>: <span class="ident">Symbol</span>,
@@ -1170,8 +1174,10 @@
     ]
 };
 
+<span class="comment">// FIXME(eddyb) clippy bug suggests `Self` even when it couldn&#39;t possibly work.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">use_self</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Symbols</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">builtins</span> <span class="op">=</span> <span class="ident">BUILTINS</span>
             .<span class="ident">iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="op">|</span> (<span class="ident">a</span>, <span class="ident">SpirvAttribute</span>::<span class="ident">Builtin</span>(<span class="ident">b</span>)));
@@ -1232,7 +1238,7 @@
             <span class="ident">spirv15</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;spirv1.5&quot;</span>),
             <span class="ident">descriptor_set</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;descriptor_set&quot;</span>),
             <span class="ident">binding</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;binding&quot;</span>),
-            <span class="ident">image</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;image&quot;</span>),
+            <span class="ident">image_type</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;image_type&quot;</span>),
             <span class="ident">dim</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;dim&quot;</span>),
             <span class="ident">depth</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;depth&quot;</span>),
             <span class="ident">arrayed</span>: <span class="ident">Symbol</span>::<span class="ident">intern</span>(<span class="string">&quot;arrayed&quot;</span>),
@@ -1244,6 +1250,16 @@
             <span class="ident">execution_modes</span>,
             <span class="ident">libm_intrinsics</span>,
         }
+    }
+
+    <span class="doccomment">/// Obtain an `Rc` handle to the current thread&#39;s `Symbols` instance, which</span>
+    <span class="doccomment">/// will be shared between all `Symbols::get()` calls on the same thread.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// While this is relatively cheap, prefer caching it in e.g. `CodegenCx`,</span>
+    <span class="doccomment">/// rather than calling `get()` every time a field of `Symbols` is needed.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="macro">thread_local</span><span class="macro">!</span>(<span class="kw">static</span> <span class="ident">SYMBOLS</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Symbols</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">Symbols</span>::<span class="ident">new</span>()));
+        <span class="ident">SYMBOLS</span>.<span class="ident">with</span>(<span class="ident">Rc</span>::<span class="ident">clone</span>)
     }
 }
 
@@ -1284,6 +1300,7 @@
     }
 }
 
+<span class="comment">// FIXME(eddyb) maybe move this to `attr`?</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpirvAttribute</span> {
     <span class="ident">Builtin</span>(<span class="ident">BuiltIn</span>),
@@ -1291,7 +1308,7 @@
     <span class="ident">Entry</span>(<span class="ident">Entry</span>),
     <span class="ident">DescriptorSet</span>(<span class="ident">u32</span>),
     <span class="ident">Binding</span>(<span class="ident">u32</span>),
-    <span class="ident">Image</span> {
+    <span class="ident">ImageType</span> {
         <span class="ident">dim</span>: <span class="ident">Dim</span>,
         <span class="ident">depth</span>: <span class="ident">u32</span>,
         <span class="ident">arrayed</span>: <span class="ident">u32</span>,
@@ -1307,157 +1324,166 @@
     <span class="ident">UnrollLoops</span>,
 }
 
-<span class="comment">// Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused</span>
-<span class="comment">// reporting already happens even before we get here :(</span>
-<span class="doccomment">/// Returns empty if this attribute is not a spirv attribute, or if it&#39;s malformed (and an error is</span>
-<span class="doccomment">/// reported).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_attrs</span>(
-    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    <span class="ident">attrs</span>: <span class="kw-2">&amp;</span>[<span class="ident">Attribute</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">SpirvAttribute</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-        <span class="ident">attrs</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">is_spirv</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">attr</span>.<span class="ident">kind</span> {
-                <span class="ident">AttrKind</span>::<span class="ident">Normal</span>(<span class="kw-2">ref</span> <span class="ident">item</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="comment">// TODO: We ignore the rest of the path. Is this right?</span>
-                    <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">item</span>.<span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">last</span>();
-                    <span class="ident">last</span>.<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">seg</span><span class="op">|</span> <span class="ident">seg</span>.<span class="ident">ident</span>.<span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">spirv</span>)
-                }
-                <span class="ident">AttrKind</span>::<span class="ident">DocComment</span>(..) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-            };
-            <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">is_spirv</span> {
-                <span class="comment">// Use an empty vec here to return empty</span>
-                <span class="ident">Vec</span>::<span class="ident">new</span>()
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">args</span>) <span class="op">=</span> <span class="ident">attr</span>.<span class="ident">meta_item_list</span>() {
-                <span class="ident">args</span>
-            } <span class="kw">else</span> {
-                <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+<span class="comment">// FIXME(eddyb) maybe move this to `attr`?</span>
+<span class="doccomment">/// Returns only the spirv attributes that could successfully parsed.</span>
+<span class="doccomment">/// For any malformed ones, an error is reported prior to codegen, by a check pass.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_attrs</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(
+    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
+    <span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> [<span class="ident">Attribute</span>],
+) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">SpirvAttribute</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Captures</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;a</span> {
+    <span class="ident">parse_attrs_for_checking</span>(<span class="kw-2">&amp;</span><span class="ident">cx</span>.<span class="ident">sym</span>, <span class="ident">attrs</span>)
+        .<span class="ident">filter_map</span>(<span class="kw">move</span> <span class="op">|</span>(<span class="kw">_</span>, <span class="ident">parse_attr_result</span>)<span class="op">|</span> {
+            <span class="comment">// NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails</span>
+            <span class="comment">// to see an attribute error, it will cause an ICE instead.</span>
+            <span class="ident">parse_attr_result</span>
+                .<span class="ident">map_err</span>(<span class="op">|</span>(<span class="ident">span</span>, <span class="ident">msg</span>)<span class="op">|</span> <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">delay_span_bug</span>(<span class="ident">span</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>))
+                .<span class="ident">ok</span>()
+        })
+        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">_span</span>, <span class="ident">parsed_attr</span>)<span class="op">|</span> <span class="ident">parsed_attr</span>)
+}
+
+<span class="comment">// FIXME(eddyb) find something nicer for the error type.</span>
+<span class="kw">type</span> <span class="ident">ParseAttrError</span> <span class="op">=</span> (<span class="ident">Span</span>, <span class="ident">String</span>);
+
+<span class="comment">// FIXME(eddyb) maybe move this to `attr`?</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">parse_attrs_for_checking</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Symbols</span>,
+    <span class="ident">attrs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Attribute</span>],
+) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span>
+    <span class="ident">Item</span> <span class="op">=</span> (
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Attribute</span>,
+        <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Span</span>, <span class="ident">SpirvAttribute</span>), <span class="ident">ParseAttrError</span><span class="op">&gt;</span>,
+    ),
+<span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;a</span> {
+    <span class="ident">attrs</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">attr</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">is_spirv</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">attr</span>.<span class="ident">kind</span> {
+            <span class="ident">AttrKind</span>::<span class="ident">Normal</span>(<span class="kw-2">ref</span> <span class="ident">item</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// TODO: We ignore the rest of the path. Is this right?</span>
+                <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">item</span>.<span class="ident">path</span>.<span class="ident">segments</span>.<span class="ident">last</span>();
+                <span class="ident">last</span>.<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">seg</span><span class="op">|</span> <span class="ident">seg</span>.<span class="ident">ident</span>.<span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sym</span>.<span class="ident">spirv</span>)
+            }
+            <span class="ident">AttrKind</span>::<span class="ident">DocComment</span>(..) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        };
+        <span class="kw">let</span> (<span class="ident">whole_attr_error</span>, <span class="ident">args</span>) <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">is_spirv</span> {
+            <span class="comment">// Use an empty vec here to return empty</span>
+            (<span class="prelude-val">None</span>, <span class="ident">Vec</span>::<span class="ident">new</span>())
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">args</span>) <span class="op">=</span> <span class="ident">attr</span>.<span class="ident">meta_item_list</span>() {
+            (<span class="prelude-val">None</span>, <span class="ident">args</span>)
+        } <span class="kw">else</span> {
+            (
+                <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>((
                     <span class="ident">attr</span>.<span class="ident">span</span>,
-                    <span class="string">&quot;#[spirv(..)] attribute must have at least one argument&quot;</span>,
-                );
-                <span class="ident">Vec</span>::<span class="ident">new</span>()
-            };
-            <span class="ident">args</span>.<span class="ident">into_iter</span>().<span class="ident">filter_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw-2">ref</span> <span class="ident">arg</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">arg</span>.<span class="ident">has_name</span>(<span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">image</span>) {
-                    <span class="ident">parse_image</span>(<span class="ident">cx</span>, <span class="ident">arg</span>)
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">arg</span>.<span class="ident">has_name</span>(<span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">descriptor_set</span>) {
-                    <span class="kw">match</span> <span class="ident">parse_attr_int_value</span>(<span class="ident">cx</span>, <span class="ident">arg</span>) {
-                        <span class="prelude-val">Some</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">SpirvAttribute</span>::<span class="ident">DescriptorSet</span>(<span class="ident">x</span>)),
-                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-                    }
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">arg</span>.<span class="ident">has_name</span>(<span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">binding</span>) {
-                    <span class="kw">match</span> <span class="ident">parse_attr_int_value</span>(<span class="ident">cx</span>, <span class="ident">arg</span>) {
-                        <span class="prelude-val">Some</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">SpirvAttribute</span>::<span class="ident">Binding</span>(<span class="ident">x</span>)),
-                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-                    }
+                    <span class="string">&quot;#[spirv(..)] attribute must have at least one argument&quot;</span>.<span class="ident">to_string</span>(),
+                ))),
+                <span class="ident">Vec</span>::<span class="ident">new</span>(),
+            )
+        };
+        <span class="ident">whole_attr_error</span>
+            .<span class="ident">into_iter</span>()
+            .<span class="ident">chain</span>(<span class="ident">args</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw-2">ref</span> <span class="ident">arg</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="ident">arg</span>.<span class="ident">span</span>();
+                <span class="kw">let</span> <span class="ident">parsed_attr</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">arg</span>.<span class="ident">has_name</span>(<span class="ident">sym</span>.<span class="ident">image_type</span>) {
+                    <span class="ident">parse_image_type</span>(<span class="ident">sym</span>, <span class="ident">arg</span>)<span class="question-mark">?</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">arg</span>.<span class="ident">has_name</span>(<span class="ident">sym</span>.<span class="ident">descriptor_set</span>) {
+                    <span class="ident">SpirvAttribute</span>::<span class="ident">DescriptorSet</span>(<span class="ident">parse_attr_int_value</span>(<span class="ident">arg</span>)<span class="question-mark">?</span>)
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">arg</span>.<span class="ident">has_name</span>(<span class="ident">sym</span>.<span class="ident">binding</span>) {
+                    <span class="ident">SpirvAttribute</span>::<span class="ident">Binding</span>(<span class="ident">parse_attr_int_value</span>(<span class="ident">arg</span>)<span class="question-mark">?</span>)
                 } <span class="kw">else</span> {
                     <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">arg</span>.<span class="ident">ident</span>() {
                         <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>,
                         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
-                                <span class="ident">arg</span>.<span class="ident">span</span>(),
-                                <span class="string">&quot;#[spirv(..)] attribute argument must be single identifier&quot;</span>,
-                            );
-                            <span class="kw">return</span> <span class="prelude-val">None</span>;
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>((
+                                <span class="ident">span</span>,
+                                <span class="string">&quot;#[spirv(..)] attribute argument must be single identifier&quot;</span>
+                                    .<span class="ident">to_string</span>(),
+                            ));
                         }
                     };
-                    <span class="ident">cx</span>.<span class="ident">sym</span>
-                        .<span class="ident">attributes</span>
+                    <span class="ident">sym</span>.<span class="ident">attributes</span>
                         .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>.<span class="ident">name</span>)
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">a</span> {
-                            <span class="ident">SpirvAttribute</span>::<span class="ident">Entry</span>(<span class="ident">entry</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Entry</span>(
-                                <span class="ident">parse_entry_attrs</span>(<span class="ident">cx</span>, <span class="ident">arg</span>, <span class="kw-2">&amp;</span><span class="ident">name</span>, <span class="ident">entry</span>.<span class="ident">execution_model</span>),
-                            ),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a</span>.<span class="ident">clone</span>(),
+                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> {
+                            <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">a</span> {
+                                <span class="ident">SpirvAttribute</span>::<span class="ident">Entry</span>(<span class="ident">entry</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Entry</span>(
+                                    <span class="ident">parse_entry_attrs</span>(<span class="ident">sym</span>, <span class="ident">arg</span>, <span class="kw-2">&amp;</span><span class="ident">name</span>, <span class="ident">entry</span>.<span class="ident">execution_model</span>)<span class="question-mark">?</span>,
+                                ),
+                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a</span>.<span class="ident">clone</span>(),
+                            })
                         })
-                        .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                            <span class="ident">cx</span>.<span class="ident">tcx</span>
-                                .<span class="ident">sess</span>
-                                .<span class="ident">span_err</span>(<span class="ident">name</span>.<span class="ident">span</span>, <span class="string">&quot;unknown argument to spirv attribute&quot;</span>);
-                            <span class="prelude-val">None</span>
-                        })
-                }
-            })
-        });
-    <span class="comment">// lifetimes are hard :(</span>
-    <span class="ident">result</span>.<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>().<span class="ident">into_iter</span>()
+                        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                            <span class="prelude-val">Err</span>((<span class="ident">name</span>.<span class="ident">span</span>, <span class="string">&quot;unknown argument to spirv attribute&quot;</span>.<span class="ident">to_string</span>()))
+                        })<span class="question-mark">?</span>
+                };
+                <span class="prelude-val">Ok</span>((<span class="ident">span</span>, <span class="ident">parsed_attr</span>))
+            }))
+            .<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">parse_attr_result</span><span class="op">|</span> (<span class="ident">attr</span>, <span class="ident">parse_attr_result</span>))
+    })
 }
 
-<span class="kw">fn</span> <span class="ident">parse_image</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">attr</span>: <span class="kw-2">&amp;</span><span class="ident">NestedMetaItem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SpirvAttribute</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">parse_image_type</span>(
+    <span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">Symbols</span>,
+    <span class="ident">attr</span>: <span class="kw-2">&amp;</span><span class="ident">NestedMetaItem</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SpirvAttribute</span>, <span class="ident">ParseAttrError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">attr</span>.<span class="ident">meta_item_list</span>() {
         <span class="prelude-val">Some</span>(<span class="ident">args</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">args</span>,
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">cx</span>.<span class="ident">tcx</span>
-                .<span class="ident">sess</span>
-                .<span class="ident">span_err</span>(<span class="ident">attr</span>.<span class="ident">span</span>(), <span class="string">&quot;image attribute must have arguments&quot;</span>);
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+            <span class="kw">return</span> <span class="prelude-val">Err</span>((
+                <span class="ident">attr</span>.<span class="ident">span</span>(),
+                <span class="string">&quot;image_type attribute must have arguments&quot;</span>.<span class="ident">to_string</span>(),
+            ))
         }
     };
     <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">6</span> <span class="op">&amp;&amp;</span> <span class="ident">args</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">7</span> {
-        <span class="ident">cx</span>.<span class="ident">tcx</span>
-            .<span class="ident">sess</span>
-            .<span class="ident">span_err</span>(<span class="ident">attr</span>.<span class="ident">span</span>(), <span class="string">&quot;image attribute must have 6 or 7 arguments&quot;</span>);
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">return</span> <span class="prelude-val">Err</span>((
+            <span class="ident">attr</span>.<span class="ident">span</span>(),
+            <span class="string">&quot;image_type attribute must have 6 or 7 arguments&quot;</span>.<span class="ident">to_string</span>(),
+        ));
     }
-    <span class="kw">let</span> <span class="ident">check</span> <span class="op">=</span> <span class="op">|</span><span class="ident">idx</span>: <span class="ident">usize</span>, <span class="ident">sym</span>: <span class="ident">Symbol</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">check</span> <span class="op">=</span> <span class="op">|</span><span class="ident">idx</span>: <span class="ident">usize</span>, <span class="ident">sym</span>: <span class="ident">Symbol</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ParseAttrError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">args</span>[<span class="ident">idx</span>].<span class="ident">has_name</span>(<span class="ident">sym</span>) {
-            <span class="bool-val">false</span>
+            <span class="prelude-val">Ok</span>(())
         } <span class="kw">else</span> {
-            <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+            <span class="prelude-val">Err</span>((
                 <span class="ident">args</span>[<span class="ident">idx</span>].<span class="ident">span</span>(),
-                <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;image attribute argument {} must be {}=...&quot;</span>, <span class="ident">idx</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">sym</span>),
-            );
-            <span class="bool-val">true</span>
+                <span class="macro">format</span><span class="macro">!</span>(
+                    <span class="string">&quot;image_type attribute argument {} must be {}=...&quot;</span>,
+                    <span class="ident">idx</span> <span class="op">+</span> <span class="number">1</span>,
+                    <span class="ident">sym</span>
+                ),
+            ))
         }
     };
-    <span class="kw">if</span> <span class="ident">check</span>(<span class="number">0</span>, <span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">dim</span>)
-        <span class="op">|</span> <span class="ident">check</span>(<span class="number">1</span>, <span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">depth</span>)
-        <span class="op">|</span> <span class="ident">check</span>(<span class="number">2</span>, <span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">arrayed</span>)
-        <span class="op">|</span> <span class="ident">check</span>(<span class="number">3</span>, <span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">multisampled</span>)
-        <span class="op">|</span> <span class="ident">check</span>(<span class="number">4</span>, <span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">sampled</span>)
-        <span class="op">|</span> <span class="ident">check</span>(<span class="number">5</span>, <span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">image_format</span>)
-        <span class="op">|</span> (<span class="ident">args</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">7</span> <span class="op">&amp;&amp;</span> <span class="ident">check</span>(<span class="number">6</span>, <span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">access_qualifier</span>))
-    {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="ident">check</span>(<span class="number">0</span>, <span class="ident">sym</span>.<span class="ident">dim</span>)<span class="question-mark">?</span>;
+    <span class="ident">check</span>(<span class="number">1</span>, <span class="ident">sym</span>.<span class="ident">depth</span>)<span class="question-mark">?</span>;
+    <span class="ident">check</span>(<span class="number">2</span>, <span class="ident">sym</span>.<span class="ident">arrayed</span>)<span class="question-mark">?</span>;
+    <span class="ident">check</span>(<span class="number">3</span>, <span class="ident">sym</span>.<span class="ident">multisampled</span>)<span class="question-mark">?</span>;
+    <span class="ident">check</span>(<span class="number">4</span>, <span class="ident">sym</span>.<span class="ident">sampled</span>)<span class="question-mark">?</span>;
+    <span class="ident">check</span>(<span class="number">5</span>, <span class="ident">sym</span>.<span class="ident">image_format</span>)<span class="question-mark">?</span>;
+    <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">7</span> {
+        <span class="ident">check</span>(<span class="number">6</span>, <span class="ident">sym</span>.<span class="ident">access_qualifier</span>)<span class="question-mark">?</span>;
     }
     <span class="kw">let</span> <span class="ident">arg_values</span> <span class="op">=</span> <span class="ident">args</span>
         .<span class="ident">iter</span>()
         .<span class="ident">map</span>(
             <span class="op">|</span><span class="ident">arg</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">arg</span>.<span class="ident">meta_item</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">arg</span><span class="op">|</span> <span class="ident">arg</span>.<span class="ident">name_value_literal</span>()) {
-                <span class="prelude-val">Some</span>(<span class="ident">arg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">arg</span>),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">cx</span>.<span class="ident">tcx</span>
-                        .<span class="ident">sess</span>
-                        .<span class="ident">span_err</span>(<span class="ident">arg</span>.<span class="ident">span</span>(), <span class="string">&quot;image attribute must be name=value&quot;</span>);
-                    <span class="prelude-val">None</span>
-                }
+                <span class="prelude-val">Some</span>(<span class="ident">arg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">arg</span>),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>((
+                    <span class="ident">arg</span>.<span class="ident">span</span>(),
+                    <span class="string">&quot;image_type attribute must be name=value&quot;</span>.<span class="ident">to_string</span>(),
+                )),
             },
         )
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">dim</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">arg_values</span>[<span class="number">0</span>].<span class="ident">kind</span> {
         <span class="ident">LitKind</span>::<span class="ident">Str</span>(<span class="ident">dim</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">dim</span>.<span class="ident">as_str</span>().<span class="ident">parse</span>() {
             <span class="prelude-val">Ok</span>(<span class="ident">dim</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dim</span>,
-            <span class="prelude-val">Err</span>(()) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">span</span>(), <span class="string">&quot;invalid dim value&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
-            }
+            <span class="prelude-val">Err</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>((<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">span</span>(), <span class="string">&quot;invalid dim value&quot;</span>.<span class="ident">to_string</span>())),
         },
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">cx</span>.<span class="ident">tcx</span>
-                .<span class="ident">sess</span>
-                .<span class="ident">span_err</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">span</span>(), <span class="string">&quot;dim value must be str&quot;</span>);
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
-        }
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>((<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">span</span>(), <span class="string">&quot;dim value must be str&quot;</span>.<span class="ident">to_string</span>())),
     };
-    <span class="kw">let</span> <span class="ident">parse_lit</span> <span class="op">=</span> <span class="op">|</span><span class="ident">idx</span>: <span class="ident">usize</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">parse_lit</span> <span class="op">=</span> <span class="op">|</span><span class="ident">idx</span>: <span class="ident">usize</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ParseAttrError</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">arg_values</span>[<span class="ident">idx</span>].<span class="ident">kind</span> {
-            <span class="ident">LitKind</span>::<span class="ident">Int</span>(<span class="ident">v</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">cx</span>.<span class="ident">tcx</span>
-                    .<span class="ident">sess</span>
-                    .<span class="ident">span_err</span>(<span class="ident">args</span>[<span class="ident">idx</span>].<span class="ident">span</span>(), <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} value must be int&quot;</span>, <span class="ident">name</span>));
-                <span class="prelude-val">None</span>
-            }
+            <span class="ident">LitKind</span>::<span class="ident">Int</span>(<span class="ident">v</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">v</span> <span class="kw">as</span> <span class="ident">u32</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>((<span class="ident">args</span>[<span class="ident">idx</span>].<span class="ident">span</span>(), <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} value must be int&quot;</span>, <span class="ident">name</span>))),
         }
     };
     <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="ident">parse_lit</span>(<span class="number">1</span>, <span class="string">&quot;depth&quot;</span>)<span class="question-mark">?</span>;
@@ -1467,42 +1493,29 @@
     <span class="kw">let</span> <span class="ident">image_format</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">arg_values</span>[<span class="number">5</span>].<span class="ident">kind</span> {
         <span class="ident">LitKind</span>::<span class="ident">Str</span>(<span class="ident">image_format</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">image_format</span>.<span class="ident">as_str</span>().<span class="ident">parse</span>() {
             <span class="prelude-val">Ok</span>(<span class="ident">image_format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">image_format</span>,
-            <span class="prelude-val">Err</span>(()) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">cx</span>.<span class="ident">tcx</span>
-                    .<span class="ident">sess</span>
-                    .<span class="ident">span_err</span>(<span class="ident">args</span>[<span class="number">5</span>].<span class="ident">span</span>(), <span class="string">&quot;invalid image_format value&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
-            }
+            <span class="prelude-val">Err</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>((<span class="ident">args</span>[<span class="number">5</span>].<span class="ident">span</span>(), <span class="string">&quot;invalid image_format value&quot;</span>.<span class="ident">to_string</span>())),
         },
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">cx</span>.<span class="ident">tcx</span>
-                .<span class="ident">sess</span>
-                .<span class="ident">span_err</span>(<span class="ident">args</span>[<span class="number">5</span>].<span class="ident">span</span>(), <span class="string">&quot;image_format value must be str&quot;</span>);
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
-        }
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>((<span class="ident">args</span>[<span class="number">5</span>].<span class="ident">span</span>(), <span class="string">&quot;image_format value must be str&quot;</span>.<span class="ident">to_string</span>())),
     };
     <span class="kw">let</span> <span class="ident">access_qualifier</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">7</span> {
         <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">arg_values</span>[<span class="number">6</span>].<span class="ident">kind</span> {
             <span class="ident">LitKind</span>::<span class="ident">Str</span>(<span class="ident">access_qualifier</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">access_qualifier</span>.<span class="ident">as_str</span>().<span class="ident">parse</span>() {
                 <span class="prelude-val">Ok</span>(<span class="ident">access_qualifier</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">access_qualifier</span>,
                 <span class="prelude-val">Err</span>(()) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">cx</span>.<span class="ident">tcx</span>
-                        .<span class="ident">sess</span>
-                        .<span class="ident">span_err</span>(<span class="ident">args</span>[<span class="number">6</span>].<span class="ident">span</span>(), <span class="string">&quot;invalid access_qualifier value&quot;</span>);
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>((<span class="ident">args</span>[<span class="number">6</span>].<span class="ident">span</span>(), <span class="string">&quot;invalid access_qualifier value&quot;</span>.<span class="ident">to_string</span>()));
                 }
             },
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">cx</span>.<span class="ident">tcx</span>
-                    .<span class="ident">sess</span>
-                    .<span class="ident">span_err</span>(<span class="ident">args</span>[<span class="number">6</span>].<span class="ident">span</span>(), <span class="string">&quot;access_qualifier value must be str&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="kw">return</span> <span class="prelude-val">Err</span>((
+                    <span class="ident">args</span>[<span class="number">6</span>].<span class="ident">span</span>(),
+                    <span class="string">&quot;access_qualifier value must be str&quot;</span>.<span class="ident">to_string</span>(),
+                ));
             }
         })
     } <span class="kw">else</span> {
         <span class="prelude-val">None</span>
     };
-    <span class="prelude-val">Some</span>(<span class="ident">SpirvAttribute</span>::<span class="ident">Image</span> {
+    <span class="prelude-val">Ok</span>(<span class="ident">SpirvAttribute</span>::<span class="ident">ImageType</span> {
         <span class="ident">dim</span>,
         <span class="ident">depth</span>,
         <span class="ident">arrayed</span>,
@@ -1513,27 +1526,17 @@
     })
 }
 
-<span class="kw">fn</span> <span class="ident">parse_attr_int_value</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">arg</span>: <span class="kw-2">&amp;</span><span class="ident">NestedMetaItem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">parse_attr_int_value</span>(<span class="ident">arg</span>: <span class="kw-2">&amp;</span><span class="ident">NestedMetaItem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ParseAttrError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">arg</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">arg</span>.<span class="ident">meta_item</span>() {
         <span class="prelude-val">Some</span>(<span class="ident">arg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">arg</span>,
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">cx</span>.<span class="ident">tcx</span>
-                .<span class="ident">sess</span>
-                .<span class="ident">span_err</span>(<span class="ident">arg</span>.<span class="ident">span</span>(), <span class="string">&quot;attribute must have value&quot;</span>);
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
-        }
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>((<span class="ident">arg</span>.<span class="ident">span</span>(), <span class="string">&quot;attribute must have value&quot;</span>.<span class="ident">to_string</span>())),
     };
     <span class="kw">match</span> <span class="ident">arg</span>.<span class="ident">name_value_literal</span>() {
         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">Lit</span> {
             <span class="ident">kind</span>: <span class="ident">LitKind</span>::<span class="ident">Int</span>(<span class="ident">x</span>, <span class="ident">LitIntType</span>::<span class="ident">Unsuffixed</span>),
             ..
-        }) <span class="kw">if</span> <span class="ident">x</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">u32</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">u128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span>),
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">cx</span>.<span class="ident">tcx</span>
-                .<span class="ident">sess</span>
-                .<span class="ident">span_err</span>(<span class="ident">arg</span>.<span class="ident">span</span>, <span class="string">&quot;attribute value must be integer&quot;</span>);
-            <span class="prelude-val">None</span>
-        }
+        }) <span class="kw">if</span> <span class="ident">x</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">u32</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">u128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span>),
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>((<span class="ident">arg</span>.<span class="ident">span</span>, <span class="string">&quot;attribute value must be integer&quot;</span>.<span class="ident">to_string</span>())),
     }
 }
 
@@ -1542,11 +1545,11 @@
 <span class="comment">// others are specified with x, y, or z components</span>
 <span class="comment">// ie #[spirv(fragment(origin_lower_left))] or #[spirv(gl_compute(local_size_x=64, local_size_y=8))]</span>
 <span class="kw">fn</span> <span class="ident">parse_entry_attrs</span>(
-    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
+    <span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">Symbols</span>,
     <span class="ident">arg</span>: <span class="kw-2">&amp;</span><span class="ident">NestedMetaItem</span>,
     <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">Ident</span>,
     <span class="ident">execution_model</span>: <span class="ident">ExecutionModel</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Entry</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Entry</span>, <span class="ident">ParseAttrError</span><span class="op">&gt;</span> {
     <span class="kw">use</span> <span class="ident">ExecutionMode</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">ExecutionModel</span>::<span class="kw-2">*</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">Entry</span>::<span class="ident">from</span>(<span class="ident">execution_model</span>);
@@ -1556,15 +1559,14 @@
     <span class="comment">// Reserved</span>
     <span class="comment">//let mut max_workgroup_size_intel: Option&lt;[u32; 3]&gt; = None;</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">attrs</span>) <span class="op">=</span> <span class="ident">arg</span>.<span class="ident">meta_item_list</span>() {
-        <span class="ident">attrs</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> {
+        <span class="kw">for</span> <span class="ident">attr</span> <span class="kw">in</span> <span class="ident">attrs</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">attr_name</span>) <span class="op">=</span> <span class="ident">attr</span>.<span class="ident">ident</span>() {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">execution_mode</span>, <span class="ident">extra_dim</span>)) <span class="op">=</span>
-                    <span class="ident">cx</span>.<span class="ident">sym</span>.<span class="ident">execution_modes</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">attr_name</span>.<span class="ident">name</span>)
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">execution_mode</span>, <span class="ident">extra_dim</span>)) <span class="op">=</span> <span class="ident">sym</span>.<span class="ident">execution_modes</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">attr_name</span>.<span class="ident">name</span>)
                 {
                     <span class="kw">use</span> <span class="ident">ExecutionModeExtraDim</span>::<span class="kw-2">*</span>;
                     <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">extra_dim</span> {
                         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span>::<span class="prelude-val">None</span>,
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">parse_attr_int_value</span>(<span class="ident">cx</span>, <span class="ident">attr</span>),
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">parse_attr_int_value</span>(<span class="ident">attr</span>)<span class="question-mark">?</span>),
                     };
                     <span class="kw">match</span> <span class="ident">execution_mode</span> {
                         <span class="ident">OriginUpperLeft</span> <span class="op">|</span> <span class="ident">OriginLowerLeft</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -1642,25 +1644,25 @@
                         }
                     }
                 } <span class="kw">else</span> {
-                    <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>((
                         <span class="ident">attr_name</span>.<span class="ident">span</span>,
-                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                        <span class="macro">format</span><span class="macro">!</span>(
                             <span class="string">&quot;#[spirv({}(..))] unknown attribute argument {}&quot;</span>,
                             <span class="ident">name</span>.<span class="ident">name</span>.<span class="ident">to_ident_string</span>(),
                             <span class="ident">attr_name</span>.<span class="ident">name</span>.<span class="ident">to_ident_string</span>()
                         ),
-                    );
+                    ));
                 }
             } <span class="kw">else</span> {
-                <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                <span class="kw">return</span> <span class="prelude-val">Err</span>((
                     <span class="ident">arg</span>.<span class="ident">span</span>(),
-                    <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                    <span class="macro">format</span><span class="macro">!</span>(
                         <span class="string">&quot;#[spirv({}(..))] attribute argument must be single identifier&quot;</span>,
                         <span class="ident">name</span>.<span class="ident">name</span>.<span class="ident">to_ident_string</span>()
                     ),
-                );
+                ));
             }
-        });
+        }
     }
     <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">execution_model</span> {
         <span class="ident">Fragment</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -1694,7 +1696,7 @@
         <span class="comment">//TODO: Cover more defaults</span>
         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
     }
-    <span class="ident">entry</span>
+    <span class="prelude-val">Ok</span>(<span class="ident">entry</span>)
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "rustc_codegen_spirv";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
