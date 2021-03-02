@@ -22,7 +22,6 @@ use spirv_std::num_traits::Float;
 #[spirv(block)]
 #[derive(Copy, Clone)]
 #[repr(C)]
-#[allow(unused_attributes)]
 pub struct ShaderConstants {
     pub width: u32,
     pub height: u32,

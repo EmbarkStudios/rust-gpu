@@ -13,6 +13,5 @@ extern crate spirv_std;
 #[macro_use]
 pub extern crate spirv_std_macros;
 
-#[allow(unused_attributes)]
 #[spirv(gl_compute)]
 pub fn main_cs() {}

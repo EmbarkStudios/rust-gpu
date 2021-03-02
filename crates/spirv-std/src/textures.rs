@@ -2,14 +2,12 @@ use glam::{Vec2, Vec3A, Vec4};
 
 use crate::{integer::Integer, vector::Vector};
 
-#[allow(unused_attributes)]
 #[spirv(sampler)]
 #[derive(Copy, Clone)]
 pub struct Sampler {
     _x: u32,
 }
 
-#[allow(unused_attributes)]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
@@ -46,7 +44,6 @@ impl Image2d {
     }
 }
 
-#[allow(unused_attributes)]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
@@ -107,7 +104,6 @@ impl StorageImage2d {
     }
 }
 
-#[allow(unused_attributes)]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
@@ -144,7 +140,6 @@ impl Image2dArray {
     }
 }
 
-#[allow(unused_attributes)]
 #[spirv(sampled_image)]
 #[derive(Copy, Clone)]
 pub struct SampledImage<I> {

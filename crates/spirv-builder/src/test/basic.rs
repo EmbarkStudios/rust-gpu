@@ -22,7 +22,6 @@ impl<'a> Drop for SetEnvVar<'a> {
 #[test]
 fn hello_world() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
 }
@@ -35,7 +34,6 @@ pub fn main() {
 fn no_dce() {
     let _var = SetEnvVar::new(&"NO_DCE", "1");
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn no_dce() {
 }
@@ -49,7 +47,6 @@ fn add_two_ints() {
 fn add_two_ints(x: u32, y: u32) -> u32 {
     x + y
 }
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     add_two_ints(2, 3);
@@ -80,7 +77,6 @@ fn asm() {
         );
     }
 }
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     asm();
@@ -112,7 +108,6 @@ fn add_two_ints(x: u32, y: u32) -> u32 {
     }
     result
 }
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     add_two_ints(2, 3);
@@ -162,7 +157,6 @@ fn asm_op_decorate() {
                     );
             }
         }
-        #[allow(unused_attributes)]
         #[spirv(fragment)]
         pub fn main() {
             add_decorate();
@@ -208,7 +202,6 @@ fn asm() {
         );
     }
 }
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     asm();
@@ -222,7 +215,6 @@ fn logical_and() {
 fn f(x: bool, y: bool) -> bool {
     x && y
 }
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     f(false, true);
@@ -232,7 +224,6 @@ pub fn main() {
 #[test]
 fn panic() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     panic!("aaa");
@@ -247,7 +238,6 @@ fn int_div(x: usize) -> usize {
     1 / x
 }
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     int_div(0);
@@ -262,7 +252,6 @@ fn array_bounds_check(x: [u32; 4], i: usize) -> u32 {
     x[i]
 }
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     array_bounds_check([0, 1, 2, 3], 5);
@@ -282,7 +271,6 @@ pub struct ShaderConstants {
     pub time: f32,
 }
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(constants: PushConstant<ShaderConstants>) {
     let _constants = *constants;
@@ -298,7 +286,6 @@ fn push_constant_vulkan() {
     val_vulkan(
         r#"
 #[derive(Copy, Clone)]
-#[allow(unused_attributes)]
 #[spirv(block)]
 pub struct ShaderConstants {
     pub width: u32,
@@ -306,7 +293,6 @@ pub struct ShaderConstants {
     pub time: f32,
 }
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(constants: PushConstant<ShaderConstants>) {
     let _constants = *constants;
@@ -318,7 +304,6 @@ pub fn main(constants: PushConstant<ShaderConstants>) {
 #[test]
 fn infinite_loop() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     loop {}
@@ -330,7 +315,6 @@ fn unroll_loops() {
     dis_fn(
         // FIXME(eddyb) use `for _ in 0..10` here when that works.
         r#"
-#[allow(unused_attributes)]
 #[spirv(unroll_loops)]
 fn java_hash_ten_times(mut x: u32, y: u32) -> u32 {
     let mut i = 0;
@@ -340,7 +324,6 @@ fn java_hash_ten_times(mut x: u32, y: u32) -> u32 {
     }
     x
 }
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     java_hash_ten_times(7, 42);
@@ -390,7 +373,6 @@ OpFunctionEnd"#,
 #[test]
 fn signum() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(i: Input<f32>, mut o: Output<f32>) {
     *o = i.signum();
@@ -406,7 +388,6 @@ fn allocate_const_scalar_pointer() {
 use core::ptr::Unique;
 const POINTER: Unique<[u8;4]> = Unique::<[u8; 4]>::dangling();
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     let _pointer = POINTER;
@@ -422,7 +403,6 @@ const VEC_LIKE: (Unique<usize>, usize, usize) = (Unique::<usize>::dangling(), 0,
 pub fn assign_vec_like() {
     let _vec_like = VEC_LIKE;
 }
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {}"#);
 }
@@ -433,7 +413,6 @@ fn allocate_null_pointer() {
 use core::ptr::null;
 const NULL_PTR: *const i32 = null();
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     let _null_ptr = NULL_PTR;
@@ -452,7 +431,6 @@ pub fn create_uninit_and_write() {
     let _maybei32 = unsafe { maybei32.assume_init() };
 }
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {}"#);
 }
@@ -460,7 +438,6 @@ pub fn main() {}"#);
 #[test]
 fn vector_extract_dynamic() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     let vector = glam::Vec2::new(1.0, 2.0);
@@ -473,7 +450,6 @@ pub fn main() {
 #[test]
 fn vector_insert_dynamic() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     let vector = glam::Vec2::new(1.0, 2.0);
@@ -487,7 +463,6 @@ pub fn main() {
 #[test]
 fn mat3_vec3_multiply() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(input: Input<glam::Mat3>, mut output: Output<glam::Vec3>) {
     let input = *input;
@@ -548,7 +523,6 @@ fn complex_image_sample_inst() {
             result
         }
     }
-    #[allow(unused_attributes)]
     #[spirv(fragment)]
     pub fn main() {
         sample_proj_lod(glam::Vec4::zero(), glam::Vec2::zero(), glam::Vec2::zero(), 0, 0);
@@ -573,7 +547,6 @@ OpFunctionEnd",
 fn any() {
     val(r#"
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     let vector = glam::BVec2::new(true, false);
@@ -585,7 +558,6 @@ pub fn main() {
 #[test]
 fn all() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main() {
     let vector = glam::BVec2::new(true, true);
@@ -597,7 +569,6 @@ pub fn main() {
 #[test]
 fn image_read() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(image: UniformConstant<StorageImage2d>, mut output: Output<glam::Vec2>) {
     let coords = image.read(glam::IVec2::new(0, 1));
@@ -609,7 +580,6 @@ pub fn main(image: UniformConstant<StorageImage2d>, mut output: Output<glam::Vec
 #[test]
 fn image_write() {
     val(r#"
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(input: Input<glam::Vec2>, image: UniformConstant<StorageImage2d>) {
     let texels = *input;

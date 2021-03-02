@@ -158,7 +158,6 @@ pub fn fs(constants: &ShaderConstants, frag_coord: Vec2) -> Vec4 {
     tonemap(color).extend(1.0)
 }
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main_fs(
     #[spirv(frag_coord)] in_frag_coord: Input<Vec4>,
@@ -169,7 +168,6 @@ pub fn main_fs(
     *output = fs(&constants, frag_coord);
 }
 
-#[allow(unused_attributes)]
 #[spirv(vertex)]
 pub fn main_vs(
     #[spirv(vertex_index)] vert_idx: Input<i32>,

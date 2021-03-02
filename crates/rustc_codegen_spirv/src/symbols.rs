@@ -480,7 +480,7 @@ pub fn parse_attrs<'a, 'tcx>(
     attrs: &'tcx [Attribute],
 ) -> impl Iterator<Item = SpirvAttribute> + Captures<'tcx> + 'a {
     parse_attrs_for_checking(&cx.sym, attrs)
-        .filter_map(move |parse_attr_result| {
+        .filter_map(move |(_, parse_attr_result)| {
             // NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails
             // to see an attribute error, it will cause an ICE instead.
             parse_attr_result
@@ -497,7 +497,12 @@ type ParseAttrError = (Span, String);
 pub(crate) fn parse_attrs_for_checking<'a>(
     sym: &'a Symbols,
     attrs: &'a [Attribute],
-) -> impl Iterator<Item = Result<(Span, SpirvAttribute), ParseAttrError>> + 'a {
+) -> impl Iterator<
+    Item = (
+        &'a Attribute,
+        Result<(Span, SpirvAttribute), ParseAttrError>,
+    ),
+> + 'a {
     attrs.iter().flat_map(move |attr| {
         let is_spirv = match attr.kind {
             AttrKind::Normal(ref item, _) => {
@@ -558,6 +563,7 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                 };
                 Ok((span, parsed_attr))
             }))
+            .map(move |parse_attr_result| (attr, parse_attr_result))
     })
 }
 
