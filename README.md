@@ -21,19 +21,9 @@ However, many things aren't implemented yet: for example, loops and switches are
 ```rust
 use spirv_std::{glam::{Vec3, Vec4, vec2, vec3}, storage_class::{Input, Output}};
 
-#[derive(Copy, Clone)]
-#[repr(C)]
-#[spirv(block)]
-pub struct ShaderConstants {
-    pub width: u32,
-    pub height: u32,
-}
-
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn main(
     #[spirv(frag_coord)] in_frag_coord: Input<Vec4>,
-    constants: PushConstant<ShaderConstants>,
     mut output: Output<Vec4>,
 ) {
     let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
@@ -47,9 +37,6 @@ pub fn main(
 
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
-
-    // Tonemapping
-    let color = color.max(Vec3::splat(0.0)).min(Vec3::splat(1024.0));
 
     *output = tonemap(color).extend(1.0)
 }
