@@ -6,6 +6,7 @@ use rspirv::spirv::{
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_data_structures::captures::Captures;
 use rustc_span::symbol::{Ident, Symbol};
+use rustc_span::Span;
 use std::collections::HashMap;
 
 /// Various places in the codebase (mostly attribute parsing) need to compare rustc Symbols to particular keywords.
@@ -459,155 +460,142 @@ pub enum SpirvAttribute {
 
 // Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused
 // reporting already happens even before we get here :(
-/// Returns empty if this attribute is not a spirv attribute, or if it's malformed (and an error is
-/// reported).
+/// Returns only the spirv attributes that could successfully parsed.
+/// For any malformed ones, an error is reported.
 pub fn parse_attrs<'a, 'tcx>(
     cx: &'a CodegenCx<'tcx>,
     attrs: &'tcx [Attribute],
 ) -> impl Iterator<Item = SpirvAttribute> + Captures<'tcx> + 'a {
+    parse_attrs_with_errors(&cx.sym, attrs).filter_map(move |parse_attr_result| {
+        parse_attr_result
+            .map_err(|(span, msg)| cx.tcx.sess.span_err(span, &msg))
+            .ok()
+    })
+}
+
+// FIXME(eddyb) find something nicer for the error type.
+type ParseAttrError = (Span, String);
+
+fn parse_attrs_with_errors<'a>(
+    sym: &'a Symbols,
+    attrs: &'a [Attribute],
+) -> impl Iterator<Item = Result<SpirvAttribute, ParseAttrError>> + 'a {
     attrs.iter().flat_map(move |attr| {
         let is_spirv = match attr.kind {
             AttrKind::Normal(ref item, _) => {
                 // TODO: We ignore the rest of the path. Is this right?
                 let last = item.path.segments.last();
-                last.map_or(false, |seg| seg.ident.name == cx.sym.spirv)
+                last.map_or(false, |seg| seg.ident.name == sym.spirv)
             }
             AttrKind::DocComment(..) => false,
         };
-        let args = if !is_spirv {
+        let (whole_attr_error, args) = if !is_spirv {
             // Use an empty vec here to return empty
-            Vec::new()
+            (None, Vec::new())
         } else if let Some(args) = attr.meta_item_list() {
-            args
+            (None, args)
         } else {
-            cx.tcx.sess.span_err(
-                attr.span,
-                "#[spirv(..)] attribute must have at least one argument",
-            );
-            Vec::new()
+            (
+                Some(Err((
+                    attr.span,
+                    "#[spirv(..)] attribute must have at least one argument".to_string(),
+                ))),
+                Vec::new(),
+            )
         };
-        args.into_iter().filter_map(move |ref arg| {
-            if arg.has_name(cx.sym.image) {
-                parse_image(cx, arg)
-            } else if arg.has_name(cx.sym.descriptor_set) {
-                match parse_attr_int_value(cx, arg) {
-                    Some(x) => Some(SpirvAttribute::DescriptorSet(x)),
-                    None => None,
+        whole_attr_error
+            .into_iter()
+            .chain(args.into_iter().map(move |ref arg| {
+                if arg.has_name(sym.image) {
+                    parse_image(sym, arg)
+                } else if arg.has_name(sym.descriptor_set) {
+                    Ok(SpirvAttribute::DescriptorSet(parse_attr_int_value(arg)?))
+                } else if arg.has_name(sym.binding) {
+                    Ok(SpirvAttribute::Binding(parse_attr_int_value(arg)?))
+                } else {
+                    let name = match arg.ident() {
+                        Some(i) => i,
+                        None => {
+                            return Err((
+                                arg.span(),
+                                "#[spirv(..)] attribute argument must be single identifier"
+                                    .to_string(),
+                            ));
+                        }
+                    };
+                    sym.attributes
+                        .get(&name.name)
+                        .map(|a| {
+                            Ok(match a {
+                                SpirvAttribute::Entry(entry) => SpirvAttribute::Entry(
+                                    parse_entry_attrs(sym, arg, &name, entry.execution_model)?,
+                                ),
+                                _ => a.clone(),
+                            })
+                        })
+                        .unwrap_or_else(|| {
+                            Err((name.span, "unknown argument to spirv attribute".to_string()))
+                        })
                 }
-            } else if arg.has_name(cx.sym.binding) {
-                match parse_attr_int_value(cx, arg) {
-                    Some(x) => Some(SpirvAttribute::Binding(x)),
-                    None => None,
-                }
-            } else {
-                let name = match arg.ident() {
-                    Some(i) => i,
-                    None => {
-                        cx.tcx.sess.span_err(
-                            arg.span(),
-                            "#[spirv(..)] attribute argument must be single identifier",
-                        );
-                        return None;
-                    }
-                };
-                cx.sym
-                    .attributes
-                    .get(&name.name)
-                    .map(|a| match a {
-                        SpirvAttribute::Entry(entry) => SpirvAttribute::Entry(parse_entry_attrs(
-                            cx,
-                            arg,
-                            &name,
-                            entry.execution_model,
-                        )),
-                        _ => a.clone(),
-                    })
-                    .or_else(|| {
-                        cx.tcx
-                            .sess
-                            .span_err(name.span, "unknown argument to spirv attribute");
-                        None
-                    })
-            }
-        })
+            }))
     })
 }
 
-fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribute> {
+fn parse_image(sym: &Symbols, attr: &NestedMetaItem) -> Result<SpirvAttribute, ParseAttrError> {
     let args = match attr.meta_item_list() {
         Some(args) => args,
         None => {
-            cx.tcx
-                .sess
-                .span_err(attr.span(), "image attribute must have arguments");
-            return None;
+            return Err((
+                attr.span(),
+                "image attribute must have arguments".to_string(),
+            ))
         }
     };
     if args.len() != 6 && args.len() != 7 {
-        cx.tcx
-            .sess
-            .span_err(attr.span(), "image attribute must have 6 or 7 arguments");
-        return None;
+        return Err((
+            attr.span(),
+            "image attribute must have 6 or 7 arguments".to_string(),
+        ));
     }
-    let check = |idx: usize, sym: Symbol| -> bool {
+    let check = |idx: usize, sym: Symbol| -> Result<(), ParseAttrError> {
         if args[idx].has_name(sym) {
-            false
+            Ok(())
         } else {
-            cx.tcx.sess.span_err(
+            Err((
                 args[idx].span(),
-                &format!("image attribute argument {} must be {}=...", idx + 1, sym),
-            );
-            true
+                format!("image attribute argument {} must be {}=...", idx + 1, sym),
+            ))
         }
     };
-    if check(0, cx.sym.dim)
-        | check(1, cx.sym.depth)
-        | check(2, cx.sym.arrayed)
-        | check(3, cx.sym.multisampled)
-        | check(4, cx.sym.sampled)
-        | check(5, cx.sym.image_format)
-        | (args.len() == 7 && check(6, cx.sym.access_qualifier))
-    {
-        return None;
+    check(0, sym.dim)?;
+    check(1, sym.depth)?;
+    check(2, sym.arrayed)?;
+    check(3, sym.multisampled)?;
+    check(4, sym.sampled)?;
+    check(5, sym.image_format)?;
+    if args.len() == 7 {
+        check(6, sym.access_qualifier)?;
     }
     let arg_values = args
         .iter()
         .map(
             |arg| match arg.meta_item().and_then(|arg| arg.name_value_literal()) {
-                Some(arg) => Some(arg),
-                None => {
-                    cx.tcx
-                        .sess
-                        .span_err(arg.span(), "image attribute must be name=value");
-                    None
-                }
+                Some(arg) => Ok(arg),
+                None => Err((arg.span(), "image attribute must be name=value".to_string())),
             },
         )
-        .collect::<Option<Vec<_>>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
     let dim = match arg_values[0].kind {
         LitKind::Str(dim, _) => match dim.as_str().parse() {
             Ok(dim) => dim,
-            Err(()) => {
-                cx.tcx.sess.span_err(args[0].span(), "invalid dim value");
-                return None;
-            }
+            Err(()) => return Err((args[0].span(), "invalid dim value".to_string())),
         },
-        _ => {
-            cx.tcx
-                .sess
-                .span_err(args[0].span(), "dim value must be str");
-            return None;
-        }
+        _ => return Err((args[0].span(), "dim value must be str".to_string())),
     };
-    let parse_lit = |idx: usize, name: &str| -> Option<u32> {
+    let parse_lit = |idx: usize, name: &str| -> Result<u32, ParseAttrError> {
         match arg_values[idx].kind {
-            LitKind::Int(v, _) => Some(v as u32),
-            _ => {
-                cx.tcx
-                    .sess
-                    .span_err(args[idx].span(), &format!("{} value must be int", name));
-                None
-            }
+            LitKind::Int(v, _) => Ok(v as u32),
+            _ => Err((args[idx].span(), format!("{} value must be int", name))),
         }
     };
     let depth = parse_lit(1, "depth")?;
@@ -617,42 +605,29 @@ fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribu
     let image_format = match arg_values[5].kind {
         LitKind::Str(image_format, _) => match image_format.as_str().parse() {
             Ok(image_format) => image_format,
-            Err(()) => {
-                cx.tcx
-                    .sess
-                    .span_err(args[5].span(), "invalid image_format value");
-                return None;
-            }
+            Err(()) => return Err((args[5].span(), "invalid image_format value".to_string())),
         },
-        _ => {
-            cx.tcx
-                .sess
-                .span_err(args[5].span(), "image_format value must be str");
-            return None;
-        }
+        _ => return Err((args[5].span(), "image_format value must be str".to_string())),
     };
     let access_qualifier = if args.len() == 7 {
         Some(match arg_values[6].kind {
             LitKind::Str(access_qualifier, _) => match access_qualifier.as_str().parse() {
                 Ok(access_qualifier) => access_qualifier,
                 Err(()) => {
-                    cx.tcx
-                        .sess
-                        .span_err(args[6].span(), "invalid access_qualifier value");
-                    return None;
+                    return Err((args[6].span(), "invalid access_qualifier value".to_string()));
                 }
             },
             _ => {
-                cx.tcx
-                    .sess
-                    .span_err(args[6].span(), "access_qualifier value must be str");
-                return None;
+                return Err((
+                    args[6].span(),
+                    "access_qualifier value must be str".to_string(),
+                ));
             }
         })
     } else {
         None
     };
-    Some(SpirvAttribute::Image {
+    Ok(SpirvAttribute::Image {
         dim,
         depth,
         arrayed,
@@ -663,27 +638,17 @@ fn parse_image(cx: &CodegenCx<'_>, attr: &NestedMetaItem) -> Option<SpirvAttribu
     })
 }
 
-fn parse_attr_int_value(cx: &CodegenCx<'_>, arg: &NestedMetaItem) -> Option<u32> {
+fn parse_attr_int_value(arg: &NestedMetaItem) -> Result<u32, ParseAttrError> {
     let arg = match arg.meta_item() {
         Some(arg) => arg,
-        None => {
-            cx.tcx
-                .sess
-                .span_err(arg.span(), "attribute must have value");
-            return None;
-        }
+        None => return Err((arg.span(), "attribute must have value".to_string())),
     };
     match arg.name_value_literal() {
         Some(&Lit {
             kind: LitKind::Int(x, LitIntType::Unsuffixed),
             ..
-        }) if x <= u32::MAX as u128 => Some(x as u32),
-        _ => {
-            cx.tcx
-                .sess
-                .span_err(arg.span, "attribute value must be integer");
-            None
-        }
+        }) if x <= u32::MAX as u128 => Ok(x as u32),
+        _ => Err((arg.span, "attribute value must be integer".to_string())),
     }
 }
 
@@ -692,11 +657,11 @@ fn parse_attr_int_value(cx: &CodegenCx<'_>, arg: &NestedMetaItem) -> Option<u32>
 // others are specified with x, y, or z components
 // ie #[spirv(fragment(origin_lower_left))] or #[spirv(gl_compute(local_size_x=64, local_size_y=8))]
 fn parse_entry_attrs(
-    cx: &CodegenCx<'_>,
+    sym: &Symbols,
     arg: &NestedMetaItem,
     name: &Ident,
     execution_model: ExecutionModel,
-) -> Entry {
+) -> Result<Entry, ParseAttrError> {
     use ExecutionMode::*;
     use ExecutionModel::*;
     let mut entry = Entry::from(execution_model);
@@ -706,15 +671,14 @@ fn parse_entry_attrs(
     // Reserved
     //let mut max_workgroup_size_intel: Option<[u32; 3]> = None;
     if let Some(attrs) = arg.meta_item_list() {
-        attrs.iter().for_each(|attr| {
+        for attr in attrs {
             if let Some(attr_name) = attr.ident() {
-                if let Some((execution_mode, extra_dim)) =
-                    cx.sym.execution_modes.get(&attr_name.name)
+                if let Some((execution_mode, extra_dim)) = sym.execution_modes.get(&attr_name.name)
                 {
                     use ExecutionModeExtraDim::*;
                     let val = match extra_dim {
                         None => Option::None,
-                        _ => parse_attr_int_value(cx, attr),
+                        _ => Some(parse_attr_int_value(attr)?),
                     };
                     match execution_mode {
                         OriginUpperLeft | OriginLowerLeft => {
@@ -792,25 +756,25 @@ fn parse_entry_attrs(
                         }
                     }
                 } else {
-                    cx.tcx.sess.span_err(
+                    return Err((
                         attr_name.span,
-                        &format!(
+                        format!(
                             "#[spirv({}(..))] unknown attribute argument {}",
                             name.name.to_ident_string(),
                             attr_name.name.to_ident_string()
                         ),
-                    );
+                    ));
                 }
             } else {
-                cx.tcx.sess.span_err(
+                return Err((
                     arg.span(),
-                    &format!(
+                    format!(
                         "#[spirv({}(..))] attribute argument must be single identifier",
                         name.name.to_ident_string()
                     ),
-                );
+                ));
             }
-        });
+        }
     }
     match entry.execution_model {
         Fragment => {
@@ -844,5 +808,5 @@ fn parse_entry_attrs(
         //TODO: Cover more defaults
         _ => {}
     }
-    entry
+    Ok(entry)
 }
