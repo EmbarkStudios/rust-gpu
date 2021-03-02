@@ -34,7 +34,7 @@ pub struct Symbols {
     pub spirv15: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
-    image: Symbol,
+    image_type: Symbol,
     dim: Symbol,
     depth: Symbol,
     arrayed: Symbol,
@@ -383,7 +383,7 @@ impl Symbols {
             spirv15: Symbol::intern("spirv1.5"),
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
-            image: Symbol::intern("image"),
+            image_type: Symbol::intern("image_type"),
             dim: Symbol::intern("dim"),
             depth: Symbol::intern("depth"),
             arrayed: Symbol::intern("arrayed"),
@@ -442,7 +442,7 @@ pub enum SpirvAttribute {
     Entry(Entry),
     DescriptorSet(u32),
     Binding(u32),
-    Image {
+    ImageType {
         dim: Dim,
         depth: u32,
         arrayed: u32,
@@ -506,8 +506,8 @@ fn parse_attrs_with_errors<'a>(
         whole_attr_error
             .into_iter()
             .chain(args.into_iter().map(move |ref arg| {
-                if arg.has_name(sym.image) {
-                    parse_image(sym, arg)
+                if arg.has_name(sym.image_type) {
+                    parse_image_type(sym, arg)
                 } else if arg.has_name(sym.descriptor_set) {
                     Ok(SpirvAttribute::DescriptorSet(parse_attr_int_value(arg)?))
                 } else if arg.has_name(sym.binding) {
@@ -541,20 +541,23 @@ fn parse_attrs_with_errors<'a>(
     })
 }
 
-fn parse_image(sym: &Symbols, attr: &NestedMetaItem) -> Result<SpirvAttribute, ParseAttrError> {
+fn parse_image_type(
+    sym: &Symbols,
+    attr: &NestedMetaItem,
+) -> Result<SpirvAttribute, ParseAttrError> {
     let args = match attr.meta_item_list() {
         Some(args) => args,
         None => {
             return Err((
                 attr.span(),
-                "image attribute must have arguments".to_string(),
+                "image_type attribute must have arguments".to_string(),
             ))
         }
     };
     if args.len() != 6 && args.len() != 7 {
         return Err((
             attr.span(),
-            "image attribute must have 6 or 7 arguments".to_string(),
+            "image_type attribute must have 6 or 7 arguments".to_string(),
         ));
     }
     let check = |idx: usize, sym: Symbol| -> Result<(), ParseAttrError> {
@@ -563,7 +566,11 @@ fn parse_image(sym: &Symbols, attr: &NestedMetaItem) -> Result<SpirvAttribute, P
         } else {
             Err((
                 args[idx].span(),
-                format!("image attribute argument {} must be {}=...", idx + 1, sym),
+                format!(
+                    "image_type attribute argument {} must be {}=...",
+                    idx + 1,
+                    sym
+                ),
             ))
         }
     };
@@ -581,7 +588,10 @@ fn parse_image(sym: &Symbols, attr: &NestedMetaItem) -> Result<SpirvAttribute, P
         .map(
             |arg| match arg.meta_item().and_then(|arg| arg.name_value_literal()) {
                 Some(arg) => Ok(arg),
-                None => Err((arg.span(), "image attribute must be name=value".to_string())),
+                None => Err((
+                    arg.span(),
+                    "image_type attribute must be name=value".to_string(),
+                )),
             },
         )
         .collect::<Result<Vec<_>, _>>()?;
@@ -627,7 +637,7 @@ fn parse_image(sym: &Symbols, attr: &NestedMetaItem) -> Result<SpirvAttribute, P
     } else {
         None
     };
-    Ok(SpirvAttribute::Image {
+    Ok(SpirvAttribute::ImageType {
         dim,
         depth,
         arrayed,
