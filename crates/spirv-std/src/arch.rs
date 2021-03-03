@@ -10,6 +10,8 @@ use crate::{scalar::Scalar, vector::Vector};
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAny")]
 #[inline]
+// Remove after 25.03.2021 (Rust 1.51)
+#[cfg(any())]
 pub fn any<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
     let mut result = false;
 
@@ -43,6 +45,8 @@ pub fn any<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAll")]
 #[inline]
+// Remove after 25.03.2021 (Rust 1.51)
+#[cfg(any())]
 pub fn all<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
     let mut result = false;
 
@@ -79,10 +83,7 @@ pub fn all<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpVectorExtractDynamic")]
 #[inline]
-pub unsafe fn vector_extract_dynamic<T: Scalar, V: Vector<T, N>, const N: usize>(
-    vector: V,
-    index: usize,
-) -> T {
+pub unsafe fn vector_extract_dynamic<T: Scalar, V: Vector<T>>(vector: V, index: usize) -> T {
     let mut result = T::default();
 
     asm! {
@@ -106,7 +107,7 @@ pub unsafe fn vector_extract_dynamic<T: Scalar, V: Vector<T, N>, const N: usize>
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpVectorInsertDynamic")]
 #[inline]
-pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T, N>, const N: usize>(
+pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T>>(
     vector: V,
     index: usize,
     element: T,
