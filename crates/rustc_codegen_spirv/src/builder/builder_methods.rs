@@ -157,7 +157,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             bitcast_res as u32
         };
 
-        let asdf = |builder: &mut Self, result_type: u32, args: &[SpirvValue]| -> SpirvValue {
+        let load_type = |builder: &mut Self, result_type: u32, args: &[SpirvValue]| -> SpirvValue {
             let data = builder.lookup_type(result_type);
 
             let bindless_idx = args[0].def(builder);
@@ -248,7 +248,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Void => {
                 if let SpirvType::Pointer { .. } = self.lookup_type(args[0].ty) {
                     let pointer = self.load(args[0], Align::from_bytes(0).unwrap());
-                    let stuff = asdf(self, pointer.ty, &args[1..]);
+                    let stuff = load_type(self, pointer.ty, &args[1..]);
                     self.store(stuff, args[0], Align::from_bytes(0).unwrap())
                 } else {
                     bug!(
@@ -257,7 +257,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     );
                 }
             }
-            _ => asdf(self, result_type, args),
+            _ => load_type(self, result_type, args),
         }
     }
 
