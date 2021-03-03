@@ -1,8 +1,9 @@
 # Summary
 
 - [Introduction](./introduction.md)
-- [Contributing]()
-    - [Building Rust-GPU](./building-rust-gpu.md)
+- [Contributing to Rust-GPU]()
+    - [Building](./building-rust-gpu.md)
+    - [Testing](./testing.md)
     - [Minimizing bugs in SPIR-V](./spirv-minimization.md)
 - [Platform Support](./platform-support.md)
 - [Writing Shader Crates](./writing-shader-crates.md)
