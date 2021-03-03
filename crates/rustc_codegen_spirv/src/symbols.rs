@@ -47,6 +47,7 @@ pub struct Symbols {
     attributes: HashMap<Symbol, SpirvAttribute>,
     execution_modes: HashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
     pub libm_intrinsics: HashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
+    pub spirv_bindless: Symbol,
 }
 
 const BUILTINS: &[(&str, BuiltIn)] = {
@@ -343,6 +344,7 @@ impl Symbols {
             ("sampled_image", SpirvAttribute::SampledImage),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
             ("internal_buffer_load", SpirvAttribute::InternalBufferLoad),
+            ("internal_buffer_store", SpirvAttribute::InternalBufferStore),
         ]
         .iter()
         .cloned();
@@ -400,6 +402,7 @@ impl Symbols {
             attributes,
             execution_modes,
             libm_intrinsics,
+            spirv_bindless: Symbol::intern("spirv_bindless"),
         }
     }
 
@@ -476,6 +479,7 @@ pub enum SpirvAttribute {
     Flat,
     UnrollLoops,
     InternalBufferLoad,
+    InternalBufferStore,
 }
 
 // FIXME(eddyb) maybe move this to `attr`?

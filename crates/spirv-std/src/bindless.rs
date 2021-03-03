@@ -108,7 +108,14 @@ pub struct Buffer(RenderResourceHandle);
 #[allow(unused_attributes)]
 #[spirv(internal_buffer_load)]
 #[spirv_std_macros::gpu_only]
-fn internal_buffer_load<T>(buffer: u32, offset: u32) -> T {
+fn internal_buffer_load<T>(_buffer: u32, _offset: u32) -> T {
+    unimplemented!()
+} // actually implemented in the compiler
+
+#[allow(unused_attributes)]
+#[spirv(internal_buffer_store)]
+#[spirv_std_macros::gpu_only]
+fn internal_buffer_store<T>(_buffer: u32, _offset: u32) -> T {
     unimplemented!()
 } // actually implemented in the compiler
 
@@ -119,6 +126,14 @@ impl Buffer {
         // assert!(self.0.tag() == RenderResourceTag::Buffer);
 
         unsafe { internal_buffer_load(self.0.index(), dword_aligned_byte_offset) }
+    }
+
+    #[spirv_std_macros::gpu_only]
+    pub unsafe fn store<T>(self, dword_aligned_byte_offset: u32) -> T {
+        // jb-todo: figure out why this assert breaks with complaints about pointers
+        // assert!(self.0.tag() == RenderResourceTag::Buffer);
+
+        unsafe { internal_buffer_store(self.0.index(), dword_aligned_byte_offset) }
     }
 }
 
@@ -143,13 +158,12 @@ impl Texture2d {
                 "OpDecorate %image_2d_var Binding 0",
                 "%uint                  = OpTypeInt 32 0",
                 "%float                 = OpTypeFloat 32",
-                "%uint_0                = OpConstant %uint 0",
                 "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
                 "%sampled_image_2d      = OpTypeSampledImage %image_2d",
                 "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
-                "%ptr_image_array       = OpTypePointer UniformConstant %image_array",
-                "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
-                "%ptr_sampled_image_2d  = OpTypePointer UniformConstant %sampled_image_2d",
+                "%ptr_image_array       = OpTypePointer Generic %image_array",
+                "%image_2d_var          = OpVariable %ptr_image_array Generic",
+                "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
                 "", // ^^ type preamble
                 "%offset                = OpLoad _ {1}",
                 "%24                    = OpAccessChain %ptr_sampled_image_2d %image_2d_var %offset",
@@ -186,14 +200,13 @@ impl Texture2d {
                 "%int                   = OpTypeInt 32 1",
                 "%float                 = OpTypeFloat 32",
                 "%v2int                 = OpTypeVector %int 2",
-                "%uint_0                = OpConstant %uint 0",
                 "%int_0                 = OpConstant %int 0",
                 "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
                 "%sampled_image_2d      = OpTypeSampledImage %image_2d",
                 "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
-                "%ptr_image_array       = OpTypePointer UniformConstant %image_array",
-                "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
-                "%ptr_sampled_image_2d  = OpTypePointer UniformConstant %sampled_image_2d",
+                "%ptr_image_array       = OpTypePointer Generic %image_array",
+                "%image_2d_var          = OpVariable %ptr_image_array Generic",
+                "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
                 "", // ^^ type preamble
                 "%offset                = OpLoad _ {1}",
                 "%24                    = OpAccessChain %ptr_sampled_image_2d %image_2d_var %offset",

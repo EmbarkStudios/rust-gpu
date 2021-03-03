@@ -129,6 +129,9 @@ impl<'tcx> CodegenCx<'tcx> {
                 SpirvAttribute::InternalBufferLoad => {
                     self.internal_buffer_load_id.borrow_mut().insert(fn_id);
                 }
+                SpirvAttribute::InternalBufferStore => {
+                    self.internal_buffer_store_id.borrow_mut().insert(fn_id);
+                }
                 _ => {}
             }
         }

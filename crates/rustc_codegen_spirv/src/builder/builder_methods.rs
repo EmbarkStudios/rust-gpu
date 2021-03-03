@@ -107,6 +107,160 @@ fn memset_dynamic_scalar(
 }
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
+    fn codegen_internal_buffer_load(
+        &mut self,
+        result_type: Word,
+        args: &[SpirvValue],
+    ) -> SpirvValue {
+        // simple structs are returned as values, complex ones are returned as out parameters
+
+        let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
+
+        let uniform_uint_ptr =
+            SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
+
+        let zero = self.constant_int(uint_ty, 0).def(self);
+
+        let sets = self.bindless_descriptor_sets.borrow().unwrap();
+
+        let member_accessor = |builder: &mut Self,
+                               offset: u32,
+                               dword_offset: u32,
+                               bindless_idx: u32,
+                               element_ty: u32|
+         -> u32 {
+            let offset = if offset > 0 {
+                let element_offset = builder.constant_int(uint_ty, offset as u64).def(builder);
+
+                builder
+                    .emit()
+                    .i_add(uint_ty, None, dword_offset, element_offset)
+                    .unwrap()
+            } else {
+                dword_offset
+            };
+
+            let indices = vec![bindless_idx, zero, offset];
+
+            let result = builder
+                .emit()
+                .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+                .unwrap();
+
+            let load_res = builder
+                .emit()
+                .load(uint_ty, None, result, None, std::iter::empty())
+                .unwrap();
+
+            let bitcast_res = builder.emit().bitcast(element_ty, None, load_res).unwrap();
+
+            bitcast_res as u32
+        };
+
+        let asdf = |builder: &mut Self, result_type: u32, args: &[SpirvValue]| -> SpirvValue {
+            let data = builder.lookup_type(result_type);
+
+            let bindless_idx = args[0].def(builder);
+            let offset_arg = args[1].def(builder);
+
+            let two = builder.constant_int(uint_ty, 2).def(builder);
+
+            let dword_offset = builder
+                .emit()
+                .shift_right_arithmetic(uint_ty, None, offset_arg, two)
+                .unwrap();
+
+            match data {
+                SpirvType::Vector { count, element } => {
+                    let mut composite_components = vec![];
+
+                    for offset in 0..count {
+                        composite_components.push(member_accessor(
+                            builder,
+                            offset,
+                            dword_offset,
+                            bindless_idx,
+                            element,
+                        ));
+                    }
+
+                    let adt = data.def(rustc_span::DUMMY_SP, builder);
+
+                    builder
+                        .emit()
+                        .composite_construct(adt, None, composite_components)
+                        .unwrap()
+                        .with_type(adt)
+                }
+                SpirvType::Adt {
+                    ref field_types,
+                    ref field_offsets,
+                    ..
+                } => {
+                    let mut composite_components = vec![];
+
+                    for (ty, offset) in field_types.iter().zip(field_offsets.iter()) {
+                        composite_components.push(member_accessor(
+                            builder,
+                            offset.bytes() as u32,
+                            dword_offset,
+                            bindless_idx,
+                            *ty,
+                        ));
+                    }
+
+                    let adt = data.def(rustc_span::DUMMY_SP, builder);
+
+                    builder
+                        .emit()
+                        .composite_construct(adt, None, composite_components)
+                        .unwrap()
+                        .with_type(adt)
+                }
+                SpirvType::Integer(bits, signed) => {
+                    assert!(bits == 32); // jb-todo: 8, 16 and 64-bits
+                    assert!(signed == false); // jb-todo: signed
+
+                    let indices = vec![bindless_idx, zero, dword_offset];
+
+                    let result = builder
+                        .emit()
+                        .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+                        .unwrap();
+
+                    let load_res = builder
+                        .emit()
+                        .load(uint_ty, None, result, None, std::iter::empty())
+                        .unwrap();
+
+                    load_res.with_type(uint_ty)
+                }
+                _ => {
+                    bug!(
+                        "Unhandled case for `internal_buffer_load` return / args: {:?}",
+                        args
+                    );
+                }
+            }
+        };
+
+        match self.lookup_type(result_type) {
+            SpirvType::Void => {
+                if let SpirvType::Pointer { .. } = self.lookup_type(args[0].ty) {
+                    let pointer = self.load(args[0], Align::from_bytes(0).unwrap());
+                    let stuff = asdf(self, pointer.ty, &args[1..]);
+                    self.store(stuff, args[0], Align::from_bytes(0).unwrap())
+                } else {
+                    bug!(
+                        "Unhandled case for `internal_buffer_load` intrinsic / args: {:?}",
+                        args
+                    );
+                }
+            }
+            _ => asdf(self, result_type, args),
+        }
+    }
+
     fn ordering_to_semantics_def(&self, ordering: AtomicOrdering) -> SpirvValue {
         let mut invalid_seq_cst = false;
         let semantics = match ordering {
@@ -1976,127 +2130,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             self.abort();
             self.undef(result_type)
         } else if self.internal_buffer_load_id.borrow().contains(&llfn_def) {
-            // simple structs are returned as values, complex ones are returned as out parameters
-            if let SpirvType::Pointer { .. } = self.lookup_type(args[0].ty) {
-                let pointer = self.load(args[0], Align::from_bytes(0).unwrap());
-                let data = self.lookup_type(pointer.ty);
-
-                // jb-todo: a large chunk of these types should just always be generated
-                let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
-
-                let runtime_array_uint =
-                    SpirvType::RuntimeArray { element: uint_ty }.def(rustc_span::DUMMY_SP, self);
-
-                let buffer_struct = SpirvType::Adt {
-                    def_id: None,
-                    size: Some(Size::from_bytes(4)),
-                    align: Align::from_bytes(4).unwrap(),
-                    field_types: vec![runtime_array_uint],
-                    field_offsets: vec![],
-                    field_names: None,
-                    is_block: false,
-                }
-                .def(rustc_span::DUMMY_SP, self);
-
-                let runtime_array_struct = SpirvType::RuntimeArray {
-                    element: buffer_struct,
-                }
-                .def(rustc_span::DUMMY_SP, self);
-
-                let uniform_ptr_runtime_array = SpirvType::Pointer {
-                    pointee: runtime_array_struct,
-                }
-                .def(rustc_span::DUMMY_SP, self);
-
-                let uniform_uint_ptr =
-                    SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
-
-                let zero = self.constant_int(uint_ty, 0).def(self);
-
-                let mut emit_global = self.emit_global();
-                let buffer = emit_global
-                    .variable(uniform_ptr_runtime_array, None, StorageClass::Uniform, None)
-                    .with_type(uniform_ptr_runtime_array)
-                    .def(self);
-
-                emit_global.decorate(
-                    buffer,
-                    rspirv::spirv::Decoration::DescriptorSet,
-                    std::iter::once(Operand::LiteralInt32(0)),
-                );
-                emit_global.decorate(
-                    buffer,
-                    rspirv::spirv::Decoration::Binding,
-                    std::iter::once(Operand::LiteralInt32(0)),
-                );
-                drop(emit_global);
-
-                let bindless_idx = args[1].def(self);
-                let offset_arg = args[2].def(self);
-                let mut composite_components = vec![];
-
-                let two = self.constant_int(uint_ty, 2).def(self);
-
-                let dword_offset = self
-                    .emit()
-                    .shift_right_arithmetic(uint_ty, None, offset_arg, two)
-                    .unwrap();
-
-                match &data {
-                    &SpirvType::Adt {
-                        ref field_types,
-                        ref field_offsets,
-                        ..
-                    } => {
-                        for (ty, offset) in field_types.iter().zip(field_offsets.iter()) {
-                            // assert!(offset % 4 == 0, "Field elements need to be 4 byte aligned");
-                            // jb-todo: need to check size is a multiple of 4 as well
-                            // jb-todo: need to handle for eg. 64-bit types
-                            // jb-todo: need to handle vector types and nested ADTs
-                            let offset = if offset > &Size::ZERO {
-                                let element_offset = self
-                                    .constant_int(uint_ty, offset.bytes() as u64 / 4)
-                                    .def(self);
-
-                                self.emit()
-                                    .i_add(uint_ty, None, dword_offset, element_offset)
-                                    .unwrap()
-                            } else {
-                                dword_offset
-                            };
-
-                            let indices = vec![bindless_idx, zero, offset];
-
-                            let result = self
-                                .emit()
-                                .access_chain(uniform_uint_ptr, None, buffer, indices)
-                                .unwrap();
-
-                            let load_res = self
-                                .emit()
-                                .load(uint_ty, None, result, None, std::iter::empty())
-                                .unwrap();
-
-                            let bitcast_res = self.emit().bitcast(*ty, None, load_res).unwrap();
-
-                            composite_components.push(bitcast_res as u32);
-                        }
-
-                        let adt = data.def(rustc_span::DUMMY_SP, self);
-
-                        let constructed_adt = self
-                            .emit()
-                            .composite_construct(adt, None, composite_components)
-                            .unwrap()
-                            .with_type(adt);
-
-                        return self.store(constructed_adt, args[0], Align::from_bytes(0).unwrap());
-                    }
-                    _ => {}
-                }
-            }
-
-            bug!("Unhandled case for `internal_buffer_load` intrinsic");
+            self.codegen_internal_buffer_load(result_type, &args)
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()
