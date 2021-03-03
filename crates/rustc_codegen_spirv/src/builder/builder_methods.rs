@@ -107,13 +107,100 @@ fn memset_dynamic_scalar(
 }
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
+    fn codegen_internal_buffer_store(
+        &mut self,
+        result_type: Word,
+        args: &[SpirvValue],
+    ) -> SpirvValue {
+        let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
+
+        let uniform_uint_ptr =
+            SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
+
+        let zero = self.constant_int(uint_ty, 0).def(self);
+
+        let sets = self.bindless_descriptor_sets.borrow().unwrap();
+
+        eprintln!("{:?}", &args);
+
+        let data = self.lookup_type(args[2].ty);
+        let data_pointer = self.load(args[2], Align::from_bytes(0).unwrap());
+        let data = self.lookup_type(data_pointer.ty);
+
+        eprintln!("{:?}", data);
+
+        let bindless_idx = args[0].def(self);
+        let offset_arg = args[1].def(self);
+
+        let two = self.constant_int(uint_ty, 2).def(self);
+
+        let dword_offset = self
+            .emit()
+            .shift_right_arithmetic(uint_ty, None, offset_arg, two)
+            .unwrap();
+
+        match data {
+            SpirvType::Adt {
+                ref field_types,
+                ref field_offsets,
+                ..
+            } => {
+                for (element_idx, (ty, offset)) in
+                    field_types.iter().zip(field_offsets.iter()).enumerate()
+                {
+                    eprintln!("{:?} {:?}", ty, offset);
+                    let offset = offset.bytes() as u32;
+
+                    let offset = if offset > 0 {
+                        let element_offset =
+                            self.constant_int(uint_ty, offset as u64 / 4).def(self);
+
+                        self.emit()
+                            .i_add(uint_ty, None, dword_offset, element_offset)
+                            .unwrap()
+                    } else {
+                        dword_offset
+                    };
+
+                    let load_res = self
+                        .extract_value(data_pointer, element_idx as u64)
+                        .def(self);
+
+                    let bitcast_res = self
+                        .emit()
+                        .bitcast(uint_ty, None, load_res)
+                        .unwrap()
+                        .with_type(uint_ty);
+
+                    let indices = vec![bindless_idx, zero, offset];
+
+                    let access_chain = self
+                        .emit()
+                        .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+                        .unwrap()
+                        .with_type(uniform_uint_ptr);
+
+                    self.store(bitcast_res, access_chain, Align::from_bytes(0).unwrap());
+                }
+            }
+            _ => {
+                bug!(
+                    "codegen_internal_buffer_store doesn't support this type: {:?}",
+                    data
+                );
+            }
+        }
+
+        self.emit_global()
+            .type_void()
+            .with_type(SpirvType::Void.def(rustc_span::DUMMY_SP, self))
+    }
+
     fn codegen_internal_buffer_load(
         &mut self,
         result_type: Word,
         args: &[SpirvValue],
     ) -> SpirvValue {
-        // simple structs are returned as values, complex ones are returned as out parameters
-
         let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
 
         let uniform_uint_ptr =
@@ -200,6 +287,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     let mut composite_components = vec![];
 
                     for (ty, offset) in field_types.iter().zip(field_offsets.iter()) {
+                        // jb-todo: this needs to recurse if `ty` is an Adt, or at least
+                        // use OpCompositeExtract on each of those members recursively
                         composite_components.push(member_accessor(
                             builder,
                             offset.bytes() as u32,
@@ -244,6 +333,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             }
         };
 
+        // simple structs are returned as values, complex ones are returned as out parameters
         match self.lookup_type(result_type) {
             SpirvType::Void => {
                 if let SpirvType::Pointer { .. } = self.lookup_type(args[0].ty) {
@@ -2131,6 +2221,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             self.undef(result_type)
         } else if self.internal_buffer_load_id.borrow().contains(&llfn_def) {
             self.codegen_internal_buffer_load(result_type, &args)
+        } else if self.internal_buffer_store_id.borrow().contains(&llfn_def) {
+            self.codegen_internal_buffer_store(result_type, &args)
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()

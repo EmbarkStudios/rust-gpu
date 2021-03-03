@@ -159,6 +159,25 @@ impl<'tcx> CodegenCx<'tcx> {
             std::iter::once(Operand::LiteralInt32(0)),
         );
 
+        emit_global.decorate(
+            buffer_struct,
+            rspirv::spirv::Decoration::BufferBlock,
+            std::iter::empty(),
+        );
+
+        emit_global.decorate(
+            runtime_array_uint,
+            rspirv::spirv::Decoration::ArrayStride,
+            std::iter::once(Operand::LiteralInt32(4)),
+        );
+
+        emit_global.member_decorate(
+            buffer_struct,
+            0,
+            rspirv::spirv::Decoration::Offset,
+            std::iter::once(Operand::LiteralInt32(0)),
+        );
+
         buffer
     }
 
