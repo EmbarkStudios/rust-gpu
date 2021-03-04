@@ -2607,10 +2607,6 @@
 <span id="2604">2604</span>
 <span id="2605">2605</span>
 <span id="2606">2606</span>
-<span id="2607">2607</span>
-<span id="2608">2608</span>
-<span id="2609">2609</span>
-<span id="2610">2610</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Specialize globals (types, constants and module-scoped variables) and functions,</span>
 <span class="doccomment">//! to legalize a SPIR-V module representing a &quot;family&quot; of types with a single type,</span>
@@ -2904,7 +2900,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">CopyOperand</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Operand</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">op</span>: <span class="ident">CopyOperand</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Operand</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">op</span>: <span class="ident">CopyOperand</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">op</span> {
             <span class="ident">CopyOperand</span>::<span class="ident">IdRef</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">IdRef</span>(<span class="ident">id</span>),
             <span class="ident">CopyOperand</span>::<span class="ident">StorageClass</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">StorageClass</span>(<span class="ident">s</span>),
@@ -2939,8 +2935,6 @@
     <span class="ident">SameAs</span>(<span class="ident">T</span>),
 }
 
-<span class="comment">// FIXME(eddyb) clippy bug suggests `Self` even when it&#39;d be a type mismatch.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">use_self</span>)]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Value</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">map_var</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>(<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">U</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
@@ -2977,8 +2971,6 @@
     <span class="ident">generic_args</span>: <span class="ident">GA</span>,
 }
 
-<span class="comment">// FIXME(eddyb) clippy bug suggests `Self` even when it&#39;d be a type mismatch.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">use_self</span>)]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">GA</span><span class="op">&gt;</span> <span class="ident">Instance</span><span class="op">&lt;</span><span class="ident">GA</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instance</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">GA</span><span class="op">&gt;</span> {
         <span class="ident">Instance</span> {
