@@ -13,6 +13,7 @@ use std::{fs::File, io::Write, path::Path};
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum SpirvValueKind {
     Def(Word),
+
     /// There are a fair number of places where `rustc_codegen_ssa` creates a pointer to something
     /// that cannot be pointed to in SPIR-V. For example, constant values are frequently emitted as
     /// a pointer to constant memory, and then dereferenced where they're used. Functions are the
@@ -27,6 +28,24 @@ pub enum SpirvValueKind {
         /// The global (module-scoped) `OpVariable` (with `initializer` set as
         /// its initializer) to attach zombies to.
         global_var: Word,
+    },
+
+    /// Deferred pointer cast, for the `Logical` addressing model (which doesn't
+    /// really support raw pointers in the way Rust expects to be able to use).
+    ///
+    /// The cast's target pointer type is the `ty` of the `SpirvValue` that has
+    /// `LogicalPtrCast` as its `kind`, as it would be redundant to have it here.
+    LogicalPtrCast {
+        /// Pointer value being cast.
+        original_ptr: Word,
+
+        /// Pointee type of `original_ptr`.
+        original_pointee_ty: Word,
+
+        /// `OpUndef` of the right target pointer type, to attach zombies to.
+        // FIXME(eddyb) we should be using a real `OpBitcast` here, but we can't
+        // emit that on the fly during `SpirvValue::def`, due to builder locking.
+        zombie_target_undef: Word,
     },
 }
 
@@ -49,7 +68,8 @@ impl SpirvValue {
                 };
                 Some(initializer.with_type(ty))
             }
-            SpirvValueKind::Def(_) => None,
+
+            SpirvValueKind::Def(_) | SpirvValueKind::LogicalPtrCast { .. } => None,
         }
     }
 
@@ -69,6 +89,7 @@ impl SpirvValue {
     pub fn def_with_span(self, cx: &CodegenCx<'_>, span: Span) -> Word {
         match self.kind {
             SpirvValueKind::Def(word) => word,
+
             SpirvValueKind::ConstantPointer {
                 initializer: _,
                 global_var,
@@ -82,6 +103,29 @@ impl SpirvValue {
                 );
 
                 global_var
+            }
+
+            SpirvValueKind::LogicalPtrCast {
+                original_ptr: _,
+                original_pointee_ty,
+                zombie_target_undef,
+            } => {
+                if cx.is_system_crate() {
+                    cx.zombie_with_span(
+                        zombie_target_undef,
+                        span,
+                        "OpBitcast on ptr without AddressingModel != Logical",
+                    )
+                } else {
+                    cx.tcx
+                        .sess
+                        .struct_span_err(span, "Cannot cast between pointer types")
+                        .note(&format!("from: *{}", cx.debug_type(original_pointee_ty)))
+                        .note(&format!("to: {}", cx.debug_type(self.ty)))
+                        .emit()
+                }
+
+                zombie_target_undef
             }
         }
     }

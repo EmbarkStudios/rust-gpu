@@ -11,7 +11,7 @@ use crate::decorations::{
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
-use rspirv::spirv::{Decoration, LinkageType, MemoryModel, StorageClass, Word};
+use rspirv::spirv::{AddressingModel, Decoration, LinkageType, MemoryModel, StorageClass, Word};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
@@ -187,6 +187,17 @@ impl<'tcx> CodegenCx<'tcx> {
             || self.tcx.crate_name(LOCAL_CRATE) == self.sym.spirv_std
             || self.tcx.crate_name(LOCAL_CRATE) == self.sym.libm
             || self.tcx.crate_name(LOCAL_CRATE) == self.sym.num_traits
+    }
+
+    // FIXME(eddyb) should this just be looking at `kernel_mode`?
+    pub fn logical_addressing_model(&self) -> bool {
+        self.emit_global()
+            .module_ref()
+            .memory_model
+            .as_ref()
+            .map_or(false, |inst| {
+                inst.operands[0].unwrap_addressing_model() == AddressingModel::Logical
+            })
     }
 
     pub fn finalize_module(self) -> Module {
