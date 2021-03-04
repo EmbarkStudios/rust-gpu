@@ -28,7 +28,8 @@
     //clippy::enum_glob_use,
     clippy::pub_enum_variant_names,
     clippy::mem_forget,
-    clippy::use_self,
+    // See: https://github.com/EmbarkStudios/rust-gpu/issues/459
+    // clippy::use_self,
     clippy::filter_map_next,
     clippy::needless_continue,
     clippy::needless_borrow,

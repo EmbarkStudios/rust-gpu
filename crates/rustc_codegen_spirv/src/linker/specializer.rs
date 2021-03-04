@@ -289,11 +289,11 @@ impl TryFrom<&Operand> for CopyOperand {
     }
 }
 
-impl Into<Operand> for CopyOperand {
-    fn into(self) -> Operand {
-        match self {
-            Self::IdRef(id) => Operand::IdRef(id),
-            Self::StorageClass(s) => Operand::StorageClass(s),
+impl From<CopyOperand> for Operand {
+    fn from(op: CopyOperand) -> Operand {
+        match op {
+            CopyOperand::IdRef(id) => Self::IdRef(id),
+            CopyOperand::StorageClass(s) => Self::StorageClass(s),
         }
     }
 }
@@ -1740,7 +1740,7 @@ impl<'a, S: Specialization> InferCx<'a, S> {
     /// field type for `OpTypeStruct`, where `indices` contains the field index.
     fn index_composite(&self, composite_ty: InferOperand, indices: &[Operand]) -> InferOperand {
         let mut ty = composite_ty;
-        for idx in &indices[..] {
+        for idx in indices {
             let instance = match ty {
                 InferOperand::Unknown | InferOperand::Concrete(_) | InferOperand::Var(_) => {
                     return InferOperand::Unknown;

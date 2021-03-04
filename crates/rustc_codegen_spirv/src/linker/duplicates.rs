@@ -59,9 +59,8 @@ pub fn remove_duplicate_ext_inst_imports(module: &mut Module) {
 }
 
 fn make_annotation_key(inst: &Instruction) -> Vec<u32> {
-    let mut data = vec![];
+    let mut data = vec![inst.class.opcode as u32];
 
-    data.push(inst.class.opcode as u32);
     // skip over the target ID
     for op in inst.operands.iter().skip(1) {
         op.assemble_into(&mut data);
@@ -114,9 +113,8 @@ fn make_dedupe_key(
     annotations: &HashMap<Word, Vec<u32>>,
     names: &HashMap<Word, String>,
 ) -> Vec<u32> {
-    let mut data = vec![];
+    let mut data = vec![inst.class.opcode as u32];
 
-    data.push(inst.class.opcode as u32);
     if let Some(id) = inst.result_type {
         // We're not only deduplicating types here, but constants as well. Those contain result_types, and so we
         // need to include those here. For example, OpConstant can have the same arg, but different result_type,
