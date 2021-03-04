@@ -290,7 +290,7 @@ impl TryFrom<&Operand> for CopyOperand {
 }
 
 impl From<CopyOperand> for Operand {
-    fn from(op: CopyOperand) -> Operand {
+    fn from(op: CopyOperand) -> Self {
         match op {
             CopyOperand::IdRef(id) => Self::IdRef(id),
             CopyOperand::StorageClass(s) => Self::StorageClass(s),
@@ -325,8 +325,6 @@ enum Value<T> {
     SameAs(T),
 }
 
-// FIXME(eddyb) clippy bug suggests `Self` even when it'd be a type mismatch.
-#[allow(clippy::use_self)]
 impl<T> Value<T> {
     fn map_var<U>(self, f: impl FnOnce(T) -> U) -> Value<U> {
         match self {
@@ -363,8 +361,6 @@ struct Instance<GA> {
     generic_args: GA,
 }
 
-// FIXME(eddyb) clippy bug suggests `Self` even when it'd be a type mismatch.
-#[allow(clippy::use_self)]
 impl<GA> Instance<GA> {
     fn as_ref(&self) -> Instance<&GA> {
         Instance {
