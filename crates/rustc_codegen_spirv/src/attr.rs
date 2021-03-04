@@ -139,7 +139,7 @@ impl CheckSpirvAttrVisitor<'_> {
                     _ => Err(Expected("function")),
                 },
 
-                SpirvAttribute::UnrollLoops => match target {
+                SpirvAttribute::InternalBufferLoad | SpirvAttribute::InternalBufferStore | SpirvAttribute::UnrollLoops => match target {
                     TargetNew::Old(Target::Fn)
                     | TargetNew::Old(Target::Closure)
                     | TargetNew::Old(Target::Method(MethodKind::Trait { body: true }))
