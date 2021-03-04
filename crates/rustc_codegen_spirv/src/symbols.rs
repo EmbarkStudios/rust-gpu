@@ -323,8 +323,6 @@ const EXECUTION_MODES: &[(&str, ExecutionMode, ExecutionModeExtraDim)] = {
     ]
 };
 
-// FIXME(eddyb) clippy bug suggests `Self` even when it couldn't possibly work.
-#[allow(clippy::use_self)]
 impl Symbols {
     fn new() -> Self {
         let builtins = BUILTINS
