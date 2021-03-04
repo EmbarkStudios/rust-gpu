@@ -16,6 +16,7 @@ use rustc_middle::bug;
 use rustc_middle::ty::Ty;
 use rustc_span::Span;
 use rustc_target::abi::{Abi, Align, Scalar, Size};
+use std::convert::TryInto;
 use std::iter::empty;
 use std::ops::Range;
 
@@ -332,33 +333,74 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    // Sometimes, when accessing the first field of a struct, vector, etc., instead of calling
-    // struct_gep, codegen_ssa will call pointercast. This will then try to catch those cases and
-    // translate them back to a struct_gep, instead of failing to compile the OpBitcast (which is
-    // unsupported on shader target)
-    fn try_pointercast_via_gep(&self, mut val: Word, field: Word) -> Option<Vec<u32>> {
+    /// If possible, return the appropriate `OpAccessChain` indices for going from
+    /// a pointer to `ty`, to a pointer to `leaf_ty`, with an added `offset`.
+    ///
+    /// That is, try to turn `((_: *T) as *u8).add(offset) as *Leaf` into a series
+    /// of struct field and array/vector element accesses.
+    fn recover_access_chain_from_offset(
+        &self,
+        mut ty: Word,
+        leaf_ty: Word,
+        mut offset: Size,
+    ) -> Option<Vec<u32>> {
+        assert_ne!(ty, leaf_ty);
+
+        // NOTE(eddyb) `ty` and `ty_kind` should be kept in sync.
+        let mut ty_kind = self.lookup_type(ty);
+
         let mut indices = Vec::new();
-        while val != field {
-            match self.lookup_type(val) {
+        loop {
+            match ty_kind {
                 SpirvType::Adt {
                     field_types,
                     field_offsets,
                     ..
                 } => {
-                    let index = field_offsets.iter().position(|&off| off == Size::ZERO)?;
-                    indices.push(index as u32);
-                    val = field_types[index];
+                    let (i, field_ty, field_ty_kind, offset_in_field) = field_offsets
+                        .iter()
+                        .enumerate()
+                        .find_map(|(i, &field_offset)| {
+                            if field_offset > offset {
+                                return None;
+                            }
+
+                            // Grab the actual field type to be able to confirm that
+                            // the leaf is somewhere inside the field.
+                            let field_ty = field_types[i];
+                            let field_ty_kind = self.lookup_type(field_ty);
+
+                            let offset_in_field = offset - field_offset;
+                            if offset_in_field < field_ty_kind.sizeof(self)? {
+                                Some((i, field_ty, field_ty_kind, offset_in_field))
+                            } else {
+                                None
+                            }
+                        })?;
+
+                    ty = field_ty;
+                    ty_kind = field_ty_kind;
+
+                    indices.push(i as u32);
+                    offset = offset_in_field;
                 }
                 SpirvType::Vector { element, .. }
                 | SpirvType::Array { element, .. }
                 | SpirvType::RuntimeArray { element } => {
-                    indices.push(0);
-                    val = element;
+                    ty = element;
+                    ty_kind = self.lookup_type(ty);
+
+                    let stride = ty_kind.sizeof(self)?;
+                    indices.push((offset.bytes() / stride.bytes()).try_into().ok()?);
+                    offset = Size::from_bytes(offset.bytes() % stride.bytes());
                 }
                 _ => return None,
             }
+
+            if offset == Size::ZERO && ty == leaf_ty {
+                return Some(indices);
+            }
         }
-        Some(indices)
     }
 }
 
@@ -940,19 +982,23 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn struct_gep(&mut self, ptr: Self::Value, idx: u64) -> Self::Value {
-        let result_pointee_type = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => match self.lookup_type(pointee) {
-                SpirvType::Adt { field_types, .. } => field_types[idx as usize],
-                SpirvType::Array { element, .. }
-                | SpirvType::RuntimeArray { element, .. }
-                | SpirvType::Vector { element, .. } => element,
-                other => self.fatal(&format!(
-                    "struct_gep not on struct, array, or vector type: {:?}, index {}",
-                    other, idx
-                )),
-            },
+        let pointee = match self.lookup_type(ptr.ty) {
+            SpirvType::Pointer { pointee } => pointee,
             other => self.fatal(&format!(
                 "struct_gep not on pointer type: {:?}, index {}",
+                other, idx
+            )),
+        };
+        let pointee_kind = self.lookup_type(pointee);
+        let result_pointee_type = match pointee_kind {
+            SpirvType::Adt {
+                ref field_types, ..
+            } => field_types[idx as usize],
+            SpirvType::Array { element, .. }
+            | SpirvType::RuntimeArray { element, .. }
+            | SpirvType::Vector { element, .. } => element,
+            other => self.fatal(&format!(
+                "struct_gep not on struct, array, or vector type: {:?}, index {}",
                 other, idx
             )),
         };
@@ -960,6 +1006,41 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             pointee: result_pointee_type,
         }
         .def(self.span(), self);
+
+        // Special-case field accesses through a `pointercast`, to accesss the
+        // right field in the original type, for the `Logical` addressing model.
+        if let SpirvValueKind::LogicalPtrCast {
+            original_ptr,
+            original_pointee_ty,
+            zombie_target_undef: _,
+        } = ptr.kind
+        {
+            let offset = match pointee_kind {
+                SpirvType::Adt { field_offsets, .. } => field_offsets[idx as usize],
+                SpirvType::Array { element, .. }
+                | SpirvType::RuntimeArray { element, .. }
+                | SpirvType::Vector { element, .. } => {
+                    self.lookup_type(element).sizeof(self).unwrap() * idx
+                }
+                _ => unreachable!(),
+            };
+            if let Some(indices) = self.recover_access_chain_from_offset(
+                original_pointee_ty,
+                result_pointee_type,
+                offset,
+            ) {
+                let indices = indices
+                    .into_iter()
+                    .map(|idx| self.constant_u32(self.span(), idx).def(self))
+                    .collect::<Vec<_>>();
+                return self
+                    .emit()
+                    .access_chain(result_type, None, original_ptr, indices)
+                    .unwrap()
+                    .with_type(result_type);
+            }
+        }
+
         // Important! LLVM, and therefore intel-compute-runtime, require the `getelementptr` instruction (and therefore
         // OpAccessChain) on structs to be a constant i32. Not i64! i32.
         if idx > u32::MAX as u64 {
@@ -1199,12 +1280,29 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn pointercast(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
-        let val_pointee = match self.lookup_type(val.ty) {
-            SpirvType::Pointer { pointee } => pointee,
-            other => self.fatal(&format!(
-                "pointercast called on non-pointer source type: {:?}",
-                other
-            )),
+        let (val, val_pointee) = match val.kind {
+            // Strip a previous `pointercast`, to reveal the original pointer type.
+            SpirvValueKind::LogicalPtrCast {
+                original_ptr,
+                original_pointee_ty,
+                zombie_target_undef: _,
+            } => (
+                original_ptr.with_type(
+                    SpirvType::Pointer {
+                        pointee: original_pointee_ty,
+                    }
+                    .def(self.span(), self),
+                ),
+                original_pointee_ty,
+            ),
+
+            _ => match self.lookup_type(val.ty) {
+                SpirvType::Pointer { pointee } => (val, pointee),
+                other => self.fatal(&format!(
+                    "pointercast called on non-pointer source type: {:?}",
+                    other
+                )),
+            },
         };
         let dest_pointee = match self.lookup_type(dest_ty) {
             SpirvType::Pointer { pointee } => pointee,
@@ -1215,7 +1313,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         if val.ty == dest_ty {
             val
-        } else if let Some(indices) = self.try_pointercast_via_gep(val_pointee, dest_pointee) {
+        } else if let Some(indices) =
+            self.recover_access_chain_from_offset(val_pointee, dest_pointee, Size::ZERO)
+        {
             let indices = indices
                 .into_iter()
                 .map(|idx| self.constant_u32(self.span(), idx).def(self))
