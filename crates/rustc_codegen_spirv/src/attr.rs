@@ -22,10 +22,10 @@ pub(crate) fn target_from_impl_item<'tcx>(
     match impl_item.kind {
         hir::ImplItemKind::Const(..) => Target::AssocConst,
         hir::ImplItemKind::Fn(..) => {
-            let parent_hir_id = tcx.hir().get_parent_item(impl_item.hir_id);
+            let parent_hir_id = tcx.hir().get_parent_item(impl_item.hir_id());
             let containing_item = tcx.hir().expect_item(parent_hir_id);
             let containing_impl_is_for_trait = match &containing_item.kind {
-                hir::ItemKind::Impl { of_trait, .. } => of_trait.is_some(),
+                hir::ItemKind::Impl(hir::Impl { of_trait, .. }) => of_trait.is_some(),
                 _ => unreachable!("parent of an ImplItem must be an Impl"),
             };
             if containing_impl_is_for_trait {
@@ -186,7 +186,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
 
     fn visit_item(&mut self, item: &'tcx hir::Item<'tcx>) {
         let target = Target::from_item(item);
-        self.check_spirv_attributes(item.hir_id, item.attrs, target);
+        self.check_spirv_attributes(item.hir_id(), item.attrs, target);
         intravisit::walk_item(self, item)
     }
 
@@ -198,7 +198,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
 
     fn visit_trait_item(&mut self, trait_item: &'tcx hir::TraitItem<'tcx>) {
         let target = Target::from_trait_item(trait_item);
-        self.check_spirv_attributes(trait_item.hir_id, trait_item.attrs, target);
+        self.check_spirv_attributes(trait_item.hir_id(), trait_item.attrs, target);
         intravisit::walk_trait_item(self, trait_item)
     }
 
@@ -214,13 +214,13 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
 
     fn visit_foreign_item(&mut self, f_item: &'tcx hir::ForeignItem<'tcx>) {
         let target = Target::from_foreign_item(f_item);
-        self.check_spirv_attributes(f_item.hir_id, f_item.attrs, target);
+        self.check_spirv_attributes(f_item.hir_id(), f_item.attrs, target);
         intravisit::walk_foreign_item(self, f_item)
     }
 
     fn visit_impl_item(&mut self, impl_item: &'tcx hir::ImplItem<'tcx>) {
         let target = target_from_impl_item(self.tcx, impl_item);
-        self.check_spirv_attributes(impl_item.hir_id, impl_item.attrs, target);
+        self.check_spirv_attributes(impl_item.hir_id(), impl_item.attrs, target);
         intravisit::walk_impl_item(self, impl_item)
     }
 
@@ -253,7 +253,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
     }
 
     fn visit_macro_def(&mut self, macro_def: &'tcx hir::MacroDef<'tcx>) {
-        self.check_spirv_attributes(macro_def.hir_id, macro_def.attrs, TargetNew::MacroDef);
+        self.check_spirv_attributes(macro_def.hir_id(), macro_def.attrs, TargetNew::MacroDef);
         intravisit::walk_macro_def(self, macro_def);
     }
 
@@ -285,7 +285,7 @@ fn check_mod_attrs(tcx: TyCtxt<'_>, module_def_id: LocalDefId) {
     );
     // FIXME(eddyb) use `tcx.hir().visit_exported_macros_in_krate(...)` after rustup.
     for id in tcx.hir().krate().exported_macros {
-        check_spirv_attr_visitor.visit_macro_def(match tcx.hir().find(id.hir_id) {
+        check_spirv_attr_visitor.visit_macro_def(match tcx.hir().find(id.hir_id()) {
             Some(hir::Node::MacroDef(macro_def)) => macro_def,
             _ => unreachable!(),
         });

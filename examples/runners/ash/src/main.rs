@@ -327,19 +327,19 @@ impl RenderBase {
         };
 
         RenderBase {
+            window,
             entry,
             instance,
             device,
-            queue_family_index,
+            swapchain_loader,
+            debug_utils_loader,
+            debug_call_back,
             pdevice,
-            window,
+            queue_family_index,
+            present_queue,
+            surface,
             surface_loader,
             surface_format,
-            present_queue,
-            swapchain_loader,
-            surface,
-            debug_call_back,
-            debug_utils_loader,
         }
     }
 
