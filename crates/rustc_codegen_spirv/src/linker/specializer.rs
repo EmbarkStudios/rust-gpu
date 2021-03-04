@@ -290,7 +290,7 @@ impl TryFrom<&Operand> for CopyOperand {
 }
 
 impl From<CopyOperand> for Operand {
-    fn from(op: CopyOperand) -> Operand {
+    fn from(op: CopyOperand) -> Self {
         match op {
             CopyOperand::IdRef(id) => Self::IdRef(id),
             CopyOperand::StorageClass(s) => Self::StorageClass(s),
