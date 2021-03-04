@@ -291,7 +291,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         // use OpCompositeExtract on each of those members recursively
                         composite_components.push(member_accessor(
                             builder,
-                            offset.bytes() as u32,
+                            offset.bytes() as u32 / 4,
                             dword_offset,
                             bindless_idx,
                             *ty,
