@@ -163,19 +163,19 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#attribute-syntax" id="attribute-syntax">Attribute syntax</a></h1>
+                        <h1 id="attribute-syntax"><a class="header" href="#attribute-syntax">Attribute syntax</a></h1>
 <p>rust-gpu introduces a number of SPIR-V related attributes to express behavior specific to SPIR-V not exposed in the base rust language.</p>
 <p>There are a few different categories of attributes:</p>
-<h2><a class="header" href="#entry-points" id="entry-points">Entry points</a></h2>
+<h2 id="entry-points"><a class="header" href="#entry-points">Entry points</a></h2>
 <p>When declaring an entry point to your shader, SPIR-V needs to know what type of function it is. For example, it could be a fragment shader, or vertex shader. Specifying this attribute is also the way rust-gpu knows that you would like to export a function as an entry point, no other functions are exported.</p>
 <p>Example:</p>
 <pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
 fn main() { }
 </code></pre></pre>
 <p>Common values are <code>#[spirv(fragment)]</code> and <code>#[spirv(vertex)]</code>. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.ExecutionModel.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
-<h3><a class="header" href="#override-entry-point-name" id="override-entry-point-name">Override entry point name</a></h3>
+<h3 id="override-entry-point-name"><a class="header" href="#override-entry-point-name">Override entry point name</a></h3>
 <p>You can override the default <code>OpEntryPoint</code> name for any entry point with the <code>entry_point_name</code> sub-attribute on any of the execution model attributes. (e.g. <code>#[spirv(vertex(entry_point_name=&quot;foo&quot;))]</code>)</p>
-<h2><a class="header" href="#builtins" id="builtins">Builtins</a></h2>
+<h2 id="builtins"><a class="header" href="#builtins">Builtins</a></h2>
 <p>When declaring inputs and outputs, sometimes you want to declare it as a &quot;builtin&quot;. This means many things, but one example is <code>gl_Position</code> from glsl - the GPU assigns inherent meaning to the variable and uses it for placing the vertex in clip space. The equivalent in rust-gpu is called <code>position</code>.</p>
 <p>Example:</p>
 <pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
@@ -184,7 +184,7 @@ fn main(
 ) { }
 </code></pre></pre>
 <p>Common values are <code>#[spirv(position)]</code>, <code>#[spirv(vertex_id)]</code>, and many more. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.BuiltIn.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
-<h2><a class="header" href="#descriptor-set-and-binding" id="descriptor-set-and-binding">Descriptor set and binding</a></h2>
+<h2 id="descriptor-set-and-binding"><a class="header" href="#descriptor-set-and-binding">Descriptor set and binding</a></h2>
 <p>A SPIR-V shader must declare where uniform variables are located with explicit indices that match up with CPU-side code. This can be done with the <code>descriptor_set</code> and <code>binding</code> attributes. Note that <code>descriptor_set = 0</code> is reserved for future use, and cannot be used.</p>
 <p>Example:</p>
 <pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
@@ -193,7 +193,7 @@ fn main(
 ) { }
 </code></pre></pre>
 <p>Both descriptor_set and binding take an integer argument that specifies the uniform's index.</p>
-<h2><a class="header" href="#block" id="block">Block</a></h2>
+<h2 id="block"><a class="header" href="#block">Block</a></h2>
 <p>This attribute is a temporary quick fix before we implement a more fully-featured binding model. If you get validation errors about missing a Block decoration on a struct due to being used as uniform block data, try adding this attribute to the struct definition. If you get errors around the struct definition not being an aggregate, but rather the type of the field, try adding <code>#[repr(C)]</code> to the struct definition.</p>
 <p>Example:</p>
 <pre><pre class="playground"><code class="language-rust">#[spirv(block)]
@@ -206,7 +206,7 @@ struct Thing {
 #[spirv(fragment)]
 fn main(obj: PushConstant&lt;ShaderConstants&gt;) { }
 </code></pre></pre>
-<h2><a class="header" href="#flat" id="flat">Flat</a></h2>
+<h2 id="flat"><a class="header" href="#flat">Flat</a></h2>
 <p>The flat attribute corresponds to the flat keyword in glsl - in other words, the data is not interpolated across the triangle when invoking the fragment shader.</p>
 <p>Example:</p>
 <pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]

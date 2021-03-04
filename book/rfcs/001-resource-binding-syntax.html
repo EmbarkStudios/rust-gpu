@@ -163,13 +163,13 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#summary" id="summary">Summary</a></h1>
+                        <h1 id="summary"><a class="header" href="#summary">Summary</a></h1>
 <p>We aught to discuss how we want resource binding to work on a language syntax level.</p>
-<h1><a class="header" href="#explanation" id="explanation">Explanation</a></h1>
+<h1 id="explanation"><a class="header" href="#explanation">Explanation</a></h1>
 <details>
 <summary>Small overview of descriptors</summary>
 Historically resources such as buffers, textures and samplers have been special in hardware where they were bound to specific slots on the shader core. Usually a limited number of such slots existed, leading to platform and vendor specific limits.
-<h3><a class="header" href="#directx" id="directx">DirectX</a></h3>
+<h3 id="directx"><a class="header" href="#directx">DirectX</a></h3>
 <p>In recent years most Desktop platforms have switched to loading resource descriptors from GPU memory instead, this has the major advantage that there is no real limit on the amount of Textures, Buffers and other resource anymore because they all can come from memory. In DirectX12 hardware is divided up into several Tiers which each denominate the amount of descriptors available.</p>
 <table><thead><tr><th>Resources Available to the Pipeline</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th></tr></thead><tbody>
 <tr><td>Feature levels</td><td>11.0+</td><td>11.0+</td><td>11.1+</td></tr>
@@ -179,11 +179,11 @@ Historically resources such as buffers, textures and samplers have been special 
 <tr><td>Maximum number of Unordered Access Views in all descriptor tables across all stages</td><td>64 for feature levels 11.1+ or 8 for feature level</td><td>64</td><td>full heap</td></tr>
 <tr><td>Maximum number of Samplers in all descriptor tables per shader stage</td><td>16</td><td>full heap</td><td>full heap</td></tr>
 </tbody></table>
-<h3><a class="header" href="#vulkan" id="vulkan">Vulkan</a></h3>
+<h3 id="vulkan"><a class="header" href="#vulkan">Vulkan</a></h3>
 <p>On the other hand in Vulkan resource descriptor binding is designed in such a way that it can accomodate hardware that still relies on descriptor slots instead of memory, because still a lot of such hardware exists in the wild. Especially in the Mobile space.</p>
 <p>There are some constraints that currently exist when it comes to binding resources to shaders that we may need to take into account, Vulkan has <code>maxBoundDescriptorSets</code> for example (between 4 and 32). However for the sake of argument we'll ignore these practical limitations for now.</p>
 </details>
-<h1><a class="header" href="#goal" id="goal">Goal</a></h1>
+<h1 id="goal"><a class="header" href="#goal">Goal</a></h1>
 <p>Ideally what one would do is have a group of bindings collected together logically for each rendering system; where the bindings are set up (semi-)automatically on both the GPU and CPU.</p>
 <p>One thing we'd like to avoid is having a set of names or numbers that manually need to match up between GPU and CPU. </p>
 <ol>
@@ -191,9 +191,9 @@ Historically resources such as buffers, textures and samplers have been special 
 <li>They make refactoring more difficult (need to change both CPU and GPU side).</li>
 <li>They can clash, especially in large code bases where it's difficult to keep track.</li>
 </ol>
-<h1><a class="header" href="#overview" id="overview">Overview</a></h1>
+<h1 id="overview"><a class="header" href="#overview">Overview</a></h1>
 <p>I would like us to have an easy way to connect bindings on the GPU and CPU side together, in a way that's as ergonomic to use as possible.</p>
-<h2><a class="header" href="#globals" id="globals">Globals</a></h2>
+<h2 id="globals"><a class="header" href="#globals">Globals</a></h2>
 <details>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
@@ -273,7 +273,7 @@ static LIGHTMAP : Texture::&lt;f32&gt; = Texture::new(0, 3);
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#arguments-to-main" id="arguments-to-main">Arguments to <code>main</code></a></h2>
+<h2 id="arguments-to-main"><a class="header" href="#arguments-to-main">Arguments to <code>main</code></a></h2>
 <p>Most compute-only languages tend to prefer this along with positional binding. This makes &quot;invoking a shader&quot; look much more like a function call and uses existing and familiar semantics.</p>
 <pre><pre class="playground"><code class="language-rust">fn main(albedo: Texture::&lt;f32&gt;, normal_map: Texture::&lt;f32&gt;, smoothness: Texture::&lt;f32&gt;, lightmap: Texture&lt;f32&gt;) {
     let mut T = brdf(&amp;albedo, &amp;normal_map, &amp;smoothness);
@@ -306,13 +306,13 @@ fn main(inputs: &amp;ShadingInputs, indirect_lighting: &amp;IndirectLighting) {
     T += gi(&amp;indirect_lighting);
 }
 </code></pre></pre>
-<h1><a class="header" href="#suggestion" id="suggestion">Suggestion</a></h1>
+<h1 id="suggestion"><a class="header" href="#suggestion">Suggestion</a></h1>
 <p>I think the most ergonomic and future proof binding method would be to have descriptors in structs, bound to the entrypoint. This allows us some nice, even more ergonomic upsides later on (when support is more widely available) where we can put data members in these structs as well. And along with this, we can have very egonomic CPU side code as well, where we can keep shader invocation looking like a function call for a large part, instead of having to manually bind to slots again.</p>
-<h1><a class="header" href="#prior-art" id="prior-art">Prior art</a></h1>
+<h1 id="prior-art"><a class="header" href="#prior-art">Prior art</a></h1>
 <details>
-<h2><a class="header" href="#metal" id="metal">Metal</a></h2>
+<h2 id="metal"><a class="header" href="#metal">Metal</a></h2>
 <p>Metal has argument buffers, best described here: https://developer.apple.com/documentation/metal/buffers/about_argument_buffers</p>
-<h2><a class="header" href="#hlsl" id="hlsl">HLSL</a></h2>
+<h2 id="hlsl"><a class="header" href="#hlsl">HLSL</a></h2>
 <p>Resource binding in HLSL is done by declaring a set of special case globals that make up resource descriptors on the GPU. </p>
 <pre><code class="language-hlsl">Texture2D&lt;float4&gt; tex0          : register(t5,  space0);
 Texture2D&lt;float4&gt; tex1[][5][3]  : register(t10, space0);
@@ -339,7 +339,7 @@ ConstantBuffer&lt;myConstants&gt;   c[10000] : register(b0);
                              &quot;addressU = TEXTURE_ADDRESS_CLAMP, &quot; \
                              &quot;filter = FILTER_MIN_MAG_MIP_LINEAR )&quot;
 </code></pre>
-<h2><a class="header" href="#glsl" id="glsl">GLSL</a></h2>
+<h2 id="glsl"><a class="header" href="#glsl">GLSL</a></h2>
 <pre><code class="language-glsl">uniform texture2D inputTex;
 uniform restrict writeonly uimage2D outputTex;
 
@@ -351,11 +351,11 @@ layout(std430) buffer mesh_vertex_buf {
     VertexPacked vertices[];
 };
 </code></pre>
-<h2><a class="header" href="#cuda" id="cuda">CUDA</a></h2>
+<h2 id="cuda"><a class="header" href="#cuda">CUDA</a></h2>
 <p>In CUDA most resources are bound to the kernel's entry point - e.g. buffers are just passed as pointers etc. </p>
-<h2><a class="header" href="#opencl" id="opencl">OpenCL</a></h2>
+<h2 id="opencl"><a class="header" href="#opencl">OpenCL</a></h2>
 <p>In OpenCL resources are marked up with their address spaces and also passed as function arguments to the executing kernel. Resources like buffers look like pointers but a lot of compiler magic is going on to turn them from resource descriptors (such as the GCN V#) into something that can emulate pointers.</p>
-<h2><a class="header" href="#rlsl" id="rlsl">RLSL</a></h2>
+<h2 id="rlsl"><a class="header" href="#rlsl">RLSL</a></h2>
 <p>RLSL also passes resource bindings as arguments to the kernel, with two template parameters. One for the <code>set</code> and one for the <code>space</code>.</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
