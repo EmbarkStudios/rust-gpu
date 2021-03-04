@@ -1,10 +1,8 @@
 use super::Builder;
-use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
+use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
-use rspirv::spirv::{
-    AddressingModel, Capability, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word,
-};
+use rspirv::spirv::{Capability, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -331,27 +329,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 def,
                 "OpConvertUToPtr OpCapability Addresses or PhysicalStorageBufferAddresses",
             );
-        }
-    }
-
-    fn zombie_bitcast_ptr(&self, def: Word, from_ty: Word, to_ty: Word) {
-        let is_logical = self
-            .emit()
-            .module_ref()
-            .memory_model
-            .as_ref()
-            .map_or(false, |inst| {
-                inst.operands[0].unwrap_addressing_model() == AddressingModel::Logical
-            });
-        if is_logical {
-            if self.is_system_crate() {
-                self.zombie(def, "OpBitcast on ptr without AddressingModel != Logical")
-            } else {
-                self.struct_err("Cannot cast between pointer types")
-                    .note(&format!("from: {}", self.debug_type(from_ty)))
-                    .note(&format!("to: {}", self.debug_type(to_ty)))
-                    .emit()
-            }
         }
     }
 
@@ -1131,16 +1108,34 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if val.ty == dest_ty {
             val
         } else {
+            let val_is_ptr = matches!(self.lookup_type(val.ty), SpirvType::Pointer { .. });
+            let dest_is_ptr = matches!(self.lookup_type(dest_ty), SpirvType::Pointer { .. });
+
+            // Reuse the pointer-specific logic in `pointercast` for `*T -> *U`.
+            if val_is_ptr && dest_is_ptr {
+                return self.pointercast(val, dest_ty);
+            }
+
             let result = self
                 .emit()
                 .bitcast(dest_ty, None, val.def(self))
                 .unwrap()
                 .with_type(dest_ty);
-            let val_is_ptr = matches!(self.lookup_type(val.ty), SpirvType::Pointer { .. });
-            let dest_is_ptr = matches!(self.lookup_type(dest_ty), SpirvType::Pointer { .. });
-            if val_is_ptr || dest_is_ptr {
-                self.zombie_bitcast_ptr(result.def(self), val.ty, dest_ty);
+
+            if (val_is_ptr || dest_is_ptr) && self.logical_addressing_model() {
+                if self.is_system_crate() {
+                    self.zombie(
+                        result.def(self),
+                        "OpBitcast between ptr and non-ptr without AddressingModel != Logical",
+                    )
+                } else {
+                    self.struct_err("Cannot cast between pointer and non-pointer types")
+                        .note(&format!("from: {}", self.debug_type(val.ty)))
+                        .note(&format!("to: {}", self.debug_type(dest_ty)))
+                        .emit()
+                }
             }
+
             result
         }
     }
@@ -1229,14 +1224,21 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .access_chain(dest_ty, None, val.def(self), indices)
                 .unwrap()
                 .with_type(dest_ty)
+        } else if self.logical_addressing_model() {
+            // Defer the cast so that it has a chance to be avoided.
+            SpirvValue {
+                kind: SpirvValueKind::LogicalPtrCast {
+                    original_ptr: val.def(self),
+                    original_pointee_ty: val_pointee,
+                    zombie_target_undef: self.undef(dest_ty).def(self),
+                },
+                ty: dest_ty,
+            }
         } else {
-            let result = self
-                .emit()
+            self.emit()
                 .bitcast(dest_ty, None, val.def(self))
                 .unwrap()
-                .with_type(dest_ty);
-            self.zombie_bitcast_ptr(result.def(self), val.ty, dest_ty);
-            result
+                .with_type(dest_ty)
         }
     }
 
