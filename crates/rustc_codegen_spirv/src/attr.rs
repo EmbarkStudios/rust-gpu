@@ -11,7 +11,6 @@ use rustc_hir::{HirId, MethodKind, Target, CRATE_HIR_ID};
 use rustc_middle::hir::map::Map;
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::TyCtxt;
-use std::fmt;
 use std::rc::Rc;
 
 // FIXME(eddyb) make this reusable from somewhere in `rustc`.
@@ -38,56 +37,15 @@ pub(crate) fn target_from_impl_item<'tcx>(
     }
 }
 
-// HACK(eddyb) current `Target` (after rust-lang/rust#80641 + rust-lang/rust#80920),
-// emulated before we can rustup to that point and use the new variants directly.
-enum TargetNew {
-    Old(Target),
-
-    // Added by rust-lang/rust#80641.
-    Field,
-    Arm,
-    MacroDef,
-
-    // Added by rust-lang/rust#80920.
-    Param,
-}
-
-impl From<Target> for TargetNew {
-    fn from(target: Target) -> Self {
-        Self::Old(target)
-    }
-}
-
-impl fmt::Display for TargetNew {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let description = match self {
-            Self::Old(target) => return write!(f, "{}", target),
-
-            Self::Field => "struct field",
-            Self::Arm => "match arm",
-            Self::MacroDef => "macro def",
-
-            Self::Param => "function param",
-        };
-        f.write_str(description)
-    }
-}
-
 struct CheckSpirvAttrVisitor<'tcx> {
     tcx: TyCtxt<'tcx>,
     sym: Rc<Symbols>,
 }
 
 impl CheckSpirvAttrVisitor<'_> {
-    fn check_spirv_attributes(
-        &self,
-        hir_id: HirId,
-        attrs: &[Attribute],
-        target: impl Into<TargetNew>,
-    ) {
+    fn check_spirv_attributes(&self, hir_id: HirId, attrs: &[Attribute], target: Target) {
         let parse_attrs = |attrs| crate::symbols::parse_attrs_for_checking(&self.sym, attrs);
 
-        let target = target.into();
         for (attr, parse_attr_result) in parse_attrs(attrs) {
             // Make sure to mark the whole `#[spirv(...)]` attribute as used,
             // to avoid warnings about unused attributes.
@@ -109,7 +67,7 @@ impl CheckSpirvAttrVisitor<'_> {
                 | SpirvAttribute::DescriptorSet(_)
                 | SpirvAttribute::Binding(_)
                 | SpirvAttribute::Flat => match target {
-                    TargetNew::Param => {
+                    Target::Param => {
                         let parent_hir_id = self.tcx.hir().get_parent_node(hir_id);
                         let parent_is_entry_point =
                             parse_attrs(self.tcx.hir().attrs(parent_hir_id))
@@ -128,9 +86,9 @@ impl CheckSpirvAttrVisitor<'_> {
                 },
 
                 SpirvAttribute::Entry(_) => match target {
-                    TargetNew::Old(Target::Fn)
-                    | TargetNew::Old(Target::Method(MethodKind::Trait { body: true }))
-                    | TargetNew::Old(Target::Method(MethodKind::Inherent)) => {
+                    Target::Fn
+                    | Target::Method(MethodKind::Trait { body: true })
+                    | Target::Method(MethodKind::Inherent) => {
                         // FIXME(eddyb) further check entry-point attribute validity,
                         // e.g. signature, shouldn't have `#[inline]` or generics, etc.
                         Ok(())
@@ -140,10 +98,10 @@ impl CheckSpirvAttrVisitor<'_> {
                 },
 
                 SpirvAttribute::UnrollLoops => match target {
-                    TargetNew::Old(Target::Fn)
-                    | TargetNew::Old(Target::Closure)
-                    | TargetNew::Old(Target::Method(MethodKind::Trait { body: true }))
-                    | TargetNew::Old(Target::Method(MethodKind::Inherent)) => Ok(()),
+                    Target::Fn
+                    | Target::Closure
+                    | Target::Method(MethodKind::Trait { body: true })
+                    | Target::Method(MethodKind::Inherent) => Ok(()),
 
                     _ => Err(Expected("function or closure")),
                 },
@@ -153,7 +111,7 @@ impl CheckSpirvAttrVisitor<'_> {
                 | SpirvAttribute::Sampler
                 | SpirvAttribute::SampledImage
                 | SpirvAttribute::Block => match target {
-                    TargetNew::Old(Target::Struct) => {
+                    Target::Struct => {
                         // FIXME(eddyb) further check type attribute validity,
                         // e.g. layout, generics, other attributes, etc.
                         Ok(())
@@ -203,12 +161,12 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
     }
 
     fn visit_struct_field(&mut self, struct_field: &'tcx hir::StructField<'tcx>) {
-        self.check_spirv_attributes(struct_field.hir_id, struct_field.attrs, TargetNew::Field);
+        self.check_spirv_attributes(struct_field.hir_id, struct_field.attrs, Target::Field);
         intravisit::walk_struct_field(self, struct_field);
     }
 
     fn visit_arm(&mut self, arm: &'tcx hir::Arm<'tcx>) {
-        self.check_spirv_attributes(arm.hir_id, arm.attrs, TargetNew::Arm);
+        self.check_spirv_attributes(arm.hir_id, arm.attrs, Target::Arm);
         intravisit::walk_arm(self, arm);
     }
 
@@ -253,12 +211,12 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
     }
 
     fn visit_macro_def(&mut self, macro_def: &'tcx hir::MacroDef<'tcx>) {
-        self.check_spirv_attributes(macro_def.hir_id(), macro_def.attrs, TargetNew::MacroDef);
+        self.check_spirv_attributes(macro_def.hir_id(), macro_def.attrs, Target::MacroDef);
         intravisit::walk_macro_def(self, macro_def);
     }
 
     fn visit_param(&mut self, param: &'tcx hir::Param<'tcx>) {
-        self.check_spirv_attributes(param.hir_id, param.attrs, TargetNew::Param);
+        self.check_spirv_attributes(param.hir_id, param.attrs, Target::Param);
 
         intravisit::walk_param(self, param);
     }
