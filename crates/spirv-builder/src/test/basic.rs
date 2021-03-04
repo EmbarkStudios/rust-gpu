@@ -440,6 +440,7 @@ pub fn main() {
 }
 
 #[test]
+#[ignore]
 fn create_uninitialized_memory() {
     val(r#"
 use core::mem::MaybeUninit;
