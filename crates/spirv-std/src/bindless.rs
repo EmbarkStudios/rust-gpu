@@ -139,6 +139,28 @@ impl Buffer {
 
 #[derive(Copy, Clone)]
 #[repr(transparent)]
+pub struct SimpleBuffer<T>(RenderResourceHandle, core::marker::PhantomData<T>);
+
+impl<T> SimpleBuffer<T> {
+    #[spirv_std_macros::gpu_only]
+    pub fn load(self) -> T {
+        unsafe { internal_buffer_load(self.0.index(), 0) }
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct ArrayBuffer<T>(RenderResourceHandle, core::marker::PhantomData<T>);
+
+impl<T> ArrayBuffer<T> {
+    #[spirv_std_macros::gpu_only]
+    pub fn load(self, index: u32) -> T {
+        unsafe { internal_buffer_load(self.0.index(), index * core::mem::size_of::<T>() as u32) }
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(transparent)]
 pub struct Texture2d(RenderResourceHandle);
 
 // #[derive(Copy, Clone)]
