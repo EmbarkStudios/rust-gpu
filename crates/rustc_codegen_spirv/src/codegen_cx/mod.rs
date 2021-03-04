@@ -30,7 +30,7 @@ use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::iter::once;
 
 pub struct CodegenCx<'tcx> {
@@ -64,6 +64,8 @@ pub struct CodegenCx<'tcx> {
     pub panic_fn_id: Cell<Option<Word>>,
     /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
     pub panic_bounds_check_fn_id: Cell<Option<Word>>,
+    /// Implements `Index` for descriptor arrays and runtime descriptor arrays.
+    pub index_descriptor_array_id: RefCell<HashSet<Word>>,
 
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
@@ -118,6 +120,7 @@ impl<'tcx> CodegenCx<'tcx> {
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
+            index_descriptor_array_id: Default::default(),
             i8_i16_atomics_allowed: false,
         }
     }

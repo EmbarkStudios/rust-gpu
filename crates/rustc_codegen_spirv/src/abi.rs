@@ -365,8 +365,7 @@ fn trans_type_impl<'tcx>(
                 SpirvAttribute::SampledImage => {
                     // see SpirvType::sizeof
                     if ty.size != Size::from_bytes(4) {
-                        cx.tcx
-                            .sess
+                        cx.tcx.sess
                             .fatal("#[spirv(sampled_image)] type must have size 4");
                     }
 
@@ -377,9 +376,84 @@ fn trans_type_impl<'tcx>(
                         let image_type = trans_type_impl(cx, span, cx.layout_of(image_ty), false);
                         return SpirvType::SampledImage { image_type }.def(span, cx);
                     } else {
-                        cx.tcx
-                            .sess
+                        cx.tcx.sess
                             .fatal("#[spirv(sampled_image)] type must have a generic image type");
+                    }
+                }
+                SpirvAttribute::Bind => {
+                    let mut subst_types = substs.types();
+                    if let (Some(data_ty), Some(desc_ty), None) =
+                        (subst_types.next(), subst_types.next(), subst_types.next()) {
+                        let data_type = trans_type_impl(cx, span, cx.layout_of(data_ty), false);
+                        let desc_type = match desc_ty.kind() {
+                            // Single Descriptor
+                            TyKind::Adt(..) => data_type,
+                            //TyKind::Array(_, count) if count.eval_usize() == 0 => {
+                            //    TODO: zombie
+                            //}
+                            //TyKind::Array(_, count) if count.eval_usize() == 1 => {
+                            //    TODO: array or no?
+                            //}
+                            // Descriptor array
+                            // NOTE: the element type may be unsized, so this cannot go through
+                            // the usual SpirvType constructor
+                            TyKind::Array(_, count) => {
+                                let count =  cx.constant_u32(
+                                    span, count.eval_usize(cx.tcx, cx.param_env()) as u32
+                                );
+                                let spirv_type = SpirvType::Array {
+                                    element: data_type,
+                                    count,
+                                };
+                                let count = if let crate::builder_spirv::SpirvValueKind::Def(val) = count.kind {
+                                    val
+                                } else {
+                                    unreachable!()
+                                };
+                                let mut type_cache_defs = cx.type_cache.type_defs.borrow_mut();
+                                if let Some(cached) = type_cache_defs.get_by_right(&spirv_type).copied() {
+                                    cached
+                                } else {
+                                    let type_word = cx.emit_global().type_array(
+                                        data_type,
+                                        count,
+                                    );
+                                    type_cache_defs
+                                        .insert_no_overwrite(type_word, spirv_type)
+                                        .unwrap();
+                                    type_word
+
+                                }
+                            }
+                            // Runtime descriptor array
+                            // NOTE: the element type may be unsized, so this cannot go through
+                            // the usual SpirvType constructor
+                            TyKind::Slice(..) => {
+                                let spirv_type = SpirvType::RuntimeArray {
+                                    element: data_type,
+                                };
+                                let mut type_cache_defs = cx.type_cache.type_defs.borrow_mut();
+                                if let Some(cached) = type_cache_defs.get_by_right(&spirv_type).copied() {
+                                    cached
+                                } else {
+                                    let type_word = cx.emit_global().type_runtime_array(
+                                        data_type,
+                                    );
+                                    type_cache_defs
+                                        .insert_no_overwrite(type_word, spirv_type)
+                                        .unwrap();
+                                    type_word
+
+                                }
+                            }
+                            _ => cx.tcx.sess
+                                .fatal("#[spirv(bind)] descriptor type must be Adt, Array or Slice"),
+                        };
+                        // The storage class is knowable here, is that useful?
+                        return SpirvType::Pointer{ pointee: desc_type }.def(span, cx)
+                    } else {
+                        cx.tcx.sess
+                            .fatal("#[spirv(bind)] type must have data and logical pointer type parameters");
                     }
                 }
                 _ => {}
@@ -608,23 +682,6 @@ fn dig_scalar_pointee_adt<'tcx>(
             }
         }
     }
-}
-
-/// Handles `#[spirv(storage_class="blah")]`. Note this is only called in the entry interface variables code, because this is only
-/// used for spooky builtin stuff, and we pinky promise to never have more than one pointer field in one of these.
-// TODO: Enforce this is only used in spirv-std.
-pub(crate) fn get_storage_class<'tcx>(
-    cx: &CodegenCx<'tcx>,
-    ty: TyAndLayout<'tcx>,
-) -> Option<StorageClass> {
-    if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
-        for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
-            if let SpirvAttribute::StorageClass(storage_class) = attr {
-                return Some(storage_class);
-            }
-        }
-    }
-    None
 }
 
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {

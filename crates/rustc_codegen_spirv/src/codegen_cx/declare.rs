@@ -122,6 +122,9 @@ impl<'tcx> CodegenCx<'tcx> {
                         .borrow_mut()
                         .insert(fn_id, UnrollLoopsDecoration {});
                 }
+                SpirvAttribute::IndexDescriptorArray => {
+                    self.index_descriptor_array_id.borrow_mut().insert(fn_id);
+                }
                 _ => {}
             }
         }

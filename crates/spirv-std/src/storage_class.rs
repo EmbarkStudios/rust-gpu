@@ -9,7 +9,7 @@
 
 use core::{
     marker::PhantomData,
-    ops::{Deref, DerefMut},
+    ops::{Deref, DerefMut, Index, IndexMut},
 };
 
 /// Graphics uniform blocks and buffer blocks.
@@ -18,24 +18,9 @@ use core::{
 /// all work groups. Requires "Shader" capability.
 #[allow(unused_attributes)]
 #[spirv(uniform)]
-pub struct Uniform<'a, T: ?Sized, Binding: sealed::UniformBinding> {
-    ptr: &'a mut T,
-    binding: PhantomData<Binding>,
-}
-
-impl<'a, T: ?Sized, Binding: sealed::UniformBinding> Deref for Uniform<'a, T, Binding> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        self.ptr
-    }
-}
-
-impl<'a, T: ?Sized, Binding: sealed::UniformBinding> DerefMut for Uniform<'a, T, Binding> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.ptr
-    }
-}
+pub struct Uniform;
+impl Descriptor for Uniform {}
+impl DescriptorMut for Uniform {}
 
 /// Graphics storage buffers (buffer blocks).
 ///
@@ -43,36 +28,9 @@ impl<'a, T: ?Sized, Binding: sealed::UniformBinding> DerefMut for Uniform<'a, T,
 /// in all invocations in all work groups.
 #[allow(unused_attributes)]
 #[spirv(storage_buffer)]
-pub struct StorageBuffer<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> {
-    ptr: &'a mut T,
-    binding: PhantomData<Binding>,
-}
-
-impl<'a, T, Binding: sealed::StorageBufferBinding> core::ops::Index<usize>
-    for StorageBuffer<'a, [T], Binding>
-{
-    type Output = T;
-
-    fn index(&self, idx: usize) -> &Self::Output {
-        &self.ptr[idx]
-    }
-}
-
-impl<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> Deref for StorageBuffer<'a, T, Binding> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        self.ptr
-    }
-}
-
-impl<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> DerefMut
-    for StorageBuffer<'a, T, Binding>
-{
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.ptr
-    }
-}
+pub struct StorageBuffer;
+impl Descriptor for StorageBuffer {}
+impl DescriptorMut for StorageBuffer {}
 
 /// Graphics uniform memory. OpenCL constant memory.
 ///
@@ -81,24 +39,8 @@ impl<'a, T: ?Sized, Binding: sealed::StorageBufferBinding> DerefMut
 /// read-only. They may have initializers, as allowed by the client API.
 #[allow(unused_attributes)]
 #[spirv(uniform_constant)]
-pub struct UniformConstant<
-    'a,
-    T: ?Sized,
-    Binding: sealed::UniformConstantBinding = sealed::CompilerInferred,
-> {
-    ptr: &'a T,
-    binding: PhantomData<Binding>,
-}
-
-impl<'a, T: ?Sized, Binding: sealed::UniformConstantBinding> Deref
-    for UniformConstant<'a, T, Binding>
-{
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        self.ptr
-    }
-}
+pub struct UniformConstant;
+impl Descriptor for UniformConstant {}
 
 /// Input from pipeline.
 ///
@@ -144,12 +86,6 @@ impl<'a, T: ?Sized, Binding: sealed::OutputBinding> DerefMut for Output<'a, T, B
     }
 }
 
-pub struct DescriptorSet<const SET: usize, const BINDING: usize>;
-impl<const SET: usize, const BINDING: usize> DescriptorSet<SET, BINDING> {
-    pub const SET: usize = SET;
-    pub const BINDING: usize = BINDING;
-}
-
 pub struct Location<const LOCATION: usize>;
 impl<const LOCATION: usize> Location<LOCATION> {
     pub const LOCATION: usize = LOCATION;
@@ -157,17 +93,6 @@ impl<const LOCATION: usize> Location<LOCATION> {
 
 mod sealed {
     pub struct CompilerInferred;
-    pub trait UniformBinding {}
-    impl<const SET: usize, const BINDING: usize> UniformBinding for super::DescriptorSet<SET, BINDING> {}
-    pub trait StorageBufferBinding {}
-    impl<const SET: usize, const BINDING: usize> StorageBufferBinding
-        for super::DescriptorSet<SET, BINDING>
-    {
-    }
-    pub trait UniformConstantBinding {}
-    impl UniformConstantBinding for CompilerInferred {}
-    impl<const LOCATION: usize> UniformConstantBinding for super::Location<LOCATION> {}
-    impl<const SET: usize, const BINDING: usize> UniformConstantBinding for super::DescriptorSet<SET, BINDING> {}
     pub trait InputBinding {}
     impl InputBinding for CompilerInferred {}
     impl<const LOCATION: usize> InputBinding for super::Location<LOCATION> {}
@@ -351,3 +276,72 @@ storage_class! {
     /// in all invocations in all work groups.
     #[spirv(physical_storage_buffer)] writeable storage_class PhysicalStorageBuffer;
 }
+
+/// A descriptor set binding.
+///
+/// The first paramter is the data parameter. It allows DSTs, but they are not supported yet.
+/// The second parameter is the storage class or an array or slice of storage class.
+/// The last two const parameters are the `Set` then `Binding` numbers.
+#[allow(unused_attributes)]
+#[spirv(bind)]
+pub struct Bind<'a, T: ?Sized, DescriptorType: DescriptorOrDescriptorArray + ?Sized, const SET: usize, const BINDING: usize> {
+    ptr: *mut T,
+    _phantom: PhantomData<&'a DescriptorType>,
+}
+
+impl<'a, T: ?Sized, DescriptorType: Descriptor, const SET: usize, const BINDING: usize>
+Deref for Bind<'a, T, DescriptorType, SET, BINDING>
+{
+    type Target = T;
+    fn deref(&self) -> &T {
+        unsafe{ &*self.ptr }
+    }
+}
+
+impl<'a, T: ?Sized, DescriptorType: Descriptor + DescriptorMut, const SET: usize, const BINDING: usize>
+DerefMut for Bind<'a, T, DescriptorType, SET, BINDING>
+{
+    fn deref_mut(&mut self) -> &mut T {
+        unsafe { &mut *self.ptr }
+    }
+}
+
+impl<'a, T: ?Sized, DescriptorType: DescriptorArray + ?Sized, const SET: usize, const BINDING: usize>
+Index<usize> for Bind<'a, T, DescriptorType, SET, BINDING>
+{
+    type Output = T;
+    #[allow(unused_attributes)]
+    #[spirv(index_descriptor_array)]
+    #[allow(unused)]
+    fn index(&self, index: usize) -> &T {
+        // compiler implemented
+        unreachable!()
+    }
+}
+
+impl<'a, T: ?Sized, DescriptorType: DescriptorArray + DescriptorMut + ?Sized, const SET: usize, const BINDING: usize>
+IndexMut<usize> for Bind<'a, T, DescriptorType, SET, BINDING>
+{
+    #[allow(unused_attributes)]
+    #[spirv(index_descriptor_array)]
+    #[allow(unused)]
+    fn index_mut(&mut self, index: usize) -> &mut T {
+        // compiler implemented
+        core::unreachable!()
+    }
+}
+
+pub trait Descriptor {}
+
+pub trait DescriptorMut {}
+impl<DescriptorType: DescriptorMut, const N: usize> DescriptorMut for [DescriptorType; N] {}
+impl<DescriptorType: DescriptorMut> DescriptorMut for [DescriptorType] {}
+
+pub trait DescriptorOrDescriptorArray {}
+impl<DescriptorType: Descriptor> DescriptorOrDescriptorArray for DescriptorType {}
+impl<DescriptorType: Descriptor, const N: usize> DescriptorOrDescriptorArray for [DescriptorType; N] {}
+impl<DescriptorType: Descriptor> DescriptorOrDescriptorArray for [DescriptorType] {}
+
+pub trait DescriptorArray: DescriptorOrDescriptorArray {}
+impl<DescriptorType: Descriptor, const N: usize> DescriptorArray for [DescriptorType; N] {}
+impl<DescriptorType: Descriptor> DescriptorArray for [DescriptorType] {}

@@ -327,6 +327,8 @@ impl Symbols {
             ("flat", SpirvAttribute::Flat),
             ("sampled_image", SpirvAttribute::SampledImage),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
+            ("bind", SpirvAttribute::Bind),
+            ("index_descriptor_array", SpirvAttribute::IndexDescriptorArray),
         ]
         .iter()
         .cloned();
@@ -430,6 +432,8 @@ pub enum SpirvAttribute {
     Block,
     Flat,
     UnrollLoops,
+    Bind,
+    IndexDescriptorArray,
 }
 
 // Note that we could mark the attr as used via cx.tcx.sess.mark_attr_used(attr), but unused
