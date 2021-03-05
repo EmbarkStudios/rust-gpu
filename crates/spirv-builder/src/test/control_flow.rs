@@ -330,7 +330,7 @@ fn issue_283() {
     // version of issue 283 with loop uncommented and warnings fixed
     // https://github.com/EmbarkStudios/rust-gpu/issues/283
     val(r#"
-use spirv_std::glam::*;
+use glam::*;
 fn sphere_sdf(p: Vec3) -> f32 {
     p.length() - 1.0
 }
