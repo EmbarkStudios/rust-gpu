@@ -465,7 +465,7 @@ pub(crate) fn run_thin(
     let mut thin_buffers = Vec::with_capacity(modules.len());
     let mut module_names = Vec::with_capacity(modules.len() + cached_modules.len());
 
-    for (name, buffer) in modules.into_iter() {
+    for (name, buffer) in modules {
         let cname = CString::new(name.clone()).unwrap();
         thin_buffers.push(buffer);
         module_names.push(cname);

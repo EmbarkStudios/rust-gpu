@@ -1261,6 +1261,7 @@ struct Unapplicable;
 
 impl<'a, S: Specialization> InferCx<'a, S> {
     /// Match `storage_class` against `pat`, returning a `Match` with found `Var`s.
+    #[allow(clippy::unused_self)] // TODO: remove?
     fn match_storage_class_pat(
         &self,
         pat: &StorageClassPat,
