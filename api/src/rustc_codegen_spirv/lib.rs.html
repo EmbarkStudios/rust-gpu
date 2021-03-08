@@ -629,6 +629,25 @@
 <span id="626">626</span>
 <span id="627">627</span>
 <span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is</span>
 <span class="doccomment">//! unstable and mainly intended for developing on the project itself. This is</span>
@@ -649,42 +668,61 @@
 <span class="doccomment">//! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys</span>
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">rustc_private</span>)]</span>
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">once_cell</span>)]</span>
-<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy</span>::<span class="ident">unimplemented</span>, <span class="ident">clippy</span>::<span class="ident">ok_expect</span>, <span class="ident">clippy</span>::<span class="ident">mem_forget</span>)]</span>
-<span class="comment">// Our standard Clippy lints that we use in Embark projects, we opt out of a few that are not appropriate for the specific crate (yet)</span>
+<span class="comment">// BEGIN - Embark standard lints v0.2.</span>
+<span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
+<span class="comment">// for more info see: &lt;https://github.com/EmbarkStudios/rust-ecosystem/issues/59&gt;</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">unsafe_code</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
-    <span class="ident">clippy</span>::<span class="ident">doc_markdown</span>,
-    <span class="ident">clippy</span>::<span class="ident">dbg_macro</span>,
-    <span class="comment">//clippy::todo,</span>
-    <span class="ident">clippy</span>::<span class="ident">empty_enum</span>,
-    <span class="comment">//clippy::enum_glob_use,</span>
-    <span class="ident">clippy</span>::<span class="ident">pub_enum_variant_names</span>,
-    <span class="ident">clippy</span>::<span class="ident">mem_forget</span>,
-    <span class="ident">clippy</span>::<span class="ident">use_self</span>,
-    <span class="ident">clippy</span>::<span class="ident">filter_map_next</span>,
-    <span class="ident">clippy</span>::<span class="ident">needless_continue</span>,
-    <span class="ident">clippy</span>::<span class="ident">needless_borrow</span>,
-    <span class="ident">clippy</span>::<span class="ident">match_wildcard_for_single_variants</span>,
-    <span class="ident">clippy</span>::<span class="ident">if_let_mutex</span>,
-    <span class="ident">clippy</span>::<span class="ident">mismatched_target_os</span>,
     <span class="ident">clippy</span>::<span class="ident">await_holding_lock</span>,
-    <span class="comment">//clippy::match_on_vec_items,</span>
-    <span class="ident">clippy</span>::<span class="ident">imprecise_flops</span>,
-    <span class="ident">clippy</span>::<span class="ident">suboptimal_flops</span>,
-    <span class="ident">clippy</span>::<span class="ident">lossy_float_literal</span>,
-    <span class="ident">clippy</span>::<span class="ident">rest_pat_in_fully_bound_structs</span>,
-    <span class="ident">clippy</span>::<span class="ident">fn_params_excessive_bools</span>,
+    <span class="ident">clippy</span>::<span class="ident">dbg_macro</span>,
+    <span class="ident">clippy</span>::<span class="ident">debug_assert_with_mut_call</span>,
+    <span class="ident">clippy</span>::<span class="ident">doc_markdown</span>,
+    <span class="ident">clippy</span>::<span class="ident">empty_enum</span>,
+    <span class="ident">clippy</span>::<span class="ident">enum_glob_use</span>,
     <span class="ident">clippy</span>::<span class="ident">exit</span>,
+    <span class="ident">clippy</span>::<span class="ident">explicit_into_iter_loop</span>,
+    <span class="ident">clippy</span>::<span class="ident">filter_map_next</span>,
+    <span class="ident">clippy</span>::<span class="ident">fn_params_excessive_bools</span>,
+    <span class="ident">clippy</span>::<span class="ident">if_let_mutex</span>,
+    <span class="ident">clippy</span>::<span class="ident">imprecise_flops</span>,
     <span class="ident">clippy</span>::<span class="ident">inefficient_to_string</span>,
+    <span class="ident">clippy</span>::<span class="ident">let_unit_value</span>,
     <span class="ident">clippy</span>::<span class="ident">linkedlist</span>,
+    <span class="ident">clippy</span>::<span class="ident">lossy_float_literal</span>,
     <span class="ident">clippy</span>::<span class="ident">macro_use_imports</span>,
+    <span class="ident">clippy</span>::<span class="ident">map_flatten</span>,
+    <span class="ident">clippy</span>::<span class="ident">map_unwrap_or</span>,
+    <span class="ident">clippy</span>::<span class="ident">match_on_vec_items</span>,
+    <span class="ident">clippy</span>::<span class="ident">match_wildcard_for_single_variants</span>,
+    <span class="ident">clippy</span>::<span class="ident">mem_forget</span>,
+    <span class="ident">clippy</span>::<span class="ident">mismatched_target_os</span>,
+    <span class="ident">clippy</span>::<span class="ident">needless_borrow</span>,
+    <span class="ident">clippy</span>::<span class="ident">needless_continue</span>,
     <span class="ident">clippy</span>::<span class="ident">option_option</span>,
-    <span class="ident">clippy</span>::<span class="ident">verbose_file_reads</span>,
+    <span class="ident">clippy</span>::<span class="ident">pub_enum_variant_names</span>,
+    <span class="ident">clippy</span>::<span class="ident">ref_option_ref</span>,
+    <span class="ident">clippy</span>::<span class="ident">rest_pat_in_fully_bound_structs</span>,
+    <span class="ident">clippy</span>::<span class="ident">string_to_string</span>,
+    <span class="ident">clippy</span>::<span class="ident">suboptimal_flops</span>,
+    <span class="ident">clippy</span>::<span class="ident">todo</span>,
     <span class="ident">clippy</span>::<span class="ident">unnested_or_patterns</span>,
-    <span class="ident">rust_2018_idioms</span>,
+    <span class="ident">clippy</span>::<span class="ident">unused_self</span>,
+    <span class="ident">clippy</span>::<span class="ident">verbose_file_reads</span>,
     <span class="ident">future_incompatible</span>,
-    <span class="ident">nonstandard_style</span>
+    <span class="ident">nonstandard_style</span>,
+    <span class="ident">rust_2018_idioms</span>
 )]</span>
+<span class="comment">// END - Embark standard lints v0.2</span>
+<span class="comment">// crate-specific exceptions:</span>
+<span class="attribute">#![<span class="ident">allow</span>(
+    <span class="ident">unsafe_code</span>,                <span class="comment">// still quite a bit of unsafe</span>
+    <span class="ident">clippy</span>::<span class="ident">map_unwrap_or</span>,      <span class="comment">// TODO: test enabling</span>
+    <span class="ident">clippy</span>::<span class="ident">match_on_vec_items</span>, <span class="comment">// TODO: test enabling</span>
+    <span class="ident">clippy</span>::<span class="ident">enum_glob_use</span>,
+    <span class="ident">clippy</span>::<span class="ident">todo</span>,               <span class="comment">// still lots to implement :)</span>
+)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy</span>::<span class="ident">unimplemented</span>, <span class="ident">clippy</span>::<span class="ident">ok_expect</span>)]</span>
 
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">rustc_ast</span>;
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">rustc_attr</span>;
