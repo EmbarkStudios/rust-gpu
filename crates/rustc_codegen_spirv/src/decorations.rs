@@ -1,10 +1,6 @@
 //! SPIR-V decorations specific to `rustc_codegen_spirv`, produced during
 //! the original codegen of a crate, and consumed by the `linker`.
 
-// FIXME(eddyb) Remove when a fix for clippy warning in `serde` derives
-// (https://github.com/rust-lang/rust-clippy/issues/6818) lands in nightly.
-#![allow(clippy::use_self)]
-
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Decoration, Op, Word};
 use rustc_span::{source_map::SourceMap, FileName, Pos, Span};

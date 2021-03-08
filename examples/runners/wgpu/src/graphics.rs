@@ -114,7 +114,7 @@ async fn run(
 
     let mut swap_chain = surface
         .as_ref()
-        .map(|surface| device.create_swap_chain(&surface, &sc_desc));
+        .map(|surface| device.create_swap_chain(surface, &sc_desc));
 
     let start = std::time::Instant::now();
 
