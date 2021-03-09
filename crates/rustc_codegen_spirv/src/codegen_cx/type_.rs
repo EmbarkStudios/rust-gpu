@@ -167,15 +167,13 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                     .sess
                     .fatal(&format!("Invalid float width in type_kind: {}", other)),
             },
-            SpirvType::Adt { .. } => TypeKind::Struct,
-            SpirvType::Opaque { .. } => TypeKind::Struct,
+            SpirvType::Adt { .. } | SpirvType::Opaque { .. } => TypeKind::Struct,
             SpirvType::Vector { .. } => TypeKind::Vector,
-            SpirvType::Array { .. } => TypeKind::Array,
-            SpirvType::RuntimeArray { .. } => TypeKind::Array,
+            SpirvType::Array { .. } | SpirvType::RuntimeArray { .. } => TypeKind::Array,
             SpirvType::Pointer { .. } => TypeKind::Pointer,
             SpirvType::Function { .. } => TypeKind::Function,
-            SpirvType::Image { .. } => TypeKind::Integer,
-            SpirvType::Sampler => TypeKind::Integer,
+            SpirvType::Image { .. } |
+            SpirvType::Sampler |
             SpirvType::SampledImage { .. } => TypeKind::Integer,
         }
     }

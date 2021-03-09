@@ -84,7 +84,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
         make_codegen_backend: None,
         registry: Registry::new(&[]),
     };
-    let res = rustc_interface::interface::run_compiler(config, |compiler| {
+    rustc_interface::interface::run_compiler(config, |compiler| {
         let res = link(
             compiler.session(),
             modules,
@@ -99,8 +99,8 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
         );
         assert_eq!(compiler.session().has_errors(), res.is_err());
         res
-    });
-    res.map_err(|_| thread.join().unwrap())
+    })
+    .map_err(|_e| thread.join().unwrap())
 }
 
 fn without_header_eq(mut result: Module, expected: &str) {
