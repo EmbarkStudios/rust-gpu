@@ -1665,6 +1665,7 @@ impl<'a, S: Specialization> InferCx<'a, S> {
             return Ok(a);
         }
 
+        #[allow(clippy::match_same_arms)]
         Ok(match (a.clone(), b.clone()) {
             // Instances of "generic" globals/functions must be of the same ID,
             // and their `generic_args` inference variables must be unified.

@@ -21,8 +21,7 @@ fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
     let mut control = FunctionControl::NONE;
     match attrs.inline {
         InlineAttr::None => (),
-        InlineAttr::Hint => control.insert(FunctionControl::INLINE),
-        InlineAttr::Always => control.insert(FunctionControl::INLINE),
+        InlineAttr::Hint | InlineAttr::Always => control.insert(FunctionControl::INLINE),
         InlineAttr::Never => control.insert(FunctionControl::DONT_INLINE),
     }
     if attrs.flags.contains(CodegenFnAttrFlags::FFI_PURE) {
