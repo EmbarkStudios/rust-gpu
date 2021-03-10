@@ -587,3 +587,14 @@ pub fn main(input: Input<glam::Vec2>, image: UniformConstant<StorageImage2d>) {
 }
 "#);
 }
+
+#[test]
+fn image_fetch() {
+    val(r#"
+#[spirv(fragment)]
+pub fn main(image: UniformConstant<Image2d>, mut output: Output<glam::Vec4>) {
+    let texel = image.fetch(glam::IVec2::new(0, 1));
+    *output = texel;
+}
+"#);
+}

@@ -42,6 +42,27 @@ impl Image2d {
             result
         }
     }
+    /// Fetch a single texel with a sampler set at compile time
+    #[spirv_std_macros::gpu_only]
+    pub fn fetch<I>(&self, coordinate: impl Vector<I>) -> Vec4
+    where
+        I: Integer,
+    {
+        let mut result = Vec4::default();
+        unsafe {
+            asm! {
+                "%image = OpLoad _ {this}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%result = OpImageFetch typeof*{result} %image %coordinate",
+                "OpStore {result} %result",
+                this = in(reg) self,
+                coordinate = in(reg) &coordinate,
+                result = in(reg) &mut result,
+            }
+        }
+
+        result
+    }
 }
 
 #[spirv(image_type(
