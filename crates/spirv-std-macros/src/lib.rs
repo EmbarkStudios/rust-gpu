@@ -79,6 +79,8 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
     tokens.into_iter().collect()
 }
 
+/// Marks a function as runnable only on the GPU, and will panic on
+/// CPU platforms.
 #[proc_macro_attribute]
 pub fn gpu_only(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let syn::ItemFn {
