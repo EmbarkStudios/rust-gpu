@@ -24,20 +24,20 @@ pub struct Image2d {
 
 impl Image2d {
     #[spirv_std_macros::gpu_only]
-    pub fn sample(&self, sampler: Sampler, coord: Vec2) -> Vec4 {
+    pub fn sample(&self, sampler: Sampler, coordinate: Vec2) -> Vec4 {
         unsafe {
             let mut result = Default::default();
             asm!(
-                "%image = OpLoad _ {1}",
-                "%sampler = OpLoad _ {2}",
-                "%coord = OpLoad _ {3}",
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
                 "%sampledImage = OpSampledImage _ %image %sampler",
-                "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
-                "OpStore {0} %result",
-                in(reg) &mut result,
-                in(reg) self,
-                in(reg) &sampler,
-                in(reg) &coord
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
             );
             result
         }
@@ -55,9 +55,9 @@ impl Image2d {
                 "%coordinate = OpLoad _ {coordinate}",
                 "%result = OpImageFetch typeof*{result} %image %coordinate",
                 "OpStore {result} %result",
+                result = in(reg) &mut result,
                 this = in(reg) self,
                 coordinate = in(reg) &coordinate,
-                result = in(reg) &mut result,
             }
         }
 
@@ -141,20 +141,20 @@ pub struct Image2dArray {
 
 impl Image2dArray {
     #[spirv_std_macros::gpu_only]
-    pub fn sample(&self, sampler: Sampler, coord: Vec3A) -> Vec4 {
+    pub fn sample(&self, sampler: Sampler, coordinate: Vec3A) -> Vec4 {
         unsafe {
             let mut result = Default::default();
             asm!(
-                "%image = OpLoad _ {1}",
-                "%sampler = OpLoad _ {2}",
-                "%coord = OpLoad _ {3}",
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
                 "%sampledImage = OpSampledImage _ %image %sampler",
-                "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
-                "OpStore {0} %result",
-                in(reg) &mut result,
-                in(reg) self,
-                in(reg) &sampler,
-                in(reg) &coord
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
             );
             result
         }
@@ -169,17 +169,17 @@ pub struct SampledImage<I> {
 
 impl SampledImage<Image2d> {
     #[spirv_std_macros::gpu_only]
-    pub fn sample(&self, coord: Vec2) -> Vec4 {
+    pub fn sample(&self, coordinate: Vec2) -> Vec4 {
         unsafe {
             let mut result = Default::default();
             asm!(
-                "%sampledImage = OpLoad _ {1}",
-                "%coord = OpLoad _ {2}",
-                "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
-                "OpStore {0} %result",
-                in(reg) &mut result,
-                in(reg) self,
-                in(reg) &coord
+                "%sampledImage = OpLoad _ {this}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                coordinate = in(reg) &coordinate
             );
             result
         }
