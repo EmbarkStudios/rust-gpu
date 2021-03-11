@@ -2101,9 +2101,50 @@
 <span id="2098">2098</span>
 <span id="2099">2099</span>
 <span id="2100">2100</span>
+<span id="2101">2101</span>
+<span id="2102">2102</span>
+<span id="2103">2103</span>
+<span id="2104">2104</span>
+<span id="2105">2105</span>
+<span id="2106">2106</span>
+<span id="2107">2107</span>
+<span id="2108">2108</span>
+<span id="2109">2109</span>
+<span id="2110">2110</span>
+<span id="2111">2111</span>
+<span id="2112">2112</span>
+<span id="2113">2113</span>
+<span id="2114">2114</span>
+<span id="2115">2115</span>
+<span id="2116">2116</span>
+<span id="2117">2117</span>
+<span id="2118">2118</span>
+<span id="2119">2119</span>
+<span id="2120">2120</span>
+<span id="2121">2121</span>
+<span id="2122">2122</span>
+<span id="2123">2123</span>
+<span id="2124">2124</span>
+<span id="2125">2125</span>
+<span id="2126">2126</span>
+<span id="2127">2127</span>
+<span id="2128">2128</span>
+<span id="2129">2129</span>
+<span id="2130">2130</span>
+<span id="2131">2131</span>
+<span id="2132">2132</span>
+<span id="2133">2133</span>
+<span id="2134">2134</span>
+<span id="2135">2135</span>
+<span id="2136">2136</span>
+<span id="2137">2137</span>
+<span id="2138">2138</span>
+<span id="2139">2139</span>
+<span id="2140">2140</span>
+<span id="2141">2141</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">InsertPoint</span>, <span class="ident">Instruction</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Capability</span>, <span class="ident">MemoryModel</span>, <span class="ident">MemorySemantics</span>, <span class="ident">Op</span>, <span class="ident">Scope</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
@@ -2125,10 +2166,44 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Range</span>;
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">simple_op</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst_name</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (
+        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst_name</span>:<span class="ident">ident</span>
+        $(, <span class="ident">fold_const</span> {
+            $(<span class="ident">int</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fold_int_lhs</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fold_int_rhs</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fold_int</span>:<span class="ident">expr</span>)<span class="question-mark">?</span>
+        })<span class="question-mark">?</span>
+    ) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">func_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">lhs</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">rhs</span>: <span class="self">Self</span>::<span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
             <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
             <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">ty</span>;
+
+            $(<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">const_lhs</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const</span>(<span class="ident">lhs</span>) {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">const_rhs</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const</span>(<span class="ident">rhs</span>) {
+                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">result_type</span>) {
+                        $(<span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">bits</span>, <span class="ident">signed</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">Size</span>::<span class="ident">from_bits</span>(<span class="ident">bits</span>);
+                            <span class="kw">let</span> <span class="ident">as_u128</span> <span class="op">=</span> <span class="op">|</span><span class="ident">const_val</span><span class="op">|</span> {
+                                <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">const_val</span> {
+                                    <span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="kw">_</span>, <span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">x</span> <span class="kw">as</span> <span class="ident">u128</span>,
+                                    <span class="ident">SpirvConst</span>::<span class="ident">U64</span>(<span class="kw">_</span>, <span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">x</span> <span class="kw">as</span> <span class="ident">u128</span>,
+                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
+                                };
+                                <span class="prelude-val">Some</span>(<span class="kw">if</span> <span class="ident">signed</span> {
+                                    <span class="ident">size</span>.<span class="ident">sign_extend</span>(<span class="ident">x</span>)
+                                } <span class="kw">else</span> {
+                                    <span class="ident">size</span>.<span class="ident">truncate</span>(<span class="ident">x</span>)
+                                })
+                            };
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fold_int_lhs</span>) <span class="op">=</span> <span class="ident">as_u128</span>(<span class="ident">const_lhs</span>) {
+                                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fold_int_rhs</span>) <span class="op">=</span> <span class="ident">as_u128</span>(<span class="ident">const_rhs</span>) {
+                                    <span class="kw">return</span> <span class="self">self</span>.<span class="ident">const_uint_big</span>(<span class="ident">result_type</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fold_int</span>);
+                                }
+                            }
+                        })<span class="question-mark">?</span>
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                    }
+                }
+            })<span class="question-mark">?</span>
+
             <span class="self">self</span>.<span class="ident">emit</span>()
                 .<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst_name</span>(<span class="ident">result_type</span>, <span class="prelude-val">None</span>, <span class="ident">lhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">rhs</span>.<span class="ident">def</span>(<span class="self">self</span>))
                 .<span class="ident">unwrap</span>()
@@ -2704,7 +2779,14 @@
     <span class="macro">simple_op</span><span class="macro">!</span> {<span class="ident">sub</span>, <span class="ident">i_sub</span>}
     <span class="macro">simple_op</span><span class="macro">!</span> {<span class="ident">fsub</span>, <span class="ident">f_sub</span>}
     <span class="macro">simple_op</span><span class="macro">!</span> {<span class="ident">fsub_fast</span>, <span class="ident">f_sub</span>} <span class="comment">// fast=normal</span>
-    <span class="macro">simple_op</span><span class="macro">!</span> {<span class="ident">mul</span>, <span class="ident">i_mul</span>}
+    <span class="macro">simple_op</span><span class="macro">!</span> {
+        <span class="ident">mul</span>, <span class="ident">i_mul</span>,
+        <span class="comment">// HACK(eddyb) `rustc_codegen_ssa` relies on `Builder` methods doing</span>
+        <span class="comment">// on-the-fly constant-folding, for e.g. intrinsics that copy memory.</span>
+        <span class="ident">fold_const</span> {
+            <span class="ident">int</span>(<span class="ident">a</span>, <span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a</span> <span class="op">*</span> <span class="ident">b</span>
+        }
+    }
     <span class="macro">simple_op</span><span class="macro">!</span> {<span class="ident">fmul</span>, <span class="ident">f_mul</span>}
     <span class="macro">simple_op</span><span class="macro">!</span> {<span class="ident">fmul_fast</span>, <span class="ident">f_mul</span>} <span class="comment">// fast=normal</span>
     <span class="macro">simple_op</span><span class="macro">!</span> {<span class="ident">udiv</span>, <span class="ident">u_div</span>}
