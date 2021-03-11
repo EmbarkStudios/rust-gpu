@@ -504,7 +504,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         cond
     }
 
-    fn sideeffect(&mut self, _: bool) {
+    fn sideeffect(&mut self) {
         // TODO: This is currently ignored.
         // It corresponds to the llvm.sideeffect intrinsic - does spir-v have an equivalent?
     }
