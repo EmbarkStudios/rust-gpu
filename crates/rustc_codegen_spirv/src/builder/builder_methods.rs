@@ -1,5 +1,5 @@
 use super::Builder;
-use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt, SpirvValueKind};
+use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
 use rspirv::spirv::{Capability, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word};
@@ -21,10 +21,44 @@ use std::iter::empty;
 use std::ops::Range;
 
 macro_rules! simple_op {
-    ($func_name:ident, $inst_name:ident) => {
+    (
+        $func_name:ident, $inst_name:ident
+        $(, fold_const {
+            $(int($fold_int_lhs:ident, $fold_int_rhs:ident) => $fold_int:expr)?
+        })?
+    ) => {
         fn $func_name(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value {
             assert_ty_eq!(self, lhs.ty, rhs.ty);
             let result_type = lhs.ty;
+
+            $(if let Some(const_lhs) = self.builder.lookup_const(lhs) {
+                if let Some(const_rhs) = self.builder.lookup_const(rhs) {
+                    match self.lookup_type(result_type) {
+                        $(SpirvType::Integer(bits, signed) => {
+                            let size = Size::from_bits(bits);
+                            let as_u128 = |const_val| {
+                                let x = match const_val {
+                                    SpirvConst::U32(_, x) => x as u128,
+                                    SpirvConst::U64(_, x) => x as u128,
+                                    _ => return None,
+                                };
+                                Some(if signed {
+                                    size.sign_extend(x)
+                                } else {
+                                    size.truncate(x)
+                                })
+                            };
+                            if let Some($fold_int_lhs) = as_u128(const_lhs) {
+                                if let Some($fold_int_rhs) = as_u128(const_rhs) {
+                                    return self.const_uint_big(result_type, $fold_int);
+                                }
+                            }
+                        })?
+                        _ => {}
+                    }
+                }
+            })?
+
             self.emit()
                 .$inst_name(result_type, None, lhs.def(self), rhs.def(self))
                 .unwrap()
@@ -600,7 +634,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     simple_op! {sub, i_sub}
     simple_op! {fsub, f_sub}
     simple_op! {fsub_fast, f_sub} // fast=normal
-    simple_op! {mul, i_mul}
+    simple_op! {
+        mul, i_mul,
+        // HACK(eddyb) `rustc_codegen_ssa` relies on `Builder` methods doing
+        // on-the-fly constant-folding, for e.g. intrinsics that copy memory.
+        fold_const {
+            int(a, b) => a * b
+        }
+    }
     simple_op! {fmul, f_mul}
     simple_op! {fmul_fast, f_mul} // fast=normal
     simple_op! {udiv, u_div}

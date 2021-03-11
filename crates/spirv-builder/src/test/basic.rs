@@ -440,7 +440,6 @@ pub fn main() {
 }
 
 #[test]
-#[ignore]
 fn create_uninitialized_memory() {
     val(r#"
 use core::mem::MaybeUninit;
@@ -597,4 +596,130 @@ pub fn main(image: UniformConstant<Image2d>, mut output: Output<glam::Vec4>) {
     *output = texel;
 }
 "#);
+}
+
+/// Helper to generate all of the `ptr_*` tests below, which test that the various
+/// ways to use raw pointer `read`/`write`/`copy`, to copy a single value, work,
+/// and that the resulting SPIR-V uses either a pair of `OpLoad` and `OpStore`,
+/// and/or the `OpCopyMemory` instruction, but *not* `OpCopyMemorySized`.
+macro_rules! test_copy_via_raw_ptr {
+    ($copy_expr:literal => $spirv:literal) => {
+        dis_fn(
+            concat!(
+                r#"
+        fn copy_via_raw_ptr(src: &f32, dst: &mut f32) {
+            unsafe {
+                "#,
+                $copy_expr,
+                r#"
+            }
+        }
+        #[spirv(fragment)]
+        pub fn main(i: Input<f32>, mut o: Output<f32>) {
+            copy_via_raw_ptr(&i, &mut o);
+            // FIXME(eddyb) above call results in inlining `copy_via_raw_ptr`,
+            // due to the to `Input`/`Output` storage classes, so to get the
+            // disassembled function we also need `Function`-local pointers:
+            let (src, mut dst) = (0.0, 0.0);
+            copy_via_raw_ptr(&src, &mut dst);
+        }
+"#
+            ),
+            "copy_via_raw_ptr",
+            concat!(
+                r#"%1 = OpFunction %2 None %3
+                %4 = OpFunctionParameter %5
+                %6 = OpFunctionParameter %5
+                %7 = OpLabel"#,
+                $spirv,
+                r#"OpReturn
+                OpFunctionEnd"#
+            ),
+        );
+    };
+}
+
+#[test]
+fn ptr_read() {
+    test_copy_via_raw_ptr!(
+        "*dst = core::ptr::read(src)"=> r#"
+            %8 = OpVariable %5 Function
+            OpStore %8 %9
+            OpCopyMemory %8 %4
+            %10 = OpLoad %11 %8
+            OpStore %6 %10
+        "#
+    );
+}
+
+#[test]
+fn ptr_read_method() {
+    test_copy_via_raw_ptr!(
+        "*dst = (src as *const f32).read()" => r#"
+            %8 = OpVariable %5 Function
+            OpStore %8 %9
+            OpCopyMemory %8 %4
+            %10 = OpLoad %11 %8
+            OpStore %6 %10
+        "#
+    );
+}
+
+#[test]
+fn ptr_write() {
+    test_copy_via_raw_ptr!(
+        "core::ptr::write(dst, *src)" => r#"
+            %8 = OpVariable %5 Function
+            %9 = OpLoad %10 %4
+            OpStore %8 %9
+            OpCopyMemory %6 %8
+        "#
+    );
+}
+
+#[test]
+fn ptr_write_method() {
+    test_copy_via_raw_ptr!(
+        "(dst as *mut f32).write(*src)" => r#"
+            %8 = OpVariable %5 Function
+            %9 = OpLoad %10 %4
+            OpStore %8 %9
+            OpCopyMemory %6 %8
+        "#
+    );
+}
+
+#[test]
+fn ptr_copy() {
+    test_copy_via_raw_ptr!(
+        "core::ptr::copy(src, dst, 1)" => r#"
+            OpCopyMemory %6 %4
+        "#
+    );
+}
+
+#[test]
+// FIXME(eddyb) doesn't work because `<*const T>::copy_to` is a method that wraps
+// the actual `core::ptr::copy` intrinsic - this requires either MIR inlining, or
+// making the methods themselves intrinsic (via attributes instead of pseudo-ABI).
+#[ignore]
+fn ptr_copy_to_method() {
+    test_copy_via_raw_ptr!(
+        "(src as *const f32).copy_to(dst, 1)" => r#"
+            OpCopyMemory %6 %4
+        "#
+    );
+}
+
+#[test]
+// FIXME(eddyb) doesn't work because `<*mut T>::copy_from` is a method that wraps
+// the actual `core::ptr::copy` intrinsic - this requires either MIR inlining, or
+// making the methods themselves intrinsic (via attributes instead of pseudo-ABI).
+#[ignore]
+fn ptr_copy_from_method() {
+    test_copy_via_raw_ptr!(
+        "(dst as *mut f32).copy_from(src, 1)" => r#"
+            OpCopyMemory %6 %4
+        "#
+    );
 }
