@@ -313,7 +313,7 @@ impl CodegenBackend for SpirvCodegenBackend {
             // capture variables. Fortunately, the defaults are exposed (thanks rustdoc), so use that instead.
             let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
             result.map_bound(|mut inner| {
-                if inner.abi == Abi::C {
+                if let Abi::C { .. } = inner.abi {
                     inner.abi = Abi::Rust;
                 }
                 inner
@@ -329,7 +329,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         providers.fn_sig = |tcx, def_id| {
             let result = (rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
             result.map_bound(|mut inner| {
-                if inner.abi == Abi::C {
+                if let Abi::C { .. } = inner.abi {
                     inner.abi = Abi::Rust;
                 }
                 inner

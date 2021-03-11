@@ -166,7 +166,7 @@ impl<'tcx> CodegenCx<'tcx> {
         if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
         }
-        for attr in parse_attrs(self, hir_param.attrs) {
+        for attr in parse_attrs(self, self.tcx.hir().attrs(hir_param.hir_id)) {
             match attr {
                 SpirvAttribute::Builtin(builtin) => {
                     self.emit_global().decorate(

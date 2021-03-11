@@ -43,9 +43,10 @@ struct CheckSpirvAttrVisitor<'tcx> {
 }
 
 impl CheckSpirvAttrVisitor<'_> {
-    fn check_spirv_attributes(&self, hir_id: HirId, attrs: &[Attribute], target: Target) {
+    fn check_spirv_attributes(&self, hir_id: HirId, target: Target) {
         let parse_attrs = |attrs| crate::symbols::parse_attrs_for_checking(&self.sym, attrs);
 
+        let attrs = self.tcx.hir().attrs(hir_id);
         for (attr, parse_attr_result) in parse_attrs(attrs) {
             // Make sure to mark the whole `#[spirv(...)]` attribute as used,
             // to avoid warnings about unused attributes.
@@ -144,48 +145,48 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
 
     fn visit_item(&mut self, item: &'tcx hir::Item<'tcx>) {
         let target = Target::from_item(item);
-        self.check_spirv_attributes(item.hir_id(), item.attrs, target);
+        self.check_spirv_attributes(item.hir_id(), target);
         intravisit::walk_item(self, item)
     }
 
     fn visit_generic_param(&mut self, generic_param: &'tcx hir::GenericParam<'tcx>) {
         let target = Target::from_generic_param(generic_param);
-        self.check_spirv_attributes(generic_param.hir_id, generic_param.attrs, target);
+        self.check_spirv_attributes(generic_param.hir_id, target);
         intravisit::walk_generic_param(self, generic_param)
     }
 
     fn visit_trait_item(&mut self, trait_item: &'tcx hir::TraitItem<'tcx>) {
         let target = Target::from_trait_item(trait_item);
-        self.check_spirv_attributes(trait_item.hir_id(), trait_item.attrs, target);
+        self.check_spirv_attributes(trait_item.hir_id(), target);
         intravisit::walk_trait_item(self, trait_item)
     }
 
     fn visit_struct_field(&mut self, struct_field: &'tcx hir::StructField<'tcx>) {
-        self.check_spirv_attributes(struct_field.hir_id, struct_field.attrs, Target::Field);
+        self.check_spirv_attributes(struct_field.hir_id, Target::Field);
         intravisit::walk_struct_field(self, struct_field);
     }
 
     fn visit_arm(&mut self, arm: &'tcx hir::Arm<'tcx>) {
-        self.check_spirv_attributes(arm.hir_id, arm.attrs, Target::Arm);
+        self.check_spirv_attributes(arm.hir_id, Target::Arm);
         intravisit::walk_arm(self, arm);
     }
 
     fn visit_foreign_item(&mut self, f_item: &'tcx hir::ForeignItem<'tcx>) {
         let target = Target::from_foreign_item(f_item);
-        self.check_spirv_attributes(f_item.hir_id(), f_item.attrs, target);
+        self.check_spirv_attributes(f_item.hir_id(), target);
         intravisit::walk_foreign_item(self, f_item)
     }
 
     fn visit_impl_item(&mut self, impl_item: &'tcx hir::ImplItem<'tcx>) {
         let target = target_from_impl_item(self.tcx, impl_item);
-        self.check_spirv_attributes(impl_item.hir_id(), impl_item.attrs, target);
+        self.check_spirv_attributes(impl_item.hir_id(), target);
         intravisit::walk_impl_item(self, impl_item)
     }
 
     fn visit_stmt(&mut self, stmt: &'tcx hir::Stmt<'tcx>) {
         // When checking statements ignore expressions, they will be checked later.
         if let hir::StmtKind::Local(l) = stmt.kind {
-            self.check_spirv_attributes(l.hir_id, &l.attrs, Target::Statement);
+            self.check_spirv_attributes(l.hir_id, Target::Statement);
         }
         intravisit::walk_stmt(self, stmt)
     }
@@ -196,7 +197,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
             _ => Target::Expression,
         };
 
-        self.check_spirv_attributes(expr.hir_id, &expr.attrs, target);
+        self.check_spirv_attributes(expr.hir_id, target);
         intravisit::walk_expr(self, expr)
     }
 
@@ -206,17 +207,17 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
         generics: &'tcx hir::Generics<'tcx>,
         item_id: HirId,
     ) {
-        self.check_spirv_attributes(variant.id, variant.attrs, Target::Variant);
+        self.check_spirv_attributes(variant.id, Target::Variant);
         intravisit::walk_variant(self, variant, generics, item_id)
     }
 
     fn visit_macro_def(&mut self, macro_def: &'tcx hir::MacroDef<'tcx>) {
-        self.check_spirv_attributes(macro_def.hir_id(), macro_def.attrs, Target::MacroDef);
+        self.check_spirv_attributes(macro_def.hir_id(), Target::MacroDef);
         intravisit::walk_macro_def(self, macro_def);
     }
 
     fn visit_param(&mut self, param: &'tcx hir::Param<'tcx>) {
-        self.check_spirv_attributes(param.hir_id, param.attrs, Target::Param);
+        self.check_spirv_attributes(param.hir_id, Target::Param);
 
         intravisit::walk_param(self, param);
     }
@@ -254,11 +255,7 @@ fn check_mod_attrs(tcx: TyCtxt<'_>, module_def_id: LocalDefId) {
         tcx.hir().krate().non_exported_macro_attrs,
     );
     if module_def_id.is_top_level_module() {
-        check_spirv_attr_visitor.check_spirv_attributes(
-            CRATE_HIR_ID,
-            tcx.hir().krate_attrs(),
-            Target::Mod,
-        );
+        check_spirv_attr_visitor.check_spirv_attributes(CRATE_HIR_ID, Target::Mod);
     }
 }
 
