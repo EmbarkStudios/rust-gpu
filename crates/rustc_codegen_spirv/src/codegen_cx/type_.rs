@@ -156,7 +156,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn type_kind(&self, ty: Self::Type) -> TypeKind {
         match self.lookup_type(ty) {
             SpirvType::Void => TypeKind::Void,
-            SpirvType::Bool => TypeKind::Integer, // thanks llvm
+            SpirvType::Bool | // thanks llvm
             SpirvType::Integer(_, _) => TypeKind::Integer,
             SpirvType::Float(width) => match width {
                 16 => TypeKind::Half,
