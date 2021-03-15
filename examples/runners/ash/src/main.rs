@@ -1217,15 +1217,15 @@ impl PipelineDescriptor {
             .build();
 
         Self {
+            color_blend_attachments,
+            dynamic_state,
             shader_stages,
             vertex_input,
             input_assembly,
             rasterization,
             multisample,
             depth_stencil,
-            color_blend_attachments,
             color_blend,
-            dynamic_state,
             dynamic_state_info,
         }
     }

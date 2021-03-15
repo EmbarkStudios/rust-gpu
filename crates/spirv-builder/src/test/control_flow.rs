@@ -377,9 +377,11 @@ pub fn main() {
 }"#);
 }
 
-// HACK(eddyb) test that `for` loop desugaring (with its call to `Iterator::next`
-// and matching on the resulting `Option`) works, without a working `Range`
-// iterator (due to the use of `mem::swap` and its block-wise implementation).
+// NOTE(eddyb) this tests `for` loop desugaring (with its call to `Iterator::next`
+// and matching on the resulting `Option`), without relying on a `Range` iterator.
+// More precisely, `Range` used to not compile, due to it using `mem::replace`,
+// which, before https://github.com/rust-lang/rust/pull/83022, used to just call
+// `mem::swap` (which has a block-wise optimization that can't work on SPIR-V).
 #[test]
 fn cf_for_with_custom_range_iter() {
     val(r#"
@@ -404,6 +406,17 @@ impl<T: Num + Ord + Copy> Iterator for RangeIter<T> {
 #[spirv(fragment)]
 pub fn main(i: Input<i32>) {
     for _ in RangeIter(0..*i) {
+    }
+}
+"#);
+}
+
+#[test]
+fn cf_for_range() {
+    val(r#"
+#[spirv(fragment)]
+pub fn main(i: Input<i32>) {
+    for _ in 0..*i {
     }
 }
 "#);
