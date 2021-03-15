@@ -223,9 +223,7 @@ pub fn main_fs(
         .intersect(mouse_circle)
     };
 
-    // FIXME(eddyb) use a `for i in 0..3` loop when that works.
-    let mut i = 0;
-    while i < 3 {
+    for i in 0..3 {
         painter.fill(
             mouse_button(i),
             RED.lerp(
@@ -239,7 +237,6 @@ pub fn main_fs(
                 ),
             ),
         );
-        i += 1;
     }
 
     painter.fill_with_contrast_border(
