@@ -10,7 +10,7 @@
 #[cfg(not(target_arch = "spirv"))]
 #[macro_use]
 pub extern crate spirv_std_macros;
-use spirv_std::glam::{vec4, Vec4};
+use shared::glam::{vec4, Vec4};
 use spirv_std::storage_class::{Input, Output};
 
 #[spirv(fragment)]

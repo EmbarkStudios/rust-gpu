@@ -47,7 +47,11 @@ overflow-checks = false
 debug-assertions = false
 
 [dependencies]
-spirv-std = { path = "../../crates/spirv-std" }
+spirv-std = { path = "../../crates/spirv-std", features=["const-generics"] }
+glam = { git = "https://github.com/EmbarkStudios/glam-rs.git", branch="spirv-std-impl", default-features=false, features = ["libm", "scalar-math"] }
+
+[patch.crates-io.spirv-std]
+path="../../crates/spirv-std"
 
 [workspace]
 "#;

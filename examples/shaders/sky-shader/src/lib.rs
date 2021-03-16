@@ -14,8 +14,8 @@
 pub extern crate spirv_std_macros;
 
 use core::f32::consts::PI;
+use glam::{const_vec3, vec2, vec3, Vec2, Vec3, Vec4};
 use shared::*;
-use spirv_std::glam::{const_vec3, vec2, vec3, Vec2, Vec3, Vec4};
 use spirv_std::storage_class::{Input, Output, PushConstant};
 
 // Note: This cfg is incorrect on its surface, it really should be "are we compiling with std", but
@@ -178,7 +178,7 @@ pub fn main_vs(
     // Create a "full screen triangle" by mapping the vertex index.
     // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
     let uv = vec2(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);
-    let pos = 2.0 * uv - Vec2::one();
+    let pos = 2.0 * uv - Vec2::ONE;
 
     *builtin_pos = pos.extend(0.0).extend(1.0);
 }

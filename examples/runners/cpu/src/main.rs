@@ -44,8 +44,8 @@
 
 use minifb::{Key, Window, WindowOptions};
 use rayon::prelude::*;
+use shared::glam::{vec2, Vec2, Vec4};
 use shared::ShaderConstants;
-use spirv_std::glam::{vec2, Vec2, Vec4};
 use std::time::Instant;
 
 use sky_shader as shader_module;
@@ -109,7 +109,7 @@ fn main() {
                 -((i / WIDTH) as f32 / HEIGHT as f32 * 2.0 - 1.0),
             );
 
-            let frag_coord = (vec2(screen_pos.x, -screen_pos.y) + Vec2::one()) / Vec2::splat(2.0)
+            let frag_coord = (vec2(screen_pos.x, -screen_pos.y) + Vec2::ONE) / Vec2::splat(2.0)
                 * vec2(WIDTH as f32, HEIGHT as f32);
 
             // evaluate the fragment shader for the specific pixel

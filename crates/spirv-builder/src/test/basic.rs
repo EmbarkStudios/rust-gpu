@@ -463,6 +463,9 @@ pub fn main() {
     let vector = glam::Vec2::new(1.0, 2.0);
     let element = unsafe { spirv_std::arch::vector_extract_dynamic(vector, 1) };
     assert!(2.0 == element);
+    let uvector = glam::UVec2::new(1, 2);
+    let element: u32 = unsafe { spirv_std::arch::vector_extract_dynamic(uvector, 1) };
+    assert!(2 == element);
 }
 "#);
 }
@@ -476,6 +479,10 @@ pub fn main() {
     let expected = glam::Vec2::new(1.0, 3.0);
     let new_vector = unsafe { spirv_std::arch::vector_insert_dynamic(vector, 1, 3.0) };
     assert!(new_vector == expected);
+    let uvector = glam::UVec2::new(1, 2);
+    let uexpected = glam::UVec2::new(1, 3);
+    let new_vector = unsafe { spirv_std::arch::vector_insert_dynamic(uvector, 1, 3) };
+    assert!(new_vector == uexpected);
 }
 "#);
 }
@@ -545,7 +552,7 @@ fn complex_image_sample_inst() {
     }
     #[spirv(fragment)]
     pub fn main() {
-        sample_proj_lod(glam::Vec4::zero(), glam::Vec2::zero(), glam::Vec2::zero(), 0, 0);
+        sample_proj_lod(glam::Vec4::ZERO, glam::Vec2::ZERO, glam::Vec2::ZERO, 0, 0);
     }"#,
         "sample_proj_lod",
         "%1 = OpFunction %2 None %3
@@ -568,7 +575,7 @@ fn image_read() {
     val(r#"
 #[spirv(fragment)]
 pub fn main(image: UniformConstant<StorageImage2d>, mut output: Output<glam::Vec2>) {
-    let coords = image.read(glam::IVec2::new(0, 1));
+    let coords =  image.read(glam::IVec2::new(0, 1));
     *output = coords;
 }
 "#);
