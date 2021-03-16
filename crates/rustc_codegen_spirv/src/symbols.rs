@@ -708,9 +708,17 @@ fn parse_local_size_attr(arg: &NestedMetaItem) -> Result<[u32; 3], ParseAttrErro
             }
             Ok(local_size)
         }
+        Some(tuple) if tuple.is_empty() => Err((
+            arg.span,
+            "#[spirv(compute(threads(x, y, z)))] must have the x dimension specified, trailing ones may be elided".to_string(),
+        )),
+        Some(tuple) if tuple.len() > 3 => Err((
+            arg.span,
+            "#[spirv(compute(threads(x, y, z)))] is three dimensional".to_string(),
+        )),
         _ => Err((
             arg.span,
-            "attribute must have 1 to 3 parameters, trailing ones may be elided".to_string(),
+            "#[spirv(compute(threads(x, y, z)))] must have 1 to 3 parameters, trailing ones may be elided".to_string(),
         )),
     }
 }
@@ -753,7 +761,9 @@ fn parse_entry_attrs(
                             } else {
                                 return Err((
                                     attr_name.span,
-                                    String::from("threads may only be specified once"),
+                                    String::from(
+                                        "`#[spirv(compute(threads))]` may only be specified once",
+                                    ),
                                 ));
                             }
                         }
@@ -859,7 +869,12 @@ fn parse_entry_attrs(
                     .execution_modes
                     .push((LocalSize, ExecutionModeExtra::new(local_size)));
             } else {
-                return Err((arg.span(), String::from("threads must be specified")));
+                return Err((
+                    arg.span(),
+                    String::from(
+                        "The `threads` argument must be specified when using `#[spirv(compute)]`",
+                    ),
+                ));
             }
         }
         Kernel => {
