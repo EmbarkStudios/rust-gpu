@@ -12,13 +12,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             target: x86_64-unknown-linux-gnu
           - os: windows-latest
             target: x86_64-pc-windows-msvc
           - os: macOS-latest
             target: x86_64-apple-darwin
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             target: aarch64-linux-android
     runs-on: ${{ matrix.os }}
     env:
@@ -32,7 +32,7 @@ jobs:
         run: |
           sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
           mkdir "${HOME}/spirv-tools"
-          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1305/20201026-063148/install.tgz | tar -xz -C "${HOME}/spirv-tools"
+          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1409/20210313-175801/install.tgz | tar -xz -C "${HOME}/spirv-tools"
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - if: ${{ runner.os == 'macOS' }}
         name: Mac - Install spirv-tools
@@ -45,7 +45,7 @@ jobs:
         run: |
           tmparch=$(mktemp)
           mkdir "${HOME}/spirv-tools"
-          curl -fL -o "$tmparch" https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1232/20200928-085551/install.zip
+          curl -fL -o "$tmparch" https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1391/20210313-183536/install.zip
           unzip "$tmparch" -d "${HOME}/spirv-tools"
       - if: ${{ runner.os == 'Windows' }}
         # Runs separately to add spir-v tools to Powershell's Path.
@@ -77,7 +77,7 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       # Note that we are explicitly NOT checking out submodules, to validate
       # that we haven't accidentally enabled spirv-tools native compilation
@@ -90,7 +90,7 @@ jobs:
       - name: Install spirv-tools
         run: |
           mkdir "${HOME}/spirv-tools"
-          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1305/20201026-063148/install.tgz | tar -xz -C "${HOME}/spirv-tools"
+          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1409/20210313-175801/install.tgz | tar -xz -C "${HOME}/spirv-tools"
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - name: Install rustup components
         run: rustup component add rustfmt clippy
@@ -102,7 +102,7 @@ jobs:
         run: .github/workflows/clippy.sh
 
   cargo-deny:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: EmbarkStudios/cargo-deny-action@v1
