@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["Derivative","Represents a type that can represent the derivation of an operation."]]});

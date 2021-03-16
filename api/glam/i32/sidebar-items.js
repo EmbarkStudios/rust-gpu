@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["ivec2","Creates a 2-dimensional vector."],["ivec3","Creates a 3-dimensional vector."],["ivec4","Creates a 4-dimensional vector."]],"struct":[["IVec2","A 2-dimensional vector."],["IVec3","A 3-dimensional vector."],["IVec4","A 4-dimensional vector."]]});

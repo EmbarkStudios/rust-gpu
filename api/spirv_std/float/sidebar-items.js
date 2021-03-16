@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["Float","Abstract trait representing a SPIR-V floating point type."]]});
