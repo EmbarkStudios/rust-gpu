@@ -2,11 +2,11 @@ use rustc_middle::bug;
 
 use super::Builder;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
+use crate::rustc_codegen_ssa::traits::BuilderMethods;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
+use rustc_span::DUMMY_SP;
 use rustc_target::abi::{Abi, Align, Scalar, Size};
-
-use crate::rustc_codegen_ssa::traits::BuilderMethods;
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
     // walk down every member in the ADT recursively and load their values as uints
@@ -50,13 +50,29 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
                 let val_def = val.def(self);
 
-                let bitcast_res = self
-                    .emit()
-                    .bitcast(uint_ty, None, val_def)
-                    .unwrap()
-                    .with_type(uint_ty);
+                match (bits, signed) {
+                    (32, false) => uint_values_and_offsets.push((base_offset, val)),
+                    (32, true) => {
+                        // need a bitcast to go from signed to unsigned
+                        let bitcast_res = self
+                            .emit()
+                            .bitcast(uint_ty, None, val_def)
+                            .unwrap()
+                            .with_type(uint_ty);
 
-                uint_values_and_offsets.push((base_offset, bitcast_res));
+                        uint_values_and_offsets.push((base_offset, bitcast_res));
+                    },
+                    (64, false) => {
+                        let lower = self.emit().u_convert(uint_ty, None, val_def).unwrap().with_type(uint_ty);
+                        uint_values_and_offsets.push((base_offset, lower));
+
+                        let const_32 = self.constant_int(uint_ty, 32).def(self);
+                        let shifted = self.emit().shift_right_logical(val.ty, None, val_def, const_32).unwrap();
+                        let upper = self.emit().u_convert(uint_ty, None, shifted).unwrap().with_type(uint_ty);
+                        uint_values_and_offsets.push((base_offset + 1, upper));
+                    }
+                    _ => bug!("codegen_internal_buffer_store doesn't support integers of {}-bits signed: {}", bits, signed)
+                }
             }
             _ => {
                 bug!(
