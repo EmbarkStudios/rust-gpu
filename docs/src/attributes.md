@@ -17,6 +17,23 @@ fn main() { }
 
 Common values are `#[spirv(fragment)]` and `#[spirv(vertex)]`. A list of all supported names can be found in [spirv_headers](https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.ExecutionModel.html) - convert the enum name to snake_case for the rust-gpu attribute name.
 
+### Compute shader dimensions
+
+The dimensions (`local_size_*` in openGL, `numthreads` in DX) of a compute shader must be specified (eg. `#[spirv(compute(threads(32, 16, 97)))]`).  Trailing ones may be elided.
+
+Example:
+
+```rust
+// the x dimension is required
+// same as threads(32, 1, 1)
+#[spirv(compute(threads(32)))]
+pub fn compute_1() {}
+
+// same as threads(32, 57, 1)
+#[spirv(compute(threads(32, 57)))]
+pub fn compute_2() {}
+```
+
 ### Override entry point name
 
 You can override the default `OpEntryPoint` name for any entry point with the `entry_point_name` sub-attribute on any of the execution model attributes. (e.g. `#[spirv(vertex(entry_point_name="foo"))]`)
