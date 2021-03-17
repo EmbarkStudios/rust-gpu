@@ -108,20 +108,21 @@ pub struct Buffer(RenderResourceHandle);
 #[allow(unused_attributes)]
 #[spirv(internal_buffer_load)]
 #[spirv_std_macros::gpu_only]
-fn internal_buffer_load<T>(_buffer: u32, _offset: u32) -> T {
+extern "unadjusted" fn internal_buffer_load<T>(_buffer: u32, _offset: u32) -> T {
     unimplemented!()
 } // actually implemented in the compiler
 
 #[allow(unused_attributes)]
 #[spirv(internal_buffer_store)]
 #[spirv_std_macros::gpu_only]
-fn internal_buffer_store<T>(_buffer: u32, _offset: u32, _value: T) {
+#[inline]
+unsafe extern "unadjusted" fn internal_buffer_store<T>(_buffer: u32, _offset: u32, _value: T) {
     unimplemented!()
 } // actually implemented in the compiler
 
 impl Buffer {
     #[spirv_std_macros::gpu_only]
-    pub fn load<T>(self, dword_aligned_byte_offset: u32) -> T {
+    pub extern "unadjusted" fn load<T>(self, dword_aligned_byte_offset: u32) -> T {
         // jb-todo: figure out why this assert breaks with complaints about pointers
         // assert!(self.0.tag() == RenderResourceTag::Buffer);
 
@@ -129,7 +130,7 @@ impl Buffer {
     }
 
     #[spirv_std_macros::gpu_only]
-    pub unsafe fn store<T>(self, dword_aligned_byte_offset: u32, value: T) {
+    pub unsafe extern "unadjusted" fn store<T>(self, dword_aligned_byte_offset: u32, value: T) {
         // jb-todo: figure out why this assert breaks with complaints about pointers
         // assert!(self.0.tag() == RenderResourceTag::Buffer);
 
