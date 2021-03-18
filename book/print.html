@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building Rust-GPU</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.2.</strong> Minimizing bugs in SPIR-V</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.3.</strong> Minimizing bugs in SPIR-V</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -200,6 +200,27 @@ a look at <a href="./building-rust-gpu.html"><em>&quot;Building Rust-GPU&quot;</
     --no-default-features
 </code></pre>
 <p>You should see <code>warning: use-installed-tools feature on, skipping compilation of C++ code</code> during the compilation, but otherwise the build will function just the same as if you compiled the C++ code, with the exception that it will fail if you don't have SPIRV-Tools installed correctly.</p>
+<h1 id="testing-rust-gpu"><a class="header" href="#testing-rust-gpu">Testing Rust-GPU</a></h1>
+<p>Rust-GPU has a couple of different kinds of tests, most can be ran through
+<code>cargo test</code>, however Rust-GPU also has end-to-end tests for compiling Rust and
+validating its SPIR-V output, which can ran by running <code>cargo compiletest</code>.</p>
+<pre><code class="language-bash">cargo test &amp;&amp; cargo compiletest
+</code></pre>
+<h2 id="adding-tests"><a class="header" href="#adding-tests">Adding Tests</a></h2>
+<p>Rust-GPU's end-to-end test's use an external version of the <a href="https://github.com/laumann/compiletest-rs"><code>compiletest</code></a> tool
+as a testing framework. Be sure to check out the <a href="https://github.com/laumann/compiletest-rs">repository</a> and
+the <a href="https://rustc-dev-guide.rust-lang.org/tests/intro.html">rustc Dev-Guide</a> for more information about how it works,
+how to configure it, and add new tests.</p>
+<h3 id="blessing-tests"><a class="header" href="#blessing-tests">Blessing Tests</a></h3>
+<p>You will occassionally need to &quot;bless&quot; the output from UI tests to update the
+normalised output, you can do this by passing a <code>--bless</code> flag to
+<code>cargo compiletest</code>.</p>
+<p><code>cargo compiletest -- --bless</code></p>
+<h3 id="caching-tests"><a class="header" href="#caching-tests">Caching Tests</a></h3>
+<p><code>cargo compiletest</code> by default caches the build output for dependencies of test
+cases such as <code>spirv-std</code> and <code>glam</code>. If you need to compile from a fresh source
+you can pass the <code>--clean</code> flag to build from scratch.</p>
+<p><code>cargo compiletest -- --clean</code></p>
 <h1 id="minimizing-bugs-in-spir-v"><a class="header" href="#minimizing-bugs-in-spir-v">Minimizing bugs in SPIR-V</a></h1>
 <p>When debugging problems with SPIR-V generated by rust-gpu, you occasionally need
 to reduce the SPIR-V in order to make it easily shareable with others. We've
