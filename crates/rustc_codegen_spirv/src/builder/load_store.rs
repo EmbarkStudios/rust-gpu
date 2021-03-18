@@ -43,6 +43,25 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     );
                 }
             }
+            SpirvType::Float(bits) => {
+                let unsigned_ty = SpirvType::Integer(bits, false).def(rustc_span::DUMMY_SP, self);
+                let val_def = val.def(self);
+
+                let bitcast_res = self
+                    .emit()
+                    .bitcast(unsigned_ty, None, val_def)
+                    .unwrap()
+                    .with_type(unsigned_ty);
+
+                self.store_integer(
+                    bits,
+                    false,
+                    uint_ty,
+                    bitcast_res,
+                    base_offset,
+                    uint_values_and_offsets,
+                );
+            }
             SpirvType::Integer(bits, signed) => {
                 self.store_integer(
                     bits,
