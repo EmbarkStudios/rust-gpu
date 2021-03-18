@@ -1,8 +1,6 @@
 // Doesn't work, only worked before because I think it got optimized away before
 // hitting the backend.
 
-// Needed because compiletest currently emits `\r\n` on Windows
-// normalize-stderr-test "\r\n" -> "\n"
 // build-fail
 
 #![feature(ptr_internals)]
