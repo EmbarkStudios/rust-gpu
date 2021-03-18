@@ -31,8 +31,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     field_types.iter().zip(field_offsets.iter()).enumerate()
                 {
                     let load_res = self.extract_value(val, element_idx as u64);
-
                     let offset = offset.bytes() as u32 / 4;
+
+                    // jb-todo: if we have two 16-bit types, adjacent we should bit-or them together into one u32
+
                     self.recurse_adt_for_stores(
                         uint_ty,
                         load_res,
@@ -42,47 +44,14 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 }
             }
             SpirvType::Integer(bits, signed) => {
-                let val_def = val.def(self);
-
-                match (bits, signed) {
-                    (32, false) => uint_values_and_offsets.push((base_offset, val)),
-                    (32, true) => {
-                        // need a bitcast to go from signed to unsigned
-                        let bitcast_res = self
-                            .emit()
-                            .bitcast(uint_ty, None, val_def)
-                            .unwrap()
-                            .with_type(uint_ty);
-
-                        uint_values_and_offsets.push((base_offset, bitcast_res));
-                    },
-                    (64, _) => {
-                        let (ulong_ty, ulong_data) = if signed {
-                            // bitcast from long into a ulong first, then proceed
-                            let ulong_ty = SpirvType::Integer(64, false).def(rustc_span::DUMMY_SP, self);
-
-                            let bitcast_res = self
-                                .emit()
-                                .bitcast(ulong_ty, None, val_def)
-                                .unwrap();
-
-                            (ulong_ty, bitcast_res)
-                        } else {
-                            (val.ty, val_def)
-                        };
-
-                        // [base] => uint(ulong_data)
-                        // [base + 1] => uint(ulong_data >> 32)
-                        let lower = self.emit().u_convert(uint_ty, None, ulong_data).unwrap().with_type(uint_ty);
-                        uint_values_and_offsets.push((base_offset, lower));
-
-                        let const_32 = self.constant_int(uint_ty, 32).def(self);
-                        let shifted = self.emit().shift_right_logical(ulong_ty, None, ulong_data, const_32).unwrap();
-                        let upper = self.emit().u_convert(uint_ty, None, shifted).unwrap().with_type(uint_ty);
-                        uint_values_and_offsets.push((base_offset + 1, upper));
-                    }
-                    _ => bug!("codegen_internal_buffer_store doesn't support integers of {}-bits signed: {}", bits, signed)
-                }
+                self.store_integer(
+                    bits,
+                    signed,
+                    uint_ty,
+                    val,
+                    base_offset,
+                    uint_values_and_offsets,
+                );
             }
             _ => {
                 bug!(
@@ -90,6 +59,90 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     val
                 );
             }
+        }
+    }
+
+    fn store_integer(
+        &mut self,
+        bits: u32,
+        signed: bool,
+        uint_ty: u32,
+        val: SpirvValue,
+        base_offset: u32,
+        uint_values_and_offsets: &mut Vec<(u32, SpirvValue)>,
+    ) {
+        let val_def = val.def(self);
+
+        match (bits, signed) {
+            (16, _) => {
+                let (ushort_ty, ushort_data) = if signed {
+                    // bitcast from i16 into a u16 first, then proceed
+                    let ushort_ty = SpirvType::Integer(16, false).def(rustc_span::DUMMY_SP, self);
+
+                    let bitcast_res = self.emit().bitcast(ushort_ty, None, val_def).unwrap();
+
+                    (ushort_ty, bitcast_res)
+                } else {
+                    (val.ty, val_def)
+                };
+
+                let up_casted = self
+                    .emit()
+                    .u_convert(uint_ty, None, ushort_data)
+                    .unwrap()
+                    .with_type(uint_ty);
+
+                uint_values_and_offsets.push((base_offset, up_casted));
+            }
+            (32, false) => uint_values_and_offsets.push((base_offset, val)),
+            (32, true) => {
+                // need a bitcast to go from signed to unsigned
+                let bitcast_res = self
+                    .emit()
+                    .bitcast(uint_ty, None, val_def)
+                    .unwrap()
+                    .with_type(uint_ty);
+
+                uint_values_and_offsets.push((base_offset, bitcast_res));
+            }
+            (64, _) => {
+                let (ulong_ty, ulong_data) = if signed {
+                    // bitcast from i64 into a u64 first, then proceed
+                    let ulong_ty = SpirvType::Integer(64, false).def(rustc_span::DUMMY_SP, self);
+
+                    let bitcast_res = self.emit().bitcast(ulong_ty, None, val_def).unwrap();
+
+                    (ulong_ty, bitcast_res)
+                } else {
+                    (val.ty, val_def)
+                };
+
+                // [base] => uint(ulong_data)
+                // [base + 1] => uint(ulong_data >> 32)
+                let lower = self
+                    .emit()
+                    .u_convert(uint_ty, None, ulong_data)
+                    .unwrap()
+                    .with_type(uint_ty);
+                uint_values_and_offsets.push((base_offset, lower));
+
+                let const_32 = self.constant_int(uint_ty, 32).def(self);
+                let shifted = self
+                    .emit()
+                    .shift_right_logical(ulong_ty, None, ulong_data, const_32)
+                    .unwrap();
+                let upper = self
+                    .emit()
+                    .u_convert(uint_ty, None, shifted)
+                    .unwrap()
+                    .with_type(uint_ty);
+                uint_values_and_offsets.push((base_offset + 1, upper));
+            }
+            _ => bug!(
+                "codegen_internal_buffer_store doesn't support integers of {}-bits signed: {}",
+                bits,
+                signed
+            ),
         }
     }
 
