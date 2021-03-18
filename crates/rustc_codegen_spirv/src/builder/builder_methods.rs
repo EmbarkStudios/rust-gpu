@@ -1655,6 +1655,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn extract_value(&mut self, agg_val: Self::Value, idx: u64) -> Self::Value {
         let result_type = match self.lookup_type(agg_val.ty) {
             SpirvType::Adt { field_types, .. } => field_types[idx as usize],
+            SpirvType::Vector { element, .. } => element,
             other => self.fatal(&format!(
                 "extract_value not implemented on type {:?}",
                 other

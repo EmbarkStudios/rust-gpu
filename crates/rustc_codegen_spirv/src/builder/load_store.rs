@@ -33,7 +33,17 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     let load_res = self.extract_value(val, element_idx as u64);
                     let offset = offset.bytes() as u32 / 4;
 
-                    // jb-todo: if we have two 16-bit types, adjacent we should bit-or them together into one u32
+                    self.recurse_adt_for_stores(
+                        uint_ty,
+                        load_res,
+                        base_offset + offset,
+                        uint_values_and_offsets,
+                    );
+                }
+            }
+            SpirvType::Vector { count, element } => {
+                for offset in 0..count {
+                    let load_res = self.extract_value(val, offset as u64);
 
                     self.recurse_adt_for_stores(
                         uint_ty,
@@ -94,6 +104,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
         match (bits, signed) {
             (16, _) => {
+                bug!("16 bit integer stores are currently un-tested");
+                // jb-todo: if we have two 16-bit types, adjacent we should bit-or them together into one u32
+
                 let (ushort_ty, ushort_data) = if signed {
                     // bitcast from i16 into a u16 first, then proceed
                     let ushort_ty = SpirvType::Integer(16, false).def(rustc_span::DUMMY_SP, self);
