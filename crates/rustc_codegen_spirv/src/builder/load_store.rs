@@ -42,12 +42,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 }
             }
             SpirvType::Integer(bits, signed) => {
-                /*
-                         %25 = OpUConvert %uint %ulong_8702358937509254
-                         %26 = OpShiftRightLogical %ulong %ulong_8702358937509254 %uint_32
-                         %27 = OpUConvert %uint %26
-                */
-
                 let val_def = val.def(self);
 
                 match (bits, signed) {
@@ -62,12 +56,28 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
                         uint_values_and_offsets.push((base_offset, bitcast_res));
                     },
-                    (64, false) => {
-                        let lower = self.emit().u_convert(uint_ty, None, val_def).unwrap().with_type(uint_ty);
+                    (64, _) => {
+                        let (ulong_ty, ulong_data) = if signed {
+                            // bitcast from long into a ulong first, then proceed
+                            let ulong_ty = SpirvType::Integer(64, false).def(rustc_span::DUMMY_SP, self);
+
+                            let bitcast_res = self
+                                .emit()
+                                .bitcast(ulong_ty, None, val_def)
+                                .unwrap();
+
+                            (ulong_ty, bitcast_res)
+                        } else {
+                            (val.ty, val_def)
+                        };
+
+                        // [base] => uint(ulong_data)
+                        // [base + 1] => uint(ulong_data >> 32)
+                        let lower = self.emit().u_convert(uint_ty, None, ulong_data).unwrap().with_type(uint_ty);
                         uint_values_and_offsets.push((base_offset, lower));
 
                         let const_32 = self.constant_int(uint_ty, 32).def(self);
-                        let shifted = self.emit().shift_right_logical(val.ty, None, val_def, const_32).unwrap();
+                        let shifted = self.emit().shift_right_logical(ulong_ty, None, ulong_data, const_32).unwrap();
                         let upper = self.emit().u_convert(uint_ty, None, shifted).unwrap().with_type(uint_ty);
                         uint_values_and_offsets.push((base_offset + 1, upper));
                     }
