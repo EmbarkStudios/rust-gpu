@@ -101,7 +101,7 @@ async fn run(
     ) -> wgpu::RenderPipeline {
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: None,
-            layout: Some(&pipeline_layout),
+            layout: Some(pipeline_layout),
             vertex_stage: wgpu::ProgrammableStageDescriptor {
                 module: &module,
                 entry_point: "main_vs",
