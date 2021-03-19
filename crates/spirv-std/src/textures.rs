@@ -46,6 +46,65 @@ impl Image2d {
             result
         }
     }
+    #[spirv_std_macros::gpu_only]
+    #[cfg(feature = "const-generics")]
+    /// Sample the image at a coordinate by a lod
+    pub fn sample_by_lod<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 2>,
+        lod: f32,
+    ) -> V {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%lod = OpLoad _ {lod}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleExplicitLod _ %sampledImage %coordinate Lod %lod",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                lod = in(reg) &lod
+            );
+        }
+        result
+    }
+    #[spirv_std_macros::gpu_only]
+    #[cfg(feature = "const-generics")]
+    /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
+    pub fn sample_by_gradient<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 2>,
+        gradient_dx: impl Vector<f32, 2>,
+        gradient_dy: impl Vector<f32, 2>,
+    ) -> V {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%gradient_dx = OpLoad _ {gradient_dx}",
+                "%gradient_dy = OpLoad _ {gradient_dy}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleExplicitLod _ %sampledImage %coordinate Grad %gradient_dx %gradient_dy",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                gradient_dx = in(reg) &gradient_dx,
+                gradient_dy = in(reg) &gradient_dy,
+            );
+        }
+        result
+    }
     /// Fetch a single texel with a sampler set at compile time
     #[spirv_std_macros::gpu_only]
     #[cfg(feature = "const-generics")]
@@ -171,6 +230,65 @@ impl Image2dArray {
             );
             result
         }
+    }
+    #[spirv_std_macros::gpu_only]
+    #[cfg(feature = "const-generics")]
+    /// Sample the image at a coordinate by a lod
+    pub fn sample_by_lod<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        lod: f32,
+    ) -> V {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%lod = OpLoad _ {lod}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleExplicitLod _ %sampledImage %coordinate Lod %lod",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                lod = in(reg) &lod
+            );
+        }
+        result
+    }
+    #[spirv_std_macros::gpu_only]
+    #[cfg(feature = "const-generics")]
+    /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
+    pub fn sample_by_gradient<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        gradient_dx: impl Vector<f32, 2>,
+        gradient_dy: impl Vector<f32, 2>,
+    ) -> V {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%gradient_dx = OpLoad _ {gradient_dx}",
+                "%gradient_dy = OpLoad _ {gradient_dy}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleExplicitLod _ %sampledImage %coordinate Grad %gradient_dx %gradient_dy",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                gradient_dx = in(reg) &gradient_dx,
+                gradient_dy = in(reg) &gradient_dy,
+            );
+        }
+        result
     }
 }
 

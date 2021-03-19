@@ -6,11 +6,8 @@ use winit::{
     window::Window,
 };
 
-unsafe fn any_as_u32_slice<T: Sized>(p: &T) -> &[u32] {
-    ::std::slice::from_raw_parts(
-        (p as *const T) as *const u32,
-        ::std::mem::size_of::<T>() / 4,
-    )
+unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
+    ::std::slice::from_raw_parts((p as *const T) as *const u8, ::std::mem::size_of::<T>())
 }
 
 fn mouse_button_index(button: MouseButton) -> usize {
@@ -58,9 +55,9 @@ async fn run(
     let (device, queue) = adapter
         .request_device(
             &wgpu::DeviceDescriptor {
+                label: None,
                 features,
                 limits,
-                shader_validation: true,
             },
             None,
         )
@@ -68,7 +65,7 @@ async fn run(
         .expect("Failed to create device");
 
     // Load the shaders from disk
-    let module = device.create_shader_module(shader_module(options.shader));
+    let module = device.create_shader_module(&shader_module(options.shader));
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
@@ -82,30 +79,38 @@ async fn run(
     let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(&pipeline_layout),
-        vertex_stage: wgpu::ProgrammableStageDescriptor {
+        vertex: wgpu::VertexState {
             module: &module,
             entry_point: "main_vs",
+            buffers: &[],
         },
-        fragment_stage: Some(wgpu::ProgrammableStageDescriptor {
+        primitive: wgpu::PrimitiveState {
+            topology: wgpu::PrimitiveTopology::TriangleList,
+            strip_index_format: None,
+            front_face: wgpu::FrontFace::Ccw,
+            cull_mode: wgpu::CullMode::None,
+            polygon_mode: wgpu::PolygonMode::Fill,
+        },
+        depth_stencil: None,
+        multisample: wgpu::MultisampleState {
+            count: 1,
+            mask: !0,
+            alpha_to_coverage_enabled: false,
+        },
+        fragment: Some(wgpu::FragmentState {
             module: &module,
             entry_point: "main_fs",
+            targets: &[wgpu::ColorTargetState {
+                format: swapchain_format,
+                alpha_blend: wgpu::BlendState::REPLACE,
+                color_blend: wgpu::BlendState::REPLACE,
+                write_mask: wgpu::ColorWrite::ALL,
+            }],
         }),
-        // Use the default rasterizer state: no culling, no depth bias
-        rasterization_state: None,
-        primitive_topology: wgpu::PrimitiveTopology::TriangleList,
-        color_states: &[swapchain_format.into()],
-        depth_stencil_state: None,
-        vertex_state: wgpu::VertexStateDescriptor {
-            index_format: wgpu::IndexFormat::Uint16,
-            vertex_buffers: &[],
-        },
-        sample_count: 1,
-        sample_mask: !0,
-        alpha_to_coverage_enabled: false,
     });
 
     let mut sc_desc = wgpu::SwapChainDescriptor {
-        usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
+        usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
         format: swapchain_format,
         width: size.width,
         height: size.height,
@@ -171,6 +176,7 @@ async fn run(
                         .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
                     {
                         let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                            label: None,
                             color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
                                 attachment: &frame.view,
                                 resolve_target: None,
@@ -206,7 +212,7 @@ async fn run(
 
                         rpass.set_pipeline(&render_pipeline);
                         rpass.set_push_constants(wgpu::ShaderStage::all(), 0, unsafe {
-                            any_as_u32_slice(&push_constants)
+                            any_as_u8_slice(&push_constants)
                         });
                         rpass.draw(0..3, 0..1);
                     }
