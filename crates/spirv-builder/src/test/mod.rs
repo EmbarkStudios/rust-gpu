@@ -165,9 +165,7 @@ fn dis_entry_fn(src: &str, func: &str, expect: &str) {
     let id = module
         .entry_points
         .iter()
-        .find(|inst| {
-            inst.operands.last().unwrap().unwrap_literal_string() == func
-        })
+        .find(|inst| inst.operands.last().unwrap().unwrap_literal_string() == func)
         .unwrap_or_else(|| {
             panic!(
                 "no entry point with the name `{}` found in:\n{}\n",

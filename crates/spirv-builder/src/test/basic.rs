@@ -1,4 +1,4 @@
-use super::{dis_fn, dis_entry_fn, dis_globals, val, val_vulkan};
+use super::{dis_entry_fn, dis_fn, dis_globals, val, val_vulkan};
 use std::ffi::OsStr;
 
 struct SetEnvVar<'a> {
@@ -484,15 +484,12 @@ fn ptr_copy_from_method() {
 fn index_user_dst() {
     dis_entry_fn(
         r#"
-fn index_user_dst(slice: &SliceF32, idx: usize) -> f32 {
-    slice.rta[idx]
-}
-
 #[spirv(fragment)]
 pub fn main(
     #[spirv(descriptor_set = 0, binding = 0)] slice: Uniform<SliceF32>,
 ) {
-    index_user_dst(&slice, 0);
+    let float: f32 = slice.rta[0];
+    let _ = float;
 }
 
 pub struct SliceF32 {
@@ -516,99 +513,31 @@ OpStore %13 %7
 %24 = OpCompositeInsert %22 %20 %21 1
 %25 = OpCompositeExtract %18 %24 0
 %26 = OpCompositeExtract %8 %24 1
-%27 = OpCompositeInsert %22 %25 %23 0
-%28 = OpCompositeInsert %22 %26 %27 1
-%29 = OpAccessChain %30 %25 %12
-%31 = OpULessThan %32 %12 %26
-OpSelectionMerge %33 None
-OpBranchConditional %31 %34 %35
-%34 = OpLabel
-%36 = OpAccessChain %30 %25 %12
-%37 = OpInBoundsAccessChain %38 %36 %12
-%39 = OpLoad %40 %37
+%27 = OpAccessChain %28 %25 %12
+%29 = OpULessThan %30 %12 %26
+OpSelectionMerge %31 None
+OpBranchConditional %29 %32 %33
+%32 = OpLabel
+%34 = OpAccessChain %28 %25 %12
+%35 = OpInBoundsAccessChain %36 %34 %12
+%37 = OpLoad %38 %35
 OpReturn
-%35 = OpLabel
-OpBranch %41
-%41 = OpLabel
-OpBranch %42
-%42 = OpLabel
-%43 = OpPhi %32 %44 %41 %44 %45
-OpLoopMerge %46 %45 None
-OpBranchConditional %43 %47 %46
-%47 = OpLabel
-OpBranch %45
-%45 = OpLabel
-OpBranch %42
-%46 = OpLabel
-OpUnreachable
 %33 = OpLabel
+OpBranch %39
+%39 = OpLabel
+OpBranch %40
+%40 = OpLabel
+%41 = OpPhi %30 %42 %39 %42 %43
+OpLoopMerge %44 %43 None
+OpBranchConditional %41 %45 %44
+%45 = OpLabel
+OpBranch %43
+%43 = OpLabel
+OpBranch %40
+%44 = OpLabel
+OpUnreachable
+%31 = OpLabel
 OpUnreachable
 OpFunctionEnd"#,
-    )
-}
-
-#[test]
-fn entry_stub_array_length() {
-    dis_globals(
-        r#"
-#[spirv(compute(threads(32)))]
-pub fn main_cs(
-    #[spirv(descriptor_set = 0, binding = 0)] slice: Uniform<Slice<f32>>,
-) {
-    let _ = slice.index(0);
-}
-
-pub struct Slice<T> {
-    rta: [T],
-}
-
-impl<T: Copy> Slice<T> {
-    fn index(&self, idx: usize) -> T {
-        self.rta[idx]
-    }
-}
-        "#,
-        r#"OpCapability Shader
-OpCapability VulkanMemoryModel
-OpCapability VariablePointers
-OpExtension "SPV_KHR_vulkan_memory_model"
-OpMemoryModel Logical Vulkan
-OpEntryPoint GLCompute %1 "main_cs"
-OpExecutionMode %1 LocalSize 32 1 1
-OpMemberName %2 0 "rta"
-OpName %2 "Slice<f32>"
-OpName %3 "&Slice<f32>"
-OpMemberName %2 0 "rta"
-OpName %4 "slice"
-OpMemberName %2 0 "rta"
-OpMemberDecorate %2 0 Offset 0
-OpMemberDecorate %3 0 Offset 0
-OpMemberDecorate %3 1 Offset 4
-OpDecorate %4 DescriptorSet 0
-OpDecorate %4 Binding 0
-%5 = OpTypeFloat 32
-%6 = OpTypeRuntimeArray %5
-%2 = OpTypeStruct %6
-%7 = OpTypePointer Uniform %2
-%8 = OpTypeInt 32 0
-%3 = OpTypeStruct %7 %8
-%9 = OpTypePointer Function %3
-%10 = OpTypePointer Function %7
-%11 = OpConstant %8 0
-%12 = OpTypePointer Function %8
-%13 = OpConstant %8 1
-%14 = OpTypePointer Uniform %6
-%15 = OpTypeBool
-%16 = OpTypeVoid
-%17 = OpTypePointer Uniform %5
-%18 = OpTypePointer Function %5
-%19 = OpTypeFunction %16
-%4 = OpVariable %7 Uniform
-%20 = OpTypePointer Function %9
-%21 = OpUndef %3
-%22 = OpConstantFalse %15
-%23 = OpConstantTrue %15
-%24 = OpConstantFalse %15
-%25 = OpConstantTrue %15"#
     )
 }
