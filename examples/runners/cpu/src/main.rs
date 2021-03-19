@@ -1,7 +1,51 @@
+// standard Embark lints
+#![deny(unsafe_code)]
+#![warn(
+    clippy::all,
+    clippy::await_holding_lock,
+    clippy::dbg_macro,
+    clippy::debug_assert_with_mut_call,
+    clippy::doc_markdown,
+    clippy::empty_enum,
+    clippy::enum_glob_use,
+    clippy::exit,
+    clippy::explicit_into_iter_loop,
+    clippy::filter_map_next,
+    clippy::fn_params_excessive_bools,
+    clippy::if_let_mutex,
+    clippy::imprecise_flops,
+    clippy::inefficient_to_string,
+    clippy::let_unit_value,
+    clippy::linkedlist,
+    clippy::lossy_float_literal,
+    clippy::macro_use_imports,
+    clippy::map_flatten,
+    clippy::map_unwrap_or,
+    clippy::match_on_vec_items,
+    clippy::match_wildcard_for_single_variants,
+    clippy::mem_forget,
+    clippy::mismatched_target_os,
+    clippy::needless_borrow,
+    clippy::needless_continue,
+    clippy::option_option,
+    clippy::pub_enum_variant_names,
+    clippy::ref_option_ref,
+    clippy::rest_pat_in_fully_bound_structs,
+    clippy::string_to_string,
+    clippy::suboptimal_flops,
+    clippy::todo,
+    clippy::unnested_or_patterns,
+    clippy::unused_self,
+    clippy::verbose_file_reads,
+    future_incompatible,
+    nonstandard_style,
+    rust_2018_idioms
+)]
+
 use minifb::{Key, Window, WindowOptions};
 use rayon::prelude::*;
+use shared::glam::{vec2, Vec2, Vec4};
 use shared::ShaderConstants;
-use spirv_std::glam::{vec2, Vec2, Vec4};
 use std::time::Instant;
 
 use sky_shader as shader_module;
@@ -65,7 +109,7 @@ fn main() {
                 -((i / WIDTH) as f32 / HEIGHT as f32 * 2.0 - 1.0),
             );
 
-            let frag_coord = (vec2(screen_pos.x, -screen_pos.y) + Vec2::one()) / Vec2::splat(2.0)
+            let frag_coord = (vec2(screen_pos.x, -screen_pos.y) + Vec2::ONE) / Vec2::splat(2.0)
                 * vec2(WIDTH as f32, HEIGHT as f32);
 
             // evaluate the fragment shader for the specific pixel

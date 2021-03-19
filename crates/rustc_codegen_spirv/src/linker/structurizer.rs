@@ -476,8 +476,7 @@ fn block_is_reverse_idom_of(
     let mut next: VecDeque<Word> = VecDeque::new();
     next.push_back(a);
 
-    let mut processed = Vec::new();
-    processed.push(a); // ensures we are not looping.
+    let mut processed = vec![a]; // ensures we are not looping.
 
     while let Some(front) = next.pop_front() {
         let block_idx = find_block_index_from_id(builder, &front);
@@ -549,8 +548,7 @@ fn block_is_parent_of(builder: &Builder, parent: Word, child: Word) -> bool {
     let mut next: VecDeque<Word> = VecDeque::new();
     next.push_back(parent);
 
-    let mut processed = Vec::new();
-    processed.push(parent); // ensures we are not looping.
+    let mut processed = vec![parent]; // ensures we are not looping.
 
     while let Some(front) = next.pop_front() {
         let block_idx = find_block_index_from_id(builder, &front);

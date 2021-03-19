@@ -11,7 +11,7 @@ use crate::decorations::{
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
-use rspirv::spirv::{Decoration, LinkageType, MemoryModel, StorageClass, Word};
+use rspirv::spirv::{AddressingModel, Decoration, LinkageType, MemoryModel, StorageClass, Word};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
@@ -30,8 +30,9 @@ use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::iter::once;
+use std::rc::Rc;
 
 pub struct CodegenCx<'tcx> {
     pub tcx: TyCtxt<'tcx>,
@@ -56,9 +57,8 @@ pub struct CodegenCx<'tcx> {
     unroll_loops_decorations: RefCell<HashMap<Word, UnrollLoopsDecoration>>,
     pub kernel_mode: bool,
     /// Cache of all the builtin symbols we need
-    pub sym: Box<Symbols>,
+    pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
-    pub really_unsafe_ignore_bitcasts: RefCell<HashSet<SpirvValue>>,
     pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
@@ -73,7 +73,7 @@ pub struct CodegenCx<'tcx> {
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
-        let sym = Box::new(Symbols::new());
+        let sym = Symbols::get();
         let mut spirv_version = None;
         let mut memory_model = None;
         let mut kernel_mode = false;
@@ -116,7 +116,6 @@ impl<'tcx> CodegenCx<'tcx> {
             kernel_mode,
             sym,
             instruction_table: InstructionTable::new(),
-            really_unsafe_ignore_bitcasts: Default::default(),
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
@@ -190,6 +189,17 @@ impl<'tcx> CodegenCx<'tcx> {
             || self.tcx.crate_name(LOCAL_CRATE) == self.sym.num_traits
     }
 
+    // FIXME(eddyb) should this just be looking at `kernel_mode`?
+    pub fn logical_addressing_model(&self) -> bool {
+        self.emit_global()
+            .module_ref()
+            .memory_model
+            .as_ref()
+            .map_or(false, |inst| {
+                inst.operands[0].unwrap_addressing_model() == AddressingModel::Logical
+            })
+    }
+
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
         result.annotations.extend(
@@ -217,18 +227,15 @@ impl<'tcx> CodegenCx<'tcx> {
 
     /// See note on `SpirvValueKind::ConstantPointer`
     pub fn make_constant_pointer(&self, span: Span, value: SpirvValue) -> SpirvValue {
-        let ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: value.ty,
-        }
-        .def(span, self);
+        let ty = SpirvType::Pointer { pointee: value.ty }.def(span, self);
         let initializer = value.def_cx(self);
 
         // Create these up front instead of on demand in SpirvValue::def because
         // SpirvValue::def can't use cx.emit()
+        // FIXME(eddyb) figure out what the correct storage class is.
         let global_var =
             self.emit_global()
-                .variable(ty, None, StorageClass::Function, Some(initializer));
+                .variable(ty, None, StorageClass::Private, Some(initializer));
 
         // In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span
         // to the use site of this constant. However, if this constant happens to never get used, we

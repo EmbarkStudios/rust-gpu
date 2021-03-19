@@ -124,6 +124,13 @@ fn link_exe(
 
     let spv_binary = do_link(sess, &objects, &rlibs, legalize);
 
+    if let Ok(ref path) = std::env::var("DUMP_POST_LINK") {
+        File::create(path)
+            .unwrap()
+            .write_all(spirv_tools::binary::from_binary(&spv_binary))
+            .unwrap();
+    }
+
     let spv_binary = if sess.opts.optimize != OptLevel::No || sess.opts.debuginfo == DebugInfo::None
     {
         let _timer = sess.timer("link_spirv_opt");
@@ -458,7 +465,7 @@ pub(crate) fn run_thin(
     let mut thin_buffers = Vec::with_capacity(modules.len());
     let mut module_names = Vec::with_capacity(modules.len() + cached_modules.len());
 
-    for (name, buffer) in modules.into_iter() {
+    for (name, buffer) in modules {
         let cname = CString::new(name.clone()).unwrap();
         thin_buffers.push(buffer);
         module_names.push(cname);

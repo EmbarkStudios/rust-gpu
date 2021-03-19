@@ -16,7 +16,7 @@ use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::bug;
 use rustc_span::source_map::Span;
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub struct InstructionTable {
     table: HashMap<&'static str, &'static rspirv::grammar::Instruction<'static>>,
@@ -24,8 +24,7 @@ pub struct InstructionTable {
 
 impl InstructionTable {
     pub fn new() -> Self {
-        let table = (0..u16::MAX)
-            .filter_map(rspirv::grammar::CoreInstructionTable::lookup_opcode)
+        let table = rspirv::grammar::CoreInstructionTable::iter()
             .map(|inst| (inst.opname, inst))
             .collect();
         Self { table }
@@ -135,6 +134,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         }
 
         let mut id_map = HashMap::new();
+        let mut defined_ids = HashSet::new();
         let mut id_to_type_map = HashMap::new();
         for operand in operands {
             if let InlineAsmOperandRef::In { reg: _, value } = operand {
@@ -143,7 +143,17 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
             }
         }
         for line in tokens {
-            self.codegen_asm(&mut id_map, &mut id_to_type_map, line.into_iter());
+            self.codegen_asm(
+                &mut id_map,
+                &mut defined_ids,
+                &mut id_to_type_map,
+                line.into_iter(),
+            );
+        }
+        for (id, num) in id_map {
+            if !defined_ids.contains(&num) {
+                self.err(&format!("%{} is used but not defined", id));
+            }
         }
     }
 }
@@ -229,7 +239,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
     }
 
-    fn insert_inst(&mut self, id_map: &mut HashMap<&str, Word>, inst: dr::Instruction) {
+    fn insert_inst(
+        &mut self,
+        id_map: &mut HashMap<&str, Word>,
+        defined_ids: &mut HashSet<Word>,
+        inst: dr::Instruction,
+    ) {
         // Types declared must be registered in our type system.
         let new_result_id = match inst.class.opcode {
             Op::TypeVoid => SpirvType::Void.def(self.span(), self),
@@ -263,11 +278,25 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 element: inst.operands[0].unwrap_id_ref(),
             }
             .def(self.span(), self),
-            Op::TypePointer => SpirvType::Pointer {
-                storage_class: inst.operands[0].unwrap_storage_class(),
-                pointee: inst.operands[1].unwrap_id_ref(),
+            Op::TypePointer => {
+                let storage_class = inst.operands[0].unwrap_storage_class();
+                if storage_class != StorageClass::Generic {
+                    self.struct_err("TypePointer in asm! requires `Generic` storage class")
+                        .note(&format!(
+                            "`{:?}` storage class was specified",
+                            storage_class
+                        ))
+                        .help(&format!(
+                            "the storage class will be inferred automatically (e.g. to `{:?}`)",
+                            storage_class
+                        ))
+                        .emit();
+                }
+                SpirvType::Pointer {
+                    pointee: inst.operands[1].unwrap_id_ref(),
+                }
+                .def(self.span(), self)
             }
-            .def(self.span(), self),
             Op::TypeImage => SpirvType::Image {
                 sampled_type: inst.operands[0].unwrap_id_ref(),
                 dim: inst.operands[1].unwrap_dim(),
@@ -302,11 +331,16 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 *value = new_result_id;
             }
         }
+        if defined_ids.remove(&inst.result_id.unwrap()) {
+            // Note this may be a duplicate insert, if the type was deduplicated.
+            defined_ids.insert(new_result_id);
+        }
     }
 
     fn codegen_asm<'a>(
         &mut self,
         id_map: &mut HashMap<&'a str, Word>,
+        defined_ids: &mut HashSet<Word>,
         id_to_type_map: &mut HashMap<Word, Word>,
         mut tokens: impl Iterator<Item = Token<'a, 'cx, 'tcx>>,
     ) where
@@ -326,7 +360,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Token::String(_) => false,
             Token::Typeof(_, _, _) => false,
         } {
-            let result_id = match self.parse_id_out(id_map, first_token) {
+            let result_id = match self.parse_id_out(id_map, defined_ids, first_token) {
                 Some(result_id) => result_id,
                 None => return,
             };
@@ -386,7 +420,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         if let Some(result_type) = instruction.result_type {
             id_to_type_map.insert(instruction.result_id.unwrap(), result_type);
         }
-        self.insert_inst(id_map, instruction);
+        self.insert_inst(id_map, defined_ids, instruction);
         if let Some(OutRegister::Place(place)) = out_register {
             self.emit()
                 .store(
@@ -511,26 +545,28 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         use crate::spirv_type_constraints::{instruction_signatures, InstSig, TyListPat, TyPat};
 
         #[derive(Debug)]
-        struct Mismatch;
+        struct Unapplicable;
 
         /// Recursively match `ty` against `pat`, returning one of:
         /// * `Ok(None)`: `pat` matched but contained no type variables
         /// * `Ok(Some(var))`: `pat` matched and `var` is the type variable
         /// * `Err(Mismatch)`: `pat` didn't match or isn't supported right now
-        fn apply_ty_pat(
+        fn match_ty_pat(
             cx: &CodegenCx<'_>,
             pat: &TyPat<'_>,
             ty: Word,
-        ) -> Result<Option<Word>, Mismatch> {
+        ) -> Result<Option<Word>, Unapplicable> {
             match pat {
                 TyPat::Any => Ok(None),
                 &TyPat::T => Ok(Some(ty)),
                 TyPat::Either(a, b) => {
-                    apply_ty_pat(cx, a, ty).or_else(|Mismatch| apply_ty_pat(cx, b, ty))
+                    match_ty_pat(cx, a, ty).or_else(|Unapplicable| match_ty_pat(cx, b, ty))
                 }
                 _ => match (pat, cx.lookup_type(ty)) {
+                    (TyPat::Any, _) | (&TyPat::T, _) | (TyPat::Either(..), _) => unreachable!(),
+
                     (TyPat::Void, SpirvType::Void) => Ok(None),
-                    (TyPat::Pointer(pat), SpirvType::Pointer { pointee: ty, .. })
+                    (TyPat::Pointer(_, pat), SpirvType::Pointer { pointee: ty, .. })
                     | (TyPat::Vector(pat), SpirvType::Vector { element: ty, .. })
                     | (
                         TyPat::Vector4(pat),
@@ -546,17 +582,19 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                         },
                     )
                     | (TyPat::SampledImage(pat), SpirvType::SampledImage { image_type: ty }) => {
-                        apply_ty_pat(cx, pat, ty)
+                        match_ty_pat(cx, pat, ty)
                     }
-                    _ => Err(Mismatch),
+                    _ => Err(Unapplicable),
                 },
             }
         }
 
         // FIXME(eddyb) try multiple signatures until one fits.
         let mut sig = match instruction_signatures(instruction.class.opcode)? {
-            [sig @ InstSig {
-                output: Some(_), ..
+            [sig
+            @ InstSig {
+                output_type: Some(_),
+                ..
             }] => *sig,
             _ => return None,
         };
@@ -564,9 +602,20 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         let mut combined_var = None;
 
         let mut ids = instruction.operands.iter().filter_map(|o| o.id_ref_any());
-        while let TyListPat::Cons { first: pat, suffix } = *sig.inputs {
-            let &ty = id_to_type_map.get(&ids.next()?)?;
-            match apply_ty_pat(self, pat, ty) {
+        while let TyListPat::Cons { first: pat, suffix } = *sig.input_types {
+            sig.input_types = suffix;
+
+            let match_result = match id_to_type_map.get(&ids.next()?) {
+                Some(&ty) => match_ty_pat(self, pat, ty),
+
+                // Non-value ID operand (or value operand of unknown type),
+                // only `TyPat::Any` is valid.
+                None => match pat {
+                    TyPat::Any => Ok(None),
+                    _ => Err(Unapplicable),
+                },
+            };
+            match match_result {
                 Ok(Some(var)) => match combined_var {
                     Some(combined_var) => {
                         // FIXME(eddyb) this could use some error reporting
@@ -580,11 +629,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     None => combined_var = Some(var),
                 },
                 Ok(None) => {}
-                Err(Mismatch) => return None,
+                Err(Unapplicable) => return None,
             }
-            sig.inputs = suffix;
         }
-        match sig.inputs {
+        match sig.input_types {
+            TyListPat::Cons { .. } => unreachable!(),
+
             TyListPat::Any => {}
             TyListPat::Nil => {
                 if ids.next().is_some() {
@@ -595,7 +645,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
 
         let var = combined_var?;
-        match sig.output.unwrap() {
+        match sig.output_type.unwrap() {
             &TyPat::T => Some(var),
             TyPat::Vector4(&TyPat::T) => Some(
                 SpirvType::Vector {
@@ -626,13 +676,18 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
     fn parse_id_out<'a>(
         &mut self,
         id_map: &mut HashMap<&'a str, Word>,
+        defined_ids: &mut HashSet<Word>,
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<OutRegister<'a>> {
         match token {
             Token::Word(word) => match word.strip_prefix("%") {
-                Some(id) => Some(OutRegister::Regular(
-                    *id_map.entry(id).or_insert_with(|| self.emit().id()),
-                )),
+                Some(id) => Some(OutRegister::Regular({
+                    let num = *id_map.entry(id).or_insert_with(|| self.emit().id());
+                    if !defined_ids.insert(num) {
+                        self.err(&format!("%{} is defined more than once", id));
+                    }
+                    num
+                })),
                 None => {
                     self.err("expected ID");
                     None
@@ -731,7 +786,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     Some(match kind {
                         TypeofKind::Plain => ty,
                         TypeofKind::Dereference => match self.lookup_type(ty) {
-                            SpirvType::Pointer { pointee, .. } => pointee,
+                            SpirvType::Pointer { pointee } => pointee,
                             other => {
                                 self.tcx.sess.span_err(
                                     span,
@@ -753,7 +808,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     self.check_reg(span, reg);
                     match place {
                         Some(place) => match self.lookup_type(place.llval.ty) {
-                            SpirvType::Pointer { pointee, .. } => Some(pointee),
+                            SpirvType::Pointer { pointee } => Some(pointee),
                             other => {
                                 self.tcx.sess.span_err(
                                     span,

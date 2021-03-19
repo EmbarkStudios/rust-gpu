@@ -114,13 +114,12 @@ impl<'tcx> CodegenCx<'tcx> {
         for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
             match attr {
                 SpirvAttribute::Entry(entry) => {
-                    let crate_relative_name = instance.to_string();
-                    self.entry_stub(&instance, &fn_abi, declared, crate_relative_name, entry)
-                }
-                SpirvAttribute::ReallyUnsafeIgnoreBitcasts => {
-                    self.really_unsafe_ignore_bitcasts
-                        .borrow_mut()
-                        .insert(declared);
+                    let entry_name = entry
+                        .name
+                        .as_ref()
+                        .map(ToString::to_string)
+                        .unwrap_or_else(|| instance.to_string());
+                    self.entry_stub(&instance, &fn_abi, declared, entry_name, entry)
                 }
                 SpirvAttribute::UnrollLoops => {
                     self.unroll_loops_decorations
@@ -184,14 +183,11 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     fn declare_global(&self, span: Span, ty: Word) -> SpirvValue {
-        let ptr_ty = SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: ty,
-        }
-        .def(span, self);
+        let ptr_ty = SpirvType::Pointer { pointee: ty }.def(span, self);
+        // FIXME(eddyb) figure out what the correct storage class is.
         let result = self
             .emit_global()
-            .variable(ptr_ty, None, StorageClass::Function, None)
+            .variable(ptr_ty, None, StorageClass::Private, None)
             .with_type(ptr_ty);
         // TODO: These should be StorageClass::Private, so just zombie for now.
         self.zombie_with_span(result.def_cx(self), span, "Globals are not supported yet");
@@ -264,7 +260,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
             Err(_) => return,
         };
         let value_ty = match self.lookup_type(g.ty) {
-            SpirvType::Pointer { pointee, .. } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             other => self.tcx.sess.fatal(&format!(
                 "global had non-pointer type {}",
                 other.debug(g.ty, self)
@@ -275,8 +271,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         if self.lookup_type(v.ty) == SpirvType::Bool {
             let val = self.builder.lookup_const(v).unwrap();
             let val_int = match val {
-                SpirvConst::Bool(_, false) => 0,
-                SpirvConst::Bool(_, true) => 0,
+                SpirvConst::Bool(_, val) => val as u8,
                 _ => bug!(),
             };
             v = self.constant_u8(span, val_int);

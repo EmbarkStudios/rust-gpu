@@ -3,7 +3,7 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::{CLOp, GLOp, StorageClass};
+use rspirv::spirv::{CLOp, GLOp};
 use rustc_codegen_ssa::mir::operand::OperandRef;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BuilderMethods, IntrinsicCallMethods};
@@ -103,11 +103,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 let mut ptr = args[0].immediate();
                 if let PassMode::Cast(ty) = fn_abi.ret.mode {
                     let pointee = ty.spirv_type(self.span(), self);
-                    let pointer = SpirvType::Pointer {
-                        storage_class: StorageClass::Function,
-                        pointee,
-                    }
-                    .def(self.span(), self);
+                    let pointer = SpirvType::Pointer { pointee }.def(self.span(), self);
                     ptr = self.pointercast(ptr, pointer);
                 }
                 let load = self.volatile_load(ptr);
@@ -383,6 +379,9 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 if self.kernel_mode {
                     self.cl_op(CLOp::ctz, ret_ty, [args[0].immediate()])
                 } else {
+                    self.ext_inst
+                        .borrow_mut()
+                        .import_integer_functions_2_intel(self);
                     self.emit()
                         .u_count_trailing_zeros_intel(
                             args[0].immediate().ty,
@@ -505,7 +504,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         cond
     }
 
-    fn sideeffect(&mut self, _: bool) {
+    fn sideeffect(&mut self) {
         // TODO: This is currently ignored.
         // It corresponds to the llvm.sideeffect intrinsic - does spir-v have an equivalent?
     }

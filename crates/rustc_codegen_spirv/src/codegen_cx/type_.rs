@@ -1,7 +1,6 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::StorageClass;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, LayoutTypeMethods};
@@ -157,7 +156,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn type_kind(&self, ty: Self::Type) -> TypeKind {
         match self.lookup_type(ty) {
             SpirvType::Void => TypeKind::Void,
-            SpirvType::Bool => TypeKind::Integer, // thanks llvm
+            SpirvType::Bool | // thanks llvm
             SpirvType::Integer(_, _) => TypeKind::Integer,
             SpirvType::Float(width) => match width {
                 16 => TypeKind::Half,
@@ -181,25 +180,14 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
         }
     }
     fn type_ptr_to(&self, ty: Self::Type) -> Self::Type {
-        SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: ty,
-        }
-        .def(DUMMY_SP, self)
+        SpirvType::Pointer { pointee: ty }.def(DUMMY_SP, self)
     }
     fn type_ptr_to_ext(&self, ty: Self::Type, _address_space: AddressSpace) -> Self::Type {
-        SpirvType::Pointer {
-            storage_class: StorageClass::Function,
-            pointee: ty,
-        }
-        .def(DUMMY_SP, self)
+        SpirvType::Pointer { pointee: ty }.def(DUMMY_SP, self)
     }
     fn element_type(&self, ty: Self::Type) -> Self::Type {
         match self.lookup_type(ty) {
-            SpirvType::Pointer {
-                storage_class: _,
-                pointee,
-            } => pointee,
+            SpirvType::Pointer { pointee } => pointee,
             SpirvType::Vector { element, .. } => element,
             spirv_type => self.tcx.sess.fatal(&format!(
                 "element_type called on invalid type: {:?}",

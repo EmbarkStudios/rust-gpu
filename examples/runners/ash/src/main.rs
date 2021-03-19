@@ -1,3 +1,47 @@
+// standard Embark lints
+//#![deny(unsafe_code)] // impractical in this crate dealing with unsafe `ash`
+#![warn(
+    clippy::all,
+    clippy::await_holding_lock,
+    clippy::dbg_macro,
+    clippy::debug_assert_with_mut_call,
+    clippy::doc_markdown,
+    clippy::empty_enum,
+    clippy::enum_glob_use,
+    clippy::exit,
+    clippy::explicit_into_iter_loop,
+    clippy::filter_map_next,
+    clippy::fn_params_excessive_bools,
+    clippy::if_let_mutex,
+    clippy::imprecise_flops,
+    clippy::inefficient_to_string,
+    clippy::let_unit_value,
+    clippy::linkedlist,
+    clippy::lossy_float_literal,
+    clippy::macro_use_imports,
+    clippy::map_flatten,
+    clippy::map_unwrap_or,
+    clippy::match_on_vec_items,
+    clippy::match_wildcard_for_single_variants,
+    clippy::mem_forget,
+    clippy::mismatched_target_os,
+    clippy::needless_borrow,
+    clippy::needless_continue,
+    clippy::option_option,
+    clippy::pub_enum_variant_names,
+    clippy::ref_option_ref,
+    clippy::rest_pat_in_fully_bound_structs,
+    clippy::string_to_string,
+    clippy::suboptimal_flops,
+    clippy::todo,
+    clippy::unnested_or_patterns,
+    clippy::unused_self,
+    clippy::verbose_file_reads,
+    future_incompatible,
+    nonstandard_style,
+    rust_2018_idioms
+)]
+
 use ash::{
     extensions::{ext, khr},
     util::read_spv,
@@ -54,7 +98,7 @@ pub fn main() {
 
     // Create shader module and pipelines
     for SpvFile { name, data } in shaders {
-        ctx.insert_shader_module(name, data);
+        ctx.insert_shader_module(name, &data);
     }
     ctx.build_pipelines(
         vk::PipelineCache::null(),
@@ -88,7 +132,7 @@ pub fn main() {
                 }
                 Ok(new_shaders) => {
                     for SpvFile { name, data } in new_shaders {
-                        ctx.insert_shader_module(name, data);
+                        ctx.insert_shader_module(name, &data);
                     }
                     ctx.recompiling_shaders = false;
                     ctx.rebuild_pipelines(vk::PipelineCache::null());
@@ -261,7 +305,7 @@ impl RenderBase {
                         .get_physical_device_queue_family_properties(*pdevice)
                         .iter()
                         .enumerate()
-                        .find_map(|(index, ref info)| {
+                        .find_map(|(index, info)| {
                             if info.queue_flags.contains(vk::QueueFlags::GRAPHICS)
                                 && surface_loader
                                     .get_physical_device_surface_support(
@@ -326,20 +370,20 @@ impl RenderBase {
             }
         };
 
-        RenderBase {
+        Self {
+            window,
             entry,
             instance,
             device,
-            queue_family_index,
+            swapchain_loader,
+            debug_utils_loader,
+            debug_call_back,
             pdevice,
-            window,
+            queue_family_index,
+            present_queue,
+            surface,
             surface_loader,
             surface_format,
-            present_queue,
-            swapchain_loader,
-            surface,
-            debug_call_back,
-            debug_utils_loader,
         }
     }
 
@@ -511,10 +555,6 @@ impl RenderBase {
         RenderSync::new(self)
     }
 
-    pub fn create_render_command_pool(&self) -> RenderCommandPool {
-        RenderCommandPool::new(self)
-    }
-
     pub fn into_ctx(self) -> RenderCtx {
         RenderCtx::from_base(self)
     }
@@ -582,7 +622,7 @@ impl RenderCtx {
             )
         };
 
-        RenderCtx {
+        Self {
             sync,
             base,
             swapchain,
@@ -715,8 +755,8 @@ impl RenderCtx {
     /// Add a shader module to the hash map of shader modules.  returns a handle to the module, and the
     /// old shader module if there was one with the same name already.  Does not rebuild pipelines
     /// that may be using the shader module, nor does it invalidate them.
-    pub fn insert_shader_module(&mut self, name: String, spirv: Vec<u32>) {
-        let shader_info = vk::ShaderModuleCreateInfo::builder().code(&spirv);
+    pub fn insert_shader_module(&mut self, name: String, spirv: &[u32]) {
+        let shader_info = vk::ShaderModuleCreateInfo::builder().code(spirv);
         let shader_module = unsafe {
             self.base
                 .device
@@ -1177,15 +1217,15 @@ impl PipelineDescriptor {
             .build();
 
         Self {
+            color_blend_attachments,
+            dynamic_state,
             shader_stages,
             vertex_input,
             input_assembly,
             rasterization,
             multisample,
             depth_stencil,
-            color_blend_attachments,
             color_blend,
-            dynamic_state,
             dynamic_state_info,
         }
     }

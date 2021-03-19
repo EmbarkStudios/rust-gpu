@@ -17,42 +17,61 @@
 //! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
 #![feature(rustc_private)]
 #![feature(once_cell)]
-#![deny(clippy::unimplemented, clippy::ok_expect, clippy::mem_forget)]
-// Our standard Clippy lints that we use in Embark projects, we opt out of a few that are not appropriate for the specific crate (yet)
+// BEGIN - Embark standard lints v0.2.
+// do not change or add/remove here, but one can add exceptions after this section
+// for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
+#![deny(unsafe_code)]
 #![warn(
     clippy::all,
-    clippy::doc_markdown,
-    clippy::dbg_macro,
-    //clippy::todo,
-    clippy::empty_enum,
-    //clippy::enum_glob_use,
-    clippy::pub_enum_variant_names,
-    clippy::mem_forget,
-    clippy::use_self,
-    clippy::filter_map_next,
-    clippy::needless_continue,
-    clippy::needless_borrow,
-    clippy::match_wildcard_for_single_variants,
-    clippy::if_let_mutex,
-    clippy::mismatched_target_os,
     clippy::await_holding_lock,
-    //clippy::match_on_vec_items,
-    clippy::imprecise_flops,
-    clippy::suboptimal_flops,
-    clippy::lossy_float_literal,
-    clippy::rest_pat_in_fully_bound_structs,
-    clippy::fn_params_excessive_bools,
+    clippy::dbg_macro,
+    clippy::debug_assert_with_mut_call,
+    clippy::doc_markdown,
+    clippy::empty_enum,
+    clippy::enum_glob_use,
     clippy::exit,
+    clippy::explicit_into_iter_loop,
+    clippy::filter_map_next,
+    clippy::fn_params_excessive_bools,
+    clippy::if_let_mutex,
+    clippy::imprecise_flops,
     clippy::inefficient_to_string,
+    clippy::let_unit_value,
     clippy::linkedlist,
+    clippy::lossy_float_literal,
     clippy::macro_use_imports,
+    clippy::map_flatten,
+    clippy::map_unwrap_or,
+    clippy::match_on_vec_items,
+    clippy::match_wildcard_for_single_variants,
+    clippy::mem_forget,
+    clippy::mismatched_target_os,
+    clippy::needless_borrow,
+    clippy::needless_continue,
     clippy::option_option,
-    clippy::verbose_file_reads,
+    clippy::pub_enum_variant_names,
+    clippy::ref_option_ref,
+    clippy::rest_pat_in_fully_bound_structs,
+    clippy::string_to_string,
+    clippy::suboptimal_flops,
+    clippy::todo,
     clippy::unnested_or_patterns,
-    rust_2018_idioms,
+    clippy::unused_self,
+    clippy::verbose_file_reads,
     future_incompatible,
-    nonstandard_style
+    nonstandard_style,
+    rust_2018_idioms
 )]
+// END - Embark standard lints v0.2
+// crate-specific exceptions:
+#![allow(
+    unsafe_code,                // still quite a bit of unsafe
+    clippy::map_unwrap_or,      // TODO: test enabling
+    clippy::match_on_vec_items, // TODO: test enabling
+    clippy::enum_glob_use,
+    clippy::todo,               // still lots to implement :)
+)]
+#![deny(clippy::unimplemented, clippy::ok_expect)]
 
 extern crate rustc_ast;
 extern crate rustc_attr;
@@ -81,6 +100,7 @@ macro_rules! assert_ty_eq {
 }
 
 mod abi;
+mod attr;
 mod builder;
 mod builder_spirv;
 mod codegen_cx;
@@ -121,7 +141,6 @@ use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions, TargetTriple};
-pub use spirv_tools;
 use std::any::Any;
 use std::env;
 use std::fs::{create_dir_all, File};
@@ -294,12 +313,15 @@ impl CodegenBackend for SpirvCodegenBackend {
             // capture variables. Fortunately, the defaults are exposed (thanks rustdoc), so use that instead.
             let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
             result.map_bound(|mut inner| {
-                if inner.abi == Abi::C {
+                if let Abi::C { .. } = inner.abi {
                     inner.abi = Abi::Rust;
                 }
                 inner
             })
         };
+
+        // Extra hooks provided by other parts of `rustc_codegen_spirv`.
+        crate::attr::provide(providers);
     }
 
     fn provide_extern(&self, providers: &mut query::Providers) {
@@ -307,7 +329,7 @@ impl CodegenBackend for SpirvCodegenBackend {
         providers.fn_sig = |tcx, def_id| {
             let result = (rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
             result.map_bound(|mut inner| {
-                if inner.abi == Abi::C {
+                if let Abi::C { .. } = inner.abi {
                     inner.abi = Abi::Rust;
                 }
                 inner
@@ -608,4 +630,18 @@ pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
     }));
 
     Box::new(SpirvCodegenBackend)
+}
+
+// HACK(eddyb) this allows `spirv-builder` to use `spirv-tools::val` without
+// risking linker errors (especially when compiled with optimizations) - this
+// also means the function can't be generic or `#[inline]`.
+pub use spirv_tools::TargetEnv as SpirvToolsTargetEnv;
+#[inline(never)]
+pub fn spirv_tools_validate(
+    target_env: Option<spirv_tools::TargetEnv>,
+    bytes: &[u8],
+    options: Option<spirv_tools::val::ValidatorOptions>,
+) -> Result<(), spirv_tools::error::Error> {
+    use spirv_tools::val::Validator as _;
+    spirv_tools::val::create(target_env).validate(spirv_tools::binary::to_binary(bytes)?, options)
 }

@@ -78,6 +78,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
         diagnostic_output: DiagnosticOutput::Raw(Box::new(write_diags)),
         stderr: None,
         lint_caps: Default::default(),
+        parse_sess_created: None,
         register_lints: None,
         override_queries: None,
         make_codegen_backend: None,

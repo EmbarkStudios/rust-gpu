@@ -1,16 +1,13 @@
-use glam::{Vec2, Vec3A, Vec4};
-
+#[cfg(feature = "const-generics")]
 use crate::{integer::Integer, vector::Vector};
 
-#[allow(unused_attributes)]
 #[spirv(sampler)]
 #[derive(Copy, Clone)]
 pub struct Sampler {
     _x: u32,
 }
 
-#[allow(unused_attributes)]
-#[spirv(image(
+#[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
     depth = 0,
@@ -26,28 +23,55 @@ pub struct Image2d {
 
 impl Image2d {
     #[spirv_std_macros::gpu_only]
-    pub fn sample(&self, sampler: Sampler, coord: Vec2) -> Vec4 {
+    #[cfg(feature = "const-generics")]
+    pub fn sample<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 2>,
+    ) -> V {
         unsafe {
             let mut result = Default::default();
             asm!(
-                "%image = OpLoad _ {1}",
-                "%sampler = OpLoad _ {2}",
-                "%coord = OpLoad _ {3}",
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
                 "%sampledImage = OpSampledImage _ %image %sampler",
-                "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
-                "OpStore {0} %result",
-                in(reg) &mut result,
-                in(reg) self,
-                in(reg) &sampler,
-                in(reg) &coord
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
             );
             result
         }
     }
+    /// Fetch a single texel with a sampler set at compile time
+    #[spirv_std_macros::gpu_only]
+    #[cfg(feature = "const-generics")]
+    pub fn fetch<V, I, const N: usize>(&self, coordinate: impl Vector<I, N>) -> V
+    where
+        V: Vector<f32, 4>,
+        I: Integer,
+    {
+        let mut result = V::default();
+        unsafe {
+            asm! {
+                "%image = OpLoad _ {this}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%result = OpImageFetch typeof*{result} %image %coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                coordinate = in(reg) &coordinate,
+            }
+        }
+
+        result
+    }
 }
 
-#[allow(unused_attributes)]
-#[spirv(image(
+#[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
     depth = 0,
@@ -64,13 +88,13 @@ pub struct StorageImage2d {
 impl StorageImage2d {
     /// Read a texel from an image without a sampler.
     #[spirv_std_macros::gpu_only]
-    pub fn read<I, V, V2>(&self, coordinate: V) -> V2
+    #[cfg(feature = "const-generics")]
+    pub fn read<I, V, const N: usize>(&self, coordinate: impl Vector<I, 2>) -> V
     where
         I: Integer,
-        V: Vector<I>,
-        V2: Vector<f32>,
+        V: Vector<f32, N>,
     {
-        let mut result = V2::default();
+        let mut result = V::default();
 
         unsafe {
             asm! {
@@ -89,28 +113,27 @@ impl StorageImage2d {
 
     /// Write a texel to an image without a sampler.
     #[spirv_std_macros::gpu_only]
-    pub fn write<I, V, V2>(&self, coordinate: V, texels: V2)
-    where
+    #[cfg(feature = "const-generics")]
+    pub unsafe fn write<I, const N: usize>(
+        &self,
+        coordinate: impl Vector<I, 2>,
+        texels: impl Vector<f32, N>,
+    ) where
         I: Integer,
-        V: Vector<I>,
-        V2: Vector<f32>,
     {
-        unsafe {
-            asm! {
-                "%image = OpLoad _ {this}",
-                "%coordinate = OpLoad _ {coordinate}",
-                "%texels = OpLoad _ {texels}",
-                "OpImageWrite %image %coordinate %texels",
-                this = in(reg) self,
-                coordinate = in(reg) &coordinate,
-                texels = in(reg) &texels,
-            }
+        asm! {
+            "%image = OpLoad _ {this}",
+            "%coordinate = OpLoad _ {coordinate}",
+            "%texels = OpLoad _ {texels}",
+            "OpImageWrite %image %coordinate %texels",
+            this = in(reg) self,
+            coordinate = in(reg) &coordinate,
+            texels = in(reg) &texels,
         }
     }
 }
 
-#[allow(unused_attributes)]
-#[spirv(image(
+#[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
     depth = 0,
@@ -126,27 +149,31 @@ pub struct Image2dArray {
 
 impl Image2dArray {
     #[spirv_std_macros::gpu_only]
-    pub fn sample(&self, sampler: Sampler, coord: Vec3A) -> Vec4 {
+    #[cfg(feature = "const-generics")]
+    pub fn sample<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+    ) -> V {
         unsafe {
-            let mut result = Default::default();
+            let mut result = V::default();
             asm!(
-                "%image = OpLoad _ {1}",
-                "%sampler = OpLoad _ {2}",
-                "%coord = OpLoad _ {3}",
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
                 "%sampledImage = OpSampledImage _ %image %sampler",
-                "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
-                "OpStore {0} %result",
-                in(reg) &mut result,
-                in(reg) self,
-                in(reg) &sampler,
-                in(reg) &coord
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
             );
             result
         }
     }
 }
 
-#[allow(unused_attributes)]
 #[spirv(sampled_image)]
 #[derive(Copy, Clone)]
 pub struct SampledImage<I> {
@@ -155,17 +182,18 @@ pub struct SampledImage<I> {
 
 impl SampledImage<Image2d> {
     #[spirv_std_macros::gpu_only]
-    pub fn sample(&self, coord: Vec2) -> Vec4 {
+    #[cfg(feature = "const-generics")]
+    pub fn sample<V: Vector<f32, 4>>(&self, coordinate: impl Vector<f32, 2>) -> V {
         unsafe {
             let mut result = Default::default();
             asm!(
-                "%sampledImage = OpLoad _ {1}",
-                "%coord = OpLoad _ {2}",
-                "%result = OpImageSampleImplicitLod _ %sampledImage %coord",
-                "OpStore {0} %result",
-                in(reg) &mut result,
-                in(reg) self,
-                in(reg) &coord
+                "%sampledImage = OpLoad _ {this}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                coordinate = in(reg) &coordinate
             );
             result
         }

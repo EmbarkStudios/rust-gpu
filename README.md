@@ -8,7 +8,7 @@
 
 This is a very early stage project to make Rust a first-class language and ecosystem for building GPU code 🚀🚧
 
-### Current Status: v0.2
+### Current Status: v0.3
 
 Compiling and running very simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
 
@@ -19,21 +19,26 @@ However, many things aren't implemented yet: for example, loops and switches are
 ![Sky shader](docs/assets/sky.jpg)
 
 ```rust
-#[spirv(entry = "fragment")]
-pub fn main_fs(input: Input<Vec4>, mut output: Output<Vec4>) {
-    let dir: Vec3 = input.load().truncate();
+use spirv_std::{glam::{Vec3, Vec4, vec2, vec3}, storage_class::{Input, Output}};
 
-    let cs_pos = Vec4(dir.0, -dir.1, 1.0, 1.0);
-    let ws_pos = {
-        let p = clip_to_world.mul_vec4(cs_pos);
-        p.truncate() / p.3
-    };
-    let dir = (ws_pos - eye_pos).normalize();
-    
+#[spirv(fragment)]
+pub fn main(
+    #[spirv(frag_coord)] in_frag_coord: Input<Vec4>,
+    mut output: Output<Vec4>,
+) {
+    let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
+    let mut uv = (frag_coord - 0.5 * vec2(constants.width as f32, constants.height as f32))
+        / constants.height as f32;
+    uv.y = -uv.y;
+
+    let eye_pos = vec3(0.0, 0.0997, 0.2);
+    let sun_pos = vec3(0.0, 75.0, -1000.0);
+    let dir = get_ray_dir(uv, eye_pos, sun_pos);
+
     // evaluate Preetham sky model
     let color = sky(dir, sun_pos);
 
-    output.store(color.extend(0.0))
+    *output = tonemap(color).extend(1.0)
 }
 ```
 
@@ -80,7 +85,7 @@ An in-depth exploration of our roadmap and milestones can be found [here](https:
 
 We use this repo as a monorepo for everything related to the project: crates, tools, shaders, examples, tests, and design documents. This way, we can use issues and PRs covering everything in the same place, cross-reference stuff within the repo, as well as with other GitHub repos such as [rspirv](https://github.com/gfx-rs/rspirv) and [Rust](https://github.com/rust-lang/rust) itself.
 
-We meet weekly over a Discord call to discuss design and triage issues. Each meeting has an [issue](https://github.com/EmbarkStudios/rust-gpu/issues?q=label%3Ameeting+) with agenda, links and minutes.
+We meet weekly over a Discord call to discuss design and triage issues. Each meeting has an [issue](https://github.com/EmbarkStudios/rust-gpu/labels/t%3A%20meeting) with agenda, links and minutes.
 
 We have a [#rust-gpu Discord channel](https://discord.gg/dAuKfZS) for fast discussion and collaboration.
 
@@ -93,9 +98,9 @@ Right now because the project is in a very early state of development, we might 
 There are a few different components to this repo:
 
 - [rfcs](docs/src/rfcs) for in-depth discussion and specs.
-- [rustc_codegen_spirv](rustc_codegen_spirv) for the compiler itself.
-- [spirv-std](spirv-std) for GPU intrinsics, types, and other library items used by GPU crates.
-- [spirv-builder](spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
+- [rustc_codegen_spirv](crates/rustc_codegen_spirv) for the compiler itself.
+- [spirv-std](crates/spirv-std) for GPU intrinsics, types, and other library items used by GPU crates.
+- [spirv-builder](crates/spirv-builder) for a convenient way of building a GPU crate in a CPU build.rs file.
 
 ## Contributing
 

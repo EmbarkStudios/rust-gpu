@@ -1,5 +1,4 @@
 mod basic;
-mod control_flow;
 
 use lazy_static::lazy_static;
 use rustc_codegen_spirv::rspirv;
@@ -47,7 +46,11 @@ overflow-checks = false
 debug-assertions = false
 
 [dependencies]
-spirv-std = { path = "../../crates/spirv-std" }
+spirv-std = { path = "../../crates/spirv-std", features=["const-generics"] }
+glam = { git = "https://github.com/EmbarkStudios/glam-rs.git", branch="spirv-std-impl", default-features=false, features = ["libm", "scalar-math"] }
+
+[patch.crates-io.spirv-std]
+path="../../crates/spirv-std"
 
 [workspace]
 "#;
@@ -100,17 +103,11 @@ fn val(src: &str) {
 /// stricter Vulkan validation (`vulkan1.2` specifically), which may produce
 /// additional errors (such as missing Vulkan-specific decorations).
 fn val_vulkan(src: &str) {
-    use rustc_codegen_spirv::spirv_tools::{
-        binary::to_binary,
-        val::{self, Validator},
-        TargetEnv,
-    };
-
-    let validator = val::create(Some(TargetEnv::Vulkan_1_2));
+    use rustc_codegen_spirv::{spirv_tools_validate as validate, SpirvToolsTargetEnv as TargetEnv};
 
     let _lock = global_lock();
     let bytes = std::fs::read(build(src)).unwrap();
-    if let Err(e) = validator.validate(to_binary(&bytes).unwrap(), None) {
+    if let Err(e) = validate(Some(TargetEnv::Vulkan_1_2), &bytes, None) {
         panic!("Vulkan validation failed:\n{}", e.to_string());
     }
 }
@@ -142,7 +139,13 @@ fn dis_fn(src: &str, func: &str, expect: &str) {
             inst.class.opcode == rspirv::spirv::Op::Name
                 && inst.operands[1].unwrap_literal_string() == abs_func_path
         })
-        .expect("No function with that name found")
+        .unwrap_or_else(|| {
+            panic!(
+                "no function with the name `{}` found in:\n{}\n",
+                abs_func_path,
+                module.disassemble()
+            )
+        })
         .operands[0]
         .unwrap_id_ref();
     let mut func = module
