@@ -116,7 +116,11 @@ fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps
             .unwrap();
 
         std::fs::write(TEST_DEPS_TOML_PATH, CARGO_TOML.as_bytes()).unwrap();
-        std::fs::write(PathBuf::from(TEST_DEPS_PATH).join("src/lib.rs"), "").unwrap();
+        std::fs::write(
+            PathBuf::from(TEST_DEPS_PATH).join("src/lib.rs"),
+            "#![no_std]",
+        )
+        .unwrap();
     }
 
     // Build test-deps
@@ -128,10 +132,7 @@ fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps
             &*format!("--target={}", TARGET),
             &*target_dir,
         ])
-        .env(
-            "RUSTFLAGS",
-            rust_flags(&codegen_backend_path) + " -Zcrate-attr=no_std",
-        )
+        .env("RUSTFLAGS", rust_flags(&codegen_backend_path))
         .env("CARGO_MANIFEST_DIR", manifest_dir)
         .current_dir(manifest_dir)
         .stderr(std::process::Stdio::inherit())
