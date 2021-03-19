@@ -405,7 +405,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                             let field_ty_kind = self.lookup_type(field_ty);
 
                             let offset_in_field = offset - field_offset;
-                            if offset_in_field < field_ty_kind.sizeof(self)? {
+                            if field_ty_kind
+                                .sizeof(self)
+                                .map_or(true, |size| offset_in_field < size)
+                            {
                                 Some((i, field_ty, field_ty_kind, offset_in_field))
                             } else {
                                 None
