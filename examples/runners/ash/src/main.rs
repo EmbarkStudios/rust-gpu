@@ -221,7 +221,7 @@ impl RenderBase {
             if #[cfg(target_os = "macos")] {
                 let entry = ash_molten::MoltenEntry::load().unwrap();
             } else {
-                let entry = ash::Entry::new().unwrap();
+                let entry = unsafe { ash::Entry::new().unwrap() };
             }
         }
 
