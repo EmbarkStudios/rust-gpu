@@ -2142,6 +2142,9 @@
 <span id="2139">2139</span>
 <span id="2140">2140</span>
 <span id="2141">2141</span>
+<span id="2142">2142</span>
+<span id="2143">2143</span>
+<span id="2144">2144</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
@@ -2550,7 +2553,10 @@
                             <span class="kw">let</span> <span class="ident">field_ty_kind</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">field_ty</span>);
 
                             <span class="kw">let</span> <span class="ident">offset_in_field</span> <span class="op">=</span> <span class="ident">offset</span> <span class="op">-</span> <span class="ident">field_offset</span>;
-                            <span class="kw">if</span> <span class="ident">offset_in_field</span> <span class="op">&lt;</span> <span class="ident">field_ty_kind</span>.<span class="ident">sizeof</span>(<span class="self">self</span>)<span class="question-mark">?</span> {
+                            <span class="kw">if</span> <span class="ident">field_ty_kind</span>
+                                .<span class="ident">sizeof</span>(<span class="self">self</span>)
+                                .<span class="ident">map_or</span>(<span class="bool-val">true</span>, <span class="op">|</span><span class="ident">size</span><span class="op">|</span> <span class="ident">offset_in_field</span> <span class="op">&lt;</span> <span class="ident">size</span>)
+                            {
                                 <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">field_ty</span>, <span class="ident">field_ty_kind</span>, <span class="ident">offset_in_field</span>))
                             } <span class="kw">else</span> {
                                 <span class="prelude-val">None</span>
