@@ -15,9 +15,9 @@ fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
         adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
+                    label: None,
                     features: wgpu::Features::empty(),
                     limits: wgpu::Limits::default(),
-                    shader_validation: true,
                 },
                 None,
             )
@@ -37,7 +37,7 @@ pub fn start(options: &Options) {
     let (device, queue) = create_device_queue();
 
     // Load the shaders from disk
-    let module = device.create_shader_module(shader_module(options.shader));
+    let module = device.create_shader_module(&shader_module(options.shader));
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
@@ -48,10 +48,10 @@ pub fn start(options: &Options) {
                 binding: 0,
                 count: None,
                 visibility: wgpu::ShaderStage::COMPUTE,
-                ty: wgpu::BindingType::StorageBuffer {
-                    dynamic: false,
+                ty: wgpu::BindingType::Buffer {
+                    has_dynamic_offset: false,
                     min_binding_size: Some(NonZeroU64::new(1).unwrap()),
-                    readonly: false,
+                    ty: wgpu::BufferBindingType::Storage { read_only: false },
                 },
             },
         ],
@@ -66,10 +66,8 @@ pub fn start(options: &Options) {
     let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
         label: None,
         layout: Some(&pipeline_layout),
-        compute_stage: wgpu::ProgrammableStageDescriptor {
-            module: &module,
-            entry_point: "main_cs",
-        },
+        module: &module,
+        entry_point: "main_cs",
     });
 
     let buf = device.create_buffer(&wgpu::BufferDescriptor {
@@ -84,7 +82,11 @@ pub fn start(options: &Options) {
         layout: &bind_group_layout,
         entries: &[wgpu::BindGroupEntry {
             binding: 0,
-            resource: wgpu::BindingResource::Buffer(buf.slice(..)),
+            resource: wgpu::BindingResource::Buffer {
+                buffer: &buf,
+                offset: 0,
+                size: None,
+            },
         }],
     });
 
@@ -92,7 +94,7 @@ pub fn start(options: &Options) {
         device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
     {
-        let mut cpass = encoder.begin_compute_pass();
+        let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
         cpass.set_bind_group(0, &bind_group, &[]);
         cpass.set_pipeline(&compute_pipeline);
         cpass.dispatch(1, 1, 1);

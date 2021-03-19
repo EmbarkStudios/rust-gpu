@@ -56,7 +56,7 @@ pub enum RustGPUShader {
     Mouse,
 }
 
-fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleSource<'static> {
+fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static> {
     match shader {
         RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),
         RustGPUShader::Sky => wgpu::include_spirv!(env!("sky_shader.spv")),
