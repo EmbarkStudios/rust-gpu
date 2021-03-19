@@ -30,7 +30,7 @@ impl DepKind {
 
 fn main() {
     let original_target_dir = Path::new("./target");
-    let deps_target_dir = original_target_dir.join("compiletest/spirv-std");
+    let deps_target_dir = original_target_dir.join("compiletest-deps");
     let compiletest_build_dir = original_target_dir.join("compiletest-results");
 
     // Pull in rustc_codegen_spirv as a dynamic library in the same way
