@@ -257,73 +257,14 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             .unwrap();
 
         // simple structs are returned as values, complex ones are returned as out parameters
-        match self.lookup_type(result_type) {
-            SpirvType::Void => {
-                if let SpirvType::Pointer { .. } = self.lookup_type(args[0].ty) {
-                    let pointer = self.load(args[0], Align::from_bytes(0).unwrap());
-                    let stuff = self.recurse_adt_for_loads(
-                        uint_ty,
-                        uniform_uint_ptr,
-                        dword_offset,
-                        pointer.ty,
-                        &args[1..],
-                        &sets,
-                    );
-                    self.store(stuff, args[0], Align::from_bytes(0).unwrap())
-                } else {
-                    bug!(
-                        "Unhandled case for `internal_buffer_load` intrinsic / args: {:?}",
-                        args
-                    );
-                }
-            }
-            _ => self.recurse_adt_for_loads(
-                uint_ty,
-                uniform_uint_ptr,
-                dword_offset,
-                result_type,
-                args,
-                &sets,
-            ),
-        }
-    }
-
-    fn member_accessor(
-        &mut self,
-        uint_ty: u32,
-        uniform_uint_ptr: u32,
-        offset: u32,
-        dword_offset: u32,
-        bindless_idx: u32,
-        element_ty: u32,
-        sets: &BindlessDescriptorSets,
-    ) -> u32 {
-        let offset = if offset > 0 {
-            let element_offset = self.constant_int(uint_ty, offset as u64).def(self);
-
-            self.emit()
-                .i_add(uint_ty, None, dword_offset, element_offset)
-                .unwrap()
-        } else {
-            dword_offset
-        };
-        let zero = self.constant_int(uint_ty, 0).def(self);
-
-        let indices = vec![bindless_idx, zero, offset];
-
-        let result = self
-            .emit()
-            .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
-            .unwrap();
-
-        let load_res = self
-            .emit()
-            .load(uint_ty, None, result, None, std::iter::empty())
-            .unwrap();
-
-        let bitcast_res = self.emit().bitcast(element_ty, None, load_res).unwrap();
-
-        bitcast_res as u32
+        self.recurse_adt_for_loads(
+            uint_ty,
+            uniform_uint_ptr,
+            dword_offset,
+            result_type,
+            args,
+            &sets,
+        )
     }
 
     fn recurse_adt_for_loads(
@@ -348,17 +289,17 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let mut composite_components = vec![];
 
                 for (ty, offset) in field_types.iter().zip(field_offsets.iter()) {
-                    // jb-todo: this needs to recurse if `ty` is an Adt, or at least
-                    // use OpCompositeExtract on each of those members recursively
-                    composite_components.push(self.member_accessor(
-                        uint_ty,
-                        uniform_uint_ptr,
-                        offset.bytes() as u32 / 4,
-                        dword_offset,
-                        bindless_idx,
-                        *ty,
-                        sets,
-                    ));
+                    composite_components.push(
+                        self.recurse_adt_for_loads(
+                            uint_ty,
+                            uniform_uint_ptr,
+                            dword_offset,
+                            *ty,
+                            args,
+                            sets,
+                        )
+                        .def(self),
+                    );
                 }
 
                 let adt = data.def(rustc_span::DUMMY_SP, self);
@@ -386,6 +327,12 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .unwrap();
 
                 load_res.with_type(uint_ty)
+
+                /*
+                        let bitcast_res = self.emit().bitcast(element_ty, None, load_res).unwrap();
+
+                bitcast_res as u32
+                */
             }
             _ => {
                 bug!(
