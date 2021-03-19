@@ -6,34 +6,9 @@ use std::{
 
 const TARGET: &str = "spirv-unknown-unknown";
 const TARGET_DIR: &str = "target/compiletest";
-const TEST_DEPS_PATH: &str = "target/compiletest/test-deps";
-const TEST_DEPS_TOML_PATH: &str = "target/compiletest/test-deps/Cargo.toml";
 const SPIRV_STD_TARGET: &str = "target/compiletest/spirv-std";
 const SPIRV_STD_HOST_DEPS: &str = "target/compiletest/spirv-std/debug/deps";
 const SPIRV_STD_TARGET_DEPS: &str = "target/compiletest/spirv-std/spirv-unknown-unknown/debug/deps";
-const CARGO_TOML: &str = r#"[package]
-name = "test-deps"
-version = "0.1.0"
-description = "Shared dependencies of all the tests"
-authors = ["Embark <opensource@embark-studios.com>"]
-edition = "2018"
-
-[dependencies]
-spirv-std = { path = "../../../crates/spirv-std", features=["const-generics"] }
-
-[dependencies.glam]
-git = "https://github.com/bitshifter/glam-rs.git"
-rev="b3e94fb"
-default-features=false
-features = ["libm", "scalar-math"]
-
-# Patch glam's dependency on spirv-std with our local version.
-[patch.crates-io]
-spirv-std-macros = { path = "../../../crates/spirv-std-macros" }
-spirv-std = { path = "../../../crates/spirv-std" }
-
-[workspace]
-"#;
 
 fn main() {
     let manifest_dir = PathBuf::from("./");
@@ -104,30 +79,12 @@ fn run_mode(mode: &'static str, codegen_backend_path: &Path, libs: &TestDeps) {
 fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
     let target_dir = format!("--target-dir={}", SPIRV_STD_TARGET);
 
-    // Create a new test-deps project.
-    if std::fs::metadata(TEST_DEPS_PATH).is_err() {
-        std::process::Command::new("cargo")
-            .args(&["new", "-q", "--lib", TEST_DEPS_PATH])
-            .current_dir(manifest_dir)
-            .stderr(std::process::Stdio::inherit())
-            .stdout(std::process::Stdio::inherit())
-            .status()
-            .and_then(map_status_to_result)
-            .unwrap();
-
-        std::fs::write(TEST_DEPS_TOML_PATH, CARGO_TOML.as_bytes()).unwrap();
-        std::fs::write(
-            PathBuf::from(TEST_DEPS_PATH).join("src/lib.rs"),
-            "#![no_std]",
-        )
-        .unwrap();
-    }
-
-    // Build test-deps
+    // Build compiletests-deps-helper
     std::process::Command::new("cargo")
         .args(&[
             "build",
-            &*format!("--manifest-path={}", TEST_DEPS_TOML_PATH),
+            "-p",
+            "compiletests-deps-helper",
             "-Zbuild-std=core",
             &*format!("--target={}", TARGET),
             &*target_dir,
