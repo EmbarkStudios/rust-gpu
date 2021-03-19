@@ -2,6 +2,7 @@ use rustc_middle::bug;
 
 use super::Builder;
 use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
+use crate::codegen_cx::BindlessDescriptorSets;
 use crate::rustc_codegen_ssa::traits::BuilderMethods;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
@@ -244,139 +245,30 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let uniform_uint_ptr =
             SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
 
-        let zero = self.constant_int(uint_ty, 0).def(self);
+        let sets = self.bindless_descriptor_sets.borrow().unwrap().clone();
 
-        let sets = self.bindless_descriptor_sets.borrow().unwrap();
+        let two = self.constant_int(uint_ty, 2).def(self);
 
-        let member_accessor = |builder: &mut Self,
-                               offset: u32,
-                               dword_offset: u32,
-                               bindless_idx: u32,
-                               element_ty: u32|
-         -> u32 {
-            let offset = if offset > 0 {
-                let element_offset = builder.constant_int(uint_ty, offset as u64).def(builder);
+        let offset_arg = args[1].def(self);
 
-                builder
-                    .emit()
-                    .i_add(uint_ty, None, dword_offset, element_offset)
-                    .unwrap()
-            } else {
-                dword_offset
-            };
-
-            let indices = vec![bindless_idx, zero, offset];
-
-            let result = builder
-                .emit()
-                .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
-                .unwrap();
-
-            let load_res = builder
-                .emit()
-                .load(uint_ty, None, result, None, std::iter::empty())
-                .unwrap();
-
-            let bitcast_res = builder.emit().bitcast(element_ty, None, load_res).unwrap();
-
-            bitcast_res as u32
-        };
-
-        let load_type = |builder: &mut Self, result_type: u32, args: &[SpirvValue]| -> SpirvValue {
-            let data = builder.lookup_type(result_type);
-
-            let bindless_idx = args[0].def(builder);
-            let offset_arg = args[1].def(builder);
-
-            let two = builder.constant_int(uint_ty, 2).def(builder);
-
-            let dword_offset = builder
-                .emit()
-                .shift_right_arithmetic(uint_ty, None, offset_arg, two)
-                .unwrap();
-
-            match data {
-                SpirvType::Vector { count, element } => {
-                    let mut composite_components = vec![];
-
-                    for offset in 0..count {
-                        composite_components.push(member_accessor(
-                            builder,
-                            offset,
-                            dword_offset,
-                            bindless_idx,
-                            element,
-                        ));
-                    }
-
-                    let adt = data.def(rustc_span::DUMMY_SP, builder);
-
-                    builder
-                        .emit()
-                        .composite_construct(adt, None, composite_components)
-                        .unwrap()
-                        .with_type(adt)
-                }
-                SpirvType::Adt {
-                    ref field_types,
-                    ref field_offsets,
-                    ..
-                } => {
-                    let mut composite_components = vec![];
-
-                    for (ty, offset) in field_types.iter().zip(field_offsets.iter()) {
-                        // jb-todo: this needs to recurse if `ty` is an Adt, or at least
-                        // use OpCompositeExtract on each of those members recursively
-                        composite_components.push(member_accessor(
-                            builder,
-                            offset.bytes() as u32 / 4,
-                            dword_offset,
-                            bindless_idx,
-                            *ty,
-                        ));
-                    }
-
-                    let adt = data.def(rustc_span::DUMMY_SP, builder);
-
-                    builder
-                        .emit()
-                        .composite_construct(adt, None, composite_components)
-                        .unwrap()
-                        .with_type(adt)
-                }
-                SpirvType::Integer(bits, signed) => {
-                    assert!(bits == 32); // jb-todo: 8, 16 and 64-bits
-                    assert!(signed == false); // jb-todo: signed
-
-                    let indices = vec![bindless_idx, zero, dword_offset];
-
-                    let result = builder
-                        .emit()
-                        .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
-                        .unwrap();
-
-                    let load_res = builder
-                        .emit()
-                        .load(uint_ty, None, result, None, std::iter::empty())
-                        .unwrap();
-
-                    load_res.with_type(uint_ty)
-                }
-                _ => {
-                    bug!(
-                        "Unhandled case for `internal_buffer_load` return / args: {:?}",
-                        args
-                    );
-                }
-            }
-        };
+        let dword_offset = self
+            .emit()
+            .shift_right_arithmetic(uint_ty, None, offset_arg, two)
+            .unwrap();
 
         // simple structs are returned as values, complex ones are returned as out parameters
         match self.lookup_type(result_type) {
             SpirvType::Void => {
                 if let SpirvType::Pointer { .. } = self.lookup_type(args[0].ty) {
                     let pointer = self.load(args[0], Align::from_bytes(0).unwrap());
-                    let stuff = load_type(self, pointer.ty, &args[1..]);
+                    let stuff = self.recurse_adt_for_loads(
+                        uint_ty,
+                        uniform_uint_ptr,
+                        dword_offset,
+                        pointer.ty,
+                        &args[1..],
+                        &sets,
+                    );
                     self.store(stuff, args[0], Align::from_bytes(0).unwrap())
                 } else {
                     bug!(
@@ -385,7 +277,122 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     );
                 }
             }
-            _ => load_type(self, result_type, args),
+            _ => self.recurse_adt_for_loads(
+                uint_ty,
+                uniform_uint_ptr,
+                dword_offset,
+                result_type,
+                args,
+                &sets,
+            ),
+        }
+    }
+
+    fn member_accessor(
+        &mut self,
+        uint_ty: u32,
+        uniform_uint_ptr: u32,
+        offset: u32,
+        dword_offset: u32,
+        bindless_idx: u32,
+        element_ty: u32,
+        sets: &BindlessDescriptorSets,
+    ) -> u32 {
+        let offset = if offset > 0 {
+            let element_offset = self.constant_int(uint_ty, offset as u64).def(self);
+
+            self.emit()
+                .i_add(uint_ty, None, dword_offset, element_offset)
+                .unwrap()
+        } else {
+            dword_offset
+        };
+        let zero = self.constant_int(uint_ty, 0).def(self);
+
+        let indices = vec![bindless_idx, zero, offset];
+
+        let result = self
+            .emit()
+            .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+            .unwrap();
+
+        let load_res = self
+            .emit()
+            .load(uint_ty, None, result, None, std::iter::empty())
+            .unwrap();
+
+        let bitcast_res = self.emit().bitcast(element_ty, None, load_res).unwrap();
+
+        bitcast_res as u32
+    }
+
+    fn recurse_adt_for_loads(
+        &mut self,
+        uint_ty: u32,
+        uniform_uint_ptr: u32,
+        dword_offset: Word,
+        result_type: u32,
+        args: &[SpirvValue],
+        sets: &BindlessDescriptorSets,
+    ) -> SpirvValue {
+        let data = self.lookup_type(result_type);
+
+        let bindless_idx = args[0].def(self);
+
+        match data {
+            SpirvType::Adt {
+                ref field_types,
+                ref field_offsets,
+                ..
+            } => {
+                let mut composite_components = vec![];
+
+                for (ty, offset) in field_types.iter().zip(field_offsets.iter()) {
+                    // jb-todo: this needs to recurse if `ty` is an Adt, or at least
+                    // use OpCompositeExtract on each of those members recursively
+                    composite_components.push(self.member_accessor(
+                        uint_ty,
+                        uniform_uint_ptr,
+                        offset.bytes() as u32 / 4,
+                        dword_offset,
+                        bindless_idx,
+                        *ty,
+                        sets,
+                    ));
+                }
+
+                let adt = data.def(rustc_span::DUMMY_SP, self);
+
+                self.emit()
+                    .composite_construct(adt, None, composite_components)
+                    .unwrap()
+                    .with_type(adt)
+            }
+            SpirvType::Integer(bits, signed) => {
+                assert!(bits == 32); // jb-todo: 8, 16 and 64-bits
+                assert!(signed == false); // jb-todo: signed
+                let zero = self.constant_int(uint_ty, 0).def(self);
+
+                let indices = vec![bindless_idx, zero, dword_offset];
+
+                let result = self
+                    .emit()
+                    .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+                    .unwrap();
+
+                let load_res = self
+                    .emit()
+                    .load(uint_ty, None, result, None, std::iter::empty())
+                    .unwrap();
+
+                load_res.with_type(uint_ty)
+            }
+            _ => {
+                bug!(
+                    "Unhandled case for `internal_buffer_load` return / args: {:?}",
+                    args
+                );
+            }
         }
     }
 }
