@@ -11,12 +11,10 @@ const SPIRV_STD_HOST_DEPS: &str = "target/compiletest/spirv-std/debug/deps";
 const SPIRV_STD_TARGET_DEPS: &str = "target/compiletest/spirv-std/spirv-unknown-unknown/debug/deps";
 
 fn main() {
-    let manifest_dir = PathBuf::from("./");
-    std::env::set_var("CARGO_MANIFEST_DIR", &manifest_dir);
     // Pull in rustc_codegen_spirv as a dynamic library in the same way
     // spirv-builder does.
     let codegen_backend_path = find_rustc_codegen_spirv();
-    let libs = build_spirv_std(&manifest_dir, &codegen_backend_path);
+    let libs = build_spirv_std(&codegen_backend_path);
 
     run_mode("ui", &codegen_backend_path, &libs);
 }
@@ -76,7 +74,7 @@ fn run_mode(mode: &'static str, codegen_backend_path: &Path, libs: &TestDeps) {
 }
 
 /// Runs the processes needed to build `spirv-std`.
-fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
+fn build_spirv_std(codegen_backend_path: &Path) -> TestDeps {
     let target_dir = format!("--target-dir={}", SPIRV_STD_TARGET);
 
     // Build compiletests-deps-helper
@@ -90,8 +88,6 @@ fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps
             &*target_dir,
         ])
         .env("RUSTFLAGS", rust_flags(&codegen_backend_path))
-        .env("CARGO_MANIFEST_DIR", manifest_dir)
-        .current_dir(manifest_dir)
         .stderr(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .status()
@@ -114,8 +110,8 @@ fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps
     .iter()
     .any(|o| o.is_none())
     {
-        clean_project(manifest_dir);
-        build_spirv_std(manifest_dir, codegen_backend_path)
+        clean_project();
+        build_spirv_std(codegen_backend_path)
     } else {
         TestDeps {
             core: core.unwrap(),
@@ -127,10 +123,12 @@ fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps
     }
 }
 
-fn clean_project(manifest_dir: &Path) {
+fn clean_project() {
     std::process::Command::new("cargo")
-        .args(&["clean", &*format!("--target-dir={}", TARGET_DIR)])
-        .current_dir(manifest_dir)
+        .args(&[
+            "clean",
+            &*format!("--target-dir={}", TARGET_DIR),
+        ])
         .stderr(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .status()
