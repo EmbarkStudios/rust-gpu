@@ -43,7 +43,6 @@
 )]
 
 use clap::Clap;
-use spirv_builder::SpirvBuilder;
 use strum::{Display, EnumString};
 
 mod compute;
@@ -66,7 +65,7 @@ fn compile_shader(shader: RustGPUShader) -> Vec<u8> {
         RustGPUShader::Mouse => "examples/shaders/mouse-shader",
     };
 
-    SpirvBuilder::new(path_to_crate)
+    spirv_builder::SpirvBuilder::new(path_to_crate)
         .spirv_version(1, 0)
         .print_metadata(false)
         .build()
