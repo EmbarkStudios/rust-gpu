@@ -29,7 +29,9 @@ impl DepKind {
 }
 
 fn main() {
-    let original_target_dir = Path::new("./target");
+    let tests_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workspace_root = tests_dir.parent().unwrap();
+    let original_target_dir = workspace_root.join("target");
     let deps_target_dir = original_target_dir.join("compiletest-deps");
     let compiletest_build_dir = original_target_dir.join("compiletest-results");
 
@@ -40,6 +42,7 @@ fn main() {
 
     run_mode(
         "ui",
+        tests_dir,
         compiletest_build_dir,
         &deps_target_dir,
         &codegen_backend_path,
@@ -53,6 +56,7 @@ fn main() {
 /// backend provided by `codegen_backend_path`.
 fn run_mode(
     mode: &'static str,
+    tests_dir: &Path,
     compiletest_build_dir: PathBuf,
     deps_target_dir: &Path,
     codegen_backend_path: &Path,
@@ -105,7 +109,7 @@ fn run_mode(
     config.target_rustcflags = Some(flags);
     config.mode = mode.parse().expect("Invalid mode");
     config.target = String::from(TARGET);
-    config.src_base = PathBuf::from(format!("./tests/{}", mode));
+    config.src_base = tests_dir.join(mode);
     config.build_base = compiletest_build_dir;
     config.bless = std::env::args().any(|a| a == "--bless");
     config.clean_rmeta();
@@ -115,6 +119,11 @@ fn run_mode(
 
 /// Runs the processes needed to build `spirv-std` & other deps.
 fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
+    // HACK(eddyb) this is only needed until we enable `resolver = "2"`, as the
+    // old ("1") resolver has a bug where it picks up extra features based on the
+    // current directory (and so we always set the working dir as a workaround).
+    let old_cargo_resolver_workaround_cwd = deps_target_dir.parent().unwrap();
+
     // Build compiletests-deps-helper
     std::process::Command::new("cargo")
         .args(&[
@@ -127,6 +136,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
         .arg("--target-dir")
         .arg(deps_target_dir)
         .env("RUSTFLAGS", rust_flags(&codegen_backend_path))
+        .current_dir(old_cargo_resolver_workaround_cwd)
         .stderr(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .status()
