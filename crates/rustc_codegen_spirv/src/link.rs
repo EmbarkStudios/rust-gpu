@@ -148,7 +148,7 @@ fn link_exe(
         if let Err(e) = std::fs::write(out_filename, spirv_tools::binary::from_binary(&spv_binary))
         {
             let mut err = sess.struct_err("failed to serialize spirv-binary to disk");
-            err.note(&format!("module {:?}", out_filename));
+            err.note(&format!("module `{}`", out_filename.display()));
             err.note(&format!("I/O error: {:#}", e));
             err.emit();
         }
@@ -195,7 +195,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
                 Level::Info | Level::Debug => sess.struct_note_without_error(&msg.message),
             };
 
-            err.note(&format!("module {:?}", filename));
+            err.note(&format!("module `{}`", filename.display()));
             err.emit();
         },
         // We currently run the validator separately after optimization or even
@@ -208,7 +208,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
         Err(e) => {
             let mut err = sess.struct_warn(&e.to_string());
             err.note("spirv-opt failed, leaving as unoptimized");
-            err.note(&format!("module {:?}", filename));
+            err.note(&format!("module `{}`", filename.display()));
             err.emit();
             spv_binary
         }
@@ -223,7 +223,7 @@ fn do_spirv_val(sess: &Session, spv_binary: &[u32], filename: &Path) {
     if let Err(e) = validator.validate(spv_binary, None) {
         let mut err = sess.struct_err(&e.to_string());
         err.note("spirv-val failed");
-        err.note(&format!("module {:?}", filename));
+        err.note(&format!("module `{}`", filename.display()));
         err.emit();
     }
 }
