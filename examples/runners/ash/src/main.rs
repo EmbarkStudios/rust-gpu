@@ -776,10 +776,6 @@ impl RenderCtx {
             for framebuffer in self.framebuffers.drain(..) {
                 self.base.device.destroy_framebuffer(framebuffer, None)
             }
-            // command buffers
-            self.base
-                .device
-                .free_command_buffers(self.commands.pool, &[self.commands.draw_command_buffer]);
             // render pass
             self.base.device.destroy_render_pass(self.render_pass, None);
             // image views
@@ -811,20 +807,6 @@ impl RenderCtx {
         self.extent = extent;
         self.image_views = self.base.create_image_views(self.swapchain);
         self.render_pass = self.base.create_render_pass();
-        let command_buffers = {
-            let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
-                .command_buffer_count(1)
-                .command_pool(self.commands.pool)
-                .level(vk::CommandBufferLevel::PRIMARY);
-
-            unsafe {
-                self.base
-                    .device
-                    .allocate_command_buffers(&command_buffer_allocate_info)
-                    .unwrap()
-            }
-        };
-        self.commands.draw_command_buffer = command_buffers[0];
         self.framebuffers =
             self.base
                 .create_framebuffers(&self.image_views, self.render_pass, extent);
@@ -971,17 +953,10 @@ impl RenderCtx {
                 .reset_fences(&[self.sync.draw_commands_reuse_fence])
                 .expect("Reset fences failed.");
 
-            self.base
-                .device
-                .reset_command_buffer(
-                    self.commands.draw_command_buffer,
-                    vk::CommandBufferResetFlags::RELEASE_RESOURCES,
-                )
-                .expect("Reset command buffer failed.");
-
             let command_buffer_begin_info = vk::CommandBufferBeginInfo::builder()
                 .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
 
+            // The command buffer is reset implicitly.
             self.base
                 .device
                 .begin_command_buffer(
@@ -1111,11 +1086,9 @@ impl RenderCommandPool {
             }
         };
 
-        let draw_command_buffer = command_buffers[0];
-
         Self {
             pool,
-            draw_command_buffer,
+            draw_command_buffer: command_buffers[0],
         }
     }
 }
