@@ -776,8 +776,6 @@ impl RenderCtx {
             for framebuffer in self.framebuffers.drain(..) {
                 self.base.device.destroy_framebuffer(framebuffer, None)
             }
-            // render pass
-            self.base.device.destroy_render_pass(self.render_pass, None);
             // image views
             for image_view in self.image_views.drain(..) {
                 self.base.device.destroy_image_view(image_view, None);
@@ -806,7 +804,6 @@ impl RenderCtx {
         self.swapchain = swapchain;
         self.extent = extent;
         self.image_views = self.base.create_image_views(self.swapchain);
-        self.render_pass = self.base.create_render_pass();
         self.framebuffers =
             self.base
                 .create_framebuffers(&self.image_views, self.render_pass, extent);
@@ -1006,6 +1003,10 @@ impl Drop for RenderCtx {
             self.base
                 .device
                 .destroy_fence(self.sync.draw_commands_reuse_fence, None);
+            self.base
+                .device
+                .free_command_buffers(self.commands.pool, &[self.commands.draw_command_buffer]);
+            self.base.device.destroy_render_pass(self.render_pass, None);
             self.cleanup_pipelines();
             self.cleanup_swapchain();
             self.base
