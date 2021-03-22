@@ -77,14 +77,21 @@ pub enum IntrinsicType {
 // `tests/ui/spirv-attr` should be updated (and new ones added if necessary).
 #[derive(Debug, Clone)]
 pub enum SpirvAttribute {
-    Builtin(BuiltIn),
+    // `struct` attributes:
     StorageClass(StorageClass),
-    Entry(Entry),
-    DescriptorSet(u32),
-    Binding(u32),
     IntrinsicType(IntrinsicType),
     Block,
+
+    // `fn` attributes:
+    Entry(Entry),
+
+    // (entry) `fn` parameter attributes:
+    Builtin(BuiltIn),
+    DescriptorSet(u32),
+    Binding(u32),
     Flat,
+
+    // `fn`/closure attributes:
     UnrollLoops,
 }
 
@@ -136,6 +143,30 @@ impl CheckSpirvAttrVisitor<'_> {
             struct Expected<T>(T);
 
             let valid_target = match parsed_attr {
+                SpirvAttribute::StorageClass(_)
+                | SpirvAttribute::IntrinsicType(_)
+                | SpirvAttribute::Block => match target {
+                    Target::Struct => {
+                        // FIXME(eddyb) further check type attribute validity,
+                        // e.g. layout, generics, other attributes, etc.
+                        Ok(())
+                    }
+
+                    _ => Err(Expected("struct")),
+                },
+
+                SpirvAttribute::Entry(_) => match target {
+                    Target::Fn
+                    | Target::Method(MethodKind::Trait { body: true })
+                    | Target::Method(MethodKind::Inherent) => {
+                        // FIXME(eddyb) further check entry-point attribute validity,
+                        // e.g. signature, shouldn't have `#[inline]` or generics, etc.
+                        Ok(())
+                    }
+
+                    _ => Err(Expected("function")),
+                },
+
                 SpirvAttribute::Builtin(_)
                 | SpirvAttribute::DescriptorSet(_)
                 | SpirvAttribute::Binding(_)
@@ -158,18 +189,6 @@ impl CheckSpirvAttrVisitor<'_> {
                     _ => Err(Expected("function parameter")),
                 },
 
-                SpirvAttribute::Entry(_) => match target {
-                    Target::Fn
-                    | Target::Method(MethodKind::Trait { body: true })
-                    | Target::Method(MethodKind::Inherent) => {
-                        // FIXME(eddyb) further check entry-point attribute validity,
-                        // e.g. signature, shouldn't have `#[inline]` or generics, etc.
-                        Ok(())
-                    }
-
-                    _ => Err(Expected("function")),
-                },
-
                 SpirvAttribute::UnrollLoops => match target {
                     Target::Fn
                     | Target::Closure
@@ -177,18 +196,6 @@ impl CheckSpirvAttrVisitor<'_> {
                     | Target::Method(MethodKind::Inherent) => Ok(()),
 
                     _ => Err(Expected("function or closure")),
-                },
-
-                SpirvAttribute::StorageClass(_)
-                | SpirvAttribute::IntrinsicType(_)
-                | SpirvAttribute::Block => match target {
-                    Target::Struct => {
-                        // FIXME(eddyb) further check type attribute validity,
-                        // e.g. layout, generics, other attributes, etc.
-                        Ok(())
-                    }
-
-                    _ => Err(Expected("struct")),
                 },
             };
             match valid_target {
