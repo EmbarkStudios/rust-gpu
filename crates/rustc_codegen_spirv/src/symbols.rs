@@ -450,6 +450,8 @@ impl From<ExecutionModel> for Entry {
 }
 
 // FIXME(eddyb) maybe move this to `attr`?
+// NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside
+// `tests/ui/spirv-attr` should be updated (and new ones added if necessary).
 #[derive(Debug, Clone)]
 pub enum SpirvAttribute {
     Builtin(BuiltIn),
