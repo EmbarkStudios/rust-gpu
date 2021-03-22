@@ -21,9 +21,9 @@ You will occassionally need to "bless" the output from UI tests to update the
 normalised output, you can do this by passing a `--bless` flag to
 `cargo compiletest`.
 
-``
-cargo compiletest -- --bless
-``
+```bash
+cargo compiletest --bless
+```
 
 [`compiletest`]: https://github.com/laumann/compiletest-rs
 [rustc-dev-guide]: https://rustc-dev-guide.rust-lang.org/tests/intro.html
