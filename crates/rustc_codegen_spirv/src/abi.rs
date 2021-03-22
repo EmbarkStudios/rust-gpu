@@ -1,10 +1,9 @@
 //! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It's
 //! surprisingly difficult.
 
-use crate::attr::{IntrinsicType, SpirvAttribute};
+use crate::attr::{AggregatedSpirvAttributes, IntrinsicType};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use crate::symbols::parse_attrs;
 use rspirv::spirv::{Capability, StorageClass, Word};
 use rustc_errors::ErrorReported;
 use rustc_middle::bug;
@@ -325,42 +324,40 @@ fn trans_type_impl<'tcx>(
     is_immediate: bool,
 ) -> Word {
     if let TyKind::Adt(adt, substs) = *ty.ty.kind() {
-        for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
-            if matches!(attr, SpirvAttribute::Block) {
-                if !adt.is_struct() {
-                    cx.tcx.sess.span_err(
-                        span,
-                        &format!(
-                            "`#[spirv(block)]` can only be used on a `struct`, \
+        let attrs = AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did));
+        if attrs.block.is_some() {
+            if !adt.is_struct() {
+                cx.tcx.sess.span_err(
+                    span,
+                    &format!(
+                        "`#[spirv(block)]` can only be used on a `struct`, \
                              but `{}` is a `{}`",
-                            ty.ty,
-                            adt.descr(),
-                        ),
-                    );
-                }
-
-                if !matches!(ty.abi, Abi::Aggregate { sized: true }) {
-                    cx.tcx.sess.span_err(
-                        span,
-                        &format!(
-                            "`#[spirv(block)]` can only be used for `Sized` aggregates, \
-                             but `{}` has `Abi::{:?}`",
-                            ty.ty, ty.abi,
-                        ),
-                    );
-                }
-
-                assert!(matches!(ty.fields, FieldsShape::Arbitrary { .. }));
-
-                return trans_struct(cx, span, ty, true);
+                        ty.ty,
+                        adt.descr(),
+                    ),
+                );
             }
 
-            if let SpirvAttribute::IntrinsicType(intrinsic_type_attr) = attr {
-                if let Ok(spirv_type) =
-                    trans_intrinsic_type(cx, span, ty, substs, intrinsic_type_attr)
-                {
-                    return spirv_type;
-                }
+            if !matches!(ty.abi, Abi::Aggregate { sized: true }) {
+                cx.tcx.sess.span_err(
+                    span,
+                    &format!(
+                        "`#[spirv(block)]` can only be used for `Sized` aggregates, \
+                             but `{}` has `Abi::{:?}`",
+                        ty.ty, ty.abi,
+                    ),
+                );
+            }
+
+            assert!(matches!(ty.fields, FieldsShape::Arbitrary { .. }));
+
+            return trans_struct(cx, span, ty, true);
+        }
+
+        if let Some(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
+            if let Ok(spirv_type) = trans_intrinsic_type(cx, span, ty, substs, intrinsic_type_attr)
+            {
+                return spirv_type;
             }
         }
     }
@@ -596,13 +593,12 @@ pub(crate) fn get_storage_class<'tcx>(
     ty: TyAndLayout<'tcx>,
 ) -> Option<StorageClass> {
     if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
-        for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
-            if let SpirvAttribute::StorageClass(storage_class) = attr {
-                return Some(storage_class);
-            }
-        }
+        AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did))
+            .storage_class
+            .map(|attr| attr.value)
+    } else {
+        None
     }
-    None
 }
 
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {

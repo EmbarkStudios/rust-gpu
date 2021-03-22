@@ -2,6 +2,7 @@
 //!
 //! The attribute-checking parts of this try to follow `rustc_passes::check_attr`.
 
+use crate::codegen_cx::CodegenCx;
 use crate::symbols::Symbols;
 use rspirv::spirv::{
     AccessQualifier, BuiltIn, Dim, ExecutionMode, ExecutionModel, ImageFormat, StorageClass,
@@ -132,6 +133,39 @@ struct MultipleAttrs {
 }
 
 impl AggregatedSpirvAttributes {
+    /// Compute `AggregatedSpirvAttributes` for use during codegen.
+    ///
+    /// Any errors for malformed/duplicate attributes will have been reported
+    /// prior to codegen, by the `attr` check pass.
+    pub fn parse<'tcx>(cx: &CodegenCx<'tcx>, attrs: &'tcx [Attribute]) -> Self {
+        let mut aggregated_attrs = Self::default();
+
+        // NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails
+        // to see an attribute error, it will cause an ICE instead.
+        for (_, parse_attr_result) in crate::symbols::parse_attrs_for_checking(&cx.sym, attrs) {
+            let (span, parsed_attr) = match parse_attr_result {
+                Ok(span_and_parsed_attr) => span_and_parsed_attr,
+                Err((span, msg)) => {
+                    cx.tcx.sess.delay_span_bug(span, &msg);
+                    continue;
+                }
+            };
+            match aggregated_attrs.try_insert_attr(parsed_attr, span) {
+                Ok(()) => {}
+                Err(MultipleAttrs {
+                    prev_span: _,
+                    category,
+                }) => {
+                    cx.tcx
+                        .sess
+                        .delay_span_bug(span, &format!("multiple {} attributes", category));
+                }
+            }
+        }
+
+        aggregated_attrs
+    }
+
     fn try_insert_attr(&mut self, attr: SpirvAttribute, span: Span) -> Result<(), MultipleAttrs> {
         fn try_insert<T>(
             slot: &mut Option<Spanned<T>>,
