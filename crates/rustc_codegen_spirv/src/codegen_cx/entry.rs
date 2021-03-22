@@ -10,6 +10,7 @@ use rustc_middle::ty::layout::TyAndLayout;
 use rustc_middle::ty::{Instance, Ty, TyKind};
 use rustc_span::Span;
 use rustc_target::abi::call::{FnAbi, PassMode};
+use rustc_target::abi::LayoutOf;
 use std::collections::HashMap;
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -37,12 +38,12 @@ impl<'tcx> CodegenCx<'tcx> {
         let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(local_id);
         let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
         for (abi, arg) in fn_abi.args.iter().zip(body.params) {
-            if let PassMode::Direct(_) = abi.mode {
-            } else {
-                self.tcx.sess.span_err(
+            match abi.mode {
+                PassMode::Direct(_) | PassMode::Indirect { .. } => {}
+                _ => self.tcx.sess.span_err(
                     arg.span,
                     &format!("PassMode {:?} invalid for entry point parameter", abi.mode),
-                )
+                ),
             }
         }
         if let PassMode::Ignore = fn_abi.ret.mode {
@@ -104,7 +105,7 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let mut decoration_locations = HashMap::new();
         // Create OpVariables before OpFunction so they're global instead of local vars.
-        let arguments = entry_fn_abi
+        let declared_params = entry_fn_abi
             .args
             .iter()
             .zip(hir_params)
@@ -117,11 +118,38 @@ impl<'tcx> CodegenCx<'tcx> {
             .begin_function(void, None, FunctionControl::NONE, fn_void_void)
             .unwrap();
         emit.begin_block(None).unwrap();
+        // Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s).
+        let arguments: Vec<_> = declared_params
+            .iter()
+            .zip(&entry_fn_abi.args)
+            .zip(hir_params)
+            .map(|((&(var, storage_class), entry_fn_arg), hir_param)| {
+                match entry_fn_arg.layout.ty.kind() {
+                    TyKind::Ref(..) => var,
+
+                    _ => match entry_fn_arg.mode {
+                        PassMode::Indirect { .. } => var,
+                        PassMode::Direct(_) => {
+                            assert_eq!(storage_class, StorageClass::Input);
+
+                            // NOTE(eddyb) this should never fail as it has to have
+                            // been already computed earlier by `declare_parameter`.
+                            let value_spirv_type =
+                                entry_fn_arg.layout.spirv_type(hir_param.span, self);
+
+                            emit.load(value_spirv_type, None, var, None, std::iter::empty())
+                                .unwrap()
+                        }
+                        _ => unreachable!(),
+                    },
+                }
+            })
+            .collect();
         emit.function_call(
             entry_func_return_type,
             None,
             entry_func.def_cx(self),
-            arguments.iter().map(|&(a, _)| a),
+            arguments,
         )
         .unwrap();
         emit.ret().unwrap();
@@ -129,13 +157,13 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let interface: Vec<_> = if emit.version().unwrap() > (1, 3) {
             // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            arguments.into_iter().map(|(a, _)| a).collect()
+            declared_params.into_iter().map(|(var, _)| var).collect()
         } else {
             // SPIR-V <= v1.3 only includes Input and Output in the interface.
-            arguments
+            declared_params
                 .into_iter()
                 .filter(|&(_, s)| s == StorageClass::Input || s == StorageClass::Output)
-                .map(|(a, _)| a)
+                .map(|(var, _)| var)
                 .collect()
         };
         emit.entry_point(execution_model, fn_id, name, interface);
@@ -155,7 +183,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // i.e. it's only immutable if `T: Freeze`, which we should check.
         // FIXME(eddyb) also check the type for compatibility with being
         // part of the interface, including potentially `Sync`ness etc.
-        let storage_class = if let Some(storage_class_attr) = attrs.storage_class {
+        let (value_ty, storage_class) = if let Some(storage_class_attr) = attrs.storage_class {
             let storage_class = storage_class_attr.value;
             let expected_mutbl = match storage_class {
                 StorageClass::UniformConstant
@@ -165,8 +193,8 @@ impl<'tcx> CodegenCx<'tcx> {
                 _ => hir::Mutability::Mut,
             };
 
-            match layout.ty.kind() {
-                TyKind::Ref(_, _, m) if *m == expected_mutbl => storage_class,
+            match *layout.ty.kind() {
+                TyKind::Ref(_, pointee_ty, m) if m == expected_mutbl => (pointee_ty, storage_class),
 
                 _ => self.tcx.sess.span_fatal(
                     hir_param.span,
@@ -180,18 +208,20 @@ impl<'tcx> CodegenCx<'tcx> {
                 ),
             }
         } else {
-            match layout.ty.kind() {
-                TyKind::Ref(_, _, hir::Mutability::Mut) => StorageClass::Output,
+            match *layout.ty.kind() {
+                TyKind::Ref(_, pointee_ty, hir::Mutability::Mut) => {
+                    (pointee_ty, StorageClass::Output)
+                }
 
-                TyKind::Ref(_, _, hir::Mutability::Not) => StorageClass::Input,
-
-                _ => self.tcx.sess.span_fatal(
+                TyKind::Ref(_, pointee_ty, hir::Mutability::Not) => self.tcx.sess.span_fatal(
                     hir_param.span,
                     &format!(
-                        "invalid entry param type `{}` (expected `&T` or `&mut T`)",
-                        layout.ty
+                        "invalid entry param type `{}` (expected `{}` or `&mut {1}`)",
+                        layout.ty, pointee_ty
                     ),
                 ),
+
+                _ => (layout.ty, StorageClass::Input),
             }
         };
 
@@ -258,9 +288,12 @@ impl<'tcx> CodegenCx<'tcx> {
         }
 
         // Emit the `OpVariable` with its *Result* ID set to `variable`.
-        let spirv_type = layout.spirv_type(hir_param.span, self);
+        let var_spirv_type = SpirvType::Pointer {
+            pointee: self.layout_of(value_ty).spirv_type(hir_param.span, self),
+        }
+        .def(hir_param.span, self);
         self.emit_global()
-            .variable(spirv_type, Some(variable), storage_class, None);
+            .variable(var_spirv_type, Some(variable), storage_class, None);
 
         (variable, storage_class)
     }

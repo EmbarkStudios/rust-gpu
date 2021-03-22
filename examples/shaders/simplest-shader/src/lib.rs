@@ -18,8 +18,7 @@ pub fn main_fs(output: &mut Vec4) {
 }
 
 #[spirv(vertex)]
-pub fn main_vs(#[spirv(vertex_index)] vert_id: &i32, #[spirv(position)] out_pos: &mut Vec4) {
-    let vert_id = *vert_id;
+pub fn main_vs(#[spirv(vertex_index)] vert_id: i32, #[spirv(position)] out_pos: &mut Vec4) {
     *out_pos = vec4(
         (vert_id - 1) as f32,
         ((vert_id & 1) * 2 - 1) as f32,
