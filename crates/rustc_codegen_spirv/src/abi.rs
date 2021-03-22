@@ -1,9 +1,10 @@
 //! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It's
 //! surprisingly difficult.
 
+use crate::attr::SpirvAttribute;
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, SpirvAttribute};
+use crate::symbols::parse_attrs;
 use rspirv::spirv::{Capability, StorageClass, Word};
 use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};

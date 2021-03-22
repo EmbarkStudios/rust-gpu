@@ -1,8 +1,9 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
+use crate::attr::{Entry, SpirvAttribute};
 use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
+use crate::symbols::parse_attrs;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_hir as hir;

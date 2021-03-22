@@ -2,7 +2,10 @@
 //!
 //! The attribute-checking parts of this try to follow `rustc_passes::check_attr`.
 
-use crate::symbols::{SpirvAttribute, Symbols};
+use crate::symbols::Symbols;
+use rspirv::spirv::{
+    AccessQualifier, BuiltIn, Dim, ExecutionMode, ExecutionModel, ImageFormat, StorageClass,
+};
 use rustc_ast::Attribute;
 use rustc_hir as hir;
 use rustc_hir::def_id::LocalDefId;
@@ -11,7 +14,73 @@ use rustc_hir::{HirId, MethodKind, Target, CRATE_HIR_ID};
 use rustc_middle::hir::map::Map;
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::TyCtxt;
+use rustc_span::symbol::Symbol;
 use std::rc::Rc;
+
+// FIXME(eddyb) replace with `ArrayVec<[Word; 3]>`.
+#[derive(Copy, Clone, Debug)]
+pub struct ExecutionModeExtra {
+    args: [u32; 3],
+    len: u8,
+}
+
+impl ExecutionModeExtra {
+    pub(crate) fn new(args: impl AsRef<[u32]>) -> Self {
+        let _args = args.as_ref();
+        let mut args = [0; 3];
+        args[.._args.len()].copy_from_slice(_args);
+        let len = _args.len() as u8;
+        Self { args, len }
+    }
+}
+
+impl AsRef<[u32]> for ExecutionModeExtra {
+    fn as_ref(&self) -> &[u32] {
+        &self.args[..self.len as _]
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Entry {
+    pub execution_model: ExecutionModel,
+    pub execution_modes: Vec<(ExecutionMode, ExecutionModeExtra)>,
+    pub name: Option<Symbol>,
+}
+
+impl From<ExecutionModel> for Entry {
+    fn from(execution_model: ExecutionModel) -> Self {
+        Self {
+            execution_model,
+            execution_modes: Vec::new(),
+            name: None,
+        }
+    }
+}
+
+// NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside
+// `tests/ui/spirv-attr` should be updated (and new ones added if necessary).
+#[derive(Debug, Clone)]
+pub enum SpirvAttribute {
+    Builtin(BuiltIn),
+    StorageClass(StorageClass),
+    Entry(Entry),
+    DescriptorSet(u32),
+    Binding(u32),
+    ImageType {
+        dim: Dim,
+        depth: u32,
+        arrayed: u32,
+        multisampled: u32,
+        sampled: u32,
+        image_format: ImageFormat,
+        access_qualifier: Option<AccessQualifier>,
+    },
+    Sampler,
+    SampledImage,
+    Block,
+    Flat,
+    UnrollLoops,
+}
 
 // FIXME(eddyb) make this reusable from somewhere in `rustc`.
 fn target_from_impl_item<'tcx>(tcx: TyCtxt<'tcx>, impl_item: &hir::ImplItem<'_>) -> Target {
