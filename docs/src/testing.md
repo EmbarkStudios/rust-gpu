@@ -25,15 +25,5 @@ normalised output, you can do this by passing a `--bless` flag to
 cargo compiletest -- --bless
 ``
 
-### Caching Tests
-
-`cargo compiletest` by default caches the build output for dependencies of test
-cases such as `spirv-std` and `glam`. If you need to compile from a fresh source
-you can pass the `--clean` flag to build from scratch.
-
-``
-cargo compiletest -- --clean
-``
-
 [`compiletest`]: https://github.com/laumann/compiletest-rs
 [rustc-dev-guide]: https://rustc-dev-guide.rust-lang.org/tests/intro.html
