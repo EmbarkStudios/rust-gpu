@@ -865,14 +865,18 @@
 <span id="862">862</span>
 <span id="863">863</span>
 <span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s</span>
 <span class="doccomment">//! surprisingly difficult.</span>
 
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">attr</span>::{<span class="ident">AggregatedSpirvAttributes</span>, <span class="ident">IntrinsicType</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">codegen_cx</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">symbols</span>::{<span class="ident">parse_attrs</span>, <span class="ident">SpirvAttribute</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Capability</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rustc_errors</span>::<span class="ident">ErrorReported</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::{<span class="ident">FnAbiExt</span>, <span class="ident">TyAndLayout</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">subst</span>::<span class="ident">SubstsRef</span>;
@@ -1191,38 +1195,40 @@
     <span class="ident">is_immediate</span>: <span class="ident">bool</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TyKind</span>::<span class="ident">Adt</span>(<span class="ident">adt</span>, <span class="ident">substs</span>) <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ty</span>.<span class="ident">ty</span>.<span class="ident">kind</span>() {
-        <span class="kw">for</span> <span class="ident">attr</span> <span class="kw">in</span> <span class="ident">parse_attrs</span>(<span class="ident">cx</span>, <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">get_attrs</span>(<span class="ident">adt</span>.<span class="ident">did</span>)) {
-            <span class="kw">if</span> <span class="macro">matches</span><span class="macro">!</span>(<span class="ident">attr</span>, <span class="ident">SpirvAttribute</span>::<span class="ident">Block</span>) {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">adt</span>.<span class="ident">is_struct</span>() {
-                    <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
-                        <span class="ident">span</span>,
-                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
-                            <span class="string">&quot;`#[spirv(block)]` can only be used on a `struct`, \
+        <span class="kw">let</span> <span class="ident">attrs</span> <span class="op">=</span> <span class="ident">AggregatedSpirvAttributes</span>::<span class="ident">parse</span>(<span class="ident">cx</span>, <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">get_attrs</span>(<span class="ident">adt</span>.<span class="ident">did</span>));
+        <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">block</span>.<span class="ident">is_some</span>() {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">adt</span>.<span class="ident">is_struct</span>() {
+                <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                    <span class="ident">span</span>,
+                    <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                        <span class="string">&quot;`#[spirv(block)]` can only be used on a `struct`, \
                              but `{}` is a `{}`&quot;</span>,
-                            <span class="ident">ty</span>.<span class="ident">ty</span>,
-                            <span class="ident">adt</span>.<span class="ident">descr</span>(),
-                        ),
-                    );
-                }
-
-                <span class="kw">if</span> <span class="op">!</span><span class="macro">matches</span><span class="macro">!</span>(<span class="ident">ty</span>.<span class="ident">abi</span>, <span class="ident">Abi</span>::<span class="ident">Aggregate</span> { <span class="ident">sized</span>: <span class="bool-val">true</span> }) {
-                    <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
-                        <span class="ident">span</span>,
-                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
-                            <span class="string">&quot;`#[spirv(block)]` can only be used for `Sized` aggregates, \
-                             but `{}` has `Abi::{:?}`&quot;</span>,
-                            <span class="ident">ty</span>.<span class="ident">ty</span>, <span class="ident">ty</span>.<span class="ident">abi</span>,
-                        ),
-                    );
-                }
-
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="macro">matches</span><span class="macro">!</span>(<span class="ident">ty</span>.<span class="ident">fields</span>, <span class="ident">FieldsShape</span>::<span class="ident">Arbitrary</span> { .. }));
-
-                <span class="kw">return</span> <span class="ident">trans_struct</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ty</span>, <span class="bool-val">true</span>);
+                        <span class="ident">ty</span>.<span class="ident">ty</span>,
+                        <span class="ident">adt</span>.<span class="ident">descr</span>(),
+                    ),
+                );
             }
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">image</span>) <span class="op">=</span> <span class="ident">trans_image</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ty</span>, <span class="ident">substs</span>, <span class="ident">attr</span>) {
-                <span class="kw">return</span> <span class="ident">image</span>;
+            <span class="kw">if</span> <span class="op">!</span><span class="macro">matches</span><span class="macro">!</span>(<span class="ident">ty</span>.<span class="ident">abi</span>, <span class="ident">Abi</span>::<span class="ident">Aggregate</span> { <span class="ident">sized</span>: <span class="bool-val">true</span> }) {
+                <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                    <span class="ident">span</span>,
+                    <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                        <span class="string">&quot;`#[spirv(block)]` can only be used for `Sized` aggregates, \
+                             but `{}` has `Abi::{:?}`&quot;</span>,
+                        <span class="ident">ty</span>.<span class="ident">ty</span>, <span class="ident">ty</span>.<span class="ident">abi</span>,
+                    ),
+                );
+            }
+
+            <span class="macro">assert</span><span class="macro">!</span>(<span class="macro">matches</span><span class="macro">!</span>(<span class="ident">ty</span>.<span class="ident">fields</span>, <span class="ident">FieldsShape</span>::<span class="ident">Arbitrary</span> { .. }));
+
+            <span class="kw">return</span> <span class="ident">trans_struct</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ty</span>, <span class="bool-val">true</span>);
+        }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">intrinsic_type_attr</span>) <span class="op">=</span> <span class="ident">attrs</span>.<span class="ident">intrinsic_type</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> <span class="ident">attr</span>.<span class="ident">value</span>) {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">spirv_type</span>) <span class="op">=</span> <span class="ident">trans_intrinsic_type</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ty</span>, <span class="ident">substs</span>, <span class="ident">intrinsic_type_attr</span>)
+            {
+                <span class="kw">return</span> <span class="ident">spirv_type</span>;
             }
         }
     }
@@ -1458,13 +1464,12 @@
     <span class="ident">ty</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">StorageClass</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TyKind</span>::<span class="ident">Adt</span>(<span class="ident">adt</span>, <span class="ident">_substs</span>) <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">ty</span>.<span class="ident">kind</span>() {
-        <span class="kw">for</span> <span class="ident">attr</span> <span class="kw">in</span> <span class="ident">parse_attrs</span>(<span class="ident">cx</span>, <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">get_attrs</span>(<span class="ident">adt</span>.<span class="ident">did</span>)) {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">SpirvAttribute</span>::<span class="ident">StorageClass</span>(<span class="ident">storage_class</span>) <span class="op">=</span> <span class="ident">attr</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">storage_class</span>);
-            }
-        }
+        <span class="ident">AggregatedSpirvAttributes</span>::<span class="ident">parse</span>(<span class="ident">cx</span>, <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">get_attrs</span>(<span class="ident">adt</span>.<span class="ident">did</span>))
+            .<span class="ident">storage_class</span>
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> <span class="ident">attr</span>.<span class="ident">value</span>)
+    } <span class="kw">else</span> {
+        <span class="prelude-val">None</span>
     }
-    <span class="prelude-val">None</span>
 }
 
 <span class="kw">fn</span> <span class="ident">trans_aggregate</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
@@ -1661,15 +1666,15 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">trans_image</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">trans_intrinsic_type</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(
     <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
     <span class="ident">span</span>: <span class="ident">Span</span>,
     <span class="ident">ty</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
     <span class="ident">substs</span>: <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-    <span class="ident">attr</span>: <span class="ident">SpirvAttribute</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">attr</span> {
-        <span class="ident">SpirvAttribute</span>::<span class="ident">ImageType</span> {
+    <span class="ident">intrinsic_type_attr</span>: <span class="ident">IntrinsicType</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ErrorReported</span><span class="op">&gt;</span> {
+    <span class="kw">match</span> <span class="ident">intrinsic_type_attr</span> {
+        <span class="ident">IntrinsicType</span>::<span class="ident">ImageType</span> {
             <span class="ident">dim</span>,
             <span class="ident">depth</span>,
             <span class="ident">arrayed</span>,
@@ -1680,8 +1685,10 @@
         } <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// see SpirvType::sizeof</span>
             <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">size</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="number">4</span>) {
-                <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="string">&quot;#[spirv(image)] type must have size 4&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="ident">cx</span>.<span class="ident">tcx</span>
+                    .<span class="ident">sess</span>
+                    .<span class="ident">err</span>(<span class="string">&quot;#[spirv(image_type)] type must have size 4&quot;</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>);
             }
             <span class="comment">// Hardcode to float for now</span>
             <span class="kw">let</span> <span class="ident">sampled_type</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="number">32</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
@@ -1695,23 +1702,23 @@
                 <span class="ident">image_format</span>,
                 <span class="ident">access_qualifier</span>,
             };
-            <span class="prelude-val">Some</span>(<span class="ident">ty</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>))
+            <span class="prelude-val">Ok</span>(<span class="ident">ty</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>))
         }
-        <span class="ident">SpirvAttribute</span>::<span class="ident">Sampler</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">IntrinsicType</span>::<span class="ident">Sampler</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// see SpirvType::sizeof</span>
             <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">size</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="number">4</span>) {
                 <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="string">&quot;#[spirv(sampler)] type must have size 4&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>);
             }
-            <span class="prelude-val">Some</span>(<span class="ident">SpirvType</span>::<span class="ident">Sampler</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>))
+            <span class="prelude-val">Ok</span>(<span class="ident">SpirvType</span>::<span class="ident">Sampler</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>))
         }
-        <span class="ident">SpirvAttribute</span>::<span class="ident">SampledImage</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">IntrinsicType</span>::<span class="ident">SampledImage</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// see SpirvType::sizeof</span>
             <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">size</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="number">4</span>) {
                 <span class="ident">cx</span>.<span class="ident">tcx</span>
                     .<span class="ident">sess</span>
                     .<span class="ident">err</span>(<span class="string">&quot;#[spirv(sampled_image)] type must have size 4&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>);
             }
 
             <span class="comment">// We use a generic to indicate the underlying image type of the sampled image.</span>
@@ -1719,15 +1726,14 @@
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">image_ty</span>) <span class="op">=</span> <span class="ident">substs</span>.<span class="ident">types</span>().<span class="ident">next</span>() {
                 <span class="comment">// TODO: enforce that the generic param is an image type?</span>
                 <span class="kw">let</span> <span class="ident">image_type</span> <span class="op">=</span> <span class="ident">trans_type_impl</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">cx</span>.<span class="ident">layout_of</span>(<span class="ident">image_ty</span>), <span class="bool-val">false</span>);
-                <span class="prelude-val">Some</span>(<span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { <span class="ident">image_type</span> }.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>))
+                <span class="prelude-val">Ok</span>(<span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { <span class="ident">image_type</span> }.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>))
             } <span class="kw">else</span> {
                 <span class="ident">cx</span>.<span class="ident">tcx</span>
                     .<span class="ident">sess</span>
                     .<span class="ident">err</span>(<span class="string">&quot;#[spirv(sampled_image)] type must have a generic image type&quot;</span>);
-                <span class="prelude-val">None</span>
+                <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>)
             }
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
     }
 }
 </pre></div>
