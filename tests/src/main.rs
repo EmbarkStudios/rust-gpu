@@ -3,6 +3,20 @@ use std::{
     io::{Error, ErrorKind, Result},
     path::{Path, PathBuf},
 };
+use structopt::StructOpt;
+
+#[derive(StructOpt)]
+#[structopt(
+    name = "cargo compiletest",
+    no_version,
+    // HACK(eddyb) avoid "USAGE:" saying "compiletests".
+    usage = "cargo compiletest [FLAGS]",
+)]
+struct Opt {
+    /// Automatically update stderr/stdout files
+    #[structopt(long)]
+    bless: bool,
+}
 
 const TARGET: &str = "spirv-unknown-unknown";
 
@@ -29,6 +43,8 @@ impl DepKind {
 }
 
 fn main() {
+    let opt = Opt::from_args();
+
     let tests_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     let workspace_root = tests_dir.parent().unwrap();
     let original_target_dir = workspace_root.join("target");
@@ -42,6 +58,7 @@ fn main() {
 
     run_mode(
         "ui",
+        opt,
         tests_dir,
         compiletest_build_dir,
         &deps_target_dir,
@@ -56,6 +73,7 @@ fn main() {
 /// backend provided by `codegen_backend_path`.
 fn run_mode(
     mode: &'static str,
+    opt: Opt,
     tests_dir: &Path,
     compiletest_build_dir: PathBuf,
     deps_target_dir: &Path,
@@ -111,7 +129,7 @@ fn run_mode(
     config.target = String::from(TARGET);
     config.src_base = tests_dir.join(mode);
     config.build_base = compiletest_build_dir;
-    config.bless = std::env::args().any(|a| a == "--bless");
+    config.bless = opt.bless;
     config.clean_rmeta();
 
     compiletest::run_tests(&config);
