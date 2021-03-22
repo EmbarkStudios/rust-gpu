@@ -4,6 +4,11 @@
     feature(asm, register_attr, repr_simd, core_intrinsics, lang_items),
     register_attr(spirv)
 )]
+#![cfg_attr(
+    feature = "const-generics",
+    feature(const_generics),
+    allow(incomplete_features)
+)]
 // BEGIN - Embark standard lints v0.3
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
@@ -72,6 +77,7 @@ pub extern crate spirv_std_macros as macros;
 pub mod arch;
 pub mod float;
 pub mod integer;
+pub mod memory;
 pub mod scalar;
 pub(crate) mod sealed;
 pub mod storage_class;
