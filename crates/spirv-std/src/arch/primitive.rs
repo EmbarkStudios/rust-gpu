@@ -40,7 +40,6 @@ pub unsafe fn end_primitive() {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpEmitStreamVertex")]
 #[inline]
-#[cfg(feature = "const-generics")]
 pub unsafe fn emit_stream_vertex<const STREAM: i64>() {
     asm! {
         "%i64 = OpTypeInt 64 1",
@@ -61,7 +60,6 @@ pub unsafe fn emit_stream_vertex<const STREAM: i64>() {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpEndStreamPrimitive")]
 #[inline]
-#[cfg(feature = "const-generics")]
 pub unsafe fn end_stream_primitive<const STREAM: i64>() {
     asm! {
         "%i64 = OpTypeInt 64 1",

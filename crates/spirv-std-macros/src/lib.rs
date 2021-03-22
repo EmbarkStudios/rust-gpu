@@ -143,7 +143,7 @@ pub fn vectorized(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
 fn create_vectored_fn(
     ItemFn {
-        mut attrs,
+        attrs,
         vis,
         mut sig,
         block,
@@ -153,13 +153,6 @@ fn create_vectored_fn(
     let trait_bound_name = Ident::new("VECTOR", Span::mixed_site());
     let const_bound_name = Ident::new("LENGTH", Span::mixed_site());
 
-    attrs.push(syn::Attribute {
-        pound_token: Default::default(),
-        style: syn::AttrStyle::Outer,
-        bracket_token: Default::default(),
-        path: Ident::new("cfg", Span::mixed_site()).into(),
-        tokens: quote::quote![(feature = "const-generics")],
-    });
     sig.ident = Ident::new(&format!("{}_vector", sig.ident), Span::mixed_site());
     sig.output = syn::ReturnType::Type(
         Default::default(),
