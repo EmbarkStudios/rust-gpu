@@ -161,9 +161,9 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
         intravisit::walk_trait_item(self, trait_item)
     }
 
-    fn visit_struct_field(&mut self, struct_field: &'tcx hir::StructField<'tcx>) {
-        self.check_spirv_attributes(struct_field.hir_id, Target::Field);
-        intravisit::walk_struct_field(self, struct_field);
+    fn visit_field_def(&mut self, field: &'tcx hir::FieldDef<'tcx>) {
+        self.check_spirv_attributes(field.hir_id, Target::Field);
+        intravisit::walk_field_def(self, field);
     }
 
     fn visit_arm(&mut self, arm: &'tcx hir::Arm<'tcx>) {
