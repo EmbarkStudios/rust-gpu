@@ -1,4 +1,4 @@
-use crate::attr::{Entry, ExecutionModeExtra, SpirvAttribute};
+use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
 use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
@@ -333,10 +333,16 @@ impl Symbols {
             .iter()
             .map(|&(a, b)| (a, SpirvAttribute::Entry(b.into())));
         let custom_attributes = [
-            ("sampler", SpirvAttribute::Sampler),
+            (
+                "sampler",
+                SpirvAttribute::IntrinsicType(IntrinsicType::Sampler),
+            ),
             ("block", SpirvAttribute::Block),
             ("flat", SpirvAttribute::Flat),
-            ("sampled_image", SpirvAttribute::SampledImage),
+            (
+                "sampled_image",
+                SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),
+            ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
         ]
         .iter()
@@ -600,7 +606,7 @@ fn parse_image_type(
     } else {
         None
     };
-    Ok(SpirvAttribute::ImageType {
+    Ok(SpirvAttribute::IntrinsicType(IntrinsicType::ImageType {
         dim,
         depth,
         arrayed,
@@ -608,7 +614,7 @@ fn parse_image_type(
         sampled,
         image_format,
         access_qualifier,
-    })
+    }))
 }
 
 fn parse_attr_int_value(arg: &NestedMetaItem) -> Result<u32, ParseAttrError> {
