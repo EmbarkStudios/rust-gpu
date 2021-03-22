@@ -1,9 +1,7 @@
 use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
-use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
-use rustc_data_structures::captures::Captures;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
 use std::collections::HashMap;
@@ -413,24 +411,6 @@ impl Symbols {
         thread_local!(static SYMBOLS: Rc<Symbols> = Rc::new(Symbols::new()));
         SYMBOLS.with(Rc::clone)
     }
-}
-
-// FIXME(eddyb) maybe move this to `attr`?
-/// Returns only the spirv attributes that could successfully parsed.
-/// For any malformed ones, an error is reported prior to codegen, by a check pass.
-pub fn parse_attrs<'a, 'tcx>(
-    cx: &'a CodegenCx<'tcx>,
-    attrs: &'tcx [Attribute],
-) -> impl Iterator<Item = SpirvAttribute> + Captures<'tcx> + 'a {
-    parse_attrs_for_checking(&cx.sym, attrs)
-        .filter_map(move |(_, parse_attr_result)| {
-            // NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails
-            // to see an attribute error, it will cause an ICE instead.
-            parse_attr_result
-                .map_err(|(span, msg)| cx.tcx.sess.delay_span_bug(span, &msg))
-                .ok()
-        })
-        .map(|(_span, parsed_attr)| parsed_attr)
 }
 
 // FIXME(eddyb) find something nicer for the error type.

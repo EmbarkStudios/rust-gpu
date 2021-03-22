@@ -1,9 +1,8 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
-use crate::attr::{Entry, SpirvAttribute};
+use crate::attr::{AggregatedSpirvAttributes, Entry};
 use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
-use crate::symbols::parse_attrs;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_hir as hir;
@@ -167,39 +166,37 @@ impl<'tcx> CodegenCx<'tcx> {
         if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
         }
-        for attr in parse_attrs(self, self.tcx.hir().attrs(hir_param.hir_id)) {
-            match attr {
-                SpirvAttribute::Builtin(builtin) => {
-                    self.emit_global().decorate(
-                        variable,
-                        Decoration::BuiltIn,
-                        std::iter::once(Operand::BuiltIn(builtin)),
-                    );
-                    has_location = false;
-                }
-                SpirvAttribute::DescriptorSet(index) => {
-                    self.emit_global().decorate(
-                        variable,
-                        Decoration::DescriptorSet,
-                        std::iter::once(Operand::LiteralInt32(index)),
-                    );
-                    has_location = false;
-                }
-                SpirvAttribute::Binding(index) => {
-                    self.emit_global().decorate(
-                        variable,
-                        Decoration::Binding,
-                        std::iter::once(Operand::LiteralInt32(index)),
-                    );
-                    has_location = false;
-                }
-                SpirvAttribute::Flat => {
-                    self.emit_global()
-                        .decorate(variable, Decoration::Flat, std::iter::empty());
-                }
-                _ => {}
-            }
+
+        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
+        if let Some(builtin) = attrs.builtin.map(|attr| attr.value) {
+            self.emit_global().decorate(
+                variable,
+                Decoration::BuiltIn,
+                std::iter::once(Operand::BuiltIn(builtin)),
+            );
+            has_location = false;
         }
+        if let Some(index) = attrs.descriptor_set.map(|attr| attr.value) {
+            self.emit_global().decorate(
+                variable,
+                Decoration::DescriptorSet,
+                std::iter::once(Operand::LiteralInt32(index)),
+            );
+            has_location = false;
+        }
+        if let Some(index) = attrs.binding.map(|attr| attr.value) {
+            self.emit_global().decorate(
+                variable,
+                Decoration::Binding,
+                std::iter::once(Operand::LiteralInt32(index)),
+            );
+            has_location = false;
+        }
+        if attrs.flat.is_some() {
+            self.emit_global()
+                .decorate(variable, Decoration::Flat, std::iter::empty());
+        }
+
         // Assign locations from left to right, incrementing each storage class
         // individually.
         // TODO: Is this right for UniformConstant? Do they share locations with
