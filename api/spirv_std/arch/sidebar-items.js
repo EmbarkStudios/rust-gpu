@@ -1,1 +1,1 @@
-initSidebarItems({});
+initSidebarItems({"fn":[["emit_vertex","Emits the current values of all output variables to the current output primitive. After execution, the values of all output variables are undefined.  Requires capability `Geometry`."],["end_primitive","Finish the current primitive and start a new one. No vertex is emitted. Requires capability `Geometry`."]]});
