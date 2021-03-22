@@ -57,15 +57,9 @@ impl From<ExecutionModel> for Entry {
     }
 }
 
-// NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside
-// `tests/ui/spirv-attr` should be updated (and new ones added if necessary).
+/// `struct` types that are used to represent special SPIR-V types.
 #[derive(Debug, Clone)]
-pub enum SpirvAttribute {
-    Builtin(BuiltIn),
-    StorageClass(StorageClass),
-    Entry(Entry),
-    DescriptorSet(u32),
-    Binding(u32),
+pub enum IntrinsicType {
     ImageType {
         dim: Dim,
         depth: u32,
@@ -77,6 +71,18 @@ pub enum SpirvAttribute {
     },
     Sampler,
     SampledImage,
+}
+
+// NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside
+// `tests/ui/spirv-attr` should be updated (and new ones added if necessary).
+#[derive(Debug, Clone)]
+pub enum SpirvAttribute {
+    Builtin(BuiltIn),
+    StorageClass(StorageClass),
+    Entry(Entry),
+    DescriptorSet(u32),
+    Binding(u32),
+    IntrinsicType(IntrinsicType),
     Block,
     Flat,
     UnrollLoops,
@@ -174,9 +180,7 @@ impl CheckSpirvAttrVisitor<'_> {
                 },
 
                 SpirvAttribute::StorageClass(_)
-                | SpirvAttribute::ImageType { .. }
-                | SpirvAttribute::Sampler
-                | SpirvAttribute::SampledImage
+                | SpirvAttribute::IntrinsicType(_)
                 | SpirvAttribute::Block => match target {
                     Target::Struct => {
                         // FIXME(eddyb) further check type attribute validity,
