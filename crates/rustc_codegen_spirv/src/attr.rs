@@ -297,6 +297,31 @@ impl CheckSpirvAttrVisitor<'_> {
                                 span,
                                 "attribute is only valid on a parameter of an entry-point function",
                             );
+                        } else {
+                            // FIXME(eddyb) should we just remove all 5 of these storage class
+                            // attributes, instead of disallowing them here?
+                            if let SpirvAttribute::StorageClass(storage_class) = parsed_attr {
+                                let valid = match storage_class {
+                                    StorageClass::Input | StorageClass::Output => {
+                                        Err("is the default and should not be explicitly specified")
+                                    }
+
+                                    StorageClass::Private
+                                    | StorageClass::Function
+                                    | StorageClass::Generic => {
+                                        Err("can not be used as part of an entry's interface")
+                                    }
+
+                                    _ => Ok(()),
+                                };
+
+                                if let Err(msg) = valid {
+                                    self.tcx.sess.span_err(
+                                        span,
+                                        &format!("`{:?}` storage class {}", storage_class, msg),
+                                    );
+                                }
+                            }
                         }
                         Ok(())
                     }
