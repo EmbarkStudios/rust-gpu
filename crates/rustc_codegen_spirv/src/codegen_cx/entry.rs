@@ -148,20 +148,51 @@ impl<'tcx> CodegenCx<'tcx> {
         hir_param: &hir::Param<'tcx>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
     ) -> (Word, StorageClass) {
-        let writable = match layout.ty.kind() {
-            // FIXME(eddyb) also take into account `&T` interior mutability,
-            // i.e. it's only immutable if `T: Freeze`, which we should check.
-            // FIXME(eddyb) also check the type for compatibility with being
-            // part of the interface, including potentially `Sync`ness etc.
-            TyKind::Ref(_, _, m) => *m == hir::Mutability::Mut,
+        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
 
-            _ => self.tcx.sess.span_fatal(
-                hir_param.span,
-                &format!(
-                    "invalid entry param type `{}` (expected `&T` or `&mut T`)",
-                    layout.ty
+        // FIXME(eddyb) attribute validation should be done ahead of time.
+        // FIXME(eddyb) also take into account `&T` interior mutability,
+        // i.e. it's only immutable if `T: Freeze`, which we should check.
+        // FIXME(eddyb) also check the type for compatibility with being
+        // part of the interface, including potentially `Sync`ness etc.
+        let storage_class = if let Some(storage_class_attr) = attrs.storage_class {
+            let storage_class = storage_class_attr.value;
+            let expected_mutbl = match storage_class {
+                StorageClass::UniformConstant
+                | StorageClass::Input
+                | StorageClass::PushConstant => hir::Mutability::Not,
+
+                _ => hir::Mutability::Mut,
+            };
+
+            match layout.ty.kind() {
+                TyKind::Ref(_, _, m) if *m == expected_mutbl => storage_class,
+
+                _ => self.tcx.sess.span_fatal(
+                    hir_param.span,
+                    &format!(
+                        "invalid entry param type `{}` for storage class `{:?}` \
+                         (expected `&{}T`)",
+                        layout.ty,
+                        storage_class,
+                        expected_mutbl.prefix_str()
+                    ),
                 ),
-            ),
+            }
+        } else {
+            match layout.ty.kind() {
+                TyKind::Ref(_, _, hir::Mutability::Mut) => StorageClass::Output,
+
+                TyKind::Ref(_, _, hir::Mutability::Not) => StorageClass::Input,
+
+                _ => self.tcx.sess.span_fatal(
+                    hir_param.span,
+                    &format!(
+                        "invalid entry param type `{}` (expected `&T` or `&mut T`)",
+                        layout.ty
+                    ),
+                ),
+            }
         };
 
         // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
@@ -171,7 +202,6 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global().name(variable, ident.to_string());
         }
 
-        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
         let mut decoration_supersedes_location = false;
         if let Some(builtin) = attrs.builtin.map(|attr| attr.value) {
             self.emit_global().decorate(
@@ -201,42 +231,6 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global()
                 .decorate(variable, Decoration::Flat, std::iter::empty());
         }
-
-        let storage_class = if let Some(storage_class_attr) = attrs.storage_class {
-            // FIXME(eddyb) attribute validation should be done ahead of time.
-            let valid = match storage_class_attr.value {
-                StorageClass::UniformConstant
-                | StorageClass::Input
-                | StorageClass::PushConstant
-                    if writable =>
-                {
-                    Err("can only be used with immutable references")
-                }
-
-                StorageClass::Input | StorageClass::Output => {
-                    Err("is the default and should not be explicitly specified")
-                }
-
-                StorageClass::Private | StorageClass::Function | StorageClass::Generic => {
-                    Err("can not be used as part of an entry's interface")
-                }
-
-                _ => Ok(()),
-            };
-
-            if let Err(msg) = valid {
-                self.tcx.sess.span_err(
-                    storage_class_attr.span,
-                    &format!("`{:?}` storage class {}", storage_class_attr.value, msg),
-                );
-            }
-
-            storage_class_attr.value
-        } else if writable {
-            StorageClass::Output
-        } else {
-            StorageClass::Input
-        };
 
         // FIXME(eddyb) check whether the storage class is compatible with the
         // specific shader stage of this entry-point, and any decorations
