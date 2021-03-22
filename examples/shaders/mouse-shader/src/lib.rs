@@ -143,7 +143,7 @@ impl Painter {
 
 #[spirv(fragment)]
 pub fn main_fs(
-    #[spirv(frag_coord)] in_frag_coord: &Vec4,
+    #[spirv(frag_coord)] in_frag_coord: Vec4,
     #[spirv(push_constant)] constants: &ShaderConstants,
     output: &mut Vec4,
 ) {
@@ -251,9 +251,7 @@ pub fn main_fs(
 }
 
 #[spirv(vertex)]
-pub fn main_vs(#[spirv(vertex_index)] vert_idx: &i32, #[spirv(position)] builtin_pos: &mut Vec4) {
-    let vert_idx = *vert_idx;
-
+pub fn main_vs(#[spirv(vertex_index)] vert_idx: i32, #[spirv(position)] builtin_pos: &mut Vec4) {
     // Create a "full screen triangle" by mapping the vertex index.
     // ported from https://www.saschawillems.de/blog/2016/08/13/vulkan-tutorial-on-rendering-a-fullscreen-quad-without-buffers/
     let uv = vec2(((vert_idx << 1) & 2) as f32, (vert_idx & 2) as f32);

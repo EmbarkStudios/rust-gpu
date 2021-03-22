@@ -3,8 +3,8 @@
 use spirv_std as _;
 
 #[spirv(fragment)]
-pub fn main(i: &i32) {
-    while *i < 10 {
+pub fn main(i: i32) {
+    while i < 10 {
         break;
     }
 }

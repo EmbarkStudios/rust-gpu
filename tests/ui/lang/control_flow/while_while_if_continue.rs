@@ -3,10 +3,10 @@
 use spirv_std as _;
 
 #[spirv(fragment)]
-pub fn main(i: &i32) {
-    while *i < 20 {
-        while *i < 10 {
-            if *i > 5 {
+pub fn main(i: i32) {
+    while i < 20 {
+        while i < 10 {
+            if i > 5 {
                 continue;
             }
         }
