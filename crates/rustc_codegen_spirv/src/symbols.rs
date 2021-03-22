@@ -1,8 +1,7 @@
+use crate::attr::{Entry, ExecutionModeExtra, SpirvAttribute};
 use crate::builder::libm_intrinsics;
 use crate::codegen_cx::CodegenCx;
-use rspirv::spirv::{
-    AccessQualifier, BuiltIn, Dim, ExecutionMode, ExecutionModel, ImageFormat, StorageClass,
-};
+use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_data_structures::captures::Captures;
 use rustc_span::symbol::{Ident, Symbol};
@@ -408,71 +407,6 @@ impl Symbols {
         thread_local!(static SYMBOLS: Rc<Symbols> = Rc::new(Symbols::new()));
         SYMBOLS.with(Rc::clone)
     }
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct ExecutionModeExtra {
-    args: [u32; 3],
-    len: u8,
-}
-
-impl ExecutionModeExtra {
-    fn new(args: impl AsRef<[u32]>) -> Self {
-        let _args = args.as_ref();
-        let mut args = [0; 3];
-        args[.._args.len()].copy_from_slice(_args);
-        let len = _args.len() as u8;
-        Self { args, len }
-    }
-}
-
-impl AsRef<[u32]> for ExecutionModeExtra {
-    fn as_ref(&self) -> &[u32] {
-        &self.args[..self.len as _]
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Entry {
-    pub execution_model: ExecutionModel,
-    pub execution_modes: Vec<(ExecutionMode, ExecutionModeExtra)>,
-    pub name: Option<Symbol>,
-}
-
-impl From<ExecutionModel> for Entry {
-    fn from(execution_model: ExecutionModel) -> Self {
-        Self {
-            execution_model,
-            execution_modes: Vec::new(),
-            name: None,
-        }
-    }
-}
-
-// FIXME(eddyb) maybe move this to `attr`?
-// NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside
-// `tests/ui/spirv-attr` should be updated (and new ones added if necessary).
-#[derive(Debug, Clone)]
-pub enum SpirvAttribute {
-    Builtin(BuiltIn),
-    StorageClass(StorageClass),
-    Entry(Entry),
-    DescriptorSet(u32),
-    Binding(u32),
-    ImageType {
-        dim: Dim,
-        depth: u32,
-        arrayed: u32,
-        multisampled: u32,
-        sampled: u32,
-        image_format: ImageFormat,
-        access_qualifier: Option<AccessQualifier>,
-    },
-    Sampler,
-    SampledImage,
-    Block,
-    Flat,
-    UnrollLoops,
 }
 
 // FIXME(eddyb) maybe move this to `attr`?

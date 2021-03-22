@@ -1,9 +1,10 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
+use crate::attr::SpirvAttribute;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::decorations::UnrollLoopsDecoration;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, SpirvAttribute};
+use crate::symbols::parse_attrs;
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
