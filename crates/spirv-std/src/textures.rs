@@ -292,6 +292,106 @@ impl Image2dArray {
     }
 }
 
+#[spirv(image_type(
+    // sampled_type is hardcoded to f32 for now
+    dim = "DimCube",
+    depth = 0,
+    arrayed = 0,
+    multisampled = 0,
+    sampled = 1,
+    image_format = "Unknown"
+))]
+#[derive(Copy, Clone)]
+pub struct Cubemap {
+    _x: u32,
+}
+
+impl Cubemap {
+    #[spirv_std_macros::gpu_only]
+    #[cfg(feature = "const-generics")]
+    pub fn sample<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+    ) -> V {
+        unsafe {
+            let mut result = Default::default();
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleImplicitLod _ %sampledImage %coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+            );
+            result
+        }
+    }
+    #[spirv_std_macros::gpu_only]
+    #[cfg(feature = "const-generics")]
+    /// Sample the image at a coordinate by a lod
+    pub fn sample_by_lod<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        lod: f32,
+    ) -> V {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%lod = OpLoad _ {lod}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleExplicitLod _ %sampledImage %coordinate Lod %lod",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                lod = in(reg) &lod
+            );
+        }
+        result
+    }
+    #[spirv_std_macros::gpu_only]
+    #[cfg(feature = "const-generics")]
+    /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
+    pub fn sample_by_gradient<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        gradient_dx: impl Vector<f32, 3>,
+        gradient_dy: impl Vector<f32, 3>,
+    ) -> V {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%gradient_dx = OpLoad _ {gradient_dx}",
+                "%gradient_dy = OpLoad _ {gradient_dy}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleExplicitLod _ %sampledImage %coordinate Grad %gradient_dx %gradient_dy",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                gradient_dx = in(reg) &gradient_dx,
+                gradient_dy = in(reg) &gradient_dy,
+            );
+        }
+        result
+    }
+}
+
 #[spirv(sampled_image)]
 #[derive(Copy, Clone)]
 pub struct SampledImage<I> {
