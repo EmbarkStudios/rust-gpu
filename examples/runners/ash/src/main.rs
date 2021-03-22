@@ -776,16 +776,6 @@ impl RenderCtx {
             for framebuffer in self.framebuffers.drain(..) {
                 self.base.device.destroy_framebuffer(framebuffer, None)
             }
-            // command buffers
-            self.base.device.free_command_buffers(
-                self.commands.pool,
-                &[
-                    self.commands.draw_command_buffer,
-                    self.commands.setup_command_buffer,
-                ],
-            );
-            // render pass
-            self.base.device.destroy_render_pass(self.render_pass, None);
             // image views
             for image_view in self.image_views.drain(..) {
                 self.base.device.destroy_image_view(image_view, None);
@@ -814,22 +804,6 @@ impl RenderCtx {
         self.swapchain = swapchain;
         self.extent = extent;
         self.image_views = self.base.create_image_views(self.swapchain);
-        self.render_pass = self.base.create_render_pass();
-        let command_buffers = {
-            let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
-                .command_buffer_count(2)
-                .command_pool(self.commands.pool)
-                .level(vk::CommandBufferLevel::PRIMARY);
-
-            unsafe {
-                self.base
-                    .device
-                    .allocate_command_buffers(&command_buffer_allocate_info)
-                    .unwrap()
-            }
-        };
-        self.commands.setup_command_buffer = command_buffers[0];
-        self.commands.draw_command_buffer = command_buffers[1];
         self.framebuffers =
             self.base
                 .create_framebuffers(&self.image_views, self.render_pass, extent);
@@ -976,17 +950,10 @@ impl RenderCtx {
                 .reset_fences(&[self.sync.draw_commands_reuse_fence])
                 .expect("Reset fences failed.");
 
-            self.base
-                .device
-                .reset_command_buffer(
-                    self.commands.draw_command_buffer,
-                    vk::CommandBufferResetFlags::RELEASE_RESOURCES,
-                )
-                .expect("Reset command buffer failed.");
-
             let command_buffer_begin_info = vk::CommandBufferBeginInfo::builder()
                 .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
 
+            // The command buffer is reset implicitly.
             self.base
                 .device
                 .begin_command_buffer(
@@ -1038,7 +1005,8 @@ impl Drop for RenderCtx {
                 .destroy_fence(self.sync.draw_commands_reuse_fence, None);
             self.base
                 .device
-                .destroy_fence(self.sync.setup_commands_reuse_fence, None);
+                .free_command_buffers(self.commands.pool, &[self.commands.draw_command_buffer]);
+            self.base.device.destroy_render_pass(self.render_pass, None);
             self.cleanup_pipelines();
             self.cleanup_swapchain();
             self.base
@@ -1055,7 +1023,6 @@ pub struct RenderSync {
     pub present_complete_semaphore: vk::Semaphore,
     pub rendering_complete_semaphore: vk::Semaphore,
     pub draw_commands_reuse_fence: vk::Fence,
-    pub setup_commands_reuse_fence: vk::Fence,
 }
 
 impl RenderSync {
@@ -1070,11 +1037,6 @@ impl RenderSync {
                 .device
                 .create_fence(&fence_create_info, None)
                 .expect("Create fence failed.");
-            let setup_commands_reuse_fence = base
-                .device
-                .create_fence(&fence_create_info, None)
-                .expect("Create fence failed.");
-
             let present_complete_semaphore = base
                 .device
                 .create_semaphore(&semaphore_create_info, None)
@@ -1088,7 +1050,6 @@ impl RenderSync {
                 present_complete_semaphore,
                 rendering_complete_semaphore,
                 draw_commands_reuse_fence,
-                setup_commands_reuse_fence,
             }
         }
     }
@@ -1097,7 +1058,6 @@ impl RenderSync {
 pub struct RenderCommandPool {
     pub pool: vk::CommandPool,
     pub draw_command_buffer: vk::CommandBuffer,
-    pub setup_command_buffer: vk::CommandBuffer,
 }
 
 impl RenderCommandPool {
@@ -1116,7 +1076,7 @@ impl RenderCommandPool {
 
         let command_buffers = {
             let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
-                .command_buffer_count(2)
+                .command_buffer_count(1)
                 .command_pool(pool)
                 .level(vk::CommandBufferLevel::PRIMARY);
 
@@ -1127,13 +1087,9 @@ impl RenderCommandPool {
             }
         };
 
-        let setup_command_buffer = command_buffers[0];
-        let draw_command_buffer = command_buffers[1];
-
         Self {
             pool,
-            draw_command_buffer,
-            setup_command_buffer,
+            draw_command_buffer: command_buffers[0],
         }
     }
 }
