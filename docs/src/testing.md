@@ -25,5 +25,19 @@ normalised output, you can do this by passing a `--bless` flag to
 cargo compiletest --bless
 ```
 
+### Filtering Tests
+
+When working on tests, you may need to run `cargo compiletest` a few times,
+while changing only a small number of tests. You can avoid having to run all
+the other (unrelated) tests, by passing substrings of their paths, to
+`cargo compiletest`, for example:
+
+```bash
+cargo compiletest arch/u image
+```
+
+The above command will only test `ui/arch/u_*.rs` and `ui/image/*.rs`, and skip
+everything else. You can also add `--bless` to update expected outputs, as well.
+
 [`compiletest`]: https://github.com/laumann/compiletest-rs
 [rustc-dev-guide]: https://rustc-dev-guide.rust-lang.org/tests/intro.html

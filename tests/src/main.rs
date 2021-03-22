@@ -10,12 +10,16 @@ use structopt::StructOpt;
     name = "cargo compiletest",
     no_version,
     // HACK(eddyb) avoid "USAGE:" saying "compiletests".
-    usage = "cargo compiletest [FLAGS]",
+    usage = "cargo compiletest [FLAGS] [FILTER]..."
 )]
 struct Opt {
     /// Automatically update stderr/stdout files
     #[structopt(long)]
     bless: bool,
+
+    /// Only run tests that match these filters
+    #[structopt(name = "FILTER")]
+    filters: Vec<String>,
 }
 
 const TARGET: &str = "spirv-unknown-unknown";
@@ -130,6 +134,7 @@ fn run_mode(
     config.src_base = tests_dir.join(mode);
     config.build_base = compiletest_build_dir;
     config.bless = opt.bless;
+    config.filters = opt.filters;
     config.clean_rmeta();
 
     compiletest::run_tests(&config);
