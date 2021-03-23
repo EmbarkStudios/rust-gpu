@@ -950,10 +950,17 @@ impl RenderCtx {
                 .reset_fences(&[self.sync.draw_commands_reuse_fence])
                 .expect("Reset fences failed.");
 
+            // As we only have a single command buffer, we can simply reset the entire pool instead of just the buffer.
+            // Doing this is a little bit faster, see
+            // https://arm-software.github.io/vulkan_best_practice_for_mobile_developers/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.html#resetting-the-command-pool
+            self.base
+                .device
+                .reset_command_pool(self.commands.pool, vk::CommandPoolResetFlags::empty())
+                .expect("Reset command pool failed.");
+
             let command_buffer_begin_info = vk::CommandBufferBeginInfo::builder()
                 .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
 
-            // The command buffer is reset implicitly.
             self.base
                 .device
                 .begin_command_buffer(
@@ -1063,9 +1070,8 @@ pub struct RenderCommandPool {
 impl RenderCommandPool {
     pub fn new(base: &RenderBase) -> Self {
         let pool = {
-            let pool_create_info = vk::CommandPoolCreateInfo::builder()
-                .flags(vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER)
-                .queue_family_index(base.queue_family_index);
+            let pool_create_info =
+                vk::CommandPoolCreateInfo::builder().queue_family_index(base.queue_family_index);
 
             unsafe {
                 base.device
