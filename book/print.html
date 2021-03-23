@@ -428,9 +428,9 @@ pub fn compute_2() {}
 <h2 id="builtins"><a class="header" href="#builtins">Builtins</a></h2>
 <p>When declaring inputs and outputs, sometimes you want to declare it as a &quot;builtin&quot;. This means many things, but one example is <code>gl_Position</code> from glsl - the GPU assigns inherent meaning to the variable and uses it for placing the vertex in clip space. The equivalent in rust-gpu is called <code>position</code>.</p>
 <p>Example:</p>
-<pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
+<pre><pre class="playground"><code class="language-rust">#[spirv(vertex)]
 fn main(
-    #[spirv(position)] mut out_pos: Output&lt;Vec4&gt;,
+    #[spirv(position)] out_pos: &amp;mut Vec4,
 ) { }
 </code></pre></pre>
 <p>Common values are <code>#[spirv(position)]</code>, <code>#[spirv(vertex_id)]</code>, and many more. A list of all supported names can be found in <a href="https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.BuiltIn.html">spirv_headers</a> - convert the enum name to snake_case for the rust-gpu attribute name.</p>
@@ -439,7 +439,7 @@ fn main(
 <p>Example:</p>
 <pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
 fn main(
-    #[spirv(descriptor_set = 2, binding = 5)] mut var: Uniform&lt;Vec4&gt;,
+    #[spirv(uniform, descriptor_set = 2, binding = 5)] var: &amp;mut Vec4,
 ) { }
 </code></pre></pre>
 <p>Both descriptor_set and binding take an integer argument that specifies the uniform's index.</p>
@@ -454,13 +454,13 @@ struct Thing {
 }
 
 #[spirv(fragment)]
-fn main(obj: PushConstant&lt;ShaderConstants&gt;) { }
+fn main(#[spirv(push_constant)] obj: &amp;ShaderConstants) { }
 </code></pre></pre>
 <h2 id="flat"><a class="header" href="#flat">Flat</a></h2>
 <p>The flat attribute corresponds to the flat keyword in glsl - in other words, the data is not interpolated across the triangle when invoking the fragment shader.</p>
 <p>Example:</p>
 <pre><pre class="playground"><code class="language-rust">#[spirv(fragment)]
-fn main(#[spirv(flat)] obj: Input&lt;u32&gt;) { }
+fn main(#[spirv(flat)] obj: &amp;u32) { }
 </code></pre></pre>
 <h1 id="inline-assembly"><a class="header" href="#inline-assembly">Inline Assembly</a></h1>
 <p>Rust-GPU has support for inline SPIR-V assembly. In addition the backend

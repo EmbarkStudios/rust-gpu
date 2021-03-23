@@ -479,6 +479,30 @@
 <span id="476">476</span>
 <span id="477">477</span>
 <span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! `#[spirv(...)]` attribute support.</span>
 <span class="doccomment">//!</span>
@@ -561,7 +585,6 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpirvAttribute</span> {
     <span class="comment">// `struct` attributes:</span>
-    <span class="ident">StorageClass</span>(<span class="ident">StorageClass</span>),
     <span class="ident">IntrinsicType</span>(<span class="ident">IntrinsicType</span>),
     <span class="ident">Block</span>,
 
@@ -569,6 +592,7 @@
     <span class="ident">Entry</span>(<span class="ident">Entry</span>),
 
     <span class="comment">// (entry) `fn` parameter attributes:</span>
+    <span class="ident">StorageClass</span>(<span class="ident">StorageClass</span>),
     <span class="ident">Builtin</span>(<span class="ident">BuiltIn</span>),
     <span class="ident">DescriptorSet</span>(<span class="ident">u32</span>),
     <span class="ident">Binding</span>(<span class="ident">u32</span>),
@@ -592,7 +616,6 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AggregatedSpirvAttributes</span> {
     <span class="comment">// `struct` attributes:</span>
-    <span class="kw">pub</span> <span class="ident">storage_class</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">StorageClass</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">intrinsic_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">IntrinsicType</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">block</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
 
@@ -600,6 +623,7 @@
     <span class="kw">pub</span> <span class="ident">entry</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">Entry</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 
     <span class="comment">// (entry) `fn` parameter attributes:</span>
+    <span class="kw">pub</span> <span class="ident">storage_class</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">StorageClass</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">builtin</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">BuiltIn</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">descriptor_set</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">binding</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -669,14 +693,14 @@
 
         <span class="kw">use</span> <span class="ident">SpirvAttribute</span>::<span class="kw-2">*</span>;
         <span class="kw">match</span> <span class="ident">attr</span> {
-            <span class="ident">StorageClass</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage_class</span>, <span class="ident">value</span>, <span class="ident">span</span>, <span class="string">&quot;storage class&quot;</span>)
-            }
             <span class="ident">IntrinsicType</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">intrinsic_type</span>, <span class="ident">value</span>, <span class="ident">span</span>, <span class="string">&quot;intrinsic type&quot;</span>)
             }
             <span class="ident">Block</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">block</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(block)]&quot;</span>),
             <span class="ident">Entry</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">entry</span>, <span class="ident">value</span>, <span class="ident">span</span>, <span class="string">&quot;entry-point&quot;</span>),
+            <span class="ident">StorageClass</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage_class</span>, <span class="ident">value</span>, <span class="ident">span</span>, <span class="string">&quot;storage class&quot;</span>)
+            }
             <span class="ident">Builtin</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">builtin</span>, <span class="ident">value</span>, <span class="ident">span</span>, <span class="string">&quot;builtin&quot;</span>),
             <span class="ident">DescriptorSet</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">descriptor_set</span>,
@@ -741,9 +765,7 @@
             <span class="kw">struct</span> <span class="ident">Expected</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">T</span>);
 
             <span class="kw">let</span> <span class="ident">valid_target</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">parsed_attr</span> {
-                <span class="ident">SpirvAttribute</span>::<span class="ident">StorageClass</span>(<span class="kw">_</span>)
-                <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">IntrinsicType</span>(<span class="kw">_</span>)
-                <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Block</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">target</span> {
+                <span class="ident">SpirvAttribute</span>::<span class="ident">IntrinsicType</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Block</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">target</span> {
                     <span class="ident">Target</span>::<span class="ident">Struct</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="comment">// FIXME(eddyb) further check type attribute validity,</span>
                         <span class="comment">// e.g. layout, generics, other attributes, etc.</span>
@@ -765,7 +787,8 @@
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Expected</span>(<span class="string">&quot;function&quot;</span>)),
                 },
 
-                <span class="ident">SpirvAttribute</span>::<span class="ident">Builtin</span>(<span class="kw">_</span>)
+                <span class="ident">SpirvAttribute</span>::<span class="ident">StorageClass</span>(<span class="kw">_</span>)
+                <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Builtin</span>(<span class="kw">_</span>)
                 <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">DescriptorSet</span>(<span class="kw">_</span>)
                 <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Binding</span>(<span class="kw">_</span>)
                 <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Flat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">target</span> {
@@ -780,6 +803,31 @@
                                 <span class="ident">span</span>,
                                 <span class="string">&quot;attribute is only valid on a parameter of an entry-point function&quot;</span>,
                             );
+                        } <span class="kw">else</span> {
+                            <span class="comment">// FIXME(eddyb) should we just remove all 5 of these storage class</span>
+                            <span class="comment">// attributes, instead of disallowing them here?</span>
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">SpirvAttribute</span>::<span class="ident">StorageClass</span>(<span class="ident">storage_class</span>) <span class="op">=</span> <span class="ident">parsed_attr</span> {
+                                <span class="kw">let</span> <span class="ident">valid</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">storage_class</span> {
+                                    <span class="ident">StorageClass</span>::<span class="ident">Input</span> <span class="op">|</span> <span class="ident">StorageClass</span>::<span class="ident">Output</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="prelude-val">Err</span>(<span class="string">&quot;is the default and should not be explicitly specified&quot;</span>)
+                                    }
+
+                                    <span class="ident">StorageClass</span>::<span class="ident">Private</span>
+                                    <span class="op">|</span> <span class="ident">StorageClass</span>::<span class="ident">Function</span>
+                                    <span class="op">|</span> <span class="ident">StorageClass</span>::<span class="ident">Generic</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="prelude-val">Err</span>(<span class="string">&quot;can not be used as part of an entry&#39;s interface&quot;</span>)
+                                    }
+
+                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+                                };
+
+                                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">msg</span>) <span class="op">=</span> <span class="ident">valid</span> {
+                                    <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                                        <span class="ident">span</span>,
+                                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;`{:?}` storage class {}&quot;</span>, <span class="ident">storage_class</span>, <span class="ident">msg</span>),
+                                    );
+                                }
+                            }
                         }
                         <span class="prelude-val">Ok</span>(())
                     }
