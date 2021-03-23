@@ -5,16 +5,16 @@ use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
+use rustc_codegen_ssa::traits::BaseTypeMethods;
 use rustc_hir as hir;
-use rustc_middle::ty::layout::TyAndLayout;
+use rustc_middle::ty::layout::{HasParamEnv, TyAndLayout};
 use rustc_middle::ty::{Instance, Ty, TyKind};
 use rustc_span::Span;
 use rustc_target::abi::{
     call::{ArgAbi, ArgAttribute, ArgAttributes, FnAbi, PassMode},
-    LayoutOf,
-    Size,
+    LayoutOf, Size,
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, iter};
 
 impl<'tcx> CodegenCx<'tcx> {
     // Entry points declare their "interface" (all uniforms, inputs, outputs, etc.) as parameters.
@@ -114,11 +114,8 @@ impl<'tcx> CodegenCx<'tcx> {
             arguments: vec![],
         }
         .def(span, self);
-        let (entry_func_return_type, entry_func_arg_types) = match self.lookup_type(entry_func.ty) {
-            SpirvType::Function {
-                return_type,
-                arguments,
-            } => (return_type, arguments),
+        let entry_func_return_type = match self.lookup_type(entry_func.ty) {
+            SpirvType::Function { return_type, .. } => return_type,
             other => self.tcx.sess.fatal(&format!(
                 "Invalid entry_stub type: {}",
                 other.debug(entry_func.ty, self)
@@ -126,14 +123,14 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let mut decoration_locations = HashMap::new();
         // Create OpVariables before OpFunction so they're global instead of local vars.
-        let declared_params = entry_fn_abi
-            .args
+        let declared_params = arg_abis
             .iter()
             .zip(hir_params)
             .map(|(entry_fn_arg, hir_param)| {
                 self.declare_parameter(entry_fn_arg.layout, hir_param, &mut decoration_locations)
             })
             .collect::<Vec<_>>();
+        let len_t = self.type_isize();
         let mut emit = self.emit_global();
         let fn_id = emit
             .begin_function(void, None, FunctionControl::NONE, fn_void_void)
@@ -142,14 +139,41 @@ impl<'tcx> CodegenCx<'tcx> {
         // Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s).
         let arguments: Vec<_> = declared_params
             .iter()
-            .zip(&entry_fn_abi.args)
+            .zip(arg_abis)
             .zip(hir_params)
-            .map(|((&(var, storage_class), entry_fn_arg), hir_param)| {
+            .flat_map(|((&(var, storage_class), entry_fn_arg), hir_param)| {
                 match entry_fn_arg.layout.ty.kind() {
-                    TyKind::Ref(..) => var,
-
+                    TyKind::Ref(_, ty, _) if ty.is_sized(self.tcx.at(span), self.param_env()) => iter::once(var).chain(None),
+                    TyKind::Ref(_, ty, _) => {
+                        match ty.kind() {
+                            TyKind::Adt(adt_def, substs) => {
+                                let (member_idx, field_def) = adt_def.all_fields().enumerate().last().unwrap();
+                                let field_ty = field_def.ty(self.tcx, substs);
+                                if !matches!(field_ty.kind(), TyKind::Slice(..)) {
+                                    self.tcx.sess.span_fatal(
+                                        hir_param.ty_span,
+                                        "DST parameters are currently restricted to a reference to a struct whose last field is a slice.",
+                                    )
+                                }
+                                let len = emit
+                                    .array_length(len_t, None, var, member_idx as u32)
+                                    .unwrap();
+                                iter::once(var).chain(Some(len))
+                            }
+                            TyKind::Slice(..) | TyKind::Str => self.tcx.sess.span_fatal(
+                                hir_param.ty_span,
+                                "Straight slices are not yet supported, wrap the slice in a newtype.",
+                            ),
+                            // TODO: Is this needed?
+                            TyKind::Dynamic(..) => self.tcx.sess.span_fatal(
+                                hir_param.ty_span,
+                                "Trait objects are not supported.",
+                            ),
+                            _ => unreachable!(),
+                        }
+                    }
                     _ => match entry_fn_arg.mode {
-                        PassMode::Indirect { .. } => var,
+                        PassMode::Indirect { .. } => iter::once(var).chain(None),
                         PassMode::Direct(_) => {
                             assert_eq!(storage_class, StorageClass::Input);
 
@@ -158,8 +182,10 @@ impl<'tcx> CodegenCx<'tcx> {
                             let value_spirv_type =
                                 entry_fn_arg.layout.spirv_type(hir_param.span, self);
 
-                            emit.load(value_spirv_type, None, var, None, std::iter::empty())
-                                .unwrap()
+                            let loaded_var = emit
+                                .load(value_spirv_type, None, var, None, iter::empty())
+                                .unwrap();
+                            iter::once(loaded_var).chain(None)
                         }
                         _ => unreachable!(),
                     },
@@ -195,7 +221,6 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         layout: TyAndLayout<'tcx>,
         hir_param: &hir::Param<'tcx>,
-        arg_t: Word,
         decoration_locations: &mut HashMap<StorageClass, u32>,
     ) -> (Word, StorageClass) {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
