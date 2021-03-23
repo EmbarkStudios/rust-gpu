@@ -1,11 +1,10 @@
 // Tests muiltplying a `Mat3` by a `Vec3`.
 // build-pass
 
-use spirv_std::storage_class::{Input, Output};
+use spirv_std as _;
 
 #[spirv(fragment)]
-pub fn main(input: Input<glam::Mat3>, mut output: Output<glam::Vec3>) {
-    let input = *input;
+pub fn main(input: glam::Mat3, output: &mut glam::Vec3) {
     let vector = input * glam::Vec3::new(1.0, 2.0, 3.0);
     *output = vector;
 }

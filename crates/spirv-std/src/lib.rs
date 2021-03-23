@@ -74,7 +74,6 @@ pub mod float;
 pub mod integer;
 pub mod scalar;
 pub(crate) mod sealed;
-pub mod storage_class;
 mod textures;
 pub mod vector;
 

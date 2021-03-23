@@ -19,12 +19,13 @@ However, many things aren't implemented yet: for example, loops and switches are
 ![Sky shader](docs/assets/sky.jpg)
 
 ```rust
-use spirv_std::{glam::{Vec3, Vec4, vec2, vec3}, storage_class::{Input, Output}};
+use glam::{Vec3, Vec4, vec2, vec3};
 
 #[spirv(fragment)]
 pub fn main(
-    #[spirv(frag_coord)] in_frag_coord: Input<Vec4>,
-    mut output: Output<Vec4>,
+    #[spirv(frag_coord)] in_frag_coord: &Vec4,
+    #[spirv(push_constant)] constants: &ShaderConstants,
+    output: &mut Vec4,
 ) {
     let frag_coord = vec2(in_frag_coord.x, in_frag_coord.y);
     let mut uv = (frag_coord - 0.5 * vec2(constants.width as f32, constants.height as f32))
@@ -61,7 +62,7 @@ Our hope with this project is that we push the industry forward by bringing an e
 
 ### Why Embark?
 
-At Embark, we've been building our own new game engine from the ground up in Rust. We have previous experience in-house developing the [RLSL](https://github.com/MaikKlein/rlsl) prototype, and we have a team of excellent rendering engineers that are familiar with the problems in current shading languages both from games, game engines and other industries. So, we believe we are uniquely positioned to attempt solving this problem. 
+At Embark, we've been building our own new game engine from the ground up in Rust. We have previous experience in-house developing the [RLSL](https://github.com/MaikKlein/rlsl) prototype, and we have a team of excellent rendering engineers that are familiar with the problems in current shading languages both from games, game engines and other industries. So, we believe we are uniquely positioned to attempt solving this problem.
 
 We want to streamline our own internal development with a single great language, build an open source graphics ecosystem and community, facilitate code-sharing between GPU and CPU, and most importantly: to enable our (future) users, and fellow developers, to more rapidly build great looking and engaging experiences.
 
@@ -71,7 +72,7 @@ If we do this project right, one wouldn't necessarily need an entire team of ren
 
 The scope of this overall project is quite broad, but is in multiple stages
 
-- `rustc` compiler backend to generate [SPIR-V], plugging in via `-Z codegen-backend`. 
+- `rustc` compiler backend to generate [SPIR-V], plugging in via `-Z codegen-backend`.
   - This is the same mechanism that [rustc_codegen_cranelift](https://github.com/bjorn3/rustc_codegen_cranelift) and [rustc_codegen_gcc](https://github.com/antoyo/rustc_codegen_gcc) use.
   - Currently only [SPIR-V] support is planned, [Vulkan](https://en.wikipedia.org/wiki/Vulkan_(API))'s open compiler target
   - Possible a future version could support [DXIL](https://github.com/microsoft/DirectXShaderCompiler/blob/master/docs/DXIL.rst) (the target for DirectX) or [WGSL](https://github.com/gpuweb/gpuweb/tree/main/wgsl) (the WebGPU shading language that's bijective with SPIR-V)

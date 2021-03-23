@@ -1,9 +1,9 @@
 // build-pass
 
-use spirv_std::{arch, storage_class::{Output, UniformConstant}, Image2d};
+use spirv_std::{arch, Image2d};
 
 #[spirv(fragment)]
-pub fn main(image: UniformConstant<Image2d>, mut output: Output<glam::Vec4>) {
+pub fn main(#[spirv(uniform_constant)] image: &Image2d, output: &mut glam::Vec4) {
     let texel = image.fetch(glam::IVec2::new(0, 1));
     *output = texel;
 }

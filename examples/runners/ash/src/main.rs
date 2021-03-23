@@ -221,7 +221,7 @@ impl RenderBase {
             if #[cfg(target_os = "macos")] {
                 let entry = ash_molten::MoltenEntry::load().unwrap();
             } else {
-                let entry = ash::Entry::new().unwrap();
+                let entry = unsafe { ash::Entry::new().unwrap() };
             }
         }
 
@@ -776,16 +776,6 @@ impl RenderCtx {
             for framebuffer in self.framebuffers.drain(..) {
                 self.base.device.destroy_framebuffer(framebuffer, None)
             }
-            // command buffers
-            self.base.device.free_command_buffers(
-                self.commands.pool,
-                &[
-                    self.commands.draw_command_buffer,
-                    self.commands.setup_command_buffer,
-                ],
-            );
-            // render pass
-            self.base.device.destroy_render_pass(self.render_pass, None);
             // image views
             for image_view in self.image_views.drain(..) {
                 self.base.device.destroy_image_view(image_view, None);
@@ -814,22 +804,6 @@ impl RenderCtx {
         self.swapchain = swapchain;
         self.extent = extent;
         self.image_views = self.base.create_image_views(self.swapchain);
-        self.render_pass = self.base.create_render_pass();
-        let command_buffers = {
-            let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
-                .command_buffer_count(2)
-                .command_pool(self.commands.pool)
-                .level(vk::CommandBufferLevel::PRIMARY);
-
-            unsafe {
-                self.base
-                    .device
-                    .allocate_command_buffers(&command_buffer_allocate_info)
-                    .unwrap()
-            }
-        };
-        self.commands.setup_command_buffer = command_buffers[0];
-        self.commands.draw_command_buffer = command_buffers[1];
         self.framebuffers =
             self.base
                 .create_framebuffers(&self.image_views, self.render_pass, extent);
@@ -976,13 +950,13 @@ impl RenderCtx {
                 .reset_fences(&[self.sync.draw_commands_reuse_fence])
                 .expect("Reset fences failed.");
 
+            // As we only have a single command buffer, we can simply reset the entire pool instead of just the buffer.
+            // Doing this is a little bit faster, see
+            // https://arm-software.github.io/vulkan_best_practice_for_mobile_developers/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.html#resetting-the-command-pool
             self.base
                 .device
-                .reset_command_buffer(
-                    self.commands.draw_command_buffer,
-                    vk::CommandBufferResetFlags::RELEASE_RESOURCES,
-                )
-                .expect("Reset command buffer failed.");
+                .reset_command_pool(self.commands.pool, vk::CommandPoolResetFlags::empty())
+                .expect("Reset command pool failed.");
 
             let command_buffer_begin_info = vk::CommandBufferBeginInfo::builder()
                 .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
@@ -1038,7 +1012,8 @@ impl Drop for RenderCtx {
                 .destroy_fence(self.sync.draw_commands_reuse_fence, None);
             self.base
                 .device
-                .destroy_fence(self.sync.setup_commands_reuse_fence, None);
+                .free_command_buffers(self.commands.pool, &[self.commands.draw_command_buffer]);
+            self.base.device.destroy_render_pass(self.render_pass, None);
             self.cleanup_pipelines();
             self.cleanup_swapchain();
             self.base
@@ -1055,7 +1030,6 @@ pub struct RenderSync {
     pub present_complete_semaphore: vk::Semaphore,
     pub rendering_complete_semaphore: vk::Semaphore,
     pub draw_commands_reuse_fence: vk::Fence,
-    pub setup_commands_reuse_fence: vk::Fence,
 }
 
 impl RenderSync {
@@ -1070,11 +1044,6 @@ impl RenderSync {
                 .device
                 .create_fence(&fence_create_info, None)
                 .expect("Create fence failed.");
-            let setup_commands_reuse_fence = base
-                .device
-                .create_fence(&fence_create_info, None)
-                .expect("Create fence failed.");
-
             let present_complete_semaphore = base
                 .device
                 .create_semaphore(&semaphore_create_info, None)
@@ -1088,7 +1057,6 @@ impl RenderSync {
                 present_complete_semaphore,
                 rendering_complete_semaphore,
                 draw_commands_reuse_fence,
-                setup_commands_reuse_fence,
             }
         }
     }
@@ -1097,15 +1065,13 @@ impl RenderSync {
 pub struct RenderCommandPool {
     pub pool: vk::CommandPool,
     pub draw_command_buffer: vk::CommandBuffer,
-    pub setup_command_buffer: vk::CommandBuffer,
 }
 
 impl RenderCommandPool {
     pub fn new(base: &RenderBase) -> Self {
         let pool = {
-            let pool_create_info = vk::CommandPoolCreateInfo::builder()
-                .flags(vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER)
-                .queue_family_index(base.queue_family_index);
+            let pool_create_info =
+                vk::CommandPoolCreateInfo::builder().queue_family_index(base.queue_family_index);
 
             unsafe {
                 base.device
@@ -1116,7 +1082,7 @@ impl RenderCommandPool {
 
         let command_buffers = {
             let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
-                .command_buffer_count(2)
+                .command_buffer_count(1)
                 .command_pool(pool)
                 .level(vk::CommandBufferLevel::PRIMARY);
 
@@ -1127,13 +1093,9 @@ impl RenderCommandPool {
             }
         };
 
-        let setup_command_buffer = command_buffers[0];
-        let draw_command_buffer = command_buffers[1];
-
         Self {
             pool,
-            draw_command_buffer,
-            setup_command_buffer,
+            draw_command_buffer: command_buffers[0],
         }
     }
 }

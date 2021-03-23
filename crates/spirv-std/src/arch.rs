@@ -9,10 +9,12 @@ use crate::{scalar::Scalar, vector::Vector};
 #[cfg(feature = "const-generics")]
 mod arithmetic;
 mod derivative;
+mod primitive;
 
 #[cfg(feature = "const-generics")]
 pub use arithmetic::*;
 pub use derivative::*;
+pub use primitive::*;
 
 /// Result is true if any component of `vector` is true, otherwise result is
 /// false.

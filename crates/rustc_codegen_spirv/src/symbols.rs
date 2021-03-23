@@ -1,10 +1,7 @@
+use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
-use crate::codegen_cx::CodegenCx;
-use rspirv::spirv::{
-    AccessQualifier, BuiltIn, Dim, ExecutionMode, ExecutionModel, ImageFormat, StorageClass,
-};
+use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
-use rustc_data_structures::captures::Captures;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
 use std::collections::HashMap;
@@ -156,7 +153,6 @@ const BUILTINS: &[(&str, BuiltIn)] = {
 
 const STORAGE_CLASSES: &[(&str, StorageClass)] = {
     use StorageClass::*;
-    // make sure these strings stay synced with spirv-std's pointer types
     &[
         ("uniform_constant", UniformConstant),
         ("input", Input),
@@ -334,10 +330,16 @@ impl Symbols {
             .iter()
             .map(|&(a, b)| (a, SpirvAttribute::Entry(b.into())));
         let custom_attributes = [
-            ("sampler", SpirvAttribute::Sampler),
+            (
+                "sampler",
+                SpirvAttribute::IntrinsicType(IntrinsicType::Sampler),
+            ),
             ("block", SpirvAttribute::Block),
             ("flat", SpirvAttribute::Flat),
-            ("sampled_image", SpirvAttribute::SampledImage),
+            (
+                "sampled_image",
+                SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),
+            ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
         ]
         .iter()
@@ -408,87 +410,6 @@ impl Symbols {
         thread_local!(static SYMBOLS: Rc<Symbols> = Rc::new(Symbols::new()));
         SYMBOLS.with(Rc::clone)
     }
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct ExecutionModeExtra {
-    args: [u32; 3],
-    len: u8,
-}
-
-impl ExecutionModeExtra {
-    fn new(args: impl AsRef<[u32]>) -> Self {
-        let _args = args.as_ref();
-        let mut args = [0; 3];
-        args[.._args.len()].copy_from_slice(_args);
-        let len = _args.len() as u8;
-        Self { args, len }
-    }
-}
-
-impl AsRef<[u32]> for ExecutionModeExtra {
-    fn as_ref(&self) -> &[u32] {
-        &self.args[..self.len as _]
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Entry {
-    pub execution_model: ExecutionModel,
-    pub execution_modes: Vec<(ExecutionMode, ExecutionModeExtra)>,
-    pub name: Option<Symbol>,
-}
-
-impl From<ExecutionModel> for Entry {
-    fn from(execution_model: ExecutionModel) -> Self {
-        Self {
-            execution_model,
-            execution_modes: Vec::new(),
-            name: None,
-        }
-    }
-}
-
-// FIXME(eddyb) maybe move this to `attr`?
-#[derive(Debug, Clone)]
-pub enum SpirvAttribute {
-    Builtin(BuiltIn),
-    StorageClass(StorageClass),
-    Entry(Entry),
-    DescriptorSet(u32),
-    Binding(u32),
-    ImageType {
-        dim: Dim,
-        depth: u32,
-        arrayed: u32,
-        multisampled: u32,
-        sampled: u32,
-        image_format: ImageFormat,
-        access_qualifier: Option<AccessQualifier>,
-    },
-    Sampler,
-    SampledImage,
-    Block,
-    Flat,
-    UnrollLoops,
-}
-
-// FIXME(eddyb) maybe move this to `attr`?
-/// Returns only the spirv attributes that could successfully parsed.
-/// For any malformed ones, an error is reported prior to codegen, by a check pass.
-pub fn parse_attrs<'a, 'tcx>(
-    cx: &'a CodegenCx<'tcx>,
-    attrs: &'tcx [Attribute],
-) -> impl Iterator<Item = SpirvAttribute> + Captures<'tcx> + 'a {
-    parse_attrs_for_checking(&cx.sym, attrs)
-        .filter_map(move |(_, parse_attr_result)| {
-            // NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails
-            // to see an attribute error, it will cause an ICE instead.
-            parse_attr_result
-                .map_err(|(span, msg)| cx.tcx.sess.delay_span_bug(span, &msg))
-                .ok()
-        })
-        .map(|(_span, parsed_attr)| parsed_attr)
 }
 
 // FIXME(eddyb) find something nicer for the error type.
@@ -664,7 +585,7 @@ fn parse_image_type(
     } else {
         None
     };
-    Ok(SpirvAttribute::ImageType {
+    Ok(SpirvAttribute::IntrinsicType(IntrinsicType::ImageType {
         dim,
         depth,
         arrayed,
@@ -672,7 +593,7 @@ fn parse_image_type(
         sampled,
         image_format,
         access_qualifier,
-    })
+    }))
 }
 
 fn parse_attr_int_value(arg: &NestedMetaItem) -> Result<u32, ParseAttrError> {

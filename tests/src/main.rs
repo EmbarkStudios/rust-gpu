@@ -3,61 +3,100 @@ use std::{
     io::{Error, ErrorKind, Result},
     path::{Path, PathBuf},
 };
+use structopt::StructOpt;
+
+#[derive(StructOpt)]
+#[structopt(
+    name = "cargo compiletest",
+    no_version,
+    // HACK(eddyb) avoid "USAGE:" saying "compiletests".
+    usage = "cargo compiletest [FLAGS] [FILTER]..."
+)]
+struct Opt {
+    /// Automatically update stderr/stdout files
+    #[structopt(long)]
+    bless: bool,
+
+    /// Only run tests that match these filters
+    #[structopt(name = "FILTER")]
+    filters: Vec<String>,
+}
 
 const TARGET: &str = "spirv-unknown-unknown";
-const TARGET_DIR: &str = "target/compiletest";
-const TEST_DEPS_PATH: &str = "target/compiletest/test-deps";
-const TEST_DEPS_TOML_PATH: &str = "target/compiletest/test-deps/Cargo.toml";
-const SPIRV_STD_TARGET: &str = "target/compiletest/spirv-std";
-const SPIRV_STD_HOST_DEPS: &str = "target/compiletest/spirv-std/debug/deps";
-const SPIRV_STD_TARGET_DEPS: &str = "target/compiletest/spirv-std/spirv-unknown-unknown/debug/deps";
-const CARGO_TOML: &str = r#"[package]
-name = "test-deps"
-version = "0.1.0"
-description = "Shared dependencies of all the tests"
-authors = ["Embark <opensource@embark-studios.com>"]
-edition = "2018"
 
-[dependencies]
-spirv-std = { path = "../../../crates/spirv-std", features=["const-generics"] }
+#[derive(Copy, Clone)]
+enum DepKind {
+    SpirvLib,
+    ProcMacro,
+}
 
-[dependencies.glam]
-git = "https://github.com/bitshifter/glam-rs.git"
-rev="b3e94fb"
-default-features=false
-features = ["libm", "scalar-math"]
+impl DepKind {
+    fn prefix_and_extension(self) -> (&'static str, &'static str) {
+        match self {
+            Self::SpirvLib => ("lib", "rlib"),
+            Self::ProcMacro => (env::consts::DLL_PREFIX, env::consts::DLL_EXTENSION),
+        }
+    }
 
-# Patch glam's dependency on spirv-std with our local version.
-[patch.crates-io]
-spirv-std-macros = { path = "../../../crates/spirv-std-macros" }
-spirv-std = { path = "../../../crates/spirv-std" }
-
-[workspace]
-"#;
+    fn target_dir_suffix(self) -> &'static str {
+        match self {
+            Self::SpirvLib => "spirv-unknown-unknown/debug/deps",
+            Self::ProcMacro => "debug/deps",
+        }
+    }
+}
 
 fn main() {
-    let manifest_dir = PathBuf::from("./");
-    std::env::set_var("CARGO_MANIFEST_DIR", &manifest_dir);
+    let opt = Opt::from_args();
+
+    let tests_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workspace_root = tests_dir.parent().unwrap();
+    let original_target_dir = workspace_root.join("target");
+    let deps_target_dir = original_target_dir.join("compiletest-deps");
+    let compiletest_build_dir = original_target_dir.join("compiletest-results");
+
     // Pull in rustc_codegen_spirv as a dynamic library in the same way
     // spirv-builder does.
     let codegen_backend_path = find_rustc_codegen_spirv();
-    let libs = build_spirv_std(&manifest_dir, &codegen_backend_path);
+    let libs = build_deps(&deps_target_dir, &codegen_backend_path);
 
-    run_mode("ui", &codegen_backend_path, &libs);
+    run_mode(
+        "ui",
+        opt,
+        tests_dir,
+        compiletest_build_dir,
+        &deps_target_dir,
+        &codegen_backend_path,
+        &libs,
+    );
 }
+
+// FIXME(eddyb) a bunch of these functions could be nicer if they were methods.
 
 /// Runs the given `mode` on the directory that matches that name, using the
 /// backend provided by `codegen_backend_path`.
-fn run_mode(mode: &'static str, codegen_backend_path: &Path, libs: &TestDeps) {
+fn run_mode(
+    mode: &'static str,
+    opt: Opt,
+    tests_dir: &Path,
+    compiletest_build_dir: PathBuf,
+    deps_target_dir: &Path,
+    codegen_backend_path: &Path,
+    libs: &TestDeps,
+) {
     let mut config = compiletest::Config::default();
 
     /// RUSTFLAGS passed to all test files.
-    fn test_rustc_flags(codegen_backend_path: &Path, deps: &TestDeps, libs: &[&Path]) -> String {
+    fn test_rustc_flags(
+        codegen_backend_path: &Path,
+        deps: &TestDeps,
+        indirect_deps_dirs: &[&Path],
+    ) -> String {
         [
             &*rust_flags(codegen_backend_path),
-            &*libs
+            &*indirect_deps_dirs
                 .iter()
-                .map(|p| format!("-L {}", p.display()))
+                .map(|dir| format!("-L dependency={}", dir.display()))
                 .fold(String::new(), |a, b| b + " " + &a),
             "--edition 2018",
             &*format!("--extern noprelude:core={}", deps.core.display()),
@@ -84,68 +123,56 @@ fn run_mode(mode: &'static str, codegen_backend_path: &Path, libs: &TestDeps) {
         codegen_backend_path,
         libs,
         &[
-            &PathBuf::from(format!("dependency={}", SPIRV_STD_TARGET_DEPS)),
-            &PathBuf::from(format!("dependency={}", SPIRV_STD_HOST_DEPS)),
+            &deps_target_dir.join(DepKind::SpirvLib.target_dir_suffix()),
+            &deps_target_dir.join(DepKind::ProcMacro.target_dir_suffix()),
         ],
     );
 
     config.target_rustcflags = Some(flags);
     config.mode = mode.parse().expect("Invalid mode");
     config.target = String::from(TARGET);
-    config.src_base = PathBuf::from(format!("./tests/{}", mode));
-    config.build_base = PathBuf::from(format!("./{}-results", TARGET_DIR));
-    config.bless = std::env::args().any(|a| a == "--bless");
+    config.src_base = tests_dir.join(mode);
+    config.build_base = compiletest_build_dir;
+    config.bless = opt.bless;
+    config.filters = opt.filters;
     config.clean_rmeta();
 
     compiletest::run_tests(&config);
 }
 
-/// Runs the processes needed to build `spirv-std`.
-fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
-    let target_dir = format!("--target-dir={}", SPIRV_STD_TARGET);
+/// Runs the processes needed to build `spirv-std` & other deps.
+fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
+    // HACK(eddyb) this is only needed until we enable `resolver = "2"`, as the
+    // old ("1") resolver has a bug where it picks up extra features based on the
+    // current directory (and so we always set the working dir as a workaround).
+    let old_cargo_resolver_workaround_cwd = deps_target_dir.parent().unwrap();
 
-    // Create a new test-deps project.
-    if std::fs::metadata(TEST_DEPS_PATH).is_err() {
-        std::process::Command::new("cargo")
-            .args(&["new", "-q", "--lib", TEST_DEPS_PATH])
-            .current_dir(manifest_dir)
-            .stderr(std::process::Stdio::inherit())
-            .stdout(std::process::Stdio::inherit())
-            .status()
-            .and_then(map_status_to_result)
-            .unwrap();
-
-        std::fs::write(TEST_DEPS_TOML_PATH, CARGO_TOML.as_bytes()).unwrap();
-        std::fs::write(
-            PathBuf::from(TEST_DEPS_PATH).join("src/lib.rs"),
-            "#![no_std]",
-        )
-        .unwrap();
-    }
-
-    // Build test-deps
+    // Build compiletests-deps-helper
     std::process::Command::new("cargo")
         .args(&[
             "build",
-            &*format!("--manifest-path={}", TEST_DEPS_TOML_PATH),
+            "-p",
+            "compiletests-deps-helper",
             "-Zbuild-std=core",
             &*format!("--target={}", TARGET),
-            &*target_dir,
         ])
+        .arg("--target-dir")
+        .arg(deps_target_dir)
         .env("RUSTFLAGS", rust_flags(&codegen_backend_path))
-        .env("CARGO_MANIFEST_DIR", manifest_dir)
-        .current_dir(manifest_dir)
+        .current_dir(old_cargo_resolver_workaround_cwd)
         .stderr(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .status()
         .and_then(map_status_to_result)
         .unwrap();
 
-    let compiler_builtins = find_lib(SPIRV_STD_TARGET_DEPS, "libcompiler_builtins", false).unwrap();
-    let core = find_lib(SPIRV_STD_TARGET_DEPS, "libcore", false).unwrap();
-    let spirv_std = find_lib(SPIRV_STD_TARGET_DEPS, "libspirv_std", false).unwrap();
-    let glam = find_lib(SPIRV_STD_TARGET_DEPS, "libglam", false).unwrap();
-    let spirv_std_macros = find_lib(SPIRV_STD_HOST_DEPS, "spirv_std_macros", true).unwrap();
+    let compiler_builtins =
+        find_lib(deps_target_dir, "compiler_builtins", DepKind::SpirvLib).unwrap();
+    let core = find_lib(deps_target_dir, "core", DepKind::SpirvLib).unwrap();
+    let spirv_std = find_lib(deps_target_dir, "spirv_std", DepKind::SpirvLib).unwrap();
+    let glam = find_lib(deps_target_dir, "glam", DepKind::SpirvLib).unwrap();
+    let spirv_std_macros =
+        find_lib(deps_target_dir, "spirv_std_macros", DepKind::ProcMacro).unwrap();
 
     if [
         &compiler_builtins,
@@ -157,8 +184,8 @@ fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps
     .iter()
     .any(|o| o.is_none())
     {
-        clean_project(manifest_dir);
-        build_spirv_std(manifest_dir, codegen_backend_path)
+        clean_deps(deps_target_dir);
+        build_deps(deps_target_dir, codegen_backend_path)
     } else {
         TestDeps {
             core: core.unwrap(),
@@ -170,10 +197,11 @@ fn build_spirv_std(manifest_dir: &Path, codegen_backend_path: &Path) -> TestDeps
     }
 }
 
-fn clean_project(manifest_dir: &Path) {
+fn clean_deps(deps_target_dir: &Path) {
     std::process::Command::new("cargo")
-        .args(&["clean", &*format!("--target-dir={}", TARGET_DIR)])
-        .current_dir(manifest_dir)
+        .arg("clean")
+        .arg("--target-dir")
+        .arg(deps_target_dir)
         .stderr(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .status()
@@ -184,18 +212,17 @@ fn clean_project(manifest_dir: &Path) {
 /// Attempt find the rlib that matches `base`, if multiple rlibs are found
 /// then a clean build is required and `None` is returned.
 fn find_lib(
-    dir: impl AsRef<Path>,
+    deps_target_dir: &Path,
     base: impl AsRef<Path>,
-    dynamic: bool,
+    dep_kind: DepKind,
 ) -> Result<Option<PathBuf>> {
     let base = base.as_ref();
-    let expected_name = if dynamic {
-        format!("{}{}", env::consts::DLL_PREFIX, base.display())
-    } else {
-        base.display().to_string()
-    };
+    let (expected_prefix, expected_extension) = dep_kind.prefix_and_extension();
+    let expected_name = format!("{}{}", expected_prefix, base.display());
 
-    let paths = std::fs::read_dir(dir.as_ref())?
+    let dir = deps_target_dir.join(dep_kind.target_dir_suffix());
+
+    let paths = std::fs::read_dir(dir)?
         .filter_map(Result::ok)
         .map(|entry| entry.path())
         .filter(|path| {
@@ -208,13 +235,9 @@ fn find_lib(
             };
 
             let name_matches = name.to_str().unwrap().starts_with(&expected_name);
-            let extension_matches = path.extension().map_or(false, |ext| {
-                if dynamic {
-                    ext == env::consts::DLL_EXTENSION
-                } else {
-                    ext == "rlib"
-                }
-            });
+            let extension_matches = path
+                .extension()
+                .map_or(false, |ext| ext == expected_extension);
 
             name_matches && extension_matches
         })

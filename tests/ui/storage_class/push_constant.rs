@@ -4,9 +4,7 @@
 
 // build-pass
 
-extern crate spirv_std;
-use spirv_std::storage_class::PushConstant;
-
+use spirv_std as _;
 
 #[derive(Copy, Clone)]
 pub struct ShaderConstants {
@@ -16,6 +14,6 @@ pub struct ShaderConstants {
 }
 
 #[spirv(fragment)]
-pub fn main(constants: PushConstant<ShaderConstants>) {
+pub fn main(#[spirv(push_constant)] constants: &ShaderConstants) {
     let _constants = *constants;
 }

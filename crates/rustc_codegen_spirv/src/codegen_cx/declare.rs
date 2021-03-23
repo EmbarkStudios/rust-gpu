@@ -1,9 +1,9 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
+use crate::attr::AggregatedSpirvAttributes;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::decorations::UnrollLoopsDecoration;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, SpirvAttribute};
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
@@ -111,23 +111,19 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let declared = fn_id.with_type(function_type);
 
-        for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
-            match attr {
-                SpirvAttribute::Entry(entry) => {
-                    let entry_name = entry
-                        .name
-                        .as_ref()
-                        .map(ToString::to_string)
-                        .unwrap_or_else(|| instance.to_string());
-                    self.entry_stub(&instance, &fn_abi, declared, entry_name, entry)
-                }
-                SpirvAttribute::UnrollLoops => {
-                    self.unroll_loops_decorations
-                        .borrow_mut()
-                        .insert(fn_id, UnrollLoopsDecoration {});
-                }
-                _ => {}
-            }
+        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.get_attrs(instance.def_id()));
+        if let Some(entry) = attrs.entry.map(|attr| attr.value) {
+            let entry_name = entry
+                .name
+                .as_ref()
+                .map(ToString::to_string)
+                .unwrap_or_else(|| instance.to_string());
+            self.entry_stub(&instance, &fn_abi, declared, entry_name, entry)
+        }
+        if attrs.unroll_loops.is_some() {
+            self.unroll_loops_decorations
+                .borrow_mut()
+                .insert(fn_id, UnrollLoopsDecoration {});
         }
 
         let instance_def_id = instance.def_id();
