@@ -113,7 +113,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.get_attrs(instance.def_id()));
 
-        let mut emit  = self.emit_global();
+        let mut emit = self.emit_global();
         for capability in attrs.capability.map(|x| x.value).unwrap_or_default() {
             emit.capability(capability);
         }

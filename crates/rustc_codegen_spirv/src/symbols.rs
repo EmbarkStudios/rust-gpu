@@ -603,15 +603,24 @@ fn parse_image_type(
 fn parse_capability_list(arg: &NestedMetaItem) -> Result<Vec<Capability>, ParseAttrError> {
     let list = match arg.meta_item_list() {
         Some(list) => list,
-        None => return Err((arg.span(), "`#[spirv(capability())]` requires a list.".to_string())),
+        None => {
+            return Err((
+                arg.span(),
+                "`#[spirv(capability())]` requires a list.".to_string(),
+            ))
+        }
     };
 
-    Ok(
-        list.iter()
-            .filter_map(NestedMetaItem::ident)
-            .filter_map(|i| CAPABILITIES.iter().find(|x| Symbol::intern(x.0) == i.name).map(|x| x.1))
-            .collect()
-    )
+    Ok(list
+        .iter()
+        .filter_map(NestedMetaItem::ident)
+        .filter_map(|i| {
+            CAPABILITIES
+                .iter()
+                .find(|x| Symbol::intern(x.0) == i.name)
+                .map(|x| x.1)
+        })
+        .collect())
 }
 
 const CAPABILITIES: &[(&str, Capability)] = {
@@ -644,10 +653,22 @@ const CAPABILITIES: &[(&str, Capability)] = {
         ("geometry_point_size", GeometryPointSize),
         ("image_gather_extended", ImageGatherExtended),
         ("storage_image_multisample", StorageImageMultisample),
-        ("uniform_buffer_array_dynamic_indexing", UniformBufferArrayDynamicIndexing),
-        ("sampled_image_array_dynamic_indexing", SampledImageArrayDynamicIndexing),
-        ("storage_buffer_array_dynamic_indexing", StorageBufferArrayDynamicIndexing),
-        ("storage_image_array_dynamic_indexing", StorageImageArrayDynamicIndexing),
+        (
+            "uniform_buffer_array_dynamic_indexing",
+            UniformBufferArrayDynamicIndexing,
+        ),
+        (
+            "sampled_image_array_dynamic_indexing",
+            SampledImageArrayDynamicIndexing,
+        ),
+        (
+            "storage_buffer_array_dynamic_indexing",
+            StorageBufferArrayDynamicIndexing,
+        ),
+        (
+            "storage_image_array_dynamic_indexing",
+            StorageImageArrayDynamicIndexing,
+        ),
         ("clip_distance", ClipDistance),
         ("cull_distance", CullDistance),
         ("image_cube_array", ImageCubeArray),
@@ -665,14 +686,23 @@ const CAPABILITIES: &[(&str, Capability)] = {
         ("sampled_buffer", SampledBuffer),
         ("image_buffer", ImageBuffer),
         ("image_ms_array", ImageMSArray),
-        ("storage_image_extended_formats", StorageImageExtendedFormats),
+        (
+            "storage_image_extended_formats",
+            StorageImageExtendedFormats,
+        ),
         ("image_query", ImageQuery),
         ("derivative_control", DerivativeControl),
         ("interpolation_function", InterpolationFunction),
         ("transform_feedback", TransformFeedback),
         ("geometry_streams", GeometryStreams),
-        ("storage_image_read_without_format", StorageImageReadWithoutFormat),
-        ("storage_image_write_without_format", StorageImageWriteWithoutFormat),
+        (
+            "storage_image_read_without_format",
+            StorageImageReadWithoutFormat,
+        ),
+        (
+            "storage_image_write_without_format",
+            StorageImageWriteWithoutFormat,
+        ),
         ("multi_viewport", MultiViewport),
         ("subgroup_dispatch", SubgroupDispatch),
         ("named_barrier", NamedBarrier),
@@ -682,7 +712,10 @@ const CAPABILITIES: &[(&str, Capability)] = {
         ("group_non_uniform_arithmetic", GroupNonUniformArithmetic),
         ("group_non_uniform_ballot", GroupNonUniformBallot),
         ("group_non_uniform_shuffle", GroupNonUniformShuffle),
-        ("group_non_uniform_shuffleRelative", GroupNonUniformShuffleRelative),
+        (
+            "group_non_uniform_shuffleRelative",
+            GroupNonUniformShuffleRelative,
+        ),
         ("group_non_uniform_clustered", GroupNonUniformClustered),
         ("group_non_uniform_quad", GroupNonUniformQuad),
         ("shader_layer", ShaderLayer),
@@ -691,17 +724,29 @@ const CAPABILITIES: &[(&str, Capability)] = {
         ("draw_parameters", DrawParameters),
         ("subgroup_vote_khr", SubgroupVoteKHR),
         ("storage_buffer_16bit_access", StorageBuffer16BitAccess),
-        ("uniform_and_storage_buffer_16bit_access", UniformAndStorageBuffer16BitAccess),
+        (
+            "uniform_and_storage_buffer_16bit_access",
+            UniformAndStorageBuffer16BitAccess,
+        ),
         ("storage_push_constant16", StoragePushConstant16),
         ("storage_input_output16", StorageInputOutput16),
         ("device_group", DeviceGroup),
         ("multi_view", MultiView),
-        ("variable_pointers_storage_buffer", VariablePointersStorageBuffer),
+        (
+            "variable_pointers_storage_buffer",
+            VariablePointersStorageBuffer,
+        ),
         ("variable_pointers", VariablePointers),
         ("atomic_storage_ops", AtomicStorageOps),
-        ("sample_mask_post_depth_coverage", SampleMaskPostDepthCoverage),
+        (
+            "sample_mask_post_depth_coverage",
+            SampleMaskPostDepthCoverage,
+        ),
         ("storage_buffer_8bit_access", StorageBuffer8BitAccess),
-        ("uniform_and_storage_buffer_8bit_access", UniformAndStorageBuffer8BitAccess),
+        (
+            "uniform_and_storage_buffer_8bit_access",
+            UniformAndStorageBuffer8BitAccess,
+        ),
         ("storage_push_constant8", StoragePushConstant8),
         ("denorm_preserve", DenormPreserve),
         ("denorm_flush_to_zero", DenormFlushToZero),
@@ -715,9 +760,18 @@ const CAPABILITIES: &[(&str, Capability)] = {
         ("stencil_export_ext", StencilExportEXT),
         ("image_read_write_lod_amd", ImageReadWriteLodAMD),
         ("shader_clock_khr", ShaderClockKHR),
-        ("sample_mask_overridecoverage_nv", SampleMaskOverrideCoverageNV),
-        ("geometry_shader_passthrough_nv", GeometryShaderPassthroughNV),
-        ("shader_viewport_index_layer_ext", ShaderViewportIndexLayerEXT),
+        (
+            "sample_mask_overridecoverage_nv",
+            SampleMaskOverrideCoverageNV,
+        ),
+        (
+            "geometry_shader_passthrough_nv",
+            GeometryShaderPassthroughNV,
+        ),
+        (
+            "shader_viewport_index_layer_ext",
+            ShaderViewportIndexLayerEXT,
+        ),
         ("shader_viewport_mask_nv", ShaderViewportMaskNV),
         ("shader_stereo_view_nv", ShaderStereoViewNV),
         ("per_view_attributes_nv", PerViewAttributesNV),
@@ -725,25 +779,67 @@ const CAPABILITIES: &[(&str, Capability)] = {
         ("mesh_shading_nv", MeshShadingNV),
         ("image_footprint_nv", ImageFootprintNV),
         ("fragment_barycentric_nv", FragmentBarycentricNV),
-        ("compute_derivative_group_quads_nv", ComputeDerivativeGroupQuadsNV),
+        (
+            "compute_derivative_group_quads_nv",
+            ComputeDerivativeGroupQuadsNV,
+        ),
         ("fragment_density_ext", FragmentDensityEXT),
-        ("group_non_uniform_partitioned_nv", GroupNonUniformPartitionedNV),
+        (
+            "group_non_uniform_partitioned_nv",
+            GroupNonUniformPartitionedNV,
+        ),
         ("shader_non_uniform", ShaderNonUniform),
         ("runtime_descriptor_array", RuntimeDescriptorArray),
-        ("input_attachment_array_dynamic_indexing", InputAttachmentArrayDynamicIndexing),
-        ("uniform_texel_bufferarray_dynamic_indexing", UniformTexelBufferArrayDynamicIndexing),
-        ("storage_texel_buffer_array_dynamic_indexing", StorageTexelBufferArrayDynamicIndexing),
-        ("uniform_buffer_array_non_uniform_indexing", UniformBufferArrayNonUniformIndexing),
-        ("sampled_image_array_non_uniform_indexing", SampledImageArrayNonUniformIndexing),
-        ("storage_buffer_array_non_uniform_indexing", StorageBufferArrayNonUniformIndexing),
-        ("storage_image_array_non_uniform_indexing", StorageImageArrayNonUniformIndexing),
-        ("input_attachment_array_non_uniform_indexing", InputAttachmentArrayNonUniformIndexing),
-        ("uniform_texel_buffer_array_non_uniform_indexing", UniformTexelBufferArrayNonUniformIndexing),
-        ("storage_texel_buffer_array_non_uniform_indexing", StorageTexelBufferArrayNonUniformIndexing),
+        (
+            "input_attachment_array_dynamic_indexing",
+            InputAttachmentArrayDynamicIndexing,
+        ),
+        (
+            "uniform_texel_bufferarray_dynamic_indexing",
+            UniformTexelBufferArrayDynamicIndexing,
+        ),
+        (
+            "storage_texel_buffer_array_dynamic_indexing",
+            StorageTexelBufferArrayDynamicIndexing,
+        ),
+        (
+            "uniform_buffer_array_non_uniform_indexing",
+            UniformBufferArrayNonUniformIndexing,
+        ),
+        (
+            "sampled_image_array_non_uniform_indexing",
+            SampledImageArrayNonUniformIndexing,
+        ),
+        (
+            "storage_buffer_array_non_uniform_indexing",
+            StorageBufferArrayNonUniformIndexing,
+        ),
+        (
+            "storage_image_array_non_uniform_indexing",
+            StorageImageArrayNonUniformIndexing,
+        ),
+        (
+            "input_attachment_array_non_uniform_indexing",
+            InputAttachmentArrayNonUniformIndexing,
+        ),
+        (
+            "uniform_texel_buffer_array_non_uniform_indexing",
+            UniformTexelBufferArrayNonUniformIndexing,
+        ),
+        (
+            "storage_texel_buffer_array_non_uniform_indexing",
+            StorageTexelBufferArrayNonUniformIndexing,
+        ),
         ("ray_tracing_nv", RayTracingNV),
         ("vulkan_memory_model", VulkanMemoryModel),
-        ("vulkan_memory_model_device_scope", VulkanMemoryModelDeviceScope),
-        ("physical_storage_buffer_addresses", PhysicalStorageBufferAddresses),
+        (
+            "vulkan_memory_model_device_scope",
+            VulkanMemoryModelDeviceScope,
+        ),
+        (
+            "physical_storage_buffer_addresses",
+            PhysicalStorageBufferAddresses,
+        ),
     ]
 };
 
