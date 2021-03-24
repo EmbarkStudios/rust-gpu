@@ -85,7 +85,7 @@ pub enum SpirvAttribute {
 
     // `fn` attributes:
     Entry(Entry),
-    Capabilities(Vec<Capability>),
+    Capability(Vec<Capability>),
 
     // (entry) `fn` parameter attributes:
     StorageClass(StorageClass),
@@ -117,7 +117,7 @@ pub struct AggregatedSpirvAttributes {
 
     // `fn` attributes:
     pub entry: Option<Spanned<Entry>>,
-    pub capabilities: Option<Spanned<Vec<Capability>>>,
+    pub capability: Option<Spanned<Vec<Capability>>>,
 
     // (entry) `fn` parameter attributes:
     pub storage_class: Option<Spanned<StorageClass>>,
@@ -198,7 +198,7 @@ impl AggregatedSpirvAttributes {
             StorageClass(value) => {
                 try_insert(&mut self.storage_class, value, span, "storage class")
             }
-            Capabilities(value) => try_insert(&mut self.capabilities, value, span, "#[spirv(capabilities)]"),
+            Capability(value) => try_insert(&mut self.capability, value, span, "#[spirv(capability)]"),
             Builtin(value) => try_insert(&mut self.builtin, value, span, "builtin"),
             DescriptorSet(value) => try_insert(
                 &mut self.descriptor_set,
@@ -273,7 +273,7 @@ impl CheckSpirvAttrVisitor<'_> {
                     _ => Err(Expected("struct")),
                 },
 
-                SpirvAttribute::Capabilities(_) | SpirvAttribute::Entry(_) => match target {
+                SpirvAttribute::Capability(_) | SpirvAttribute::Entry(_) => match target {
                     Target::Fn
                     | Target::Method(MethodKind::Trait { body: true })
                     | Target::Method(MethodKind::Inherent) => {
@@ -369,9 +369,9 @@ impl CheckSpirvAttrVisitor<'_> {
             }
         }
 
-        match aggregated_attrs.capabilities {
+        match aggregated_attrs.capability {
             Some(spanned) if aggregated_attrs.entry.is_none() => {
-                self.tcx.sess.span_err(spanned.span, "`#[spirv(capabilities)]` can only be used with entry point functions.");
+                self.tcx.sess.span_err(spanned.span, "`#[spirv(capability)]` can only be used with entry point functions.");
 
             }
             _ => {}

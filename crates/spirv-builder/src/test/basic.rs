@@ -44,7 +44,7 @@ fn capability_attribute() {
     dis_globals(
         r#"
 #[spirv(fragment)]
-#[spirv(capabilities(multi_view))]
+#[spirv(capability(multi_view))]
 pub fn main() { }
 "#,
         r#"OpCapability Shader

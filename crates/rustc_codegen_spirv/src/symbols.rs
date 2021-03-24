@@ -31,7 +31,7 @@ pub struct Symbols {
     pub spirv14: Symbol,
     pub spirv15: Symbol,
     pub entry_point_name: Symbol,
-    capabilities: Symbol,
+    capability: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
     image_type: Symbol,
@@ -386,7 +386,7 @@ impl Symbols {
             spirv13: Symbol::intern("spirv1.3"),
             spirv14: Symbol::intern("spirv1.4"),
             spirv15: Symbol::intern("spirv1.5"),
-            capabilities: Symbol::intern("capabilities"),
+            capability: Symbol::intern("capability"),
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             image_type: Symbol::intern("image_type"),
@@ -460,8 +460,8 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                     SpirvAttribute::DescriptorSet(parse_attr_int_value(arg)?)
                 } else if arg.has_name(sym.binding) {
                     SpirvAttribute::Binding(parse_attr_int_value(arg)?)
-                } else if arg.has_name(sym.capabilities) {
-                    SpirvAttribute::Capabilities(parse_capability_list(arg)?)
+                } else if arg.has_name(sym.capability) {
+                    SpirvAttribute::Capability(parse_capability_list(arg)?)
                 } else {
                     let name = match arg.ident() {
                         Some(i) => i,
@@ -603,7 +603,7 @@ fn parse_image_type(
 fn parse_capability_list(arg: &NestedMetaItem) -> Result<Vec<Capability>, ParseAttrError> {
     let list = match arg.meta_item_list() {
         Some(list) => list,
-        None => return Err((arg.span(), "`#[spirv(capabilities())]` requires a list.".to_string())),
+        None => return Err((arg.span(), "`#[spirv(capability())]` requires a list.".to_string())),
     };
 
     Ok(
