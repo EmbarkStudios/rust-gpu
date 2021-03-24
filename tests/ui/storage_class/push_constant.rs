@@ -7,6 +7,7 @@
 use spirv_std as _;
 
 #[derive(Copy, Clone)]
+#[spirv(block)]
 pub struct ShaderConstants {
     pub width: u32,
     pub height: u32,

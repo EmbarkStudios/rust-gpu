@@ -211,7 +211,7 @@ fn is_blocklisted_fn<'tcx>(
     false
 }
 
-fn target_options() -> Target {
+fn target_options(env: Option<spirv_tools::TargetEnv>) -> Target {
     Target {
         llvm_target: "no-llvm".to_string(),
         pointer_width: 32,
@@ -228,6 +228,10 @@ fn target_options() -> Target {
             linker_flavor: LinkerFlavor::Ld,
             panic_strategy: PanicStrategy::Abort,
             os: "unknown".to_string(),
+            env: env
+                .as_ref()
+                .map(ToString::to_string)
+                .unwrap_or_else(|| "unknown".to_string()),
             // TODO: Investigate if main_needs_argc_argv is useful (for building exes)
             main_needs_argc_argv: false,
             ..Default::default()
@@ -290,12 +294,20 @@ impl CodegenBackend for SpirvCodegenBackend {
 
     fn target_override(&self, opts: &config::Options) -> Option<Target> {
         match opts.target_triple {
-            TargetTriple::TargetTriple(ref target_triple) => match &**target_triple {
-                // TODO: Do we want to match *everything* here, since, well, we only support one thing? that will allow
-                // folks to not specify --target spirv-unknown-unknown on the commandline.
-                "spirv-unknown-unknown" => Some(target_options()),
-                _ => None,
-            },
+            TargetTriple::TargetTriple(ref target_triple) => {
+                const ARCH_VENDOR: &str = "spirv-unknown-";
+                if !target_triple.starts_with(ARCH_VENDOR) {
+                    return None;
+                }
+
+                let env = &target_triple[ARCH_VENDOR.len()..];
+
+                match env.parse() {
+                    Ok(env) => Some(target_options(Some(env))),
+                    Err(_) if env == "unknown" => Some(target_options(None)),
+                    Err(_) => None,
+                }
+            }
             TargetTriple::TargetPath(_) => None,
         }
     }

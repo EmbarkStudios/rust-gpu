@@ -52,4 +52,4 @@ cargo_test_no_features examples/runners/cpu
 cargo_test_no_features examples/shaders/sky-shader
 cargo_test_no_features examples/shaders/simplest-shader
 
-cargo compiletest
+cargo compiletest --target-env unknown,vulkan1.1,spv1.3
