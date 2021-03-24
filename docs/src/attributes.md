@@ -86,6 +86,18 @@ struct Thing {
 fn main(#[spirv(push_constant)] obj: &ShaderConstants) { }
 ```
 
+## Capabilities
+
+The `#[spirv(capability)]` attribute allows you to specify what SPIR-V capabilities your module requires on your entry point function. `#[spirv(capability)]` accepts one or more camel-case identifiers of the [SPIR-V Capabilities].
+
+```
+#[spirv(fragment)]
+#[spirv(capability(multi_view))] // Enables `OpCapability MultiView`
+fn main () {}
+```
+
+[spir-v capabilities]: https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#Capability
+
 ## Flat
 
 The flat attribute corresponds to the flat keyword in glsl - in other words, the data is not interpolated across the triangle when invoking the fragment shader.
