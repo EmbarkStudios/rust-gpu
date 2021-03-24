@@ -1,6 +1,6 @@
 use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
-use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
+use rspirv::spirv::{BuiltIn, Capability, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
@@ -31,6 +31,7 @@ pub struct Symbols {
     pub spirv14: Symbol,
     pub spirv15: Symbol,
     pub entry_point_name: Symbol,
+    capabilities: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
     image_type: Symbol,
@@ -385,6 +386,7 @@ impl Symbols {
             spirv13: Symbol::intern("spirv1.3"),
             spirv14: Symbol::intern("spirv1.4"),
             spirv15: Symbol::intern("spirv1.5"),
+            capabilities: Symbol::intern("capabilities"),
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             image_type: Symbol::intern("image_type"),
@@ -458,6 +460,8 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                     SpirvAttribute::DescriptorSet(parse_attr_int_value(arg)?)
                 } else if arg.has_name(sym.binding) {
                     SpirvAttribute::Binding(parse_attr_int_value(arg)?)
+                } else if arg.has_name(sym.capabilities) {
+                    SpirvAttribute::Capabilities(parse_capability_list(arg)?)
                 } else {
                     let name = match arg.ident() {
                         Some(i) => i,
@@ -595,6 +599,153 @@ fn parse_image_type(
         access_qualifier,
     }))
 }
+
+fn parse_capability_list(arg: &NestedMetaItem) -> Result<Vec<Capability>, ParseAttrError> {
+    let list = match arg.meta_item_list() {
+        Some(list) => list,
+        None => return Err((arg.span(), "`#[spirv(capabilities())]` requires a list.".to_string())),
+    };
+
+    Ok(
+        list.iter()
+            .filter_map(NestedMetaItem::ident)
+            .filter_map(|i| CAPABILITIES.iter().find(|x| Symbol::intern(x.0) == i.name).map(|x| x.1))
+            .collect()
+    )
+}
+
+const CAPABILITIES: &[(&str, Capability)] = {
+    use Capability::*;
+
+    &[
+        ("matrix", Matrix),
+        ("shader", Shader),
+        ("geometry", Geometry),
+        ("tessellation", Tessellation),
+        ("addresses", Addresses),
+        ("linkage", Linkage),
+        ("kernel", Kernel),
+        ("vector16", Vector16),
+        ("float16_buffer", Float16Buffer),
+        ("float16", Float16),
+        ("float64", Float64),
+        ("int64", Int64),
+        ("int64_atomics", Int64Atomics),
+        ("image_basic", ImageBasic),
+        ("image_read_write", ImageReadWrite),
+        ("image_mipmap", ImageMipmap),
+        ("pipes", Pipes),
+        ("groups", Groups),
+        ("device_enqueue", DeviceEnqueue),
+        ("literal_sampler", LiteralSampler),
+        ("atomic_storage", AtomicStorage),
+        ("int16", Int16),
+        ("tessellation_point_size", TessellationPointSize),
+        ("geometry_point_size", GeometryPointSize),
+        ("image_gather_extended", ImageGatherExtended),
+        ("storage_image_multisample", StorageImageMultisample),
+        ("uniform_buffer_array_dynamic_indexing", UniformBufferArrayDynamicIndexing),
+        ("sampled_image_array_dynamic_indexing", SampledImageArrayDynamicIndexing),
+        ("storage_buffer_array_dynamic_indexing", StorageBufferArrayDynamicIndexing),
+        ("storage_image_array_dynamic_indexing", StorageImageArrayDynamicIndexing),
+        ("clip_distance", ClipDistance),
+        ("cull_distance", CullDistance),
+        ("image_cube_array", ImageCubeArray),
+        ("sample_rate_shading", SampleRateShading),
+        ("image_rect", ImageRect),
+        ("sampled_rect", SampledRect),
+        ("generic_pointer", GenericPointer),
+        ("int8", Int8),
+        ("input_attachment", InputAttachment),
+        ("sparse_residency", SparseResidency),
+        ("min_lod", MinLod),
+        ("sampled1d", Sampled1D),
+        ("image1d", Image1D),
+        ("sampled_cube_array", SampledCubeArray),
+        ("sampled_buffer", SampledBuffer),
+        ("image_buffer", ImageBuffer),
+        ("image_ms_array", ImageMSArray),
+        ("storage_image_extended_formats", StorageImageExtendedFormats),
+        ("image_query", ImageQuery),
+        ("derivative_control", DerivativeControl),
+        ("interpolation_function", InterpolationFunction),
+        ("transform_feedback", TransformFeedback),
+        ("geometry_streams", GeometryStreams),
+        ("storage_image_read_without_format", StorageImageReadWithoutFormat),
+        ("storage_image_write_without_format", StorageImageWriteWithoutFormat),
+        ("multi_viewport", MultiViewport),
+        ("subgroup_dispatch", SubgroupDispatch),
+        ("named_barrier", NamedBarrier),
+        ("pipe_storage", PipeStorage),
+        ("group_non_uniform", GroupNonUniform),
+        ("group_non_uniform_vote", GroupNonUniformVote),
+        ("group_non_uniform_arithmetic", GroupNonUniformArithmetic),
+        ("group_non_uniform_ballot", GroupNonUniformBallot),
+        ("group_non_uniform_shuffle", GroupNonUniformShuffle),
+        ("group_non_uniform_shuffleRelative", GroupNonUniformShuffleRelative),
+        ("group_non_uniform_clustered", GroupNonUniformClustered),
+        ("group_non_uniform_quad", GroupNonUniformQuad),
+        ("shader_layer", ShaderLayer),
+        ("shader_viewport_index", ShaderViewportIndex),
+        ("subgroup_ballot_khr", SubgroupBallotKHR),
+        ("draw_parameters", DrawParameters),
+        ("subgroup_vote_khr", SubgroupVoteKHR),
+        ("storage_buffer_16bit_access", StorageBuffer16BitAccess),
+        ("uniform_and_storage_buffer_16bit_access", UniformAndStorageBuffer16BitAccess),
+        ("storage_push_constant16", StoragePushConstant16),
+        ("storage_input_output16", StorageInputOutput16),
+        ("device_group", DeviceGroup),
+        ("multi_view", MultiView),
+        ("variable_pointers_storage_buffer", VariablePointersStorageBuffer),
+        ("variable_pointers", VariablePointers),
+        ("atomic_storage_ops", AtomicStorageOps),
+        ("sample_mask_post_depth_coverage", SampleMaskPostDepthCoverage),
+        ("storage_buffer_8bit_access", StorageBuffer8BitAccess),
+        ("uniform_and_storage_buffer_8bit_access", UniformAndStorageBuffer8BitAccess),
+        ("storage_push_constant8", StoragePushConstant8),
+        ("denorm_preserve", DenormPreserve),
+        ("denorm_flush_to_zero", DenormFlushToZero),
+        ("signed_zero_inf_nan_preserve", SignedZeroInfNanPreserve),
+        ("rounding_mode_rte", RoundingModeRTE),
+        ("rounding_mode_rtz", RoundingModeRTZ),
+        ("ray_query_provisional_khr", RayQueryProvisionalKHR),
+        ("float16_image_amd", Float16ImageAMD),
+        ("image_gather_bias_lod_amd", ImageGatherBiasLodAMD),
+        ("fragment_mask_amd", FragmentMaskAMD),
+        ("stencil_export_ext", StencilExportEXT),
+        ("image_read_write_lod_amd", ImageReadWriteLodAMD),
+        ("shader_clock_khr", ShaderClockKHR),
+        ("sample_mask_overridecoverage_nv", SampleMaskOverrideCoverageNV),
+        ("geometry_shader_passthrough_nv", GeometryShaderPassthroughNV),
+        ("shader_viewport_index_layer_ext", ShaderViewportIndexLayerEXT),
+        ("shader_viewport_mask_nv", ShaderViewportMaskNV),
+        ("shader_stereo_view_nv", ShaderStereoViewNV),
+        ("per_view_attributes_nv", PerViewAttributesNV),
+        ("fragment_fully_covered_ext", FragmentFullyCoveredEXT),
+        ("mesh_shading_nv", MeshShadingNV),
+        ("image_footprint_nv", ImageFootprintNV),
+        ("fragment_barycentric_nv", FragmentBarycentricNV),
+        ("compute_derivative_group_quads_nv", ComputeDerivativeGroupQuadsNV),
+        ("fragment_density_ext", FragmentDensityEXT),
+        ("group_non_uniform_partitioned_nv", GroupNonUniformPartitionedNV),
+        ("shader_non_uniform", ShaderNonUniform),
+        ("runtime_descriptor_array", RuntimeDescriptorArray),
+        ("input_attachment_array_dynamic_indexing", InputAttachmentArrayDynamicIndexing),
+        ("uniform_texel_bufferarray_dynamic_indexing", UniformTexelBufferArrayDynamicIndexing),
+        ("storage_texel_buffer_array_dynamic_indexing", StorageTexelBufferArrayDynamicIndexing),
+        ("uniform_buffer_array_non_uniform_indexing", UniformBufferArrayNonUniformIndexing),
+        ("sampled_image_array_non_uniform_indexing", SampledImageArrayNonUniformIndexing),
+        ("storage_buffer_array_non_uniform_indexing", StorageBufferArrayNonUniformIndexing),
+        ("storage_image_array_non_uniform_indexing", StorageImageArrayNonUniformIndexing),
+        ("input_attachment_array_non_uniform_indexing", InputAttachmentArrayNonUniformIndexing),
+        ("uniform_texel_buffer_array_non_uniform_indexing", UniformTexelBufferArrayNonUniformIndexing),
+        ("storage_texel_buffer_array_non_uniform_indexing", StorageTexelBufferArrayNonUniformIndexing),
+        ("ray_tracing_nv", RayTracingNV),
+        ("vulkan_memory_model", VulkanMemoryModel),
+        ("vulkan_memory_model_device_scope", VulkanMemoryModelDeviceScope),
+        ("physical_storage_buffer_addresses", PhysicalStorageBufferAddresses),
+    ]
+};
 
 fn parse_attr_int_value(arg: &NestedMetaItem) -> Result<u32, ParseAttrError> {
     let arg = match arg.meta_item() {

@@ -40,6 +40,28 @@ OpName %2 "test_project::main"
 }
 
 #[test]
+fn capability_attribute() {
+    dis_globals(
+        r#"
+#[spirv(fragment)]
+#[spirv(capabilities(multi_view))]
+pub fn main() { }
+"#,
+        r#"OpCapability Shader
+OpCapability VulkanMemoryModel
+OpCapability VariablePointers
+OpCapability MultiView
+OpExtension "SPV_KHR_vulkan_memory_model"
+OpMemoryModel Logical Vulkan
+OpEntryPoint Fragment %1 "main"
+OpExecutionMode %1 OriginUpperLeft
+OpName %2 "test_project::main"
+%3 = OpTypeVoid
+%4 = OpTypeFunction %3"#,
+    );
+}
+
+#[test]
 // blocked on: https://github.com/EmbarkStudios/rust-gpu/issues/69
 #[ignore]
 fn no_dce() {

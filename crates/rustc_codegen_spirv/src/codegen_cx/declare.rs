@@ -112,6 +112,13 @@ impl<'tcx> CodegenCx<'tcx> {
         let declared = fn_id.with_type(function_type);
 
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.get_attrs(instance.def_id()));
+
+        let mut emit  = self.emit_global();
+        for capability in attrs.capabilities.map(|x| x.value).unwrap_or_default() {
+            emit.capability(capability);
+        }
+        drop(emit);
+
         if let Some(entry) = attrs.entry.map(|attr| attr.value) {
             let entry_name = entry
                 .name
