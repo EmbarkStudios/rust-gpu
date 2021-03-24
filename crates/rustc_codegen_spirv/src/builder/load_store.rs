@@ -64,7 +64,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .unwrap()
                     .with_type(unsigned_ty);
 
-                self.store_integer(
+                self.store_as_u32(
                     bits,
                     false,
                     uint_ty,
@@ -74,7 +74,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 );
             }
             SpirvType::Integer(bits, signed) => {
-                self.store_integer(
+                self.store_as_u32(
                     bits,
                     signed,
                     uint_ty,
@@ -92,7 +92,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    fn store_integer(
+    fn store_as_u32(
         &mut self,
         bits: u32,
         signed: bool,
@@ -245,40 +245,98 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let uniform_uint_ptr =
             SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
 
-        let sets = self.bindless_descriptor_sets.borrow().unwrap().clone();
-
         let two = self.constant_int(uint_ty, 2).def(self);
 
         let offset_arg = args[1].def(self);
 
-        let dword_offset = self
+        let base_offset_var = self
             .emit()
             .shift_right_arithmetic(uint_ty, None, offset_arg, two)
             .unwrap();
 
-        // simple structs are returned as values, complex ones are returned as out parameters
+        let bindless_idx = args[0].def(self);
+
+        eprintln!("{:?} / {:?}", result_type, args);
+
+        let sets = self.bindless_descriptor_sets.borrow().unwrap();
+
         self.recurse_adt_for_loads(
             uint_ty,
             uniform_uint_ptr,
-            dword_offset,
+            bindless_idx,
+            base_offset_var,
+            0,
             result_type,
-            args,
             &sets,
         )
+    }
+
+    fn load_from_u32(
+        &mut self,
+        bits: u32,
+        signed: bool,
+        target_ty: Word,
+        uint_ty: u32,
+        uniform_uint_ptr: u32,
+        bindless_idx: u32,
+        base_offset_var: Word,
+        element_offset_literal: u32,
+        sets: &BindlessDescriptorSets,
+    ) -> SpirvValue {
+        let zero = self.constant_int(uint_ty, 0).def(self);
+
+        let offset = if element_offset_literal > 0 {
+            let element_offset = self
+                .constant_int(uint_ty, element_offset_literal as u64)
+                .def(self);
+
+            self.emit()
+                .i_add(uint_ty, None, base_offset_var, element_offset)
+                .unwrap()
+        } else {
+            base_offset_var
+        };
+
+        let indices = vec![bindless_idx, zero, offset];
+
+        let result = self
+            .emit()
+            .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+            .unwrap();
+
+        match (bits, signed) {
+            (32, false) => self
+                .emit()
+                .load(uint_ty, None, result, None, std::iter::empty())
+                .unwrap()
+                .with_type(uint_ty),
+            (32, true) => {
+                let load_res = self
+                    .emit()
+                    .load(uint_ty, None, result, None, std::iter::empty())
+                    .unwrap();
+
+                self.emit()
+                    .bitcast(target_ty, None, load_res)
+                    .unwrap()
+                    .with_type(target_ty)
+            }
+            _ => panic!("Invalid load bits: {} signed: {}", bits, signed),
+        }
     }
 
     fn recurse_adt_for_loads(
         &mut self,
         uint_ty: u32,
         uniform_uint_ptr: u32,
-        dword_offset: Word,
+        bindless_idx: u32,
+        base_offset_var: Word,
+        element_offset_literal: u32,
         result_type: u32,
-        args: &[SpirvValue],
         sets: &BindlessDescriptorSets,
     ) -> SpirvValue {
         let data = self.lookup_type(result_type);
-
-        let bindless_idx = args[0].def(self);
+        eprintln!("{:?}", data);
 
         match data {
             SpirvType::Adt {
@@ -289,13 +347,16 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let mut composite_components = vec![];
 
                 for (ty, offset) in field_types.iter().zip(field_offsets.iter()) {
+                    let offset = offset.bytes() as u32 / 4;
+
                     composite_components.push(
                         self.recurse_adt_for_loads(
                             uint_ty,
                             uniform_uint_ptr,
-                            dword_offset,
+                            bindless_idx,
+                            base_offset_var,
+                            element_offset_literal + offset,
                             *ty,
-                            args,
                             sets,
                         )
                         .def(self),
@@ -309,35 +370,66 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .unwrap()
                     .with_type(adt)
             }
-            SpirvType::Integer(bits, signed) => {
-                assert!(bits == 32); // jb-todo: 8, 16 and 64-bits
-                assert!(signed == false); // jb-todo: signed
-                let zero = self.constant_int(uint_ty, 0).def(self);
+            SpirvType::Vector { count, element } => {
+                let mut composite_components = vec![];
 
-                let indices = vec![bindless_idx, zero, dword_offset];
+                for offset in 0..count {
+                    composite_components.push(
+                        self.recurse_adt_for_loads(
+                            uint_ty,
+                            uniform_uint_ptr,
+                            bindless_idx,
+                            base_offset_var,
+                            element_offset_literal + offset,
+                            element,
+                            sets,
+                        )
+                        .def(self),
+                    );
+                }
 
-                let result = self
-                    .emit()
-                    .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
-                    .unwrap();
+                let adt = data.def(rustc_span::DUMMY_SP, self);
 
-                let load_res = self
-                    .emit()
-                    .load(uint_ty, None, result, None, std::iter::empty())
-                    .unwrap();
-
-                load_res.with_type(uint_ty)
-
-                /*
-                        let bitcast_res = self.emit().bitcast(element_ty, None, load_res).unwrap();
-
-                bitcast_res as u32
-                */
+                self.emit()
+                    .composite_construct(adt, None, composite_components)
+                    .unwrap()
+                    .with_type(adt)
             }
+            SpirvType::Float(bits) => {
+                let loaded_as_u32 = self
+                    .load_from_u32(
+                        bits,
+                        false,
+                        uint_ty,
+                        uint_ty,
+                        uniform_uint_ptr,
+                        bindless_idx,
+                        base_offset_var,
+                        element_offset_literal,
+                        sets,
+                    )
+                    .def(self);
+
+                self.emit()
+                    .bitcast(result_type, None, loaded_as_u32)
+                    .unwrap()
+                    .with_type(result_type)
+            }
+            SpirvType::Integer(bits, signed) => self.load_from_u32(
+                bits,
+                signed,
+                result_type,
+                uint_ty,
+                uniform_uint_ptr,
+                bindless_idx,
+                base_offset_var,
+                element_offset_literal,
+                sets,
+            ),
             _ => {
                 bug!(
                     "Unhandled case for `internal_buffer_load` return / args: {:?}",
-                    args
+                    data
                 );
             }
         }
