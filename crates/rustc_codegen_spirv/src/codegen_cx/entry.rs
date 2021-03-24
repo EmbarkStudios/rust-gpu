@@ -14,7 +14,7 @@ use rustc_target::abi::{
     call::{ArgAbi, ArgAttribute, ArgAttributes, FnAbi, PassMode},
     LayoutOf, Size,
 };
-use std::{collections::HashMap, iter};
+use std::collections::HashMap;
 
 impl<'tcx> CodegenCx<'tcx> {
     // Entry points declare their "interface" (all uniforms, inputs, outputs, etc.) as parameters.
@@ -142,38 +142,18 @@ impl<'tcx> CodegenCx<'tcx> {
             .zip(arg_abis)
             .zip(hir_params)
             .flat_map(|((&(var, storage_class), entry_fn_arg), hir_param)| {
-                match entry_fn_arg.layout.ty.kind() {
-                    TyKind::Ref(_, ty, _) if ty.is_sized(self.tcx.at(span), self.param_env()) => iter::once(var).chain(None),
+                let mut dst_len_arg = None;
+                let arg = match entry_fn_arg.layout.ty.kind() {
                     TyKind::Ref(_, ty, _) => {
-                        match ty.kind() {
-                            TyKind::Adt(adt_def, substs) => {
-                                let (member_idx, field_def) = adt_def.all_fields().enumerate().last().unwrap();
-                                let field_ty = field_def.ty(self.tcx, substs);
-                                if !matches!(field_ty.kind(), TyKind::Slice(..)) {
-                                    self.tcx.sess.span_fatal(
-                                        hir_param.ty_span,
-                                        "DST parameters are currently restricted to a reference to a struct whose last field is a slice.",
-                                    )
-                                }
-                                let len = emit
-                                    .array_length(len_t, None, var, member_idx as u32)
-                                    .unwrap();
-                                iter::once(var).chain(Some(len))
-                            }
-                            TyKind::Slice(..) | TyKind::Str => self.tcx.sess.span_fatal(
-                                hir_param.ty_span,
-                                "Straight slices are not yet supported, wrap the slice in a newtype.",
-                            ),
-                            // TODO: Is this needed?
-                            TyKind::Dynamic(..) => self.tcx.sess.span_fatal(
-                                hir_param.ty_span,
-                                "Trait objects are not supported.",
-                            ),
-                            _ => unreachable!(),
+                        if !ty.is_sized(self.tcx.at(span), self.param_env()) {
+                            dst_len_arg.replace(
+                                self.dst_length_argument(&mut emit, ty, hir_param, len_t, var),
+                            );
                         }
+                        var
                     }
                     _ => match entry_fn_arg.mode {
-                        PassMode::Indirect { .. } => iter::once(var).chain(None),
+                        PassMode::Indirect { .. } => var,
                         PassMode::Direct(_) => {
                             assert_eq!(storage_class, StorageClass::Input);
 
@@ -182,14 +162,13 @@ impl<'tcx> CodegenCx<'tcx> {
                             let value_spirv_type =
                                 entry_fn_arg.layout.spirv_type(hir_param.span, self);
 
-                            let loaded_var = emit
-                                .load(value_spirv_type, None, var, None, iter::empty())
-                                .unwrap();
-                            iter::once(loaded_var).chain(None)
+                            emit.load(value_spirv_type, None, var, None, std::iter::empty())
+                                .unwrap()
                         }
                         _ => unreachable!(),
                     },
-                }
+                };
+                std::iter::once(arg).chain(dst_len_arg)
             })
             .collect();
         emit.function_call(
@@ -215,6 +194,38 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         emit.entry_point(execution_model, fn_id, name, interface);
         fn_id
+    }
+
+    fn dst_length_argument(
+        &self,
+        emit: &mut std::cell::RefMut<'_, rspirv::dr::Builder>,
+        ty: Ty<'tcx>,
+        hir_param: &hir::Param<'tcx>,
+        len_t: Word,
+        var: Word,
+    ) -> Word {
+        match ty.kind() {
+            TyKind::Adt(adt_def, substs) => {
+                let (member_idx, field_def) = adt_def.all_fields().enumerate().last().unwrap();
+                let field_ty = field_def.ty(self.tcx, substs);
+                if !matches!(field_ty.kind(), TyKind::Slice(..)) {
+                    self.tcx.sess.span_fatal(
+                        hir_param.ty_span,
+                        "DST parameters are currently restricted to a reference to a struct whose last field is a slice.",
+                    )
+                }
+                emit.array_length(len_t, None, var, member_idx as u32)
+                    .unwrap()
+            }
+            TyKind::Slice(..) | TyKind::Str => self.tcx.sess.span_fatal(
+                hir_param.ty_span,
+                "Straight slices are not yet supported, wrap the slice in a newtype.",
+            ),
+            _ => self
+                .tcx
+                .sess
+                .span_fatal(hir_param.ty_span, "Unsupported parameter type."),
+        }
     }
 
     fn declare_parameter(
