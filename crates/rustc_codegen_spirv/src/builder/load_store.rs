@@ -319,6 +319,58 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .unwrap()
                     .with_type(target_ty)
             }
+            (64, _) => {
+                // lower = u64(base[0])
+                // upper = u64(base[1])
+                // result = lower | (upper << 32)
+                let ulong_ty = SpirvType::Integer(64, false).def(rustc_span::DUMMY_SP, self);
+
+                let lower = self
+                    .emit()
+                    .load(uint_ty, None, result, None, std::iter::empty())
+                    .unwrap();
+
+                let lower = self.emit().u_convert(ulong_ty, None, lower).unwrap();
+
+                let const_one = self.constant_int(uint_ty, 1 as u64).def(self);
+
+                let upper_offset = self.emit().i_add(uint_ty, None, offset, const_one).unwrap();
+
+                let indices = vec![bindless_idx, zero, upper_offset];
+
+                let upper_chain = self
+                    .emit()
+                    .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+                    .unwrap();
+
+                let upper = self
+                    .emit()
+                    .load(uint_ty, None, upper_chain, None, std::iter::empty())
+                    .unwrap();
+
+                let upper = self.emit().u_convert(ulong_ty, None, upper).unwrap();
+
+                let thirty_two = self.constant_int(uint_ty, 32).def(self);
+
+                let upper_shifted = self
+                    .emit()
+                    .shift_left_logical(ulong_ty, None, upper, thirty_two)
+                    .unwrap();
+
+                let value = self
+                    .emit()
+                    .bitwise_or(ulong_ty, None, upper_shifted, lower)
+                    .unwrap();
+
+                if signed {
+                    self.emit()
+                        .bitcast(target_ty, None, value)
+                        .unwrap()
+                        .with_type(target_ty)
+                } else {
+                    value.with_type(ulong_ty)
+                }
+            }
             _ => panic!("Invalid load bits: {} signed: {}", bits, signed),
         }
     }
@@ -393,7 +445,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .with_type(adt)
             }
             SpirvType::Float(bits) => {
-                let loaded_as_u32 = self
+                let loaded_as_int = self
                     .load_from_u32(
                         bits,
                         false,
@@ -408,7 +460,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .def(self);
 
                 self.emit()
-                    .bitcast(result_type, None, loaded_as_u32)
+                    .bitcast(result_type, None, loaded_as_int)
                     .unwrap()
                     .with_type(result_type)
             }
