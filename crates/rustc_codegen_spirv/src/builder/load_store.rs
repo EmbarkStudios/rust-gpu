@@ -256,8 +256,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
         let bindless_idx = args[0].def(self);
 
-        eprintln!("{:?} / {:?}", result_type, args);
-
         let sets = self.bindless_descriptor_sets.borrow().unwrap();
 
         self.recurse_adt_for_loads(
@@ -336,7 +334,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         sets: &BindlessDescriptorSets,
     ) -> SpirvValue {
         let data = self.lookup_type(result_type);
-        eprintln!("{:?}", data);
 
         match data {
             SpirvType::Adt {
