@@ -1415,10 +1415,6 @@
 <span id="1412">1412</span>
 <span id="1413">1413</span>
 <span id="1414">1414</span>
-<span id="1415">1415</span>
-<span id="1416">1416</span>
-<span id="1417">1417</span>
-<span id="1418">1418</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
@@ -1778,9 +1774,7 @@
         <span class="kw">let</span> <span class="ident">out_register</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">match</span> <span class="ident">first_token</span> {
             <span class="ident">Token</span>::<span class="ident">Placeholder</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="ident">id_str</span>) <span class="kw">if</span> <span class="ident">id_str</span>.<span class="ident">starts_with</span>(<span class="string">&#39;%&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-            <span class="ident">Token</span>::<span class="ident">String</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Token</span>::<span class="ident">String</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         } {
             <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">parse_id_out</span>(<span class="ident">id_map</span>, <span class="ident">defined_ids</span>, <span class="ident">first_token</span>) {
                 <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">result_id</span>,
@@ -2343,9 +2337,7 @@
         };
         <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">token</span> {
             <span class="ident">Token</span>::<span class="ident">Word</span>(<span class="ident">word</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">word</span>),
-            <span class="ident">Token</span>::<span class="ident">String</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-            <span class="ident">Token</span>::<span class="ident">Placeholder</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-            <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">Token</span>::<span class="ident">String</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Token</span>::<span class="ident">Placeholder</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">|</span> <span class="ident">Token</span>::<span class="ident">Typeof</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         };
         <span class="kw">match</span> (<span class="ident">kind</span>, <span class="ident">word</span>) {
             (<span class="ident">OperandKind</span>::<span class="ident">IdResultType</span>, <span class="kw">_</span>) <span class="op">|</span> (<span class="ident">OperandKind</span>::<span class="ident">IdResult</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {

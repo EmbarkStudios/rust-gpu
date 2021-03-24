@@ -2291,9 +2291,9 @@
     <span class="kw">fn</span> <span class="ident">ordering_to_semantics_def</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ordering</span>: <span class="ident">AtomicOrdering</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">invalid_seq_cst</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="kw">let</span> <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ordering</span> {
-            <span class="ident">AtomicOrdering</span>::<span class="ident">NotAtomic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemorySemantics</span>::<span class="ident">NONE</span>,
-            <span class="ident">AtomicOrdering</span>::<span class="ident">Unordered</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemorySemantics</span>::<span class="ident">NONE</span>,
-            <span class="ident">AtomicOrdering</span>::<span class="ident">Monotonic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemorySemantics</span>::<span class="ident">NONE</span>,
+            <span class="ident">AtomicOrdering</span>::<span class="ident">NotAtomic</span> <span class="op">|</span> <span class="ident">AtomicOrdering</span>::<span class="ident">Unordered</span> <span class="op">|</span> <span class="ident">AtomicOrdering</span>::<span class="ident">Monotonic</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">MemorySemantics</span>::<span class="ident">NONE</span>
+            }
             <span class="comment">// Note: rustc currently has AtomicOrdering::Consume commented out, if it ever becomes</span>
             <span class="comment">// uncommented, it should be MakeVisible | Acquire.</span>
             <span class="ident">AtomicOrdering</span>::<span class="ident">Acquire</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MemorySemantics</span>::<span class="ident">MAKE_VISIBLE</span> <span class="op">|</span> <span class="ident">MemorySemantics</span>::<span class="ident">ACQUIRE</span>,
