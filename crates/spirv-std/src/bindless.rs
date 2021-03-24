@@ -148,6 +148,11 @@ impl<T> SimpleBuffer<T> {
     pub extern "unadjusted" fn load(self) -> T {
         unsafe { internal_buffer_load(self.0.index(), 0) }
     }
+
+    #[spirv_std_macros::gpu_only]
+    pub unsafe extern "unadjusted" fn store(self, index: u32, value: T) {
+        unsafe { internal_buffer_store(self.0.index(), 0, value) }
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -162,10 +167,13 @@ impl<T> ArrayBuffer<T> {
 
     #[spirv_std_macros::gpu_only]
     pub unsafe extern "unadjusted" fn store(self, index: u32, value: T) {
-        // jb-todo: figure out why this assert breaks with complaints about pointers
-        // assert!(self.0.tag() == RenderResourceTag::Buffer);
-
-        unsafe { internal_buffer_store(self.0.index(), index * core::mem::size_of::<T>() as u32, value) }
+        unsafe {
+            internal_buffer_store(
+                self.0.index(),
+                index * core::mem::size_of::<T>() as u32,
+                value,
+            )
+        }
     }
 }
 
