@@ -347,6 +347,16 @@
 <span id="344">344</span>
 <span id="345">345</span>
 <span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -610,6 +620,16 @@
         <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">flat</span>.<span class="ident">is_some</span>() {
             <span class="self">self</span>.<span class="ident">emit_global</span>()
                 .<span class="ident">decorate</span>(<span class="ident">variable</span>, <span class="ident">Decoration</span>::<span class="ident">Flat</span>, <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">empty</span>());
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">invariant</span>) <span class="op">=</span> <span class="ident">attrs</span>.<span class="ident">invariant</span> {
+            <span class="self">self</span>.<span class="ident">emit_global</span>()
+                .<span class="ident">decorate</span>(<span class="ident">variable</span>, <span class="ident">Decoration</span>::<span class="ident">Invariant</span>, <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">empty</span>());
+            <span class="kw">if</span> <span class="ident">storage_class</span> <span class="op">!</span><span class="op">=</span> <span class="ident">StorageClass</span>::<span class="ident">Output</span> {
+                <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                    <span class="ident">invariant</span>.<span class="ident">span</span>,
+                    <span class="string">&quot;#[spirv(invariant)] is only valid on Output variables&quot;</span>,
+                );
+            }
         }
 
         <span class="comment">// FIXME(eddyb) check whether the storage class is compatible with the</span>

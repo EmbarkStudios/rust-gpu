@@ -503,6 +503,10 @@
 <span id="500">500</span>
 <span id="501">501</span>
 <span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! `#[spirv(...)]` attribute support.</span>
 <span class="doccomment">//!</span>
@@ -597,6 +601,7 @@
     <span class="ident">DescriptorSet</span>(<span class="ident">u32</span>),
     <span class="ident">Binding</span>(<span class="ident">u32</span>),
     <span class="ident">Flat</span>,
+    <span class="ident">Invariant</span>,
 
     <span class="comment">// `fn`/closure attributes:</span>
     <span class="ident">UnrollLoops</span>,
@@ -628,6 +633,7 @@
     <span class="kw">pub</span> <span class="ident">descriptor_set</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">binding</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">flat</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">invariant</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
 
     <span class="comment">// `fn`/closure attributes:</span>
     <span class="kw">pub</span> <span class="ident">unroll_loops</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -710,6 +716,7 @@
             ),
             <span class="ident">Binding</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">binding</span>, <span class="ident">value</span>, <span class="ident">span</span>, <span class="string">&quot;#[spirv(binding)]&quot;</span>),
             <span class="ident">Flat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">flat</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(flat)]&quot;</span>),
+            <span class="ident">Invariant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">invariant</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(invariant)]&quot;</span>),
             <span class="ident">UnrollLoops</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">unroll_loops</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(unroll_loops)]&quot;</span>),
         }
     }
@@ -791,7 +798,8 @@
                 <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Builtin</span>(<span class="kw">_</span>)
                 <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">DescriptorSet</span>(<span class="kw">_</span>)
                 <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Binding</span>(<span class="kw">_</span>)
-                <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Flat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">target</span> {
+                <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Flat</span>
+                <span class="op">|</span> <span class="ident">SpirvAttribute</span>::<span class="ident">Invariant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">target</span> {
                     <span class="ident">Target</span>::<span class="ident">Param</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">parent_hir_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">get_parent_node</span>(<span class="ident">hir_id</span>);
                         <span class="kw">let</span> <span class="ident">parent_is_entry_point</span> <span class="op">=</span>
