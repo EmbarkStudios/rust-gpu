@@ -1,4 +1,4 @@
-use super::{link, Options};
+use super::{link, LinkResult, Options};
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
 use rustc_driver::handle_options;
@@ -95,10 +95,14 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
                 mem2reg: false,
                 structurize: false,
                 use_new_structurizer: false,
+                emit_multiple_modules: false,
             },
         );
         assert_eq!(compiler.session().has_errors(), res.is_err());
-        res
+        res.map(|res| match res {
+            LinkResult::SingleModule(m) => m,
+            LinkResult::MultipleModules(_) => unreachable!(),
+        })
     })
     .map_err(|_e| thread.join().unwrap())
 }

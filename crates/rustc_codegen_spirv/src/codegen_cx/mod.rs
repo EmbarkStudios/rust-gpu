@@ -98,6 +98,8 @@ impl<'tcx> CodegenCx<'tcx> {
                 memory_model = Some(MemoryModel::Vulkan);
             } else if feature == sym.glsl450 {
                 memory_model = Some(MemoryModel::GLSL450);
+            } else if feature == sym.multimodule {
+                // do nothing, this is reparsed in rustc_codegen_spirv/lib.rs link()
             } else {
                 tcx.sess.err(&format!("Unknown feature {}", feature));
             }

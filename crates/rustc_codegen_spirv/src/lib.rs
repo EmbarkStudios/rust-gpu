@@ -380,6 +380,9 @@ impl CodegenBackend for SpirvCodegenBackend {
     ) -> Result<(), ErrorReported> {
         // TODO: Can we merge this sym with the one in symbols.rs?
         let legalize = !sess.target_features.contains(&Symbol::intern("kernel"));
+        let emit_multiple_modules = sess
+            .target_features
+            .contains(&Symbol::intern("multimodule"));
 
         let timer = sess.timer("link_crate");
         link::link(
@@ -388,6 +391,7 @@ impl CodegenBackend for SpirvCodegenBackend {
             outputs,
             &codegen_results.crate_name.as_str(),
             legalize,
+            emit_multiple_modules,
         );
         drop(timer);
 

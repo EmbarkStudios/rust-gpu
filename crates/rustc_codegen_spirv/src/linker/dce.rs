@@ -73,6 +73,9 @@ fn kill_unrooted(module: &mut Module, rooted: &HashSet<Word>) {
     module
         .ext_inst_imports
         .retain(|inst| is_rooted(inst, rooted));
+    module
+        .execution_modes
+        .retain(|inst| is_rooted(inst, rooted));
     module.debugs.retain(|inst| is_rooted(inst, rooted));
     module.annotations.retain(|inst| is_rooted(inst, rooted));
     module

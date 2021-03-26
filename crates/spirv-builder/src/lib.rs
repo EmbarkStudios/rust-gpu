@@ -64,18 +64,32 @@ use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::fmt;
+use std::fs::File;
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 #[derive(Debug)]
 pub enum SpirvBuilderError {
     BuildFailed,
+    MultiModuleWithPrintMetadata,
+    MetadataFileMissing(std::io::Error),
+    MetadataFileMalformed(serde_json::Error),
 }
 
 impl fmt::Display for SpirvBuilderError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SpirvBuilderError::BuildFailed => f.write_str("Build failed"),
+            SpirvBuilderError::MultiModuleWithPrintMetadata => {
+                f.write_str("Multi-module build cannot be used with print_metadata = true")
+            }
+            SpirvBuilderError::MetadataFileMissing(_) => {
+                f.write_str("Multi-module metadata file missing")
+            }
+            SpirvBuilderError::MetadataFileMalformed(_) => {
+                f.write_str("Unable to parse multi-module metadata file")
+            }
         }
     }
 }
@@ -134,12 +148,24 @@ impl SpirvBuilder {
     /// you usually don't have to inspect the path, as the environment variable will already be
     /// set.
     pub fn build(self) -> Result<PathBuf, SpirvBuilderError> {
-        let spirv_module = invoke_rustc(&self)?;
+        let spirv_module = invoke_rustc(&self, false)?;
         let env_var = spirv_module.file_name().unwrap().to_str().unwrap();
         if self.print_metadata {
             println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
         }
         Ok(spirv_module)
+    }
+
+    pub fn build_multimodule(self) -> Result<HashMap<String, PathBuf>, SpirvBuilderError> {
+        if self.print_metadata {
+            return Err(SpirvBuilderError::MultiModuleWithPrintMetadata);
+        }
+        let metadata_file = invoke_rustc(&self, true)?;
+        let metadata_contents =
+            File::open(metadata_file).map_err(SpirvBuilderError::MetadataFileMissing)?;
+        let metadata = serde_json::from_reader(BufReader::new(metadata_contents))
+            .map_err(SpirvBuilderError::MetadataFileMalformed)?;
+        Ok(metadata)
     }
 }
 
@@ -175,7 +201,8 @@ fn find_rustc_codegen_spirv() -> PathBuf {
     panic!("Could not find {} in library path", filename);
 }
 
-fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
+// Note: in case of multimodule, returns path to the metadata json
+fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, SpirvBuilderError> {
     // Okay, this is a little bonkers: in a normal world, we'd have the user clone
     // rustc_codegen_spirv and pass in the path to it, and then we'd invoke cargo to build it, grab
     // the resulting .so, and pass it into -Z codegen-backend. But that's really gross: the user
@@ -199,6 +226,9 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
             }
             .to_string(),
         );
+    }
+    if multimodule {
+        target_features.push("+multimodule".to_string());
     }
     let feature_flag = if target_features.is_empty() {
         String::new()
