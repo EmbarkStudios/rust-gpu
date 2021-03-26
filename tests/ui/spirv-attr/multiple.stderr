@@ -13,8 +13,14 @@ note: previous intrinsic type attribute
 error: only one intrinsic type attribute is allowed on a struct
   --> $DIR/multiple.rs:13:5
    |
-13 |     image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | /     image_type(
+14 | |         dim = "Dim2D",
+15 | |         depth = 0,
+16 | |         arrayed = 0,
+...  |
+19 | |         image_format = "Unknown"
+20 | |     )
+   | |_____^
    |
 note: previous intrinsic type attribute
   --> $DIR/multiple.rs:12:5
@@ -23,171 +29,171 @@ note: previous intrinsic type attribute
    |     ^^^^^^^
 
 error: only one #[spirv(block)] attribute is allowed on a struct
-  --> $DIR/multiple.rs:17:16
+  --> $DIR/multiple.rs:24:16
    |
-17 | #[spirv(block, block)]
+24 | #[spirv(block, block)]
    |                ^^^^^
    |
 note: previous #[spirv(block)] attribute
-  --> $DIR/multiple.rs:17:9
+  --> $DIR/multiple.rs:24:9
    |
-17 | #[spirv(block, block)]
+24 | #[spirv(block, block)]
    |         ^^^^^
 
 error: only one entry-point attribute is allowed on a function
-  --> $DIR/multiple.rs:20:17
+  --> $DIR/multiple.rs:27:17
    |
-20 | #[spirv(vertex, vertex)]
+27 | #[spirv(vertex, vertex)]
    |                 ^^^^^^
    |
 note: previous entry-point attribute
-  --> $DIR/multiple.rs:20:9
+  --> $DIR/multiple.rs:27:9
    |
-20 | #[spirv(vertex, vertex)]
+27 | #[spirv(vertex, vertex)]
    |         ^^^^^^
 
 error: only one entry-point attribute is allowed on a function
-  --> $DIR/multiple.rs:23:17
+  --> $DIR/multiple.rs:30:17
    |
-23 | #[spirv(vertex, fragment)]
+30 | #[spirv(vertex, fragment)]
    |                 ^^^^^^^^
    |
 note: previous entry-point attribute
-  --> $DIR/multiple.rs:23:9
+  --> $DIR/multiple.rs:30:9
    |
-23 | #[spirv(vertex, fragment)]
+30 | #[spirv(vertex, fragment)]
    |         ^^^^^^
 
 error: only one storage class attribute is allowed on a function param
-  --> $DIR/multiple.rs:28:22
+  --> $DIR/multiple.rs:35:22
    |
-28 |     #[spirv(uniform, uniform)] _same_storage_class: (),
+35 |     #[spirv(uniform, uniform)] _same_storage_class: (),
    |                      ^^^^^^^
    |
 note: previous storage class attribute
-  --> $DIR/multiple.rs:28:13
+  --> $DIR/multiple.rs:35:13
    |
-28 |     #[spirv(uniform, uniform)] _same_storage_class: (),
+35 |     #[spirv(uniform, uniform)] _same_storage_class: (),
    |             ^^^^^^^
 
 error: only one storage class attribute is allowed on a function param
-  --> $DIR/multiple.rs:29:22
+  --> $DIR/multiple.rs:36:22
    |
-29 |     #[spirv(uniform, push_constant)] _diff_storage_class: (),
+36 |     #[spirv(uniform, push_constant)] _diff_storage_class: (),
    |                      ^^^^^^^^^^^^^
    |
 note: previous storage class attribute
-  --> $DIR/multiple.rs:29:13
+  --> $DIR/multiple.rs:36:13
    |
-29 |     #[spirv(uniform, push_constant)] _diff_storage_class: (),
+36 |     #[spirv(uniform, push_constant)] _diff_storage_class: (),
    |             ^^^^^^^
 
 error: only one builtin attribute is allowed on a function param
-  --> $DIR/multiple.rs:31:23
+  --> $DIR/multiple.rs:38:23
    |
-31 |     #[spirv(position, position)] _same_builtin: (),
+38 |     #[spirv(position, position)] _same_builtin: (),
    |                       ^^^^^^^^
    |
 note: previous builtin attribute
-  --> $DIR/multiple.rs:31:13
+  --> $DIR/multiple.rs:38:13
    |
-31 |     #[spirv(position, position)] _same_builtin: (),
+38 |     #[spirv(position, position)] _same_builtin: (),
    |             ^^^^^^^^
 
 error: only one builtin attribute is allowed on a function param
-  --> $DIR/multiple.rs:32:23
+  --> $DIR/multiple.rs:39:23
    |
-32 |     #[spirv(position, vertex_index)] _diff_builtin: (),
+39 |     #[spirv(position, vertex_index)] _diff_builtin: (),
    |                       ^^^^^^^^^^^^
    |
 note: previous builtin attribute
-  --> $DIR/multiple.rs:32:13
+  --> $DIR/multiple.rs:39:13
    |
-32 |     #[spirv(position, vertex_index)] _diff_builtin: (),
+39 |     #[spirv(position, vertex_index)] _diff_builtin: (),
    |             ^^^^^^^^
 
 error: only one #[spirv(descriptor_set)] attribute is allowed on a function param
-  --> $DIR/multiple.rs:34:33
+  --> $DIR/multiple.rs:41:33
    |
-34 |     #[spirv(descriptor_set = 0, descriptor_set = 0)] _same_descriptor_set: (),
+41 |     #[spirv(descriptor_set = 0, descriptor_set = 0)] _same_descriptor_set: (),
    |                                 ^^^^^^^^^^^^^^^^^^
    |
 note: previous #[spirv(descriptor_set)] attribute
-  --> $DIR/multiple.rs:34:13
+  --> $DIR/multiple.rs:41:13
    |
-34 |     #[spirv(descriptor_set = 0, descriptor_set = 0)] _same_descriptor_set: (),
+41 |     #[spirv(descriptor_set = 0, descriptor_set = 0)] _same_descriptor_set: (),
    |             ^^^^^^^^^^^^^^^^^^
 
 error: only one #[spirv(descriptor_set)] attribute is allowed on a function param
-  --> $DIR/multiple.rs:35:33
+  --> $DIR/multiple.rs:42:33
    |
-35 |     #[spirv(descriptor_set = 0, descriptor_set = 1)] _diff_descriptor_set: (),
+42 |     #[spirv(descriptor_set = 0, descriptor_set = 1)] _diff_descriptor_set: (),
    |                                 ^^^^^^^^^^^^^^^^^^
    |
 note: previous #[spirv(descriptor_set)] attribute
-  --> $DIR/multiple.rs:35:13
+  --> $DIR/multiple.rs:42:13
    |
-35 |     #[spirv(descriptor_set = 0, descriptor_set = 1)] _diff_descriptor_set: (),
+42 |     #[spirv(descriptor_set = 0, descriptor_set = 1)] _diff_descriptor_set: (),
    |             ^^^^^^^^^^^^^^^^^^
 
 error: only one #[spirv(binding)] attribute is allowed on a function param
-  --> $DIR/multiple.rs:37:26
+  --> $DIR/multiple.rs:44:26
    |
-37 |     #[spirv(binding = 0, binding = 0)] _same_binding: (),
+44 |     #[spirv(binding = 0, binding = 0)] _same_binding: (),
    |                          ^^^^^^^^^^^
    |
 note: previous #[spirv(binding)] attribute
-  --> $DIR/multiple.rs:37:13
+  --> $DIR/multiple.rs:44:13
    |
-37 |     #[spirv(binding = 0, binding = 0)] _same_binding: (),
+44 |     #[spirv(binding = 0, binding = 0)] _same_binding: (),
    |             ^^^^^^^^^^^
 
 error: only one #[spirv(binding)] attribute is allowed on a function param
-  --> $DIR/multiple.rs:38:26
+  --> $DIR/multiple.rs:45:26
    |
-38 |     #[spirv(binding = 0, binding = 1)] _diff_binding: (),
+45 |     #[spirv(binding = 0, binding = 1)] _diff_binding: (),
    |                          ^^^^^^^^^^^
    |
 note: previous #[spirv(binding)] attribute
-  --> $DIR/multiple.rs:38:13
+  --> $DIR/multiple.rs:45:13
    |
-38 |     #[spirv(binding = 0, binding = 1)] _diff_binding: (),
+45 |     #[spirv(binding = 0, binding = 1)] _diff_binding: (),
    |             ^^^^^^^^^^^
 
 error: only one #[spirv(flat)] attribute is allowed on a function param
-  --> $DIR/multiple.rs:40:19
+  --> $DIR/multiple.rs:47:19
    |
-40 |     #[spirv(flat, flat)] _flat: (),
+47 |     #[spirv(flat, flat)] _flat: (),
    |                   ^^^^
    |
 note: previous #[spirv(flat)] attribute
-  --> $DIR/multiple.rs:40:13
+  --> $DIR/multiple.rs:47:13
    |
-40 |     #[spirv(flat, flat)] _flat: (),
+47 |     #[spirv(flat, flat)] _flat: (),
    |             ^^^^
 
 error: only one #[spirv(invariant)] attribute is allowed on a function param
-  --> $DIR/multiple.rs:42:24
+  --> $DIR/multiple.rs:49:24
    |
-42 |     #[spirv(invariant, invariant)] _invariant: (),
+49 |     #[spirv(invariant, invariant)] _invariant: (),
    |                        ^^^^^^^^^
    |
 note: previous #[spirv(invariant)] attribute
-  --> $DIR/multiple.rs:42:13
+  --> $DIR/multiple.rs:49:13
    |
-42 |     #[spirv(invariant, invariant)] _invariant: (),
+49 |     #[spirv(invariant, invariant)] _invariant: (),
    |             ^^^^^^^^^
 
 error: only one #[spirv(unroll_loops)] attribute is allowed on a function
-  --> $DIR/multiple.rs:45:23
+  --> $DIR/multiple.rs:53:23
    |
-45 | #[spirv(unroll_loops, unroll_loops)]
+53 | #[spirv(unroll_loops, unroll_loops)]
    |                       ^^^^^^^^^^^^
    |
 note: previous #[spirv(unroll_loops)] attribute
-  --> $DIR/multiple.rs:45:9
+  --> $DIR/multiple.rs:53:9
    |
-45 | #[spirv(unroll_loops, unroll_loops)]
+53 | #[spirv(unroll_loops, unroll_loops)]
    |         ^^^^^^^^^^^^
 
 error: aborting due to 16 previous errors

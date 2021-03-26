@@ -3,7 +3,12 @@
 
 // build-fail
 
-#![feature(extern_types, min_type_alias_impl_trait, stmt_expr_attributes, trait_alias)]
+#![feature(
+    extern_types,
+    min_type_alias_impl_trait,
+    stmt_expr_attributes,
+    trait_alias
+)]
 
 // NOTE(eddyb) in the interest of keeping this test manageable, only one of
 // each of the following categories of `#[spirv(...)]` attributes is used:
@@ -135,7 +140,9 @@ type _TyAlias = ();
 )]
 type _OpaqueTy = impl Copy;
 
-fn _opaque_ty_definer() -> _OpaqueTy { () }
+fn _opaque_ty_definer() -> _OpaqueTy {
+    ()
+}
 
 #[spirv(
     sampler, block, sampled_image, // struct-only (incl. `image_type`)
@@ -332,14 +339,13 @@ fn _fn(
     )]
     let _statement = ();
 
-    let _closure =
-        #[spirv(
+    let _closure = #[spirv(
             sampler, block, sampled_image, // struct-only (incl. `image_type`)
             image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
             vertex, // fn-only
             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         )]
-        || {};
+    || {};
 
     (
         #[spirv(
@@ -371,24 +377,20 @@ fn _fn_with_generics<
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
-    )]
-    '_lifetime_param,
-
+    )] '_lifetime_param,
     #[spirv(
         sampler, block, sampled_image, // struct-only (incl. `image_type`)
         image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
-    )]
-    _TyParam,
-
+    )] _TyParam,
     #[spirv(
         sampler, block, sampled_image, // struct-only (incl. `image_type`)
         image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
-    )]
-    const _CONST_PARAM: usize
->() {}
+    )] const _CONST_PARAM: usize,
+>() {
+}

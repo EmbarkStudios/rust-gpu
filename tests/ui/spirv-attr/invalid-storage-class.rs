@@ -9,4 +9,5 @@ fn _entry(
     #[spirv(private)] _: (),
     #[spirv(function)] _: (),
     #[spirv(generic)] _: (),
-) {}
+) {
+}
