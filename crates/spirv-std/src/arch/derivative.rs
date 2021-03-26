@@ -34,7 +34,7 @@ macro_rules! deriv_fn {
 /// dependent on external factors.
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
-fn ddx<F: Float>(component: F) -> F {
+pub fn ddx<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdx, false)
 }
 
@@ -43,7 +43,7 @@ fn ddx<F: Float>(component: F) -> F {
 /// the current fragment and its immediate neighbor(s).
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
-fn ddx_fine<F: Float>(component: F) -> F {
+pub fn ddx_fine<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdxFine, true)
 }
 
@@ -55,7 +55,7 @@ fn ddx_fine<F: Float>(component: F) -> F {
 /// unique locations than would be allowed by [`Self::ddx_fine`].
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
-fn ddx_coarse<F: Float>(component: F) -> F {
+pub fn ddx_coarse<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdxCoarse, true)
 }
 
@@ -65,7 +65,7 @@ fn ddx_coarse<F: Float>(component: F) -> F {
 /// external factors.
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
-fn ddy<F: Float>(component: F) -> F {
+pub fn ddy<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdy, false)
 }
 
@@ -74,7 +74,7 @@ fn ddy<F: Float>(component: F) -> F {
 /// the current fragment and its immediate neighbor(s).
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
-fn ddy_fine<F: Float>(component: F) -> F {
+pub fn ddy_fine<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdyFine, true)
 }
 
@@ -86,7 +86,7 @@ fn ddy_fine<F: Float>(component: F) -> F {
 /// unique locations than would be allowed by [`Derivative::ddy_fine`].
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
-fn ddy_coarse<F: Float>(component: F) -> F {
+pub fn ddy_coarse<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdyCoarse, true)
 }
 
@@ -94,7 +94,7 @@ fn ddy_coarse<F: Float>(component: F) -> F {
 /// [`Self::ddy`] as a single operation.
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
-fn fwidth<F: Float>(component: F) -> F {
+pub fn fwidth<F: Float>(component: F) -> F {
     deriv_fn!(component, OpFwidth, false)
 }
 
@@ -102,7 +102,7 @@ fn fwidth<F: Float>(component: F) -> F {
 /// [`Self::ddy_fine`] as a single operation.
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
-fn fwidth_fine<F: Float>(component: F) -> F {
+pub fn fwidth_fine<F: Float>(component: F) -> F {
     deriv_fn!(component, OpFwidthFine, true)
 }
 
@@ -110,6 +110,6 @@ fn fwidth_fine<F: Float>(component: F) -> F {
 /// [`Self::ddy_coarse`] as a single operation.
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
-fn fwidth_coarse<F: Float>(component: F) -> F {
+pub fn fwidth_coarse<F: Float>(component: F) -> F {
     deriv_fn!(component, OpFwidthCoarse, true)
 }
