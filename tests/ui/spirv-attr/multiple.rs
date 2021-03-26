@@ -38,6 +38,8 @@ fn _entry(
     #[spirv(binding = 0, binding = 1)] _diff_binding: (),
 
     #[spirv(flat, flat)] _flat: (),
+
+    #[spirv(invariant, invariant)] _invariant: (),
 ) {}
 
 #[spirv(unroll_loops, unroll_loops)]
