@@ -94,5 +94,16 @@ Example:
 
 ```rust
 #[spirv(fragment)]
-fn main(#[spirv(flat)] obj: &u32) { }
+fn main(#[spirv(flat)] obj: u32) { }
+```
+
+## Invariant
+
+The invariant attribute corresponds to the invariant keyword in glsl. It can only be applied to output variables.
+
+Example:
+
+```rust
+#[spirv(vertex)]
+fn main(#[spirv(invariant)] var: &mut f32) { }
 ```
