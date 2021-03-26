@@ -261,6 +261,16 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global()
                 .decorate(variable, Decoration::Flat, std::iter::empty());
         }
+        if let Some(invariant) = attrs.invariant {
+            self.emit_global()
+                .decorate(variable, Decoration::Invariant, std::iter::empty());
+            if storage_class != StorageClass::Output {
+                self.tcx.sess.span_err(
+                    invariant.span,
+                    "#[spirv(invariant)] is only valid on Output variables",
+                );
+            }
+        }
 
         // FIXME(eddyb) check whether the storage class is compatible with the
         // specific shader stage of this entry-point, and any decorations
