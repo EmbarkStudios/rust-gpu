@@ -14,7 +14,7 @@ in with pkgs; stdenv.mkDerivation rec {
   ];
 
   # Runtime dependencies.
-  LD_LIBRARY_PATH = with xlibs; stdenv.lib.makeLibraryPath [
+  LD_LIBRARY_PATH = with xlibs; lib.makeLibraryPath [
     libX11 libXcursor libXi libXrandr vulkan-loader
   ];
 }
