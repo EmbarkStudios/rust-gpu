@@ -12,6 +12,7 @@ os=$1
 function cargo_test() {
     echo ::group::"$1 build"
     cargo test \
+        --release \
         --manifest-path "$1/Cargo.toml" \
         --no-default-features \
         --features "$FEAT" \
@@ -20,6 +21,7 @@ function cargo_test() {
 
     echo ::group::"$1 test"
     cargo test \
+        --release \
         --manifest-path "$1/Cargo.toml" \
         --no-default-features \
         --features "$FEAT"
@@ -28,11 +30,11 @@ function cargo_test() {
 
 function cargo_test_no_features() {
     echo ::group::"$1 build"
-    cargo test --manifest-path "$1/Cargo.toml" --no-run
+    cargo test --release --manifest-path "$1/Cargo.toml" --no-run
     echo ::endgroup::
 
     echo ::group::"$1 test"
-    cargo test --manifest-path "$1/Cargo.toml"
+    cargo test --release --manifest-path "$1/Cargo.toml"
     echo ::endgroup::
 }
 
