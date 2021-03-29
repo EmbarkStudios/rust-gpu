@@ -188,6 +188,17 @@ impl SpirvType {
             }
             Self::RuntimeArray { element } => {
                 let result = cx.emit_global().type_runtime_array(element);
+                // ArrayStride decoration wants in *bytes*
+                let element_size = cx
+                    .lookup_type(element)
+                    .sizeof(cx)
+                    .expect("Element of sized array must be sized")
+                    .bytes();
+                cx.emit_global().decorate(
+                    result,
+                    Decoration::ArrayStride,
+                    iter::once(Operand::LiteralInt32(element_size as u32)),
+                );
                 if cx.kernel_mode {
                     cx.zombie_with_span(result, def_span, "RuntimeArray in kernel mode");
                 }

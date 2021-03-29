@@ -33,6 +33,7 @@ use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::iter::once;
 use std::rc::Rc;
+use std::str::FromStr;
 
 pub struct CodegenCx<'tcx> {
     pub tcx: TyCtxt<'tcx>,
@@ -69,6 +70,8 @@ pub struct CodegenCx<'tcx> {
     /// Some runtimes (e.g. intel-compute-runtime) disallow atomics on i8 and i16, even though it's allowed by the spec.
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
+
+    pub codegen_args: CodegenArgs,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -102,6 +105,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 tcx.sess.err(&format!("Unknown feature {}", feature));
             }
         }
+        let codegen_args = CodegenArgs::from_session(tcx.sess);
         Self {
             tcx,
             codegen_unit,
@@ -120,6 +124,7 @@ impl<'tcx> CodegenCx<'tcx> {
             panic_fn_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
+            codegen_args,
         }
     }
 
@@ -252,6 +257,51 @@ impl<'tcx> CodegenCx<'tcx> {
                 global_var,
             },
             ty,
+        }
+    }
+}
+
+pub struct CodegenArgs {
+    pub module_output_type: ModuleOutputType,
+}
+
+impl CodegenArgs {
+    pub fn from_session(sess: &Session) -> Self {
+        match CodegenArgs::parse(&sess.opts.cg.llvm_args) {
+            Ok(ok) => ok,
+            Err(err) => sess.fatal(&format!("Unable to parse llvm-args: {}", err)),
+        }
+    }
+
+    pub fn parse(args: &[String]) -> Result<Self, rustc_session::getopts::Fail> {
+        use rustc_session::getopts;
+        let mut opts = getopts::Options::new();
+        opts.optopt(
+            "",
+            "module-output",
+            "single output or multiple output",
+            "[single|multiple]",
+        );
+        let matches = opts.parse(args)?;
+        let module_output_type =
+            matches.opt_get_default("module-output", ModuleOutputType::Single)?;
+        Ok(Self { module_output_type })
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ModuleOutputType {
+    Single,
+    Multiple,
+}
+
+impl FromStr for ModuleOutputType {
+    type Err = rustc_session::getopts::Fail;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "single" => Ok(Self::Single),
+            "multiple" => Ok(Self::Multiple),
+            v => Err(Self::Err::UnrecognizedOption(v.to_string())),
         }
     }
 }

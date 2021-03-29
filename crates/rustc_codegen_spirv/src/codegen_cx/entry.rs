@@ -5,12 +5,15 @@ use crate::builder_spirv::SpirvValue;
 use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
+use rustc_codegen_ssa::traits::BaseTypeMethods;
 use rustc_hir as hir;
-use rustc_middle::ty::layout::TyAndLayout;
+use rustc_middle::ty::layout::{HasParamEnv, TyAndLayout};
 use rustc_middle::ty::{Instance, Ty, TyKind};
 use rustc_span::Span;
-use rustc_target::abi::call::{FnAbi, PassMode};
-use rustc_target::abi::LayoutOf;
+use rustc_target::abi::{
+    call::{ArgAbi, ArgAttribute, ArgAttributes, FnAbi, PassMode},
+    LayoutOf, Size,
+};
 use std::collections::HashMap;
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -37,9 +40,27 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(local_id);
         let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
+        const EMPTY: ArgAttribute = ArgAttribute::empty();
         for (abi, arg) in fn_abi.args.iter().zip(body.params) {
             match abi.mode {
-                PassMode::Direct(_) | PassMode::Indirect { .. } => {}
+                PassMode::Direct(_)
+                | PassMode::Indirect { .. }
+                // plain DST/RTA/VLA
+                | PassMode::Pair(
+                    ArgAttributes {
+                        pointee_size: Size::ZERO,
+                        ..
+                    },
+                    ArgAttributes { regular: EMPTY, .. },
+                )
+                // DST struct with fields before the DST member
+                | PassMode::Pair(
+                    ArgAttributes { .. },
+                    ArgAttributes {
+                        pointee_size: Size::ZERO,
+                        ..
+                    },
+                ) => {}
                 _ => self.tcx.sess.span_err(
                     arg.span,
                     &format!("PassMode {:?} invalid for entry point parameter", abi.mode),
@@ -63,7 +84,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.shader_entry_stub(
                 self.tcx.def_span(instance.def_id()),
                 entry_func,
-                fn_abi,
+                &fn_abi.args,
                 body.params,
                 name,
                 execution_model,
@@ -82,7 +103,7 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         span: Span,
         entry_func: SpirvValue,
-        entry_fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
+        arg_abis: &[ArgAbi<'tcx, Ty<'tcx>>],
         hir_params: &[hir::Param<'tcx>],
         name: String,
         execution_model: ExecutionModel,
@@ -94,10 +115,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         .def(span, self);
         let entry_func_return_type = match self.lookup_type(entry_func.ty) {
-            SpirvType::Function {
-                return_type,
-                arguments: _,
-            } => return_type,
+            SpirvType::Function { return_type, .. } => return_type,
             other => self.tcx.sess.fatal(&format!(
                 "Invalid entry_stub type: {}",
                 other.debug(entry_func.ty, self)
@@ -105,14 +123,14 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let mut decoration_locations = HashMap::new();
         // Create OpVariables before OpFunction so they're global instead of local vars.
-        let declared_params = entry_fn_abi
-            .args
+        let declared_params = arg_abis
             .iter()
             .zip(hir_params)
             .map(|(entry_fn_arg, hir_param)| {
                 self.declare_parameter(entry_fn_arg.layout, hir_param, &mut decoration_locations)
             })
             .collect::<Vec<_>>();
+        let len_t = self.type_isize();
         let mut emit = self.emit_global();
         let fn_id = emit
             .begin_function(void, None, FunctionControl::NONE, fn_void_void)
@@ -121,12 +139,19 @@ impl<'tcx> CodegenCx<'tcx> {
         // Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s).
         let arguments: Vec<_> = declared_params
             .iter()
-            .zip(&entry_fn_abi.args)
+            .zip(arg_abis)
             .zip(hir_params)
-            .map(|((&(var, storage_class), entry_fn_arg), hir_param)| {
-                match entry_fn_arg.layout.ty.kind() {
-                    TyKind::Ref(..) => var,
-
+            .flat_map(|((&(var, storage_class), entry_fn_arg), hir_param)| {
+                let mut dst_len_arg = None;
+                let arg = match entry_fn_arg.layout.ty.kind() {
+                    TyKind::Ref(_, ty, _) => {
+                        if !ty.is_sized(self.tcx.at(span), self.param_env()) {
+                            dst_len_arg.replace(
+                                self.dst_length_argument(&mut emit, ty, hir_param, len_t, var),
+                            );
+                        }
+                        var
+                    }
                     _ => match entry_fn_arg.mode {
                         PassMode::Indirect { .. } => var,
                         PassMode::Direct(_) => {
@@ -142,7 +167,8 @@ impl<'tcx> CodegenCx<'tcx> {
                         }
                         _ => unreachable!(),
                     },
-                }
+                };
+                std::iter::once(arg).chain(dst_len_arg)
             })
             .collect();
         emit.function_call(
@@ -168,6 +194,38 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         emit.entry_point(execution_model, fn_id, name, interface);
         fn_id
+    }
+
+    fn dst_length_argument(
+        &self,
+        emit: &mut std::cell::RefMut<'_, rspirv::dr::Builder>,
+        ty: Ty<'tcx>,
+        hir_param: &hir::Param<'tcx>,
+        len_t: Word,
+        var: Word,
+    ) -> Word {
+        match ty.kind() {
+            TyKind::Adt(adt_def, substs) => {
+                let (member_idx, field_def) = adt_def.all_fields().enumerate().last().unwrap();
+                let field_ty = field_def.ty(self.tcx, substs);
+                if !matches!(field_ty.kind(), TyKind::Slice(..)) {
+                    self.tcx.sess.span_fatal(
+                        hir_param.ty_span,
+                        "DST parameters are currently restricted to a reference to a struct whose last field is a slice.",
+                    )
+                }
+                emit.array_length(len_t, None, var, member_idx as u32)
+                    .unwrap()
+            }
+            TyKind::Slice(..) | TyKind::Str => self.tcx.sess.span_fatal(
+                hir_param.ty_span,
+                "Straight slices are not yet supported, wrap the slice in a newtype.",
+            ),
+            _ => self
+                .tcx
+                .sess
+                .span_fatal(hir_param.ty_span, "Unsupported parameter type."),
+        }
     }
 
     fn declare_parameter(
