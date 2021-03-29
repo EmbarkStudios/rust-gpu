@@ -1,4 +1,4 @@
-use super::{dis_fn, dis_globals, val, val_vulkan};
+use super::{dis_entry_fn, dis_fn, dis_globals, val, val_vulkan};
 use std::ffi::OsStr;
 
 struct SetEnvVar<'a> {
@@ -183,20 +183,21 @@ OpEntryPoint Fragment %1 "main"
 OpExecutionMode %1 OriginUpperLeft
 OpName %2 "test_project::add_decorate"
 OpName %3 "test_project::main"
-OpDecorate %4 DescriptorSet 0
-OpDecorate %4 Binding 0
-%5 = OpTypeVoid
-%6 = OpTypeFunction %5
-%7 = OpTypeInt 32 0
-%8 = OpTypePointer Function %7
-%9 = OpConstant %7 1
-%10 = OpTypeFloat 32
-%11 = OpTypeImage %10 2D 0 0 0 1 Unknown
-%12 = OpTypeSampledImage %11
-%13 = OpTypeRuntimeArray %12
-%14 = OpTypePointer UniformConstant %13
-%4 = OpVariable %14 UniformConstant
-%15 = OpTypePointer UniformConstant %12"#,
+OpDecorate %4 ArrayStride 4
+OpDecorate %5 DescriptorSet 0
+OpDecorate %5 Binding 0
+%6 = OpTypeVoid
+%7 = OpTypeFunction %6
+%8 = OpTypeInt 32 0
+%9 = OpTypePointer Function %8
+%10 = OpConstant %8 1
+%11 = OpTypeFloat 32
+%12 = OpTypeImage %11 2D 0 0 0 1 Unknown
+%13 = OpTypeSampledImage %12
+%4 = OpTypeRuntimeArray %13
+%14 = OpTypePointer UniformConstant %4
+%5 = OpVariable %14 UniformConstant
+%15 = OpTypePointer UniformConstant %13"#,
     );
 }
 
@@ -478,4 +479,55 @@ fn ptr_copy_from_method() {
             OpCopyMemory %6 %4
         "#
     );
+}
+
+#[test]
+fn index_user_dst() {
+    dis_entry_fn(
+        r#"
+#[spirv(fragment)]
+pub fn main(
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] slice: &mut SliceF32,
+) {
+    let float: f32 = slice.rta[0];
+    let _ = float;
+}
+
+pub struct SliceF32 {
+    rta: [f32],
+}
+        "#,
+        "main",
+        r#"%1 = OpFunction %2 None %3
+%4 = OpLabel
+%5 = OpArrayLength %6 %7 0
+%8 = OpCompositeInsert %9 %7 %10 0
+%11 = OpCompositeInsert %9 %5 %8 1
+%12 = OpAccessChain %13 %7 %14
+%15 = OpULessThan %16 %14 %5
+OpSelectionMerge %17 None
+OpBranchConditional %15 %18 %19
+%18 = OpLabel
+%20 = OpAccessChain %13 %7 %14
+%21 = OpInBoundsAccessChain %22 %20 %14
+%23 = OpLoad %24 %21
+OpReturn
+%19 = OpLabel
+OpBranch %25
+%25 = OpLabel
+OpBranch %26
+%26 = OpLabel
+%27 = OpPhi %16 %28 %25 %28 %29
+OpLoopMerge %30 %29 None
+OpBranchConditional %27 %31 %30
+%31 = OpLabel
+OpBranch %29
+%29 = OpLabel
+OpBranch %26
+%30 = OpLabel
+OpUnreachable
+%17 = OpLabel
+OpUnreachable
+OpFunctionEnd"#,
+    )
 }

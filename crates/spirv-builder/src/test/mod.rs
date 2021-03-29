@@ -159,6 +159,33 @@ fn dis_fn(src: &str, func: &str, expect: &str) {
     assert_str_eq(expect, &func.disassemble())
 }
 
+fn dis_entry_fn(src: &str, func: &str, expect: &str) {
+    let _lock = global_lock();
+    let module = read_module(&build(src)).unwrap();
+    let id = module
+        .entry_points
+        .iter()
+        .find(|inst| inst.operands.last().unwrap().unwrap_literal_string() == func)
+        .unwrap_or_else(|| {
+            panic!(
+                "no entry point with the name `{}` found in:\n{}\n",
+                func,
+                module.disassemble()
+            )
+        })
+        .operands[1]
+        .unwrap_id_ref();
+    let mut func = module
+        .functions
+        .into_iter()
+        .find(|f| f.def_id().unwrap() == id)
+        .unwrap();
+    // Compact to make IDs more stable
+    compact_ids(&mut func);
+    use rspirv::binary::Disassemble;
+    assert_str_eq(expect, &func.disassemble())
+}
+
 fn dis_globals(src: &str, expect: &str) {
     let _lock = global_lock();
     let module = read_module(&build(src)).unwrap();
