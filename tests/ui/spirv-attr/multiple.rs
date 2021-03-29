@@ -10,7 +10,14 @@ struct _SameIntrinsicType {}
 
 #[spirv(
     sampler,
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    image_type(
+        dim = "Dim2D",
+        depth = 0,
+        arrayed = 0,
+        multisampled = 0,
+        sampled = 1,
+        image_format = "Unknown"
+    )
 )]
 struct _DiffIntrinsicType {}
 
@@ -38,7 +45,10 @@ fn _entry(
     #[spirv(binding = 0, binding = 1)] _diff_binding: (),
 
     #[spirv(flat, flat)] _flat: (),
-) {}
+
+    #[spirv(invariant, invariant)] _invariant: (),
+) {
+}
 
 #[spirv(unroll_loops, unroll_loops)]
 fn _unroll_loops() {}

@@ -1,3 +1,12 @@
+//! Dead code elimination
+//!
+//! This pass removes any instruction that doesn't affect the module. It does so by considering all
+//! `OpEntryPoint` instructions to be "rooted", and then everything a rooted instruction touches is
+//! also rooted (done transitively). Then, any instruction not rooted is removed. It gets a little
+//! weird with things like `OpDecorate`, where the reference is reversed - an `OpDecorate` that
+//! *references* a rooted thing is also rooted, not the other way around - but that's the basic
+//! concept.
+
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::Word;
 use std::collections::HashSet;
@@ -27,16 +36,8 @@ fn spread_roots(module: &Module, rooted: &mut HashSet<Word>) -> bool {
     }
     for func in &module.functions {
         if rooted.contains(&func.def_id().unwrap()) {
-            for inst in &func.def {
+            for inst in func.all_inst_iter() {
                 any |= root(inst, rooted);
-            }
-            for inst in &func.parameters {
-                any |= root(inst, rooted);
-            }
-            for block in &func.blocks {
-                for inst in &block.instructions {
-                    any |= root(inst, rooted);
-                }
             }
         }
     }

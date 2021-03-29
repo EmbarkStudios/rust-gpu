@@ -1,4 +1,3 @@
-#[cfg(feature = "const-generics")]
 use crate::{integer::Integer, vector::Vector};
 
 #[spirv(sampler)]
@@ -23,7 +22,6 @@ pub struct Image2d {
 
 impl Image2d {
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     pub fn sample<V: Vector<f32, 4>>(
         &self,
         sampler: Sampler,
@@ -47,7 +45,6 @@ impl Image2d {
         }
     }
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     /// Sample the image at a coordinate by a lod
     pub fn sample_by_lod<V: Vector<f32, 4>>(
         &self,
@@ -75,7 +72,6 @@ impl Image2d {
         result
     }
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
     pub fn sample_by_gradient<V: Vector<f32, 4>>(
         &self,
@@ -107,7 +103,6 @@ impl Image2d {
     }
     /// Fetch a single texel with a sampler set at compile time
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     pub fn fetch<V, I, const N: usize>(&self, coordinate: impl Vector<I, N>) -> V
     where
         V: Vector<f32, 4>,
@@ -147,7 +142,6 @@ pub struct StorageImage2d {
 impl StorageImage2d {
     /// Read a texel from an image without a sampler.
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     pub fn read<I, V, const N: usize>(&self, coordinate: impl Vector<I, 2>) -> V
     where
         I: Integer,
@@ -172,7 +166,6 @@ impl StorageImage2d {
 
     /// Write a texel to an image without a sampler.
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     pub unsafe fn write<I, const N: usize>(
         &self,
         coordinate: impl Vector<I, 2>,
@@ -208,7 +201,6 @@ pub struct Image2dArray {
 
 impl Image2dArray {
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     pub fn sample<V: Vector<f32, 4>>(
         &self,
         sampler: Sampler,
@@ -232,7 +224,6 @@ impl Image2dArray {
         }
     }
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     /// Sample the image at a coordinate by a lod
     pub fn sample_by_lod<V: Vector<f32, 4>>(
         &self,
@@ -260,7 +251,6 @@ impl Image2dArray {
         result
     }
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
     pub fn sample_by_gradient<V: Vector<f32, 4>>(
         &self,
@@ -308,7 +298,6 @@ pub struct Cubemap {
 
 impl Cubemap {
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     pub fn sample<V: Vector<f32, 4>>(
         &self,
         sampler: Sampler,
@@ -332,7 +321,6 @@ impl Cubemap {
         }
     }
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     /// Sample the image at a coordinate by a lod
     pub fn sample_by_lod<V: Vector<f32, 4>>(
         &self,
@@ -360,7 +348,6 @@ impl Cubemap {
         result
     }
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
     pub fn sample_by_gradient<V: Vector<f32, 4>>(
         &self,
@@ -400,7 +387,6 @@ pub struct SampledImage<I> {
 
 impl SampledImage<Image2d> {
     #[spirv_std_macros::gpu_only]
-    #[cfg(feature = "const-generics")]
     pub fn sample<V: Vector<f32, 4>>(&self, coordinate: impl Vector<f32, 2>) -> V {
         unsafe {
             let mut result = Default::default();

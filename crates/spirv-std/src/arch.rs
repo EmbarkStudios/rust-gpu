@@ -3,15 +3,12 @@
 //! This module is intended as a low level abstraction over SPIR-V instructions.
 //! These functions will typically map to a single instruction, and will perform
 //! no additional safety checks beyond type-checking.
-#[cfg(feature = "const-generics")]
 use crate::{scalar::Scalar, vector::Vector};
 
-#[cfg(feature = "const-generics")]
 mod arithmetic;
 mod derivative;
 mod primitive;
 
-#[cfg(feature = "const-generics")]
 pub use arithmetic::*;
 pub use derivative::*;
 pub use primitive::*;
@@ -21,7 +18,6 @@ pub use primitive::*;
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAny")]
 #[inline]
-#[cfg(feature = "const-generics")]
 pub fn any<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
     let mut result = false;
 
@@ -55,7 +51,6 @@ pub fn any<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpAll")]
 #[inline]
-#[cfg(feature = "const-generics")]
 pub fn all<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
     let mut result = false;
 
@@ -92,7 +87,6 @@ pub fn all<V: Vector<bool, N>, const N: usize>(vector: V) -> bool {
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpVectorExtractDynamic")]
 #[inline]
-#[cfg(feature = "const-generics")]
 pub unsafe fn vector_extract_dynamic<T: Scalar, const N: usize>(
     vector: impl Vector<T, N>,
     index: usize,
@@ -120,7 +114,6 @@ pub unsafe fn vector_extract_dynamic<T: Scalar, const N: usize>(
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpVectorInsertDynamic")]
 #[inline]
-#[cfg(feature = "const-generics")]
 pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T, N>, const N: usize>(
     vector: V,
     index: usize,

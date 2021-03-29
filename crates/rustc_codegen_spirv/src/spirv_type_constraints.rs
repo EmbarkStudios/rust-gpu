@@ -238,6 +238,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         };
     }
 
+    #[allow(clippy::match_same_arms)]
     match op {
         // 3.37.1. Miscellaneous Instructions
         Op::Nop | Op::Undef => {}

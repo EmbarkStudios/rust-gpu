@@ -12,7 +12,10 @@ This is a very early stage project to make Rust a first-class language and ecosy
 
 Compiling and running very simple shaders works, and a significant portion of [the core library](https://doc.rust-lang.org/core/index.html) also compiles.
 
-However, many things aren't implemented yet: for example, loops and switches aren't supported yet! That means that while being technically usable, this project is far from being production-ready.
+However, many things aren't implemented yet. That means that while being technically usable, this project is far from being production-ready. Support for specific features in [Rust][rust-support] and [SPIR-V][spirv-support] are tracked on GitHub.
+
+[rust-support]: https://github.com/EmbarkStudios/rust-gpu/issues/78
+[spirv-support]: https://github.com/EmbarkStudios/rust-gpu/issues/383
 
 ### Example
 

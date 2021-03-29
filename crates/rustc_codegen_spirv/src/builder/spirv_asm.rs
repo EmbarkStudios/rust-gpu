@@ -356,9 +356,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         let out_register = if match first_token {
             Token::Placeholder(_, _) => true,
             Token::Word(id_str) if id_str.starts_with('%') => true,
-            Token::Word(_) => false,
-            Token::String(_) => false,
-            Token::Typeof(_, _, _) => false,
+            Token::Word(_) | Token::String(_) | Token::Typeof(_, _, _) => false,
         } {
             let result_id = match self.parse_id_out(id_map, defined_ids, first_token) {
                 Some(result_id) => result_id,
@@ -921,9 +919,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         };
         let word = match token {
             Token::Word(word) => Some(word),
-            Token::String(_) => None,
-            Token::Placeholder(_, _) => None,
-            Token::Typeof(_, _, _) => None,
+            Token::String(_) | Token::Placeholder(_, _) | Token::Typeof(_, _, _) => None,
         };
         match (kind, word) {
             (OperandKind::IdResultType, _) | (OperandKind::IdResult, _) => {

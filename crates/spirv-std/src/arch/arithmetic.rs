@@ -2,7 +2,6 @@
 // but the compiler/clippy hasn't caught up to that style yet, so we just
 // disable the lint.
 #![allow(unused_unsafe)]
-#![cfg(feature = "const-generics")]
 
 use crate::{
     float::Float,
