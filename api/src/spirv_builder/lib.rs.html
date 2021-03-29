@@ -321,6 +321,39 @@
 <span id="318">318</span>
 <span id="319">319</span>
 <span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// BEGIN - Embark standard lints v0.3</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -388,18 +421,32 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">BufReader</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::{<span class="ident">Command</span>, <span class="ident">Stdio</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpirvBuilderError</span> {
     <span class="ident">BuildFailed</span>,
+    <span class="ident">MultiModuleWithPrintMetadata</span>,
+    <span class="ident">MetadataFileMissing</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="ident">MetadataFileMalformed</span>(<span class="ident">serde_json</span>::<span class="ident">Error</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">SpirvBuilderError</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">SpirvBuilderError</span>::<span class="ident">BuildFailed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Build failed&quot;</span>),
+            <span class="ident">SpirvBuilderError</span>::<span class="ident">MultiModuleWithPrintMetadata</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Multi-module build cannot be used with print_metadata = true&quot;</span>)
+            }
+            <span class="ident">SpirvBuilderError</span>::<span class="ident">MetadataFileMissing</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Multi-module metadata file missing&quot;</span>)
+            }
+            <span class="ident">SpirvBuilderError</span>::<span class="ident">MetadataFileMalformed</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Unable to parse multi-module metadata file&quot;</span>)
+            }
         }
     }
 }
@@ -458,12 +505,24 @@
     <span class="doccomment">/// you usually don&#39;t have to inspect the path, as the environment variable will already be</span>
     <span class="doccomment">/// set.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">spirv_module</span> <span class="op">=</span> <span class="ident">invoke_rustc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">spirv_module</span> <span class="op">=</span> <span class="ident">invoke_rustc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">env_var</span> <span class="op">=</span> <span class="ident">spirv_module</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>().<span class="ident">to_str</span>().<span class="ident">unwrap</span>();
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print_metadata</span> {
             <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;cargo:rustc-env={}={}&quot;</span>, <span class="ident">env_var</span>, <span class="ident">spirv_module</span>.<span class="ident">display</span>());
         }
         <span class="prelude-val">Ok</span>(<span class="ident">spirv_module</span>)
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_multimodule</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">PathBuf</span><span class="op">&gt;</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print_metadata</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SpirvBuilderError</span>::<span class="ident">MultiModuleWithPrintMetadata</span>);
+        }
+        <span class="kw">let</span> <span class="ident">metadata_file</span> <span class="op">=</span> <span class="ident">invoke_rustc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">metadata_contents</span> <span class="op">=</span>
+            <span class="ident">File</span>::<span class="ident">open</span>(<span class="ident">metadata_file</span>).<span class="ident">map_err</span>(<span class="ident">SpirvBuilderError</span>::<span class="ident">MetadataFileMissing</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_reader</span>(<span class="ident">BufReader</span>::<span class="ident">new</span>(<span class="ident">metadata_contents</span>))
+            .<span class="ident">map_err</span>(<span class="ident">SpirvBuilderError</span>::<span class="ident">MetadataFileMalformed</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">metadata</span>)
     }
 }
 
@@ -499,7 +558,8 @@
     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Could not find {} in library path&quot;</span>, <span class="ident">filename</span>);
 }
 
-<span class="kw">fn</span> <span class="ident">invoke_rustc</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">SpirvBuilder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
+<span class="comment">// Note: in case of multimodule, returns path to the metadata json</span>
+<span class="kw">fn</span> <span class="ident">invoke_rustc</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">SpirvBuilder</span>, <span class="ident">multimodule</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
     <span class="comment">// Okay, this is a little bonkers: in a normal world, we&#39;d have the user clone</span>
     <span class="comment">// rustc_codegen_spirv and pass in the path to it, and then we&#39;d invoke cargo to build it, grab</span>
     <span class="comment">// the resulting .so, and pass it into -Z codegen-backend. But that&#39;s really gross: the user</span>
@@ -529,10 +589,16 @@
     } <span class="kw">else</span> {
         <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot; -C target-feature={}&quot;</span>, <span class="ident">target_features</span>.<span class="ident">join</span>(<span class="string">&quot;,&quot;</span>))
     };
+    <span class="kw">let</span> <span class="ident">llvm_args</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">multimodule</span> {
+        <span class="string">&quot; -C llvm-args=--module-output=multiple&quot;</span>
+    } <span class="kw">else</span> {
+        <span class="string">&quot;&quot;</span>
+    };
     <span class="kw">let</span> <span class="ident">rustflags</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(
-        <span class="string">&quot;-Z codegen-backend={} -Z symbol-mangling-version=v0{}&quot;</span>,
+        <span class="string">&quot;-Z codegen-backend={} -Z symbol-mangling-version=v0{}{}&quot;</span>,
         <span class="ident">rustc_codegen_spirv</span>.<span class="ident">display</span>(),
         <span class="ident">feature_flag</span>,
+        <span class="ident">llvm_args</span>,
     );
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cargo</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;cargo&quot;</span>);
     <span class="ident">cargo</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
