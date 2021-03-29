@@ -183,20 +183,21 @@ OpEntryPoint Fragment %1 "main"
 OpExecutionMode %1 OriginUpperLeft
 OpName %2 "test_project::add_decorate"
 OpName %3 "test_project::main"
-OpDecorate %4 DescriptorSet 0
-OpDecorate %4 Binding 0
-%5 = OpTypeVoid
-%6 = OpTypeFunction %5
-%7 = OpTypeInt 32 0
-%8 = OpTypePointer Function %7
-%9 = OpConstant %7 1
-%10 = OpTypeFloat 32
-%11 = OpTypeImage %10 2D 0 0 0 1 Unknown
-%12 = OpTypeSampledImage %11
-%13 = OpTypeRuntimeArray %12
-%14 = OpTypePointer UniformConstant %13
-%4 = OpVariable %14 UniformConstant
-%15 = OpTypePointer UniformConstant %12"#,
+OpDecorate %4 ArrayStride 4
+OpDecorate %5 DescriptorSet 0
+OpDecorate %5 Binding 0
+%6 = OpTypeVoid
+%7 = OpTypeFunction %6
+%8 = OpTypeInt 32 0
+%9 = OpTypePointer Function %8
+%10 = OpConstant %8 1
+%11 = OpTypeFloat 32
+%12 = OpTypeImage %11 2D 0 0 0 1 Unknown
+%13 = OpTypeSampledImage %12
+%4 = OpTypeRuntimeArray %13
+%14 = OpTypePointer UniformConstant %4
+%5 = OpVariable %14 UniformConstant
+%15 = OpTypePointer UniformConstant %13"#,
     );
 }
 
