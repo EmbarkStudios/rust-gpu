@@ -30,6 +30,12 @@ pub struct Options {
     pub mem2reg: bool,
     pub structurize: bool,
     pub use_new_structurizer: bool,
+    pub emit_multiple_modules: bool,
+}
+
+pub enum LinkResult {
+    SingleModule(Module),
+    MultipleModules(HashMap<String, Module>),
 }
 
 fn id(header: &mut ModuleHeader) -> Word {
@@ -70,9 +76,7 @@ fn apply_rewrite_rules(rewrite_rules: &HashMap<Word, Word>, blocks: &mut [Block]
     }
 }
 
-// Sess needs to be Option because linker tests call this method, and linker tests can't synthesize
-// a test Session (not sure how to do that).
-pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<Module> {
+pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<LinkResult> {
     let mut output = {
         let _timer = sess.timer("link_merge");
         // shift all the ids
@@ -241,18 +245,54 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<M
         simple_passes::sort_globals(&mut output);
     }
 
-    {
-        let _timer = sess.timer("link_remove_extra_capabilities");
-        capability_computation::remove_extra_capabilities(&mut output);
-        capability_computation::remove_extra_extensions(&mut output);
-    }
-
-    if opts.compact_ids {
-        let _timer = sess.timer("link_compact_ids");
-        // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
-        output.header.as_mut().unwrap().bound = simple_passes::compact_ids(&mut output);
+    let mut output = if opts.emit_multiple_modules {
+        let modules = output
+            .entry_points
+            .iter()
+            .map(|entry| {
+                let mut module = output.clone();
+                module.entry_points.clear();
+                module.entry_points.push(entry.clone());
+                let name = entry.operands[2].unwrap_literal_string();
+                (name.to_string(), module)
+            })
+            .collect();
+        LinkResult::MultipleModules(modules)
+    } else {
+        LinkResult::SingleModule(output)
     };
 
-    // output the module
+    let output_module_iter: Box<dyn Iterator<Item = &mut Module>> = match output {
+        LinkResult::SingleModule(ref mut m) => Box::new(std::iter::once(m)),
+        LinkResult::MultipleModules(ref mut m) => Box::new(m.values_mut()),
+    };
+    for output in output_module_iter {
+        if let Ok(ref path) = std::env::var("DUMP_POST_SPLIT") {
+            use rspirv::binary::Assemble;
+            use std::fs::File;
+            use std::io::Write;
+
+            File::create(path)
+                .unwrap()
+                .write_all(spirv_tools::binary::from_binary(&output.assemble()))
+                .unwrap();
+        }
+        if opts.dce && opts.emit_multiple_modules {
+            let _timer = sess.timer("link_dce_2");
+            dce::dce(output);
+        }
+        {
+            let _timer = sess.timer("link_remove_extra_capabilities");
+            capability_computation::remove_extra_capabilities(output);
+            capability_computation::remove_extra_extensions(output);
+        }
+
+        if opts.compact_ids {
+            let _timer = sess.timer("link_compact_ids");
+            // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
+            output.header.as_mut().unwrap().bound = simple_passes::compact_ids(output);
+        };
+    }
+
     Ok(output)
 }
