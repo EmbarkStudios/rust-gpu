@@ -251,7 +251,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
 fn do_spirv_val(sess: &Session, spv_binary: &[u32], filename: &Path) {
     use spirv_tools::val::{self, Validator};
 
-    let validator = val::create(None);
+    let validator = val::create(sess.target.options.env.parse().ok());
 
     if let Err(e) = validator.validate(spv_binary, None) {
         let mut err = sess.struct_err(&e.to_string());

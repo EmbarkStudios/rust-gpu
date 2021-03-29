@@ -39,5 +39,16 @@ cargo compiletest arch/u image
 The above command will only test `ui/arch/u_*.rs` and `ui/image/*.rs`, and skip
 everything else. You can also add `--bless` to update expected outputs, as well.
 
+### Testing Different Environments
+
+You can test against multiple different SPIR-V environments with the
+`--target-env` flag. By default it is set to `unknown`.
+
+```bash
+cargo compiletest --target-env=vulkan1.1
+# You can also provide multiple values to test multiple environments
+cargo compiletest --target-env=vulkan1.1,spv.1.3
+```
+
 [`compiletest`]: https://github.com/laumann/compiletest-rs
 [rustc-dev-guide]: https://rustc-dev-guide.rust-lang.org/tests/intro.html

@@ -17,12 +17,25 @@ struct Opt {
     #[structopt(long)]
     bless: bool,
 
+    /// The environment to compile to the SPIR-V tests.
+    #[structopt(long)]
+    target_env: Option<String>,
+
     /// Only run tests that match these filters
     #[structopt(name = "FILTER")]
     filters: Vec<String>,
 }
 
-const TARGET: &str = "spirv-unknown-unknown";
+impl Opt {
+    pub fn environments(&self) -> Vec<String> {
+        match &self.target_env {
+            Some(env) => env.split(',').map(String::from).collect(),
+            None => vec!["unknown".into()],
+        }
+    }
+}
+
+const TARGET_PREFIX: &str = "spirv-unknown-";
 
 #[derive(Copy, Clone)]
 enum DepKind {
@@ -38,10 +51,10 @@ impl DepKind {
         }
     }
 
-    fn target_dir_suffix(self) -> &'static str {
+    fn target_dir_suffix(self, target: &str) -> String {
         match self {
-            Self::SpirvLib => "spirv-unknown-unknown/debug/deps",
-            Self::ProcMacro => "debug/deps",
+            Self::SpirvLib => format!("{}/debug/deps", target),
+            Self::ProcMacro => "debug/deps".into(),
         }
     }
 }
@@ -49,7 +62,7 @@ impl DepKind {
 fn main() {
     let opt = Opt::from_args();
 
-    let tests_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let tests_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let workspace_root = tests_dir.parent().unwrap();
     let original_target_dir = workspace_root.join("target");
     let deps_target_dir = original_target_dir.join("compiletest-deps");
@@ -58,90 +71,97 @@ fn main() {
     // Pull in rustc_codegen_spirv as a dynamic library in the same way
     // spirv-builder does.
     let codegen_backend_path = find_rustc_codegen_spirv();
-    let libs = build_deps(&deps_target_dir, &codegen_backend_path);
 
-    run_mode(
-        "ui",
+    let runner = Runner {
         opt,
         tests_dir,
         compiletest_build_dir,
-        &deps_target_dir,
-        &codegen_backend_path,
-        &libs,
-    );
+        deps_target_dir,
+        codegen_backend_path,
+    };
+
+    runner.run_mode("ui");
 }
 
-// FIXME(eddyb) a bunch of these functions could be nicer if they were methods.
-
-/// Runs the given `mode` on the directory that matches that name, using the
-/// backend provided by `codegen_backend_path`.
-fn run_mode(
-    mode: &'static str,
+struct Runner {
     opt: Opt,
-    tests_dir: &Path,
+    tests_dir: PathBuf,
     compiletest_build_dir: PathBuf,
-    deps_target_dir: &Path,
-    codegen_backend_path: &Path,
-    libs: &TestDeps,
-) {
-    let mut config = compiletest::Config::default();
+    deps_target_dir: PathBuf,
+    codegen_backend_path: PathBuf,
+}
 
-    /// RUSTFLAGS passed to all test files.
-    fn test_rustc_flags(
-        codegen_backend_path: &Path,
-        deps: &TestDeps,
-        indirect_deps_dirs: &[&Path],
-    ) -> String {
-        [
-            &*rust_flags(codegen_backend_path),
-            &*indirect_deps_dirs
-                .iter()
-                .map(|dir| format!("-L dependency={}", dir.display()))
-                .fold(String::new(), |a, b| b + " " + &a),
-            "--edition 2018",
-            &*format!("--extern noprelude:core={}", deps.core.display()),
-            &*format!(
-                "--extern noprelude:compiler_builtins={}",
-                deps.compiler_builtins.display()
-            ),
-            &*format!(
-                "--extern spirv_std_macros={}",
-                deps.spirv_std_macros.display()
-            ),
-            &*format!("--extern spirv_std={}", deps.spirv_std.display()),
-            &*format!("--extern glam={}", deps.glam.display()),
-            "--crate-type dylib",
-            "-Zunstable-options",
-            "-Zcrate-attr=no_std",
-            "-Zcrate-attr=feature(register_attr,asm)",
-            "-Zcrate-attr=register_attr(spirv)",
-        ]
-        .join(" ")
+impl Runner {
+    /// Runs the given `mode` on the directory that matches that name, using the
+    /// backend provided by `codegen_backend_path`.
+    fn run_mode(&self, mode: &'static str) {
+        /// RUSTFLAGS passed to all test files.
+        fn test_rustc_flags(
+            codegen_backend_path: &Path,
+            deps: &TestDeps,
+            indirect_deps_dirs: &[&Path],
+        ) -> String {
+            [
+                &*rust_flags(codegen_backend_path),
+                &*indirect_deps_dirs
+                    .iter()
+                    .map(|dir| format!("-L dependency={}", dir.display()))
+                    .fold(String::new(), |a, b| b + " " + &a),
+                "--edition 2018",
+                &*format!("--extern noprelude:core={}", deps.core.display()),
+                &*format!(
+                    "--extern noprelude:compiler_builtins={}",
+                    deps.compiler_builtins.display()
+                ),
+                &*format!(
+                    "--extern spirv_std_macros={}",
+                    deps.spirv_std_macros.display()
+                ),
+                &*format!("--extern spirv_std={}", deps.spirv_std.display()),
+                &*format!("--extern glam={}", deps.glam.display()),
+                "--crate-type dylib",
+                "-Zunstable-options",
+                "-Zcrate-attr=no_std",
+                "-Zcrate-attr=feature(register_attr,asm)",
+                "-Zcrate-attr=register_attr(spirv)",
+            ]
+            .join(" ")
+        }
+
+        for env in self.opt.environments() {
+            let target = format!("{}{}", TARGET_PREFIX, env);
+            let mut config = compiletest::Config::default();
+            let libs = build_deps(&self.deps_target_dir, &self.codegen_backend_path, &target);
+
+            let flags = test_rustc_flags(
+                &self.codegen_backend_path,
+                &libs,
+                &[
+                    &self
+                        .deps_target_dir
+                        .join(DepKind::SpirvLib.target_dir_suffix(&target)),
+                    &self
+                        .deps_target_dir
+                        .join(DepKind::ProcMacro.target_dir_suffix(&target)),
+                ],
+            );
+
+            config.target_rustcflags = Some(flags);
+            config.mode = mode.parse().expect("Invalid mode");
+            config.target = target;
+            config.src_base = self.tests_dir.join(mode);
+            config.build_base = self.compiletest_build_dir.clone();
+            config.bless = self.opt.bless;
+            config.filters = self.opt.filters.clone();
+            config.clean_rmeta();
+
+            compiletest::run_tests(&config);
+        }
     }
-
-    let flags = test_rustc_flags(
-        codegen_backend_path,
-        libs,
-        &[
-            &deps_target_dir.join(DepKind::SpirvLib.target_dir_suffix()),
-            &deps_target_dir.join(DepKind::ProcMacro.target_dir_suffix()),
-        ],
-    );
-
-    config.target_rustcflags = Some(flags);
-    config.mode = mode.parse().expect("Invalid mode");
-    config.target = String::from(TARGET);
-    config.src_base = tests_dir.join(mode);
-    config.build_base = compiletest_build_dir;
-    config.bless = opt.bless;
-    config.filters = opt.filters;
-    config.clean_rmeta();
-
-    compiletest::run_tests(&config);
 }
 
 /// Runs the processes needed to build `spirv-std` & other deps.
-fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
+fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str) -> TestDeps {
     // HACK(eddyb) this is only needed until we enable `resolver = "2"`, as the
     // old ("1") resolver has a bug where it picks up extra features based on the
     // current directory (and so we always set the working dir as a workaround).
@@ -154,7 +174,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
             "-p",
             "compiletests-deps-helper",
             "-Zbuild-std=core",
-            &*format!("--target={}", TARGET),
+            &*format!("--target={}", target),
         ])
         .arg("--target-dir")
         .arg(deps_target_dir)
@@ -166,13 +186,23 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
         .and_then(map_status_to_result)
         .unwrap();
 
-    let compiler_builtins =
-        find_lib(deps_target_dir, "compiler_builtins", DepKind::SpirvLib).unwrap();
-    let core = find_lib(deps_target_dir, "core", DepKind::SpirvLib).unwrap();
-    let spirv_std = find_lib(deps_target_dir, "spirv_std", DepKind::SpirvLib).unwrap();
-    let glam = find_lib(deps_target_dir, "glam", DepKind::SpirvLib).unwrap();
-    let spirv_std_macros =
-        find_lib(deps_target_dir, "spirv_std_macros", DepKind::ProcMacro).unwrap();
+    let compiler_builtins = find_lib(
+        deps_target_dir,
+        "compiler_builtins",
+        DepKind::SpirvLib,
+        target,
+    )
+    .unwrap();
+    let core = find_lib(deps_target_dir, "core", DepKind::SpirvLib, target).unwrap();
+    let spirv_std = find_lib(deps_target_dir, "spirv_std", DepKind::SpirvLib, target).unwrap();
+    let glam = find_lib(deps_target_dir, "glam", DepKind::SpirvLib, target).unwrap();
+    let spirv_std_macros = find_lib(
+        deps_target_dir,
+        "spirv_std_macros",
+        DepKind::ProcMacro,
+        target,
+    )
+    .unwrap();
 
     if [
         &compiler_builtins,
@@ -185,7 +215,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path) -> TestDeps {
     .any(|o| o.is_none())
     {
         clean_deps(deps_target_dir);
-        build_deps(deps_target_dir, codegen_backend_path)
+        build_deps(deps_target_dir, codegen_backend_path, target)
     } else {
         TestDeps {
             core: core.unwrap(),
@@ -215,12 +245,13 @@ fn find_lib(
     deps_target_dir: &Path,
     base: impl AsRef<Path>,
     dep_kind: DepKind,
+    target: &str,
 ) -> Result<Option<PathBuf>> {
     let base = base.as_ref();
     let (expected_prefix, expected_extension) = dep_kind.prefix_and_extension();
     let expected_name = format!("{}{}", expected_prefix, base.display());
 
-    let dir = deps_target_dir.join(dep_kind.target_dir_suffix());
+    let dir = deps_target_dir.join(dep_kind.target_dir_suffix(target));
 
     let paths = std::fs::read_dir(dir)?
         .filter_map(Result::ok)
