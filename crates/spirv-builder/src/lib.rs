@@ -227,18 +227,21 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
             .to_string(),
         );
     }
-    if multimodule {
-        target_features.push("+multimodule".to_string());
-    }
     let feature_flag = if target_features.is_empty() {
         String::new()
     } else {
         format!(" -C target-feature={}", target_features.join(","))
     };
+    let llvm_args = if multimodule {
+        " -C llvm-args=--module-output=multiple"
+    } else {
+        ""
+    };
     let rustflags = format!(
-        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}",
+        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}{}",
         rustc_codegen_spirv.display(),
         feature_flag,
+        llvm_args,
     );
     let mut cargo = Command::new("cargo");
     cargo.args(&[

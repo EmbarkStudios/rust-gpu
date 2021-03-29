@@ -118,7 +118,7 @@ mod spirv_type_constraints;
 mod symbols;
 
 use builder::Builder;
-use codegen_cx::CodegenCx;
+use codegen_cx::{CodegenArgs, CodegenCx, ModuleOutputType};
 pub use rspirv;
 use rspirv::binary::Assemble;
 use rustc_ast::expand::allocator::AllocatorKind;
@@ -380,9 +380,8 @@ impl CodegenBackend for SpirvCodegenBackend {
     ) -> Result<(), ErrorReported> {
         // TODO: Can we merge this sym with the one in symbols.rs?
         let legalize = !sess.target_features.contains(&Symbol::intern("kernel"));
-        let emit_multiple_modules = sess
-            .target_features
-            .contains(&Symbol::intern("multimodule"));
+        let codegen_args = CodegenArgs::from_session(sess);
+        let emit_multiple_modules = codegen_args.module_output_type == ModuleOutputType::Multiple;
 
         let timer = sess.timer("link_crate");
         link::link(
