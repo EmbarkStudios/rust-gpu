@@ -1,4 +1,4 @@
-use super::{dis_fn, dis_globals, val, val_vulkan};
+use super::{dis_fn, dis_globals, val};
 use std::ffi::OsStr;
 
 struct SetEnvVar<'a> {
@@ -197,29 +197,6 @@ OpDecorate %4 Binding 0
 %14 = OpTypePointer UniformConstant %13
 %4 = OpVariable %14 UniformConstant
 %15 = OpTypePointer UniformConstant %12"#,
-    );
-}
-
-// NOTE(eddyb) we specifically run Vulkan validation here, as the default
-// validation rules are more lax and don't require a `Block` decoration
-// (`#[spirv(block)]` here) on `struct ShaderConstants`.
-#[test]
-fn push_constant_vulkan() {
-    val_vulkan(
-        r#"
-#[derive(Copy, Clone)]
-#[spirv(block)]
-pub struct ShaderConstants {
-    pub width: u32,
-    pub height: u32,
-    pub time: f32,
-}
-
-#[spirv(fragment)]
-pub fn main(#[spirv(push_constant)] constants: &ShaderConstants) {
-    let _constants = *constants;
-}
-"#,
     );
 }
 

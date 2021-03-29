@@ -17,13 +17,13 @@ struct Opt {
     #[structopt(long)]
     bless: bool,
 
-    /// Only run tests that match these filters
-    #[structopt(name = "FILTER")]
-    filters: Vec<String>,
-
     /// The environment to compile to the SPIR-V tests.
     #[structopt(long)]
     target_env: Option<String>,
+
+    /// Only run tests that match these filters
+    #[structopt(name = "FILTER")]
+    filters: Vec<String>,
 }
 
 impl Opt {
@@ -82,8 +82,6 @@ fn main() {
 
     runner.run_mode("ui");
 }
-
-// FIXME(eddyb) a bunch of these functions could be nicer if they were methods.
 
 struct Runner {
     opt: Opt,
