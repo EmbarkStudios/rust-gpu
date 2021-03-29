@@ -649,17 +649,3 @@ pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
 
     Box::new(SpirvCodegenBackend)
 }
-
-// HACK(eddyb) this allows `spirv-builder` to use `spirv-tools::val` without
-// risking linker errors (especially when compiled with optimizations) - this
-// also means the function can't be generic or `#[inline]`.
-pub use spirv_tools::TargetEnv as SpirvToolsTargetEnv;
-#[inline(never)]
-pub fn spirv_tools_validate(
-    target_env: Option<spirv_tools::TargetEnv>,
-    bytes: &[u8],
-    options: Option<spirv_tools::val::ValidatorOptions>,
-) -> Result<(), spirv_tools::error::Error> {
-    use spirv_tools::val::Validator as _;
-    spirv_tools::val::create(target_env).validate(spirv_tools::binary::to_binary(bytes)?, options)
-}
