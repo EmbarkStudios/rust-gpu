@@ -16,17 +16,20 @@ members = [
     "tests/deps-helper",
 ]
 
-# Compile build-dependencies in release mode with
-# the same settings as regular dependencies.
+# Enable incremental by default in release mode.
+[profile.release]
+incremental = true
+# HACK(eddyb) this is the default but without explicitly specifying it, Cargo
+# will treat the identical settings in `[profile.release.build-override]` below
+# as different sets of `rustc` flags and will not reuse artifacts between them.
+codegen-units = 256
+
+# Compile build-dependencies in release mode with the same settings
+# as regular dependencies (including the incremental enabled above).
 [profile.release.build-override]
 opt-level = 3
-codegen-units = 16
-
-# HACK(eddyb) this is the default but without explicitly specifying it, Cargo
-# will treat the identical settings in `[profile.release.build-override]` above
-# as different sets of `rustc` flags and will not reuse artifacts between them.
-[profile.release]
-codegen-units = 16
+incremental = true
+codegen-units = 256
 
 [patch.crates-io]
 spirv-std = { path = "./crates/spirv-std" }
