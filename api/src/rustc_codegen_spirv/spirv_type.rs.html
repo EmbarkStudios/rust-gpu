@@ -682,17 +682,6 @@
 <span id="679">679</span>
 <span id="680">680</span>
 <span id="681">681</span>
-<span id="682">682</span>
-<span id="683">683</span>
-<span id="684">684</span>
-<span id="685">685</span>
-<span id="686">686</span>
-<span id="687">687</span>
-<span id="688">688</span>
-<span id="689">689</span>
-<span id="690">690</span>
-<span id="691">691</span>
-<span id="692">692</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::{<span class="ident">RecursivePointeeCache</span>, <span class="ident">TyLayoutNameKey</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
@@ -884,17 +873,6 @@
             }
             <span class="self">Self</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_runtime_array</span>(<span class="ident">element</span>);
-                <span class="comment">// ArrayStride decoration wants in *bytes*</span>
-                <span class="kw">let</span> <span class="ident">element_size</span> <span class="op">=</span> <span class="ident">cx</span>
-                    .<span class="ident">lookup_type</span>(<span class="ident">element</span>)
-                    .<span class="ident">sizeof</span>(<span class="ident">cx</span>)
-                    .<span class="ident">expect</span>(<span class="string">&quot;Element of sized array must be sized&quot;</span>)
-                    .<span class="ident">bytes</span>();
-                <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">decorate</span>(
-                    <span class="ident">result</span>,
-                    <span class="ident">Decoration</span>::<span class="ident">ArrayStride</span>,
-                    <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">Operand</span>::<span class="ident">LiteralInt32</span>(<span class="ident">element_size</span> <span class="kw">as</span> <span class="ident">u32</span>)),
-                );
                 <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">kernel_mode</span> {
                     <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;RuntimeArray in kernel mode&quot;</span>);
                 }
