@@ -1,4 +1,5 @@
 var N = null;var sourcesIndex = {};
+sourcesIndex["ahash"] = {"name":"","files":["convert.rs","fallback_hash.rs","lib.rs","operations.rs","random_state.rs","specialize.rs"]};
 sourcesIndex["bimap"] = {"name":"","files":["btree.rs","hash.rs","lib.rs","mem.rs"]};
 sourcesIndex["bitflags"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["byteorder"] = {"name":"","files":["io.rs","lib.rs"]};
@@ -36,7 +37,7 @@ sourcesIndex["spirv_std"] = {"name":"","dirs":[{"name":"arch","files":["arithmet
 sourcesIndex["spirv_std_macros"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["spirv_tools"] = {"name":"","dirs":[{"name":"assembler","files":["tool.rs"]},{"name":"opt","files":["tool.rs"]},{"name":"val","files":["tool.rs"]}],"files":["assembler.rs","binary.rs","cmd.rs","error.rs","lib.rs","opt.rs","val.rs"]};
 sourcesIndex["spirv_tools_sys"] = {"name":"","files":["assembler.rs","diagnostics.rs","lib.rs","opt.rs","shared.rs","val.rs"]};
-sourcesIndex["syn"] = {"name":"","dirs":[{"name":"gen","files":["clone.rs","debug.rs","eq.rs","gen_helper.rs","hash.rs"]}],"files":["attr.rs","await.rs","bigint.rs","buffer.rs","custom_keyword.rs","custom_punctuation.rs","data.rs","derive.rs","discouraged.rs","error.rs","export.rs","expr.rs","ext.rs","file.rs","generics.rs","group.rs","ident.rs","item.rs","lib.rs","lifetime.rs","lit.rs","lookahead.rs","mac.rs","macros.rs","op.rs","parse.rs","parse_macro_input.rs","parse_quote.rs","pat.rs","path.rs","print.rs","punctuated.rs","reserved.rs","sealed.rs","span.rs","spanned.rs","stmt.rs","thread.rs","token.rs","tt.rs","ty.rs","verbatim.rs","whitespace.rs"]};
+sourcesIndex["syn"] = {"name":"","dirs":[{"name":"gen","files":["clone.rs","debug.rs","eq.rs","gen_helper.rs","hash.rs","visit.rs","visit_mut.rs"]}],"files":["attr.rs","await.rs","bigint.rs","buffer.rs","custom_keyword.rs","custom_punctuation.rs","data.rs","derive.rs","discouraged.rs","error.rs","export.rs","expr.rs","ext.rs","file.rs","generics.rs","group.rs","ident.rs","item.rs","lib.rs","lifetime.rs","lit.rs","lookahead.rs","mac.rs","macros.rs","op.rs","parse.rs","parse_macro_input.rs","parse_quote.rs","pat.rs","path.rs","print.rs","punctuated.rs","reserved.rs","sealed.rs","span.rs","spanned.rs","stmt.rs","thread.rs","token.rs","tt.rs","ty.rs","verbatim.rs","whitespace.rs"]};
 sourcesIndex["tar"] = {"name":"","files":["archive.rs","builder.rs","entry.rs","entry_type.rs","error.rs","header.rs","lib.rs","pax.rs"]};
 sourcesIndex["tempfile"] = {"name":"","dirs":[{"name":"file","dirs":[{"name":"imp","files":["mod.rs","unix.rs"]}],"files":["mod.rs"]}],"files":["dir.rs","error.rs","lib.rs","spooled.rs","util.rs"]};
 sourcesIndex["topological_sort"] = {"name":"","files":["lib.rs"]};

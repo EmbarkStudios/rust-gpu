@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A hash map implemented with quadratic probing and SIMD lookup."><meta name="keywords" content="rust, rustlang, rust-lang, HashMap"><title>hashbrown::HashMap - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><script src="../crates.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc struct"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../hashbrown/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Struct HashMap</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#implementations">Methods</a><div class="sidebar-links"><a href="#method.capacity">capacity</a><a href="#method.clear">clear</a><a href="#method.contains_key">contains_key</a><a href="#method.drain">drain</a><a href="#method.drain_filter">drain_filter</a><a href="#method.entry">entry</a><a href="#method.get">get</a><a href="#method.get_key_value">get_key_value</a><a href="#method.get_key_value_mut">get_key_value_mut</a><a href="#method.get_mut">get_mut</a><a href="#method.hasher">hasher</a><a href="#method.insert">insert</a><a href="#method.is_empty">is_empty</a><a href="#method.iter">iter</a><a href="#method.iter_mut">iter_mut</a><a href="#method.keys">keys</a><a href="#method.len">len</a><a href="#method.raw_entry">raw_entry</a><a href="#method.raw_entry_mut">raw_entry_mut</a><a href="#method.remove">remove</a><a href="#method.remove_entry">remove_entry</a><a href="#method.reserve">reserve</a><a href="#method.retain">retain</a><a href="#method.shrink_to">shrink_to</a><a href="#method.shrink_to_fit">shrink_to_fit</a><a href="#method.try_reserve">try_reserve</a><a href="#method.values">values</a><a href="#method.values_mut">values_mut</a><a href="#method.with_capacity_and_hasher">with_capacity_and_hasher</a><a href="#method.with_hasher">with_hasher</a></div><a class="sidebar-title" href="#trait-implementations">Trait Implementations</a><div class="sidebar-links"><a href="#impl-Clone">Clone</a><a href="#impl-Debug">Debug</a><a href="#impl-Default">Default</a><a href="#impl-Eq">Eq</a><a href="#impl-Extend%3C(%26%27a%20K%2C%20%26%27a%20V)%3E">Extend&lt;(&amp;&#39;a K, &amp;&#39;a V)&gt;</a><a href="#impl-Extend%3C(K%2C%20V)%3E">Extend&lt;(K, V)&gt;</a><a href="#impl-FromIterator%3C(K%2C%20V)%3E">FromIterator&lt;(K, V)&gt;</a><a href="#impl-Index%3C%26%27_%20Q%3E">Index&lt;&amp;&#39;_ Q&gt;</a><a href="#impl-IntoIterator">IntoIterator</a><a href="#impl-PartialEq%3CHashMap%3CK%2C%20V%2C%20S%3E%3E">PartialEq&lt;HashMap&lt;K, V, S&gt;&gt;</a></div><a class="sidebar-title" href="#synthetic-implementations">Auto Trait Implementations</a><div class="sidebar-links"><a href="#impl-Send">Send</a><a href="#impl-Sync">Sync</a><a href="#impl-Unpin">Unpin</a></div><a class="sidebar-title" href="#blanket-implementations">Blanket Implementations</a><div class="sidebar-links"><a href="#impl-Any">Any</a><a href="#impl-Borrow%3CT%3E">Borrow&lt;T&gt;</a><a href="#impl-BorrowMut%3CT%3E">BorrowMut&lt;T&gt;</a><a href="#impl-From%3CT%3E">From&lt;T&gt;</a><a href="#impl-Into%3CU%3E">Into&lt;U&gt;</a><a href="#impl-ToOwned">ToOwned</a><a href="#impl-TryFrom%3CU%3E">TryFrom&lt;U&gt;</a><a href="#impl-TryInto%3CU%3E">TryInto&lt;U&gt;</a></div></div><p class="location"><a href="index.html">hashbrown</a></p><div id="sidebar-vars" data-name="HashMap" data-ty="struct" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Struct <a href="index.html">hashbrown</a>::<wbr><a class="struct" href="">HashMap</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/hashbrown/map.rs.html#188-191" title="goto source code">[src]</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><pre class="rust struct">pub struct HashMap&lt;K, V, S&nbsp;=&nbsp;<a class="enum" href="../hashbrown/hash_map/enum.DefaultHashBuilder.html" title="enum hashbrown::hash_map::DefaultHashBuilder">DefaultHashBuilder</a>&gt; { /* fields omitted */ }</pre></div><div class="docblock"><p>A hash map implemented with quadratic probing and SIMD lookup.</p>
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc struct"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../hashbrown/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Struct HashMap</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#implementations">Methods</a><div class="sidebar-links"><a href="#method.capacity">capacity</a><a href="#method.clear">clear</a><a href="#method.contains_key">contains_key</a><a href="#method.drain">drain</a><a href="#method.drain_filter">drain_filter</a><a href="#method.entry">entry</a><a href="#method.get">get</a><a href="#method.get_key_value">get_key_value</a><a href="#method.get_key_value_mut">get_key_value_mut</a><a href="#method.get_mut">get_mut</a><a href="#method.hasher">hasher</a><a href="#method.insert">insert</a><a href="#method.is_empty">is_empty</a><a href="#method.iter">iter</a><a href="#method.iter_mut">iter_mut</a><a href="#method.keys">keys</a><a href="#method.len">len</a><a href="#method.new">new</a><a href="#method.raw_entry">raw_entry</a><a href="#method.raw_entry_mut">raw_entry_mut</a><a href="#method.remove">remove</a><a href="#method.remove_entry">remove_entry</a><a href="#method.reserve">reserve</a><a href="#method.retain">retain</a><a href="#method.shrink_to">shrink_to</a><a href="#method.shrink_to_fit">shrink_to_fit</a><a href="#method.try_reserve">try_reserve</a><a href="#method.values">values</a><a href="#method.values_mut">values_mut</a><a href="#method.with_capacity">with_capacity</a><a href="#method.with_capacity_and_hasher">with_capacity_and_hasher</a><a href="#method.with_hasher">with_hasher</a></div><a class="sidebar-title" href="#trait-implementations">Trait Implementations</a><div class="sidebar-links"><a href="#impl-Clone">Clone</a><a href="#impl-Debug">Debug</a><a href="#impl-Default">Default</a><a href="#impl-Eq">Eq</a><a href="#impl-Extend%3C(%26%27a%20K%2C%20%26%27a%20V)%3E">Extend&lt;(&amp;&#39;a K, &amp;&#39;a V)&gt;</a><a href="#impl-Extend%3C(K%2C%20V)%3E">Extend&lt;(K, V)&gt;</a><a href="#impl-FromIterator%3C(K%2C%20V)%3E">FromIterator&lt;(K, V)&gt;</a><a href="#impl-Index%3C%26%27_%20Q%3E">Index&lt;&amp;&#39;_ Q&gt;</a><a href="#impl-IntoIterator">IntoIterator</a><a href="#impl-PartialEq%3CHashMap%3CK%2C%20V%2C%20S%3E%3E">PartialEq&lt;HashMap&lt;K, V, S&gt;&gt;</a></div><a class="sidebar-title" href="#synthetic-implementations">Auto Trait Implementations</a><div class="sidebar-links"><a href="#impl-Send">Send</a><a href="#impl-Sync">Sync</a><a href="#impl-Unpin">Unpin</a></div><a class="sidebar-title" href="#blanket-implementations">Blanket Implementations</a><div class="sidebar-links"><a href="#impl-Any">Any</a><a href="#impl-Borrow%3CT%3E">Borrow&lt;T&gt;</a><a href="#impl-BorrowMut%3CT%3E">BorrowMut&lt;T&gt;</a><a href="#impl-From%3CT%3E">From&lt;T&gt;</a><a href="#impl-Into%3CU%3E">Into&lt;U&gt;</a><a href="#impl-ToOwned">ToOwned</a><a href="#impl-TryFrom%3CU%3E">TryFrom&lt;U&gt;</a><a href="#impl-TryInto%3CU%3E">TryInto&lt;U&gt;</a></div></div><p class="location"><a href="index.html">hashbrown</a></p><div id="sidebar-vars" data-name="HashMap" data-ty="struct" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Struct <a href="index.html">hashbrown</a>::<wbr><a class="struct" href="">HashMap</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/hashbrown/map.rs.html#188-191" title="goto source code">[src]</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><pre class="rust struct">pub struct HashMap&lt;K, V, S&nbsp;=&nbsp;<a class="type" href="../hashbrown/hash_map/type.DefaultHashBuilder.html" title="type hashbrown::hash_map::DefaultHashBuilder">DefaultHashBuilder</a>&gt; { /* fields omitted */ }</pre></div><div class="docblock"><p>A hash map implemented with quadratic probing and SIMD lookup.</p>
 <p>The default hashing algorithm is currently <a href="https://crates.io/crates/ahash"><code>AHash</code></a>, though this is
 subject to change at any point in the future. This hash function is very
 fast for all types of keys, but this algorithm will typically <em>not</em> protect
@@ -142,7 +142,21 @@ We must also derive <a href="https://doc.rust-lang.org/std/cmp/trait.PartialEq.h
 <span class="kw">let</span> <span class="ident">timber_resources</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> [(<span class="string">&quot;Norway&quot;</span>, <span class="number">100</span>), (<span class="string">&quot;Denmark&quot;</span>, <span class="number">50</span>), (<span class="string">&quot;Iceland&quot;</span>, <span class="number">10</span>)]
     .<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
 <span class="comment">// use the values stored in map</span></pre></div>
-</div><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><h3 id="impl" class="impl"><code class="in-band">impl&lt;K, V, S&gt; <a class="struct" href="../hashbrown/hash_map/struct.HashMap.html" title="struct hashbrown::hash_map::HashMap">HashMap</a>&lt;K, V, S&gt;</code><a href="#impl" class="anchor"></a><a class="srclink" href="../src/hashbrown/map.rs.html#251-640" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.with_hasher" class="method"><code>pub const fn <a href="#method.with_hasher" class="fnname">with_hasher</a>(hash_builder: S) -&gt; Self</code><a class="srclink" href="../src/hashbrown/map.rs.html#278-283" title="goto source code">[src]</a></h4><div class="docblock"><p>Creates an empty <code>HashMap</code> which will use the given hash builder to hash
+</div><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><h3 id="impl" class="impl"><code class="in-band">impl&lt;K, V&gt; <a class="struct" href="../hashbrown/hash_map/struct.HashMap.html" title="struct hashbrown::hash_map::HashMap">HashMap</a>&lt;K, V, <a class="type" href="../hashbrown/hash_map/type.DefaultHashBuilder.html" title="type hashbrown::hash_map::DefaultHashBuilder">DefaultHashBuilder</a>&gt;</code><a href="#impl" class="anchor"></a><a class="srclink" href="../src/hashbrown/map.rs.html#217-249" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.new" class="method"><code>pub fn <a href="#method.new" class="fnname">new</a>() -&gt; Self</code><a class="srclink" href="../src/hashbrown/map.rs.html#230-232" title="goto source code">[src]</a></h4><div class="docblock"><p>Creates an empty <code>HashMap</code>.</p>
+<p>The hash map is initially created with a capacity of 0, so it will not allocate until it
+is first inserted into.</p>
+<h1 id="examples-1" class="section-header"><a href="#examples-1">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();</pre></div>
+</div><h4 id="method.with_capacity" class="method"><code>pub fn <a href="#method.with_capacity" class="fnname">with_capacity</a>(capacity: usize) -&gt; Self</code><a class="srclink" href="../src/hashbrown/map.rs.html#246-248" title="goto source code">[src]</a></h4><div class="docblock"><p>Creates an empty <code>HashMap</code> with the specified capacity.</p>
+<p>The hash map will be able to hold at least <code>capacity</code> elements without
+reallocating. If <code>capacity</code> is 0, the hash map will not allocate.</p>
+<h1 id="examples-2" class="section-header"><a href="#examples-2">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">with_capacity</span>(<span class="number">10</span>);</pre></div>
+</div></div><h3 id="impl-1" class="impl"><code class="in-band">impl&lt;K, V, S&gt; <a class="struct" href="../hashbrown/hash_map/struct.HashMap.html" title="struct hashbrown::hash_map::HashMap">HashMap</a>&lt;K, V, S&gt;</code><a href="#impl-1" class="anchor"></a><a class="srclink" href="../src/hashbrown/map.rs.html#251-640" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.with_hasher" class="method"><code>pub const fn <a href="#method.with_hasher" class="fnname">with_hasher</a>(hash_builder: S) -&gt; Self</code><a class="srclink" href="../src/hashbrown/map.rs.html#278-283" title="goto source code">[src]</a></h4><div class="docblock"><p>Creates an empty <code>HashMap</code> which will use the given hash builder to hash
 keys.</p>
 <p>The created map has the default initial capacity.</p>
 <p>Warning: <code>hash_builder</code> is normally randomly generated, and
@@ -151,7 +165,7 @@ cause many collisions and very poor performance. Setting it
 manually using this function can expose a DoS attack vector.</p>
 <p>The <code>hash_builder</code> passed should implement the <a href="../../std/hash/trait.BuildHasher.html"><code>BuildHasher</code></a> trait for
 the HashMap to be useful, see its documentation for details.</p>
-<h1 id="examples-1" class="section-header"><a href="#examples-1">Examples</a></h1>
+<h1 id="examples-3" class="section-header"><a href="#examples-3">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">hash_map</span>::<span class="ident">DefaultHashBuilder</span>;
@@ -169,7 +183,7 @@ cause many collisions and very poor performance. Setting it
 manually using this function can expose a DoS attack vector.</p>
 <p>The <code>hash_builder</code> passed should implement the <a href="../../std/hash/trait.BuildHasher.html"><code>BuildHasher</code></a> trait for
 the HashMap to be useful, see its documentation for details.</p>
-<h1 id="examples-2" class="section-header"><a href="#examples-2">Examples</a></h1>
+<h1 id="examples-4" class="section-header"><a href="#examples-4">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">hash_map</span>::<span class="ident">DefaultHashBuilder</span>;
@@ -178,7 +192,7 @@ the HashMap to be useful, see its documentation for details.</p>
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">with_capacity_and_hasher</span>(<span class="number">10</span>, <span class="ident">s</span>);
 <span class="ident">map</span>.<span class="ident">insert</span>(<span class="number">1</span>, <span class="number">2</span>);</pre></div>
 </div><h4 id="method.hasher" class="method"><code>pub fn <a href="#method.hasher" class="fnname">hasher</a>(&amp;self) -&gt; &amp;S</code><a class="srclink" href="../src/hashbrown/map.rs.html#334-336" title="goto source code">[src]</a></h4><div class="docblock"><p>Returns a reference to the map’s <a href="https://doc.rust-lang.org/std/hash/trait.BuildHasher.html"><code>BuildHasher</code></a>.</p>
-<h1 id="examples-3" class="section-header"><a href="#examples-3">Examples</a></h1>
+<h1 id="examples-5" class="section-header"><a href="#examples-5">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">hash_map</span>::<span class="ident">DefaultHashBuilder</span>;
@@ -189,14 +203,14 @@ the HashMap to be useful, see its documentation for details.</p>
 </div><h4 id="method.capacity" class="method"><code>pub fn <a href="#method.capacity" class="fnname">capacity</a>(&amp;self) -&gt; usize</code><a class="srclink" href="../src/hashbrown/map.rs.html#351-353" title="goto source code">[src]</a></h4><div class="docblock"><p>Returns the number of elements the map can hold without reallocating.</p>
 <p>This number is a lower bound; the <code>HashMap&lt;K, V&gt;</code> might be able to hold
 more, but is guaranteed to be able to hold at least this many.</p>
-<h1 id="examples-4" class="section-header"><a href="#examples-4">Examples</a></h1>
+<h1 id="examples-6" class="section-header"><a href="#examples-6">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 <span class="kw">let</span> <span class="ident">map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">with_capacity</span>(<span class="number">100</span>);
 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">map</span>.<span class="ident">capacity</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">100</span>);</pre></div>
 </div><h4 id="method.keys" class="method"><code>pub fn <a href="#method.keys" class="fnname">keys</a>(&amp;self) -&gt; <a class="struct" href="../hashbrown/hash_map/struct.Keys.html" title="struct hashbrown::hash_map::Keys">Keys</a>&lt;'_, K, V&gt;<span class="notable-traits"><span class="notable-traits-tooltip">ⓘ<div class="notable-traits-tooltiptext"><span class="docblock"><h3 class="notable">Notable traits for <a class="struct" href="../hashbrown/hash_map/struct.Keys.html" title="struct hashbrown::hash_map::Keys">Keys</a>&lt;'a, K, V&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, K, V&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator">Iterator</a> for <a class="struct" href="../hashbrown/hash_map/struct.Keys.html" title="struct hashbrown::hash_map::Keys">Keys</a>&lt;'a, K, V&gt;</span><span class="where fmt-newline">    type <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item" class="type">Item</a> = &amp;'a K;</span></code></span></div></span></span></code><a class="srclink" href="../src/hashbrown/map.rs.html#373-375" title="goto source code">[src]</a></h4><div class="docblock"><p>An iterator visiting all keys in arbitrary order.
 The iterator element type is <code>&amp;'a K</code>.</p>
-<h1 id="examples-5" class="section-header"><a href="#examples-5">Examples</a></h1>
+<h1 id="examples-7" class="section-header"><a href="#examples-7">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -210,7 +224,7 @@ The iterator element type is <code>&amp;'a K</code>.</p>
 }</pre></div>
 </div><h4 id="method.values" class="method"><code>pub fn <a href="#method.values" class="fnname">values</a>(&amp;self) -&gt; <a class="struct" href="../hashbrown/hash_map/struct.Values.html" title="struct hashbrown::hash_map::Values">Values</a>&lt;'_, K, V&gt;<span class="notable-traits"><span class="notable-traits-tooltip">ⓘ<div class="notable-traits-tooltiptext"><span class="docblock"><h3 class="notable">Notable traits for <a class="struct" href="../hashbrown/hash_map/struct.Values.html" title="struct hashbrown::hash_map::Values">Values</a>&lt;'a, K, V&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, K, V&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator">Iterator</a> for <a class="struct" href="../hashbrown/hash_map/struct.Values.html" title="struct hashbrown::hash_map::Values">Values</a>&lt;'a, K, V&gt;</span><span class="where fmt-newline">    type <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item" class="type">Item</a> = &amp;'a V;</span></code></span></div></span></span></code><a class="srclink" href="../src/hashbrown/map.rs.html#395-397" title="goto source code">[src]</a></h4><div class="docblock"><p>An iterator visiting all values in arbitrary order.
 The iterator element type is <code>&amp;'a V</code>.</p>
-<h1 id="examples-6" class="section-header"><a href="#examples-6">Examples</a></h1>
+<h1 id="examples-8" class="section-header"><a href="#examples-8">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -224,7 +238,7 @@ The iterator element type is <code>&amp;'a V</code>.</p>
 }</pre></div>
 </div><h4 id="method.values_mut" class="method"><code>pub fn <a href="#method.values_mut" class="fnname">values_mut</a>(&amp;mut self) -&gt; <a class="struct" href="../hashbrown/hash_map/struct.ValuesMut.html" title="struct hashbrown::hash_map::ValuesMut">ValuesMut</a>&lt;'_, K, V&gt;<span class="notable-traits"><span class="notable-traits-tooltip">ⓘ<div class="notable-traits-tooltiptext"><span class="docblock"><h3 class="notable">Notable traits for <a class="struct" href="../hashbrown/hash_map/struct.ValuesMut.html" title="struct hashbrown::hash_map::ValuesMut">ValuesMut</a>&lt;'a, K, V&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, K, V&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator">Iterator</a> for <a class="struct" href="../hashbrown/hash_map/struct.ValuesMut.html" title="struct hashbrown::hash_map::ValuesMut">ValuesMut</a>&lt;'a, K, V&gt;</span><span class="where fmt-newline">    type <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item" class="type">Item</a> = &amp;'a mut V;</span></code></span></div></span></span></code><a class="srclink" href="../src/hashbrown/map.rs.html#422-426" title="goto source code">[src]</a></h4><div class="docblock"><p>An iterator visiting all values mutably in arbitrary order.
 The iterator element type is <code>&amp;'a mut V</code>.</p>
-<h1 id="examples-7" class="section-header"><a href="#examples-7">Examples</a></h1>
+<h1 id="examples-9" class="section-header"><a href="#examples-9">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -243,7 +257,7 @@ The iterator element type is <code>&amp;'a mut V</code>.</p>
 }</pre></div>
 </div><h4 id="method.iter" class="method"><code>pub fn <a href="#method.iter" class="fnname">iter</a>(&amp;self) -&gt; <a class="struct" href="../hashbrown/hash_map/struct.Iter.html" title="struct hashbrown::hash_map::Iter">Iter</a>&lt;'_, K, V&gt;<span class="notable-traits"><span class="notable-traits-tooltip">ⓘ<div class="notable-traits-tooltiptext"><span class="docblock"><h3 class="notable">Notable traits for <a class="struct" href="../hashbrown/hash_map/struct.Iter.html" title="struct hashbrown::hash_map::Iter">Iter</a>&lt;'a, K, V&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, K, V&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator">Iterator</a> for <a class="struct" href="../hashbrown/hash_map/struct.Iter.html" title="struct hashbrown::hash_map::Iter">Iter</a>&lt;'a, K, V&gt;</span><span class="where fmt-newline">    type <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item" class="type">Item</a> = (&amp;'a K, &amp;'a V);</span></code></span></div></span></span></code><a class="srclink" href="../src/hashbrown/map.rs.html#446-454" title="goto source code">[src]</a></h4><div class="docblock"><p>An iterator visiting all key-value pairs in arbitrary order.
 The iterator element type is <code>(&amp;'a K, &amp;'a V)</code>.</p>
-<h1 id="examples-8" class="section-header"><a href="#examples-8">Examples</a></h1>
+<h1 id="examples-10" class="section-header"><a href="#examples-10">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -258,7 +272,7 @@ The iterator element type is <code>(&amp;'a K, &amp;'a V)</code>.</p>
 </div><h4 id="method.iter_mut" class="method"><code>pub fn <a href="#method.iter_mut" class="fnname">iter_mut</a>(&amp;mut self) -&gt; <a class="struct" href="../hashbrown/hash_map/struct.IterMut.html" title="struct hashbrown::hash_map::IterMut">IterMut</a>&lt;'_, K, V&gt;<span class="notable-traits"><span class="notable-traits-tooltip">ⓘ<div class="notable-traits-tooltiptext"><span class="docblock"><h3 class="notable">Notable traits for <a class="struct" href="../hashbrown/hash_map/struct.IterMut.html" title="struct hashbrown::hash_map::IterMut">IterMut</a>&lt;'a, K, V&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, K, V&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator">Iterator</a> for <a class="struct" href="../hashbrown/hash_map/struct.IterMut.html" title="struct hashbrown::hash_map::IterMut">IterMut</a>&lt;'a, K, V&gt;</span><span class="where fmt-newline">    type <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item" class="type">Item</a> = (&amp;'a K, &amp;'a mut V);</span></code></span></div></span></span></code><a class="srclink" href="../src/hashbrown/map.rs.html#480-488" title="goto source code">[src]</a></h4><div class="docblock"><p>An iterator visiting all key-value pairs in arbitrary order,
 with mutable references to the values.
 The iterator element type is <code>(&amp;'a K, &amp;'a mut V)</code>.</p>
-<h1 id="examples-9" class="section-header"><a href="#examples-9">Examples</a></h1>
+<h1 id="examples-11" class="section-header"><a href="#examples-11">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -276,7 +290,7 @@ The iterator element type is <code>(&amp;'a K, &amp;'a mut V)</code>.</p>
     <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;key: {} val: {}&quot;</span>, <span class="ident">key</span>, <span class="ident">val</span>);
 }</pre></div>
 </div><h4 id="method.len" class="method"><code>pub fn <a href="#method.len" class="fnname">len</a>(&amp;self) -&gt; usize</code><a class="srclink" href="../src/hashbrown/map.rs.html#509-511" title="goto source code">[src]</a></h4><div class="docblock"><p>Returns the number of elements in the map.</p>
-<h1 id="examples-10" class="section-header"><a href="#examples-10">Examples</a></h1>
+<h1 id="examples-12" class="section-header"><a href="#examples-12">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -285,7 +299,7 @@ The iterator element type is <code>(&amp;'a K, &amp;'a mut V)</code>.</p>
 <span class="ident">a</span>.<span class="ident">insert</span>(<span class="number">1</span>, <span class="string">&quot;a&quot;</span>);
 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>.<span class="ident">len</span>(), <span class="number">1</span>);</pre></div>
 </div><h4 id="method.is_empty" class="method"><code>pub fn <a href="#method.is_empty" class="fnname">is_empty</a>(&amp;self) -&gt; bool</code><a class="srclink" href="../src/hashbrown/map.rs.html#526-528" title="goto source code">[src]</a></h4><div class="docblock"><p>Returns <code>true</code> if the map contains no elements.</p>
-<h1 id="examples-11" class="section-header"><a href="#examples-11">Examples</a></h1>
+<h1 id="examples-13" class="section-header"><a href="#examples-13">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -295,7 +309,7 @@ The iterator element type is <code>(&amp;'a K, &amp;'a mut V)</code>.</p>
 <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">a</span>.<span class="ident">is_empty</span>());</pre></div>
 </div><h4 id="method.drain" class="method"><code>pub fn <a href="#method.drain" class="fnname">drain</a>(&amp;mut self) -&gt; <a class="struct" href="../hashbrown/hash_map/struct.Drain.html" title="struct hashbrown::hash_map::Drain">Drain</a>&lt;'_, K, V&gt;<span class="notable-traits"><span class="notable-traits-tooltip">ⓘ<div class="notable-traits-tooltiptext"><span class="docblock"><h3 class="notable">Notable traits for <a class="struct" href="../hashbrown/hash_map/struct.Drain.html" title="struct hashbrown::hash_map::Drain">Drain</a>&lt;'a, K, V&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;'a, K, V&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator">Iterator</a> for <a class="struct" href="../hashbrown/hash_map/struct.Drain.html" title="struct hashbrown::hash_map::Drain">Drain</a>&lt;'a, K, V&gt;</span><span class="where fmt-newline">    type <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item" class="type">Item</a> = (K, V);</span></code></span></div></span></span></code><a class="srclink" href="../src/hashbrown/map.rs.html#550-554" title="goto source code">[src]</a></h4><div class="docblock"><p>Clears the map, returning all key-value pairs as an iterator. Keeps the
 allocated memory for reuse.</p>
-<h1 id="examples-12" class="section-header"><a href="#examples-12">Examples</a></h1>
+<h1 id="examples-14" class="section-header"><a href="#examples-14">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -311,7 +325,7 @@ allocated memory for reuse.</p>
 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">a</span>.<span class="ident">is_empty</span>());</pre></div>
 </div><h4 id="method.retain" class="method"><code>pub fn <a href="#method.retain" class="fnname">retain</a>&lt;F&gt;(&amp;mut self, f: F) <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;F: <a class="trait" href="https://doc.rust-lang.org/nightly/core/ops/function/trait.FnMut.html" title="trait core::ops::function::FnMut">FnMut</a>(&amp;K, &amp;mut V) -&gt; bool,&nbsp;</span></code><a class="srclink" href="../src/hashbrown/map.rs.html#569-582" title="goto source code">[src]</a></h4><div class="docblock"><p>Retains only the elements specified by the predicate.</p>
 <p>In other words, remove all pairs <code>(k, v)</code> such that <code>f(&amp;k,&amp;mut v)</code> returns <code>false</code>.</p>
-<h1 id="examples-13" class="section-header"><a href="#examples-13">Examples</a></h1>
+<h1 id="examples-15" class="section-header"><a href="#examples-15">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -324,7 +338,7 @@ and returns an iterator over the removed items.</p>
 into another iterator.</p>
 <p>When the returned DrainedFilter is dropped, any remaining elements that satisfy
 the predicate are dropped from the table.</p>
-<h1 id="examples-14" class="section-header"><a href="#examples-14">Examples</a></h1>
+<h1 id="examples-16" class="section-header"><a href="#examples-16">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -340,7 +354,7 @@ the predicate are dropped from the table.</p>
 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">odds</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>]);</pre></div>
 </div><h4 id="method.clear" class="method"><code>pub fn <a href="#method.clear" class="fnname">clear</a>(&amp;mut self)</code><a class="srclink" href="../src/hashbrown/map.rs.html#637-639" title="goto source code">[src]</a></h4><div class="docblock"><p>Clears the map, removing all key-value pairs. Keeps the allocated memory
 for reuse.</p>
-<h1 id="examples-15" class="section-header"><a href="#examples-15">Examples</a></h1>
+<h1 id="examples-17" class="section-header"><a href="#examples-17">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -348,12 +362,12 @@ for reuse.</p>
 <span class="ident">a</span>.<span class="ident">insert</span>(<span class="number">1</span>, <span class="string">&quot;a&quot;</span>);
 <span class="ident">a</span>.<span class="ident">clear</span>();
 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">a</span>.<span class="ident">is_empty</span>());</pre></div>
-</div></div><h3 id="impl-1" class="impl"><code class="in-band">impl&lt;K, V, S&gt; <a class="struct" href="../hashbrown/hash_map/struct.HashMap.html" title="struct hashbrown::hash_map::HashMap">HashMap</a>&lt;K, V, S&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;K: <a class="trait" href="https://doc.rust-lang.org/nightly/core/cmp/trait.Eq.html" title="trait core::cmp::Eq">Eq</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html" title="trait core::hash::Hash">Hash</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;S: <a class="trait" href="https://doc.rust-lang.org/nightly/core/hash/trait.BuildHasher.html" title="trait core::hash::BuildHasher">BuildHasher</a>,&nbsp;</span></code><a href="#impl-1" class="anchor"></a><a class="srclink" href="../src/hashbrown/map.rs.html#642-1066" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.reserve" class="method"><code>pub fn <a href="#method.reserve" class="fnname">reserve</a>(&amp;mut self, additional: usize)</code><a class="srclink" href="../src/hashbrown/map.rs.html#665-669" title="goto source code">[src]</a></h4><div class="docblock"><p>Reserves capacity for at least <code>additional</code> more elements to be inserted
+</div></div><h3 id="impl-2" class="impl"><code class="in-band">impl&lt;K, V, S&gt; <a class="struct" href="../hashbrown/hash_map/struct.HashMap.html" title="struct hashbrown::hash_map::HashMap">HashMap</a>&lt;K, V, S&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;K: <a class="trait" href="https://doc.rust-lang.org/nightly/core/cmp/trait.Eq.html" title="trait core::cmp::Eq">Eq</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html" title="trait core::hash::Hash">Hash</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;S: <a class="trait" href="https://doc.rust-lang.org/nightly/core/hash/trait.BuildHasher.html" title="trait core::hash::BuildHasher">BuildHasher</a>,&nbsp;</span></code><a href="#impl-2" class="anchor"></a><a class="srclink" href="../src/hashbrown/map.rs.html#642-1066" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.reserve" class="method"><code>pub fn <a href="#method.reserve" class="fnname">reserve</a>(&amp;mut self, additional: usize)</code><a class="srclink" href="../src/hashbrown/map.rs.html#665-669" title="goto source code">[src]</a></h4><div class="docblock"><p>Reserves capacity for at least <code>additional</code> more elements to be inserted
 in the <code>HashMap</code>. The collection may reserve more space to avoid
 frequent reallocations.</p>
 <h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
 <p>Panics if the new allocation size overflows <a href="https://doc.rust-lang.org/std/primitive.usize.html"><code>usize</code></a>.</p>
-<h1 id="examples-16" class="section-header"><a href="#examples-16">Examples</a></h1>
+<h1 id="examples-18" class="section-header"><a href="#examples-18">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
@@ -364,7 +378,7 @@ frequent reallocations.</p>
 <h1 id="errors" class="section-header"><a href="#errors">Errors</a></h1>
 <p>If the capacity overflows, or the allocator reports a failure, then an error
 is returned.</p>
-<h1 id="examples-17" class="section-header"><a href="#examples-17">Examples</a></h1>
+<h1 id="examples-19" class="section-header"><a href="#examples-19">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">isize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
@@ -372,7 +386,7 @@ is returned.</p>
 </div><h4 id="method.shrink_to_fit" class="method"><code>pub fn <a href="#method.shrink_to_fit" class="fnname">shrink_to_fit</a>(&amp;mut self)</code><a class="srclink" href="../src/hashbrown/map.rs.html#711-714" title="goto source code">[src]</a></h4><div class="docblock"><p>Shrinks the capacity of the map as much as possible. It will drop
 down as much as possible while maintaining the internal rules
 and possibly leaving some space in accordance with the resize policy.</p>
-<h1 id="examples-18" class="section-header"><a href="#examples-18">Examples</a></h1>
+<h1 id="examples-20" class="section-header"><a href="#examples-20">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -387,7 +401,7 @@ down no lower than the supplied limit while maintaining the internal rules
 and possibly leaving some space in accordance with the resize policy.</p>
 <p>This function does nothing if the current capacity is smaller than the
 supplied minimum capacity.</p>
-<h1 id="examples-19" class="section-header"><a href="#examples-19">Examples</a></h1>
+<h1 id="examples-21" class="section-header"><a href="#examples-21">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -402,7 +416,7 @@ supplied minimum capacity.</p>
 <span class="ident">map</span>.<span class="ident">shrink_to</span>(<span class="number">10</span>);
 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">map</span>.<span class="ident">capacity</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span>);</pre></div>
 </div><h4 id="method.entry" class="method"><code>pub fn <a href="#method.entry" class="fnname">entry</a>(&amp;mut self, key: K) -&gt; <a class="enum" href="../hashbrown/hash_map/enum.Entry.html" title="enum hashbrown::hash_map::Entry">Entry</a>&lt;'_, K, V, S&gt;</code><a class="srclink" href="../src/hashbrown/map.rs.html#766-782" title="goto source code">[src]</a></h4><div class="docblock"><p>Gets the given key’s corresponding entry in the map for in-place manipulation.</p>
-<h1 id="examples-20" class="section-header"><a href="#examples-20">Examples</a></h1>
+<h1 id="examples-22" class="section-header"><a href="#examples-22">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -421,7 +435,7 @@ supplied minimum capacity.</p>
 <p>The key may be any borrowed form of the map’s key type, but
 <a href="https://doc.rust-lang.org/std/hash/trait.Hash.html"><code>Hash</code></a> and <a href="https://doc.rust-lang.org/std/cmp/trait.Eq.html"><code>Eq</code></a> on the borrowed form <em>must</em> match those for
 the key type.</p>
-<h1 id="examples-21" class="section-header"><a href="#examples-21">Examples</a></h1>
+<h1 id="examples-23" class="section-header"><a href="#examples-23">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -433,7 +447,7 @@ the key type.</p>
 <p>The supplied key may be any borrowed form of the map’s key type, but
 <a href="https://doc.rust-lang.org/std/hash/trait.Hash.html"><code>Hash</code></a> and <a href="https://doc.rust-lang.org/std/cmp/trait.Eq.html"><code>Eq</code></a> on the borrowed form <em>must</em> match those for
 the key type.</p>
-<h1 id="examples-22" class="section-header"><a href="#examples-22">Examples</a></h1>
+<h1 id="examples-24" class="section-header"><a href="#examples-24">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -445,7 +459,7 @@ the key type.</p>
 <p>The supplied key may be any borrowed form of the map’s key type, but
 <a href="https://doc.rust-lang.org/std/hash/trait.Hash.html"><code>Hash</code></a> and <a href="https://doc.rust-lang.org/std/cmp/trait.Eq.html"><code>Eq</code></a> on the borrowed form <em>must</em> match those for
 the key type.</p>
-<h1 id="examples-23" class="section-header"><a href="#examples-23">Examples</a></h1>
+<h1 id="examples-25" class="section-header"><a href="#examples-25">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -461,7 +475,7 @@ the key type.</p>
 <p>The key may be any borrowed form of the map’s key type, but
 <a href="https://doc.rust-lang.org/std/hash/trait.Hash.html"><code>Hash</code></a> and <a href="https://doc.rust-lang.org/std/cmp/trait.Eq.html"><code>Eq</code></a> on the borrowed form <em>must</em> match those for
 the key type.</p>
-<h1 id="examples-24" class="section-header"><a href="#examples-24">Examples</a></h1>
+<h1 id="examples-26" class="section-header"><a href="#examples-26">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -473,7 +487,7 @@ the key type.</p>
 <p>The key may be any borrowed form of the map’s key type, but
 <a href="https://doc.rust-lang.org/std/hash/trait.Hash.html"><code>Hash</code></a> and <a href="https://doc.rust-lang.org/std/cmp/trait.Eq.html"><code>Eq</code></a> on the borrowed form <em>must</em> match those for
 the key type.</p>
-<h1 id="examples-25" class="section-header"><a href="#examples-25">Examples</a></h1>
+<h1 id="examples-27" class="section-header"><a href="#examples-27">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -489,7 +503,7 @@ the key type.</p>
 value is returned. The key is not updated, though; this matters for
 types that can be <code>==</code> without being identical. See the <a href="index.html#insert-and-complex-keys">module-level
 documentation</a> for more.</p>
-<h1 id="examples-26" class="section-header"><a href="#examples-26">Examples</a></h1>
+<h1 id="examples-28" class="section-header"><a href="#examples-28">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -505,7 +519,7 @@ was previously in the map.</p>
 <p>The key may be any borrowed form of the map’s key type, but
 <a href="https://doc.rust-lang.org/std/hash/trait.Hash.html"><code>Hash</code></a> and <a href="https://doc.rust-lang.org/std/cmp/trait.Eq.html"><code>Eq</code></a> on the borrowed form <em>must</em> match those for
 the key type.</p>
-<h1 id="examples-27" class="section-header"><a href="#examples-27">Examples</a></h1>
+<h1 id="examples-29" class="section-header"><a href="#examples-29">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -518,7 +532,7 @@ key was previously in the map.</p>
 <p>The key may be any borrowed form of the map’s key type, but
 <a href="https://doc.rust-lang.org/std/hash/trait.Hash.html"><code>Hash</code></a> and <a href="https://doc.rust-lang.org/std/cmp/trait.Eq.html"><code>Eq</code></a> on the borrowed form <em>must</em> match those for
 the key type.</p>
-<h1 id="examples-28" class="section-header"><a href="#examples-28">Examples</a></h1>
+<h1 id="examples-30" class="section-header"><a href="#examples-30">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
@@ -526,7 +540,7 @@ the key type.</p>
 <span class="ident">map</span>.<span class="ident">insert</span>(<span class="number">1</span>, <span class="string">&quot;a&quot;</span>);
 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">map</span>.<span class="ident">remove_entry</span>(<span class="kw-2">&amp;</span><span class="number">1</span>), <span class="prelude-val">Some</span>((<span class="number">1</span>, <span class="string">&quot;a&quot;</span>)));
 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">map</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="number">1</span>), <span class="prelude-val">None</span>);</pre></div>
-</div></div><h3 id="impl-2" class="impl"><code class="in-band">impl&lt;K, V, S&gt; <a class="struct" href="../hashbrown/hash_map/struct.HashMap.html" title="struct hashbrown::hash_map::HashMap">HashMap</a>&lt;K, V, S&gt;</code><a href="#impl-2" class="anchor"></a><a class="srclink" href="../src/hashbrown/map.rs.html#1068-1124" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.raw_entry_mut" class="method"><code>pub fn <a href="#method.raw_entry_mut" class="fnname">raw_entry_mut</a>(&amp;mut self) -&gt; <a class="struct" href="../hashbrown/hash_map/struct.RawEntryBuilderMut.html" title="struct hashbrown::hash_map::RawEntryBuilderMut">RawEntryBuilderMut</a>&lt;'_, K, V, S&gt;</code><a class="srclink" href="../src/hashbrown/map.rs.html#1101-1103" title="goto source code">[src]</a></h4><div class="docblock"><p>Creates a raw entry builder for the HashMap.</p>
+</div></div><h3 id="impl-3" class="impl"><code class="in-band">impl&lt;K, V, S&gt; <a class="struct" href="../hashbrown/hash_map/struct.HashMap.html" title="struct hashbrown::hash_map::HashMap">HashMap</a>&lt;K, V, S&gt;</code><a href="#impl-3" class="anchor"></a><a class="srclink" href="../src/hashbrown/map.rs.html#1068-1124" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.raw_entry_mut" class="method"><code>pub fn <a href="#method.raw_entry_mut" class="fnname">raw_entry_mut</a>(&amp;mut self) -&gt; <a class="struct" href="../hashbrown/hash_map/struct.RawEntryBuilderMut.html" title="struct hashbrown::hash_map::RawEntryBuilderMut">RawEntryBuilderMut</a>&lt;'_, K, V, S&gt;</code><a class="srclink" href="../src/hashbrown/map.rs.html#1101-1103" title="goto source code">[src]</a></h4><div class="docblock"><p>Creates a raw entry builder for the HashMap.</p>
 <p>Raw entries provide the lowest level of control for searching and
 manipulating a map. They must be manually initialized with a hash and
 then manually searched. After this, insertions into a vacant entry
@@ -594,7 +608,7 @@ keys with new values returned from the iterator.</p>
 </div><h4 id="method.into_iter-2" class="method"><code>fn <a href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html#tymethod.into_iter" class="fnname">into_iter</a>(self) -&gt; <a class="struct" href="../hashbrown/hash_map/struct.IntoIter.html" title="struct hashbrown::hash_map::IntoIter">IntoIter</a>&lt;K, V&gt;<span class="notable-traits"><span class="notable-traits-tooltip">ⓘ<div class="notable-traits-tooltiptext"><span class="docblock"><h3 class="notable">Notable traits for <a class="struct" href="../hashbrown/hash_map/struct.IntoIter.html" title="struct hashbrown::hash_map::IntoIter">IntoIter</a>&lt;K, V&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;K, V&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator">Iterator</a> for <a class="struct" href="../hashbrown/hash_map/struct.IntoIter.html" title="struct hashbrown::hash_map::IntoIter">IntoIter</a>&lt;K, V&gt;</span><span class="where fmt-newline">    type <a href="https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item" class="type">Item</a> = (K, V);</span></code></span></div></span></span></code><a class="srclink" href="../src/hashbrown/map.rs.html#2143-2147" title="goto source code">[src]</a></h4><div class="docblock"><p>Creates a consuming iterator, that is, one that moves each key-value
 pair out of the map in arbitrary order. The map cannot be used after
 calling this.</p>
-<h1 id="examples-29" class="section-header"><a href="#examples-29">Examples</a></h1>
+<h1 id="examples-31" class="section-header"><a href="#examples-31">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">hashbrown</span>::<span class="ident">HashMap</span>;
 
