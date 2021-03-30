@@ -60,6 +60,7 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
+    pub zombie_undefs_for_system_fn_addrs: RefCell<HashMap<Word, Word>>,
     pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
@@ -120,6 +121,7 @@ impl<'tcx> CodegenCx<'tcx> {
             kernel_mode,
             sym,
             instruction_table: InstructionTable::new(),
+            zombie_undefs_for_system_fn_addrs: Default::default(),
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
@@ -361,10 +363,36 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         self.get_fn_ext(instance)
     }
 
+    // NOTE(eddyb) see the comment on `SpirvValueKind::FnAddr`, this should
+    // be fixed upstream, so we never see any "function pointer" values being
+    // created just to perform direct calls.
     fn get_fn_addr(&self, instance: Instance<'tcx>) -> Self::Value {
         let function = self.get_fn(instance);
         let span = self.tcx.def_span(instance.def_id());
-        self.make_constant_pointer(span, function)
+
+        let ty = SpirvType::Pointer {
+            pointee: function.ty,
+        }
+        .def(span, self);
+
+        if self.is_system_crate() {
+            // Create these undefs up front instead of on demand in SpirvValue::def because
+            // SpirvValue::def can't use cx.emit()
+            self.zombie_undefs_for_system_fn_addrs
+                .borrow_mut()
+                .entry(ty)
+                .or_insert_with(|| {
+                    // We want a unique ID for these undefs, so don't use the caching system.
+                    self.emit_global().undef(ty, None)
+                });
+        }
+
+        SpirvValue {
+            kind: SpirvValueKind::FnAddr {
+                function: function.def_cx(self),
+            },
+            ty,
+        }
     }
 
     fn eh_personality(&self) -> Self::Value {

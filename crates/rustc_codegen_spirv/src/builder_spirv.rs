@@ -14,6 +14,14 @@ use std::{fs::File, io::Write, path::Path};
 pub enum SpirvValueKind {
     Def(Word),
 
+    // FIXME(eddyb) this shouldn't be needed, but `rustc_codegen_ssa` still relies
+    // on converting `Function`s to `Value`s even for direct calls, the `Builder`
+    // should just have direct and indirect `call` variants (or a `Callee` enum).
+    // FIXME(eddyb) document? not sure what to do with the `ConstantPointer` comment.
+    FnAddr {
+        function: Word,
+    },
+
     /// There are a fair number of places where `rustc_codegen_ssa` creates a pointer to something
     /// that cannot be pointed to in SPIR-V. For example, constant values are frequently emitted as
     /// a pointer to constant memory, and then dereferenced where they're used. Functions are the
@@ -69,7 +77,9 @@ impl SpirvValue {
                 Some(initializer.with_type(ty))
             }
 
-            SpirvValueKind::Def(_) | SpirvValueKind::LogicalPtrCast { .. } => None,
+            SpirvValueKind::FnAddr { .. }
+            | SpirvValueKind::Def(_)
+            | SpirvValueKind::LogicalPtrCast { .. } => None,
         }
     }
 
@@ -89,6 +99,21 @@ impl SpirvValue {
     pub fn def_with_span(self, cx: &CodegenCx<'_>, span: Span) -> Word {
         match self.kind {
             SpirvValueKind::Def(word) => word,
+            SpirvValueKind::FnAddr { .. } => {
+                if cx.is_system_crate() {
+                    *cx.zombie_undefs_for_system_fn_addrs
+                        .borrow()
+                        .get(&self.ty)
+                        .expect("FnAddr didn't go through proper undef registration")
+                } else {
+                    cx.tcx
+                        .sess
+                        .err("Cannot use this function pointer for anything other than calls");
+                    // Because we never get beyond compilation (into e.g. linking),
+                    // emitting an invalid ID reference here is OK.
+                    0
+                }
+            }
 
             SpirvValueKind::ConstantPointer {
                 initializer: _,
