@@ -277,7 +277,10 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
                 .write_all(spirv_tools::binary::from_binary(&output.assemble()))
                 .unwrap();
         }
-        if opts.dce && opts.emit_multiple_modules {
+        // Run DCE again, even if emit_multiple_modules==false - the first DCE ran before
+        // structurization and mem2reg (for perf reasons), and mem2reg may remove references to
+        // invalid types, so we need to DCE again.
+        if opts.dce {
             let _timer = sess.timer("link_dce_2");
             dce::dce(output);
         }
