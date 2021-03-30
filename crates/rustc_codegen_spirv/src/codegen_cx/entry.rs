@@ -246,6 +246,7 @@ impl<'tcx> CodegenCx<'tcx> {
             let expected_mutbl = match storage_class {
                 StorageClass::UniformConstant
                 | StorageClass::Input
+                | StorageClass::Uniform
                 | StorageClass::PushConstant => hir::Mutability::Not,
 
                 _ => hir::Mutability::Mut,
