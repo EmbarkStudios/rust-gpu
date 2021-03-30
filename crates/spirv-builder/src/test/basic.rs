@@ -250,7 +250,7 @@ OpReturnValue %14
 %24 = OpLabel
 %12 = OpPhi %10 %30 %25
 %15 = OpPhi %2 %29 %25
-%19 = OpPhi %17 %32 %25
+%19 = OpPhi %17 %18 %25
 OpBranch %13
 %13 = OpLabel
 OpBranch %8

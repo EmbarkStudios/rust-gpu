@@ -5,6 +5,13 @@ use rspirv::spirv::{LoopControl, Op, SelectionControl, Word};
 use std::collections::HashMap;
 use std::{iter, mem};
 
+/// Cached IDs of `OpTypeBool`, `OpConstantFalse`, and `OpConstantTrue`.
+struct Globals {
+    type_bool: Word,
+    const_false: Word,
+    const_true: Word,
+}
+
 // FIXME(eddyb) move this into some common module. Also consider whether we
 // actually need a "builder" or could just operate on a `&mut Function`.
 struct FuncBuilder<'a> {
@@ -37,6 +44,32 @@ pub fn structurize(
 ) -> Module {
     let mut builder = Builder::new_from_module(module);
 
+    // Get the `OpTypeBool` type (it will only be created if it's missing).
+    let type_bool = builder.type_bool();
+
+    // Find already present `OpConstant{False,True}` (if they're in the module).
+    let mut existing_const_false = None;
+    let mut existing_const_true = None;
+    for inst in &builder.module_ref().types_global_values {
+        let existing = match inst.class.opcode {
+            Op::ConstantFalse => &mut existing_const_false,
+            Op::ConstantTrue => &mut existing_const_true,
+            _ => continue,
+        };
+
+        if existing.is_none() {
+            *existing = Some(inst.result_id.unwrap());
+        }
+
+        if existing_const_false.is_some() && existing_const_true.is_some() {
+            break;
+        }
+    }
+
+    // Create new `OpConstant{False,True}` if they're missing.
+    let const_false = existing_const_false.unwrap_or_else(|| builder.constant_false(type_bool));
+    let const_true = existing_const_true.unwrap_or_else(|| builder.constant_true(type_bool));
+
     for func_idx in 0..builder.module_ref().functions.len() {
         builder.select_function(Some(func_idx)).unwrap();
         let func = FuncBuilder {
@@ -58,6 +91,11 @@ pub fn structurize(
             .collect();
 
         Structurizer {
+            globals: Globals {
+                type_bool,
+                const_false,
+                const_true,
+            },
             func,
             block_id_to_idx,
             loop_control,
@@ -99,6 +137,8 @@ struct Exit {
 }
 
 struct Structurizer<'a> {
+    globals: Globals,
+
     func: FuncBuilder<'a>,
     block_id_to_idx: HashMap<BlockId, BlockIdx>,
 
@@ -116,6 +156,12 @@ struct Structurizer<'a> {
 
 impl Structurizer<'_> {
     fn structurize_func(&mut self) {
+        let Globals {
+            const_false,
+            const_true,
+            type_bool,
+        } = self.globals;
+
         // By iterating in post-order, we are guaranteed to visit "inner" regions
         // before "outer" ones.
         for block in self.post_order() {
@@ -292,10 +338,6 @@ impl Structurizer<'_> {
                     .select_block(Some(while_header_block))
                     .unwrap();
 
-                // FIXME(eddyb) deduplicate/cache these constants?
-                let type_bool = self.func.builder.type_bool();
-                let const_false = self.func.builder.constant_false(type_bool);
-                let const_true = self.func.builder.constant_true(type_bool);
                 for (&target, exit) in region
                     .exits
                     .iter_mut()
@@ -371,6 +413,12 @@ impl Structurizer<'_> {
     }
 
     fn selection_merge_regions(&mut self, block: BlockIdx, child_regions: &[Region]) -> Region {
+        let Globals {
+            const_false,
+            const_true,
+            type_bool,
+        } = self.globals;
+
         // HACK(eddyb) this special-cases the easy case where we can
         // just reuse a merge block, and don't have to create our own.
         let unconditional_single_exit = |region: &Region| {
@@ -435,10 +483,6 @@ impl Structurizer<'_> {
             }
 
             // Update conditions using phis.
-            // FIXME(eddyb) deduplicate/cache these constants?
-            let type_bool = self.func.builder.type_bool();
-            let const_false = self.func.builder.constant_false(type_bool);
-            let const_true = self.func.builder.constant_true(type_bool);
             for (&target, exit) in &mut exits {
                 let phi_cases = child_regions
                     .iter()
