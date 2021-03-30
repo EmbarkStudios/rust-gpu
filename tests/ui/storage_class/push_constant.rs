@@ -1,4 +1,5 @@
-// Test that using push constants work.
+// Test that using push constants passes (Vulkan) validation.
+
 // build-pass
 use spirv_std as _;
 
