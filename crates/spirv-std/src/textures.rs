@@ -22,6 +22,7 @@ pub struct Image2d {
 
 impl Image2d {
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleImplicitLod")]
     pub fn sample<V: Vector<f32, 4>>(
         &self,
         sampler: Sampler,
@@ -44,7 +45,9 @@ impl Image2d {
             result
         }
     }
+
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleExplicitLod")]
     /// Sample the image at a coordinate by a lod
     pub fn sample_by_lod<V: Vector<f32, 4>>(
         &self,
@@ -71,7 +74,9 @@ impl Image2d {
         }
         result
     }
+
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleExplicitLod")]
     /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
     pub fn sample_by_gradient<V: Vector<f32, 4>>(
         &self,
@@ -101,8 +106,290 @@ impl Image2d {
         }
         result
     }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleProjImplicitLod")]
+    pub fn sample_with_project_coordinate<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        project_coordinate: impl Vector<f32, 3>,
+    ) -> V {
+        unsafe {
+            let mut result = Default::default();
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%project_coordinate = OpLoad _ {project_coordinate}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleProjImplicitLod _ %sampledImage %project_coordinate",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                project_coordinate = in(reg) &project_coordinate,
+            );
+            result
+        }
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleProjExplicitLod")]
+    /// Sample the image with a project coordinate by a lod
+    pub fn sample_with_project_coordinate_by_lod<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        project_coordinate: impl Vector<f32, 3>,
+        lod: f32,
+    ) -> V {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%project_coordinate = OpLoad _ {project_coordinate}",
+                "%lod = OpLoad _ {lod}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleProjExplicitLod _ %sampledImage %project_coordinate Lod %lod",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                project_coordinate = in(reg) &project_coordinate,
+                lod = in(reg) &lod
+            );
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleProjExplicitLod")]
+    /// Sample the image with a project coordinate based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
+    pub fn sample_with_project_coordinate_by_gradient<V: Vector<f32, 4>>(
+        &self,
+        sampler: Sampler,
+        project_coordinate: impl Vector<f32, 3>,
+        gradient_dx: impl Vector<f32, 2>,
+        gradient_dy: impl Vector<f32, 2>,
+    ) -> V {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%project_coordinate = OpLoad _ {project_coordinate}",
+                "%gradient_dx = OpLoad _ {gradient_dx}",
+                "%gradient_dy = OpLoad _ {gradient_dy}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleProjExplicitLod _ %sampledImage %project_coordinate Grad %gradient_dx %gradient_dy",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                project_coordinate = in(reg) &project_coordinate,
+                gradient_dx = in(reg) &gradient_dx,
+                gradient_dy = in(reg) &gradient_dy,
+            );
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleDrefImplicitLod")]
+    /// Sample the image's depth reference
+    pub fn sample_depth_reference(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 2>,
+        depth_reference: f32,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}", // not required to do this way, but done for consistency
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleDrefImplicitLod _ %sampledImage %coordinate %depth_reference",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+            );
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleDrefExplicitLod")]
+    /// Sample the image's depth reference based on an explicit lod
+    pub fn sample_depth_reference_by_lod(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 2>,
+        depth_reference: f32,
+        lod: f32,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}",
+                "%lod = OpLoad _ {lod}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleDrefExplicitLod _ %sampledImage %coordinate %depth_reference Lod %lod",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+                lod = in(reg) &lod,
+            )
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleDrefExplicitLod")]
+    /// Sample the image's depth reference based on a gradient formed by (dx, dy).
+    /// Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
+    pub fn sample_depth_reference_by_gradient(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 2>,
+        depth_reference: f32,
+        gradient_dx: impl Vector<f32, 2>,
+        gradient_dy: impl Vector<f32, 2>,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}",
+                "%gradient_dx = OpLoad _ {gradient_dx}",
+                "%gradient_dy = OpLoad _ {gradient_dy}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleDrefExplicitLod _ %sampledImage %coordinate %depth_reference Grad %gradient_dx %gradient_dy",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+                gradient_dx = in(reg) &gradient_dx,
+                gradient_dy = in(reg) &gradient_dy,
+            );
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleProjDrefImplicitLod")]
+    /// Sample the image's depth reference with the project coordinate
+    pub fn sample_depth_reference_with_project_coordinate(
+        &self,
+        sampler: Sampler,
+        project_coordinate: impl Vector<f32, 3>,
+        depth_reference: f32,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%project_coordinate = OpLoad _ {project_coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}", // not required to do this way, but done for consistency
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleProjDrefImplicitLod _ %sampledImage %project_coordinate %depth_reference",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                project_coordinate = in(reg) &project_coordinate,
+                depth_reference = in(reg) &depth_reference,
+            );
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleProjDrefExplicitLod")]
+    /// Sample the image's depth reference with the project coordinate based on an explicit lod
+    pub fn sample_depth_reference_with_project_coordinate_by_lod(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        depth_reference: f32,
+        lod: f32,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}",
+                "%lod = OpLoad _ {lod}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleProjDrefExplicitLod _ %sampledImage %coordinate %depth_reference Lod %lod",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+                lod = in(reg) &lod,
+            )
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleProjDrefExplicitLod")]
+    /// Sample the image's depth reference with the project coordinate based on a gradient formed by (dx, dy).
+    /// Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
+    pub fn sample_depth_reference_with_project_coordinate_by_gradient(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        depth_reference: f32,
+        gradient_dx: impl Vector<f32, 2>,
+        gradient_dy: impl Vector<f32, 2>,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}",
+                "%gradient_dx = OpLoad _ {gradient_dx}",
+                "%gradient_dy = OpLoad _ {gradient_dy}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleProjDrefExplicitLod _ %sampledImage %coordinate %depth_reference Grad %gradient_dx %gradient_dy",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+                gradient_dx = in(reg) &gradient_dx,
+                gradient_dy = in(reg) &gradient_dy,
+            );
+        }
+        result
+    }
+
     /// Fetch a single texel with a sampler set at compile time
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageFetch")]
     pub fn fetch<V, I, const N: usize>(&self, coordinate: impl Vector<I, N>) -> V
     where
         V: Vector<f32, 4>,
@@ -142,6 +429,7 @@ pub struct StorageImage2d {
 impl StorageImage2d {
     /// Read a texel from an image without a sampler.
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageRead")]
     pub fn read<I, V, const N: usize>(&self, coordinate: impl Vector<I, 2>) -> V
     where
         I: Integer,
@@ -166,6 +454,7 @@ impl StorageImage2d {
 
     /// Write a texel to an image without a sampler.
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageWrite")]
     pub unsafe fn write<I, const N: usize>(
         &self,
         coordinate: impl Vector<I, 2>,
@@ -201,6 +490,7 @@ pub struct Image2dArray {
 
 impl Image2dArray {
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleImplicitLod")]
     pub fn sample<V: Vector<f32, 4>>(
         &self,
         sampler: Sampler,
@@ -223,7 +513,9 @@ impl Image2dArray {
             result
         }
     }
+
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleExplicitLod")]
     /// Sample the image at a coordinate by a lod
     pub fn sample_by_lod<V: Vector<f32, 4>>(
         &self,
@@ -250,7 +542,9 @@ impl Image2dArray {
         }
         result
     }
+
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleExplicitLod")]
     /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
     pub fn sample_by_gradient<V: Vector<f32, 4>>(
         &self,
@@ -280,6 +574,103 @@ impl Image2dArray {
         }
         result
     }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleDrefImplicitLod")]
+    /// Sample the image's depth reference
+    pub fn sample_depth_reference(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        depth_reference: f32,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}", // not required to do this way, but done for consistency
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleDrefImplicitLod _ %sampledImage %coordinate %depth_reference",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+            );
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleDrefExplicitLod")]
+    /// Sample the image's depth reference based on an explicit lod
+    pub fn sample_depth_reference_by_lod(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        depth_reference: f32,
+        lod: f32,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}",
+                "%lod = OpLoad _ {lod}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleDrefExplicitLod _ %sampledImage %coordinate %depth_reference Lod %lod",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+                lod = in(reg) &lod,
+            )
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleDrefExplicitLod")]
+    /// Sample the image's depth reference based on a gradient formed by (dx, dy).
+    /// Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
+    pub fn sample_depth_reference_by_gradient(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        depth_reference: f32,
+        gradient_dx: impl Vector<f32, 2>,
+        gradient_dy: impl Vector<f32, 2>,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}",
+                "%gradient_dx = OpLoad _ {gradient_dx}",
+                "%gradient_dy = OpLoad _ {gradient_dy}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleDrefExplicitLod _ %sampledImage %coordinate %depth_reference Grad %gradient_dx %gradient_dy",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+                gradient_dx = in(reg) &gradient_dx,
+                gradient_dy = in(reg) &gradient_dy,
+            );
+        }
+        result
+    }
 }
 
 #[spirv(image_type(
@@ -298,6 +689,7 @@ pub struct Cubemap {
 
 impl Cubemap {
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpSampledImage")]
     pub fn sample<V: Vector<f32, 4>>(
         &self,
         sampler: Sampler,
@@ -320,7 +712,9 @@ impl Cubemap {
             result
         }
     }
+
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleExplicitLod")]
     /// Sample the image at a coordinate by a lod
     pub fn sample_by_lod<V: Vector<f32, 4>>(
         &self,
@@ -347,8 +741,10 @@ impl Cubemap {
         }
         result
     }
+
     #[spirv_std_macros::gpu_only]
-    /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])
+    #[doc(alias = "OpImageSampleExplicitLod")]
+    /// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx, dw/dx], [du/dy, dv/dy, dw/dy])
     pub fn sample_by_gradient<V: Vector<f32, 4>>(
         &self,
         sampler: Sampler,
@@ -377,6 +773,103 @@ impl Cubemap {
         }
         result
     }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleDrefImplicitLod")]
+    /// Sample the image's depth reference
+    pub fn sample_depth_reference(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        depth_reference: f32,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}", // not required to do this way, but done for consistency
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleDrefImplicitLod _ %sampledImage %coordinate %depth_reference",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+            );
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleDrefExplicitLod")]
+    /// Sample the image's depth reference based on an explicit lod
+    pub fn sample_depth_reference_by_lod(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        depth_reference: f32,
+        lod: f32,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}",
+                "%lod = OpLoad _ {lod}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleDrefExplicitLod _ %sampledImage %coordinate %depth_reference Lod %lod",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+                lod = in(reg) &lod,
+            )
+        }
+        result
+    }
+
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleDrefExplicitLod")]
+    /// Sample the image's depth reference based on a gradient formed by (dx, dy).
+    /// Specifically, ([du/dx, dv/dx, dw/dx], [du/dy, dv/dy, dw/dy])
+    pub fn sample_depth_reference_by_gradient(
+        &self,
+        sampler: Sampler,
+        coordinate: impl Vector<f32, 3>,
+        depth_reference: f32,
+        gradient_dx: impl Vector<f32, 3>,
+        gradient_dy: impl Vector<f32, 3>,
+    ) -> f32 {
+        let mut result = Default::default();
+        unsafe {
+            asm!(
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%depth_reference = OpLoad _ {depth_reference}",
+                "%gradient_dx = OpLoad _ {gradient_dx}",
+                "%gradient_dy = OpLoad _ {gradient_dy}",
+                "%sampledImage = OpSampledImage _ %image %sampler",
+                "%result = OpImageSampleDrefExplicitLod _ %sampledImage %coordinate %depth_reference Grad %gradient_dx %gradient_dy",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                depth_reference = in(reg) &depth_reference,
+                gradient_dx = in(reg) &gradient_dx,
+                gradient_dy = in(reg) &gradient_dy,
+            );
+        }
+        result
+    }
 }
 
 #[spirv(sampled_image)]
@@ -387,6 +880,7 @@ pub struct SampledImage<I> {
 
 impl SampledImage<Image2d> {
     #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpImageSampleImplicitLod")]
     pub fn sample<V: Vector<f32, 4>>(&self, coordinate: impl Vector<f32, 2>) -> V {
         unsafe {
             let mut result = Default::default();
