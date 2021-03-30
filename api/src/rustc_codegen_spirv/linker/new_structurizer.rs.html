@@ -511,6 +511,50 @@
 <span id="508">508</span>
 <span id="509">509</span>
 <span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">decorations</span>::<span class="ident">UnrollLoopsDecoration</span>;
 <span class="kw">use</span> <span class="ident">indexmap</span>::{<span class="ident">indexmap</span>, <span class="ident">IndexMap</span>};
@@ -518,6 +562,13 @@
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">LoopControl</span>, <span class="ident">Op</span>, <span class="ident">SelectionControl</span>, <span class="ident">Word</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">iter</span>, <span class="ident">mem</span>};
+
+<span class="doccomment">/// Cached IDs of `OpTypeBool`, `OpConstantFalse`, and `OpConstantTrue`.</span>
+<span class="kw">struct</span> <span class="ident">Globals</span> {
+    <span class="ident">type_bool</span>: <span class="ident">Word</span>,
+    <span class="ident">const_false</span>: <span class="ident">Word</span>,
+    <span class="ident">const_true</span>: <span class="ident">Word</span>,
+}
 
 <span class="comment">// FIXME(eddyb) move this into some common module. Also consider whether we</span>
 <span class="comment">// actually need a &quot;builder&quot; or could just operate on a `&amp;mut Function`.</span>
@@ -551,6 +602,32 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Module</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new_from_module</span>(<span class="ident">module</span>);
 
+    <span class="comment">// Get the `OpTypeBool` type (it will only be created if it&#39;s missing).</span>
+    <span class="kw">let</span> <span class="ident">type_bool</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">type_bool</span>();
+
+    <span class="comment">// Find already present `OpConstant{False,True}` (if they&#39;re in the module).</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">existing_const_false</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">existing_const_true</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">builder</span>.<span class="ident">module_ref</span>().<span class="ident">types_global_values</span> {
+        <span class="kw">let</span> <span class="ident">existing</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
+            <span class="ident">Op</span>::<span class="ident">ConstantFalse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">existing_const_false</span>,
+            <span class="ident">Op</span>::<span class="ident">ConstantTrue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">existing_const_true</span>,
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+        };
+
+        <span class="kw">if</span> <span class="ident">existing</span>.<span class="ident">is_none</span>() {
+            <span class="kw-2">*</span><span class="ident">existing</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
+        }
+
+        <span class="kw">if</span> <span class="ident">existing_const_false</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> <span class="ident">existing_const_true</span>.<span class="ident">is_some</span>() {
+            <span class="kw">break</span>;
+        }
+    }
+
+    <span class="comment">// Create new `OpConstant{False,True}` if they&#39;re missing.</span>
+    <span class="kw">let</span> <span class="ident">const_false</span> <span class="op">=</span> <span class="ident">existing_const_false</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">builder</span>.<span class="ident">constant_false</span>(<span class="ident">type_bool</span>));
+    <span class="kw">let</span> <span class="ident">const_true</span> <span class="op">=</span> <span class="ident">existing_const_true</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">builder</span>.<span class="ident">constant_true</span>(<span class="ident">type_bool</span>));
+
     <span class="kw">for</span> <span class="ident">func_idx</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">builder</span>.<span class="ident">module_ref</span>().<span class="ident">functions</span>.<span class="ident">len</span>() {
         <span class="ident">builder</span>.<span class="ident">select_function</span>(<span class="prelude-val">Some</span>(<span class="ident">func_idx</span>)).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">func</span> <span class="op">=</span> <span class="ident">FuncBuilder</span> {
@@ -572,6 +649,11 @@
             .<span class="ident">collect</span>();
 
         <span class="ident">Structurizer</span> {
+            <span class="ident">globals</span>: <span class="ident">Globals</span> {
+                <span class="ident">type_bool</span>,
+                <span class="ident">const_false</span>,
+                <span class="ident">const_true</span>,
+            },
             <span class="ident">func</span>,
             <span class="ident">block_id_to_idx</span>,
             <span class="ident">loop_control</span>,
@@ -613,6 +695,8 @@
 }
 
 <span class="kw">struct</span> <span class="ident">Structurizer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="ident">globals</span>: <span class="ident">Globals</span>,
+
     <span class="ident">func</span>: <span class="ident">FuncBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="ident">block_id_to_idx</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">BlockId</span>, <span class="ident">BlockIdx</span><span class="op">&gt;</span>,
 
@@ -630,6 +714,12 @@
 
 <span class="kw">impl</span> <span class="ident">Structurizer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">structurize_func</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="kw">let</span> <span class="ident">Globals</span> {
+            <span class="ident">const_false</span>,
+            <span class="ident">const_true</span>,
+            <span class="ident">type_bool</span>,
+        } <span class="op">=</span> <span class="self">self</span>.<span class="ident">globals</span>;
+
         <span class="comment">// By iterating in post-order, we are guaranteed to visit &quot;inner&quot; regions</span>
         <span class="comment">// before &quot;outer&quot; ones.</span>
         <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">post_order</span>() {
@@ -806,10 +896,6 @@
                     .<span class="ident">select_block</span>(<span class="prelude-val">Some</span>(<span class="ident">while_header_block</span>))
                     .<span class="ident">unwrap</span>();
 
-                <span class="comment">// FIXME(eddyb) deduplicate/cache these constants?</span>
-                <span class="kw">let</span> <span class="ident">type_bool</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">builder</span>.<span class="ident">type_bool</span>();
-                <span class="kw">let</span> <span class="ident">const_false</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">builder</span>.<span class="ident">constant_false</span>(<span class="ident">type_bool</span>);
-                <span class="kw">let</span> <span class="ident">const_true</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">builder</span>.<span class="ident">constant_true</span>(<span class="ident">type_bool</span>);
                 <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">exit</span>) <span class="kw">in</span> <span class="ident">region</span>
                     .<span class="ident">exits</span>
                     .<span class="ident">iter_mut</span>()
@@ -885,6 +971,12 @@
     }
 
     <span class="kw">fn</span> <span class="ident">selection_merge_regions</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">BlockIdx</span>, <span class="ident">child_regions</span>: <span class="kw-2">&amp;</span>[<span class="ident">Region</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Region</span> {
+        <span class="kw">let</span> <span class="ident">Globals</span> {
+            <span class="ident">const_false</span>,
+            <span class="ident">const_true</span>,
+            <span class="ident">type_bool</span>,
+        } <span class="op">=</span> <span class="self">self</span>.<span class="ident">globals</span>;
+
         <span class="comment">// HACK(eddyb) this special-cases the easy case where we can</span>
         <span class="comment">// just reuse a merge block, and don&#39;t have to create our own.</span>
         <span class="kw">let</span> <span class="ident">unconditional_single_exit</span> <span class="op">=</span> <span class="op">|</span><span class="ident">region</span>: <span class="kw-2">&amp;</span><span class="ident">Region</span><span class="op">|</span> {
@@ -949,10 +1041,6 @@
             }
 
             <span class="comment">// Update conditions using phis.</span>
-            <span class="comment">// FIXME(eddyb) deduplicate/cache these constants?</span>
-            <span class="kw">let</span> <span class="ident">type_bool</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">builder</span>.<span class="ident">type_bool</span>();
-            <span class="kw">let</span> <span class="ident">const_false</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">builder</span>.<span class="ident">constant_false</span>(<span class="ident">type_bool</span>);
-            <span class="kw">let</span> <span class="ident">const_true</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">builder</span>.<span class="ident">constant_true</span>(<span class="ident">type_bool</span>);
             <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">exit</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">exits</span> {
                 <span class="kw">let</span> <span class="ident">phi_cases</span> <span class="op">=</span> <span class="ident">child_regions</span>
                     .<span class="ident">iter</span>()
