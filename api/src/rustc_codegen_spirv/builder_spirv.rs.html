@@ -430,6 +430,31 @@
 <span id="427">427</span>
 <span id="428">428</span>
 <span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">codegen_cx</span>::<span class="ident">CodegenCx</span>;
@@ -446,6 +471,14 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpirvValueKind</span> {
     <span class="ident">Def</span>(<span class="ident">Word</span>),
+
+    <span class="comment">// FIXME(eddyb) this shouldn&#39;t be needed, but `rustc_codegen_ssa` still relies</span>
+    <span class="comment">// on converting `Function`s to `Value`s even for direct calls, the `Builder`</span>
+    <span class="comment">// should just have direct and indirect `call` variants (or a `Callee` enum).</span>
+    <span class="comment">// FIXME(eddyb) document? not sure what to do with the `ConstantPointer` comment.</span>
+    <span class="ident">FnAddr</span> {
+        <span class="ident">function</span>: <span class="ident">Word</span>,
+    },
 
     <span class="doccomment">/// There are a fair number of places where `rustc_codegen_ssa` creates a pointer to something</span>
     <span class="doccomment">/// that cannot be pointed to in SPIR-V. For example, constant values are frequently emitted as</span>
@@ -502,7 +535,9 @@
                 <span class="prelude-val">Some</span>(<span class="ident">initializer</span>.<span class="ident">with_type</span>(<span class="ident">ty</span>))
             }
 
-            <span class="ident">SpirvValueKind</span>::<span class="ident">Def</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">SpirvValueKind</span>::<span class="ident">LogicalPtrCast</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">SpirvValueKind</span>::<span class="ident">FnAddr</span> { .. }
+            <span class="op">|</span> <span class="ident">SpirvValueKind</span>::<span class="ident">Def</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">SpirvValueKind</span>::<span class="ident">LogicalPtrCast</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
 
@@ -522,6 +557,21 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_with_span</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">kind</span> {
             <span class="ident">SpirvValueKind</span>::<span class="ident">Def</span>(<span class="ident">word</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">word</span>,
+            <span class="ident">SpirvValueKind</span>::<span class="ident">FnAddr</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">is_system_crate</span>() {
+                    <span class="kw-2">*</span><span class="ident">cx</span>.<span class="ident">zombie_undefs_for_system_fn_addrs</span>
+                        .<span class="ident">borrow</span>()
+                        .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ty</span>)
+                        .<span class="ident">expect</span>(<span class="string">&quot;FnAddr didn&#39;t go through proper undef registration&quot;</span>)
+                } <span class="kw">else</span> {
+                    <span class="ident">cx</span>.<span class="ident">tcx</span>
+                        .<span class="ident">sess</span>
+                        .<span class="ident">err</span>(<span class="string">&quot;Cannot use this function pointer for anything other than calls&quot;</span>);
+                    <span class="comment">// Because we never get beyond compilation (into e.g. linking),</span>
+                    <span class="comment">// emitting an invalid ID reference here is OK.</span>
+                    <span class="number">0</span>
+                }
+            }
 
             <span class="ident">SpirvValueKind</span>::<span class="ident">ConstantPointer</span> {
                 <span class="ident">initializer</span>: <span class="kw">_</span>,
