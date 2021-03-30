@@ -15,7 +15,7 @@ You can now test out and try building shaders with rust-gpu from the browser!
   and run shaders on the web.
 - [Shader Playground] A playground for building and checking the output of
   shader code similar to godbolt or play.rust-lang.org.
-  
+
 [SHADERed]: https://shadered.org/template
 [shader playground]: http://shader-playground.timjones.io/9d744d5893beb6a8f129fda50ad4aeeb
 
@@ -70,15 +70,14 @@ Now you should have a `librustc_codegen_spirv` dynamic library available in
 `target/release`. You'll need to keep this somewhere stable that you can
 reference from your shader project.
 
-Now we need to add our `.cargo/config` file. This tells cargo to build for the
-`spirv-unknown-unknown` target, and provides a path to the codegen backend for
-that target. We have to also provide `-Zbuild-std` as the
-`spirv-unknown-unknown` sysroot is not currently available in the
-default installation.
+Now we need to add our `.cargo/config` file. This is a configuration file that
+tells cargo how to build for SPIR-V. You need provide the target you're
+compiling for (see [platform support](./platform-support.md)) and provide a path to your built `rustc_codegen_spirv` dynamic
+library. We have to also provide `-Zbuild-std`.
 
 ```toml
 [build]
-target = "spirv-unknown-unknown"
+target = "spirv-unknown-spv1.3"
 rustflags = [
    "-Zcodegen-backend=<path_to_librustc_codegen_spirv>",
    "-Zsymbol-mangling-version=v0"
@@ -89,7 +88,7 @@ build-std=["core"]
 build-std-features=["compiler-builtins-mem"]
 ```
 
-Now we can build our crate with cargo as normal. 
+Now we can build our crate with cargo as normal.
 ```bash
 cargo build
 ```

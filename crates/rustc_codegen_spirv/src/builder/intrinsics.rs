@@ -154,14 +154,14 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 
             // TODO: Configure these to be ocl vs. gl ext instructions, etc.
             sym::sqrtf32 | sym::sqrtf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::sqrt, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Sqrt, ret_ty, [args[0].immediate()])
                 }
             }
             sym::powif32 | sym::powif64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(
                         CLOp::pown,
                         ret_ty,
@@ -173,21 +173,21 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
             sym::sinf32 | sym::sinf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::sin, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Sin, ret_ty, [args[0].immediate()])
                 }
             }
             sym::cosf32 | sym::cosf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::cos, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Cos, ret_ty, [args[0].immediate()])
                 }
             }
             sym::powf32 | sym::powf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(
                         CLOp::pow,
                         ret_ty,
@@ -202,35 +202,35 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
             sym::expf32 | sym::expf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::exp, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Exp, ret_ty, [args[0].immediate()])
                 }
             }
             sym::exp2f32 | sym::exp2f64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::exp2, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Exp2, ret_ty, [args[0].immediate()])
                 }
             }
             sym::logf32 | sym::logf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::log, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Log, ret_ty, [args[0].immediate()])
                 }
             }
             sym::log2f32 | sym::log2f64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::log2, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Log2, ret_ty, [args[0].immediate()])
                 }
             }
             sym::log10f32 | sym::log10f64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::log10, ret_ty, [args[0].immediate()])
                 } else {
                     // spir-v glsl doesn't have log10, so,
@@ -241,7 +241,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
             sym::fmaf32 | sym::fmaf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(
                         CLOp::fma,
                         ret_ty,
@@ -264,14 +264,14 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
             sym::fabsf32 | sym::fabsf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::fabs, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::FAbs, ret_ty, [args[0].immediate()])
                 }
             }
             sym::minnumf32 | sym::minnumf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(
                         CLOp::fmin,
                         ret_ty,
@@ -286,7 +286,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
             sym::maxnumf32 | sym::maxnumf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(
                         CLOp::fmax,
                         ret_ty,
@@ -301,7 +301,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
             sym::copysignf32 | sym::copysignf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(
                         CLOp::copysign,
                         ret_ty,
@@ -314,21 +314,21 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
             sym::floorf32 | sym::floorf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::floor, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Floor, ret_ty, [args[0].immediate()])
                 }
             }
             sym::ceilf32 | sym::ceilf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::ceil, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Ceil, ret_ty, [args[0].immediate()])
                 }
             }
             sym::truncf32 | sym::truncf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::trunc, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Trunc, ret_ty, [args[0].immediate()])
@@ -336,14 +336,14 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             }
             // TODO: Correctness of all these rounds
             sym::rintf32 | sym::rintf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::rint, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Round, ret_ty, [args[0].immediate()])
                 }
             }
             sym::nearbyintf32 | sym::nearbyintf64 | sym::roundf32 | sym::roundf64 => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::round, ret_ty, [args[0].immediate()])
                 } else {
                     self.gl_op(GLOp::Round, ret_ty, [args[0].immediate()])
@@ -359,7 +359,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 
             // TODO: Do we want to manually implement these instead of using intel instructions?
             sym::ctlz | sym::ctlz_nonzero => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::clz, ret_ty, [args[0].immediate()])
                 } else {
                     self.ext_inst
@@ -376,7 +376,7 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 }
             }
             sym::cttz | sym::cttz_nonzero => {
-                if self.kernel_mode {
+                if self.target.is_kernel() {
                     self.cl_op(CLOp::ctz, ret_ty, [args[0].immediate()])
                 } else {
                     self.ext_inst

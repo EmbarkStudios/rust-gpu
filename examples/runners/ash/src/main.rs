@@ -171,10 +171,13 @@ pub fn main() {
 }
 
 pub fn compile_shaders() -> Vec<SpvFile> {
-    let spv_paths: Vec<PathBuf> = vec![SpirvBuilder::new("examples/shaders/sky-shader")
-        .print_metadata(false)
-        .build()
-        .unwrap()];
+    let spv_paths: Vec<PathBuf> =
+        vec![
+            SpirvBuilder::new("examples/shaders/sky-shader", "spirv-unknown-vulkan1.1")
+                .print_metadata(false)
+                .build()
+                .unwrap(),
+        ];
     let mut spv_files = Vec::<SpvFile>::with_capacity(spv_paths.len());
     for path in spv_paths.iter() {
         spv_files.push(SpvFile {

@@ -116,6 +116,7 @@ mod linker;
 mod spirv_type;
 mod spirv_type_constraints;
 mod symbols;
+mod target;
 
 use builder::Builder;
 use codegen_cx::{CodegenArgs, CodegenCx, ModuleOutputType};
@@ -146,7 +147,7 @@ use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::abi::Abi;
-use rustc_target::spec::{LinkerFlavor, PanicStrategy, Target, TargetOptions, TargetTriple};
+use rustc_target::spec::{Target, TargetTriple};
 use std::any::Any;
 use std::env;
 use std::fs::{create_dir_all, File};
@@ -211,34 +212,6 @@ fn is_blocklisted_fn<'tcx>(
     false
 }
 
-fn target_options(env: Option<spirv_tools::TargetEnv>) -> Target {
-    Target {
-        llvm_target: "no-llvm".to_string(),
-        pointer_width: 32,
-        data_layout: "e-m:e-p:32:32:32-i64:64-n8:16:32:64".to_string(),
-        arch: "spirv".to_string(),
-        options: TargetOptions {
-            simd_types_indirect: false,
-            allows_weak_linkage: false,
-            crt_static_allows_dylibs: true,
-            dll_prefix: "".to_string(),
-            dll_suffix: ".spv".to_string(),
-            dynamic_linking: true,
-            emit_debug_gdb_scripts: false,
-            linker_flavor: LinkerFlavor::Ld,
-            panic_strategy: PanicStrategy::Abort,
-            os: "unknown".to_string(),
-            env: env
-                .as_ref()
-                .map(ToString::to_string)
-                .unwrap_or_else(|| "unknown".to_string()),
-            // TODO: Investigate if main_needs_argc_argv is useful (for building exes)
-            main_needs_argc_argv: false,
-            ..Default::default()
-        },
-    }
-}
-
 // TODO: Should this store Vec or Module?
 struct SpirvModuleBuffer(Vec<u32>);
 
@@ -294,20 +267,10 @@ impl CodegenBackend for SpirvCodegenBackend {
 
     fn target_override(&self, opts: &config::Options) -> Option<Target> {
         match opts.target_triple {
-            TargetTriple::TargetTriple(ref target_triple) => {
-                const ARCH_VENDOR: &str = "spirv-unknown-";
-                if !target_triple.starts_with(ARCH_VENDOR) {
-                    return None;
-                }
-
-                let env = &target_triple[ARCH_VENDOR.len()..];
-
-                match env.parse() {
-                    Ok(env) => Some(target_options(Some(env))),
-                    Err(_) if env == "unknown" => Some(target_options(None)),
-                    Err(_) => None,
-                }
-            }
+            TargetTriple::TargetTriple(ref target) => target
+                .parse::<target::SpirvTarget>()
+                .map(|target| target.rustc_target())
+                .ok(),
             TargetTriple::TargetPath(_) => None,
         }
     }

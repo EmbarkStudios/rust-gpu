@@ -25,6 +25,45 @@ The `rust-gpu` project currently supports a limited number of platforms and grap
 | WGPU | 0.6 | Primary | Uses a translation layer to Metal/DX12
 |  OpenGL | ??? | Tertiary |
 
+### SPIR-V Targets
+
+- `spirv-unknown-spv1.0`
+- `spirv-unknown-spv1.1`
+- `spirv-unknown-spv1.2`
+- `spirv-unknown-spv1.3`
+- `spirv-unknown-spv1.4`
+- `spirv-unknown-spv1.5`
+
+### Vulkan Targets
+
+- `spirv-unknown-vulkan1.0`
+- `spirv-unknown-vulkan1.1`
+- `spirv-unknown-vulkan1.1spv1.4`
+- `spirv-unknown-vulkan1.2`
+
+### WebGPU Targets
+
+- `spirv-unknown-webgpu0`
+
+### OpenGL Targets
+
+- `spirv-unknown-opengl4.0`
+- `spirv-unknown-opengl4.1`
+- `spirv-unknown-opengl4.2`
+- `spirv-unknown-opengl4.3`
+- `spirv-unknown-opengl4.5`
+
+### OpenCL Targets
+
+- `spirv-unknown-opencl1.2`
+- `spirv-unknown-opencl1.2embedded`
+- `spirv-unknown-opencl2.0`
+- `spirv-unknown-opencl2.0embedded`
+- `spirv-unknown-opencl2.1`
+- `spirv-unknown-opencl2.1embedded`
+- `spirv-unknown-opencl2.2`
+- `spirv-unknown-opencl2.2embedded`
+
 ## GPU
 
 Currently we don't have specific generations of GPUs for support, as long they support Vulkan 1.1+ with the latest officially installed drivers it should be able build and run the examples. You can check your Vulkan version using the [`vulkaninfo`] command from the `vulkan-sdk`.
