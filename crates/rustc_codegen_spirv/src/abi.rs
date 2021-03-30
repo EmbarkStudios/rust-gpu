@@ -338,11 +338,11 @@ fn trans_type_impl<'tcx>(
                 );
             }
 
-            if !matches!(ty.abi, Abi::Aggregate { sized: true }) {
+            if !matches!(ty.abi, Abi::Aggregate { .. }) {
                 cx.tcx.sess.span_err(
                     span,
                     &format!(
-                        "`#[spirv(block)]` can only be used for `Sized` aggregates, \
+                        "`#[spirv(block)]` can only be used on aggregates, \
                              but `{}` has `Abi::{:?}`",
                         ty.ty, ty.abi,
                     ),
