@@ -9,7 +9,7 @@ pub struct PointsBuffer {
 pub fn main_cs(
     #[spirv(global_invocation_id)] id: UVec3,
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] points_buffer: &mut PointsBuffer,
-    #[spirv(uniform_constant, descriptor_set = 1, binding = 1)] image: &spirv_std::StorageImage2d,
+    #[spirv(descriptor_set = 1, binding = 1)] image: &spirv_std::StorageImage2d,
 ) {
     unsafe { asm!("OpCapability StorageImageWriteWithoutFormat") };
     let position = id.xy();

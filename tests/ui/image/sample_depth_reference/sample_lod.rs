@@ -5,10 +5,10 @@ use spirv_std::{arch, Cubemap, Image2d, Image2dArray, Sampler};
 
 #[spirv(fragment)]
 pub fn main(
-    #[spirv(uniform_constant, descriptor_set = 0, binding = 0)] image: &Image2d,
-    #[spirv(uniform_constant, descriptor_set = 1, binding = 1)] image_array: &Image2dArray,
-    #[spirv(uniform_constant, descriptor_set = 2, binding = 2)] sampler: &Sampler,
-    #[spirv(uniform_constant, descriptor_set = 3, binding = 3)] cubemap: &Cubemap,
+    #[spirv(descriptor_set = 0, binding = 0)] image: &Image2d,
+    #[spirv(descriptor_set = 1, binding = 1)] image_array: &Image2dArray,
+    #[spirv(descriptor_set = 2, binding = 2)] sampler: &Sampler,
+    #[spirv(descriptor_set = 3, binding = 3)] cubemap: &Cubemap,
     output: &mut f32,
 ) {
     let v2 = glam::Vec2::new(0.0, 1.0);
