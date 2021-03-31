@@ -249,6 +249,22 @@ impl Structurizer<'_> {
                 let taken_block_id = self.func.blocks()[target].label_id().unwrap();
                 let exit = region.exits.remove(&target).unwrap();
 
+                // Special-case the last exit as unconditional - regardless of
+                // what might end up in `exit.condition`, what we'd generate is
+                // `if exit.condition { branch target; } else { unreachable; }`
+                // which is just `branch target;` with an extra assumption that
+                // `exit.condition` is `true` (which we can just ignore).
+                if region.exits.is_empty() {
+                    self.func.builder.select_block(Some(region.merge)).unwrap();
+                    assert_eq!(
+                        self.func.builder.pop_instruction().unwrap().class.opcode,
+                        Op::Unreachable
+                    );
+                    self.func.builder.branch(taken_block_id).unwrap();
+                    region = self.regions.remove(&target).unwrap();
+                    continue;
+                }
+
                 // Create a new block for the "`exit` not taken" path.
                 let not_taken_block_id = self.func.builder.begin_block(None).unwrap();
                 let not_taken_block = self.func.builder.selected_block().unwrap();
