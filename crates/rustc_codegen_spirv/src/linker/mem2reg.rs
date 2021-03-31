@@ -464,7 +464,7 @@ impl Renamer<'_> {
             }
         }
 
-        for dest_id in outgoing_edges(&self.blocks[block]) {
+        for dest_id in outgoing_edges(&self.blocks[block]).collect::<Vec<_>>() {
             // TODO: Don't do this find
             let dest_idx = label_to_index(self.blocks, dest_id);
             self.rename(dest_idx, Some(block));
