@@ -723,11 +723,12 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
 
         // 3.37.25. Reserved Instructions
         // SPV_KHR_ray_tracing
+        // NOTE(eddyb) we actually use these despite not being in the standard yet.
         Op::TraceRayKHR
         | Op::ExecuteCallableKHR
         | Op::ConvertUToAccelerationStructureKHR
         | Op::IgnoreIntersectionKHR
-        | Op::TerminateRayKHR => reserved!(SPV_KHR_ray_tracing),
+        | Op::TerminateRayKHR => {} // reserved!(SPV_KHR_ray_tracing),
         // SPV_KHR_ray_query
         Op::TypeRayQueryKHR
         | Op::RayQueryInitializeKHR
@@ -735,7 +736,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::RayQueryGenerateIntersectionKHR
         | Op::RayQueryConfirmIntersectionKHR
         | Op::RayQueryProceedKHR
-        | Op::RayQueryGetIntersectionTypeKHR => reserved!(SPV_KHR_ray_query),
+        | Op::RayQueryGetIntersectionTypeKHR => {} // reserved!(SPV_KHR_ray_query),
         // SPV_AMD_shader_fragment_mask
         Op::FragmentMaskFetchAMD | Op::FragmentFetchAMD => reserved!(SPV_AMD_shader_fragment_mask),
         // SPV_KHR_shader_clock
@@ -748,7 +749,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::TerminateRayNV
         | Op::TraceNV
         | Op::TypeAccelerationStructureNV
-        | Op::ExecuteCallableNV => reserved!(SPV_NV_ray_tracing),
+        | Op::ExecuteCallableNV => {}
         // SPV_NV_cooperative_matrix
         Op::TypeCooperativeMatrixNV
         | Op::CooperativeMatrixLoadNV

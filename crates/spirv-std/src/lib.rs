@@ -78,6 +78,7 @@ pub mod arch;
 pub mod float;
 pub mod integer;
 pub mod memory;
+pub mod ray_tracing;
 pub mod scalar;
 pub(crate) mod sealed;
 mod textures;

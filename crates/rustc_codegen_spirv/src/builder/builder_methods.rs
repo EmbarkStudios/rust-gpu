@@ -236,6 +236,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Sampler => self.fatal("cannot memset sampler"),
             SpirvType::SampledImage { .. } => self.fatal("cannot memset sampled image"),
             SpirvType::InterfaceBlock { .. } => self.fatal("cannot memset interface block"),
+            SpirvType::AccelerationStructureKhr => {
+                self.fatal("cannot memset acceleration structure")
+            }
         }
     }
 
@@ -293,6 +296,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Sampler => self.fatal("cannot memset sampler"),
             SpirvType::SampledImage { .. } => self.fatal("cannot memset sampled image"),
             SpirvType::InterfaceBlock { .. } => self.fatal("cannot memset interface block"),
+            SpirvType::AccelerationStructureKhr => {
+                self.fatal("cannot memset acceleration structure")
+            }
         }
     }
 

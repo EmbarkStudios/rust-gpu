@@ -175,9 +175,11 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             SpirvType::Function { .. } => TypeKind::Function,
             // HACK(eddyb) this is probably the closest `TypeKind` (which is still
             // very much LLVM-specific, sadly) has to offer to "resource handle".
-            SpirvType::Image { .. } | SpirvType::Sampler | SpirvType::SampledImage { .. } => {
-                TypeKind::Token
-            }
+            | SpirvType::Image { .. }
+            | SpirvType::Sampler
+            | SpirvType::SampledImage { .. }
+            | SpirvType::AccelerationStructureKhr
+                => TypeKind::Token,
         }
     }
     fn type_ptr_to(&self, ty: Self::Type) -> Self::Type {

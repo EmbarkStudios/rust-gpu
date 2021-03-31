@@ -86,7 +86,12 @@ pub fn outgoing_edges(block: &Block) -> impl Iterator<Item = Word> + '_ {
         Op::Branch => (0..1).step_by(1),
         Op::BranchConditional => (1..3).step_by(1),
         Op::Switch => (1..terminator.operands.len()).step_by(2),
-        Op::Return | Op::ReturnValue | Op::Kill | Op::Unreachable => (0..0).step_by(1),
+        Op::Return
+        | Op::ReturnValue
+        | Op::Kill
+        | Op::Unreachable
+        | Op::IgnoreIntersectionKHR
+        | Op::TerminateRayKHR => (0..0).step_by(1),
         _ => panic!("Invalid block terminator: {:?}", terminator),
     };
     operand_indices.map(move |i| terminator.operands[i].unwrap_id_ref())
