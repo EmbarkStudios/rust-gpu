@@ -791,6 +791,7 @@ fn trans_intrinsic_type<'tcx>(
         IntrinsicType::AccelerationStructureKhr => {
             Ok(SpirvType::AccelerationStructureKhr.def(span, cx))
         }
+        IntrinsicType::RayQueryKhr => Ok(SpirvType::RayQueryKhr.def(span, cx)),
         IntrinsicType::SampledImage => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {

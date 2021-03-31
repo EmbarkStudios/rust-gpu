@@ -239,6 +239,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::AccelerationStructureKhr => {
                 self.fatal("cannot memset acceleration structure")
             }
+            SpirvType::RayQueryKhr => self.fatal("cannot memset ray query"),
         }
     }
 
@@ -299,6 +300,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::AccelerationStructureKhr => {
                 self.fatal("cannot memset acceleration structure")
             }
+            SpirvType::RayQueryKhr => self.fatal("cannot memset ray query"),
         }
     }
 

@@ -73,6 +73,7 @@ pub enum IntrinsicType {
     Sampler,
     AccelerationStructureKhr,
     SampledImage,
+    RayQueryKhr,
 }
 
 // NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside

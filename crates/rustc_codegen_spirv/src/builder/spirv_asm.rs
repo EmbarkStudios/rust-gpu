@@ -312,6 +312,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 image_type: inst.operands[0].unwrap_id_ref(),
             }
             .def(self.span(), self),
+            Op::TypeRayQueryKHR => SpirvType::RayQueryKhr.def(self.span(), self),
             Op::Variable if inst.operands[0].unwrap_storage_class() != StorageClass::Function => {
                 // OpVariable with Function storage class should be emitted inside the function,
                 // however, all other OpVariables should appear in the global scope instead.
