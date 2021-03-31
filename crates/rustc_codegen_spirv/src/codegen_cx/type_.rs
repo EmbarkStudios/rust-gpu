@@ -179,6 +179,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             | SpirvType::Sampler
             | SpirvType::SampledImage { .. }
             | SpirvType::AccelerationStructureKhr
+            | SpirvType::RayQueryKhr
                 => TypeKind::Token,
         }
     }
