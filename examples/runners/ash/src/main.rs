@@ -1,3 +1,47 @@
+// standard Embark lints
+//#![deny(unsafe_code)] // impractical in this crate dealing with unsafe `ash`
+#![warn(
+    clippy::all,
+    clippy::await_holding_lock,
+    clippy::dbg_macro,
+    clippy::debug_assert_with_mut_call,
+    clippy::doc_markdown,
+    clippy::empty_enum,
+    clippy::enum_glob_use,
+    clippy::exit,
+    clippy::explicit_into_iter_loop,
+    clippy::filter_map_next,
+    clippy::fn_params_excessive_bools,
+    clippy::if_let_mutex,
+    clippy::imprecise_flops,
+    clippy::inefficient_to_string,
+    clippy::let_unit_value,
+    clippy::linkedlist,
+    clippy::lossy_float_literal,
+    clippy::macro_use_imports,
+    clippy::map_flatten,
+    clippy::map_unwrap_or,
+    clippy::match_on_vec_items,
+    clippy::match_wildcard_for_single_variants,
+    clippy::mem_forget,
+    clippy::mismatched_target_os,
+    clippy::needless_borrow,
+    clippy::needless_continue,
+    clippy::option_option,
+    clippy::pub_enum_variant_names,
+    clippy::ref_option_ref,
+    clippy::rest_pat_in_fully_bound_structs,
+    clippy::string_to_string,
+    clippy::suboptimal_flops,
+    clippy::todo,
+    clippy::unnested_or_patterns,
+    clippy::unused_self,
+    clippy::verbose_file_reads,
+    future_incompatible,
+    nonstandard_style,
+    rust_2018_idioms
+)]
+
 use ash::{
     extensions::{ext, khr},
     util::read_spv,
@@ -54,7 +98,7 @@ pub fn main() {
 
     // Create shader module and pipelines
     for SpvFile { name, data } in shaders {
-        ctx.insert_shader_module(name, data);
+        ctx.insert_shader_module(name, &data);
     }
     ctx.build_pipelines(
         vk::PipelineCache::null(),
@@ -88,7 +132,7 @@ pub fn main() {
                 }
                 Ok(new_shaders) => {
                     for SpvFile { name, data } in new_shaders {
-                        ctx.insert_shader_module(name, data);
+                        ctx.insert_shader_module(name, &data);
                     }
                     ctx.recompiling_shaders = false;
                     ctx.rebuild_pipelines(vk::PipelineCache::null());
@@ -177,7 +221,7 @@ impl RenderBase {
             if #[cfg(target_os = "macos")] {
                 let entry = ash_molten::MoltenEntry::load().unwrap();
             } else {
-                let entry = ash::Entry::new().unwrap();
+                let entry = unsafe { ash::Entry::new().unwrap() };
             }
         }
 
@@ -261,7 +305,7 @@ impl RenderBase {
                         .get_physical_device_queue_family_properties(*pdevice)
                         .iter()
                         .enumerate()
-                        .find_map(|(index, ref info)| {
+                        .find_map(|(index, info)| {
                             if info.queue_flags.contains(vk::QueueFlags::GRAPHICS)
                                 && surface_loader
                                     .get_physical_device_surface_support(
@@ -326,20 +370,20 @@ impl RenderBase {
             }
         };
 
-        RenderBase {
+        Self {
+            window,
             entry,
             instance,
             device,
-            queue_family_index,
+            swapchain_loader,
+            debug_utils_loader,
+            debug_call_back,
             pdevice,
-            window,
+            queue_family_index,
+            present_queue,
+            surface,
             surface_loader,
             surface_format,
-            present_queue,
-            swapchain_loader,
-            surface,
-            debug_call_back,
-            debug_utils_loader,
         }
     }
 
@@ -578,7 +622,7 @@ impl RenderCtx {
             )
         };
 
-        RenderCtx {
+        Self {
             sync,
             base,
             swapchain,
@@ -711,8 +755,8 @@ impl RenderCtx {
     /// Add a shader module to the hash map of shader modules.  returns a handle to the module, and the
     /// old shader module if there was one with the same name already.  Does not rebuild pipelines
     /// that may be using the shader module, nor does it invalidate them.
-    pub fn insert_shader_module(&mut self, name: String, spirv: Vec<u32>) {
-        let shader_info = vk::ShaderModuleCreateInfo::builder().code(&spirv);
+    pub fn insert_shader_module(&mut self, name: String, spirv: &[u32]) {
+        let shader_info = vk::ShaderModuleCreateInfo::builder().code(spirv);
         let shader_module = unsafe {
             self.base
                 .device
@@ -732,16 +776,6 @@ impl RenderCtx {
             for framebuffer in self.framebuffers.drain(..) {
                 self.base.device.destroy_framebuffer(framebuffer, None)
             }
-            // command buffers
-            self.base.device.free_command_buffers(
-                self.commands.pool,
-                &[
-                    self.commands.draw_command_buffer,
-                    self.commands.setup_command_buffer,
-                ],
-            );
-            // render pass
-            self.base.device.destroy_render_pass(self.render_pass, None);
             // image views
             for image_view in self.image_views.drain(..) {
                 self.base.device.destroy_image_view(image_view, None);
@@ -770,22 +804,6 @@ impl RenderCtx {
         self.swapchain = swapchain;
         self.extent = extent;
         self.image_views = self.base.create_image_views(self.swapchain);
-        self.render_pass = self.base.create_render_pass();
-        let command_buffers = {
-            let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
-                .command_buffer_count(2)
-                .command_pool(self.commands.pool)
-                .level(vk::CommandBufferLevel::PRIMARY);
-
-            unsafe {
-                self.base
-                    .device
-                    .allocate_command_buffers(&command_buffer_allocate_info)
-                    .unwrap()
-            }
-        };
-        self.commands.setup_command_buffer = command_buffers[0];
-        self.commands.draw_command_buffer = command_buffers[1];
         self.framebuffers =
             self.base
                 .create_framebuffers(&self.image_views, self.render_pass, extent);
@@ -932,13 +950,13 @@ impl RenderCtx {
                 .reset_fences(&[self.sync.draw_commands_reuse_fence])
                 .expect("Reset fences failed.");
 
+            // As we only have a single command buffer, we can simply reset the entire pool instead of just the buffer.
+            // Doing this is a little bit faster, see
+            // https://arm-software.github.io/vulkan_best_practice_for_mobile_developers/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.html#resetting-the-command-pool
             self.base
                 .device
-                .reset_command_buffer(
-                    self.commands.draw_command_buffer,
-                    vk::CommandBufferResetFlags::RELEASE_RESOURCES,
-                )
-                .expect("Reset command buffer failed.");
+                .reset_command_pool(self.commands.pool, vk::CommandPoolResetFlags::empty())
+                .expect("Reset command pool failed.");
 
             let command_buffer_begin_info = vk::CommandBufferBeginInfo::builder()
                 .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
@@ -994,7 +1012,8 @@ impl Drop for RenderCtx {
                 .destroy_fence(self.sync.draw_commands_reuse_fence, None);
             self.base
                 .device
-                .destroy_fence(self.sync.setup_commands_reuse_fence, None);
+                .free_command_buffers(self.commands.pool, &[self.commands.draw_command_buffer]);
+            self.base.device.destroy_render_pass(self.render_pass, None);
             self.cleanup_pipelines();
             self.cleanup_swapchain();
             self.base
@@ -1011,7 +1030,6 @@ pub struct RenderSync {
     pub present_complete_semaphore: vk::Semaphore,
     pub rendering_complete_semaphore: vk::Semaphore,
     pub draw_commands_reuse_fence: vk::Fence,
-    pub setup_commands_reuse_fence: vk::Fence,
 }
 
 impl RenderSync {
@@ -1026,11 +1044,6 @@ impl RenderSync {
                 .device
                 .create_fence(&fence_create_info, None)
                 .expect("Create fence failed.");
-            let setup_commands_reuse_fence = base
-                .device
-                .create_fence(&fence_create_info, None)
-                .expect("Create fence failed.");
-
             let present_complete_semaphore = base
                 .device
                 .create_semaphore(&semaphore_create_info, None)
@@ -1044,7 +1057,6 @@ impl RenderSync {
                 present_complete_semaphore,
                 rendering_complete_semaphore,
                 draw_commands_reuse_fence,
-                setup_commands_reuse_fence,
             }
         }
     }
@@ -1053,15 +1065,13 @@ impl RenderSync {
 pub struct RenderCommandPool {
     pub pool: vk::CommandPool,
     pub draw_command_buffer: vk::CommandBuffer,
-    pub setup_command_buffer: vk::CommandBuffer,
 }
 
 impl RenderCommandPool {
     pub fn new(base: &RenderBase) -> Self {
         let pool = {
-            let pool_create_info = vk::CommandPoolCreateInfo::builder()
-                .flags(vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER)
-                .queue_family_index(base.queue_family_index);
+            let pool_create_info =
+                vk::CommandPoolCreateInfo::builder().queue_family_index(base.queue_family_index);
 
             unsafe {
                 base.device
@@ -1072,7 +1082,7 @@ impl RenderCommandPool {
 
         let command_buffers = {
             let command_buffer_allocate_info = vk::CommandBufferAllocateInfo::builder()
-                .command_buffer_count(2)
+                .command_buffer_count(1)
                 .command_pool(pool)
                 .level(vk::CommandBufferLevel::PRIMARY);
 
@@ -1083,13 +1093,9 @@ impl RenderCommandPool {
             }
         };
 
-        let setup_command_buffer = command_buffers[0];
-        let draw_command_buffer = command_buffers[1];
-
         Self {
             pool,
-            draw_command_buffer,
-            setup_command_buffer,
+            draw_command_buffer: command_buffers[0],
         }
     }
 }
@@ -1173,15 +1179,15 @@ impl PipelineDescriptor {
             .build();
 
         Self {
+            color_blend_attachments,
+            dynamic_state,
             shader_stages,
             vertex_input,
             input_assembly,
             rasterization,
             multisample,
             depth_stencil,
-            color_blend_attachments,
             color_blend,
-            dynamic_state,
             dynamic_state_info,
         }
     }

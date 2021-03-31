@@ -1,18 +1,21 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
+use crate::attr::{AggregatedSpirvAttributes, Entry};
 use crate::builder_spirv::SpirvValue;
 use crate::builder_spirv::SpirvValueExt;
 use crate::codegen_cx::BindlessDescriptorSets;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, Entry, SpirvAttribute};
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
+use rustc_codegen_ssa::traits::BaseTypeMethods;
 use rustc_hir as hir;
-use rustc_middle::ty::layout::TyAndLayout;
-use rustc_middle::ty::{Instance, Ty};
+use rustc_middle::ty::layout::{HasParamEnv, TyAndLayout};
+use rustc_middle::ty::{Instance, Ty, TyKind};
 use rustc_span::Span;
-use rustc_target::abi::call::{FnAbi, PassMode};
-use rustc_target::abi::{Align, Size};
+use rustc_target::abi::{
+    call::{ArgAbi, ArgAttribute, ArgAttributes, FnAbi, PassMode},
+    Align, LayoutOf, Size,
+};
 use std::collections::HashMap;
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -39,13 +42,31 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(local_id);
         let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
+        const EMPTY: ArgAttribute = ArgAttribute::empty();
         for (abi, arg) in fn_abi.args.iter().zip(body.params) {
-            if let PassMode::Direct(_) = abi.mode {
-            } else {
-                self.tcx.sess.span_err(
+            match abi.mode {
+                PassMode::Direct(_)
+                | PassMode::Indirect { .. }
+                // plain DST/RTA/VLA
+                | PassMode::Pair(
+                    ArgAttributes {
+                        pointee_size: Size::ZERO,
+                        ..
+                    },
+                    ArgAttributes { regular: EMPTY, .. },
+                )
+                // DST struct with fields before the DST member
+                | PassMode::Pair(
+                    ArgAttributes { .. },
+                    ArgAttributes {
+                        pointee_size: Size::ZERO,
+                        ..
+                    },
+                ) => {}
+                _ => self.tcx.sess.span_err(
                     arg.span,
                     &format!("PassMode {:?} invalid for entry point parameter", abi.mode),
-                )
+                ),
             }
         }
         if let PassMode::Ignore = fn_abi.ret.mode {
@@ -65,7 +86,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.shader_entry_stub(
                 self.tcx.def_span(instance.def_id()),
                 entry_func,
-                fn_abi,
+                &fn_abi.args,
                 body.params,
                 name,
                 execution_model,
@@ -241,7 +262,7 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         span: Span,
         entry_func: SpirvValue,
-        entry_fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
+        arg_abis: &[ArgAbi<'tcx, Ty<'tcx>>],
         hir_params: &[hir::Param<'tcx>],
         name: String,
         execution_model: ExecutionModel,
@@ -253,10 +274,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         .def(span, self);
         let entry_func_return_type = match self.lookup_type(entry_func.ty) {
-            SpirvType::Function {
-                return_type,
-                arguments: _,
-            } => return_type,
+            SpirvType::Function { return_type, .. } => return_type,
             other => self.tcx.sess.fatal(&format!(
                 "Invalid entry_stub type: {}",
                 other.debug(entry_func.ty, self)
@@ -264,24 +282,59 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let mut decoration_locations = HashMap::new();
         // Create OpVariables before OpFunction so they're global instead of local vars.
-        let arguments = entry_fn_abi
-            .args
+        let declared_params = arg_abis
             .iter()
             .zip(hir_params)
             .map(|(entry_fn_arg, hir_param)| {
                 self.declare_parameter(entry_fn_arg.layout, hir_param, &mut decoration_locations)
             })
             .collect::<Vec<_>>();
+        let len_t = self.type_isize();
         let mut emit = self.emit_global();
         let fn_id = emit
             .begin_function(void, None, FunctionControl::NONE, fn_void_void)
             .unwrap();
         emit.begin_block(None).unwrap();
+        // Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s).
+        let arguments: Vec<_> = declared_params
+            .iter()
+            .zip(arg_abis)
+            .zip(hir_params)
+            .flat_map(|((&(var, storage_class), entry_fn_arg), hir_param)| {
+                let mut dst_len_arg = None;
+                let arg = match entry_fn_arg.layout.ty.kind() {
+                    TyKind::Ref(_, ty, _) => {
+                        if !ty.is_sized(self.tcx.at(span), self.param_env()) {
+                            dst_len_arg.replace(
+                                self.dst_length_argument(&mut emit, ty, hir_param, len_t, var),
+                            );
+                        }
+                        var
+                    }
+                    _ => match entry_fn_arg.mode {
+                        PassMode::Indirect { .. } => var,
+                        PassMode::Direct(_) => {
+                            assert_eq!(storage_class, StorageClass::Input);
+
+                            // NOTE(eddyb) this should never fail as it has to have
+                            // been already computed earlier by `declare_parameter`.
+                            let value_spirv_type =
+                                entry_fn_arg.layout.spirv_type(hir_param.span, self);
+
+                            emit.load(value_spirv_type, None, var, None, std::iter::empty())
+                                .unwrap()
+                        }
+                        _ => unreachable!(),
+                    },
+                };
+                std::iter::once(arg).chain(dst_len_arg)
+            })
+            .collect();
         emit.function_call(
             entry_func_return_type,
             None,
             entry_func.def_cx(self),
-            arguments.iter().map(|&(a, _)| a),
+            arguments,
         )
         .unwrap();
         emit.ret().unwrap();
@@ -289,17 +342,49 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let interface: Vec<_> = if emit.version().unwrap() > (1, 3) {
             // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            arguments.into_iter().map(|(a, _)| a).collect()
+            declared_params.into_iter().map(|(var, _)| var).collect()
         } else {
             // SPIR-V <= v1.3 only includes Input and Output in the interface.
-            arguments
+            declared_params
                 .into_iter()
                 .filter(|&(_, s)| s == StorageClass::Input || s == StorageClass::Output)
-                .map(|(a, _)| a)
+                .map(|(var, _)| var)
                 .collect()
         };
         emit.entry_point(execution_model, fn_id, name, interface);
         fn_id
+    }
+
+    fn dst_length_argument(
+        &self,
+        emit: &mut std::cell::RefMut<'_, rspirv::dr::Builder>,
+        ty: Ty<'tcx>,
+        hir_param: &hir::Param<'tcx>,
+        len_t: Word,
+        var: Word,
+    ) -> Word {
+        match ty.kind() {
+            TyKind::Adt(adt_def, substs) => {
+                let (member_idx, field_def) = adt_def.all_fields().enumerate().last().unwrap();
+                let field_ty = field_def.ty(self.tcx, substs);
+                if !matches!(field_ty.kind(), TyKind::Slice(..)) {
+                    self.tcx.sess.span_fatal(
+                        hir_param.ty_span,
+                        "DST parameters are currently restricted to a reference to a struct whose last field is a slice.",
+                    )
+                }
+                emit.array_length(len_t, None, var, member_idx as u32)
+                    .unwrap()
+            }
+            TyKind::Slice(..) | TyKind::Str => self.tcx.sess.span_fatal(
+                hir_param.ty_span,
+                "Straight slices are not yet supported, wrap the slice in a newtype.",
+            ),
+            _ => self
+                .tcx
+                .sess
+                .span_fatal(hir_param.ty_span, "Unsupported parameter type."),
+        }
     }
 
     fn declare_parameter(
@@ -308,61 +393,116 @@ impl<'tcx> CodegenCx<'tcx> {
         hir_param: &hir::Param<'tcx>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
     ) -> (Word, StorageClass) {
-        let storage_class = crate::abi::get_storage_class(self, layout).unwrap_or_else(|| {
-            self.tcx.sess.span_fatal(
-                hir_param.span,
-                &format!("invalid entry param type `{}`", layout.ty),
-            );
-        });
-        let mut has_location = matches!(
-            storage_class,
-            StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
-        );
-        // Note: this *declares* the variable too.
-        let spirv_type = layout.spirv_type(hir_param.span, self);
-        let variable = self
-            .emit_global()
-            .variable(spirv_type, None, storage_class, None);
+        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
+
+        // FIXME(eddyb) attribute validation should be done ahead of time.
+        // FIXME(eddyb) also take into account `&T` interior mutability,
+        // i.e. it's only immutable if `T: Freeze`, which we should check.
+        // FIXME(eddyb) also check the type for compatibility with being
+        // part of the interface, including potentially `Sync`ness etc.
+        let (value_ty, storage_class) = if let Some(storage_class_attr) = attrs.storage_class {
+            let storage_class = storage_class_attr.value;
+            let expected_mutbl = match storage_class {
+                StorageClass::UniformConstant
+                | StorageClass::Input
+                | StorageClass::Uniform
+                | StorageClass::PushConstant => hir::Mutability::Not,
+
+                _ => hir::Mutability::Mut,
+            };
+
+            match *layout.ty.kind() {
+                TyKind::Ref(_, pointee_ty, m) if m == expected_mutbl => (pointee_ty, storage_class),
+
+                _ => self.tcx.sess.span_fatal(
+                    hir_param.span,
+                    &format!(
+                        "invalid entry param type `{}` for storage class `{:?}` \
+                         (expected `&{}T`)",
+                        layout.ty,
+                        storage_class,
+                        expected_mutbl.prefix_str()
+                    ),
+                ),
+            }
+        } else {
+            match *layout.ty.kind() {
+                TyKind::Ref(_, pointee_ty, hir::Mutability::Mut) => {
+                    (pointee_ty, StorageClass::Output)
+                }
+
+                TyKind::Ref(_, pointee_ty, hir::Mutability::Not) => self.tcx.sess.span_fatal(
+                    hir_param.span,
+                    &format!(
+                        "invalid entry param type `{}` (expected `{}` or `&mut {1}`)",
+                        layout.ty, pointee_ty
+                    ),
+                ),
+
+                _ => (layout.ty, StorageClass::Input),
+            }
+        };
+
+        // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
+        let variable = self.emit_global().id();
+
         if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
         }
-        for attr in parse_attrs(self, hir_param.attrs) {
-            match attr {
-                SpirvAttribute::Builtin(builtin) => {
-                    self.emit_global().decorate(
-                        variable,
-                        Decoration::BuiltIn,
-                        std::iter::once(Operand::BuiltIn(builtin)),
-                    );
-                    has_location = false;
-                }
-                SpirvAttribute::DescriptorSet(index) => {
-                    self.emit_global().decorate(
-                        variable,
-                        Decoration::DescriptorSet,
-                        std::iter::once(Operand::LiteralInt32(index)),
-                    );
-                    has_location = false;
-                }
-                SpirvAttribute::Binding(index) => {
-                    self.emit_global().decorate(
-                        variable,
-                        Decoration::Binding,
-                        std::iter::once(Operand::LiteralInt32(index)),
-                    );
-                    has_location = false;
-                }
-                SpirvAttribute::Flat => {
-                    self.emit_global()
-                        .decorate(variable, Decoration::Flat, std::iter::empty());
-                }
-                _ => {}
+
+        let mut decoration_supersedes_location = false;
+        if let Some(builtin) = attrs.builtin.map(|attr| attr.value) {
+            self.emit_global().decorate(
+                variable,
+                Decoration::BuiltIn,
+                std::iter::once(Operand::BuiltIn(builtin)),
+            );
+            decoration_supersedes_location = true;
+        }
+        if let Some(index) = attrs.descriptor_set.map(|attr| attr.value) {
+            self.emit_global().decorate(
+                variable,
+                Decoration::DescriptorSet,
+                std::iter::once(Operand::LiteralInt32(index)),
+            );
+            decoration_supersedes_location = true;
+        }
+        if let Some(index) = attrs.binding.map(|attr| attr.value) {
+            self.emit_global().decorate(
+                variable,
+                Decoration::Binding,
+                std::iter::once(Operand::LiteralInt32(index)),
+            );
+            decoration_supersedes_location = true;
+        }
+        if attrs.flat.is_some() {
+            self.emit_global()
+                .decorate(variable, Decoration::Flat, std::iter::empty());
+        }
+        if let Some(invariant) = attrs.invariant {
+            self.emit_global()
+                .decorate(variable, Decoration::Invariant, std::iter::empty());
+            if storage_class != StorageClass::Output {
+                self.tcx.sess.span_err(
+                    invariant.span,
+                    "#[spirv(invariant)] is only valid on Output variables",
+                );
             }
         }
+
+        // FIXME(eddyb) check whether the storage class is compatible with the
+        // specific shader stage of this entry-point, and any decorations
+        // (e.g. Vulkan has specific rules for builtin storage classes).
+
         // Assign locations from left to right, incrementing each storage class
         // individually.
         // TODO: Is this right for UniformConstant? Do they share locations with
         // input/outpus?
+        let has_location = !decoration_supersedes_location
+            && matches!(
+                storage_class,
+                StorageClass::Input | StorageClass::Output | StorageClass::UniformConstant
+            );
         if has_location {
             let location = decoration_locations
                 .entry(storage_class)
@@ -374,6 +514,15 @@ impl<'tcx> CodegenCx<'tcx> {
             );
             *location += 1;
         }
+
+        // Emit the `OpVariable` with its *Result* ID set to `variable`.
+        let var_spirv_type = SpirvType::Pointer {
+            pointee: self.layout_of(value_ty).spirv_type(hir_param.span, self),
+        }
+        .def(hir_param.span, self);
+        self.emit_global()
+            .variable(var_spirv_type, Some(variable), storage_class, None);
+
         (variable, storage_class)
     }
 

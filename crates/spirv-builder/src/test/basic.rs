@@ -1,4 +1,4 @@
-use super::{dis_fn, dis_globals, val, val_vulkan};
+use super::{dis_entry_fn, dis_fn, dis_globals, val};
 use std::ffi::OsStr;
 
 struct SetEnvVar<'a> {
@@ -17,15 +17,6 @@ impl<'a> Drop for SetEnvVar<'a> {
     fn drop(&mut self) {
         std::env::remove_var(self.k)
     }
-}
-
-#[test]
-fn hello_world() {
-    val(r#"
-#[spirv(fragment)]
-pub fn main() {
-}
-"#);
 }
 
 #[test]
@@ -192,142 +183,21 @@ OpEntryPoint Fragment %1 "main"
 OpExecutionMode %1 OriginUpperLeft
 OpName %2 "test_project::add_decorate"
 OpName %3 "test_project::main"
-OpDecorate %4 DescriptorSet 0
-OpDecorate %4 Binding 0
-%5 = OpTypeVoid
-%6 = OpTypeFunction %5
-%7 = OpTypeInt 32 0
-%8 = OpTypePointer Function %7
-%9 = OpConstant %7 1
+OpDecorate %4 ArrayStride 4
+OpDecorate %5 DescriptorSet 0
+OpDecorate %5 Binding 0
+%6 = OpTypeVoid
+%7 = OpTypeFunction %6
+%8 = OpTypeInt 32 0
+%9 = OpConstant %8 1
 %10 = OpTypeFloat 32
 %11 = OpTypeImage %10 2D 0 0 0 1 Unknown
 %12 = OpTypeSampledImage %11
-%13 = OpTypeRuntimeArray %12
-%14 = OpTypePointer UniformConstant %13
-%4 = OpVariable %14 UniformConstant
-%15 = OpTypePointer UniformConstant %12"#,
+%4 = OpTypeRuntimeArray %12
+%13 = OpTypePointer UniformConstant %4
+%5 = OpVariable %13 UniformConstant
+%14 = OpTypePointer UniformConstant %12"#,
     );
-}
-
-#[test]
-fn asm_const_arg() {
-    val(r#"
-fn asm() {
-    unsafe {
-        const N: usize = 3;
-        asm!(
-            "%int = OpTypeInt 32 0",
-            "%type = OpTypeVector %int {len}",
-            len = const N,
-        );
-    }
-}
-#[spirv(fragment)]
-pub fn main() {
-    asm();
-}
-"#);
-}
-
-#[test]
-fn logical_and() {
-    val(r#"
-fn f(x: bool, y: bool) -> bool {
-    x && y
-}
-#[spirv(fragment)]
-pub fn main() {
-    f(false, true);
-}"#);
-}
-
-#[test]
-fn panic() {
-    val(r#"
-#[spirv(fragment)]
-pub fn main() {
-    panic!("aaa");
-}
-"#);
-}
-
-#[test]
-fn panic_builtin() {
-    val(r#"
-fn int_div(x: usize) -> usize {
-    1 / x
-}
-
-#[spirv(fragment)]
-pub fn main() {
-    int_div(0);
-}
-"#);
-}
-
-#[test]
-fn panic_builtin_bounds_check() {
-    val(r#"
-fn array_bounds_check(x: [u32; 4], i: usize) -> u32 {
-    x[i]
-}
-
-#[spirv(fragment)]
-pub fn main() {
-    array_bounds_check([0, 1, 2, 3], 5);
-}
-"#);
-}
-
-// NOTE(eddyb) this won't pass Vulkan validation (see `push_constant_vulkan`),
-// but should still pass the basline SPIR-V validation.
-#[test]
-fn push_constant() {
-    val(r#"
-#[derive(Copy, Clone)]
-pub struct ShaderConstants {
-    pub width: u32,
-    pub height: u32,
-    pub time: f32,
-}
-
-#[spirv(fragment)]
-pub fn main(constants: PushConstant<ShaderConstants>) {
-    let _constants = *constants;
-}
-"#);
-}
-
-// NOTE(eddyb) we specifically run Vulkan validation here, as the default
-// validation rules are more lax and don't require a `Block` decoration
-// (`#[spirv(block)]` here) on `struct ShaderConstants`.
-#[test]
-fn push_constant_vulkan() {
-    val_vulkan(
-        r#"
-#[derive(Copy, Clone)]
-#[spirv(block)]
-pub struct ShaderConstants {
-    pub width: u32,
-    pub height: u32,
-    pub time: f32,
-}
-
-#[spirv(fragment)]
-pub fn main(constants: PushConstant<ShaderConstants>) {
-    let _constants = *constants;
-}
-"#,
-    );
-}
-
-#[test]
-fn infinite_loop() {
-    val(r#"
-#[spirv(fragment)]
-pub fn main() {
-    loop {}
-}"#);
 }
 
 #[test]
@@ -380,7 +250,7 @@ OpReturnValue %14
 %24 = OpLabel
 %12 = OpPhi %10 %30 %25
 %15 = OpPhi %2 %29 %25
-%19 = OpPhi %17 %32 %25
+%19 = OpPhi %17 %18 %25
 OpBranch %13
 %13 = OpLabel
 OpBranch %8
@@ -388,108 +258,6 @@ OpBranch %8
 OpUnreachable
 OpFunctionEnd"#,
     );
-}
-
-#[test]
-fn signum() {
-    val(r#"
-#[spirv(fragment)]
-pub fn main(i: Input<f32>, mut o: Output<f32>) {
-    *o = i.signum();
-}"#);
-}
-
-#[test]
-// Doesn't work, only worked before because I think it got optimized away before hitting the
-// backend.
-#[ignore]
-fn allocate_const_scalar_pointer() {
-    val(r#"
-use core::ptr::Unique;
-const POINTER: Unique<[u8;4]> = Unique::<[u8; 4]>::dangling();
-
-#[spirv(fragment)]
-pub fn main() {
-    let _pointer = POINTER;
-}"#);
-}
-
-#[test]
-fn allocate_vec_like_pointer() {
-    val(r#"
-use core::ptr::Unique;
-const VEC_LIKE: (Unique<usize>, usize, usize) = (Unique::<usize>::dangling(), 0, 0);
-
-pub fn assign_vec_like() {
-    let _vec_like = VEC_LIKE;
-}
-#[spirv(fragment)]
-pub fn main() {}"#);
-}
-
-#[test]
-fn allocate_null_pointer() {
-    val(r#"
-use core::ptr::null;
-const NULL_PTR: *const i32 = null();
-
-#[spirv(fragment)]
-pub fn main() {
-    let _null_ptr = NULL_PTR;
-}"#);
-}
-
-#[test]
-fn create_uninitialized_memory() {
-    val(r#"
-use core::mem::MaybeUninit;
-const MAYBEI32: MaybeUninit<&i32> = MaybeUninit::<&i32>::uninit();
-
-pub fn create_uninit_and_write() {
-    let mut maybei32 = MAYBEI32;
-    unsafe { maybei32.as_mut_ptr().write(&0); }
-    let _maybei32 = unsafe { maybei32.assume_init() };
-}
-
-#[spirv(fragment)]
-pub fn main() {}"#);
-}
-
-#[test]
-fn vector_extract_dynamic() {
-    val(r#"
-#[spirv(fragment)]
-pub fn main() {
-    let vector = glam::Vec2::new(1.0, 2.0);
-    let element = unsafe { spirv_std::arch::vector_extract_dynamic(vector, 1) };
-    assert!(2.0 == element);
-}
-"#);
-}
-
-#[test]
-fn vector_insert_dynamic() {
-    val(r#"
-#[spirv(fragment)]
-pub fn main() {
-    let vector = glam::Vec2::new(1.0, 2.0);
-    let expected = glam::Vec2::new(1.0, 3.0);
-    let new_vector = unsafe { spirv_std::arch::vector_insert_dynamic(vector, 1, 3.0) };
-    assert!(new_vector == expected);
-}
-"#);
-}
-
-#[test]
-fn mat3_vec3_multiply() {
-    val(r#"
-#[spirv(fragment)]
-pub fn main(input: Input<glam::Mat3>, mut output: Output<glam::Vec3>) {
-    let input = *input;
-    let vector = input * glam::Vec3::new(1.0, 2.0, 3.0);
-    *output = vector;
-}
-"#);
 }
 
 #[test]
@@ -545,7 +313,7 @@ fn complex_image_sample_inst() {
     }
     #[spirv(fragment)]
     pub fn main() {
-        sample_proj_lod(glam::Vec4::zero(), glam::Vec2::zero(), glam::Vec2::zero(), 0, 0);
+        sample_proj_lod(glam::Vec4::ZERO, glam::Vec2::ZERO, glam::Vec2::ZERO, 0, 0);
     }"#,
         "sample_proj_lod",
         "%1 = OpFunction %2 None %3
@@ -563,26 +331,179 @@ OpFunctionEnd",
     );
 }
 
-#[test]
-fn image_read() {
-    val(r#"
-#[spirv(fragment)]
-pub fn main(image: UniformConstant<StorageImage2d>, mut output: Output<glam::Vec2>) {
-    let coords = image.read(glam::IVec2::new(0, 1));
-    *output = coords;
-}
-"#);
+/// Helper to generate all of the `ptr_*` tests below, which test that the various
+/// ways to use raw pointer `read`/`write`/`copy`, to copy a single value, work,
+/// and that the resulting SPIR-V uses either a pair of `OpLoad` and `OpStore`,
+/// and/or the `OpCopyMemory` instruction, but *not* `OpCopyMemorySized`.
+macro_rules! test_copy_via_raw_ptr {
+    ($copy_expr:literal => $spirv:literal) => {
+        dis_fn(
+            concat!(
+                r#"
+        fn copy_via_raw_ptr(src: &f32, dst: &mut f32) {
+            unsafe {
+                "#,
+                $copy_expr,
+                r#"
+            }
+        }
+        #[spirv(fragment)]
+        pub fn main(i: f32, o: &mut f32) {
+            copy_via_raw_ptr(&i, o);
+            // FIXME(eddyb) above call results in inlining `copy_via_raw_ptr`,
+            // due to the to `Output` storage classe, so to get the disassembled
+            // function we also need `Function`-local pointers:
+            let (src, mut dst) = (0.0, 0.0);
+            copy_via_raw_ptr(&src, &mut dst);
+        }
+"#
+            ),
+            "copy_via_raw_ptr",
+            concat!(
+                r#"%1 = OpFunction %2 None %3
+                %4 = OpFunctionParameter %5
+                %6 = OpFunctionParameter %5
+                %7 = OpLabel"#,
+                $spirv,
+                r#"OpReturn
+                OpFunctionEnd"#
+            ),
+        );
+    };
 }
 
 #[test]
-fn image_write() {
-    val(r#"
-#[spirv(fragment)]
-pub fn main(input: Input<glam::Vec2>, image: UniformConstant<StorageImage2d>) {
-    let texels = *input;
-    unsafe {
-        image.write(glam::UVec2::new(0, 1), texels);
-    }
+fn ptr_read() {
+    test_copy_via_raw_ptr!(
+        "*dst = core::ptr::read(src)"=> r#"
+            %8 = OpVariable %5 Function
+            OpStore %8 %9
+            OpCopyMemory %8 %4
+            %10 = OpLoad %11 %8
+            OpStore %6 %10
+        "#
+    );
 }
-"#);
+
+#[test]
+fn ptr_read_method() {
+    test_copy_via_raw_ptr!(
+        "*dst = (src as *const f32).read()" => r#"
+            %8 = OpVariable %5 Function
+            OpStore %8 %9
+            OpCopyMemory %8 %4
+            %10 = OpLoad %11 %8
+            OpStore %6 %10
+        "#
+    );
+}
+
+#[test]
+fn ptr_write() {
+    test_copy_via_raw_ptr!(
+        "core::ptr::write(dst, *src)" => r#"
+            %8 = OpVariable %5 Function
+            %9 = OpLoad %10 %4
+            OpStore %8 %9
+            OpCopyMemory %6 %8
+        "#
+    );
+}
+
+#[test]
+fn ptr_write_method() {
+    test_copy_via_raw_ptr!(
+        "(dst as *mut f32).write(*src)" => r#"
+            %8 = OpVariable %5 Function
+            %9 = OpLoad %10 %4
+            OpStore %8 %9
+            OpCopyMemory %6 %8
+        "#
+    );
+}
+
+#[test]
+fn ptr_copy() {
+    test_copy_via_raw_ptr!(
+        "core::ptr::copy(src, dst, 1)" => r#"
+            OpCopyMemory %6 %4
+        "#
+    );
+}
+
+#[test]
+// FIXME(eddyb) doesn't work because `<*const T>::copy_to` is a method that wraps
+// the actual `core::ptr::copy` intrinsic - this requires either MIR inlining, or
+// making the methods themselves intrinsic (via attributes instead of pseudo-ABI).
+#[ignore]
+fn ptr_copy_to_method() {
+    test_copy_via_raw_ptr!(
+        "(src as *const f32).copy_to(dst, 1)" => r#"
+            OpCopyMemory %6 %4
+        "#
+    );
+}
+
+#[test]
+// FIXME(eddyb) doesn't work because `<*mut T>::copy_from` is a method that wraps
+// the actual `core::ptr::copy` intrinsic - this requires either MIR inlining, or
+// making the methods themselves intrinsic (via attributes instead of pseudo-ABI).
+#[ignore]
+fn ptr_copy_from_method() {
+    test_copy_via_raw_ptr!(
+        "(dst as *mut f32).copy_from(src, 1)" => r#"
+            OpCopyMemory %6 %4
+        "#
+    );
+}
+
+#[test]
+fn index_user_dst() {
+    dis_entry_fn(
+        r#"
+#[spirv(fragment)]
+pub fn main(
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] slice: &SliceF32,
+) {
+    let float: f32 = slice.rta[0];
+    let _ = float;
+}
+
+pub struct SliceF32 {
+    rta: [f32],
+}
+        "#,
+        "main",
+        r#"%1 = OpFunction %2 None %3
+%4 = OpLabel
+%5 = OpArrayLength %6 %7 0
+%8 = OpCompositeInsert %9 %7 %10 0
+%11 = OpCompositeInsert %9 %5 %8 1
+%12 = OpAccessChain %13 %7 %14
+%15 = OpULessThan %16 %14 %5
+OpSelectionMerge %17 None
+OpBranchConditional %15 %18 %19
+%18 = OpLabel
+%20 = OpAccessChain %13 %7 %14
+%21 = OpInBoundsAccessChain %22 %20 %14
+%23 = OpLoad %24 %21
+OpReturn
+%19 = OpLabel
+OpBranch %25
+%25 = OpLabel
+OpBranch %26
+%26 = OpLabel
+%27 = OpPhi %16 %28 %25 %28 %29
+OpLoopMerge %30 %29 None
+OpBranchConditional %27 %31 %30
+%31 = OpLabel
+OpBranch %29
+%29 = OpLabel
+OpBranch %26
+%30 = OpLabel
+OpUnreachable
+%17 = OpLabel
+OpUnreachable
+OpFunctionEnd"#,
+    )
 }

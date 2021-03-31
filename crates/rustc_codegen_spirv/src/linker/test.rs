@@ -1,4 +1,4 @@
-use super::{link, Options};
+use super::{link, LinkResult, Options};
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
 use rustc_driver::handle_options;
@@ -78,12 +78,13 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
         diagnostic_output: DiagnosticOutput::Raw(Box::new(write_diags)),
         stderr: None,
         lint_caps: Default::default(),
+        parse_sess_created: None,
         register_lints: None,
         override_queries: None,
         make_codegen_backend: None,
         registry: Registry::new(&[]),
     };
-    let res = rustc_interface::interface::run_compiler(config, |compiler| {
+    rustc_interface::interface::run_compiler(config, |compiler| {
         let res = link(
             compiler.session(),
             modules,
@@ -94,12 +95,16 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
                 mem2reg: false,
                 structurize: false,
                 use_new_structurizer: false,
+                emit_multiple_modules: false,
             },
         );
         assert_eq!(compiler.session().has_errors(), res.is_err());
-        res
-    });
-    res.map_err(|_| thread.join().unwrap())
+        res.map(|res| match res {
+            LinkResult::SingleModule(m) => m,
+            LinkResult::MultipleModules(_) => unreachable!(),
+        })
+    })
+    .map_err(|_e| thread.join().unwrap())
 }
 
 fn without_header_eq(mut result: Module, expected: &str) {

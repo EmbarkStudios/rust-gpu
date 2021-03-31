@@ -1,3 +1,58 @@
+// BEGIN - Embark standard lints v0.3
+// do not change or add/remove here, but one can add exceptions after this section
+// for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
+#![deny(unsafe_code)]
+#![warn(
+    clippy::all,
+    clippy::await_holding_lock,
+    clippy::dbg_macro,
+    clippy::debug_assert_with_mut_call,
+    clippy::doc_markdown,
+    clippy::empty_enum,
+    clippy::enum_glob_use,
+    clippy::exit,
+    clippy::explicit_into_iter_loop,
+    clippy::filter_map_next,
+    clippy::fn_params_excessive_bools,
+    clippy::if_let_mutex,
+    clippy::imprecise_flops,
+    clippy::inefficient_to_string,
+    clippy::large_types_passed_by_value,
+    clippy::let_unit_value,
+    clippy::linkedlist,
+    clippy::lossy_float_literal,
+    clippy::macro_use_imports,
+    clippy::map_err_ignore,
+    clippy::map_flatten,
+    clippy::map_unwrap_or,
+    clippy::match_on_vec_items,
+    clippy::match_same_arms,
+    clippy::match_wildcard_for_single_variants,
+    clippy::mem_forget,
+    clippy::mismatched_target_os,
+    clippy::needless_borrow,
+    clippy::needless_continue,
+    clippy::option_option,
+    clippy::pub_enum_variant_names,
+    clippy::ref_option_ref,
+    clippy::rest_pat_in_fully_bound_structs,
+    clippy::string_add_assign,
+    clippy::string_add,
+    clippy::string_to_string,
+    clippy::suboptimal_flops,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::unnested_or_patterns,
+    clippy::unused_self,
+    clippy::verbose_file_reads,
+    future_incompatible,
+    nonstandard_style,
+    rust_2018_idioms
+)]
+// END - Embark standard lints v0.3
+// crate-specific exceptions:
+#![allow()]
+
 #[cfg(test)]
 mod test;
 
@@ -9,18 +64,32 @@ use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::fmt;
+use std::fs::File;
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 #[derive(Debug)]
 pub enum SpirvBuilderError {
     BuildFailed,
+    MultiModuleWithPrintMetadata,
+    MetadataFileMissing(std::io::Error),
+    MetadataFileMalformed(serde_json::Error),
 }
 
 impl fmt::Display for SpirvBuilderError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SpirvBuilderError::BuildFailed => f.write_str("Build failed"),
+            SpirvBuilderError::MultiModuleWithPrintMetadata => {
+                f.write_str("Multi-module build cannot be used with print_metadata = true")
+            }
+            SpirvBuilderError::MetadataFileMissing(_) => {
+                f.write_str("Multi-module metadata file missing")
+            }
+            SpirvBuilderError::MetadataFileMalformed(_) => {
+                f.write_str("Unable to parse multi-module metadata file")
+            }
         }
     }
 }
@@ -75,16 +144,28 @@ impl SpirvBuilder {
         self
     }
 
-    /// Builds the module. Returns the path to the built spir-v file. If print_metadata is true,
+    /// Builds the module. Returns the path to the built spir-v file. If `print_metadata` is true,
     /// you usually don't have to inspect the path, as the environment variable will already be
     /// set.
     pub fn build(self) -> Result<PathBuf, SpirvBuilderError> {
-        let spirv_module = invoke_rustc(&self)?;
+        let spirv_module = invoke_rustc(&self, false)?;
         let env_var = spirv_module.file_name().unwrap().to_str().unwrap();
         if self.print_metadata {
             println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
         }
         Ok(spirv_module)
+    }
+
+    pub fn build_multimodule(self) -> Result<HashMap<String, PathBuf>, SpirvBuilderError> {
+        if self.print_metadata {
+            return Err(SpirvBuilderError::MultiModuleWithPrintMetadata);
+        }
+        let metadata_file = invoke_rustc(&self, true)?;
+        let metadata_contents =
+            File::open(metadata_file).map_err(SpirvBuilderError::MetadataFileMissing)?;
+        let metadata = serde_json::from_reader(BufReader::new(metadata_contents))
+            .map_err(SpirvBuilderError::MetadataFileMalformed)?;
+        Ok(metadata)
     }
 }
 
@@ -120,7 +201,8 @@ fn find_rustc_codegen_spirv() -> PathBuf {
     panic!("Could not find {} in library path", filename);
 }
 
-fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
+// Note: in case of multimodule, returns path to the metadata json
+fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, SpirvBuilderError> {
     // Okay, this is a little bonkers: in a normal world, we'd have the user clone
     // rustc_codegen_spirv and pass in the path to it, and then we'd invoke cargo to build it, grab
     // the resulting .so, and pass it into -Z codegen-backend. But that's really gross: the user
@@ -150,10 +232,16 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     } else {
         format!(" -C target-feature={}", target_features.join(","))
     };
+    let llvm_args = if multimodule {
+        " -C llvm-args=--module-output=multiple"
+    } else {
+        ""
+    };
     let rustflags = format!(
-        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}",
+        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}{}",
         rustc_codegen_spirv.display(),
         feature_flag,
+        llvm_args,
     );
     let mut cargo = Command::new("cargo");
     cargo.args(&[

@@ -11,7 +11,7 @@ use crate::decorations::{
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
-use rspirv::spirv::{Decoration, LinkageType, MemoryModel, StorageClass, Word};
+use rspirv::spirv::{AddressingModel, Decoration, LinkageType, MemoryModel, StorageClass, Word};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
@@ -33,6 +33,7 @@ use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
+use std::str::FromStr;
 
 #[derive(Copy, Clone, Debug)]
 pub struct BindlessDescriptorSets {
@@ -67,6 +68,7 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
+    pub zombie_undefs_for_system_fn_addrs: RefCell<HashMap<Word, Word>>,
     pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
@@ -83,6 +85,7 @@ pub struct CodegenCx<'tcx> {
     /// If bindless is enable, this contains the information about the global
     /// descriptor sets that are always bound.
     pub bindless_descriptor_sets: RefCell<Option<BindlessDescriptorSets>>,
+    pub codegen_args: CodegenArgs,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -116,8 +119,8 @@ impl<'tcx> CodegenCx<'tcx> {
                 tcx.sess.err(&format!("Unknown feature {}", feature));
             }
         }
-
-        let k = Self {
+        let codegen_args = CodegenArgs::from_session(tcx.sess);
+        let mut result = Self {
             tcx,
             codegen_unit,
             builder: BuilderSpirv::new(spirv_version, memory_model, kernel_mode),
@@ -131,18 +134,20 @@ impl<'tcx> CodegenCx<'tcx> {
             kernel_mode,
             sym,
             instruction_table: InstructionTable::new(),
+            zombie_undefs_for_system_fn_addrs: Default::default(),
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
             internal_buffer_load_id: Default::default(),
             internal_buffer_store_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
+            codegen_args,
             bindless_descriptor_sets: Default::default(),
         };
 
-        k.lazy_add_bindless_descriptor_sets();
+        result.lazy_add_bindless_descriptor_sets();
 
-        k
+        result
     }
 
     /// See comment on `BuilderCursor`
@@ -211,6 +216,17 @@ impl<'tcx> CodegenCx<'tcx> {
             || self.tcx.crate_name(LOCAL_CRATE) == self.sym.num_traits
     }
 
+    // FIXME(eddyb) should this just be looking at `kernel_mode`?
+    pub fn logical_addressing_model(&self) -> bool {
+        self.emit_global()
+            .module_ref()
+            .memory_model
+            .as_ref()
+            .map_or(false, |inst| {
+                inst.operands[0].unwrap_addressing_model() == AddressingModel::Logical
+            })
+    }
+
     pub fn finalize_module(self) -> Module {
         let mut result = self.builder.finalize();
         result.annotations.extend(
@@ -263,6 +279,51 @@ impl<'tcx> CodegenCx<'tcx> {
                 global_var,
             },
             ty,
+        }
+    }
+}
+
+pub struct CodegenArgs {
+    pub module_output_type: ModuleOutputType,
+}
+
+impl CodegenArgs {
+    pub fn from_session(sess: &Session) -> Self {
+        match CodegenArgs::parse(&sess.opts.cg.llvm_args) {
+            Ok(ok) => ok,
+            Err(err) => sess.fatal(&format!("Unable to parse llvm-args: {}", err)),
+        }
+    }
+
+    pub fn parse(args: &[String]) -> Result<Self, rustc_session::getopts::Fail> {
+        use rustc_session::getopts;
+        let mut opts = getopts::Options::new();
+        opts.optopt(
+            "",
+            "module-output",
+            "single output or multiple output",
+            "[single|multiple]",
+        );
+        let matches = opts.parse(args)?;
+        let module_output_type =
+            matches.opt_get_default("module-output", ModuleOutputType::Single)?;
+        Ok(Self { module_output_type })
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ModuleOutputType {
+    Single,
+    Multiple,
+}
+
+impl FromStr for ModuleOutputType {
+    type Err = rustc_session::getopts::Fail;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "single" => Ok(Self::Single),
+            "multiple" => Ok(Self::Multiple),
+            v => Err(Self::Err::UnrecognizedOption(v.to_string())),
         }
     }
 }
@@ -322,10 +383,36 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         self.get_fn_ext(instance)
     }
 
+    // NOTE(eddyb) see the comment on `SpirvValueKind::FnAddr`, this should
+    // be fixed upstream, so we never see any "function pointer" values being
+    // created just to perform direct calls.
     fn get_fn_addr(&self, instance: Instance<'tcx>) -> Self::Value {
         let function = self.get_fn(instance);
         let span = self.tcx.def_span(instance.def_id());
-        self.make_constant_pointer(span, function)
+
+        let ty = SpirvType::Pointer {
+            pointee: function.ty,
+        }
+        .def(span, self);
+
+        if self.is_system_crate() {
+            // Create these undefs up front instead of on demand in SpirvValue::def because
+            // SpirvValue::def can't use cx.emit()
+            self.zombie_undefs_for_system_fn_addrs
+                .borrow_mut()
+                .entry(ty)
+                .or_insert_with(|| {
+                    // We want a unique ID for these undefs, so don't use the caching system.
+                    self.emit_global().undef(ty, None)
+                });
+        }
+
+        SpirvValue {
+            kind: SpirvValueKind::FnAddr {
+                function: function.def_cx(self),
+            },
+            ty,
+        }
     }
 
     fn eh_personality(&self) -> Self::Value {

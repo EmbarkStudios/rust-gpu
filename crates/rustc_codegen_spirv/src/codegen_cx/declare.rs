@@ -1,9 +1,9 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
+use crate::attr::AggregatedSpirvAttributes;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::decorations::UnrollLoopsDecoration;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, SpirvAttribute};
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
 use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
@@ -21,8 +21,7 @@ fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
     let mut control = FunctionControl::NONE;
     match attrs.inline {
         InlineAttr::None => (),
-        InlineAttr::Hint => control.insert(FunctionControl::INLINE),
-        InlineAttr::Always => control.insert(FunctionControl::INLINE),
+        InlineAttr::Hint | InlineAttr::Always => control.insert(FunctionControl::INLINE),
         InlineAttr::Never => control.insert(FunctionControl::DONT_INLINE),
     }
     if attrs.flags.contains(CodegenFnAttrFlags::FFI_PURE) {
@@ -111,29 +110,25 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let declared = fn_id.with_type(function_type);
 
-        for attr in parse_attrs(self, self.tcx.get_attrs(instance.def_id())) {
-            match attr {
-                SpirvAttribute::Entry(entry) => {
-                    let entry_name = entry
-                        .name
-                        .as_ref()
-                        .map(ToString::to_string)
-                        .unwrap_or_else(|| instance.to_string());
-                    self.entry_stub(&instance, &fn_abi, declared, entry_name, entry)
-                }
-                SpirvAttribute::UnrollLoops => {
-                    self.unroll_loops_decorations
-                        .borrow_mut()
-                        .insert(fn_id, UnrollLoopsDecoration {});
-                }
-                SpirvAttribute::InternalBufferLoad => {
-                    self.internal_buffer_load_id.borrow_mut().insert(fn_id);
-                }
-                SpirvAttribute::InternalBufferStore => {
-                    self.internal_buffer_store_id.borrow_mut().insert(fn_id);
-                }
-                _ => {}
-            }
+        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.get_attrs(instance.def_id()));
+        if let Some(entry) = attrs.entry.map(|attr| attr.value) {
+            let entry_name = entry
+                .name
+                .as_ref()
+                .map(ToString::to_string)
+                .unwrap_or_else(|| instance.to_string());
+            self.entry_stub(&instance, &fn_abi, declared, entry_name, entry)
+        }
+        if attrs.unroll_loops.is_some() {
+            self.unroll_loops_decorations
+                .borrow_mut()
+                .insert(fn_id, UnrollLoopsDecoration {});
+        }
+        if attrs.internal_buffer_load.is_some() {
+            self.internal_buffer_load_id.borrow_mut().insert(fn_id);
+        }
+        if attrs.internal_buffer_store.is_some() {
+            self.internal_buffer_store_id.borrow_mut().insert(fn_id);
         }
 
         let instance_def_id = instance.def_id();
@@ -278,8 +273,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         if self.lookup_type(v.ty) == SpirvType::Bool {
             let val = self.builder.lookup_const(v).unwrap();
             let val_int = match val {
-                SpirvConst::Bool(_, false) => 0,
-                SpirvConst::Bool(_, true) => 0,
+                SpirvConst::Bool(_, val) => val as u8,
                 _ => bug!(),
             };
             v = self.constant_u8(span, val_int);

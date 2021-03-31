@@ -1,10 +1,11 @@
 //! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It's
 //! surprisingly difficult.
 
+use crate::attr::{AggregatedSpirvAttributes, IntrinsicType};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use crate::symbols::{parse_attrs, SpirvAttribute};
 use rspirv::spirv::{Capability, StorageClass, Word};
+use rustc_errors::ErrorReported;
 use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::subst::SubstsRef;
@@ -323,38 +324,40 @@ fn trans_type_impl<'tcx>(
     is_immediate: bool,
 ) -> Word {
     if let TyKind::Adt(adt, substs) = *ty.ty.kind() {
-        for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
-            if matches!(attr, SpirvAttribute::Block) {
-                if !adt.is_struct() {
-                    cx.tcx.sess.span_err(
-                        span,
-                        &format!(
-                            "`#[spirv(block)]` can only be used on a `struct`, \
+        let attrs = AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did));
+        if attrs.block.is_some() {
+            if !adt.is_struct() {
+                cx.tcx.sess.span_err(
+                    span,
+                    &format!(
+                        "`#[spirv(block)]` can only be used on a `struct`, \
                              but `{}` is a `{}`",
-                            ty.ty,
-                            adt.descr(),
-                        ),
-                    );
-                }
-
-                if !matches!(ty.abi, Abi::Aggregate { sized: true }) {
-                    cx.tcx.sess.span_err(
-                        span,
-                        &format!(
-                            "`#[spirv(block)]` can only be used for `Sized` aggregates, \
-                             but `{}` has `Abi::{:?}`",
-                            ty.ty, ty.abi,
-                        ),
-                    );
-                }
-
-                assert!(matches!(ty.fields, FieldsShape::Arbitrary { .. }));
-
-                return trans_struct(cx, span, ty, true);
+                        ty.ty,
+                        adt.descr(),
+                    ),
+                );
             }
 
-            if let Some(image) = trans_image(cx, span, ty, substs, attr) {
-                return image;
+            if !matches!(ty.abi, Abi::Aggregate { .. }) {
+                cx.tcx.sess.span_err(
+                    span,
+                    &format!(
+                        "`#[spirv(block)]` can only be used on aggregates, \
+                             but `{}` has `Abi::{:?}`",
+                        ty.ty, ty.abi,
+                    ),
+                );
+            }
+
+            assert!(matches!(ty.fields, FieldsShape::Arbitrary { .. }));
+
+            return trans_struct(cx, span, ty, true);
+        }
+
+        if let Some(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
+            if let Ok(spirv_type) = trans_intrinsic_type(cx, span, ty, substs, intrinsic_type_attr)
+            {
+                return spirv_type;
             }
         }
     }
@@ -582,23 +585,6 @@ fn dig_scalar_pointee_adt<'tcx>(
     }
 }
 
-/// Handles `#[spirv(storage_class="blah")]`. Note this is only called in the entry interface variables code, because this is only
-/// used for spooky builtin stuff, and we pinky promise to never have more than one pointer field in one of these.
-// TODO: Enforce this is only used in spirv-std.
-pub(crate) fn get_storage_class<'tcx>(
-    cx: &CodegenCx<'tcx>,
-    ty: TyAndLayout<'tcx>,
-) -> Option<StorageClass> {
-    if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
-        for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
-            if let SpirvAttribute::StorageClass(storage_class) = attr {
-                return Some(storage_class);
-            }
-        }
-    }
-    None
-}
-
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
     match ty.fields {
         FieldsShape::Primitive => cx.tcx.sess.fatal(&format!(
@@ -793,15 +779,15 @@ impl fmt::Display for TyLayoutNameKey<'_> {
     }
 }
 
-fn trans_image<'tcx>(
+fn trans_intrinsic_type<'tcx>(
     cx: &CodegenCx<'tcx>,
     span: Span,
     ty: TyAndLayout<'tcx>,
     substs: SubstsRef<'tcx>,
-    attr: SpirvAttribute,
-) -> Option<Word> {
-    match attr {
-        SpirvAttribute::ImageType {
+    intrinsic_type_attr: IntrinsicType,
+) -> Result<Word, ErrorReported> {
+    match intrinsic_type_attr {
+        IntrinsicType::ImageType {
             dim,
             depth,
             arrayed,
@@ -812,8 +798,10 @@ fn trans_image<'tcx>(
         } => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
-                cx.tcx.sess.err("#[spirv(image)] type must have size 4");
-                return None;
+                cx.tcx
+                    .sess
+                    .err("#[spirv(image_type)] type must have size 4");
+                return Err(ErrorReported);
             }
             // Hardcode to float for now
             let sampled_type = SpirvType::Float(32).def(span, cx);
@@ -827,23 +815,23 @@ fn trans_image<'tcx>(
                 image_format,
                 access_qualifier,
             };
-            Some(ty.def(span, cx))
+            Ok(ty.def(span, cx))
         }
-        SpirvAttribute::Sampler => {
+        IntrinsicType::Sampler => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
                 cx.tcx.sess.err("#[spirv(sampler)] type must have size 4");
-                return None;
+                return Err(ErrorReported);
             }
-            Some(SpirvType::Sampler.def(span, cx))
+            Ok(SpirvType::Sampler.def(span, cx))
         }
-        SpirvAttribute::SampledImage => {
+        IntrinsicType::SampledImage => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
                 cx.tcx
                     .sess
                     .err("#[spirv(sampled_image)] type must have size 4");
-                return None;
+                return Err(ErrorReported);
             }
 
             // We use a generic to indicate the underlying image type of the sampled image.
@@ -851,14 +839,13 @@ fn trans_image<'tcx>(
             if let Some(image_ty) = substs.types().next() {
                 // TODO: enforce that the generic param is an image type?
                 let image_type = trans_type_impl(cx, span, cx.layout_of(image_ty), false);
-                Some(SpirvType::SampledImage { image_type }.def(span, cx))
+                Ok(SpirvType::SampledImage { image_type }.def(span, cx))
             } else {
                 cx.tcx
                     .sess
                     .err("#[spirv(sampled_image)] type must have a generic image type");
-                None
+                Err(ErrorReported)
             }
         }
-        _ => None,
     }
 }

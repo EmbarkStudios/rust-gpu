@@ -1,10 +1,7 @@
+use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
-use crate::codegen_cx::CodegenCx;
-use rspirv::spirv::{
-    AccessQualifier, BuiltIn, Dim, ExecutionMode, ExecutionModel, ImageFormat, StorageClass,
-};
+use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
-use rustc_data_structures::captures::Captures;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
 use std::collections::HashMap;
@@ -157,7 +154,6 @@ const BUILTINS: &[(&str, BuiltIn)] = {
 
 const STORAGE_CLASSES: &[(&str, StorageClass)] = {
     use StorageClass::*;
-    // make sure these strings stay synced with spirv-std's pointer types
     &[
         ("uniform_constant", UniformConstant),
         ("input", Input),
@@ -199,7 +195,7 @@ const EXECUTION_MODELS: &[(&str, ExecutionModel)] = {
         ("tessellation_evaluation", TessellationEvaluation),
         ("geometry", Geometry),
         ("fragment", Fragment),
-        ("gl_compute", GLCompute),
+        ("compute", GLCompute),
         ("kernel", Kernel),
         ("task_nv", TaskNV),
         ("mesh_nv", MeshNV),
@@ -219,6 +215,7 @@ enum ExecutionModeExtraDim {
     X,
     Y,
     Z,
+    Tuple,
 }
 
 const EXECUTION_MODES: &[(&str, ExecutionMode, ExecutionModeExtraDim)] = {
@@ -241,9 +238,7 @@ const EXECUTION_MODES: &[(&str, ExecutionMode, ExecutionModeExtraDim)] = {
         ("depth_greater", DepthGreater, None),
         ("depth_less", DepthLess, None),
         ("depth_unchanged", DepthUnchanged, None),
-        ("local_size_x", LocalSize, X),
-        ("local_size_y", LocalSize, Y),
-        ("local_size_z", LocalSize, Z),
+        ("threads", LocalSize, Tuple),
         ("local_size_hint_x", LocalSizeHint, X),
         ("local_size_hint_y", LocalSizeHint, Y),
         ("local_size_hint_z", LocalSizeHint, Z),
@@ -324,8 +319,6 @@ const EXECUTION_MODES: &[(&str, ExecutionMode, ExecutionModeExtraDim)] = {
     ]
 };
 
-// FIXME(eddyb) clippy bug suggests `Self` even when it couldn't possibly work.
-#[allow(clippy::use_self)]
 impl Symbols {
     fn new() -> Self {
         let builtins = BUILTINS
@@ -338,10 +331,17 @@ impl Symbols {
             .iter()
             .map(|&(a, b)| (a, SpirvAttribute::Entry(b.into())));
         let custom_attributes = [
-            ("sampler", SpirvAttribute::Sampler),
+            (
+                "sampler",
+                SpirvAttribute::IntrinsicType(IntrinsicType::Sampler),
+            ),
             ("block", SpirvAttribute::Block),
             ("flat", SpirvAttribute::Flat),
-            ("sampled_image", SpirvAttribute::SampledImage),
+            ("invariant", SpirvAttribute::Invariant),
+            (
+                "sampled_image",
+                SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),
+            ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
             ("internal_buffer_load", SpirvAttribute::InternalBufferLoad),
             ("internal_buffer_store", SpirvAttribute::InternalBufferStore),
@@ -415,89 +415,6 @@ impl Symbols {
         thread_local!(static SYMBOLS: Rc<Symbols> = Rc::new(Symbols::new()));
         SYMBOLS.with(Rc::clone)
     }
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct ExecutionModeExtra {
-    args: [u32; 3],
-    len: u8,
-}
-
-impl ExecutionModeExtra {
-    fn new(args: impl AsRef<[u32]>) -> Self {
-        let _args = args.as_ref();
-        let mut args = [0; 3];
-        args[.._args.len()].copy_from_slice(_args);
-        let len = _args.len() as u8;
-        Self { args, len }
-    }
-}
-
-impl AsRef<[u32]> for ExecutionModeExtra {
-    fn as_ref(&self) -> &[u32] {
-        &self.args[..self.len as _]
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Entry {
-    pub execution_model: ExecutionModel,
-    pub execution_modes: Vec<(ExecutionMode, ExecutionModeExtra)>,
-    pub name: Option<Symbol>,
-}
-
-impl From<ExecutionModel> for Entry {
-    fn from(execution_model: ExecutionModel) -> Self {
-        Self {
-            execution_model,
-            execution_modes: Vec::new(),
-            name: None,
-        }
-    }
-}
-
-// FIXME(eddyb) maybe move this to `attr`?
-#[derive(Debug, Clone)]
-pub enum SpirvAttribute {
-    Builtin(BuiltIn),
-    StorageClass(StorageClass),
-    Entry(Entry),
-    DescriptorSet(u32),
-    Binding(u32),
-    ImageType {
-        dim: Dim,
-        depth: u32,
-        arrayed: u32,
-        multisampled: u32,
-        sampled: u32,
-        image_format: ImageFormat,
-        access_qualifier: Option<AccessQualifier>,
-    },
-    Sampler,
-    SampledImage,
-    Block,
-    Flat,
-    UnrollLoops,
-    InternalBufferLoad,
-    InternalBufferStore,
-}
-
-// FIXME(eddyb) maybe move this to `attr`?
-/// Returns only the spirv attributes that could successfully parsed.
-/// For any malformed ones, an error is reported prior to codegen, by a check pass.
-pub fn parse_attrs<'a, 'tcx>(
-    cx: &'a CodegenCx<'tcx>,
-    attrs: &'tcx [Attribute],
-) -> impl Iterator<Item = SpirvAttribute> + Captures<'tcx> + 'a {
-    parse_attrs_for_checking(&cx.sym, attrs)
-        .filter_map(move |(_, parse_attr_result)| {
-            // NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails
-            // to see an attribute error, it will cause an ICE instead.
-            parse_attr_result
-                .map_err(|(span, msg)| cx.tcx.sess.delay_span_bug(span, &msg))
-                .ok()
-        })
-        .map(|(_span, parsed_attr)| parsed_attr)
 }
 
 // FIXME(eddyb) find something nicer for the error type.
@@ -673,7 +590,7 @@ fn parse_image_type(
     } else {
         None
     };
-    Ok(SpirvAttribute::ImageType {
+    Ok(SpirvAttribute::IntrinsicType(IntrinsicType::ImageType {
         dim,
         depth,
         arrayed,
@@ -681,7 +598,7 @@ fn parse_image_type(
         sampled,
         image_format,
         access_qualifier,
-    })
+    }))
 }
 
 fn parse_attr_int_value(arg: &NestedMetaItem) -> Result<u32, ParseAttrError> {
@@ -695,6 +612,40 @@ fn parse_attr_int_value(arg: &NestedMetaItem) -> Result<u32, ParseAttrError> {
             ..
         }) if x <= u32::MAX as u128 => Ok(x as u32),
         _ => Err((arg.span, "attribute value must be integer".to_string())),
+    }
+}
+
+fn parse_local_size_attr(arg: &NestedMetaItem) -> Result<[u32; 3], ParseAttrError> {
+    let arg = match arg.meta_item() {
+        Some(arg) => arg,
+        None => return Err((arg.span(), "attribute must have value".to_string())),
+    };
+    match arg.meta_item_list() {
+        Some(tuple) if !tuple.is_empty() && tuple.len() < 4 => {
+            let mut local_size = [1; 3];
+            for (idx, lit) in tuple.iter().enumerate() {
+                match lit.literal() {
+                    Some(&Lit {
+                        kind: LitKind::Int(x, LitIntType::Unsuffixed),
+                        ..
+                    }) if x <= u32::MAX as u128 => local_size[idx] = x as u32,
+                    _ => return Err((lit.span(), "must be a u32 literal".to_string())),
+                }
+            }
+            Ok(local_size)
+        }
+        Some(tuple) if tuple.is_empty() => Err((
+            arg.span,
+            "#[spirv(compute(threads(x, y, z)))] must have the x dimension specified, trailing ones may be elided".to_string(),
+        )),
+        Some(tuple) if tuple.len() > 3 => Err((
+            arg.span,
+            "#[spirv(compute(threads(x, y, z)))] is three dimensional".to_string(),
+        )),
+        _ => Err((
+            arg.span,
+            "#[spirv(compute(threads(x, y, z)))] must have 1 to 3 parameters, trailing ones may be elided".to_string(),
+        )),
     }
 }
 
@@ -723,7 +674,7 @@ fn parse_entry_attrs(
                 {
                     use ExecutionModeExtraDim::*;
                     let val = match extra_dim {
-                        None => Option::None,
+                        None | Tuple => Option::None,
                         _ => Some(parse_attr_int_value(attr)?),
                     };
                     match execution_mode {
@@ -731,22 +682,15 @@ fn parse_entry_attrs(
                             origin_mode.replace(*execution_mode);
                         }
                         LocalSize => {
-                            let val = val.unwrap();
                             if local_size.is_none() {
-                                local_size.replace([1, 1, 1]);
-                            }
-                            let local_size = local_size.as_mut().unwrap();
-                            match extra_dim {
-                                X => {
-                                    local_size[0] = val;
-                                }
-                                Y => {
-                                    local_size[1] = val;
-                                }
-                                Z => {
-                                    local_size[2] = val;
-                                }
-                                _ => unreachable!(),
+                                local_size.replace(parse_local_size_attr(attr)?);
+                            } else {
+                                return Err((
+                                    attr_name.span,
+                                    String::from(
+                                        "`#[spirv(compute(threads))]` may only be specified once",
+                                    ),
+                                ));
                             }
                         }
                         LocalSizeHint => {
@@ -846,10 +790,18 @@ fn parse_entry_attrs(
                 .push((origin_mode, ExecutionModeExtra::new([])));
         }
         GLCompute => {
-            let local_size = local_size.unwrap_or([1, 1, 1]);
-            entry
-                .execution_modes
-                .push((LocalSize, ExecutionModeExtra::new(local_size)));
+            if let Some(local_size) = local_size {
+                entry
+                    .execution_modes
+                    .push((LocalSize, ExecutionModeExtra::new(local_size)));
+            } else {
+                return Err((
+                    arg.span(),
+                    String::from(
+                        "The `threads` argument must be specified when using `#[spirv(compute)]`",
+                    ),
+                ));
+            }
         }
         Kernel => {
             if let Some(local_size) = local_size {

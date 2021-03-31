@@ -13,11 +13,11 @@ use rustc_session::config::{CrateType, DebugInfo, Lto, OptLevel, OutputFilenames
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::ffi::{CString, OsStr};
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tar::{Archive, Builder, Header};
@@ -28,6 +28,7 @@ pub fn link<'a>(
     outputs: &OutputFilenames,
     crate_name: &str,
     legalize: bool,
+    emit_multiple_modules: bool,
 ) {
     let output_metadata = sess.opts.output_types.contains_key(&OutputType::Metadata);
     for &crate_type in sess.crate_types().iter() {
@@ -60,9 +61,14 @@ pub fn link<'a>(
                 CrateType::Rlib => {
                     link_rlib(sess, codegen_results, &out_filename);
                 }
-                CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => {
-                    link_exe(sess, crate_type, &out_filename, codegen_results, legalize)
-                }
+                CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => link_exe(
+                    sess,
+                    crate_type,
+                    &out_filename,
+                    codegen_results,
+                    legalize,
+                    emit_multiple_modules,
+                ),
                 other => sess.err(&format!("CrateType {:?} not supported yet", other)),
             }
         }
@@ -104,6 +110,7 @@ fn link_exe(
     out_filename: &Path,
     codegen_results: &CodegenResults,
     legalize: bool,
+    emit_multiple_modules: bool,
 ) {
     let mut objects = Vec::new();
     let mut rlibs = Vec::new();
@@ -122,8 +129,34 @@ fn link_exe(
         codegen_results,
     );
 
-    let spv_binary = do_link(sess, &objects, &rlibs, legalize);
+    let spv_binary = do_link(sess, &objects, &rlibs, legalize, emit_multiple_modules);
 
+    use rspirv::binary::Assemble;
+    match spv_binary {
+        linker::LinkResult::SingleModule(spv_binary) => {
+            post_link_single_module(sess, spv_binary.assemble(), out_filename);
+        }
+        linker::LinkResult::MultipleModules(map) => {
+            let mut root_file_name = out_filename.file_name().unwrap().to_owned();
+            root_file_name.push(".dir");
+            let out_dir = out_filename.with_file_name(root_file_name);
+            if !out_dir.is_dir() {
+                std::fs::create_dir_all(&out_dir).unwrap();
+            }
+            let mut hashmap = HashMap::new();
+            for (name, spv_binary) in map {
+                let mut module_filename = out_dir.clone();
+                module_filename.push(sanitize_filename::sanitize(&name));
+                post_link_single_module(sess, spv_binary.assemble(), &module_filename);
+                hashmap.insert(name, module_filename);
+            }
+            let file = File::create(out_filename).unwrap();
+            serde_json::to_writer(BufWriter::new(file), &hashmap).unwrap();
+        }
+    }
+}
+
+fn post_link_single_module(sess: &Session, spv_binary: Vec<u32>, out_filename: &Path) {
     if let Ok(ref path) = std::env::var("DUMP_POST_LINK") {
         File::create(path)
             .unwrap()
@@ -148,7 +181,7 @@ fn link_exe(
         if let Err(e) = std::fs::write(out_filename, spirv_tools::binary::from_binary(&spv_binary))
         {
             let mut err = sess.struct_err("failed to serialize spirv-binary to disk");
-            err.note(&format!("module {:?}", out_filename));
+            err.note(&format!("module `{}`", out_filename.display()));
             err.note(&format!("I/O error: {:#}", e));
             err.emit();
         }
@@ -195,7 +228,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
                 Level::Info | Level::Debug => sess.struct_note_without_error(&msg.message),
             };
 
-            err.note(&format!("module {:?}", filename));
+            err.note(&format!("module `{}`", filename.display()));
             err.emit();
         },
         // We currently run the validator separately after optimization or even
@@ -208,7 +241,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
         Err(e) => {
             let mut err = sess.struct_warn(&e.to_string());
             err.note("spirv-opt failed, leaving as unoptimized");
-            err.note(&format!("module {:?}", filename));
+            err.note(&format!("module `{}`", filename.display()));
             err.emit();
             spv_binary
         }
@@ -218,12 +251,12 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
 fn do_spirv_val(sess: &Session, spv_binary: &[u32], filename: &Path) {
     use spirv_tools::val::{self, Validator};
 
-    let validator = val::create(None);
+    let validator = val::create(sess.target.options.env.parse().ok());
 
     if let Err(e) = validator.validate(spv_binary, None) {
         let mut err = sess.struct_err(&e.to_string());
         err.note("spirv-val failed");
-        err.note(&format!("module {:?}", filename));
+        err.note(&format!("module `{}`", filename.display()));
         err.emit();
     }
 }
@@ -378,7 +411,13 @@ pub fn read_metadata(rlib: &Path) -> Result<MetadataRef, String> {
 
 /// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc's
 /// shenanigans to collect all the object files we need to link.
-fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: bool) -> Vec<u32> {
+fn do_link(
+    sess: &Session,
+    objects: &[PathBuf],
+    rlibs: &[PathBuf],
+    legalize: bool,
+    emit_multiple_modules: bool,
+) -> linker::LinkResult {
     fn load(bytes: &[u8]) -> rspirv::dr::Module {
         let mut loader = rspirv::dr::Loader::new();
         rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
@@ -407,6 +446,7 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: boo
     }
 
     if let Ok(ref path) = env::var("DUMP_PRE_LINK") {
+        use rspirv::binary::Assemble;
         let path = Path::new(path);
         if path.is_file() {
             std::fs::remove_file(path).unwrap();
@@ -429,21 +469,18 @@ fn do_link(sess: &Session, objects: &[PathBuf], rlibs: &[PathBuf], legalize: boo
         mem2reg: legalize,
         structurize: env::var("NO_STRUCTURIZE").is_err(),
         use_new_structurizer: env::var("OLD_STRUCTURIZER").is_err(),
+        emit_multiple_modules,
     };
 
     let link_result = linker::link(sess, modules, &options);
 
-    let assembled = match link_result {
+    match link_result {
         Ok(v) => v,
         Err(rustc_errors::ErrorReported) => {
             sess.abort_if_errors();
             bug!("Linker errored, but no error reported")
         }
-    };
-
-    // And finally write out the linked binary.
-    use rspirv::binary::Assemble;
-    assembled.assemble()
+    }
 }
 
 /// As of right now, this is essentially a no-op, just plumbing through all the files.
@@ -465,7 +502,7 @@ pub(crate) fn run_thin(
     let mut thin_buffers = Vec::with_capacity(modules.len());
     let mut module_names = Vec::with_capacity(modules.len() + cached_modules.len());
 
-    for (name, buffer) in modules.into_iter() {
+    for (name, buffer) in modules {
         let cname = CString::new(name.clone()).unwrap();
         thin_buffers.push(buffer);
         module_names.push(cname);

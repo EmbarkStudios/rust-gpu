@@ -188,6 +188,17 @@ impl SpirvType {
             }
             Self::RuntimeArray { element } => {
                 let result = cx.emit_global().type_runtime_array(element);
+                // ArrayStride decoration wants in *bytes*
+                let element_size = cx
+                    .lookup_type(element)
+                    .sizeof(cx)
+                    .expect("Element of sized array must be sized")
+                    .bytes();
+                cx.emit_global().decorate(
+                    result,
+                    Decoration::ArrayStride,
+                    iter::once(Operand::LiteralInt32(element_size as u32)),
+                );
                 if cx.kernel_mode {
                     cx.zombie_with_span(result, def_span, "RuntimeArray in kernel mode");
                 }
@@ -305,36 +316,37 @@ impl SpirvType {
 
     pub fn sizeof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Option<Size> {
         let result = match *self {
-            Self::Void => Size::ZERO,
+            // Types that have a dynamic size, or no concept of size at all.
+            Self::Void
+            | Self::Opaque { .. }
+            | Self::RuntimeArray { .. }
+            | Self::Function { .. } => return None,
+
             Self::Bool => Size::from_bytes(1),
-            Self::Integer(width, _) => Size::from_bits(width),
-            Self::Float(width) => Size::from_bits(width),
+            Self::Integer(width, _) | Self::Float(width) => Size::from_bits(width),
             Self::Adt { size, .. } => size?,
-            Self::Opaque { .. } => Size::ZERO,
             Self::Vector { element, count } => {
                 cx.lookup_type(element).sizeof(cx)? * count.next_power_of_two() as u64
             }
             Self::Array { element, count } => {
                 cx.lookup_type(element).sizeof(cx)? * cx.builder.lookup_const_u64(count).unwrap()
             }
-            Self::RuntimeArray { .. } => return None,
             Self::Pointer { .. } => cx.tcx.data_layout.pointer_size,
-            Self::Function { .. } => cx.tcx.data_layout.pointer_size,
-            Self::Image { .. } => Size::from_bytes(4),
-            Self::Sampler => Size::from_bytes(4),
-            Self::SampledImage { .. } => Size::from_bytes(4),
+            Self::Image { .. } | Self::Sampler | Self::SampledImage { .. } => Size::from_bytes(4),
         };
         Some(result)
     }
 
     pub fn alignof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Align {
         match *self {
-            Self::Void => Align::from_bytes(0).unwrap(),
+            // Types that have no concept of size or alignment.
+            Self::Void | Self::Opaque { .. } | Self::Function { .. } => {
+                Align::from_bytes(0).unwrap()
+            }
+
             Self::Bool => Align::from_bytes(1).unwrap(),
-            Self::Integer(width, _) => Align::from_bits(width as u64).unwrap(),
-            Self::Float(width) => Align::from_bits(width as u64).unwrap(),
+            Self::Integer(width, _) | Self::Float(width) => Align::from_bits(width as u64).unwrap(),
             Self::Adt { align, .. } => align,
-            Self::Opaque { .. } => Align::from_bytes(0).unwrap(),
             // Vectors have size==align
             Self::Vector { .. } => Align::from_bytes(
                 self.sizeof(cx)
@@ -342,13 +354,13 @@ impl SpirvType {
                     .bytes(),
             )
             .expect("alignof: Vectors must have power-of-2 size"),
-            Self::Array { element, .. } => cx.lookup_type(element).alignof(cx),
-            Self::RuntimeArray { element } => cx.lookup_type(element).alignof(cx),
+            Self::Array { element, .. } | Self::RuntimeArray { element } => {
+                cx.lookup_type(element).alignof(cx)
+            }
             Self::Pointer { .. } => cx.tcx.data_layout.pointer_align.abi,
-            Self::Function { .. } => cx.tcx.data_layout.pointer_align.abi,
-            Self::Image { .. } => Align::from_bytes(4).unwrap(),
-            Self::Sampler => Align::from_bytes(4).unwrap(),
-            Self::SampledImage { .. } => Align::from_bytes(4).unwrap(),
+            Self::Image { .. } | Self::Sampler | Self::SampledImage { .. } => {
+                Align::from_bytes(4).unwrap()
+            }
         }
     }
 }

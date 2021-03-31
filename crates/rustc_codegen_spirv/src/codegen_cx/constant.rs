@@ -41,29 +41,21 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn constant_int(&self, ty: Word, val: u64) -> SpirvValue {
         match self.lookup_type(ty) {
-            SpirvType::Integer(8, false) => self
-                .builder
-                .def_constant(SpirvConst::U32(ty, val as u8 as u32)),
-            SpirvType::Integer(16, false) => self
-                .builder
-                .def_constant(SpirvConst::U32(ty, val as u16 as u32)),
-            SpirvType::Integer(32, false) => {
-                self.builder.def_constant(SpirvConst::U32(ty, val as u32))
+            SpirvType::Integer(bits @ 8..=32, signed) => {
+                let size = Size::from_bits(bits);
+                let val = val as u128;
+                self.builder.def_constant(SpirvConst::U32(
+                    ty,
+                    if signed {
+                        size.sign_extend(val)
+                    } else {
+                        size.truncate(val)
+                    } as u32,
+                ))
             }
-            SpirvType::Integer(64, false) => self.builder.def_constant(SpirvConst::U64(ty, val)),
-            SpirvType::Integer(8, true) => self
-                .builder
-                .def_constant(SpirvConst::U32(ty, val as i64 as i8 as u32)),
-            SpirvType::Integer(16, true) => self
-                .builder
-                .def_constant(SpirvConst::U32(ty, val as i64 as i16 as u32)),
-            SpirvType::Integer(32, true) => self
-                .builder
-                .def_constant(SpirvConst::U32(ty, val as i64 as i32 as u32)),
-            SpirvType::Integer(64, true) => self.builder.def_constant(SpirvConst::U64(ty, val)),
+            SpirvType::Integer(64, _) => self.builder.def_constant(SpirvConst::U64(ty, val)),
             SpirvType::Bool => match val {
-                0 => self.builder.def_constant(SpirvConst::Bool(ty, false)),
-                1 => self.builder.def_constant(SpirvConst::Bool(ty, true)),
+                0 | 1 => self.builder.def_constant(SpirvConst::Bool(ty, val != 0)),
                 _ => self
                     .tcx
                     .sess

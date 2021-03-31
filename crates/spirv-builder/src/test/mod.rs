@@ -1,5 +1,4 @@
 mod basic;
-mod control_flow;
 
 use lazy_static::lazy_static;
 use rustc_codegen_spirv::rspirv;
@@ -47,7 +46,11 @@ overflow-checks = false
 debug-assertions = false
 
 [dependencies]
-spirv-std = { path = "../../crates/spirv-std" }
+spirv-std = { path = "../../crates/spirv-std", features=["const-generics"] }
+glam = { git = "https://github.com/EmbarkStudios/glam-rs.git", rev="7476a96", default-features=false, features = ["libm", "scalar-math"] }
+
+[patch.crates-io.spirv-std]
+path="../../crates/spirv-std"
 
 [workspace]
 "#;
@@ -55,10 +58,10 @@ spirv-std = { path = "../../crates/spirv-std" }
 static SRC_PREFIX: &str = r#"#![no_std]
 #![feature(register_attr, asm, ptr_internals)]
 #![register_attr(spirv)]
-#![allow(unused_imports)]
-use spirv_std::*;
-use spirv_std::storage_class::*;
-use spirv_std::num_traits::Float;
+#![deny(warnings)]
+
+#[allow(unused_imports)]
+use spirv_std::{*, num_traits::Float as _ };
 "#;
 
 fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {
@@ -96,19 +99,6 @@ fn val(src: &str) {
     build(src);
 }
 
-/// While `val` runs baseline SPIR-V validation, for some tests we want the
-/// stricter Vulkan validation (`vulkan1.2` specifically), which may produce
-/// additional errors (such as missing Vulkan-specific decorations).
-fn val_vulkan(src: &str) {
-    use rustc_codegen_spirv::{spirv_tools_validate as validate, SpirvToolsTargetEnv as TargetEnv};
-
-    let _lock = global_lock();
-    let bytes = std::fs::read(build(src)).unwrap();
-    if let Err(e) = validate(Some(TargetEnv::Vulkan_1_2), &bytes, None) {
-        panic!("Vulkan validation failed:\n{}", e.to_string());
-    }
-}
-
 fn assert_str_eq(expected: &str, result: &str) {
     let expected = expected
         .split('\n')
@@ -136,8 +126,41 @@ fn dis_fn(src: &str, func: &str, expect: &str) {
             inst.class.opcode == rspirv::spirv::Op::Name
                 && inst.operands[1].unwrap_literal_string() == abs_func_path
         })
-        .expect("No function with that name found")
+        .unwrap_or_else(|| {
+            panic!(
+                "no function with the name `{}` found in:\n{}\n",
+                abs_func_path,
+                module.disassemble()
+            )
+        })
         .operands[0]
+        .unwrap_id_ref();
+    let mut func = module
+        .functions
+        .into_iter()
+        .find(|f| f.def_id().unwrap() == id)
+        .unwrap();
+    // Compact to make IDs more stable
+    compact_ids(&mut func);
+    use rspirv::binary::Disassemble;
+    assert_str_eq(expect, &func.disassemble())
+}
+
+fn dis_entry_fn(src: &str, func: &str, expect: &str) {
+    let _lock = global_lock();
+    let module = read_module(&build(src)).unwrap();
+    let id = module
+        .entry_points
+        .iter()
+        .find(|inst| inst.operands.last().unwrap().unwrap_literal_string() == func)
+        .unwrap_or_else(|| {
+            panic!(
+                "no entry point with the name `{}` found in:\n{}\n",
+                func,
+                module.disassemble()
+            )
+        })
+        .operands[1]
         .unwrap_id_ref();
     let mut func = module
         .functions

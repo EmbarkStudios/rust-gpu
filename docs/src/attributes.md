@@ -17,6 +17,23 @@ fn main() { }
 
 Common values are `#[spirv(fragment)]` and `#[spirv(vertex)]`. A list of all supported names can be found in [spirv_headers](https://docs.rs/spirv_headers/1.5.0/spirv_headers/enum.ExecutionModel.html) - convert the enum name to snake_case for the rust-gpu attribute name.
 
+### Compute shader dimensions
+
+The dimensions (`local_size_*` in openGL, `numthreads` in DX) of a compute shader must be specified (eg. `#[spirv(compute(threads(32, 16, 97)))]`).  Trailing ones may be elided.
+
+Example:
+
+```rust
+// the x dimension is required
+// same as threads(32, 1, 1)
+#[spirv(compute(threads(32)))]
+pub fn compute_1() {}
+
+// same as threads(32, 57, 1)
+#[spirv(compute(threads(32, 57)))]
+pub fn compute_2() {}
+```
+
 ### Override entry point name
 
 You can override the default `OpEntryPoint` name for any entry point with the `entry_point_name` sub-attribute on any of the execution model attributes. (e.g. `#[spirv(vertex(entry_point_name="foo"))]`)
@@ -28,9 +45,9 @@ When declaring inputs and outputs, sometimes you want to declare it as a "builti
 Example:
 
 ```rust
-#[spirv(fragment)]
+#[spirv(vertex)]
 fn main(
-    #[spirv(position)] mut out_pos: Output<Vec4>,
+    #[spirv(position)] out_pos: &mut Vec4,
 ) { }
 ```
 
@@ -45,7 +62,7 @@ Example:
 ```rust
 #[spirv(fragment)]
 fn main(
-    #[spirv(descriptor_set = 2, binding = 5)] mut var: Uniform<Vec4>,
+    #[spirv(uniform, descriptor_set = 2, binding = 5)] var: &mut Vec4,
 ) { }
 ```
 
@@ -66,7 +83,7 @@ struct Thing {
 }
 
 #[spirv(fragment)]
-fn main(obj: PushConstant<ShaderConstants>) { }
+fn main(#[spirv(push_constant)] obj: &ShaderConstants) { }
 ```
 
 ## Flat
@@ -77,5 +94,16 @@ Example:
 
 ```rust
 #[spirv(fragment)]
-fn main(#[spirv(flat)] obj: Input<u32>) { }
+fn main(#[spirv(flat)] obj: u32) { }
+```
+
+## Invariant
+
+The invariant attribute corresponds to the invariant keyword in glsl. It can only be applied to output variables.
+
+Example:
+
+```rust
+#[spirv(vertex)]
+fn main(#[spirv(invariant)] var: &mut f32) { }
 ```

@@ -1,4 +1,4 @@
-use crate::glam::{Vec2, Vec4};
+use crate::vector::Vector;
 
 /// A handle that points to a rendering related resource (TLAS, Sampler, Buffer, Texture etc)
 /// this handle can be uploaded directly to the GPU to refer to our resources in a bindless
@@ -187,10 +187,10 @@ pub struct Texture2d(RenderResourceHandle);
 
 impl Texture2d {
     #[spirv_std_macros::gpu_only]
-    pub fn sample(self, coord: Vec2) -> Vec4 {
+    pub fn sample<V: Vector<f32, 4>>(self, coord: impl Vector<f32, 2>) -> V {
         // jb-todo: also do a bindless fetch of the sampler
         unsafe {
-            let mut result = Vec4::default();
+            let mut result = Default::default();
             asm!(
                 "OpExtension \"SPV_EXT_descriptor_indexing\"",
                 "OpCapability RuntimeDescriptorArray",
@@ -220,17 +220,17 @@ impl Texture2d {
     }
 
     #[spirv_std_macros::gpu_only]
-    pub fn sample_proj_lod(
+    pub fn sample_proj_lod<V: Vector<f32, 4>>(
         self,
-        coord: Vec4,
-        ddx: Vec2,
-        ddy: Vec2,
+        coord: impl Vector<f32, 4>,
+        ddx: impl Vector<f32, 2>,
+        ddy: impl Vector<f32, 2>,
         offset_x: i32,
         offset_y: i32,
-    ) -> Vec4 {
+    ) -> V {
         // jb-todo: also do a bindless fetch of the sampler
         unsafe {
-            let mut result = Vec4::default();
+            let mut result = Default::default();
             asm!(
                 "OpExtension \"SPV_EXT_descriptor_indexing\"",
                 "OpCapability RuntimeDescriptorArray",

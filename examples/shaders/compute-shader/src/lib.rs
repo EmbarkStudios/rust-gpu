@@ -13,5 +13,6 @@ extern crate spirv_std;
 #[macro_use]
 pub extern crate spirv_std_macros;
 
-#[spirv(gl_compute)]
+// LocalSize/numthreads of (x = 32, y = 1, z = 1)
+#[spirv(compute(threads(32)))]
 pub fn main_cs() {}

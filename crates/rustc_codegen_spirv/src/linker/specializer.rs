@@ -289,11 +289,11 @@ impl TryFrom<&Operand> for CopyOperand {
     }
 }
 
-impl Into<Operand> for CopyOperand {
-    fn into(self) -> Operand {
-        match self {
-            Self::IdRef(id) => Operand::IdRef(id),
-            Self::StorageClass(s) => Operand::StorageClass(s),
+impl From<CopyOperand> for Operand {
+    fn from(op: CopyOperand) -> Self {
+        match op {
+            CopyOperand::IdRef(id) => Self::IdRef(id),
+            CopyOperand::StorageClass(s) => Self::StorageClass(s),
         }
     }
 }
@@ -325,8 +325,6 @@ enum Value<T> {
     SameAs(T),
 }
 
-// FIXME(eddyb) clippy bug suggests `Self` even when it'd be a type mismatch.
-#[allow(clippy::use_self)]
 impl<T> Value<T> {
     fn map_var<U>(self, f: impl FnOnce(T) -> U) -> Value<U> {
         match self {
@@ -363,8 +361,6 @@ struct Instance<GA> {
     generic_args: GA,
 }
 
-// FIXME(eddyb) clippy bug suggests `Self` even when it'd be a type mismatch.
-#[allow(clippy::use_self)]
 impl<GA> Instance<GA> {
     fn as_ref(&self) -> Instance<&GA> {
         Instance {
@@ -1265,6 +1261,7 @@ struct Unapplicable;
 
 impl<'a, S: Specialization> InferCx<'a, S> {
     /// Match `storage_class` against `pat`, returning a `Match` with found `Var`s.
+    #[allow(clippy::unused_self)] // TODO: remove?
     fn match_storage_class_pat(
         &self,
         pat: &StorageClassPat,
@@ -1668,6 +1665,7 @@ impl<'a, S: Specialization> InferCx<'a, S> {
             return Ok(a);
         }
 
+        #[allow(clippy::match_same_arms)]
         Ok(match (a.clone(), b.clone()) {
             // Instances of "generic" globals/functions must be of the same ID,
             // and their `generic_args` inference variables must be unified.
@@ -1740,7 +1738,7 @@ impl<'a, S: Specialization> InferCx<'a, S> {
     /// field type for `OpTypeStruct`, where `indices` contains the field index.
     fn index_composite(&self, composite_ty: InferOperand, indices: &[Operand]) -> InferOperand {
         let mut ty = composite_ty;
-        for idx in &indices[..] {
+        for idx in indices {
             let instance = match ty {
                 InferOperand::Unknown | InferOperand::Concrete(_) | InferOperand::Var(_) => {
                     return InferOperand::Unknown;

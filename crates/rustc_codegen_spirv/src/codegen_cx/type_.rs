@@ -156,7 +156,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn type_kind(&self, ty: Self::Type) -> TypeKind {
         match self.lookup_type(ty) {
             SpirvType::Void => TypeKind::Void,
-            SpirvType::Bool => TypeKind::Integer, // thanks llvm
+            SpirvType::Bool | // thanks llvm
             SpirvType::Integer(_, _) => TypeKind::Integer,
             SpirvType::Float(width) => match width {
                 16 => TypeKind::Half,
@@ -167,16 +167,16 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                     .sess
                     .fatal(&format!("Invalid float width in type_kind: {}", other)),
             },
-            SpirvType::Adt { .. } => TypeKind::Struct,
-            SpirvType::Opaque { .. } => TypeKind::Struct,
+            SpirvType::Adt { .. } | SpirvType::Opaque { .. } => TypeKind::Struct,
             SpirvType::Vector { .. } => TypeKind::Vector,
-            SpirvType::Array { .. } => TypeKind::Array,
-            SpirvType::RuntimeArray { .. } => TypeKind::Array,
+            SpirvType::Array { .. } | SpirvType::RuntimeArray { .. } => TypeKind::Array,
             SpirvType::Pointer { .. } => TypeKind::Pointer,
             SpirvType::Function { .. } => TypeKind::Function,
-            SpirvType::Image { .. } => TypeKind::Integer,
-            SpirvType::Sampler => TypeKind::Integer,
-            SpirvType::SampledImage { .. } => TypeKind::Integer,
+            // HACK(eddyb) this is probably the closest `TypeKind` (which is still
+            // very much LLVM-specific, sadly) has to offer to "resource handle".
+            SpirvType::Image { .. } |
+            SpirvType::Sampler |
+            SpirvType::SampledImage { .. } => TypeKind::Token,
         }
     }
     fn type_ptr_to(&self, ty: Self::Type) -> Self::Type {
