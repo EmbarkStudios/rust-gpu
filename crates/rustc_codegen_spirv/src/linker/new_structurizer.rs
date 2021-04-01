@@ -286,7 +286,7 @@ impl Structurizer<'_> {
                 let taken_region = self.regions.remove(&target).unwrap();
 
                 // Choose whether to take this `exit`, in the previous merge block.
-                region = match region {
+                match region {
                     Region::Divergent => {
                         // Special-case the last exit as unconditional - regardless of
                         // what might end up in `exit.condition`, what we'd generate is
@@ -299,26 +299,37 @@ impl Structurizer<'_> {
                             Op::Unreachable
                         );
                         self.func.builder.branch(taken_block_id).unwrap();
-                        taken_region
+                        region = taken_region;
                     }
-                    Region::Convergent(ConvergentRegion { exits, .. }) => {
-                        // Create a new block for the "`exit` not taken" path.
-                        let not_taken_block_id = self.func.builder.begin_block(None).unwrap();
-                        let not_taken_block = self.func.builder.selected_block().unwrap();
-                        // Default all merges to `OpUnreachable`, in case they're unused.
-                        self.func.builder.unreachable().unwrap();
-
-                        let not_taken_region = ConvergentRegion {
-                            merge: not_taken_block,
-                            merge_id: not_taken_block_id,
-                            exits,
+                    Region::Convergent(convergent_region) => {
+                        // HACK(eddyb) since `selection_merge_convergent_regions`
+                        // creates a fresh merge block, use that block for the
+                        // "(exit) not taken" side of our conditional branch,
+                        // instead of creating an additional empty block for it.
+                        // However, note that this trick requires us merging the
+                        // region itself with the "(exit) taken" edge, and then
+                        // rewriting the unconditional branch from `region_merge`
+                        // to the "(exit) not taken" block, into a conditional one.
+                        region = match taken_region {
+                            Region::Divergent => self.selection_merge_convergent_regions(
+                                region_merge,
+                                &[convergent_region],
+                            ),
+                            Region::Convergent(taken_region) => self
+                                .selection_merge_convergent_regions(
+                                    region_merge,
+                                    &[taken_region, convergent_region],
+                                ),
                         };
 
+                        // Rewrite the injected `OpBranch %not_taken` into
+                        // `OpBranchConditional %exit_condition %taken %not_taken`.
                         self.func.builder.select_block(Some(region_merge)).unwrap();
-                        assert_eq!(
-                            self.func.builder.pop_instruction().unwrap().class.opcode,
-                            Op::Unreachable
-                        );
+                        let not_taken_block_id = {
+                            let branch_inst = self.func.builder.pop_instruction().unwrap();
+                            assert_eq!(branch_inst.class.opcode, Op::Branch);
+                            branch_inst.operands[0].unwrap_id_ref()
+                        };
                         self.func
                             .builder
                             .branch_conditional(
@@ -328,29 +339,8 @@ impl Structurizer<'_> {
                                 iter::empty(),
                             )
                             .unwrap();
-
-                        // Merge the "taken" and "not taken" paths.
-                        match taken_region {
-                            Region::Divergent => {
-                                self.func.builder.select_block(Some(region_merge)).unwrap();
-                                self.func
-                                    .builder
-                                    .insert_selection_merge(
-                                        InsertPoint::FromEnd(1),
-                                        not_taken_block_id,
-                                        SelectionControl::NONE,
-                                    )
-                                    .unwrap();
-                                Region::Convergent(not_taken_region)
-                            }
-                            Region::Convergent(taken_region) => self
-                                .selection_merge_convergent_regions(
-                                    region_merge,
-                                    &[taken_region, not_taken_region],
-                                ),
-                        }
                     }
-                };
+                }
             }
 
             // Peel off a backedge exit, which indicates this region is a loop.
