@@ -228,21 +228,33 @@ impl<'tcx> CodegenCx<'tcx> {
         }
     }
 
-    fn declare_parameter(
+    fn infer_param_ty_and_storage_class(
         &self,
         layout: TyAndLayout<'tcx>,
         hir_param: &hir::Param<'tcx>,
-        decoration_locations: &mut HashMap<StorageClass, u32>,
+        attrs: &AggregatedSpirvAttributes,
     ) -> (Word, StorageClass) {
-        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
-
         // FIXME(eddyb) attribute validation should be done ahead of time.
         // FIXME(eddyb) also take into account `&T` interior mutability,
         // i.e. it's only immutable if `T: Freeze`, which we should check.
         // FIXME(eddyb) also check the type for compatibility with being
         // part of the interface, including potentially `Sync`ness etc.
-        let (value_ty, storage_class) = if let Some(storage_class_attr) = attrs.storage_class {
+        let (value_ty, mutbl, is_ref) = match *layout.ty.kind() {
+            TyKind::Ref(_, pointee_ty, mutbl) => (pointee_ty, mutbl, true),
+            _ => (layout.ty, hir::Mutability::Not, false),
+        };
+        let spirv_ty = self.layout_of(value_ty).spirv_type(hir_param.span, self);
+        // Some types automatically specify a storage class. Compute that here.
+        let inferred_storage_class_from_ty = match self.lookup_type(spirv_ty) {
+            SpirvType::Image { .. } | SpirvType::Sampler | SpirvType::SampledImage { .. } => {
+                Some(StorageClass::UniformConstant)
+            }
+            _ => None,
+        };
+        // Storage classes can be specified via attribute. Compute that here, and emit diagnostics.
+        let attr_storage_class = attrs.storage_class.map(|storage_class_attr| {
             let storage_class = storage_class_attr.value;
+
             let expected_mutbl = match storage_class {
                 StorageClass::UniformConstant
                 | StorageClass::Input
@@ -252,10 +264,8 @@ impl<'tcx> CodegenCx<'tcx> {
                 _ => hir::Mutability::Mut,
             };
 
-            match *layout.ty.kind() {
-                TyKind::Ref(_, pointee_ty, m) if m == expected_mutbl => (pointee_ty, storage_class),
-
-                _ => self.tcx.sess.span_fatal(
+            if !is_ref {
+                self.tcx.sess.span_fatal(
                     hir_param.span,
                     &format!(
                         "invalid entry param type `{}` for storage class `{:?}` \
@@ -264,25 +274,62 @@ impl<'tcx> CodegenCx<'tcx> {
                         storage_class,
                         expected_mutbl.prefix_str()
                     ),
-                ),
+                )
             }
-        } else {
-            match *layout.ty.kind() {
-                TyKind::Ref(_, pointee_ty, hir::Mutability::Mut) => {
-                    (pointee_ty, StorageClass::Output)
-                }
 
-                TyKind::Ref(_, pointee_ty, hir::Mutability::Not) => self.tcx.sess.span_fatal(
+            match inferred_storage_class_from_ty {
+                Some(inferred) if storage_class == inferred => self.tcx.sess.span_warn(
+                    storage_class_attr.span,
+                    "redundant storage class specifier, storage class is inferred from type",
+                ),
+                Some(inferred) => self
+                    .tcx
+                    .sess
+                    .struct_span_err(
+                        hir_param.span,
+                        &format!(
+                            "storage class {:?} was inferred from type, but {:?} was specified in attribute",
+                            inferred, storage_class
+                        ),
+                    )
+                    .span_note(
+                        storage_class_attr.span,
+                        &format!("remove storage class attribute to use {:?} as storage class", inferred),
+                    )
+                    .emit(),
+                None => (),
+            }
+
+            storage_class
+        });
+        // If storage class was not inferred nor specified, compute the default (i.e. input/output)
+        let storage_class = inferred_storage_class_from_ty
+            .or(attr_storage_class)
+            .unwrap_or_else(|| match (is_ref, mutbl) {
+                (false, _) => StorageClass::Input,
+                (true, hir::Mutability::Mut) => StorageClass::Output,
+                (true, hir::Mutability::Not) => self.tcx.sess.span_fatal(
                     hir_param.span,
                     &format!(
                         "invalid entry param type `{}` (expected `{}` or `&mut {1}`)",
-                        layout.ty, pointee_ty
+                        layout.ty, value_ty
                     ),
                 ),
+            });
 
-                _ => (layout.ty, StorageClass::Input),
-            }
-        };
+        (spirv_ty, storage_class)
+    }
+
+    fn declare_parameter(
+        &self,
+        layout: TyAndLayout<'tcx>,
+        hir_param: &hir::Param<'tcx>,
+        decoration_locations: &mut HashMap<StorageClass, u32>,
+    ) -> (Word, StorageClass) {
+        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
+
+        let (value_ty, storage_class) =
+            self.infer_param_ty_and_storage_class(layout, hir_param, &attrs);
 
         // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
         let variable = self.emit_global().id();
@@ -357,10 +404,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
 
         // Emit the `OpVariable` with its *Result* ID set to `variable`.
-        let var_spirv_type = SpirvType::Pointer {
-            pointee: self.layout_of(value_ty).spirv_type(hir_param.span, self),
-        }
-        .def(hir_param.span, self);
+        let var_spirv_type = SpirvType::Pointer { pointee: value_ty }.def(hir_param.span, self);
         self.emit_global()
             .variable(var_spirv_type, Some(variable), storage_class, None);
 
