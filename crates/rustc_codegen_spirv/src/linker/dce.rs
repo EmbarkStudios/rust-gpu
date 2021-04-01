@@ -7,8 +7,8 @@
 //! *references* a rooted thing is also rooted, not the other way around - but that's the basic
 //! concept.
 
-use rspirv::dr::{Instruction, Module};
-use rspirv::spirv::Word;
+use rspirv::dr::{Function, Instruction, Module};
+use rspirv::spirv::{Op, Word};
 use std::collections::HashSet;
 
 pub fn dce(module: &mut Module) {
@@ -84,4 +84,28 @@ fn kill_unrooted(module: &mut Module, rooted: &HashSet<Word>) {
     module
         .functions
         .retain(|f| is_rooted(f.def.as_ref().unwrap(), rooted));
+}
+
+pub fn dce_phi(func: &mut Function) {
+    let mut used = HashSet::new();
+    loop {
+        let mut changed = false;
+        for inst in func.all_inst_iter() {
+            if inst.class.opcode != Op::Phi || used.contains(&inst.result_id.unwrap()) {
+                for op in &inst.operands {
+                    if let Some(id) = op.id_ref_any() {
+                        changed |= used.insert(id);
+                    }
+                }
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    for block in &mut func.blocks {
+        block
+            .instructions
+            .retain(|inst| inst.class.opcode != Op::Phi || used.contains(&inst.result_id.unwrap()))
+    }
 }
