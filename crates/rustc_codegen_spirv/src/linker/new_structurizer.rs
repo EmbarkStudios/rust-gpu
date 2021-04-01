@@ -114,19 +114,42 @@ type BlockId = Word;
 
 /// Regions are made up of their entry block and all other blocks dominated
 /// by that block. All edges leaving a region are considered "exits".
-struct Region {
-    /// After structurizing a region, all paths through it must lead to a single
-    /// "merge" block (i.e. `merge` post-dominates the entire region).
-    /// The `merge` block must be terminated by one of `OpReturn`, `OpReturnValue`,
-    /// `OpKill`, or `OpUnreachable`. If `exits` isn't empty, `merge` will
-    /// receive an `OpBranch` from its parent region (to an outer merge block).
+#[derive(Debug)]
+enum Region {
+    /// All paths through the region "diverge", i.e. they never leave the region
+    /// by branching to another block in the same function, so they either:
+    /// * get stuck in an (infinite) loop
+    /// * reach `OpReturn`, `OpReturnValue`, `OpKill`, or `OpUnreachable`
+    ///
+    /// Such a region is fully structurized and requires no propagation to its
+    /// parent region (only that a branch into its entry block exists).
+    Divergent,
+
+    /// Some paths through the region don't "diverge" (see `ConvergentRegion`).
+    Convergent(ConvergentRegion),
+}
+
+/// `Region` where at least some paths through the region leave it by branching
+/// to other blocks in the same function.
+///
+/// After structurizing, all paths through it must lead to a single "merge" block
+/// (i.e. `merge` post-dominates the entire region), with all of the branches to
+/// outside the region having been moved from the CFG itself, into `exits`.
+///
+/// The `merge` block is terminated by `OpUnreachable`, to be replaced with an
+/// `OpBranch` (to an outer merge block) by its parent region, which will also
+/// inherit its `exits` (potentially attaching some/all of them to itself).
+#[derive(Debug)]
+struct ConvergentRegion {
     merge: BlockIdx,
     merge_id: BlockId,
 
+    // FIXME(eddyb) use something more compact when `exits.len()` is small
+    // (e.g. `ArrayVec<[(BlockIdx, Exit); 4]>` with linear search).
     exits: IndexMap<BlockIdx, Exit>,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct Exit {
     /// Number of total edges to this target (a subset of the target's predecessors).
     edge_count: usize,
@@ -168,11 +191,7 @@ impl Structurizer<'_> {
             let block_id = self.func.blocks()[block].label_id().unwrap();
             let terminator = self.func.blocks()[block].instructions.last().unwrap();
             let mut region = match terminator.class.opcode {
-                Op::Return | Op::ReturnValue | Op::Kill | Op::Unreachable => Region {
-                    merge: block,
-                    merge_id: block_id,
-                    exits: indexmap! {},
-                },
+                Op::Return | Op::ReturnValue | Op::Kill | Op::Unreachable => Region::Divergent,
 
                 Op::Branch => {
                     let target = self.block_id_to_idx[&terminator.operands[0].unwrap_id_ref()];
@@ -181,13 +200,13 @@ impl Structurizer<'_> {
                         self.func.builder.pop_instruction().unwrap();
                         // Default all merges to `OpUnreachable`, in case they're unused.
                         self.func.builder.unreachable().unwrap();
-                        Region {
+                        Region::Convergent(ConvergentRegion {
                             merge: block,
                             merge_id: block_id,
                             exits: indexmap! {
                                 target => Exit { edge_count: 1, condition: None }
                             },
-                        }
+                        })
                     })
                 }
 
@@ -199,7 +218,7 @@ impl Structurizer<'_> {
                     };
 
                     // FIXME(eddyb) avoid wasteful allocation.
-                    let child_regions: Vec<_> = target_operand_indices
+                    let convergent_child_regions: Vec<_> = target_operand_indices
                         .map(|i| {
                             let target_id = self.func.blocks()[block]
                                 .instructions
@@ -223,84 +242,134 @@ impl Structurizer<'_> {
                                     .last_mut()
                                     .unwrap()
                                     .operands[i] = Operand::IdRef(new_block_id);
-                                Region {
+                                Region::Convergent(ConvergentRegion {
                                     merge: new_block,
                                     merge_id: new_block_id,
                                     exits: indexmap! {
                                         target => Exit { edge_count: 1, condition: None }
                                     },
-                                }
+                                })
                             })
+                        })
+                        .filter_map(|region| match region {
+                            Region::Divergent => None,
+                            Region::Convergent(region) => Some(region),
                         })
                         .collect();
 
-                    self.selection_merge_regions(block, &child_regions)
+                    self.selection_merge_convergent_regions(block, &convergent_child_regions)
                 }
                 _ => panic!("Invalid block terminator: {:?}", terminator),
             };
 
             // Peel off deferred exits which have all their edges accounted for
             // already, within this region. Repeat until no such exits are left.
-            while let Some((&target, _)) = region
-                .exits
-                .iter()
-                .find(|&(&target, exit)| exit.edge_count == self.incoming_edge_count[target])
-            {
+            while let Region::Convergent(convergent_region) = &mut region {
+                let (region_merge, target, exit) =
+                    match convergent_region.exits.iter().find(|&(&target, exit)| {
+                        exit.edge_count == self.incoming_edge_count[target]
+                    }) {
+                        Some((&target, _)) => {
+                            let exit = convergent_region.exits.remove(&target).unwrap();
+                            let region_merge = convergent_region.merge;
+                            if convergent_region.exits.is_empty() {
+                                region = Region::Divergent;
+                            }
+                            (region_merge, target, exit)
+                        }
+                        None => {
+                            break;
+                        }
+                    };
+
                 let taken_block_id = self.func.blocks()[target].label_id().unwrap();
-                let exit = region.exits.remove(&target).unwrap();
-
-                // Special-case the last exit as unconditional - regardless of
-                // what might end up in `exit.condition`, what we'd generate is
-                // `if exit.condition { branch target; } else { unreachable; }`
-                // which is just `branch target;` with an extra assumption that
-                // `exit.condition` is `true` (which we can just ignore).
-                if region.exits.is_empty() {
-                    self.func.builder.select_block(Some(region.merge)).unwrap();
-                    assert_eq!(
-                        self.func.builder.pop_instruction().unwrap().class.opcode,
-                        Op::Unreachable
-                    );
-                    self.func.builder.branch(taken_block_id).unwrap();
-                    region = self.regions.remove(&target).unwrap();
-                    continue;
-                }
-
-                // Create a new block for the "`exit` not taken" path.
-                let not_taken_block_id = self.func.builder.begin_block(None).unwrap();
-                let not_taken_block = self.func.builder.selected_block().unwrap();
-                // Default all merges to `OpUnreachable`, in case they're unused.
-                self.func.builder.unreachable().unwrap();
+                let taken_region = self.regions.remove(&target).unwrap();
 
                 // Choose whether to take this `exit`, in the previous merge block.
-                let branch_block = region.merge;
-                self.func.builder.select_block(Some(branch_block)).unwrap();
-                assert_eq!(
-                    self.func.builder.pop_instruction().unwrap().class.opcode,
-                    Op::Unreachable
-                );
-                self.func
-                    .builder
-                    .branch_conditional(
-                        exit.condition.unwrap(),
-                        taken_block_id,
-                        not_taken_block_id,
-                        iter::empty(),
-                    )
-                    .unwrap();
+                region = match region {
+                    Region::Divergent => {
+                        // Special-case the last exit as unconditional - regardless of
+                        // what might end up in `exit.condition`, what we'd generate is
+                        // `if exit.condition { branch target; } else { unreachable; }`
+                        // which is just `branch target;` with an extra assumption that
+                        // `exit.condition` is `true` (which we can just ignore).
+                        self.func.builder.select_block(Some(region_merge)).unwrap();
+                        assert_eq!(
+                            self.func.builder.pop_instruction().unwrap().class.opcode,
+                            Op::Unreachable
+                        );
+                        self.func.builder.branch(taken_block_id).unwrap();
+                        taken_region
+                    }
+                    Region::Convergent(ConvergentRegion { exits, .. }) => {
+                        // Create a new block for the "`exit` not taken" path.
+                        let not_taken_block_id = self.func.builder.begin_block(None).unwrap();
+                        let not_taken_block = self.func.builder.selected_block().unwrap();
+                        // Default all merges to `OpUnreachable`, in case they're unused.
+                        self.func.builder.unreachable().unwrap();
 
-                // Merge the "taken" and "not taken" paths.
-                let taken_region = self.regions.remove(&target).unwrap();
-                let not_taken_region = Region {
-                    merge: not_taken_block,
-                    merge_id: not_taken_block_id,
-                    exits: region.exits,
+                        let not_taken_region = ConvergentRegion {
+                            merge: not_taken_block,
+                            merge_id: not_taken_block_id,
+                            exits,
+                        };
+
+                        self.func.builder.select_block(Some(region_merge)).unwrap();
+                        assert_eq!(
+                            self.func.builder.pop_instruction().unwrap().class.opcode,
+                            Op::Unreachable
+                        );
+                        self.func
+                            .builder
+                            .branch_conditional(
+                                exit.condition.unwrap(),
+                                taken_block_id,
+                                not_taken_block_id,
+                                iter::empty(),
+                            )
+                            .unwrap();
+
+                        // Merge the "taken" and "not taken" paths.
+                        match taken_region {
+                            Region::Divergent => {
+                                self.func.builder.select_block(Some(region_merge)).unwrap();
+                                self.func
+                                    .builder
+                                    .insert_selection_merge(
+                                        InsertPoint::FromEnd(1),
+                                        not_taken_block_id,
+                                        SelectionControl::NONE,
+                                    )
+                                    .unwrap();
+                                Region::Convergent(not_taken_region)
+                            }
+                            Region::Convergent(taken_region) => self
+                                .selection_merge_convergent_regions(
+                                    region_merge,
+                                    &[taken_region, not_taken_region],
+                                ),
+                        }
+                    }
                 };
-                region =
-                    self.selection_merge_regions(branch_block, &[taken_region, not_taken_region]);
             }
 
             // Peel off a backedge exit, which indicates this region is a loop.
-            if let Some(mut backedge_exit) = region.exits.remove(&block) {
+            let region_merge_and_backedge_exit = match &mut region {
+                Region::Divergent => None,
+                Region::Convergent(convergent_region) => {
+                    match convergent_region.exits.remove(&block) {
+                        Some(backedge_exit) => {
+                            let region_merge = convergent_region.merge;
+                            if convergent_region.exits.is_empty() {
+                                region = Region::Divergent;
+                            }
+                            Some((region_merge, backedge_exit))
+                        }
+                        None => None,
+                    }
+                }
+            };
+            if let Some((mut region_merge, mut backedge_exit)) = region_merge_and_backedge_exit {
                 // Inject a `while`-like loop header just before the start of the
                 // loop body. This is needed because our "`break` vs `continue`"
                 // choice is *after* the loop body, like in a `do`-`while` loop,
@@ -322,9 +391,8 @@ impl Structurizer<'_> {
                 // we just moved (this should only be relevant to infinite loops).
                 self.func.blocks_mut()[while_body_block].instructions =
                     mem::replace(&mut self.func.blocks_mut()[block].instructions, vec![]);
-                if region.merge == block {
-                    region.merge = while_body_block;
-                    region.merge_id = while_body_block_id;
+                if region_merge == block {
+                    region_merge = while_body_block;
                 }
 
                 // Create a separate merge block for the loop body, as the original
@@ -332,7 +400,7 @@ impl Structurizer<'_> {
                 let while_body_merge_id = self.func.builder.begin_block(None).unwrap();
                 let while_body_merge = self.func.builder.selected_block().unwrap();
                 self.func.builder.select_block(None).unwrap();
-                self.func.builder.select_block(Some(region.merge)).unwrap();
+                self.func.builder.select_block(Some(region_merge)).unwrap();
                 assert_eq!(
                     self.func.builder.pop_instruction().unwrap().class.opcode,
                     Op::Unreachable
@@ -354,9 +422,13 @@ impl Structurizer<'_> {
                     .select_block(Some(while_header_block))
                     .unwrap();
 
-                for (&target, exit) in region
-                    .exits
-                    .iter_mut()
+                let region_exits = match &mut region {
+                    Region::Divergent => None,
+                    Region::Convergent(ConvergentRegion { exits, .. }) => Some(exits.iter_mut()),
+                };
+                for (&target, exit) in region_exits
+                    .into_iter()
+                    .flatten()
                     .chain(iter::once((&while_body_block, &mut backedge_exit)))
                 {
                     let first_entry_case = (
@@ -404,8 +476,16 @@ impl Structurizer<'_> {
                         iter::empty(),
                     )
                     .unwrap();
-                region.merge = while_exit_block;
-                region.merge_id = while_exit_block_id;
+                region = match region {
+                    Region::Divergent => Region::Divergent,
+                    Region::Convergent(ConvergentRegion { exits, .. }) => {
+                        Region::Convergent(ConvergentRegion {
+                            merge: while_exit_block,
+                            merge_id: while_exit_block_id,
+                            exits,
+                        })
+                    }
+                };
 
                 // Remove the backedge count from the total incoming count of `block`.
                 // This will allow outer regions to treat the loop opaquely.
@@ -416,7 +496,7 @@ impl Structurizer<'_> {
         }
 
         assert_eq!(self.regions.len(), 1);
-        assert_eq!(self.regions.values().next().unwrap().exits.len(), 0);
+        assert_matches!(self.regions.values().next().unwrap(), Region::Divergent);
     }
 
     fn child_region(&mut self, target: BlockIdx) -> Option<Region> {
@@ -428,7 +508,11 @@ impl Structurizer<'_> {
         }
     }
 
-    fn selection_merge_regions(&mut self, block: BlockIdx, child_regions: &[Region]) -> Region {
+    fn selection_merge_convergent_regions(
+        &mut self,
+        block: BlockIdx,
+        child_regions: &[ConvergentRegion],
+    ) -> Region {
         let Globals {
             const_false,
             const_true,
@@ -437,27 +521,28 @@ impl Structurizer<'_> {
 
         // HACK(eddyb) this special-cases the easy case where we can
         // just reuse a merge block, and don't have to create our own.
-        let unconditional_single_exit = |region: &Region| {
+        let unconditional_single_exit = |region: &ConvergentRegion| {
             region.exits.len() == 1 && region.exits.get_index(0).unwrap().1.condition.is_none()
         };
-        let structural_merge = if child_regions.iter().all(unconditional_single_exit) {
-            let merge = *child_regions[0].exits.get_index(0).unwrap().0;
-            if child_regions
-                .iter()
-                .all(|region| *region.exits.get_index(0).unwrap().0 == merge)
-                && child_regions
+        let structural_merge =
+            if !child_regions.is_empty() && child_regions.iter().all(unconditional_single_exit) {
+                let merge = *child_regions[0].exits.get_index(0).unwrap().0;
+                if child_regions
                     .iter()
-                    .map(|region| region.exits.get_index(0).unwrap().1.edge_count)
-                    .sum::<usize>()
-                    == self.incoming_edge_count[merge]
-            {
-                Some(merge)
+                    .all(|region| *region.exits.get_index(0).unwrap().0 == merge)
+                    && child_regions
+                        .iter()
+                        .map(|region| region.exits.get_index(0).unwrap().1.edge_count)
+                        .sum::<usize>()
+                        == self.incoming_edge_count[merge]
+                {
+                    Some(merge)
+                } else {
+                    None
+                }
             } else {
                 None
-            }
-        } else {
-            None
-        };
+            };
 
         // Reuse or create a merge block, and use it as the selection merge.
         let merge = structural_merge.unwrap_or_else(|| {
@@ -473,16 +558,12 @@ impl Structurizer<'_> {
 
         // Branch all the child regions into our merge block.
         for region in child_regions {
-            // HACK(eddyb) empty `region.exits` indicate diverging control-flow,
-            // and that we should ignore `region.merge`.
-            if !region.exits.is_empty() {
-                self.func.builder.select_block(Some(region.merge)).unwrap();
-                assert_eq!(
-                    self.func.builder.pop_instruction().unwrap().class.opcode,
-                    Op::Unreachable
-                );
-                self.func.builder.branch(merge_id).unwrap();
-            }
+            self.func.builder.select_block(Some(region.merge)).unwrap();
+            assert_eq!(
+                self.func.builder.pop_instruction().unwrap().class.opcode,
+                Op::Unreachable
+            );
+            self.func.builder.branch(merge_id).unwrap();
         }
 
         if let Some(merge) = structural_merge {
@@ -500,32 +581,29 @@ impl Structurizer<'_> {
 
             // Update conditions using phis.
             for (&target, exit) in &mut exits {
-                let phi_cases = child_regions
-                    .iter()
-                    .filter(|region| {
-                        // HACK(eddyb) empty `region.exits` indicate diverging control-flow,
-                        // and that we should ignore `region.merge`.
-                        !region.exits.is_empty()
-                    })
-                    .map(|region| {
-                        (
-                            match region.exits.get(&target) {
-                                Some(exit) => exit.condition.unwrap_or(const_true),
-                                None => const_false,
-                            },
-                            region.merge_id,
-                        )
-                    });
+                let phi_cases = child_regions.iter().map(|region| {
+                    (
+                        match region.exits.get(&target) {
+                            Some(exit) => exit.condition.unwrap_or(const_true),
+                            None => const_false,
+                        },
+                        region.merge_id,
+                    )
+                });
                 exit.condition = Some(self.func.builder.phi(type_bool, None, phi_cases).unwrap());
             }
 
             // Default all merges to `OpUnreachable`, in case they're unused.
             self.func.builder.unreachable().unwrap();
 
-            Region {
-                merge,
-                merge_id,
-                exits,
+            if exits.is_empty() {
+                Region::Divergent
+            } else {
+                Region::Convergent(ConvergentRegion {
+                    merge,
+                    merge_id,
+                    exits,
+                })
             }
         }
     }

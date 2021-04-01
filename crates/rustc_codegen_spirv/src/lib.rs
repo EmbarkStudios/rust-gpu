@@ -16,6 +16,7 @@
 //! [`spirv-tools`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools
 //! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
 #![feature(rustc_private)]
+#![feature(assert_matches)]
 #![feature(once_cell)]
 // BEGIN - Embark standard lints v0.3
 // do not change or add/remove here, but one can add exceptions after this section
