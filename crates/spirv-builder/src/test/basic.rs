@@ -233,28 +233,26 @@ OpBranch %8
 %8 = OpLabel
 %9 = OpPhi %10 %11 %7 %12 %13
 %14 = OpPhi %2 %4 %7 %15 %13
-%16 = OpPhi %17 %18 %7 %19 %13
-OpLoopMerge %20 %13 Unroll
-OpBranchConditional %16 %21 %20
-%21 = OpLabel
-%22 = OpSLessThan %17 %9 %23
-OpSelectionMerge %24 None
-OpBranchConditional %22 %25 %26
-%25 = OpLabel
-%27 = OpIMul %2 %28 %14
-%29 = OpIAdd %2 %27 %5
-%30 = OpIAdd %10 %9 %31
-OpBranch %24
-%26 = OpLabel
-OpReturnValue %14
+OpLoopMerge %16 %13 Unroll
+OpBranchConditional %17 %18 %16
+%18 = OpLabel
+%19 = OpSLessThan %20 %9 %21
+OpSelectionMerge %22 None
+OpBranchConditional %19 %23 %24
+%23 = OpLabel
+%25 = OpIMul %2 %26 %14
+%27 = OpIAdd %2 %25 %5
+%28 = OpIAdd %10 %9 %29
+OpBranch %22
 %24 = OpLabel
-%12 = OpPhi %10 %30 %25
-%15 = OpPhi %2 %29 %25
-%19 = OpPhi %17 %18 %25
+OpReturnValue %14
+%22 = OpLabel
+%12 = OpPhi %10 %28 %23
+%15 = OpPhi %2 %27 %23
 OpBranch %13
 %13 = OpLabel
 OpBranch %8
-%20 = OpLabel
+%16 = OpLabel
 OpUnreachable
 OpFunctionEnd"#,
     );
@@ -493,14 +491,13 @@ OpBranch %25
 %25 = OpLabel
 OpBranch %26
 %26 = OpLabel
-%27 = OpPhi %16 %28 %25 %28 %29
-OpLoopMerge %30 %29 None
-OpBranchConditional %27 %31 %30
-%31 = OpLabel
-OpBranch %29
-%29 = OpLabel
-OpBranch %26
+OpLoopMerge %27 %28 None
+OpBranchConditional %29 %30 %27
 %30 = OpLabel
+OpBranch %28
+%28 = OpLabel
+OpBranch %26
+%27 = OpLabel
 OpUnreachable
 %17 = OpLabel
 OpUnreachable

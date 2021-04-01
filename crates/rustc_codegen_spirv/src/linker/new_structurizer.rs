@@ -441,12 +441,8 @@ impl Structurizer<'_> {
                     );
                     let repeat_case = (exit.condition.unwrap_or(const_true), while_body_merge_id);
                     let phi_cases = [first_entry_case, repeat_case];
-                    exit.condition = Some(
-                        self.func
-                            .builder
-                            .phi(type_bool, None, phi_cases.iter().copied())
-                            .unwrap(),
-                    );
+                    exit.condition =
+                        Some(self.emit_phi_or_simplfy(type_bool, phi_cases.iter().copied()));
                 }
 
                 // Choose whether to keep looping, in the `while`-like loop header.
@@ -590,7 +586,7 @@ impl Structurizer<'_> {
                         region.merge_id,
                     )
                 });
-                exit.condition = Some(self.func.builder.phi(type_bool, None, phi_cases).unwrap());
+                exit.condition = Some(self.emit_phi_or_simplfy(type_bool, phi_cases));
             }
 
             // Default all merges to `OpUnreachable`, in case they're unused.
@@ -605,6 +601,22 @@ impl Structurizer<'_> {
                     exits,
                 })
             }
+        }
+    }
+
+    /// Emit an `OpPhi`, but only if it can't be simplified, such as when all
+    /// values are the same (and therefore the common value itself can be used).
+    fn emit_phi_or_simplfy(
+        &mut self,
+        value_type: Word,
+        cases: impl Iterator<Item = (Word, BlockId)> + Clone,
+    ) -> Word {
+        let mut values = cases.clone().map(|(v, _)| v);
+        let first = values.next().unwrap();
+        if values.all(|other| other == first) {
+            first
+        } else {
+            self.func.builder.phi(value_type, None, cases).unwrap()
         }
     }
 
