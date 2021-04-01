@@ -234,6 +234,11 @@ impl<'tcx> CodegenCx<'tcx> {
         hir_param: &hir::Param<'tcx>,
         attrs: &AggregatedSpirvAttributes,
     ) -> (Word, StorageClass) {
+        // FIXME(eddyb) attribute validation should be done ahead of time.
+        // FIXME(eddyb) also take into account `&T` interior mutability,
+        // i.e. it's only immutable if `T: Freeze`, which we should check.
+        // FIXME(eddyb) also check the type for compatibility with being
+        // part of the interface, including potentially `Sync`ness etc.
         let (value_ty, mutbl, is_ref) = match *layout.ty.kind() {
             TyKind::Ref(_, pointee_ty, mutbl) => (pointee_ty, mutbl, true),
             _ => (layout.ty, hir::Mutability::Not, false),
@@ -323,11 +328,6 @@ impl<'tcx> CodegenCx<'tcx> {
     ) -> (Word, StorageClass) {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
 
-        // FIXME(eddyb) attribute validation should be done ahead of time.
-        // FIXME(eddyb) also take into account `&T` interior mutability,
-        // i.e. it's only immutable if `T: Freeze`, which we should check.
-        // FIXME(eddyb) also check the type for compatibility with being
-        // part of the interface, including potentially `Sync`ness etc.
         let (value_ty, storage_class) =
             self.infer_param_ty_and_storage_class(layout, hir_param, &attrs);
 
