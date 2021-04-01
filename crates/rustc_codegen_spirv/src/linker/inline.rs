@@ -5,7 +5,7 @@
 //! run mem2reg (see mem2reg.rs) on the result to "unwrap" the Function pointer.
 
 use super::apply_rewrite_rules;
-use super::mem2reg::compute_preds;
+use super::simple_passes::outgoing_edges;
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use std::collections::{HashMap, HashSet};
@@ -412,4 +412,18 @@ fn fuse_trivial_branches(function: &mut Function) {
         }
     }
     function.blocks.retain(|b| !b.instructions.is_empty());
+}
+
+fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
+    let mut result = vec![vec![]; blocks.len()];
+    for (source_idx, source) in blocks.iter().enumerate() {
+        for dest_id in outgoing_edges(source) {
+            let dest_idx = blocks
+                .iter()
+                .position(|b| b.label_id().unwrap() == dest_id)
+                .unwrap();
+            result[dest_idx].push(source_idx);
+        }
+    }
+    result
 }

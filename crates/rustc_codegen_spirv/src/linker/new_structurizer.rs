@@ -561,7 +561,9 @@ impl Structurizer<'_> {
         }
         visited[block] = true;
 
-        for target in super::simple_passes::outgoing_edges(&self.func.blocks()[block]) {
+        for target in
+            super::simple_passes::outgoing_edges(&self.func.blocks()[block]).collect::<Vec<_>>()
+        {
             self.post_order_step(self.block_id_to_idx[&target], visited, post_order)
         }
 
