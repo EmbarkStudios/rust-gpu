@@ -242,14 +242,12 @@ OpSelectionMerge %24 None
 OpBranchConditional %22 %25 %26
 %25 = OpLabel
 %27 = OpIMul %2 %28 %14
-%29 = OpIAdd %2 %27 %5
-%30 = OpIAdd %10 %9 %31
+%15 = OpIAdd %2 %27 %5
+%12 = OpIAdd %10 %9 %29
 OpBranch %24
 %26 = OpLabel
 OpReturnValue %14
 %24 = OpLabel
-%12 = OpPhi %10 %30 %25
-%15 = OpPhi %2 %29 %25
 %19 = OpPhi %17 %18 %25
 OpBranch %13
 %13 = OpLabel
