@@ -489,6 +489,24 @@
 <span id="486">486</span>
 <span id="487">487</span>
 <span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.</span>
 <span class="doccomment">//! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a</span>
@@ -514,8 +532,9 @@
     <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">func</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Function</span>,
 ) {
-    <span class="kw">let</span> <span class="ident">preds</span> <span class="op">=</span> <span class="ident">compute_preds</span>(<span class="kw-2">&amp;</span><span class="ident">func</span>.<span class="ident">blocks</span>);
-    <span class="kw">let</span> <span class="ident">idom</span> <span class="op">=</span> <span class="ident">compute_idom</span>(<span class="kw-2">&amp;</span><span class="ident">preds</span>);
+    <span class="kw">let</span> <span class="ident">reachable</span> <span class="op">=</span> <span class="ident">compute_reachable</span>(<span class="kw-2">&amp;</span><span class="ident">func</span>.<span class="ident">blocks</span>);
+    <span class="kw">let</span> <span class="ident">preds</span> <span class="op">=</span> <span class="ident">compute_preds</span>(<span class="kw-2">&amp;</span><span class="ident">func</span>.<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">reachable</span>);
+    <span class="kw">let</span> <span class="ident">idom</span> <span class="op">=</span> <span class="ident">compute_idom</span>(<span class="kw-2">&amp;</span><span class="ident">preds</span>, <span class="kw-2">&amp;</span><span class="ident">reachable</span>);
     <span class="kw">let</span> <span class="ident">dominance_frontier</span> <span class="op">=</span> <span class="ident">compute_dominance_frontier</span>(<span class="kw-2">&amp;</span><span class="ident">preds</span>, <span class="kw-2">&amp;</span><span class="ident">idom</span>);
     <span class="ident">insert_phis_all</span>(
         <span class="ident">header</span>,
@@ -527,24 +546,38 @@
     );
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_preds</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="macro">vec</span><span class="macro">!</span>[]; <span class="ident">blocks</span>.<span class="ident">len</span>()];
-    <span class="kw">for</span> (<span class="ident">source_idx</span>, <span class="ident">source</span>) <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">source</span>);
-        <span class="comment">// HACK(eddyb) treat `OpSelectionMerge` as an edge, in case it points</span>
-        <span class="comment">// to an otherwise-unreachable block.</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">before_last_idx</span>) <span class="op">=</span> <span class="ident">source</span>.<span class="ident">instructions</span>.<span class="ident">len</span>().<span class="ident">checked_sub</span>(<span class="number">2</span>) {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">before_last</span>) <span class="op">=</span> <span class="ident">source</span>.<span class="ident">instructions</span>.<span class="ident">get</span>(<span class="ident">before_last_idx</span>) {
-                <span class="kw">if</span> <span class="ident">before_last</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">SelectionMerge</span> {
-                    <span class="ident">edges</span>.<span class="ident">push</span>(<span class="ident">before_last</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>());
-                }
+<span class="kw">fn</span> <span class="ident">label_to_index</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="ident">blocks</span>
+        .<span class="ident">iter</span>()
+        .<span class="ident">position</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">id</span>)
+        .<span class="ident">unwrap</span>()
+}
+
+<span class="kw">fn</span> <span class="ident">compute_reachable</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">recurse</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">reachable</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">bool</span>], <span class="ident">block</span>: <span class="ident">usize</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">reachable</span>[<span class="ident">block</span>] {
+            <span class="ident">reachable</span>[<span class="ident">block</span>] <span class="op">=</span> <span class="bool-val">true</span>;
+            <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">blocks</span>[<span class="ident">block</span>]) {
+                <span class="kw">let</span> <span class="ident">dest_idx</span> <span class="op">=</span> <span class="ident">label_to_index</span>(<span class="ident">blocks</span>, <span class="ident">dest_id</span>);
+                <span class="ident">recurse</span>(<span class="ident">blocks</span>, <span class="ident">reachable</span>, <span class="ident">dest_idx</span>);
             }
         }
-        <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">edges</span> {
-            <span class="kw">let</span> <span class="ident">dest_idx</span> <span class="op">=</span> <span class="ident">blocks</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">position</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">dest_id</span>)
-                .<span class="ident">unwrap</span>();
+    }
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reachable</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="bool-val">false</span>; <span class="ident">blocks</span>.<span class="ident">len</span>()];
+    <span class="ident">recurse</span>(<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">reachable</span>, <span class="number">0</span>);
+    <span class="ident">reachable</span>
+}
+
+<span class="kw">fn</span> <span class="ident">compute_preds</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">reachable_blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">bool</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="macro">vec</span><span class="macro">!</span>[]; <span class="ident">blocks</span>.<span class="ident">len</span>()];
+    <span class="comment">// Do not count unreachable blocks as valid preds of blocks</span>
+    <span class="kw">for</span> (<span class="ident">source_idx</span>, <span class="ident">source</span>) <span class="kw">in</span> <span class="ident">blocks</span>
+        .<span class="ident">iter</span>()
+        .<span class="ident">enumerate</span>()
+        .<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span>(<span class="ident">b</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">reachable_blocks</span>[<span class="ident">b</span>])
+    {
+        <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">outgoing_edges</span>(<span class="ident">source</span>) {
+            <span class="kw">let</span> <span class="ident">dest_idx</span> <span class="op">=</span> <span class="ident">label_to_index</span>(<span class="ident">blocks</span>, <span class="ident">dest_id</span>);
             <span class="ident">result</span>[<span class="ident">dest_idx</span>].<span class="ident">push</span>(<span class="ident">source_idx</span>);
         }
     }
@@ -554,7 +587,8 @@
 <span class="comment">// Paper: A Simple, Fast Dominance Algorithm</span>
 <span class="comment">// https://www.cs.rice.edu/~keith/EMBED/dom.pdf</span>
 <span class="comment">// Note: requires nodes in reverse postorder</span>
-<span class="kw">fn</span> <span class="ident">compute_idom</span>(<span class="ident">preds</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+<span class="comment">// If a result is None, that means the block is unreachable, and therefore has no idom.</span>
+<span class="kw">fn</span> <span class="ident">compute_idom</span>(<span class="ident">preds</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>], <span class="ident">reachable_blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">bool</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">intersect</span>(<span class="ident">doms</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">finger1</span>: <span class="ident">usize</span>, <span class="kw-2">mut</span> <span class="ident">finger2</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="comment">// TODO: This may return an optional result?</span>
         <span class="kw">while</span> <span class="ident">finger1</span> <span class="op">!</span><span class="op">=</span> <span class="ident">finger2</span> {
@@ -575,7 +609,8 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">changed</span> <span class="op">=</span> <span class="bool-val">true</span>;
     <span class="kw">while</span> <span class="ident">changed</span> {
         <span class="ident">changed</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="number">1</span>..(<span class="ident">preds</span>.<span class="ident">len</span>()) {
+        <span class="comment">// Unreachable blocks have no preds, and therefore no idom</span>
+        <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> (<span class="number">1</span>..(<span class="ident">preds</span>.<span class="ident">len</span>())).<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">i</span><span class="op">|</span> <span class="ident">reachable_blocks</span>[<span class="ident">i</span>]) {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_idom</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">pred</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">preds</span>[<span class="ident">node</span>] {
                 <span class="kw">if</span> <span class="ident">idom</span>[<span class="ident">pred</span>].<span class="ident">is_some</span>() {
@@ -591,20 +626,25 @@
             }
         }
     }
-    <span class="ident">idom</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">unwrap</span>()).<span class="ident">collect</span>()
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">idom</span>
+        .<span class="ident">iter</span>()
+        .<span class="ident">enumerate</span>()
+        .<span class="ident">all</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">x</span>)<span class="op">|</span> <span class="ident">x</span>.<span class="ident">is_some</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">reachable_blocks</span>[<span class="ident">i</span>]));
+    <span class="ident">idom</span>
 }
 
 <span class="comment">// Same paper as above</span>
-<span class="kw">fn</span> <span class="ident">compute_dominance_frontier</span>(<span class="ident">preds</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>], <span class="ident">idom</span>: <span class="kw-2">&amp;</span>[<span class="ident">usize</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">compute_dominance_frontier</span>(<span class="ident">preds</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>], <span class="ident">idom</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">preds</span>.<span class="ident">len</span>(), <span class="ident">idom</span>.<span class="ident">len</span>());
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dominance_frontier</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">HashSet</span>::<span class="ident">new</span>(); <span class="ident">preds</span>.<span class="ident">len</span>()];
     <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">preds</span>.<span class="ident">len</span>() {
         <span class="kw">if</span> <span class="ident">preds</span>[<span class="ident">node</span>].<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span> {
+            <span class="kw">let</span> <span class="ident">node_idom</span> <span class="op">=</span> <span class="ident">idom</span>[<span class="ident">node</span>].<span class="ident">unwrap</span>();
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">pred</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">preds</span>[<span class="ident">node</span>] {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runner</span> <span class="op">=</span> <span class="ident">pred</span>;
-                <span class="kw">while</span> <span class="ident">runner</span> <span class="op">!</span><span class="op">=</span> <span class="ident">idom</span>[<span class="ident">node</span>] {
+                <span class="kw">while</span> <span class="ident">runner</span> <span class="op">!</span><span class="op">=</span> <span class="ident">node_idom</span> {
                     <span class="ident">dominance_frontier</span>[<span class="ident">runner</span>].<span class="ident">insert</span>(<span class="ident">node</span>);
-                    <span class="ident">runner</span> <span class="op">=</span> <span class="ident">idom</span>[<span class="ident">runner</span>];
+                    <span class="ident">runner</span> <span class="op">=</span> <span class="ident">idom</span>[<span class="ident">runner</span>].<span class="ident">unwrap</span>();
                 }
             }
         }
@@ -934,13 +974,9 @@
             }
         }
 
-        <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">blocks</span>[<span class="ident">block</span>]) {
+        <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">blocks</span>[<span class="ident">block</span>]).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>() {
             <span class="comment">// TODO: Don&#39;t do this find</span>
-            <span class="kw">let</span> <span class="ident">dest_idx</span> <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">blocks</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">position</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">dest_id</span>)
-                .<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">dest_idx</span> <span class="op">=</span> <span class="ident">label_to_index</span>(<span class="self">self</span>.<span class="ident">blocks</span>, <span class="ident">dest_id</span>);
             <span class="self">self</span>.<span class="ident">rename</span>(<span class="ident">dest_idx</span>, <span class="prelude-val">Some</span>(<span class="ident">block</span>));
         }
 

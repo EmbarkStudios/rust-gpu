@@ -1061,7 +1061,8 @@
 
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">front</span>) <span class="op">=</span> <span class="ident">next</span>.<span class="ident">pop_front</span>() {
             <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span>
+                <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
             <span class="comment">// Make sure we are not looping or going into child loops.</span>
             <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
@@ -1102,8 +1103,7 @@
 <span class="kw">fn</span> <span class="ident">incoming_edges</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Builder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">incoming_edges</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
     <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>) {
-        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>);
-        <span class="kw">if</span> <span class="ident">out</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
+        <span class="kw">if</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>).<span class="ident">any</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">id</span>) {
             <span class="ident">incoming_edges</span>.<span class="ident">push</span>(<span class="ident">block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>());
         }
     }
@@ -1145,8 +1145,8 @@
         <span class="comment">// find all blocks that branch to a merge block.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">possible_intermediate_block_idexes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>).<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>);
-            <span class="kw">if</span> <span class="ident">out</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">out</span>[<span class="number">0</span>] <span class="op">=</span><span class="op">=</span> <span class="ident">loop_info</span>.<span class="ident">merge_id</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>);
+            <span class="kw">if</span> <span class="ident">out</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">loop_info</span>.<span class="ident">merge_id</span>) <span class="op">&amp;&amp;</span> <span class="ident">out</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">None</span> {
                 <span class="ident">possible_intermediate_block_idexes</span>.<span class="ident">push</span>(<span class="ident">i</span>)
             }
         }
@@ -1243,7 +1243,7 @@
     <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>) {
         <span class="kw">let</span> <span class="ident">block_id</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
         <span class="kw">if</span> <span class="ident">ends_in_branch</span>(<span class="ident">block</span>) {
-            <span class="kw">let</span> <span class="ident">edge</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>)[<span class="number">0</span>];
+            <span class="kw">let</span> <span class="ident">edge</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="ident">block</span>).<span class="ident">next</span>().<span class="ident">unwrap</span>();
             <span class="kw">if</span> <span class="ident">edge</span> <span class="op">=</span><span class="op">=</span> <span class="ident">header</span> <span class="op">&amp;&amp;</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>, <span class="ident">header</span>, <span class="ident">block_id</span>) {
                 <span class="ident">continue_blocks</span>.<span class="ident">push</span>(<span class="ident">block_id</span>);
             }
@@ -1274,7 +1274,7 @@
 
     <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">front</span>) <span class="op">=</span> <span class="ident">next</span>.<span class="ident">pop_front</span>() {
         <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
         <span class="comment">// Make sure we are not looping.</span>
         <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
@@ -1309,7 +1309,7 @@
 
 <span class="kw">fn</span> <span class="ident">block_leads_into_continue</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">Builder</span>, <span class="ident">cf_info</span>: <span class="kw-2">&amp;</span><span class="ident">ControlFlowInfo</span>, <span class="ident">start</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="ident">start_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">start</span>);
-    <span class="kw">let</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">start_idx</span>));
+    <span class="kw">let</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">start_idx</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
     <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
         <span class="kw">if</span> <span class="ident">new_edges</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">loop_info</span>.<span class="ident">continue_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">new_edges</span>[<span class="number">0</span>] {
             <span class="kw">return</span> <span class="bool-val">true</span>;
@@ -1338,7 +1338,7 @@
             <span class="kw">continue</span>;
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
         <span class="comment">// Skip loop bodies by jumping to the merge block is we hit a header block.</span>
         <span class="kw">for</span> <span class="ident">loop_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">cf_info</span>.<span class="ident">loops</span> {
@@ -1405,7 +1405,7 @@
 
     <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">front</span>) <span class="op">=</span> <span class="ident">next</span>.<span class="ident">pop_front</span>() {
         <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">processed</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">new_edges</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">id</span>) {
@@ -1442,7 +1442,7 @@
         }
 
         <span class="kw">let</span> <span class="ident">block_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">block_idx</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
         <span class="kw">let</span> <span class="ident">edge_it</span> <span class="op">=</span> <span class="ident">new_edges</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">start</span>); <span class="comment">// Check if the new_edges contain the start</span>
         <span class="kw">if</span> <span class="ident">new_edges</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
@@ -1451,8 +1451,8 @@
                 <span class="kw">let</span> <span class="ident">start_idx</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">front</span>);
                 <span class="kw">let</span> <span class="ident">start_edges</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="macro">get_block_ref</span><span class="macro">!</span>(<span class="ident">builder</span>, <span class="ident">start_idx</span>));
 
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">start_edge</span>) <span class="kw">in</span> <span class="ident">start_edges</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="kw">if</span> <span class="ident">start_edge</span> <span class="op">=</span><span class="op">=</span> <span class="ident">edge_it</span> <span class="op">|</span><span class="op">|</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>, <span class="kw-2">*</span><span class="ident">start_edge</span>, <span class="kw-2">*</span><span class="ident">edge_it</span>) {
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">start_edge</span>) <span class="kw">in</span> <span class="ident">start_edges</span>.<span class="ident">enumerate</span>() {
+                    <span class="kw">if</span> <span class="ident">start_edge</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">edge_it</span> <span class="op">|</span><span class="op">|</span> <span class="ident">block_is_parent_of</span>(<span class="ident">builder</span>, <span class="ident">start_edge</span>, <span class="kw-2">*</span><span class="ident">edge_it</span>) {
                         <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>);
                     }
                 }
@@ -1549,7 +1549,7 @@
         };
 
         <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="ident">id</span>);
-        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>)[<span class="ident">bi</span>]);
+        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>)[<span class="ident">bi</span>]).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">idx_to_id</span>(<span class="ident">builder</span>, <span class="ident">bi</span>);
         <span class="kw">let</span> <span class="ident">a_nexts</span> <span class="op">=</span> <span class="ident">get_possible_merge_positions</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">out</span>[<span class="number">0</span>]);
         <span class="kw">let</span> <span class="ident">b_nexts</span> <span class="op">=</span> <span class="ident">get_possible_merge_positions</span>(<span class="ident">builder</span>, <span class="ident">cf_info</span>, <span class="ident">out</span>[<span class="number">1</span>]);
@@ -1662,7 +1662,7 @@
 
         <span class="kw">let</span> <span class="ident">merge_branch_idx</span> <span class="op">=</span> (<span class="ident">looping_branch_idx</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">%</span> <span class="number">2</span>;
         <span class="kw">let</span> <span class="ident">bi</span> <span class="op">=</span> <span class="ident">find_block_index_from_id</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>);
-        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>)[<span class="ident">bi</span>]);
+        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">outgoing_edges</span>(<span class="kw-2">&amp;</span><span class="ident">get_blocks_ref</span>(<span class="ident">builder</span>)[<span class="ident">bi</span>]).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
         <span class="kw">let</span> <span class="ident">continue_block_id</span> <span class="op">=</span> <span class="ident">eliminate_multiple_continue_blocks</span>(<span class="ident">builder</span>, <span class="ident">id</span>);
         <span class="kw">let</span> <span class="ident">merge_block_id</span> <span class="op">=</span> <span class="ident">out</span>[<span class="ident">merge_branch_idx</span>];
