@@ -123,11 +123,15 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let mut decoration_locations = HashMap::new();
         // Create OpVariables before OpFunction so they're global instead of local vars.
-        let declared_params = arg_abis
+        let interface_globals = arg_abis
             .iter()
             .zip(hir_params)
             .map(|(entry_fn_arg, hir_param)| {
-                self.declare_parameter(entry_fn_arg.layout, hir_param, &mut decoration_locations)
+                self.declare_interface_global_for_param(
+                    entry_fn_arg.layout,
+                    hir_param,
+                    &mut decoration_locations,
+                )
             })
             .collect::<Vec<_>>();
         let len_t = self.type_isize();
@@ -137,7 +141,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .unwrap();
         emit.begin_block(None).unwrap();
         // Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s).
-        let arguments: Vec<_> = declared_params
+        let arguments: Vec<_> = interface_globals
             .iter()
             .zip(arg_abis)
             .zip(hir_params)
@@ -158,7 +162,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             assert_eq!(storage_class, StorageClass::Input);
 
                             // NOTE(eddyb) this should never fail as it has to have
-                            // been already computed earlier by `declare_parameter`.
+                            // been already computed earlier by `declare_interface_global_for_param`.
                             let value_spirv_type =
                                 entry_fn_arg.layout.spirv_type(hir_param.span, self);
 
@@ -183,10 +187,10 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let interface: Vec<_> = if emit.version().unwrap() > (1, 3) {
             // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            declared_params.into_iter().map(|(var, _)| var).collect()
+            interface_globals.into_iter().map(|(var, _)| var).collect()
         } else {
             // SPIR-V <= v1.3 only includes Input and Output in the interface.
-            declared_params
+            interface_globals
                 .into_iter()
                 .filter(|&(_, s)| s == StorageClass::Input || s == StorageClass::Output)
                 .map(|(var, _)| var)
@@ -320,7 +324,7 @@ impl<'tcx> CodegenCx<'tcx> {
         (spirv_ty, storage_class)
     }
 
-    fn declare_parameter(
+    fn declare_interface_global_for_param(
         &self,
         layout: TyAndLayout<'tcx>,
         hir_param: &hir::Param<'tcx>,
