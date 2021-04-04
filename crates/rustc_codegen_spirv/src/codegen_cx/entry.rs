@@ -1,7 +1,7 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::attr::{AggregatedSpirvAttributes, Entry};
-use crate::builder_spirv::SpirvValue;
+use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
@@ -145,35 +145,40 @@ impl<'tcx> CodegenCx<'tcx> {
             .iter()
             .zip(arg_abis)
             .zip(hir_params)
-            .flat_map(|((&(var, storage_class), entry_fn_arg), hir_param)| {
-                let mut dst_len_arg = None;
-                let arg = match entry_fn_arg.layout.ty.kind() {
-                    TyKind::Ref(_, ty, _) => {
-                        if !ty.is_sized(self.tcx.at(span), self.param_env()) {
-                            dst_len_arg.replace(
-                                self.dst_length_argument(&mut emit, ty, hir_param, len_t, var),
-                            );
-                        }
-                        var
-                    }
-                    _ => match entry_fn_arg.mode {
-                        PassMode::Indirect { .. } => var,
-                        PassMode::Direct(_) => {
-                            assert_eq!(storage_class, StorageClass::Input);
+            .flat_map(
+                |((&(global_var, storage_class), entry_fn_arg), hir_param)| {
+                    // FIXME(eddyb) use `Builder` and `SpirvValue` here.
+                    let var = global_var.def_cx(self);
 
-                            // NOTE(eddyb) this should never fail as it has to have
-                            // been already computed earlier by `declare_interface_global_for_param`.
-                            let value_spirv_type =
-                                entry_fn_arg.layout.spirv_type(hir_param.span, self);
-
-                            emit.load(value_spirv_type, None, var, None, std::iter::empty())
-                                .unwrap()
+                    let mut dst_len_arg = None;
+                    let arg = match entry_fn_arg.layout.ty.kind() {
+                        TyKind::Ref(_, ty, _) => {
+                            if !ty.is_sized(self.tcx.at(span), self.param_env()) {
+                                dst_len_arg.replace(
+                                    self.dst_length_argument(&mut emit, ty, hir_param, len_t, var),
+                                );
+                            }
+                            var
                         }
-                        _ => unreachable!(),
-                    },
-                };
-                std::iter::once(arg).chain(dst_len_arg)
-            })
+                        _ => match entry_fn_arg.mode {
+                            PassMode::Indirect { .. } => var,
+                            PassMode::Direct(_) => {
+                                assert_eq!(storage_class, StorageClass::Input);
+
+                                // NOTE(eddyb) this should never fail as it has to have
+                                // been already computed earlier by `declare_interface_global_for_param`.
+                                let value_spirv_type =
+                                    entry_fn_arg.layout.spirv_type(hir_param.span, self);
+
+                                emit.load(value_spirv_type, None, var, None, std::iter::empty())
+                                    .unwrap()
+                            }
+                            _ => unreachable!(),
+                        },
+                    };
+                    std::iter::once(arg).chain(dst_len_arg)
+                },
+            )
             .collect();
         emit.function_call(
             entry_func_return_type,
@@ -187,13 +192,16 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let interface: Vec<_> = if emit.version().unwrap() > (1, 3) {
             // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            interface_globals.into_iter().map(|(var, _)| var).collect()
+            interface_globals
+                .into_iter()
+                .map(|(var, _)| var.def_cx(self))
+                .collect()
         } else {
             // SPIR-V <= v1.3 only includes Input and Output in the interface.
             interface_globals
                 .into_iter()
                 .filter(|&(_, s)| s == StorageClass::Input || s == StorageClass::Output)
-                .map(|(var, _)| var)
+                .map(|(var, _)| var.def_cx(self))
                 .collect()
         };
         emit.entry_point(execution_model, fn_id, name, interface);
@@ -329,7 +337,7 @@ impl<'tcx> CodegenCx<'tcx> {
         layout: TyAndLayout<'tcx>,
         hir_param: &hir::Param<'tcx>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
-    ) -> (Word, StorageClass) {
+    ) -> (SpirvValue, StorageClass) {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
 
         let (value_ty, storage_class) =
@@ -412,7 +420,7 @@ impl<'tcx> CodegenCx<'tcx> {
         self.emit_global()
             .variable(var_spirv_type, Some(variable), storage_class, None);
 
-        (variable, storage_class)
+        (variable.with_type(var_spirv_type), storage_class)
     }
 
     // Kernel mode takes its interface as function parameters(??)
