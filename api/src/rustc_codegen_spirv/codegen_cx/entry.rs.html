@@ -460,17 +460,77 @@
 <span id="457">457</span>
 <span id="458">458</span>
 <span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">attr</span>::{<span class="ident">AggregatedSpirvAttributes</span>, <span class="ident">Entry</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Operand</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Decoration</span>, <span class="ident">ExecutionModel</span>, <span class="ident">FunctionControl</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::<span class="ident">BaseTypeMethods</span>;
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">BuilderMethods</span>};
 <span class="kw">use</span> <span class="ident">rustc_hir</span> <span class="kw">as</span> <span class="ident">hir</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::{<span class="ident">HasParamEnv</span>, <span class="ident">TyAndLayout</span>};
+<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::<span class="ident">TyAndLayout</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::{<span class="ident">Instance</span>, <span class="ident">Ty</span>, <span class="ident">TyKind</span>};
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">Span</span>;
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{
@@ -492,19 +552,23 @@
         <span class="ident">name</span>: <span class="ident">String</span>,
         <span class="ident">entry</span>: <span class="ident">Entry</span>,
     ) {
-        <span class="kw">let</span> <span class="ident">local_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">instance</span>.<span class="ident">def_id</span>().<span class="ident">as_local</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">id</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">tcx</span>
-                    .<span class="ident">sess</span>
-                    .<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Cannot declare {} as an entry point&quot;</span>, <span class="ident">name</span>));
-                <span class="kw">return</span>;
-            }
+        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>());
+        <span class="kw">let</span> <span class="ident">hir_params</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="ident">fn_local_def_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">instance</span>.<span class="ident">def_id</span>().<span class="ident">as_local</span>() {
+                <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">id</span>,
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="self">self</span>.<span class="ident">tcx</span>
+                        .<span class="ident">sess</span>
+                        .<span class="ident">span_err</span>(<span class="ident">span</span>, <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Cannot declare {} as an entry point&quot;</span>, <span class="ident">name</span>));
+                    <span class="kw">return</span>;
+                }
+            };
+            <span class="kw">let</span> <span class="ident">fn_hir_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">local_def_id_to_hir_id</span>(<span class="ident">fn_local_def_id</span>);
+            <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">body</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">body_owned_by</span>(<span class="ident">fn_hir_id</span>));
+            <span class="ident">body</span>.<span class="ident">params</span>
         };
-        <span class="kw">let</span> <span class="ident">fn_hir_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">local_def_id_to_hir_id</span>(<span class="ident">local_id</span>);
-        <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">body</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">body_owned_by</span>(<span class="ident">fn_hir_id</span>));
         <span class="kw">const</span> <span class="ident">EMPTY</span>: <span class="ident">ArgAttribute</span> <span class="op">=</span> <span class="ident">ArgAttribute</span>::<span class="ident">empty</span>();
-        <span class="kw">for</span> (<span class="ident">abi</span>, <span class="ident">arg</span>) <span class="kw">in</span> <span class="ident">fn_abi</span>.<span class="ident">args</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">body</span>.<span class="ident">params</span>) {
+        <span class="kw">for</span> (<span class="ident">abi</span>, <span class="ident">hir_param</span>) <span class="kw">in</span> <span class="ident">fn_abi</span>.<span class="ident">args</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">hir_params</span>) {
             <span class="kw">match</span> <span class="ident">abi</span>.<span class="ident">mode</span> {
                 <span class="ident">PassMode</span>::<span class="ident">Direct</span>(<span class="kw">_</span>)
                 <span class="op">|</span> <span class="ident">PassMode</span>::<span class="ident">Indirect</span> { .. }
@@ -525,7 +589,7 @@
                     },
                 ) <span class="op">=</span><span class="op">&gt;</span> {}
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
-                    <span class="ident">arg</span>.<span class="ident">span</span>,
+                    <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
                     <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;PassMode {:?} invalid for entry point parameter&quot;</span>, <span class="ident">abi</span>.<span class="ident">mode</span>),
                 ),
             }
@@ -533,7 +597,7 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">PassMode</span>::<span class="ident">Ignore</span> <span class="op">=</span> <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">mode</span> {
         } <span class="kw">else</span> {
             <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
-                <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">span</span>(<span class="ident">fn_hir_id</span>),
+                <span class="ident">span</span>,
                 <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                     <span class="string">&quot;PassMode {:?} invalid for entry point return type&quot;</span>,
                     <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">mode</span>
@@ -545,10 +609,10 @@
             <span class="self">self</span>.<span class="ident">kernel_entry_stub</span>(<span class="ident">entry_func</span>, <span class="ident">name</span>, <span class="ident">execution_model</span>)
         } <span class="kw">else</span> {
             <span class="self">self</span>.<span class="ident">shader_entry_stub</span>(
-                <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>()),
+                <span class="ident">span</span>,
                 <span class="ident">entry_func</span>,
                 <span class="kw-2">&amp;</span><span class="ident">fn_abi</span>.<span class="ident">args</span>,
-                <span class="ident">body</span>.<span class="ident">params</span>,
+                <span class="ident">hir_params</span>,
                 <span class="ident">name</span>,
                 <span class="ident">execution_model</span>,
             )
@@ -571,124 +635,136 @@
         <span class="ident">name</span>: <span class="ident">String</span>,
         <span class="ident">execution_model</span>: <span class="ident">ExecutionModel</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-        <span class="kw">let</span> <span class="ident">void</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Void</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="kw">let</span> <span class="ident">fn_void_void</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Function</span> {
-            <span class="ident">return_type</span>: <span class="ident">void</span>,
-            <span class="ident">arguments</span>: <span class="macro">vec</span><span class="macro">!</span>[],
-        }
-        .<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="kw">let</span> <span class="ident">entry_func_return_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">entry_func</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Function</span> { <span class="ident">return_type</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">return_type</span>,
-            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
-                <span class="string">&quot;Invalid entry_stub type: {}&quot;</span>,
-                <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">entry_func</span>.<span class="ident">ty</span>, <span class="self">self</span>)
-            )),
+        <span class="kw">let</span> <span class="ident">stub_fn</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="ident">void</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Void</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
+            <span class="kw">let</span> <span class="ident">fn_void_void</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Function</span> {
+                <span class="ident">return_type</span>: <span class="ident">void</span>,
+                <span class="ident">arguments</span>: <span class="macro">vec</span><span class="macro">!</span>[],
+            }
+            .<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit_global</span>();
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">emit</span>
+                .<span class="ident">begin_function</span>(<span class="ident">void</span>, <span class="prelude-val">None</span>, <span class="ident">FunctionControl</span>::<span class="ident">NONE</span>, <span class="ident">fn_void_void</span>)
+                .<span class="ident">unwrap</span>();
+            <span class="ident">emit</span>.<span class="ident">end_function</span>().<span class="ident">unwrap</span>();
+            <span class="ident">id</span>.<span class="ident">with_type</span>(<span class="ident">fn_void_void</span>)
         };
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">decoration_locations</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
-        <span class="comment">// Create OpVariables before OpFunction so they&#39;re global instead of local vars.</span>
-        <span class="kw">let</span> <span class="ident">declared_params</span> <span class="op">=</span> <span class="ident">arg_abis</span>
+        <span class="kw">let</span> <span class="ident">interface_globals</span> <span class="op">=</span> <span class="ident">arg_abis</span>
             .<span class="ident">iter</span>()
             .<span class="ident">zip</span>(<span class="ident">hir_params</span>)
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">entry_fn_arg</span>, <span class="ident">hir_param</span>)<span class="op">|</span> {
-                <span class="self">self</span>.<span class="ident">declare_parameter</span>(<span class="ident">entry_fn_arg</span>.<span class="ident">layout</span>, <span class="ident">hir_param</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">decoration_locations</span>)
+                <span class="self">self</span>.<span class="ident">declare_interface_global_for_param</span>(
+                    <span class="ident">entry_fn_arg</span>.<span class="ident">layout</span>,
+                    <span class="ident">hir_param</span>,
+                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">decoration_locations</span>,
+                )
             })
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="ident">len_t</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_isize</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit_global</span>();
-        <span class="kw">let</span> <span class="ident">fn_id</span> <span class="op">=</span> <span class="ident">emit</span>
-            .<span class="ident">begin_function</span>(<span class="ident">void</span>, <span class="prelude-val">None</span>, <span class="ident">FunctionControl</span>::<span class="ident">NONE</span>, <span class="ident">fn_void_void</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="ident">emit</span>.<span class="ident">begin_block</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
-        <span class="comment">// Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s).</span>
-        <span class="kw">let</span> <span class="ident">arguments</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">declared_params</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bx</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new_block</span>(<span class="self">self</span>, <span class="ident">stub_fn</span>, <span class="string">&quot;&quot;</span>);
+        <span class="comment">// Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s,</span>
+        <span class="comment">// or accessing the sole field of an &quot;interface block&quot; `OpTypeStruct`),</span>
+        <span class="comment">// to match the argument type we have to pass to the Rust entry `fn`.</span>
+        <span class="kw">let</span> <span class="ident">arguments</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">interface_globals</span>
             .<span class="ident">iter</span>()
             .<span class="ident">zip</span>(<span class="ident">arg_abis</span>)
             .<span class="ident">zip</span>(<span class="ident">hir_params</span>)
-            .<span class="ident">flat_map</span>(<span class="op">|</span>((<span class="kw-2">&amp;</span>(<span class="ident">var</span>, <span class="ident">storage_class</span>), <span class="ident">entry_fn_arg</span>), <span class="ident">hir_param</span>)<span class="op">|</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dst_len_arg</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-                <span class="kw">let</span> <span class="ident">arg</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry_fn_arg</span>.<span class="ident">layout</span>.<span class="ident">ty</span>.<span class="ident">kind</span>() {
-                    <span class="ident">TyKind</span>::<span class="ident">Ref</span>(<span class="kw">_</span>, <span class="ident">ty</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">ty</span>.<span class="ident">is_sized</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">at</span>(<span class="ident">span</span>), <span class="self">self</span>.<span class="ident">param_env</span>()) {
-                            <span class="ident">dst_len_arg</span>.<span class="ident">replace</span>(
-                                <span class="self">self</span>.<span class="ident">dst_length_argument</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">emit</span>, <span class="ident">ty</span>, <span class="ident">hir_param</span>, <span class="ident">len_t</span>, <span class="ident">var</span>),
-                            );
+            .<span class="ident">flat_map</span>(
+                <span class="op">|</span>((<span class="kw-2">&amp;</span>(<span class="ident">global_var</span>, <span class="ident">storage_class</span>), <span class="ident">entry_fn_arg</span>), <span class="ident">hir_param</span>)<span class="op">|</span> {
+                    <span class="ident">bx</span>.<span class="ident">set_span</span>(<span class="ident">hir_param</span>.<span class="ident">span</span>);
+
+                    <span class="kw">let</span> <span class="ident">var_value_spirv_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">global_var</span>.<span class="ident">ty</span>) {
+                        <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pointee</span>,
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                    };
+
+                    <span class="kw">let</span> (<span class="ident">first</span>, <span class="ident">second</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry_fn_arg</span>.<span class="ident">layout</span>.<span class="ident">ty</span>.<span class="ident">kind</span>() {
+                        <span class="ident">TyKind</span>::<span class="ident">Ref</span>(<span class="kw">_</span>, <span class="ident">pointee_ty</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">let</span> <span class="ident">arg_pointee_spirv_type</span> <span class="op">=</span> <span class="self">self</span>
+                                .<span class="ident">layout_of</span>(<span class="ident">pointee_ty</span>)
+                                .<span class="ident">spirv_type</span>(<span class="ident">hir_param</span>.<span class="ident">ty_span</span>, <span class="self">self</span>);
+
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">SpirvType</span>::<span class="ident">InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span>
+                                <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">var_value_spirv_type</span>)
+                            {
+                                <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">arg_pointee_spirv_type</span>, <span class="ident">inner_type</span>);
+
+                                <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">bx</span>.<span class="ident">struct_gep</span>(<span class="ident">global_var</span>, <span class="number">0</span>);
+
+                                <span class="kw">match</span> <span class="ident">entry_fn_arg</span>.<span class="ident">mode</span> {
+                                    <span class="ident">PassMode</span>::<span class="ident">Direct</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">inner</span>, <span class="prelude-val">None</span>),
+
+                                    <span class="comment">// Unsized pointee with length (i.e. `&amp;[T]`).</span>
+                                    <span class="ident">PassMode</span>::<span class="ident">Pair</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="comment">// FIXME(eddyb) shouldn&#39;t this be `usize`?</span>
+                                        <span class="kw">let</span> <span class="ident">len_spirv_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_isize</span>();
+
+                                        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">bx</span>
+                                            .<span class="ident">emit</span>()
+                                            .<span class="ident">array_length</span>(
+                                                <span class="ident">len_spirv_type</span>,
+                                                <span class="prelude-val">None</span>,
+                                                <span class="ident">global_var</span>.<span class="ident">def</span>(<span class="kw-2">&amp;</span><span class="ident">bx</span>),
+                                                <span class="number">0</span>,
+                                            )
+                                            .<span class="ident">unwrap</span>()
+                                            .<span class="ident">with_type</span>(<span class="ident">len_spirv_type</span>);
+
+                                        (<span class="ident">inner</span>, <span class="prelude-val">Some</span>(<span class="ident">len</span>))
+                                    }
+
+                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                                }
+                            } <span class="kw">else</span> {
+                                <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">arg_pointee_spirv_type</span>, <span class="ident">var_value_spirv_type</span>);
+                                <span class="macro">assert_matches</span><span class="macro">!</span>(<span class="ident">entry_fn_arg</span>.<span class="ident">mode</span>, <span class="ident">PassMode</span>::<span class="ident">Direct</span>(<span class="kw">_</span>));
+                                (<span class="ident">global_var</span>, <span class="prelude-val">None</span>)
+                            }
                         }
-                        <span class="ident">var</span>
-                    }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">entry_fn_arg</span>.<span class="ident">mode</span> {
-                        <span class="ident">PassMode</span>::<span class="ident">Indirect</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">var</span>,
-                        <span class="ident">PassMode</span>::<span class="ident">Direct</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">storage_class</span>, <span class="ident">StorageClass</span>::<span class="ident">Input</span>);
 
-                            <span class="comment">// NOTE(eddyb) this should never fail as it has to have</span>
-                            <span class="comment">// been already computed earlier by `declare_parameter`.</span>
-                            <span class="kw">let</span> <span class="ident">value_spirv_type</span> <span class="op">=</span>
-                                <span class="ident">entry_fn_arg</span>.<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="ident">hir_param</span>.<span class="ident">span</span>, <span class="self">self</span>);
+                            <span class="kw">let</span> <span class="ident">arg_spirv_type</span> <span class="op">=</span>
+                                <span class="ident">entry_fn_arg</span>.<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="ident">hir_param</span>.<span class="ident">ty_span</span>, <span class="self">self</span>);
 
-                            <span class="ident">emit</span>.<span class="ident">load</span>(<span class="ident">value_spirv_type</span>, <span class="prelude-val">None</span>, <span class="ident">var</span>, <span class="prelude-val">None</span>, <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">empty</span>())
-                                .<span class="ident">unwrap</span>()
+                            <span class="macro">assert_ty_eq</span><span class="macro">!</span>(<span class="self">self</span>, <span class="ident">arg_spirv_type</span>, <span class="ident">var_value_spirv_type</span>);
+
+                            <span class="kw">match</span> <span class="ident">entry_fn_arg</span>.<span class="ident">mode</span> {
+                                <span class="ident">PassMode</span>::<span class="ident">Indirect</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">global_var</span>, <span class="prelude-val">None</span>),
+                                <span class="ident">PassMode</span>::<span class="ident">Direct</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    (<span class="ident">bx</span>.<span class="ident">load</span>(<span class="ident">global_var</span>, <span class="ident">entry_fn_arg</span>.<span class="ident">layout</span>.<span class="ident">align</span>.<span class="ident">abi</span>), <span class="prelude-val">None</span>)
+                                }
+                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                            }
                         }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
-                    },
-                };
-                <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">arg</span>).<span class="ident">chain</span>(<span class="ident">dst_len_arg</span>)
-            })
+                    };
+                    <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">first</span>).<span class="ident">chain</span>(<span class="ident">second</span>)
+                },
+            )
             .<span class="ident">collect</span>();
-        <span class="ident">emit</span>.<span class="ident">function_call</span>(
-            <span class="ident">entry_func_return_type</span>,
-            <span class="prelude-val">None</span>,
-            <span class="ident">entry_func</span>.<span class="ident">def_cx</span>(<span class="self">self</span>),
-            <span class="ident">arguments</span>,
-        )
-        .<span class="ident">unwrap</span>();
-        <span class="ident">emit</span>.<span class="ident">ret</span>().<span class="ident">unwrap</span>();
-        <span class="ident">emit</span>.<span class="ident">end_function</span>().<span class="ident">unwrap</span>();
+        <span class="ident">bx</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
+        <span class="ident">bx</span>.<span class="ident">call</span>(<span class="ident">entry_func</span>, <span class="kw-2">&amp;</span><span class="ident">arguments</span>, <span class="prelude-val">None</span>);
+        <span class="ident">bx</span>.<span class="ident">ret_void</span>();
 
-        <span class="kw">let</span> <span class="ident">interface</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">emit</span>.<span class="ident">version</span>().<span class="ident">unwrap</span>() <span class="op">&gt;</span> (<span class="number">1</span>, <span class="number">3</span>) {
+        <span class="kw">let</span> <span class="ident">interface</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">emit_global</span>().<span class="ident">version</span>().<span class="ident">unwrap</span>() <span class="op">&gt;</span> (<span class="number">1</span>, <span class="number">3</span>) {
             <span class="comment">// SPIR-V &gt;= v1.4 includes all OpVariables in the interface.</span>
-            <span class="ident">declared_params</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">var</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">var</span>).<span class="ident">collect</span>()
+            <span class="ident">interface_globals</span>
+                .<span class="ident">into_iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">var</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">var</span>.<span class="ident">def_cx</span>(<span class="self">self</span>))
+                .<span class="ident">collect</span>()
         } <span class="kw">else</span> {
             <span class="comment">// SPIR-V &lt;= v1.3 only includes Input and Output in the interface.</span>
-            <span class="ident">declared_params</span>
+            <span class="ident">interface_globals</span>
                 .<span class="ident">into_iter</span>()
                 .<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="ident">s</span>)<span class="op">|</span> <span class="ident">s</span> <span class="op">=</span><span class="op">=</span> <span class="ident">StorageClass</span>::<span class="ident">Input</span> <span class="op">|</span><span class="op">|</span> <span class="ident">s</span> <span class="op">=</span><span class="op">=</span> <span class="ident">StorageClass</span>::<span class="ident">Output</span>)
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">var</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">var</span>)
+                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">var</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">var</span>.<span class="ident">def_cx</span>(<span class="self">self</span>))
                 .<span class="ident">collect</span>()
         };
-        <span class="ident">emit</span>.<span class="ident">entry_point</span>(<span class="ident">execution_model</span>, <span class="ident">fn_id</span>, <span class="ident">name</span>, <span class="ident">interface</span>);
-        <span class="ident">fn_id</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">dst_length_argument</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">emit</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Builder</span><span class="op">&gt;</span>,
-        <span class="ident">ty</span>: <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="ident">hir_param</span>: <span class="kw-2">&amp;</span><span class="ident">hir</span>::<span class="ident">Param</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="ident">len_t</span>: <span class="ident">Word</span>,
-        <span class="ident">var</span>: <span class="ident">Word</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-        <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">kind</span>() {
-            <span class="ident">TyKind</span>::<span class="ident">Adt</span>(<span class="ident">adt_def</span>, <span class="ident">substs</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> (<span class="ident">member_idx</span>, <span class="ident">field_def</span>) <span class="op">=</span> <span class="ident">adt_def</span>.<span class="ident">all_fields</span>().<span class="ident">enumerate</span>().<span class="ident">last</span>().<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">field_ty</span> <span class="op">=</span> <span class="ident">field_def</span>.<span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">substs</span>);
-                <span class="kw">if</span> <span class="op">!</span><span class="macro">matches</span><span class="macro">!</span>(<span class="ident">field_ty</span>.<span class="ident">kind</span>(), <span class="ident">TyKind</span>::<span class="ident">Slice</span>(..)) {
-                    <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_fatal</span>(
-                        <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
-                        <span class="string">&quot;DST parameters are currently restricted to a reference to a struct whose last field is a slice.&quot;</span>,
-                    )
-                }
-                <span class="ident">emit</span>.<span class="ident">array_length</span>(<span class="ident">len_t</span>, <span class="prelude-val">None</span>, <span class="ident">var</span>, <span class="ident">member_idx</span> <span class="kw">as</span> <span class="ident">u32</span>)
-                    .<span class="ident">unwrap</span>()
-            }
-            <span class="ident">TyKind</span>::<span class="ident">Slice</span>(..) <span class="op">|</span> <span class="ident">TyKind</span>::<span class="ident">Str</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_fatal</span>(
-                <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
-                <span class="string">&quot;Straight slices are not yet supported, wrap the slice in a newtype.&quot;</span>,
-            ),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
-                .<span class="ident">tcx</span>
-                .<span class="ident">sess</span>
-                .<span class="ident">span_fatal</span>(<span class="ident">hir_param</span>.<span class="ident">ty_span</span>, <span class="string">&quot;Unsupported parameter type.&quot;</span>),
-        }
+        <span class="kw">let</span> <span class="ident">stub_fn_id</span> <span class="op">=</span> <span class="ident">stub_fn</span>.<span class="ident">def_cx</span>(<span class="self">self</span>);
+        <span class="self">self</span>.<span class="ident">emit_global</span>()
+            .<span class="ident">entry_point</span>(<span class="ident">execution_model</span>, <span class="ident">stub_fn_id</span>, <span class="ident">name</span>, <span class="ident">interface</span>);
+        <span class="ident">stub_fn_id</span>
     }
 
     <span class="kw">fn</span> <span class="ident">infer_param_ty_and_storage_class</span>(
@@ -706,7 +782,7 @@
             <span class="ident">TyKind</span>::<span class="ident">Ref</span>(<span class="kw">_</span>, <span class="ident">pointee_ty</span>, <span class="ident">mutbl</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">pointee_ty</span>, <span class="ident">mutbl</span>, <span class="bool-val">true</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">layout</span>.<span class="ident">ty</span>, <span class="ident">hir</span>::<span class="ident">Mutability</span>::<span class="ident">Not</span>, <span class="bool-val">false</span>),
         };
-        <span class="kw">let</span> <span class="ident">spirv_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">value_ty</span>).<span class="ident">spirv_type</span>(<span class="ident">hir_param</span>.<span class="ident">span</span>, <span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">spirv_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">value_ty</span>).<span class="ident">spirv_type</span>(<span class="ident">hir_param</span>.<span class="ident">ty_span</span>, <span class="self">self</span>);
         <span class="comment">// Some types automatically specify a storage class. Compute that here.</span>
         <span class="kw">let</span> <span class="ident">inferred_storage_class_from_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">spirv_ty</span>) {
             <span class="ident">SpirvType</span>::<span class="ident">Image</span> { .. } <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Sampler</span> <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
@@ -729,7 +805,7 @@
 
             <span class="kw">if</span> <span class="op">!</span><span class="ident">is_ref</span> {
                 <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_fatal</span>(
-                    <span class="ident">hir_param</span>.<span class="ident">span</span>,
+                    <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
                     <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                         <span class="string">&quot;invalid entry param type `{}` for storage class `{:?}` \
                          (expected `&amp;{}T`)&quot;</span>,
@@ -748,16 +824,21 @@
                 <span class="prelude-val">Some</span>(<span class="ident">inferred</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                     .<span class="ident">tcx</span>
                     .<span class="ident">sess</span>
-                    .<span class="ident">struct_span_err</span>(
-                        <span class="ident">hir_param</span>.<span class="ident">span</span>,
-                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
-                            <span class="string">&quot;storage class {:?} was inferred from type, but {:?} was specified in attribute&quot;</span>,
-                            <span class="ident">inferred</span>, <span class="ident">storage_class</span>
-                        ),
-                    )
-                    .<span class="ident">span_note</span>(
+                    .<span class="ident">struct_span_err</span>(<span class="ident">hir_param</span>.<span class="ident">span</span>, <span class="string">&quot;storage class mismatch&quot;</span>)
+                    .<span class="ident">span_label</span>(
                         <span class="ident">storage_class_attr</span>.<span class="ident">span</span>,
-                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;remove storage class attribute to use {:?} as storage class&quot;</span>, <span class="ident">inferred</span>),
+                        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?} specified in attribute&quot;</span>, <span class="ident">storage_class</span>),
+                    )
+                    .<span class="ident">span_label</span>(
+                        <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
+                        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?} inferred from type&quot;</span>, <span class="ident">inferred</span>),
+                    )
+                    .<span class="ident">span_help</span>(
+                        <span class="ident">storage_class_attr</span>.<span class="ident">span</span>,
+                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                            <span class="string">&quot;remove storage class attribute to use {:?} as storage class&quot;</span>,
+                            <span class="ident">inferred</span>
+                        ),
                     )
                     .<span class="ident">emit</span>(),
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (),
@@ -772,7 +853,7 @@
                 (<span class="bool-val">false</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">StorageClass</span>::<span class="ident">Input</span>,
                 (<span class="bool-val">true</span>, <span class="ident">hir</span>::<span class="ident">Mutability</span>::<span class="ident">Mut</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">StorageClass</span>::<span class="ident">Output</span>,
                 (<span class="bool-val">true</span>, <span class="ident">hir</span>::<span class="ident">Mutability</span>::<span class="ident">Not</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_fatal</span>(
-                    <span class="ident">hir_param</span>.<span class="ident">span</span>,
+                    <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
                     <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                         <span class="string">&quot;invalid entry param type `{}` (expected `{}` or `&amp;mut {1}`)&quot;</span>,
                         <span class="ident">layout</span>.<span class="ident">ty</span>, <span class="ident">value_ty</span>
@@ -783,15 +864,15 @@
         (<span class="ident">spirv_ty</span>, <span class="ident">storage_class</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">declare_parameter</span>(
+    <span class="kw">fn</span> <span class="ident">declare_interface_global_for_param</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">layout</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
         <span class="ident">hir_param</span>: <span class="kw-2">&amp;</span><span class="ident">hir</span>::<span class="ident">Param</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
         <span class="ident">decoration_locations</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">StorageClass</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Word</span>, <span class="ident">StorageClass</span>) {
+    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">SpirvValue</span>, <span class="ident">StorageClass</span>) {
         <span class="kw">let</span> <span class="ident">attrs</span> <span class="op">=</span> <span class="ident">AggregatedSpirvAttributes</span>::<span class="ident">parse</span>(<span class="self">self</span>, <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">attrs</span>(<span class="ident">hir_param</span>.<span class="ident">hir_id</span>));
 
-        <span class="kw">let</span> (<span class="ident">value_ty</span>, <span class="ident">storage_class</span>) <span class="op">=</span>
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">value_spirv_type</span>, <span class="ident">storage_class</span>) <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">infer_param_ty_and_storage_class</span>(<span class="ident">layout</span>, <span class="ident">hir_param</span>, <span class="kw-2">&amp;</span><span class="ident">attrs</span>);
 
         <span class="comment">// Pre-allocate the module-scoped `OpVariable`&#39;s *Result* ID.</span>
@@ -841,6 +922,40 @@
             }
         }
 
+        <span class="comment">// Certain storage classes require an `OpTypeStruct` decorated with `Block`,</span>
+        <span class="comment">// which we represent with `SpirvType::InterfaceBlock` (see its doc comment).</span>
+        <span class="comment">// This &quot;interface block&quot; construct is also required for &quot;runtime arrays&quot;.</span>
+        <span class="kw">let</span> <span class="ident">is_unsized</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">value_spirv_type</span>).<span class="ident">sizeof</span>(<span class="self">self</span>).<span class="ident">is_none</span>();
+        <span class="kw">match</span> <span class="ident">storage_class</span> {
+            <span class="ident">StorageClass</span>::<span class="ident">PushConstant</span> <span class="op">|</span> <span class="ident">StorageClass</span>::<span class="ident">Uniform</span> <span class="op">|</span> <span class="ident">StorageClass</span>::<span class="ident">StorageBuffer</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">is_unsized</span> {
+                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">value_spirv_type</span>) {
+                        <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                            <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
+                            <span class="string">&quot;only plain slices are supported as unsized types&quot;</span>,
+                        ),
+                    }
+                }
+
+                <span class="ident">value_spirv_type</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">InterfaceBlock</span> {
+                    <span class="ident">inner_type</span>: <span class="ident">value_spirv_type</span>,
+                }
+                .<span class="ident">def</span>(<span class="ident">hir_param</span>.<span class="ident">span</span>, <span class="self">self</span>);
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">is_unsized</span> {
+                    <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_fatal</span>(
+                        <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
+                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                            <span class="string">&quot;unsized types are not supported for storage class {:?}&quot;</span>,
+                            <span class="ident">storage_class</span>
+                        ),
+                    );
+                }
+            }
+        }
+
         <span class="comment">// FIXME(eddyb) check whether the storage class is compatible with the</span>
         <span class="comment">// specific shader stage of this entry-point, and any decorations</span>
         <span class="comment">// (e.g. Vulkan has specific rules for builtin storage classes).</span>
@@ -867,11 +982,14 @@
         }
 
         <span class="comment">// Emit the `OpVariable` with its *Result* ID set to `variable`.</span>
-        <span class="kw">let</span> <span class="ident">var_spirv_type</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>: <span class="ident">value_ty</span> }.<span class="ident">def</span>(<span class="ident">hir_param</span>.<span class="ident">span</span>, <span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">var_spirv_type</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
+            <span class="ident">pointee</span>: <span class="ident">value_spirv_type</span>,
+        }
+        .<span class="ident">def</span>(<span class="ident">hir_param</span>.<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">emit_global</span>()
             .<span class="ident">variable</span>(<span class="ident">var_spirv_type</span>, <span class="prelude-val">Some</span>(<span class="ident">variable</span>), <span class="ident">storage_class</span>, <span class="prelude-val">None</span>);
 
-        (<span class="ident">variable</span>, <span class="ident">storage_class</span>)
+        (<span class="ident">variable</span>.<span class="ident">with_type</span>(<span class="ident">var_spirv_type</span>), <span class="ident">storage_class</span>)
     }
 
     <span class="comment">// Kernel mode takes its interface as function parameters(??)</span>

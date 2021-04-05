@@ -235,6 +235,7 @@
 <span id="232">232</span>
 <span id="233">233</span>
 <span id="234">234</span>
+<span id="235">235</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -387,7 +388,6 @@
             <span class="ident">field_types</span>: <span class="ident">els</span>.<span class="ident">to_vec</span>(),
             <span class="ident">field_offsets</span>,
             <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
-            <span class="ident">is_block</span>: <span class="bool-val">false</span>,
         }
         .<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>)
     }
@@ -405,16 +405,18 @@
                     .<span class="ident">sess</span>
                     .<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Invalid float width in type_kind: {}&quot;</span>, <span class="ident">other</span>)),
             },
-            <span class="ident">SpirvType</span>::<span class="ident">Adt</span> { .. } <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Opaque</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TypeKind</span>::<span class="ident">Struct</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Adt</span> { .. } <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Opaque</span> { .. } <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">InterfaceBlock</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TypeKind</span>::<span class="ident">Struct</span>
+            }
             <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TypeKind</span>::<span class="ident">Vector</span>,
             <span class="ident">SpirvType</span>::<span class="ident">Array</span> { .. } <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TypeKind</span>::<span class="ident">Array</span>,
             <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TypeKind</span>::<span class="ident">Pointer</span>,
             <span class="ident">SpirvType</span>::<span class="ident">Function</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TypeKind</span>::<span class="ident">Function</span>,
             <span class="comment">// HACK(eddyb) this is probably the closest `TypeKind` (which is still</span>
             <span class="comment">// very much LLVM-specific, sadly) has to offer to &quot;resource handle&quot;.</span>
-            <span class="ident">SpirvType</span>::<span class="ident">Image</span> { .. } <span class="op">|</span>
-            <span class="ident">SpirvType</span>::<span class="ident">Sampler</span> <span class="op">|</span>
-            <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TypeKind</span>::<span class="ident">Token</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">Image</span> { .. } <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Sampler</span> <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TypeKind</span>::<span class="ident">Token</span>
+            }
         }
     }
     <span class="kw">fn</span> <span class="ident">type_ptr_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="self">Self</span>::<span class="ident">Type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Type</span> {

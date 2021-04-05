@@ -2171,6 +2171,12 @@
 <span id="2168">2168</span>
 <span id="2169">2169</span>
 <span id="2170">2170</span>
+<span id="2171">2171</span>
+<span id="2172">2172</span>
+<span id="2173">2173</span>
+<span id="2174">2174</span>
+<span id="2175">2175</span>
+<span id="2176">2176</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
@@ -2406,6 +2412,7 @@
             <span class="ident">SpirvType</span>::<span class="ident">Image</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;cannot memset image&quot;</span>),
             <span class="ident">SpirvType</span>::<span class="ident">Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;cannot memset sampler&quot;</span>),
             <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;cannot memset sampled image&quot;</span>),
+            <span class="ident">SpirvType</span>::<span class="ident">InterfaceBlock</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;cannot memset interface block&quot;</span>),
         }
     }
 
@@ -2462,6 +2469,7 @@
             <span class="ident">SpirvType</span>::<span class="ident">Image</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;cannot memset image&quot;</span>),
             <span class="ident">SpirvType</span>::<span class="ident">Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;cannot memset sampler&quot;</span>),
             <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;cannot memset sampled image&quot;</span>),
+            <span class="ident">SpirvType</span>::<span class="ident">InterfaceBlock</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;cannot memset interface block&quot;</span>),
         }
     }
 
@@ -3215,6 +3223,10 @@
             <span class="ident">SpirvType</span>::<span class="ident">Array</span> { <span class="ident">element</span>, .. }
             <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span>, .. }
             <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">element</span>,
+            <span class="ident">SpirvType</span>::<span class="ident">InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">idx</span>, <span class="number">0</span>);
+                <span class="ident">inner_type</span>
+            }
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;struct_gep not on struct, array, or vector type: {:?}, index {}&quot;</span>,
                 <span class="ident">other</span>, <span class="ident">idx</span>
