@@ -1,11 +1,12 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::attr::{AggregatedSpirvAttributes, Entry};
+use crate::builder::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
-use rustc_codegen_ssa::traits::BaseTypeMethods;
+use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 use rustc_hir as hir;
 use rustc_middle::ty::layout::{HasParamEnv, TyAndLayout};
 use rustc_middle::ty::{Instance, Ty, TyKind};
@@ -108,21 +109,22 @@ impl<'tcx> CodegenCx<'tcx> {
         name: String,
         execution_model: ExecutionModel,
     ) -> Word {
-        let void = SpirvType::Void.def(span, self);
-        let fn_void_void = SpirvType::Function {
-            return_type: void,
-            arguments: vec![],
-        }
-        .def(span, self);
-        let entry_func_return_type = match self.lookup_type(entry_func.ty) {
-            SpirvType::Function { return_type, .. } => return_type,
-            other => self.tcx.sess.fatal(&format!(
-                "Invalid entry_stub type: {}",
-                other.debug(entry_func.ty, self)
-            )),
+        let stub_fn = {
+            let void = SpirvType::Void.def(span, self);
+            let fn_void_void = SpirvType::Function {
+                return_type: void,
+                arguments: vec![],
+            }
+            .def(span, self);
+            let mut emit = self.emit_global();
+            let id = emit
+                .begin_function(void, None, FunctionControl::NONE, fn_void_void)
+                .unwrap();
+            emit.end_function().unwrap();
+            id.with_type(fn_void_void)
         };
+
         let mut decoration_locations = HashMap::new();
-        // Create OpVariables before OpFunction so they're global instead of local vars.
         let interface_globals = arg_abis
             .iter()
             .zip(hir_params)
@@ -134,12 +136,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 )
             })
             .collect::<Vec<_>>();
-        let len_t = self.type_isize();
-        let mut emit = self.emit_global();
-        let fn_id = emit
-            .begin_function(void, None, FunctionControl::NONE, fn_void_void)
-            .unwrap();
-        emit.begin_block(None).unwrap();
+        let mut bx = Builder::new_block(self, stub_fn, "");
         // Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s).
         let arguments: Vec<_> = interface_globals
             .iter()
@@ -147,31 +144,23 @@ impl<'tcx> CodegenCx<'tcx> {
             .zip(hir_params)
             .flat_map(
                 |((&(global_var, storage_class), entry_fn_arg), hir_param)| {
-                    // FIXME(eddyb) use `Builder` and `SpirvValue` here.
-                    let var = global_var.def_cx(self);
+                    bx.set_span(hir_param.span);
 
                     let mut dst_len_arg = None;
                     let arg = match entry_fn_arg.layout.ty.kind() {
                         TyKind::Ref(_, ty, _) => {
                             if !ty.is_sized(self.tcx.at(span), self.param_env()) {
                                 dst_len_arg.replace(
-                                    self.dst_length_argument(&mut emit, ty, hir_param, len_t, var),
+                                    self.dst_length_argument(&mut bx, ty, hir_param, global_var),
                                 );
                             }
-                            var
+                            global_var
                         }
                         _ => match entry_fn_arg.mode {
-                            PassMode::Indirect { .. } => var,
+                            PassMode::Indirect { .. } => global_var,
                             PassMode::Direct(_) => {
                                 assert_eq!(storage_class, StorageClass::Input);
-
-                                // NOTE(eddyb) this should never fail as it has to have
-                                // been already computed earlier by `declare_interface_global_for_param`.
-                                let value_spirv_type =
-                                    entry_fn_arg.layout.spirv_type(hir_param.span, self);
-
-                                emit.load(value_spirv_type, None, var, None, std::iter::empty())
-                                    .unwrap()
+                                bx.load(global_var, entry_fn_arg.layout.align.abi)
                             }
                             _ => unreachable!(),
                         },
@@ -180,17 +169,11 @@ impl<'tcx> CodegenCx<'tcx> {
                 },
             )
             .collect();
-        emit.function_call(
-            entry_func_return_type,
-            None,
-            entry_func.def_cx(self),
-            arguments,
-        )
-        .unwrap();
-        emit.ret().unwrap();
-        emit.end_function().unwrap();
+        bx.set_span(span);
+        bx.call(entry_func, &arguments, None);
+        bx.ret_void();
 
-        let interface: Vec<_> = if emit.version().unwrap() > (1, 3) {
+        let interface: Vec<_> = if self.emit_global().version().unwrap() > (1, 3) {
             // SPIR-V >= v1.4 includes all OpVariables in the interface.
             interface_globals
                 .into_iter()
@@ -204,18 +187,19 @@ impl<'tcx> CodegenCx<'tcx> {
                 .map(|(var, _)| var.def_cx(self))
                 .collect()
         };
-        emit.entry_point(execution_model, fn_id, name, interface);
-        fn_id
+        let stub_fn_id = stub_fn.def_cx(self);
+        self.emit_global()
+            .entry_point(execution_model, stub_fn_id, name, interface);
+        stub_fn_id
     }
 
     fn dst_length_argument(
         &self,
-        emit: &mut std::cell::RefMut<'_, rspirv::dr::Builder>,
+        bx: &mut Builder<'_, 'tcx>,
         ty: Ty<'tcx>,
         hir_param: &hir::Param<'tcx>,
-        len_t: Word,
-        var: Word,
-    ) -> Word {
+        global_var: SpirvValue,
+    ) -> SpirvValue {
         match ty.kind() {
             TyKind::Adt(adt_def, substs) => {
                 let (member_idx, field_def) = adt_def.all_fields().enumerate().last().unwrap();
@@ -226,8 +210,12 @@ impl<'tcx> CodegenCx<'tcx> {
                         "DST parameters are currently restricted to a reference to a struct whose last field is a slice.",
                     )
                 }
-                emit.array_length(len_t, None, var, member_idx as u32)
+                // FIXME(eddyb) shouldn't this be `usize`?
+                let len_t = self.type_isize();
+                bx.emit()
+                    .array_length(len_t, None, global_var.def(bx), member_idx as u32)
                     .unwrap()
+                    .with_type(len_t)
             }
             TyKind::Slice(..) | TyKind::Str => self.tcx.sess.span_fatal(
                 hir_param.ty_span,
