@@ -400,7 +400,15 @@ impl<'tcx> CodegenCx<'tcx> {
                 Decoration::Location,
                 std::iter::once(Operand::LiteralInt32(*location)),
             );
-            *location += 1;
+            // Arrays take up multiple locations
+            *location +=
+                if let SpirvType::Array { count, .. } = self.lookup_type(var_spirv_type_pointee) {
+                    self.builder
+                        .lookup_const_u64(count)
+                        .expect("Array type has invalid count value") as u32
+                } else {
+                    1
+                }
         }
 
         // Emit the `OpVariable` with its *Result* ID set to `variable`.
