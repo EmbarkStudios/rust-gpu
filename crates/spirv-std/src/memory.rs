@@ -21,6 +21,7 @@ pub enum Scope {
     QueueFamily = 5,
 }
 
+// FIXME(eddyb) use `bitflags!` for this.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Semantics {
     /// No memory semantics.
