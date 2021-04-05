@@ -8,7 +8,7 @@ use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 use rustc_hir as hir;
-use rustc_middle::ty::layout::{HasParamEnv, TyAndLayout};
+use rustc_middle::ty::layout::TyAndLayout;
 use rustc_middle::ty::{Instance, Ty, TyKind};
 use rustc_span::Span;
 use rustc_target::abi::{
@@ -141,7 +141,8 @@ impl<'tcx> CodegenCx<'tcx> {
             })
             .collect::<Vec<_>>();
         let mut bx = Builder::new_block(self, stub_fn, "");
-        // Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s),
+        // Adjust any global `OpVariable`s as needed (e.g. loading from `Input`s,
+        // or accessing the sole field of an "interface block" `OpTypeStruct`),
         // to match the argument type we have to pass to the Rust entry `fn`.
         let arguments: Vec<_> = interface_globals
             .iter()
@@ -156,21 +157,48 @@ impl<'tcx> CodegenCx<'tcx> {
                         _ => unreachable!(),
                     };
 
-                    let mut dst_len_arg = None;
-                    let arg = match entry_fn_arg.layout.ty.kind() {
+                    let (first, second) = match entry_fn_arg.layout.ty.kind() {
                         TyKind::Ref(_, pointee_ty, _) => {
                             let arg_pointee_spirv_type = self
                                 .layout_of(pointee_ty)
                                 .spirv_type(hir_param.ty_span, self);
 
-                            assert_ty_eq!(self, arg_pointee_spirv_type, var_value_spirv_type);
+                            if let SpirvType::InterfaceBlock { inner_type } =
+                                self.lookup_type(var_value_spirv_type)
+                            {
+                                assert_ty_eq!(self, arg_pointee_spirv_type, inner_type);
 
-                            if !pointee_ty.is_sized(self.tcx.at(span), self.param_env()) {
-                                dst_len_arg.replace(self.dst_length_argument(
-                                    &mut bx, pointee_ty, hir_param, global_var,
-                                ));
+                                let inner = bx.struct_gep(global_var, 0);
+
+                                match entry_fn_arg.mode {
+                                    PassMode::Direct(_) => (inner, None),
+
+                                    // Unsized pointee with length (i.e. `&[T]`).
+                                    PassMode::Pair(..) => {
+                                        // FIXME(eddyb) shouldn't this be `usize`?
+                                        let len_spirv_type = self.type_isize();
+
+                                        let len = bx
+                                            .emit()
+                                            .array_length(
+                                                len_spirv_type,
+                                                None,
+                                                global_var.def(&bx),
+                                                0,
+                                            )
+                                            .unwrap()
+                                            .with_type(len_spirv_type);
+
+                                        (inner, Some(len))
+                                    }
+
+                                    _ => unreachable!(),
+                                }
+                            } else {
+                                assert_ty_eq!(self, arg_pointee_spirv_type, var_value_spirv_type);
+                                assert_matches!(entry_fn_arg.mode, PassMode::Direct(_));
+                                (global_var, None)
                             }
-                            global_var
                         }
                         _ => {
                             assert_eq!(storage_class, StorageClass::Input);
@@ -181,15 +209,15 @@ impl<'tcx> CodegenCx<'tcx> {
                             assert_ty_eq!(self, arg_spirv_type, var_value_spirv_type);
 
                             match entry_fn_arg.mode {
-                                PassMode::Indirect { .. } => global_var,
+                                PassMode::Indirect { .. } => (global_var, None),
                                 PassMode::Direct(_) => {
-                                    bx.load(global_var, entry_fn_arg.layout.align.abi)
+                                    (bx.load(global_var, entry_fn_arg.layout.align.abi), None)
                                 }
                                 _ => unreachable!(),
                             }
                         }
                     };
-                    std::iter::once(arg).chain(dst_len_arg)
+                    std::iter::once(first).chain(second)
                 },
             )
             .collect();
@@ -215,41 +243,6 @@ impl<'tcx> CodegenCx<'tcx> {
         self.emit_global()
             .entry_point(execution_model, stub_fn_id, name, interface);
         stub_fn_id
-    }
-
-    fn dst_length_argument(
-        &self,
-        bx: &mut Builder<'_, 'tcx>,
-        ty: Ty<'tcx>,
-        hir_param: &hir::Param<'tcx>,
-        global_var: SpirvValue,
-    ) -> SpirvValue {
-        match ty.kind() {
-            TyKind::Adt(adt_def, substs) => {
-                let (member_idx, field_def) = adt_def.all_fields().enumerate().last().unwrap();
-                let field_ty = field_def.ty(self.tcx, substs);
-                if !matches!(field_ty.kind(), TyKind::Slice(..)) {
-                    self.tcx.sess.span_fatal(
-                        hir_param.ty_span,
-                        "DST parameters are currently restricted to a reference to a struct whose last field is a slice.",
-                    )
-                }
-                // FIXME(eddyb) shouldn't this be `usize`?
-                let len_t = self.type_isize();
-                bx.emit()
-                    .array_length(len_t, None, global_var.def(bx), member_idx as u32)
-                    .unwrap()
-                    .with_type(len_t)
-            }
-            TyKind::Slice(..) | TyKind::Str => self.tcx.sess.span_fatal(
-                hir_param.ty_span,
-                "Straight slices are not yet supported, wrap the slice in a newtype.",
-            ),
-            _ => self
-                .tcx
-                .sess
-                .span_fatal(hir_param.ty_span, "Unsupported parameter type."),
-        }
     }
 
     fn infer_param_ty_and_storage_class(
@@ -357,7 +350,7 @@ impl<'tcx> CodegenCx<'tcx> {
     ) -> (SpirvValue, StorageClass) {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
 
-        let (value_ty, storage_class) =
+        let (mut value_spirv_type, storage_class) =
             self.infer_param_ty_and_storage_class(layout, hir_param, &attrs);
 
         // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
@@ -407,6 +400,40 @@ impl<'tcx> CodegenCx<'tcx> {
             }
         }
 
+        // Certain storage classes require an `OpTypeStruct` decorated with `Block`,
+        // which we represent with `SpirvType::InterfaceBlock` (see its doc comment).
+        // This "interface block" construct is also required for "runtime arrays".
+        let is_unsized = self.lookup_type(value_spirv_type).sizeof(self).is_none();
+        match storage_class {
+            StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer => {
+                if is_unsized {
+                    match self.lookup_type(value_spirv_type) {
+                        SpirvType::RuntimeArray { .. } => {}
+                        _ => self.tcx.sess.span_err(
+                            hir_param.ty_span,
+                            "only plain slices are supported as unsized types",
+                        ),
+                    }
+                }
+
+                value_spirv_type = SpirvType::InterfaceBlock {
+                    inner_type: value_spirv_type,
+                }
+                .def(hir_param.span, self);
+            }
+            _ => {
+                if is_unsized {
+                    self.tcx.sess.span_fatal(
+                        hir_param.ty_span,
+                        &format!(
+                            "unsized types are not supported for storage class {:?}",
+                            storage_class
+                        ),
+                    );
+                }
+            }
+        }
+
         // FIXME(eddyb) check whether the storage class is compatible with the
         // specific shader stage of this entry-point, and any decorations
         // (e.g. Vulkan has specific rules for builtin storage classes).
@@ -433,7 +460,10 @@ impl<'tcx> CodegenCx<'tcx> {
         }
 
         // Emit the `OpVariable` with its *Result* ID set to `variable`.
-        let var_spirv_type = SpirvType::Pointer { pointee: value_ty }.def(hir_param.span, self);
+        let var_spirv_type = SpirvType::Pointer {
+            pointee: value_spirv_type,
+        }
+        .def(hir_param.span, self);
         self.emit_global()
             .variable(var_spirv_type, Some(variable), storage_class, None);
 

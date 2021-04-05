@@ -461,44 +461,39 @@ fn index_user_dst() {
         r#"
 #[spirv(fragment)]
 pub fn main(
-    #[spirv(uniform, descriptor_set = 0, binding = 0)] slice: &SliceF32,
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] slice: &mut [f32],
 ) {
-    let float: f32 = slice.rta[0];
+    let float: f32 = slice[0];
     let _ = float;
-}
-
-pub struct SliceF32 {
-    rta: [f32],
 }
         "#,
         "main",
         r#"%1 = OpFunction %2 None %3
 %4 = OpLabel
-%5 = OpArrayLength %6 %7 0
-%8 = OpCompositeInsert %9 %7 %10 0
-%11 = OpCompositeInsert %9 %5 %8 1
-%12 = OpAccessChain %13 %7 %14
-%15 = OpULessThan %16 %14 %5
+%5 = OpAccessChain %6 %7 %8
+%9 = OpArrayLength %10 %7 0
+%11 = OpCompositeInsert %12 %5 %13 0
+%14 = OpCompositeInsert %12 %9 %11 1
+%15 = OpULessThan %16 %8 %9
 OpSelectionMerge %17 None
 OpBranchConditional %15 %18 %19
 %18 = OpLabel
-%20 = OpAccessChain %13 %7 %14
-%21 = OpInBoundsAccessChain %22 %20 %14
-%23 = OpLoad %24 %21
+%20 = OpInBoundsAccessChain %21 %5 %8
+%22 = OpLoad %23 %20
 OpReturn
 %19 = OpLabel
+OpBranch %24
+%24 = OpLabel
 OpBranch %25
 %25 = OpLabel
-OpBranch %26
-%26 = OpLabel
-%27 = OpPhi %16 %28 %25 %28 %29
-OpLoopMerge %30 %29 None
-OpBranchConditional %27 %31 %30
-%31 = OpLabel
-OpBranch %29
-%29 = OpLabel
-OpBranch %26
+%26 = OpPhi %16 %27 %24 %27 %28
+OpLoopMerge %29 %28 None
+OpBranchConditional %26 %30 %29
 %30 = OpLabel
+OpBranch %28
+%28 = OpLabel
+OpBranch %25
+%29 = OpLabel
 OpUnreachable
 %17 = OpLabel
 OpUnreachable
