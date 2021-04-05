@@ -95,9 +95,8 @@ extern crate rustc_target;
 
 macro_rules! assert_ty_eq {
     ($codegen_cx:expr, $left:expr, $right:expr) => {
-        assert_eq!(
-            $left,
-            $right,
+        assert!(
+            $left == $right,
             "Expected types to be equal:\n{}\n==\n{}",
             $codegen_cx.debug_type($left),
             $codegen_cx.debug_type($right)
