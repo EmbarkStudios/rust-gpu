@@ -232,6 +232,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Image { .. } => self.fatal("cannot memset image"),
             SpirvType::Sampler => self.fatal("cannot memset sampler"),
             SpirvType::SampledImage { .. } => self.fatal("cannot memset sampled image"),
+            SpirvType::InterfaceBlock { .. } => self.fatal("cannot memset interface block"),
         }
     }
 
@@ -288,6 +289,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Image { .. } => self.fatal("cannot memset image"),
             SpirvType::Sampler => self.fatal("cannot memset sampler"),
             SpirvType::SampledImage { .. } => self.fatal("cannot memset sampled image"),
+            SpirvType::InterfaceBlock { .. } => self.fatal("cannot memset interface block"),
         }
     }
 
@@ -1041,6 +1043,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Array { element, .. }
             | SpirvType::RuntimeArray { element, .. }
             | SpirvType::Vector { element, .. } => element,
+            SpirvType::InterfaceBlock { inner_type } => {
+                assert_eq!(idx, 0);
+                inner_type
+            }
             other => self.fatal(&format!(
                 "struct_gep not on struct, array, or vector type: {:?}, index {}",
                 other, idx

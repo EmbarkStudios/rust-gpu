@@ -367,6 +367,16 @@ impl CheckSpirvAttrVisitor<'_> {
                 },
             }
         }
+
+        // At this point we have all of the attributes (valid for this target),
+        // so we can perform further checks, emit warnings, etc.
+
+        if let Some(block_attr) = aggregated_attrs.block {
+            self.tcx.sess.span_warn(
+                block_attr.span,
+                "#[spirv(block)] is no longer needed and should be removed",
+            );
+        }
     }
 }
 

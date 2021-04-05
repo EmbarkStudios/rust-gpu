@@ -68,24 +68,6 @@ fn main(
 
 Both descriptor_set and binding take an integer argument that specifies the uniform's index.
 
-## Block
-
-This attribute is a temporary quick fix before we implement a more fully-featured binding model. If you get validation errors about missing a Block decoration on a struct due to being used as uniform block data, try adding this attribute to the struct definition. If you get errors around the struct definition not being an aggregate, but rather the type of the field, try adding `#[repr(C)]` to the struct definition.
-
-Example:
-
-```rust
-#[spirv(block)]
-struct Thing {
-    a: Vec4,
-    b: Vec4,
-    c: Vec4,
-}
-
-#[spirv(fragment)]
-fn main(#[spirv(push_constant)] obj: &ShaderConstants) { }
-```
-
 ## Flat
 
 The flat attribute corresponds to the flat keyword in glsl - in other words, the data is not interpolated across the triangle when invoking the fragment shader.

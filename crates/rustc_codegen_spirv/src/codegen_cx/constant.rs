@@ -180,7 +180,6 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             field_types,
             field_offsets,
             field_names: None,
-            is_block: false,
         }
         .def(DUMMY_SP, self);
         self.constant_composite(struct_ty, elts.iter().map(|f| f.def_cx(self)).collect())
@@ -524,6 +523,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 .tcx
                 .sess
                 .fatal("Cannot create a constant sampled image value"),
+            SpirvType::InterfaceBlock { .. } => self
+                .tcx
+                .sess
+                .fatal("Cannot create a constant interface block value"),
         }
     }
 }

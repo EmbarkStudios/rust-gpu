@@ -1,15 +1,6 @@
 //! Ported to Rust from <https://github.com/Tw1ddle/Sky-Shader/blob/master/src/shaders/glsl/sky.fragment>
 
-#![cfg_attr(
-    target_arch = "spirv",
-    no_std,
-    feature(register_attr, lang_items),
-    register_attr(spirv)
-)]
-
-#[cfg(not(target_arch = "spirv"))]
-#[macro_use]
-pub extern crate spirv_std_macros;
+#![cfg_attr(target_arch = "spirv", no_std, feature(lang_items))]
 
 use core::f32::consts::PI;
 use glam::{vec3, Vec3};
@@ -21,7 +12,6 @@ pub use glam;
 #[cfg(target_arch = "spirv")]
 use spirv_std::num_traits::Float;
 
-#[spirv(block)]
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ShaderConstants {
