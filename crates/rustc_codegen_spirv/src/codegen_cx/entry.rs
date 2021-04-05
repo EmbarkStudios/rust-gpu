@@ -30,19 +30,23 @@ impl<'tcx> CodegenCx<'tcx> {
         name: String,
         entry: Entry,
     ) {
-        let local_id = match instance.def_id().as_local() {
-            Some(id) => id,
-            None => {
-                self.tcx
-                    .sess
-                    .err(&format!("Cannot declare {} as an entry point", name));
-                return;
-            }
+        let span = self.tcx.def_span(instance.def_id());
+        let hir_params = {
+            let fn_local_def_id = match instance.def_id().as_local() {
+                Some(id) => id,
+                None => {
+                    self.tcx
+                        .sess
+                        .span_err(span, &format!("Cannot declare {} as an entry point", name));
+                    return;
+                }
+            };
+            let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(fn_local_def_id);
+            let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
+            body.params
         };
-        let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(local_id);
-        let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
         const EMPTY: ArgAttribute = ArgAttribute::empty();
-        for (abi, arg) in fn_abi.args.iter().zip(body.params) {
+        for (abi, hir_param) in fn_abi.args.iter().zip(hir_params) {
             match abi.mode {
                 PassMode::Direct(_)
                 | PassMode::Indirect { .. }
@@ -63,7 +67,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     },
                 ) => {}
                 _ => self.tcx.sess.span_err(
-                    arg.span,
+                    hir_param.ty_span,
                     &format!("PassMode {:?} invalid for entry point parameter", abi.mode),
                 ),
             }
@@ -71,7 +75,7 @@ impl<'tcx> CodegenCx<'tcx> {
         if let PassMode::Ignore = fn_abi.ret.mode {
         } else {
             self.tcx.sess.span_err(
-                self.tcx.hir().span(fn_hir_id),
+                span,
                 &format!(
                     "PassMode {:?} invalid for entry point return type",
                     fn_abi.ret.mode
@@ -83,10 +87,10 @@ impl<'tcx> CodegenCx<'tcx> {
             self.kernel_entry_stub(entry_func, name, execution_model)
         } else {
             self.shader_entry_stub(
-                self.tcx.def_span(instance.def_id()),
+                span,
                 entry_func,
                 &fn_abi.args,
-                body.params,
+                hir_params,
                 name,
                 execution_model,
             )
@@ -155,8 +159,9 @@ impl<'tcx> CodegenCx<'tcx> {
                     let mut dst_len_arg = None;
                     let arg = match entry_fn_arg.layout.ty.kind() {
                         TyKind::Ref(_, pointee_ty, _) => {
-                            let arg_pointee_spirv_type =
-                                self.layout_of(pointee_ty).spirv_type(hir_param.span, self);
+                            let arg_pointee_spirv_type = self
+                                .layout_of(pointee_ty)
+                                .spirv_type(hir_param.ty_span, self);
 
                             assert_ty_eq!(self, arg_pointee_spirv_type, var_value_spirv_type);
 
@@ -171,7 +176,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             assert_eq!(storage_class, StorageClass::Input);
 
                             let arg_spirv_type =
-                                entry_fn_arg.layout.spirv_type(hir_param.span, self);
+                                entry_fn_arg.layout.spirv_type(hir_param.ty_span, self);
 
                             assert_ty_eq!(self, arg_spirv_type, var_value_spirv_type);
 
@@ -262,7 +267,7 @@ impl<'tcx> CodegenCx<'tcx> {
             TyKind::Ref(_, pointee_ty, mutbl) => (pointee_ty, mutbl, true),
             _ => (layout.ty, hir::Mutability::Not, false),
         };
-        let spirv_ty = self.layout_of(value_ty).spirv_type(hir_param.span, self);
+        let spirv_ty = self.layout_of(value_ty).spirv_type(hir_param.ty_span, self);
         // Some types automatically specify a storage class. Compute that here.
         let inferred_storage_class_from_ty = match self.lookup_type(spirv_ty) {
             SpirvType::Image { .. } | SpirvType::Sampler | SpirvType::SampledImage { .. } => {
@@ -285,7 +290,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
             if !is_ref {
                 self.tcx.sess.span_fatal(
-                    hir_param.span,
+                    hir_param.ty_span,
                     &format!(
                         "invalid entry param type `{}` for storage class `{:?}` \
                          (expected `&{}T`)",
@@ -304,16 +309,21 @@ impl<'tcx> CodegenCx<'tcx> {
                 Some(inferred) => self
                     .tcx
                     .sess
-                    .struct_span_err(
-                        hir_param.span,
-                        &format!(
-                            "storage class {:?} was inferred from type, but {:?} was specified in attribute",
-                            inferred, storage_class
-                        ),
-                    )
-                    .span_note(
+                    .struct_span_err(hir_param.span, "storage class mismatch")
+                    .span_label(
                         storage_class_attr.span,
-                        &format!("remove storage class attribute to use {:?} as storage class", inferred),
+                        format!("{:?} specified in attribute", storage_class),
+                    )
+                    .span_label(
+                        hir_param.ty_span,
+                        format!("{:?} inferred from type", inferred),
+                    )
+                    .span_help(
+                        storage_class_attr.span,
+                        &format!(
+                            "remove storage class attribute to use {:?} as storage class",
+                            inferred
+                        ),
                     )
                     .emit(),
                 None => (),
@@ -328,7 +338,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 (false, _) => StorageClass::Input,
                 (true, hir::Mutability::Mut) => StorageClass::Output,
                 (true, hir::Mutability::Not) => self.tcx.sess.span_fatal(
-                    hir_param.span,
+                    hir_param.ty_span,
                     &format!(
                         "invalid entry param type `{}` (expected `{}` or `&mut {1}`)",
                         layout.ty, value_ty
