@@ -505,3 +505,43 @@ OpUnreachable
 OpFunctionEnd"#,
     )
 }
+
+#[test]
+fn array_locations() {
+    dis_globals(
+        r#"
+#[allow(unused_variables)]
+#[spirv(fragment(entry_point_name="array_locations"))]
+pub fn main(one: [f32; 7], two: [f32; 3], three: f32) { }
+"#,
+        r#"OpCapability Shader
+OpCapability VulkanMemoryModel
+OpCapability VariablePointers
+OpExtension "SPV_KHR_vulkan_memory_model"
+OpMemoryModel Logical Vulkan
+OpEntryPoint Fragment %1 "array_locations" %2 %3 %4
+OpExecutionMode %1 OriginUpperLeft
+OpName %2 "one"
+OpName %3 "two"
+OpName %4 "three"
+OpDecorate %5 ArrayStride 4
+OpDecorate %6 ArrayStride 4
+OpDecorate %2 Location 0
+OpDecorate %3 Location 7
+OpDecorate %4 Location 10
+%7 = OpTypeVoid
+%8 = OpTypeFloat 32
+%9 = OpTypeInt 32 0
+%10 = OpConstant %9 7
+%5 = OpTypeArray %8 %10
+%11 = OpTypePointer Input %5
+%12 = OpConstant %9 3
+%6 = OpTypeArray %8 %12
+%13 = OpTypePointer Input %6
+%14 = OpTypeFunction %7
+%2 = OpVariable %11 Input
+%3 = OpVariable %13 Input
+%15 = OpTypePointer Input %8
+%4 = OpVariable %15 Input"#,
+    );
+}
