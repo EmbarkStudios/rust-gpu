@@ -457,7 +457,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 std::iter::once(Operand::LiteralInt32(*location)),
             );
             // Arrays take up multiple locations
-            *location += if let SpirvType::Array { count, .. } = self.lookup_type(value_ty) {
+            *location += if let SpirvType::Array { count, .. } = self.lookup_type(value_spirv_type) {
                 self.builder
                     .lookup_const_u64(count)
                     .expect("Array type has invalid count value") as u32
