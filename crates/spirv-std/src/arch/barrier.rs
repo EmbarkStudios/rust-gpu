@@ -65,13 +65,14 @@ pub unsafe fn control_barrier<
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpMemoryBarrier")]
 #[inline]
-pub unsafe fn memory_barrier<const MEMORY: Scope, const SEMANTICS: Semantics>() {
+// FIXME(eddyb) use a `bitflags!` `Semantics` for `SEMANTICS`.
+pub unsafe fn memory_barrier<const MEMORY: Scope, const SEMANTICS: u32>() {
     asm! {
         "%u32 = OpTypeInt 32 0",
         "%memory = OpConstant %u32 {memory}",
         "%semantics = OpConstant %u32 {semantics}",
         "OpMemoryBarrier %memory %semantics",
         memory = const MEMORY as u8,
-        semantics = const SEMANTICS as u8,
+        semantics = const SEMANTICS,
     }
 }

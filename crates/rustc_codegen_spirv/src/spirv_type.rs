@@ -41,7 +41,6 @@ pub enum SpirvType {
         field_types: Vec<Word>,
         field_offsets: Vec<Size>,
         field_names: Option<Vec<String>>,
-        is_block: bool,
     },
     Opaque {
         name: String,
@@ -79,6 +78,12 @@ pub enum SpirvType {
     Sampler,
     SampledImage {
         image_type: Word,
+    },
+
+    /// `OpTypeStruct` decorated with `Block`, required by Vulkan (and OpenGL)
+    /// for `PushConstant`, `Uniform` and `StorageBuffer` interface variables.
+    InterfaceBlock {
+        inner_type: Word,
     },
 }
 
@@ -136,7 +141,6 @@ impl SpirvType {
                 ref field_types,
                 ref field_offsets,
                 ref field_names,
-                is_block,
             } => {
                 let mut emit = cx.emit_global();
                 // Ensure a unique struct is emitted each time, due to possibly having different OpMemberDecorates
@@ -160,9 +164,6 @@ impl SpirvType {
                     for (index, field_name) in field_names.iter().enumerate() {
                         emit.member_name(result, index as u32, field_name);
                     }
-                }
-                if is_block {
-                    emit.decorate(result, Decoration::Block, iter::empty());
                 }
                 result
             }
@@ -248,6 +249,20 @@ impl SpirvType {
             ),
             Self::Sampler => cx.emit_global().type_sampler(),
             Self::SampledImage { image_type } => cx.emit_global().type_sampled_image(image_type),
+
+            Self::InterfaceBlock { inner_type } => {
+                let mut emit = cx.emit_global();
+                let id = emit.id();
+                let result = emit.type_struct_id(Some(id), iter::once(inner_type));
+                emit.decorate(result, Decoration::Block, iter::empty());
+                emit.member_decorate(
+                    result,
+                    0,
+                    Decoration::Offset,
+                    [Operand::LiteralInt32(0)].iter().cloned(),
+                );
+                result
+            }
         };
         cx.type_cache.def(result, self);
         result
@@ -333,6 +348,8 @@ impl SpirvType {
             }
             Self::Pointer { .. } => cx.tcx.data_layout.pointer_size,
             Self::Image { .. } | Self::Sampler | Self::SampledImage { .. } => Size::from_bytes(4),
+
+            Self::InterfaceBlock { inner_type } => cx.lookup_type(inner_type).sizeof(cx)?,
         };
         Some(result)
     }
@@ -361,6 +378,8 @@ impl SpirvType {
             Self::Image { .. } | Self::Sampler | Self::SampledImage { .. } => {
                 Align::from_bytes(4).unwrap()
             }
+
+            Self::InterfaceBlock { inner_type } => cx.lookup_type(inner_type).alignof(cx),
         }
     }
 }
@@ -407,7 +426,6 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 ref field_types,
                 ref field_offsets,
                 ref field_names,
-                is_block,
             } => {
                 let fields = field_types
                     .iter()
@@ -421,7 +439,6 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                     .field("field_types", &fields)
                     .field("field_offsets", field_offsets)
                     .field("field_names", field_names)
-                    .field("is_block", &is_block)
                     .finish()
             }
             SpirvType::Opaque { ref name } => f
@@ -499,6 +516,12 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("id", &self.id)
                 .field("image_type", &self.cx.debug_type(image_type))
                 .finish(),
+
+            SpirvType::InterfaceBlock { inner_type } => f
+                .debug_struct("SampledImage")
+                .field("id", &self.id)
+                .field("inner_type", &self.cx.debug_type(inner_type))
+                .finish(),
         };
         {
             let mut debug_stack = DEBUG_STACK.lock().unwrap();
@@ -551,12 +574,7 @@ impl SpirvTypePrinter<'_, '_> {
                 ref field_types,
                 field_offsets: _,
                 ref field_names,
-                is_block,
             } => {
-                if is_block {
-                    write!(f, "#[spirv(block)] ")?;
-                }
-
                 write!(f, "struct")?;
 
                 // HACK(eddyb) use the first name (in insertion order, i.e.
@@ -575,8 +593,7 @@ impl SpirvTypePrinter<'_, '_> {
                     write!(f, " {}", name)?;
                 }
 
-                write!(f, " {{ ")?;
-
+                f.write_str(" { ")?;
                 for (index, &field) in field_types.iter().enumerate() {
                     let suffix = if index + 1 == field_types.len() {
                         ""
@@ -654,6 +671,12 @@ impl SpirvTypePrinter<'_, '_> {
                 .debug_struct("SampledImage")
                 .field("image_type", &self.cx.debug_type(image_type))
                 .finish(),
+
+            SpirvType::InterfaceBlock { inner_type } => {
+                f.write_str("interface block { ")?;
+                ty(self.cx, stack, f, inner_type)?;
+                f.write_str(" }")
+            }
         }
     }
 }
