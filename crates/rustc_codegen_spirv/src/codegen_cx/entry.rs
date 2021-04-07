@@ -343,16 +343,58 @@ impl<'tcx> CodegenCx<'tcx> {
     ) -> (SpirvValue, StorageClass) {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
 
-        let (mut value_spirv_type, storage_class) =
-            self.infer_param_ty_and_storage_class(layout, hir_param, &attrs);
-
         // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
         let variable = self.emit_global().id();
 
+        let (mut value_spirv_type, storage_class) =
+            self.infer_param_ty_and_storage_class(layout, hir_param, &attrs);
+
+        // Certain storage classes require an `OpTypeStruct` decorated with `Block`,
+        // which we represent with `SpirvType::InterfaceBlock` (see its doc comment).
+        // This "interface block" construct is also required for "runtime arrays".
+        let is_unsized = self.lookup_type(value_spirv_type).sizeof(self).is_none();
+        match storage_class {
+            StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer => {
+                if is_unsized {
+                    match self.lookup_type(value_spirv_type) {
+                        SpirvType::RuntimeArray { .. } => {}
+                        _ => self.tcx.sess.span_err(
+                            hir_param.ty_span,
+                            "only plain slices are supported as unsized types",
+                        ),
+                    }
+                }
+
+                value_spirv_type = SpirvType::InterfaceBlock {
+                    inner_type: value_spirv_type,
+                }
+                .def(hir_param.span, self);
+            }
+            _ => {
+                if is_unsized {
+                    self.tcx.sess.span_fatal(
+                        hir_param.ty_span,
+                        &format!(
+                            "unsized types are not supported for storage class {:?}",
+                            storage_class
+                        ),
+                    );
+                }
+            }
+        }
+
+        // FIXME(eddyb) check whether the storage class is compatible with the
+        // specific shader stage of this entry-point, and any decorations
+        // (e.g. Vulkan has specific rules for builtin storage classes).
+
+        // Emit `OpName` in the simple case of a pattern that's just a variable
+        // name (e.g. "foo" for `foo: Vec3`). While `OpName` is *not* suppposed
+        // to be semantic, OpenGL and some tooling rely on it for reflection.
         if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
             self.emit_global().name(variable, ident.to_string());
         }
 
+        // Emit `OpDecorate`s based on attributes.
         let mut decoration_supersedes_location = false;
         if let Some(builtin) = attrs.builtin.map(|attr| attr.value) {
             self.emit_global().decorate(
@@ -392,44 +434,6 @@ impl<'tcx> CodegenCx<'tcx> {
                 );
             }
         }
-
-        // Certain storage classes require an `OpTypeStruct` decorated with `Block`,
-        // which we represent with `SpirvType::InterfaceBlock` (see its doc comment).
-        // This "interface block" construct is also required for "runtime arrays".
-        let is_unsized = self.lookup_type(value_spirv_type).sizeof(self).is_none();
-        match storage_class {
-            StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer => {
-                if is_unsized {
-                    match self.lookup_type(value_spirv_type) {
-                        SpirvType::RuntimeArray { .. } => {}
-                        _ => self.tcx.sess.span_err(
-                            hir_param.ty_span,
-                            "only plain slices are supported as unsized types",
-                        ),
-                    }
-                }
-
-                value_spirv_type = SpirvType::InterfaceBlock {
-                    inner_type: value_spirv_type,
-                }
-                .def(hir_param.span, self);
-            }
-            _ => {
-                if is_unsized {
-                    self.tcx.sess.span_fatal(
-                        hir_param.ty_span,
-                        &format!(
-                            "unsized types are not supported for storage class {:?}",
-                            storage_class
-                        ),
-                    );
-                }
-            }
-        }
-
-        // FIXME(eddyb) check whether the storage class is compatible with the
-        // specific shader stage of this entry-point, and any decorations
-        // (e.g. Vulkan has specific rules for builtin storage classes).
 
         // Assign locations from left to right, incrementing each storage class
         // individually.
