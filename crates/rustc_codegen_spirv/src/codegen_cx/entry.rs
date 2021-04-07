@@ -344,7 +344,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
 
         // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
-        let variable = self.emit_global().id();
+        let var = self.emit_global().id();
 
         let (mut value_spirv_type, storage_class) =
             self.infer_param_ty_and_storage_class(layout, hir_param, &attrs);
@@ -391,14 +391,14 @@ impl<'tcx> CodegenCx<'tcx> {
         // name (e.g. "foo" for `foo: Vec3`). While `OpName` is *not* suppposed
         // to be semantic, OpenGL and some tooling rely on it for reflection.
         if let hir::PatKind::Binding(_, _, ident, _) = &hir_param.pat.kind {
-            self.emit_global().name(variable, ident.to_string());
+            self.emit_global().name(var, ident.to_string());
         }
 
         // Emit `OpDecorate`s based on attributes.
         let mut decoration_supersedes_location = false;
         if let Some(builtin) = attrs.builtin.map(|attr| attr.value) {
             self.emit_global().decorate(
-                variable,
+                var,
                 Decoration::BuiltIn,
                 std::iter::once(Operand::BuiltIn(builtin)),
             );
@@ -406,7 +406,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         if let Some(index) = attrs.descriptor_set.map(|attr| attr.value) {
             self.emit_global().decorate(
-                variable,
+                var,
                 Decoration::DescriptorSet,
                 std::iter::once(Operand::LiteralInt32(index)),
             );
@@ -414,7 +414,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         if let Some(index) = attrs.binding.map(|attr| attr.value) {
             self.emit_global().decorate(
-                variable,
+                var,
                 Decoration::Binding,
                 std::iter::once(Operand::LiteralInt32(index)),
             );
@@ -422,11 +422,11 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         if attrs.flat.is_some() {
             self.emit_global()
-                .decorate(variable, Decoration::Flat, std::iter::empty());
+                .decorate(var, Decoration::Flat, std::iter::empty());
         }
         if let Some(invariant) = attrs.invariant {
             self.emit_global()
-                .decorate(variable, Decoration::Invariant, std::iter::empty());
+                .decorate(var, Decoration::Invariant, std::iter::empty());
             if storage_class != StorageClass::Output {
                 self.tcx.sess.span_err(
                     invariant.span,
@@ -449,34 +449,34 @@ impl<'tcx> CodegenCx<'tcx> {
                 .entry(storage_class)
                 .or_insert_with(|| 0);
             self.emit_global().decorate(
-                variable,
+                var,
                 Decoration::Location,
                 std::iter::once(Operand::LiteralInt32(*location)),
             );
             *location += 1;
         }
 
-        // Emit the `OpVariable` with its *Result* ID set to `variable`.
+        // Emit the `OpVariable` with its *Result* ID set to `var`.
         let var_spirv_type = SpirvType::Pointer {
             pointee: value_spirv_type,
         }
         .def(hir_param.span, self);
         self.emit_global()
-            .variable(var_spirv_type, Some(variable), storage_class, None);
+            .variable(var_spirv_type, Some(var), storage_class, None);
 
         // Record this `OpVariable` as needing to be added (if applicable),
         // to the *Interface* operands of the `OpEntryPoint` instruction.
         if self.emit_global().version().unwrap() > (1, 3) {
             // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            op_entry_point_interface_operands.push(variable);
+            op_entry_point_interface_operands.push(var);
         } else {
             // SPIR-V <= v1.3 only includes Input and Output in the interface.
             if storage_class == StorageClass::Input || storage_class == StorageClass::Output {
-                op_entry_point_interface_operands.push(variable);
+                op_entry_point_interface_operands.push(var);
             }
         }
 
-        (variable.with_type(var_spirv_type), storage_class)
+        (var.with_type(var_spirv_type), storage_class)
     }
 
     // Kernel mode takes its interface as function parameters(??)
