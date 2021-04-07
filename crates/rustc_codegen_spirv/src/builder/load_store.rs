@@ -26,12 +26,29 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Adt {
                 ref field_types,
                 ref field_offsets,
+                ref field_names,
                 ..
             } => {
                 for (element_idx, (ty, offset)) in
                     field_types.iter().zip(field_offsets.iter()).enumerate()
                 {
                     let load_res = self.extract_value(val, element_idx as u64);
+
+                    if offset.bytes() as u32 % 4 != 0 {
+                        let adt_name = self.type_cache.lookup_name(val.ty);
+                        let field_name = if let Some(field_names) = field_names {
+                            &field_names[element_idx]
+                        } else {
+                            "<unknown>"
+                        };
+
+                        self.fatal(&format!(
+                            "Trying to store to unaligned field: `{}::{}`. Field must be aligned to multiple of 4 bytes, but has offset {}",
+                            adt_name,
+                            field_name,
+                            offset.bytes() as u32));
+                    }
+
                     let offset = offset.bytes() as u32 / 4;
 
                     self.recurse_adt_for_stores(
@@ -84,10 +101,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 );
             }
             _ => {
-                bug!(
-                    "codegen_internal_buffer_store doesn't support this type: {:?}",
-                    val
+                let mut err = self.tcx.sess.struct_err(
+                    "Type unsupported for `codegen_internal_buffer_store` return / args:",
                 );
+                err.note(&format!("type `{:?}`", val));
+                err.emit();
             }
         }
     }
@@ -104,29 +122,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let val_def = val.def(self);
 
         match (bits, signed) {
-            (16, _) => {
-                bug!("16 bit integer stores are currently un-tested");
-                // jb-todo: if we have two 16-bit types, adjacent we should bit-or them together into one u32
-
-                let (ushort_ty, ushort_data) = if signed {
-                    // bitcast from i16 into a u16 first, then proceed
-                    let ushort_ty = SpirvType::Integer(16, false).def(rustc_span::DUMMY_SP, self);
-
-                    let bitcast_res = self.emit().bitcast(ushort_ty, None, val_def).unwrap();
-
-                    (ushort_ty, bitcast_res)
-                } else {
-                    (val.ty, val_def)
-                };
-
-                let up_casted = self
-                    .emit()
-                    .u_convert(uint_ty, None, ushort_data)
-                    .unwrap()
-                    .with_type(uint_ty);
-
-                uint_values_and_offsets.push((base_offset, up_casted));
-            }
             (32, false) => uint_values_and_offsets.push((base_offset, val)),
             (32, true) => {
                 // need a bitcast to go from signed to unsigned
@@ -171,11 +166,15 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .with_type(uint_ty);
                 uint_values_and_offsets.push((base_offset + 1, upper));
             }
-            _ => bug!(
-                "codegen_internal_buffer_store doesn't support integers of {}-bits signed: {}",
-                bits,
-                signed
-            ),
+            _ => {
+                let mut err = self
+                    .tcx
+                    .sess
+                    .struct_err("Unsupported integer type for `codegen_internal_buffer_store`");
+                err.note(&format!("bits: `{:?}`", bits));
+                err.note(&format!("signed: `{:?}`", signed));
+                err.emit();
+            }
         }
     }
 
@@ -371,7 +370,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     value.with_type(ulong_ty)
                 }
             }
-            _ => panic!("Invalid load bits: {} signed: {}", bits, signed),
+            _ => self.fatal(&format!(
+                "Trying to load invalid data type, width: {} signed: {}",
+                bits, signed
+            )),
         }
     }
 
@@ -391,11 +393,29 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Adt {
                 ref field_types,
                 ref field_offsets,
+                ref field_names,
+                ref def_id,
                 ..
             } => {
                 let mut composite_components = vec![];
 
-                for (ty, offset) in field_types.iter().zip(field_offsets.iter()) {
+                for (idx, (ty, offset)) in field_types.iter().zip(field_offsets.iter()).enumerate()
+                {
+                    if offset.bytes() as u32 % 4 != 0 {
+                        let adt_name = self.type_cache.lookup_name(result_type);
+                        let field_name = if let Some(field_names) = field_names {
+                            &field_names[idx]
+                        } else {
+                            "<unknown>"
+                        };
+
+                        self.fatal(&format!(
+                            "Trying to load from unaligned field: `{}::{}`. Field must be aligned to multiple of 4 bytes, but has offset {}",
+                            adt_name,
+                            field_name,
+                            offset.bytes() as u32));
+                    }
+
                     let offset = offset.bytes() as u32 / 4;
 
                     composite_components.push(
@@ -476,10 +496,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 sets,
             ),
             _ => {
-                bug!(
+                self.fatal(&format!(
                     "Unhandled case for `internal_buffer_load` return / args: {:?}",
                     data
-                );
+                ));
             }
         }
     }

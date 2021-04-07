@@ -689,4 +689,13 @@ impl TypeCache<'_> {
             .insert_no_overwrite(word, ty)
             .unwrap();
     }
+
+    pub fn lookup_name(&self, word: Word) -> String {
+        let mut type_names = self.type_names.borrow();
+        type_names
+            .get(&word)
+            .and_then(|names| names.iter().next().copied())
+            .map(|v| v.to_string())
+            .unwrap_or("<unknown>".to_string())
+    }
 }
