@@ -128,6 +128,7 @@ impl<'tcx> CodegenCx<'tcx> {
             id.with_type(fn_void_void)
         };
 
+        let mut op_entry_point_interface_operands = vec![];
         let mut decoration_locations = HashMap::new();
         let interface_globals = arg_abis
             .iter()
@@ -136,6 +137,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 self.declare_interface_global_for_param(
                     entry_fn_arg.layout,
                     hir_param,
+                    &mut op_entry_point_interface_operands,
                     &mut decoration_locations,
                 )
             })
@@ -225,23 +227,13 @@ impl<'tcx> CodegenCx<'tcx> {
         bx.call(entry_func, &arguments, None);
         bx.ret_void();
 
-        let interface: Vec<_> = if self.emit_global().version().unwrap() > (1, 3) {
-            // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            interface_globals
-                .into_iter()
-                .map(|(var, _)| var.def_cx(self))
-                .collect()
-        } else {
-            // SPIR-V <= v1.3 only includes Input and Output in the interface.
-            interface_globals
-                .into_iter()
-                .filter(|&(_, s)| s == StorageClass::Input || s == StorageClass::Output)
-                .map(|(var, _)| var.def_cx(self))
-                .collect()
-        };
         let stub_fn_id = stub_fn.def_cx(self);
-        self.emit_global()
-            .entry_point(execution_model, stub_fn_id, name, interface);
+        self.emit_global().entry_point(
+            execution_model,
+            stub_fn_id,
+            name,
+            op_entry_point_interface_operands,
+        );
         stub_fn_id
     }
 
@@ -346,6 +338,7 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         layout: TyAndLayout<'tcx>,
         hir_param: &hir::Param<'tcx>,
+        op_entry_point_interface_operands: &mut Vec<Word>,
         decoration_locations: &mut HashMap<StorageClass, u32>,
     ) -> (SpirvValue, StorageClass) {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
@@ -466,6 +459,18 @@ impl<'tcx> CodegenCx<'tcx> {
         .def(hir_param.span, self);
         self.emit_global()
             .variable(var_spirv_type, Some(variable), storage_class, None);
+
+        // Record this `OpVariable` as needing to be added (if applicable),
+        // to the *Interface* operands of the `OpEntryPoint` instruction.
+        if self.emit_global().version().unwrap() > (1, 3) {
+            // SPIR-V >= v1.4 includes all OpVariables in the interface.
+            op_entry_point_interface_operands.push(variable);
+        } else {
+            // SPIR-V <= v1.3 only includes Input and Output in the interface.
+            if storage_class == StorageClass::Input || storage_class == StorageClass::Output {
+                op_entry_point_interface_operands.push(variable);
+            }
+        }
 
         (variable.with_type(var_spirv_type), storage_class)
     }
