@@ -134,7 +134,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .iter()
             .zip(hir_params)
             .map(|(entry_fn_arg, hir_param)| {
-                self.declare_interface_global_for_param(
+                self.declare_shader_interface_for_param(
                     entry_fn_arg.layout,
                     hir_param,
                     &mut op_entry_point_interface_operands,
@@ -334,7 +334,7 @@ impl<'tcx> CodegenCx<'tcx> {
         (spirv_ty, storage_class)
     }
 
-    fn declare_interface_global_for_param(
+    fn declare_shader_interface_for_param(
         &self,
         layout: TyAndLayout<'tcx>,
         hir_param: &hir::Param<'tcx>,
