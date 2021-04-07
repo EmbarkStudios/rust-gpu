@@ -518,7 +518,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .finish(),
 
             SpirvType::InterfaceBlock { inner_type } => f
-                .debug_struct("SampledImage")
+                .debug_struct("InterfaceBlock")
                 .field("id", &self.id)
                 .field("inner_type", &self.cx.debug_type(inner_type))
                 .finish(),
