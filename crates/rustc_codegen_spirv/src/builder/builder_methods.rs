@@ -17,7 +17,7 @@ use rustc_middle::ty::Ty;
 use rustc_span::Span;
 use rustc_target::abi::{Abi, Align, Scalar, Size};
 use std::convert::TryInto;
-use std::iter::empty;
+use std::iter::{self, empty};
 use std::ops::Range;
 
 macro_rules! simple_op {
@@ -125,7 +125,7 @@ fn memset_dynamic_scalar(
         .composite_construct(
             composite_type,
             None,
-            std::iter::repeat(fill_var).take(byte_width),
+            iter::repeat(fill_var).take(byte_width),
         )
         .unwrap();
     let result_type = if is_float {
@@ -214,15 +214,18 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 self.constant_composite(
                     ty.clone().def(self.span(), self),
-                    vec![elem_pat; count as usize],
+                    iter::repeat(elem_pat).take(count as usize),
                 )
                 .def(self)
             }
             SpirvType::Array { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
-                self.constant_composite(ty.clone().def(self.span(), self), vec![elem_pat; count])
-                    .def(self)
+                self.constant_composite(
+                    ty.clone().def(self.span(), self),
+                    iter::repeat(elem_pat).take(count),
+                )
+                .def(self)
             }
             SpirvType::RuntimeArray { .. } => {
                 self.fatal("memset on runtime arrays not implemented yet")
@@ -267,7 +270,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .composite_construct(
                         ty.clone().def(self.span(), self),
                         None,
-                        std::iter::repeat(elem_pat).take(count),
+                        iter::repeat(elem_pat).take(count),
                     )
                     .unwrap()
             }
@@ -277,7 +280,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .composite_construct(
                         ty.clone().def(self.span(), self),
                         None,
-                        std::iter::repeat(elem_pat).take(count as usize),
+                        iter::repeat(elem_pat).take(count as usize),
                     )
                     .unwrap()
             }
@@ -1791,13 +1794,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         }
         .def(self.span(), self);
         if self.builder.lookup_const(elt).is_some() {
-            self.constant_composite(result_type, vec![elt.def(self); num_elts])
+            self.constant_composite(result_type, iter::repeat(elt.def(self)).take(num_elts))
         } else {
             self.emit()
                 .composite_construct(
                     result_type,
                     None,
-                    std::iter::repeat(elt.def(self)).take(num_elts),
+                    iter::repeat(elt.def(self)).take(num_elts),
                 )
                 .unwrap()
                 .with_type(result_type)

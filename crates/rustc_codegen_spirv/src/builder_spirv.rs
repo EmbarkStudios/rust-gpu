@@ -1,13 +1,14 @@
 use crate::builder;
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use bimap::BiHashMap;
 use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_middle::bug;
 use rustc_span::{Span, DUMMY_SP};
 use std::cell::{RefCell, RefMut};
+use std::rc::Rc;
 use std::{fs::File, io::Write, path::Path};
 
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -178,7 +179,7 @@ pub enum SpirvConst {
     /// f64 isn't hash, so store bits
     F64(u64),
     Bool(bool),
-    Composite(Vec<Word>),
+    Composite(Rc<[Word]>),
     Null,
     Undef,
 }
@@ -220,7 +221,11 @@ pub struct BuilderCursor {
 
 pub struct BuilderSpirv {
     builder: RefCell<Builder>,
-    constants: RefCell<BiHashMap<WithType<SpirvConst>, Word>>,
+
+    // Bidirectional maps between `SpirvConst` and the ID of the defined global
+    // (e.g. `OpConstant...`) instruction.
+    const_to_id: RefCell<FxHashMap<WithType<SpirvConst>, Word>>,
+    id_to_const: RefCell<FxHashMap<Word, SpirvConst>>,
 }
 
 impl BuilderSpirv {
@@ -263,7 +268,8 @@ impl BuilderSpirv {
         }
         Self {
             builder: RefCell::new(builder),
-            constants: Default::default(),
+            const_to_id: Default::default(),
+            id_to_const: Default::default(),
         }
     }
 
@@ -338,7 +344,7 @@ impl BuilderSpirv {
     pub fn def_constant(&self, ty: Word, val: SpirvConst) -> SpirvValue {
         let val_with_type = WithType { ty, val };
         let mut builder = self.builder(BuilderCursor::default());
-        if let Some(id) = self.constants.borrow_mut().get_by_left(&val_with_type) {
+        if let Some(id) = self.const_to_id.borrow().get(&val_with_type) {
             return id.with_type(ty);
         }
         let id = match val_with_type.val {
@@ -357,16 +363,22 @@ impl BuilderSpirv {
             SpirvConst::Null => builder.constant_null(ty),
             SpirvConst::Undef => builder.undef(ty, None),
         };
-        self.constants
-            .borrow_mut()
-            .insert_no_overwrite(val_with_type, id)
-            .unwrap();
+        assert_matches!(
+            self.const_to_id
+                .borrow_mut()
+                .insert(val_with_type.clone(), id),
+            None
+        );
+        assert_matches!(
+            self.id_to_const.borrow_mut().insert(id, val_with_type.val),
+            None
+        );
         id.with_type(ty)
     }
 
     pub fn lookup_const(&self, def: SpirvValue) -> Option<SpirvConst> {
         match def.kind {
-            SpirvValueKind::Def(id) => Some(self.constants.borrow().get_by_right(&id)?.val.clone()),
+            SpirvValueKind::Def(id) => Some(self.id_to_const.borrow().get(&id)?.clone()),
             _ => None,
         }
     }
