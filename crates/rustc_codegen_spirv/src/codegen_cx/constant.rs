@@ -16,27 +16,27 @@ use rustc_target::abi::{self, AddressSpace, HasDataLayout, Integer, LayoutOf, Pr
 impl<'tcx> CodegenCx<'tcx> {
     pub fn constant_u8(&self, span: Span, val: u8) -> SpirvValue {
         let ty = SpirvType::Integer(8, false).def(span, self);
-        self.builder.def_constant(SpirvConst::U32(ty, val as u32))
+        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_u16(&self, span: Span, val: u16) -> SpirvValue {
         let ty = SpirvType::Integer(16, false).def(span, self);
-        self.builder.def_constant(SpirvConst::U32(ty, val as u32))
+        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_i32(&self, span: Span, val: i32) -> SpirvValue {
         let ty = SpirvType::Integer(32, !self.kernel_mode).def(span, self);
-        self.builder.def_constant(SpirvConst::U32(ty, val as u32))
+        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_u32(&self, span: Span, val: u32) -> SpirvValue {
         let ty = SpirvType::Integer(32, false).def(span, self);
-        self.builder.def_constant(SpirvConst::U32(ty, val))
+        self.builder.def_constant(ty, SpirvConst::U32(val))
     }
 
     pub fn constant_u64(&self, span: Span, val: u64) -> SpirvValue {
         let ty = SpirvType::Integer(64, false).def(span, self);
-        self.builder.def_constant(SpirvConst::U64(ty, val))
+        self.builder.def_constant(ty, SpirvConst::U64(val))
     }
 
     pub fn constant_int(&self, ty: Word, val: u64) -> SpirvValue {
@@ -44,18 +44,18 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Integer(bits @ 8..=32, signed) => {
                 let size = Size::from_bits(bits);
                 let val = val as u128;
-                self.builder.def_constant(SpirvConst::U32(
+                self.builder.def_constant(
                     ty,
-                    if signed {
+                    SpirvConst::U32(if signed {
                         size.sign_extend(val)
                     } else {
                         size.truncate(val)
-                    } as u32,
-                ))
+                    } as u32),
+                )
             }
-            SpirvType::Integer(64, _) => self.builder.def_constant(SpirvConst::U64(ty, val)),
+            SpirvType::Integer(64, _) => self.builder.def_constant(ty, SpirvConst::U64(val)),
             SpirvType::Bool => match val {
-                0 | 1 => self.builder.def_constant(SpirvConst::Bool(ty, val != 0)),
+                0 | 1 => self.builder.def_constant(ty, SpirvConst::Bool(val != 0)),
                 _ => self
                     .tcx
                     .sess
@@ -76,23 +76,23 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn constant_f32(&self, span: Span, val: f32) -> SpirvValue {
         let ty = SpirvType::Float(32).def(span, self);
         self.builder
-            .def_constant(SpirvConst::F32(ty, val.to_bits()))
+            .def_constant(ty, SpirvConst::F32(val.to_bits()))
     }
 
     pub fn constant_f64(&self, span: Span, val: f64) -> SpirvValue {
         let ty = SpirvType::Float(64).def(span, self);
         self.builder
-            .def_constant(SpirvConst::F64(ty, val.to_bits()))
+            .def_constant(ty, SpirvConst::F64(val.to_bits()))
     }
 
     pub fn constant_float(&self, ty: Word, val: f64) -> SpirvValue {
         match self.lookup_type(ty) {
             SpirvType::Float(32) => self
                 .builder
-                .def_constant(SpirvConst::F32(ty, (val as f32).to_bits())),
+                .def_constant(ty, SpirvConst::F32((val as f32).to_bits())),
             SpirvType::Float(64) => self
                 .builder
-                .def_constant(SpirvConst::F64(ty, val.to_bits())),
+                .def_constant(ty, SpirvConst::F64(val.to_bits())),
             other => self.tcx.sess.fatal(&format!(
                 "constant_float invalid on type {}",
                 other.debug(ty, self)
@@ -102,19 +102,19 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn constant_bool(&self, span: Span, val: bool) -> SpirvValue {
         let ty = SpirvType::Bool.def(span, self);
-        self.builder.def_constant(SpirvConst::Bool(ty, val))
+        self.builder.def_constant(ty, SpirvConst::Bool(val))
     }
 
     pub fn constant_composite(&self, ty: Word, val: Vec<Word>) -> SpirvValue {
-        self.builder.def_constant(SpirvConst::Composite(ty, val))
+        self.builder.def_constant(ty, SpirvConst::Composite(val))
     }
 
     pub fn constant_null(&self, ty: Word) -> SpirvValue {
-        self.builder.def_constant(SpirvConst::Null(ty))
+        self.builder.def_constant(ty, SpirvConst::Null)
     }
 
     pub fn undef(&self, ty: Word) -> SpirvValue {
-        self.builder.def_constant(SpirvConst::Undef(ty))
+        self.builder.def_constant(ty, SpirvConst::Undef)
     }
 }
 

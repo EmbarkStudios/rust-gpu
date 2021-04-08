@@ -38,8 +38,8 @@ macro_rules! simple_op {
                             let size = Size::from_bits(bits);
                             let as_u128 = |const_val| {
                                 let x = match const_val {
-                                    SpirvConst::U32(_, x) => x as u128,
-                                    SpirvConst::U64(_, x) => x as u128,
+                                    SpirvConst::U32(x) => x as u128,
+                                    SpirvConst::U64(x) => x as u128,
                                     _ => return None,
                                 };
                                 Some(if signed {

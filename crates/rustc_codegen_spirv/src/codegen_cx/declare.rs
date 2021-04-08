@@ -264,9 +264,8 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         let mut v = self.create_const_alloc(alloc, value_ty);
 
         if self.lookup_type(v.ty) == SpirvType::Bool {
-            let val = self.builder.lookup_const(v).unwrap();
-            let val_int = match val {
-                SpirvConst::Bool(_, val) => val as u8,
+            let val_int = match self.builder.lookup_const(v).unwrap() {
+                SpirvConst::Bool(val) => val as u8,
                 _ => bug!(),
             };
             v = self.constant_u8(span, val_int);
