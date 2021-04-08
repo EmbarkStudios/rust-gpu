@@ -15,6 +15,11 @@ use std::{fs::File, io::Write, path::Path};
 pub enum SpirvValueKind {
     Def(Word),
 
+    /// The ID of a global instruction matching a `SpirvConst`, but which cannot
+    /// pass validation. Used to error (or attach zombie spans), at the usesites
+    /// of such constants, instead of where they're generated (and cached).
+    IllegalConst(Word),
+
     // FIXME(eddyb) this shouldn't be needed, but `rustc_codegen_ssa` still relies
     // on converting `Function`s to `Value`s even for direct calls, the `Builder`
     // should just have direct and indirect `call` variants (or a `Callee` enum).
@@ -80,6 +85,7 @@ impl SpirvValue {
 
             SpirvValueKind::FnAddr { .. }
             | SpirvValueKind::Def(_)
+            | SpirvValueKind::IllegalConst(_)
             | SpirvValueKind::LogicalPtrCast { .. } => None,
         }
     }
@@ -99,7 +105,23 @@ impl SpirvValue {
 
     pub fn def_with_span(self, cx: &CodegenCx<'_>, span: Span) -> Word {
         match self.kind {
-            SpirvValueKind::Def(word) => word,
+            SpirvValueKind::Def(id) => id,
+
+            SpirvValueKind::IllegalConst(id) => {
+                let illegal = cx.builder.id_to_const.borrow()[&id].legal.unwrap_err();
+                if cx.is_system_crate() {
+                    cx.zombie_with_span(id, span, illegal.message());
+                } else {
+                    cx.tcx
+                        .sess
+                        .struct_span_err(span, illegal.message())
+                        .note(&format!("constant type: {}", cx.debug_type(self.ty)))
+                        .emit();
+                }
+
+                id
+            }
+
             SpirvValueKind::FnAddr { .. } => {
                 if cx.is_system_crate() {
                     *cx.zombie_undefs_for_system_fn_addrs
@@ -190,6 +212,21 @@ struct WithType<V> {
     val: V,
 }
 
+#[derive(Copy, Clone, Debug)]
+enum IllegalConst {}
+
+impl IllegalConst {
+    fn message(&self) -> &'static str {
+        match *self {}
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+struct WithConstLegality<V> {
+    val: V,
+    legal: Result<(), IllegalConst>,
+}
+
 /// Cursor system:
 ///
 /// The LLVM module builder model (and therefore `codegen_ssa`) assumes that there is a central
@@ -224,8 +261,10 @@ pub struct BuilderSpirv {
 
     // Bidirectional maps between `SpirvConst` and the ID of the defined global
     // (e.g. `OpConstant...`) instruction.
-    const_to_id: RefCell<FxHashMap<WithType<SpirvConst>, Word>>,
-    id_to_const: RefCell<FxHashMap<Word, SpirvConst>>,
+    // NOTE(eddyb) both maps have `WithConstLegality` around their keys, which
+    // allows getting that legality information without additional lookups.
+    const_to_id: RefCell<FxHashMap<WithType<SpirvConst>, WithConstLegality<Word>>>,
+    id_to_const: RefCell<FxHashMap<Word, WithConstLegality<SpirvConst>>>,
 }
 
 impl BuilderSpirv {
@@ -344,10 +383,16 @@ impl BuilderSpirv {
     pub fn def_constant(&self, ty: Word, val: SpirvConst) -> SpirvValue {
         let val_with_type = WithType { ty, val };
         let mut builder = self.builder(BuilderCursor::default());
-        if let Some(id) = self.const_to_id.borrow().get(&val_with_type) {
-            return id.with_type(ty);
+        if let Some(entry) = self.const_to_id.borrow().get(&val_with_type) {
+            let kind = if entry.legal.is_ok() {
+                SpirvValueKind::Def(entry.val)
+            } else {
+                SpirvValueKind::IllegalConst(entry.val)
+            };
+            return SpirvValue { kind, ty };
         }
-        let id = match val_with_type.val {
+        let val = val_with_type.val;
+        let id = match val {
             SpirvConst::U32(v) => builder.constant_u32(ty, v),
             SpirvConst::U64(v) => builder.constant_u64(ty, v),
             SpirvConst::F32(v) => builder.constant_f32(ty, f32::from_bits(v)),
@@ -363,22 +408,58 @@ impl BuilderSpirv {
             SpirvConst::Null => builder.constant_null(ty),
             SpirvConst::Undef => builder.undef(ty, None),
         };
+        #[allow(clippy::match_same_arms)]
+        let legal = match val {
+            SpirvConst::U32(_)
+            | SpirvConst::U64(_)
+            | SpirvConst::F32(_)
+            | SpirvConst::F64(_)
+            | SpirvConst::Bool(_) => Ok(()),
+
+            SpirvConst::Null => {
+                // FIXME(eddyb) check that the type supports `OpConstantNull`.
+                Ok(())
+            }
+            SpirvConst::Undef => {
+                // FIXME(eddyb) check that the type supports `OpUndef`.
+                Ok(())
+            }
+
+            SpirvConst::Composite(ref v) => v.iter().fold(Ok(()), |result, field| {
+                // FIXME(eddyb) combine `IllegalConst`s to account for some being
+                // "worse" than others.
+                result.and(self.id_to_const.borrow()[field].legal)
+            }),
+        };
         assert_matches!(
-            self.const_to_id
+            self.const_to_id.borrow_mut().insert(
+                WithType {
+                    ty,
+                    val: val.clone()
+                },
+                WithConstLegality { val: id, legal }
+            ),
+            None
+        );
+        assert_matches!(
+            self.id_to_const
                 .borrow_mut()
-                .insert(val_with_type.clone(), id),
+                .insert(id, WithConstLegality { val, legal }),
             None
         );
-        assert_matches!(
-            self.id_to_const.borrow_mut().insert(id, val_with_type.val),
-            None
-        );
-        id.with_type(ty)
+        let kind = if legal.is_ok() {
+            SpirvValueKind::Def(id)
+        } else {
+            SpirvValueKind::IllegalConst(id)
+        };
+        SpirvValue { kind, ty }
     }
 
     pub fn lookup_const(&self, def: SpirvValue) -> Option<SpirvConst> {
         match def.kind {
-            SpirvValueKind::Def(id) => Some(self.id_to_const.borrow().get(&id)?.clone()),
+            SpirvValueKind::Def(id) | SpirvValueKind::IllegalConst(id) => {
+                Some(self.id_to_const.borrow().get(&id)?.val.clone())
+            }
             _ => None,
         }
     }
