@@ -838,8 +838,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
-        // See comment on `SpirvValueKind::ConstantPointer`
-        if let Some(value) = ptr.const_ptr_val(self) {
+        if let Some(value) = ptr.const_fold_load(self) {
             return value;
         }
         let ty = match self.lookup_type(ptr.ty) {
@@ -1665,9 +1664,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         let src_element_size = src_pointee.and_then(|p| self.lookup_type(p).sizeof(self));
         if src_element_size.is_some() && src_element_size == const_size.map(Size::from_bytes) {
-            // See comment on `SpirvValueKind::ConstantPointer`
-
-            if let Some(const_value) = src.const_ptr_val(self) {
+            if let Some(const_value) = src.const_fold_load(self) {
                 self.store(const_value, dst, Align::from_bytes(0).unwrap());
             } else {
                 self.emit()

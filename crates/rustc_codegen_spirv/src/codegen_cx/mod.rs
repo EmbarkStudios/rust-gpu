@@ -4,14 +4,14 @@ mod entry;
 mod type_;
 
 use crate::builder::{ExtInst, InstructionTable};
-use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueKind};
+use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvConst, SpirvValue, SpirvValueKind};
 use crate::decorations::{
     CustomDecoration, SerializedSpan, UnrollLoopsDecoration, ZombieDecoration,
 };
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use rspirv::dr::{Module, Operand};
-use rspirv::spirv::{AddressingModel, Decoration, LinkageType, MemoryModel, StorageClass, Word};
+use rspirv::spirv::{AddressingModel, Decoration, LinkageType, MemoryModel, Word};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
@@ -59,7 +59,6 @@ pub struct CodegenCx<'tcx> {
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
-    pub zombie_undefs_for_system_fn_addrs: RefCell<FxHashMap<Word, Word>>,
     pub libm_intrinsics: RefCell<FxHashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
@@ -120,7 +119,6 @@ impl<'tcx> CodegenCx<'tcx> {
             kernel_mode,
             sym,
             instruction_table: InstructionTable::new(),
-            zombie_undefs_for_system_fn_addrs: Default::default(),
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
@@ -229,36 +227,6 @@ impl<'tcx> CodegenCx<'tcx> {
             Decoration::LinkageAttributes,
             once(Operand::LiteralString(name)).chain(once(Operand::LinkageType(linkage))),
         )
-    }
-
-    /// See note on `SpirvValueKind::ConstantPointer`
-    pub fn make_constant_pointer(&self, span: Span, value: SpirvValue) -> SpirvValue {
-        let ty = SpirvType::Pointer { pointee: value.ty }.def(span, self);
-        let initializer = value.def_cx(self);
-
-        // Create these up front instead of on demand in SpirvValue::def because
-        // SpirvValue::def can't use cx.emit()
-        // FIXME(eddyb) figure out what the correct storage class is.
-        let global_var =
-            self.emit_global()
-                .variable(ty, None, StorageClass::Private, Some(initializer));
-
-        // In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span
-        // to the use site of this constant. However, if this constant happens to never get used, we
-        // still want to zobmie it, so zombie here.
-        self.zombie_even_in_user_code(
-            global_var,
-            span,
-            "Cannot use this pointer directly, it must be dereferenced first",
-        );
-
-        SpirvValue {
-            kind: SpirvValueKind::ConstantPointer {
-                initializer,
-                global_var,
-            },
-            ty,
-        }
     }
 }
 
@@ -377,13 +345,8 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         if self.is_system_crate() {
             // Create these undefs up front instead of on demand in SpirvValue::def because
             // SpirvValue::def can't use cx.emit()
-            self.zombie_undefs_for_system_fn_addrs
-                .borrow_mut()
-                .entry(ty)
-                .or_insert_with(|| {
-                    // We want a unique ID for these undefs, so don't use the caching system.
-                    self.emit_global().undef(ty, None)
-                });
+            self.builder
+                .def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
         }
 
         SpirvValue {

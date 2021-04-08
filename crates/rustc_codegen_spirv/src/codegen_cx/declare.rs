@@ -6,14 +6,14 @@ use crate::decorations::UnrollLoopsDecoration;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
-use rustc_codegen_ssa::traits::{PreDefineMethods, StaticMethods};
+use rustc_codegen_ssa::traits::{BaseTypeMethods, PreDefineMethods, StaticMethods};
 use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::FnAbiExt;
 use rustc_middle::ty::{self, Instance, ParamEnv, TypeFoldable};
 use rustc_span::def_id::DefId;
-use rustc_span::{Span, DUMMY_SP};
+use rustc_span::Span;
 use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Align, LayoutOf};
 
@@ -242,7 +242,12 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
 impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
-        self.make_constant_pointer(DUMMY_SP, cv)
+        self.builder.def_constant(
+            self.type_ptr_to(cv.ty),
+            SpirvConst::PtrTo {
+                pointee: cv.def_cx(self),
+            },
+        )
     }
 
     fn codegen_static(&self, def_id: DefId, _is_mutable: bool) {
