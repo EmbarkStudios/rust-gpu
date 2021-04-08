@@ -850,6 +850,7 @@
 <span id="847">847</span>
 <span id="848">848</span>
 <span id="849">849</span>
+<span id="850">850</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// This pass inserts merge instructions for structured control flow with the assumption the spir-v is reducible.</span>
 
@@ -860,8 +861,9 @@
     <span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Builder</span>, <span class="ident">InsertPoint</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>},
     <span class="ident">spirv</span>::<span class="ident">LoopControl</span>,
 };
+<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::<span class="ident">FxHashMap</span>;
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">VecDeque</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">VecDeque</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LoopInfo</span> {
     <span class="ident">merge_id</span>: <span class="ident">Word</span>,
@@ -980,7 +982,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">structurize</span>(
     <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
     <span class="ident">module</span>: <span class="ident">Module</span>,
-    <span class="ident">unroll_loops_decorations</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">UnrollLoopsDecoration</span><span class="op">&gt;</span>,
+    <span class="ident">unroll_loops_decorations</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">UnrollLoopsDecoration</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Module</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new_from_module</span>(<span class="ident">module</span>);
 
@@ -1539,7 +1541,7 @@
         }
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modified_ids</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modified_ids</span> <span class="op">=</span> <span class="ident">FxHashMap</span>::<span class="ident">default</span>();
 
     <span class="comment">// Find convergence point.</span>
     <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">branch_conditional_ops</span>.<span class="ident">iter</span>() {
@@ -1651,7 +1653,7 @@
             }
         }
     }
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modified_ids</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modified_ids</span> <span class="op">=</span> <span class="ident">FxHashMap</span>::<span class="ident">default</span>();
 
     <span class="comment">// Figure out which branch loops and which branch should merge, also find any potential break ops.</span>
     <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">looping_branch_idx</span>) <span class="kw">in</span> <span class="ident">branch_conditional_ops</span>.<span class="ident">iter</span>() {

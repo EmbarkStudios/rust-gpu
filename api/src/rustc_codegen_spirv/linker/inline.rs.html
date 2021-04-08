@@ -441,10 +441,10 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">simple_passes</span>::<span class="ident">outgoing_edges</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">ModuleHeader</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">FunctionControl</span>, <span class="ident">Op</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
+<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">replace</span>;
 
-<span class="kw">type</span> <span class="ident">FunctionMap</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Function</span><span class="op">&gt;</span>;
+<span class="kw">type</span> <span class="ident">FunctionMap</span> <span class="op">=</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Function</span><span class="op">&gt;</span>;
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inline</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Module</span>) {
     <span class="kw">let</span> <span class="ident">functions</span> <span class="op">=</span> <span class="ident">module</span>
@@ -461,7 +461,7 @@
         .<span class="ident">unwrap_or</span>(<span class="number">0</span>);
     <span class="comment">// Drop all the functions we&#39;ll be inlining. (This also means we won&#39;t waste time processing</span>
     <span class="comment">// inlines in functions that will get inlined)</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dropped_ids</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dropped_ids</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
     <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> {
         <span class="kw">if</span> <span class="ident">should_inline</span>(<span class="kw-2">&amp;</span><span class="ident">disallowed_argument_types</span>, <span class="ident">f</span>) {
             <span class="comment">// TODO: We should insert all defined IDs in this function.</span>
@@ -491,7 +491,7 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">compute_disallowed_argument_types</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">compute_disallowed_argument_types</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">allowed_argument_storage_classes</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[
         <span class="ident">StorageClass</span>::<span class="ident">UniformConstant</span>,
         <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
@@ -500,8 +500,8 @@
         <span class="ident">StorageClass</span>::<span class="ident">AtomicCounter</span>,
         <span class="comment">// TODO: StorageBuffer is allowed if VariablePointers is enabled</span>
     ];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_argument_types</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_pointees</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_argument_types</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_pointees</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
     <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types_global_values</span> {
         <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
             <span class="ident">Op</span>::<span class="ident">TypePointer</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -548,7 +548,7 @@
     <span class="ident">disallowed_argument_types</span>
 }
 
-<span class="kw">fn</span> <span class="ident">should_inline</span>(<span class="ident">disallowed_argument_types</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">should_inline</span>(<span class="ident">disallowed_argument_types</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="ident">def</span> <span class="op">=</span> <span class="ident">function</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">control</span> <span class="op">=</span> <span class="ident">def</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_function_control</span>();
     <span class="ident">control</span>.<span class="ident">contains</span>(<span class="ident">FunctionControl</span>::<span class="ident">INLINE</span>)
@@ -569,8 +569,8 @@
     <span class="ident">types_global_values</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;m</span> <span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="ident">void</span>: <span class="ident">Word</span>,
     <span class="ident">functions</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="ident">FunctionMap</span>,
-    <span class="ident">disallowed_argument_types</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="comment">// rewrite_rules: HashMap&lt;Word, Word&gt;,</span>
+    <span class="ident">disallowed_argument_types</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
+    <span class="comment">// rewrite_rules: FxHashMap&lt;Word, Word&gt;,</span>
 }
 
 <span class="kw">impl</span> <span class="ident">Inliner</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
@@ -731,7 +731,7 @@
         <span class="bool-val">true</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">add_clone_id_rules</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">rewrite_rules</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) {
+    <span class="kw">fn</span> <span class="ident">add_clone_id_rules</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">rewrite_rules</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) {
         <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span> {
             <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">block</span>.<span class="ident">label</span>.<span class="ident">iter</span>().<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">instructions</span>) {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {

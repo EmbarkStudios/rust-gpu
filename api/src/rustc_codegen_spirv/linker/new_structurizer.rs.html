@@ -578,7 +578,7 @@
 <span class="kw">use</span> <span class="ident">indexmap</span>::{<span class="ident">indexmap</span>, <span class="ident">IndexMap</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Builder</span>, <span class="ident">Function</span>, <span class="ident">InsertPoint</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">LoopControl</span>, <span class="ident">Op</span>, <span class="ident">SelectionControl</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
+<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::<span class="ident">FxHashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">iter</span>, <span class="ident">mem</span>};
 
 <span class="doccomment">/// Cached IDs of `OpTypeBool`, `OpConstantFalse`, and `OpConstantTrue`.</span>
@@ -616,7 +616,7 @@
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">structurize</span>(
     <span class="ident">module</span>: <span class="ident">Module</span>,
-    <span class="ident">unroll_loops_decorations</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">UnrollLoopsDecoration</span><span class="op">&gt;</span>,
+    <span class="ident">unroll_loops_decorations</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">UnrollLoopsDecoration</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Module</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new_from_module</span>(<span class="ident">module</span>);
 
@@ -676,7 +676,7 @@
             <span class="ident">block_id_to_idx</span>,
             <span class="ident">loop_control</span>,
             <span class="ident">incoming_edge_count</span>: <span class="macro">vec</span><span class="macro">!</span>[],
-            <span class="ident">regions</span>: <span class="ident">HashMap</span>::<span class="ident">new</span>(),
+            <span class="ident">regions</span>: <span class="ident">FxHashMap</span>::<span class="ident">default</span>(),
         }
         .<span class="ident">structurize_func</span>();
     }
@@ -716,7 +716,7 @@
     <span class="ident">globals</span>: <span class="ident">Globals</span>,
 
     <span class="ident">func</span>: <span class="ident">FuncBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    <span class="ident">block_id_to_idx</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">BlockId</span>, <span class="ident">BlockIdx</span><span class="op">&gt;</span>,
+    <span class="ident">block_id_to_idx</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">BlockId</span>, <span class="ident">BlockIdx</span><span class="op">&gt;</span>,
 
     <span class="doccomment">/// `LoopControl` to use in all loops&#39; `OpLoopMerge` instruction.</span>
     <span class="doccomment">/// Currently only affected by function-scoped `#[spirv(unroll_loops)]`.</span>
@@ -727,7 +727,7 @@
     <span class="doccomment">/// (backedge count is subtracted to hide them from outer regions).</span>
     <span class="ident">incoming_edge_count</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
 
-    <span class="ident">regions</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">BlockIdx</span>, <span class="ident">Region</span><span class="op">&gt;</span>,
+    <span class="ident">regions</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">BlockIdx</span>, <span class="ident">Region</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Structurizer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {

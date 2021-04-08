@@ -235,9 +235,9 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">decorations</span>::{<span class="ident">CustomDecoration</span>, <span class="ident">ZombieDecoration</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Instruction</span>, <span class="ident">Module</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Op</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::<span class="ident">FxHashMap</span>;
 <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">once</span>;
 
@@ -267,7 +267,7 @@
 
 <span class="kw">fn</span> <span class="ident">contains_zombie</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
     <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>,
-    <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_type</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_type</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>) <span class="op">=</span> <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">result_type</span>) {
@@ -281,7 +281,7 @@
 
 <span class="kw">fn</span> <span class="ident">is_zombie</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
     <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>,
-    <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
         <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">result_id</span>)
@@ -292,13 +292,13 @@
 
 <span class="kw">fn</span> <span class="ident">is_or_contains_zombie</span><span class="op">&lt;</span><span class="lifetime">&#39;h</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
     <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>,
-    <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;h</span> <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">result_zombie</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">result_id</span><span class="op">|</span> <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">result_id</span>));
     <span class="ident">result_zombie</span>.<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">contains_zombie</span>(<span class="ident">inst</span>, <span class="ident">zombie</span>))
 }
 
-<span class="kw">fn</span> <span class="ident">spread_zombie</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Module</span>, <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">spread_zombie</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Module</span>, <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any</span> <span class="op">=</span> <span class="bool-val">false</span>;
     <span class="comment">// globals are easy</span>
     <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">global_inst_iter</span>() {
@@ -335,7 +335,7 @@
     <span class="ident">any</span>
 }
 
-<span class="kw">fn</span> <span class="ident">get_names</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">get_names</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
     <span class="ident">module</span>
         .<span class="ident">debugs</span>
         .<span class="ident">iter</span>()
@@ -352,7 +352,7 @@
 <span class="comment">// If an entry point references a zombie&#39;d value, then the entry point would normally get removed.</span>
 <span class="comment">// That&#39;s an absolutely horrible experience to debug, though, so instead, create a nice error</span>
 <span class="comment">// message containing the stack trace of how the entry point got to the zombie value.</span>
-<span class="kw">fn</span> <span class="ident">report_error_zombies</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>, <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+<span class="kw">fn</span> <span class="ident">report_error_zombies</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>, <span class="ident">zombie</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">names</span> <span class="op">=</span> <span class="prelude-val">None</span>;
     <span class="kw">for</span> <span class="ident">root</span> <span class="kw">in</span> <span class="kw">super</span>::<span class="ident">dce</span>::<span class="ident">collect_roots</span>(<span class="ident">module</span>) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>) <span class="op">=</span> <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>) {

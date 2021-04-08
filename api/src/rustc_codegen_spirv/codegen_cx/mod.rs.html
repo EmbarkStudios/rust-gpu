@@ -494,7 +494,6 @@
 <span id="491">491</span>
 <span id="492">492</span>
 <span id="493">493</span>
-<span id="494">494</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
@@ -528,7 +527,6 @@
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{<span class="ident">HasDataLayout</span>, <span class="ident">TargetDataLayout</span>};
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">spec</span>::{<span class="ident">HasTargetSpec</span>, <span class="ident">Target</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::{<span class="ident">Cell</span>, <span class="ident">RefCell</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">once</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
@@ -539,9 +537,9 @@
     <span class="doccomment">/// Spir-v module builder</span>
     <span class="kw">pub</span> <span class="ident">builder</span>: <span class="ident">BuilderSpirv</span>,
     <span class="doccomment">/// Map from MIR function to spir-v function ID</span>
-    <span class="kw">pub</span> <span class="ident">instances</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">SpirvValue</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">instances</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">SpirvValue</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Map from function ID to parameter list</span>
-    <span class="kw">pub</span> <span class="ident">function_parameter_values</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SpirvValue</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">function_parameter_values</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SpirvValue</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">type_cache</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Cache generated vtables</span>
     <span class="kw">pub</span> <span class="ident">vtables</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span>(<span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PolyExistentialTraitRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="ident">SpirvValue</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -549,17 +547,17 @@
     <span class="doccomment">/// Invalid spir-v IDs that should be stripped from the final binary,</span>
     <span class="doccomment">/// each with its own reason and span that should be used for reporting</span>
     <span class="doccomment">/// (in the event that the value is actually needed)</span>
-    <span class="ident">zombie_decorations</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieDecoration</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">zombie_decorations</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ZombieDecoration</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Functions that have `#[spirv(unroll_loops)]`, and therefore should</span>
     <span class="doccomment">/// get `LoopControl::UNROLL` applied to all of their loops&#39; `OpLoopMerge`</span>
     <span class="doccomment">/// instructions, during structuralization.</span>
-    <span class="ident">unroll_loops_decorations</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">UnrollLoopsDecoration</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">unroll_loops_decorations</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">UnrollLoopsDecoration</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">kernel_mode</span>: <span class="ident">bool</span>,
     <span class="doccomment">/// Cache of all the builtin symbols we need</span>
     <span class="kw">pub</span> <span class="ident">sym</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Symbols</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">instruction_table</span>: <span class="ident">InstructionTable</span>,
-    <span class="kw">pub</span> <span class="ident">zombie_undefs_for_system_fn_addrs</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">libm_intrinsics</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw">super</span>::<span class="ident">builder</span>::<span class="ident">libm_intrinsics</span>::<span class="ident">LibmIntrinsic</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">zombie_undefs_for_system_fn_addrs</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">libm_intrinsics</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw">super</span>::<span class="ident">builder</span>::<span class="ident">libm_intrinsics</span>::<span class="ident">LibmIntrinsic</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 
     <span class="doccomment">/// Simple `panic!(&quot;...&quot;)` and builtin panics (from MIR `Assert`s) call `#[lang = &quot;panic&quot;]`.</span>
     <span class="kw">pub</span> <span class="ident">panic_fn_id</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,

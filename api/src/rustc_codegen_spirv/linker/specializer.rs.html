@@ -2609,6 +2609,7 @@
 <span id="2606">2606</span>
 <span id="2607">2607</span>
 <span id="2608">2608</span>
+<span id="2609">2609</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Specialize globals (types, constants and module-scoped variables) and functions,</span>
 <span class="doccomment">//! to legalize a SPIR-V module representing a &quot;family&quot; of types with a single type,</span>
@@ -2666,8 +2667,9 @@
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Builder</span>, <span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Op</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
 <span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">captures</span>::<span class="ident">Captures</span>;
+<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
 <span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">BTreeMap</span>, <span class="ident">HashMap</span>, <span class="ident">HashSet</span>, <span class="ident">VecDeque</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">BTreeMap</span>, <span class="ident">VecDeque</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::{<span class="ident">Range</span>, <span class="ident">RangeTo</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">io</span>, <span class="ident">iter</span>, <span class="ident">mem</span>, <span class="ident">slice</span>};
@@ -2721,7 +2723,7 @@
     <span class="kw">let</span> <span class="ident">debug</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;SPECIALIZER_DEBUG&quot;</span>).<span class="ident">is_ok</span>();
     <span class="kw">let</span> <span class="ident">dump_instances</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;SPECIALIZER_DUMP_INSTANCES&quot;</span>).<span class="ident">ok</span>();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">debug_names</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">debug_names</span> <span class="op">=</span> <span class="ident">FxHashMap</span>::<span class="ident">default</span>();
     <span class="kw">if</span> <span class="ident">debug</span> <span class="op">|</span><span class="op">|</span> <span class="ident">dump_instances</span>.<span class="ident">is_some</span>() {
         <span class="ident">debug_names</span> <span class="op">=</span> <span class="ident">module</span>
             .<span class="ident">debugs</span>
@@ -2743,7 +2745,7 @@
         <span class="ident">debug_names</span>,
 
         <span class="ident">generics</span>: <span class="ident">IndexMap</span>::<span class="ident">new</span>(),
-        <span class="ident">int_consts</span>: <span class="ident">HashMap</span>::<span class="ident">new</span>(),
+        <span class="ident">int_consts</span>: <span class="ident">FxHashMap</span>::<span class="ident">default</span>(),
     };
 
     <span class="ident">specializer</span>.<span class="ident">collect_generics</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>);
@@ -2809,7 +2811,7 @@
 
 <span class="kw">impl</span> <span class="ident">CallGraph</span> {
     <span class="kw">fn</span> <span class="ident">collect</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">func_id_to_idx</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">module</span>
+        <span class="kw">let</span> <span class="ident">func_id_to_idx</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">module</span>
             .<span class="ident">functions</span>
             .<span class="ident">iter</span>()
             .<span class="ident">enumerate</span>()
@@ -3191,14 +3193,14 @@
     <span class="ident">debug</span>: <span class="ident">bool</span>,
 
     <span class="comment">// HACK(eddyb) if debugging is requested, this is used to quickly get `OpName`s.</span>
-    <span class="ident">debug_names</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="ident">debug_names</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">String</span><span class="op">&gt;</span>,
 
     <span class="comment">// FIXME(eddyb) compact SPIR-V IDs to allow flatter maps.</span>
     <span class="ident">generics</span>: <span class="ident">IndexMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Generic</span><span class="op">&gt;</span>,
 
     <span class="doccomment">/// Integer `OpConstant`s (i.e. containing a `LiteralInt32`), to be used</span>
     <span class="doccomment">/// for interpreting `TyPat::IndexComposite` (such as for `OpAccessChain`).</span>
-    <span class="ident">int_consts</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="ident">int_consts</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Specialization</span><span class="op">&gt;</span> <span class="ident">Specializer</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
@@ -3228,7 +3230,7 @@
             .<span class="ident">iter</span>()
             .<span class="ident">chain</span>(<span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">iter</span>().<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>()));
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">forward_declared_pointers</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">forward_declared_pointers</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
         <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">types_global_values_and_functions</span> {
             <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="macro">unreachable</span><span class="macro">!</span>(
@@ -5090,7 +5092,7 @@
                 <span class="kw">if</span> <span class="ident">newly_expanded_functions</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
                     <span class="comment">// NOTE(eddyb) this is defined outside the loop to avoid</span>
                     <span class="comment">// allocating it for every expanded copy of the function.</span>
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewrite_rules</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewrite_rules</span> <span class="op">=</span> <span class="ident">FxHashMap</span>::<span class="ident">default</span>();
 
                     <span class="kw">for</span> <span class="ident">func</span> <span class="kw">in</span> <span class="ident">newly_expanded_functions</span> {
                         <span class="ident">rewrite_rules</span>.<span class="ident">extend</span>(<span class="ident">func</span>.<span class="ident">parameters</span>.<span class="ident">iter_mut</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">param</span><span class="op">|</span> {

@@ -507,6 +507,10 @@
 <span id="504">504</span>
 <span id="505">505</span>
 <span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.</span>
 <span class="doccomment">//! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a</span>
@@ -523,13 +527,14 @@
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">apply_rewrite_rules</span>, <span class="ident">id</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">ModuleHeader</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Op</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">hash_map</span>, <span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
+<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">hash_map</span>;
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mem2reg</span>(
     <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
     <span class="ident">types_global_values</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
+    <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">func</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Function</span>,
 ) {
     <span class="kw">let</span> <span class="ident">reachable</span> <span class="op">=</span> <span class="ident">compute_reachable</span>(<span class="kw-2">&amp;</span><span class="ident">func</span>.<span class="ident">blocks</span>);
@@ -634,9 +639,12 @@
 }
 
 <span class="comment">// Same paper as above</span>
-<span class="kw">fn</span> <span class="ident">compute_dominance_frontier</span>(<span class="ident">preds</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>], <span class="ident">idom</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">compute_dominance_frontier</span>(
+    <span class="ident">preds</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>],
+    <span class="ident">idom</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>],
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">preds</span>.<span class="ident">len</span>(), <span class="ident">idom</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dominance_frontier</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">HashSet</span>::<span class="ident">new</span>(); <span class="ident">preds</span>.<span class="ident">len</span>()];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dominance_frontier</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">FxHashSet</span>::<span class="ident">default</span>(); <span class="ident">preds</span>.<span class="ident">len</span>()];
     <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">preds</span>.<span class="ident">len</span>() {
         <span class="kw">if</span> <span class="ident">preds</span>[<span class="ident">node</span>].<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span> {
             <span class="kw">let</span> <span class="ident">node_idom</span> <span class="op">=</span> <span class="ident">idom</span>[<span class="ident">node</span>].<span class="ident">unwrap</span>();
@@ -655,10 +663,10 @@
 <span class="kw">fn</span> <span class="ident">insert_phis_all</span>(
     <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
     <span class="ident">types_global_values</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
+    <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>],
-    <span class="ident">dominance_frontier</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">dominance_frontier</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 ) {
     <span class="kw">let</span> <span class="ident">thing</span> <span class="op">=</span> <span class="ident">blocks</span>[<span class="number">0</span>]
         .<span class="ident">instructions</span>
@@ -682,10 +690,10 @@
             <span class="ident">blocks_with_phi</span>,
             <span class="ident">base_var_type</span>,
             <span class="ident">var_map</span>,
-            <span class="ident">phi_defs</span>: <span class="ident">HashSet</span>::<span class="ident">new</span>(),
-            <span class="ident">visited</span>: <span class="ident">HashSet</span>::<span class="ident">new</span>(),
+            <span class="ident">phi_defs</span>: <span class="ident">FxHashSet</span>::<span class="ident">default</span>(),
+            <span class="ident">visited</span>: <span class="ident">FxHashSet</span>::<span class="ident">default</span>(),
             <span class="ident">stack</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">rewrite_rules</span>: <span class="ident">HashMap</span>::<span class="ident">new</span>(),
+            <span class="ident">rewrite_rules</span>: <span class="ident">FxHashMap</span>::<span class="ident">default</span>(),
         };
         <span class="ident">renamer</span>.<span class="ident">rename</span>(<span class="number">0</span>, <span class="prelude-val">None</span>);
         <span class="ident">apply_rewrite_rules</span>(<span class="kw-2">&amp;</span><span class="ident">renamer</span>.<span class="ident">rewrite_rules</span>, <span class="ident">blocks</span>);
@@ -703,15 +711,15 @@
 }
 
 <span class="kw">fn</span> <span class="ident">collect_access_chains</span>(
-    <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
+    <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>],
     <span class="ident">base_var</span>: <span class="ident">Word</span>,
     <span class="ident">base_var_ty</span>: <span class="ident">Word</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">construct_access_chain_info</span>(
-        <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
-        <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
+        <span class="ident">pointer_to_pointee</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
+        <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
         <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>,
         <span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">VarInfo</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VarInfo</span><span class="op">&gt;</span> {
@@ -727,7 +735,7 @@
         })
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">variables</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">variables</span> <span class="op">=</span> <span class="ident">FxHashMap</span>::<span class="ident">default</span>();
     <span class="ident">variables</span>.<span class="ident">insert</span>(
         <span class="ident">base_var</span>,
         <span class="ident">VarInfo</span> {
@@ -772,7 +780,7 @@
     <span class="prelude-val">Some</span>(<span class="ident">variables</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">has_store</span>(<span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">Block</span>, <span class="ident">var_map</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">has_store</span>(<span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">Block</span>, <span class="ident">var_map</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
             <span class="ident">Op</span>::<span class="ident">Store</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>(),
@@ -786,14 +794,14 @@
 
 <span class="kw">fn</span> <span class="ident">insert_phis</span>(
     <span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>],
-    <span class="ident">dominance_frontier</span>: <span class="kw-2">&amp;</span>[<span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>],
-    <span class="ident">var_map</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+    <span class="ident">dominance_frontier</span>: <span class="kw-2">&amp;</span>[<span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>],
+    <span class="ident">var_map</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
     <span class="comment">// TODO: Some algorithms check if the var is trivial in some way, e.g. all loads and stores are</span>
     <span class="comment">// in a single block. We should probably do that too.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ever_on_work_list</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ever_on_work_list</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">work_list</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">blocks_with_phi</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">blocks_with_phi</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
     <span class="kw">for</span> (<span class="ident">block_idx</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
         <span class="kw">if</span> <span class="ident">has_store</span>(<span class="ident">block</span>, <span class="ident">var_map</span>) {
             <span class="ident">ever_on_work_list</span>.<span class="ident">insert</span>(<span class="ident">block_idx</span>);
@@ -843,13 +851,13 @@
     <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
     <span class="ident">types_global_values</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">Block</span>],
-    <span class="ident">blocks_with_phi</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+    <span class="ident">blocks_with_phi</span>: <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
     <span class="ident">base_var_type</span>: <span class="ident">Word</span>,
-    <span class="ident">var_map</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>,
-    <span class="ident">phi_defs</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">visited</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+    <span class="ident">var_map</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>,
+    <span class="ident">phi_defs</span>: <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
+    <span class="ident">visited</span>: <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
     <span class="ident">stack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-    <span class="ident">rewrite_rules</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
+    <span class="ident">rewrite_rules</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Renamer</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
@@ -994,7 +1002,7 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">remove_old_variables</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>], <span class="ident">thing</span>: <span class="kw-2">&amp;</span>[(<span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>, <span class="ident">u32</span>)]) {
+<span class="kw">fn</span> <span class="ident">remove_old_variables</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>], <span class="ident">thing</span>: <span class="kw-2">&amp;</span>[(<span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>, <span class="ident">u32</span>)]) {
     <span class="ident">blocks</span>[<span class="number">0</span>].<span class="ident">instructions</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
         <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">Variable</span> <span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>();
