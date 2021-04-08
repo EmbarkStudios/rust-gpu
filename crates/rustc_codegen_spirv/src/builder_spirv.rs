@@ -220,7 +220,7 @@ pub struct BuilderCursor {
 
 pub struct BuilderSpirv {
     builder: RefCell<Builder>,
-    constants: RefCell<BiHashMap<WithType<SpirvConst>, SpirvValue>>,
+    constants: RefCell<BiHashMap<WithType<SpirvConst>, Word>>,
 }
 
 impl BuilderSpirv {
@@ -338,8 +338,8 @@ impl BuilderSpirv {
     pub fn def_constant(&self, ty: Word, val: SpirvConst) -> SpirvValue {
         let val_with_type = WithType { ty, val };
         let mut builder = self.builder(BuilderCursor::default());
-        if let Some(value) = self.constants.borrow_mut().get_by_left(&val_with_type) {
-            return *value;
+        if let Some(id) = self.constants.borrow_mut().get_by_left(&val_with_type) {
+            return id.with_type(ty);
         }
         let id = match val_with_type.val {
             SpirvConst::U32(v) => builder.constant_u32(ty, v),
@@ -357,16 +357,18 @@ impl BuilderSpirv {
             SpirvConst::Null => builder.constant_null(ty),
             SpirvConst::Undef => builder.undef(ty, None),
         };
-        let spirv_value = id.with_type(ty);
         self.constants
             .borrow_mut()
-            .insert_no_overwrite(val_with_type, spirv_value)
+            .insert_no_overwrite(val_with_type, id)
             .unwrap();
-        spirv_value
+        id.with_type(ty)
     }
 
     pub fn lookup_const(&self, def: SpirvValue) -> Option<SpirvConst> {
-        Some(self.constants.borrow().get_by_right(&def)?.val.clone())
+        match def.kind {
+            SpirvValueKind::Def(id) => Some(self.constants.borrow().get_by_right(&id)?.val.clone()),
+            _ => None,
+        }
     }
 
     pub fn lookup_const_u64(&self, def: SpirvValue) -> Option<u64> {
