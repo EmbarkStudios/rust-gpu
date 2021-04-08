@@ -5,6 +5,7 @@ use crate::attr::{AggregatedSpirvAttributes, IntrinsicType};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{Capability, StorageClass, Word};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
 use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
@@ -18,7 +19,6 @@ use rustc_target::abi::{
 };
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
-use std::collections::HashMap;
 use std::fmt;
 
 /// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk
@@ -28,7 +28,7 @@ use std::fmt;
 /// tracking.
 #[derive(Default)]
 pub struct RecursivePointeeCache<'tcx> {
-    map: RefCell<HashMap<PointeeTy<'tcx>, PointeeDefState>>,
+    map: RefCell<FxHashMap<PointeeTy<'tcx>, PointeeDefState>>,
 }
 
 impl<'tcx> RecursivePointeeCache<'tcx> {

@@ -2,7 +2,7 @@ use crate::decorations::UnrollLoopsDecoration;
 use indexmap::{indexmap, IndexMap};
 use rspirv::dr::{Block, Builder, Function, InsertPoint, Module, Operand};
 use rspirv::spirv::{LoopControl, Op, SelectionControl, Word};
-use std::collections::HashMap;
+use rustc_data_structures::fx::FxHashMap;
 use std::{iter, mem};
 
 /// Cached IDs of `OpTypeBool`, `OpConstantFalse`, and `OpConstantTrue`.
@@ -40,7 +40,7 @@ impl FuncBuilder<'_> {
 
 pub fn structurize(
     module: Module,
-    unroll_loops_decorations: HashMap<Word, UnrollLoopsDecoration>,
+    unroll_loops_decorations: FxHashMap<Word, UnrollLoopsDecoration>,
 ) -> Module {
     let mut builder = Builder::new_from_module(module);
 
@@ -100,7 +100,7 @@ pub fn structurize(
             block_id_to_idx,
             loop_control,
             incoming_edge_count: vec![],
-            regions: HashMap::new(),
+            regions: FxHashMap::default(),
         }
         .structurize_func();
     }
@@ -140,7 +140,7 @@ struct Structurizer<'a> {
     globals: Globals,
 
     func: FuncBuilder<'a>,
-    block_id_to_idx: HashMap<BlockId, BlockIdx>,
+    block_id_to_idx: FxHashMap<BlockId, BlockIdx>,
 
     /// `LoopControl` to use in all loops' `OpLoopMerge` instruction.
     /// Currently only affected by function-scoped `#[spirv(unroll_loops)]`.
@@ -151,7 +151,7 @@ struct Structurizer<'a> {
     /// (backedge count is subtracted to hide them from outer regions).
     incoming_edge_count: Vec<usize>,
 
-    regions: HashMap<BlockIdx, Region>,
+    regions: FxHashMap<BlockIdx, Region>,
 }
 
 impl Structurizer<'_> {

@@ -1,6 +1,6 @@
 use rspirv::dr::{Block, Function, Module};
 use rspirv::spirv::{Op, Word};
-use std::collections::{HashMap, HashSet};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use std::mem::replace;
 
 pub fn shift_ids(module: &mut Module, add: u32) {
@@ -31,7 +31,7 @@ pub fn block_ordering_pass(func: &mut Function) {
     }
     fn visit_postorder(
         func: &Function,
-        visited: &mut HashSet<Word>,
+        visited: &mut FxHashSet<Word>,
         postorder: &mut Vec<Word>,
         current: Word,
     ) {
@@ -60,7 +60,7 @@ pub fn block_ordering_pass(func: &mut Function) {
         postorder.push(current);
     }
 
-    let mut visited = HashSet::new();
+    let mut visited = FxHashSet::default();
     let mut postorder = Vec::new();
 
     let entry_label = func.blocks[0].label_id().unwrap();
@@ -93,7 +93,7 @@ pub fn outgoing_edges(block: &Block) -> impl Iterator<Item = Word> + '_ {
 }
 
 pub fn compact_ids(module: &mut Module) -> u32 {
-    let mut remap = HashMap::new();
+    let mut remap = FxHashMap::default();
 
     let mut insert = |current_id: u32| -> u32 {
         let len = remap.len();

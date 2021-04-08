@@ -17,9 +17,9 @@ use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
 use rspirv::binary::Consumer;
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
 use rustc_session::Session;
-use std::collections::HashMap;
 
 pub type Result<T> = std::result::Result<T, ErrorReported>;
 
@@ -35,7 +35,7 @@ pub struct Options {
 
 pub enum LinkResult {
     SingleModule(Module),
-    MultipleModules(HashMap<String, Module>),
+    MultipleModules(FxHashMap<String, Module>),
 }
 
 fn id(header: &mut ModuleHeader) -> Word {
@@ -44,7 +44,7 @@ fn id(header: &mut ModuleHeader) -> Word {
     result
 }
 
-fn apply_rewrite_rules(rewrite_rules: &HashMap<Word, Word>, blocks: &mut [Block]) {
+fn apply_rewrite_rules(rewrite_rules: &FxHashMap<Word, Word>, blocks: &mut [Block]) {
     let apply = |inst: &mut Instruction| {
         if let Some(ref mut id) = &mut inst.result_id {
             if let Some(&rewrite) = rewrite_rules.get(id) {
@@ -185,7 +185,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
 
     let unroll_loops_decorations = UnrollLoopsDecoration::decode_all(&output)
         .map(|(id, unroll_loops)| (id, unroll_loops.deserialize()))
-        .collect::<HashMap<_, _>>();
+        .collect::<FxHashMap<_, _>>();
     UnrollLoopsDecoration::remove_all(&mut output);
 
     let mut output = if opts.structurize {
@@ -201,8 +201,8 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
 
     {
         let _timer = sess.timer("link_block_ordering_pass_and_mem2reg");
-        let mut pointer_to_pointee = HashMap::new();
-        let mut constants = HashMap::new();
+        let mut pointer_to_pointee = FxHashMap::default();
+        let mut constants = FxHashMap::default();
         if opts.mem2reg {
             let mut u32 = None;
             for inst in &output.types_global_values {

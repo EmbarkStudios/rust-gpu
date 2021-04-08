@@ -1,9 +1,9 @@
 use super::Result;
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_errors::ErrorReported;
 use rustc_session::Session;
-use std::collections::{HashMap, HashSet};
 
 pub fn run(sess: &Session, module: &mut Module) -> Result<()> {
     let (rewrite_rules, killed_parameters) =
@@ -17,15 +17,15 @@ pub fn run(sess: &Session, module: &mut Module) -> Result<()> {
 fn find_import_export_pairs_and_killed_params(
     sess: &Session,
     module: &Module,
-) -> Result<(HashMap<u32, u32>, HashSet<u32>)> {
+) -> Result<(FxHashMap<u32, u32>, FxHashSet<u32>)> {
     let type_map = get_type_map(module);
     let fn_parameters = fn_parameters(module);
 
     // Map from name -> (definition, type)
-    let mut exports = HashMap::new();
+    let mut exports = FxHashMap::default();
     // Rules to rewrite the module with
-    let mut rewrite_rules = HashMap::new();
-    let mut killed_parameters = HashSet::new();
+    let mut rewrite_rules = FxHashMap::default();
+    let mut killed_parameters = FxHashSet::default();
 
     // First, collect all the exports.
     for annotation in &module.annotations {
@@ -84,7 +84,7 @@ fn get_linkage_inst(inst: &Instruction) -> Option<(Word, &str, LinkageType)> {
     }
 }
 
-fn get_type_map(module: &Module) -> HashMap<Word, Word> {
+fn get_type_map(module: &Module) -> FxHashMap<Word, Word> {
     let vars = module
         .types_global_values
         .iter()
@@ -97,7 +97,7 @@ fn get_type_map(module: &Module) -> HashMap<Word, Word> {
     vars.chain(fns).collect()
 }
 
-fn fn_parameters(module: &Module) -> HashMap<Word, Vec<Word>> {
+fn fn_parameters(module: &Module) -> FxHashMap<Word, Vec<Word>> {
     module
         .functions
         .iter()
@@ -117,7 +117,7 @@ fn check_tys_equal(sess: &Session, name: &str, import_type: Word, export_type: W
     }
 }
 
-fn replace_all_uses_with(module: &mut Module, rules: &HashMap<u32, u32>) {
+fn replace_all_uses_with(module: &mut Module, rules: &FxHashMap<u32, u32>) {
     module.all_inst_iter_mut().for_each(|inst| {
         if let Some(ref mut result_type) = &mut inst.result_type {
             if let Some(&rewrite) = rules.get(result_type) {
@@ -135,7 +135,7 @@ fn replace_all_uses_with(module: &mut Module, rules: &HashMap<u32, u32>) {
     });
 }
 
-fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &HashMap<u32, u32>) {
+fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &FxHashMap<u32, u32>) {
     // drop imported functions
     module
         .functions
@@ -161,8 +161,8 @@ fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &HashMap<u32, u
 
 fn import_kill_annotations_and_debug(
     module: &mut Module,
-    rewrite_rules: &HashMap<u32, u32>,
-    killed_parameters: &HashSet<u32>,
+    rewrite_rules: &FxHashMap<u32, u32>,
+    killed_parameters: &FxHashSet<u32>,
 ) {
     module.annotations.retain(|inst| {
         inst.operands.is_empty()

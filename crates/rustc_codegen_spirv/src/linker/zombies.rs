@@ -3,9 +3,9 @@
 use crate::decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Op, Word};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
-use std::collections::HashMap;
 use std::env;
 use std::iter::once;
 
@@ -35,7 +35,7 @@ impl<'a> ZombieInfo<'a> {
 
 fn contains_zombie<'h, 'a>(
     inst: &Instruction,
-    zombie: &'h HashMap<Word, ZombieInfo<'a>>,
+    zombie: &'h FxHashMap<Word, ZombieInfo<'a>>,
 ) -> Option<&'h ZombieInfo<'a>> {
     if let Some(result_type) = inst.result_type {
         if let Some(reason) = zombie.get(&result_type) {
@@ -49,7 +49,7 @@ fn contains_zombie<'h, 'a>(
 
 fn is_zombie<'h, 'a>(
     inst: &Instruction,
-    zombie: &'h HashMap<Word, ZombieInfo<'a>>,
+    zombie: &'h FxHashMap<Word, ZombieInfo<'a>>,
 ) -> Option<&'h ZombieInfo<'a>> {
     if let Some(result_id) = inst.result_id {
         zombie.get(&result_id)
@@ -60,13 +60,13 @@ fn is_zombie<'h, 'a>(
 
 fn is_or_contains_zombie<'h, 'a>(
     inst: &Instruction,
-    zombie: &'h HashMap<Word, ZombieInfo<'a>>,
+    zombie: &'h FxHashMap<Word, ZombieInfo<'a>>,
 ) -> Option<&'h ZombieInfo<'a>> {
     let result_zombie = inst.result_id.and_then(|result_id| zombie.get(&result_id));
     result_zombie.or_else(|| contains_zombie(inst, zombie))
 }
 
-fn spread_zombie(module: &mut Module, zombie: &mut HashMap<Word, ZombieInfo<'_>>) -> bool {
+fn spread_zombie(module: &mut Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_>>) -> bool {
     let mut any = false;
     // globals are easy
     for inst in module.global_inst_iter() {
@@ -103,7 +103,7 @@ fn spread_zombie(module: &mut Module, zombie: &mut HashMap<Word, ZombieInfo<'_>>
     any
 }
 
-fn get_names(module: &Module) -> HashMap<Word, &str> {
+fn get_names(module: &Module) -> FxHashMap<Word, &str> {
     module
         .debugs
         .iter()
@@ -120,7 +120,7 @@ fn get_names(module: &Module) -> HashMap<Word, &str> {
 // If an entry point references a zombie'd value, then the entry point would normally get removed.
 // That's an absolutely horrible experience to debug, though, so instead, create a nice error
 // message containing the stack trace of how the entry point got to the zombie value.
-fn report_error_zombies(sess: &Session, module: &Module, zombie: &HashMap<Word, ZombieInfo<'_>>) {
+fn report_error_zombies(sess: &Session, module: &Module, zombie: &FxHashMap<Word, ZombieInfo<'_>>) {
     let mut names = None;
     for root in super::dce::collect_roots(module) {
         if let Some(reason) = zombie.get(&root) {

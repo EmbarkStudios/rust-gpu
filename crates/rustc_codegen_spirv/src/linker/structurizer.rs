@@ -7,8 +7,9 @@ use rspirv::{
     dr::{Block, Builder, InsertPoint, Module, Operand},
     spirv::LoopControl,
 };
+use rustc_data_structures::fx::FxHashMap;
 use rustc_session::Session;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 pub struct LoopInfo {
     merge_id: Word,
@@ -127,7 +128,7 @@ impl ControlFlowInfo {
 pub fn structurize(
     sess: &Session,
     module: Module,
-    unroll_loops_decorations: HashMap<Word, UnrollLoopsDecoration>,
+    unroll_loops_decorations: FxHashMap<Word, UnrollLoopsDecoration>,
 ) -> Module {
     let mut builder = Builder::new_from_module(module);
 
@@ -686,7 +687,7 @@ pub fn insert_selection_merge_on_conditional_branch(
         }
     }
 
-    let mut modified_ids = HashMap::new();
+    let mut modified_ids = FxHashMap::default();
 
     // Find convergence point.
     for id in branch_conditional_ops.iter() {
@@ -798,7 +799,7 @@ pub fn insert_loop_merge_on_conditional_branch(
             }
         }
     }
-    let mut modified_ids = HashMap::new();
+    let mut modified_ids = FxHashMap::default();
 
     // Figure out which branch loops and which branch should merge, also find any potential break ops.
     for (id, looping_branch_idx) in branch_conditional_ops.iter() {

@@ -7,11 +7,11 @@ use rspirv::dr::Operand;
 use rspirv::spirv::{
     AccessQualifier, Capability, Decoration, Dim, ImageFormat, StorageClass, Word,
 };
+use rustc_data_structures::fx::FxHashMap;
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::{Align, Size};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::fmt;
 use std::iter;
 use std::lazy::SyncLazy;
@@ -690,7 +690,7 @@ pub struct TypeCache<'tcx> {
     /// Set of names for a type (only `SpirvType::Adt` currently).
     /// The same `OpType*` may have multiple names if it's e.g. a generic
     /// `struct` where the generic parameters result in the same field types.
-    type_names: RefCell<HashMap<Word, IndexSet<TyLayoutNameKey<'tcx>>>>,
+    type_names: RefCell<FxHashMap<Word, IndexSet<TyLayoutNameKey<'tcx>>>>,
 }
 
 impl TypeCache<'_> {

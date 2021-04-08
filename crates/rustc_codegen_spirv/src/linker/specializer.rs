@@ -54,8 +54,9 @@ use indexmap::{IndexMap, IndexSet};
 use rspirv::dr::{Builder, Function, Instruction, Module, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::captures::Captures;
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use smallvec::SmallVec;
-use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, VecDeque};
 use std::convert::{TryFrom, TryInto};
 use std::ops::{Range, RangeTo};
 use std::{fmt, io, iter, mem, slice};
@@ -109,7 +110,7 @@ pub fn specialize(module: Module, specialization: impl Specialization) -> Module
     let debug = std::env::var("SPECIALIZER_DEBUG").is_ok();
     let dump_instances = std::env::var("SPECIALIZER_DUMP_INSTANCES").ok();
 
-    let mut debug_names = HashMap::new();
+    let mut debug_names = FxHashMap::default();
     if debug || dump_instances.is_some() {
         debug_names = module
             .debugs
@@ -131,7 +132,7 @@ pub fn specialize(module: Module, specialization: impl Specialization) -> Module
         debug_names,
 
         generics: IndexMap::new(),
-        int_consts: HashMap::new(),
+        int_consts: FxHashMap::default(),
     };
 
     specializer.collect_generics(&module);
@@ -197,7 +198,7 @@ struct CallGraph {
 
 impl CallGraph {
     fn collect(module: &Module) -> Self {
-        let func_id_to_idx: HashMap<_, _> = module
+        let func_id_to_idx: FxHashMap<_, _> = module
             .functions
             .iter()
             .enumerate()
@@ -579,14 +580,14 @@ struct Specializer<S: Specialization> {
     debug: bool,
 
     // HACK(eddyb) if debugging is requested, this is used to quickly get `OpName`s.
-    debug_names: HashMap<Word, String>,
+    debug_names: FxHashMap<Word, String>,
 
     // FIXME(eddyb) compact SPIR-V IDs to allow flatter maps.
     generics: IndexMap<Word, Generic>,
 
     /// Integer `OpConstant`s (i.e. containing a `LiteralInt32`), to be used
     /// for interpreting `TyPat::IndexComposite` (such as for `OpAccessChain`).
-    int_consts: HashMap<Word, u32>,
+    int_consts: FxHashMap<Word, u32>,
 }
 
 impl<S: Specialization> Specializer<S> {
@@ -616,7 +617,7 @@ impl<S: Specialization> Specializer<S> {
             .iter()
             .chain(module.functions.iter().filter_map(|f| f.def.as_ref()));
 
-        let mut forward_declared_pointers = HashSet::new();
+        let mut forward_declared_pointers = FxHashSet::default();
         for inst in types_global_values_and_functions {
             let result_id = inst.result_id.unwrap_or_else(|| {
                 unreachable!(
@@ -2478,7 +2479,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
                 if newly_expanded_functions.len() > 1 {
                     // NOTE(eddyb) this is defined outside the loop to avoid
                     // allocating it for every expanded copy of the function.
-                    let mut rewrite_rules = HashMap::new();
+                    let mut rewrite_rules = FxHashMap::default();
 
                     for func in newly_expanded_functions {
                         rewrite_rules.extend(func.parameters.iter_mut().map(|param| {

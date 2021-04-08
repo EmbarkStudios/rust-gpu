@@ -30,7 +30,6 @@ use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
 use std::iter::once;
 use std::rc::Rc;
 use std::str::FromStr;
@@ -41,9 +40,9 @@ pub struct CodegenCx<'tcx> {
     /// Spir-v module builder
     pub builder: BuilderSpirv,
     /// Map from MIR function to spir-v function ID
-    pub instances: RefCell<HashMap<Instance<'tcx>, SpirvValue>>,
+    pub instances: RefCell<FxHashMap<Instance<'tcx>, SpirvValue>>,
     /// Map from function ID to parameter list
-    pub function_parameter_values: RefCell<HashMap<Word, Vec<SpirvValue>>>,
+    pub function_parameter_values: RefCell<FxHashMap<Word, Vec<SpirvValue>>>,
     pub type_cache: TypeCache<'tcx>,
     /// Cache generated vtables
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
@@ -51,17 +50,17 @@ pub struct CodegenCx<'tcx> {
     /// Invalid spir-v IDs that should be stripped from the final binary,
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
-    zombie_decorations: RefCell<HashMap<Word, ZombieDecoration>>,
+    zombie_decorations: RefCell<FxHashMap<Word, ZombieDecoration>>,
     /// Functions that have `#[spirv(unroll_loops)]`, and therefore should
     /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
     /// instructions, during structuralization.
-    unroll_loops_decorations: RefCell<HashMap<Word, UnrollLoopsDecoration>>,
+    unroll_loops_decorations: RefCell<FxHashMap<Word, UnrollLoopsDecoration>>,
     pub kernel_mode: bool,
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
-    pub zombie_undefs_for_system_fn_addrs: RefCell<HashMap<Word, Word>>,
-    pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
+    pub zombie_undefs_for_system_fn_addrs: RefCell<FxHashMap<Word, Word>>,
+    pub libm_intrinsics: RefCell<FxHashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
     pub panic_fn_id: Cell<Option<Word>>,
