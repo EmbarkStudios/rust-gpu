@@ -2,11 +2,12 @@ use crate::decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::binary::Assemble;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::{Op, Word};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::bug;
-use std::collections::{hash_map, HashMap, HashSet};
+use std::collections::hash_map;
 
 pub fn remove_duplicate_extensions(module: &mut Module) {
-    let mut set = HashSet::new();
+    let mut set = FxHashSet::default();
 
     module.extensions.retain(|inst| {
         inst.class.opcode != Op::Extension
@@ -15,7 +16,7 @@ pub fn remove_duplicate_extensions(module: &mut Module) {
 }
 
 pub fn remove_duplicate_capablities(module: &mut Module) {
-    let mut set = HashSet::new();
+    let mut set = FxHashSet::default();
     module.capabilities.retain(|inst| {
         inst.class.opcode != Op::Capability || set.insert(inst.operands[0].unwrap_capability())
     });
@@ -23,8 +24,8 @@ pub fn remove_duplicate_capablities(module: &mut Module) {
 
 pub fn remove_duplicate_ext_inst_imports(module: &mut Module) {
     // This is a simpler version of remove_duplicate_types, see that for comments
-    let mut ext_to_id = HashMap::new();
-    let mut rewrite_rules = HashMap::new();
+    let mut ext_to_id = FxHashMap::default();
+    let mut rewrite_rules = FxHashMap::default();
 
     // First deduplicate the imports
     for inst in &mut module.ext_inst_imports {
@@ -69,8 +70,8 @@ fn make_annotation_key(inst: &Instruction) -> Vec<u32> {
     data
 }
 
-fn gather_annotations(annotations: &[Instruction]) -> HashMap<Word, Vec<u32>> {
-    let mut map = HashMap::new();
+fn gather_annotations(annotations: &[Instruction]) -> FxHashMap<Word, Vec<u32>> {
+    let mut map = FxHashMap::default();
     for inst in annotations {
         if inst.class.opcode == Op::Decorate || inst.class.opcode == Op::MemberDecorate {
             match map.entry(inst.operands[0].id_ref_any().unwrap()) {
@@ -93,7 +94,7 @@ fn gather_annotations(annotations: &[Instruction]) -> HashMap<Word, Vec<u32>> {
         .collect()
 }
 
-fn gather_names(debugs: &[Instruction]) -> HashMap<Word, String> {
+fn gather_names(debugs: &[Instruction]) -> FxHashMap<Word, String> {
     debugs
         .iter()
         .filter(|inst| inst.class.opcode == Op::Name)
@@ -108,10 +109,10 @@ fn gather_names(debugs: &[Instruction]) -> HashMap<Word, String> {
 
 fn make_dedupe_key(
     inst: &Instruction,
-    unresolved_forward_pointers: &HashSet<Word>,
-    zombies: &HashSet<Word>,
-    annotations: &HashMap<Word, Vec<u32>>,
-    names: &HashMap<Word, String>,
+    unresolved_forward_pointers: &FxHashSet<Word>,
+    zombies: &FxHashSet<Word>,
+    annotations: &FxHashMap<Word, Vec<u32>>,
+    names: &FxHashMap<Word, String>,
 ) -> Vec<u32> {
     let mut data = vec![inst.class.opcode as u32];
 
@@ -168,7 +169,7 @@ fn make_dedupe_key(
     data
 }
 
-fn rewrite_inst_with_rules(inst: &mut Instruction, rules: &HashMap<u32, u32>) {
+fn rewrite_inst_with_rules(inst: &mut Instruction, rules: &FxHashMap<u32, u32>) {
     if let Some(ref mut id) = inst.result_type {
         // If the rewrite rules contain this ID, replace with the mapped value, otherwise don't touch it.
         *id = rules.get(id).copied().unwrap_or(*id);
@@ -184,18 +185,18 @@ pub fn remove_duplicate_types(module: &mut Module) {
     // Keep in mind, this algorithm requires forward type references to not exist - i.e. it's a valid spir-v module.
 
     // Include zombies in the key to not merge zombies with non-zombies
-    let zombies: HashSet<Word> = ZombieDecoration::decode_all(module)
+    let zombies: FxHashSet<Word> = ZombieDecoration::decode_all(module)
         .map(|(z, _)| z)
         .collect();
 
     // When a duplicate type is encountered, then this is a map from the deleted ID, to the new, deduplicated ID.
-    let mut rewrite_rules = HashMap::new();
+    let mut rewrite_rules = FxHashMap::default();
     // Instructions are encoded into "keys": their opcode, followed by arguments, then annotations.
     // Importantly, result_id is left out. This means that any instruction that declares the same
     // type, but with different result_id, will result in the same key.
-    let mut key_to_result_id = HashMap::new();
+    let mut key_to_result_id = FxHashMap::default();
     // TODO: This is implementing forward pointers incorrectly.
-    let mut unresolved_forward_pointers = HashSet::new();
+    let mut unresolved_forward_pointers = FxHashSet::default();
 
     // Collect a map from type ID to an annotation "key blob" (to append to the type key)
     let annotations = gather_annotations(&module.annotations);
@@ -262,12 +263,12 @@ pub fn remove_duplicate_types(module: &mut Module) {
     // The same decorations for duplicated types will cause those different types to merge
     // together. So, we need to deduplicate the annotations as well. (Note we *do* care about the
     // ID of the type being applied to here, unlike `gather_annotations`)
-    let mut anno_set = HashSet::new();
+    let mut anno_set = FxHashSet::default();
     module
         .annotations
         .retain(|inst| anno_set.insert(inst.assemble()));
     // Same thing with OpName
-    let mut name_ids = HashSet::new();
+    let mut name_ids = FxHashSet::default();
     module.debugs.retain(|inst| {
         inst.class.opcode != Op::Name || name_ids.insert(inst.operands[0].unwrap_id_ref())
     });

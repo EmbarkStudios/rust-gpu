@@ -2,9 +2,9 @@ use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 /// Various places in the codebase (mostly attribute parsing) need to compare rustc Symbols to particular keywords.
@@ -41,9 +41,9 @@ pub struct Symbols {
     sampled: Symbol,
     image_format: Symbol,
     access_qualifier: Symbol,
-    attributes: HashMap<Symbol, SpirvAttribute>,
-    execution_modes: HashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
-    pub libm_intrinsics: HashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
+    attributes: FxHashMap<Symbol, SpirvAttribute>,
+    execution_modes: FxHashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
+    pub libm_intrinsics: FxHashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
 }
 
 const BUILTINS: &[(&str, BuiltIn)] = {
@@ -350,20 +350,20 @@ impl Symbols {
             .chain(execution_models)
             .chain(custom_attributes)
             .map(|(a, b)| (Symbol::intern(a), b));
-        let mut attributes = HashMap::new();
+        let mut attributes = FxHashMap::default();
         for (a, b) in attributes_iter {
             let old = attributes.insert(a, b);
-            // `.collect()` into a HashMap does not error on duplicates, so manually write out the
+            // `.collect()` into a FxHashMap does not error on duplicates, so manually write out the
             // loop here to error on duplicates.
             assert!(old.is_none());
         }
-        let mut execution_modes = HashMap::new();
+        let mut execution_modes = FxHashMap::default();
         for &(key, mode, dim) in EXECUTION_MODES {
             let old = execution_modes.insert(Symbol::intern(key), (mode, dim));
             assert!(old.is_none());
         }
 
-        let mut libm_intrinsics = HashMap::new();
+        let mut libm_intrinsics = FxHashMap::default();
         for &(a, b) in libm_intrinsics::TABLE {
             let old = libm_intrinsics.insert(Symbol::intern(a), b);
             assert!(old.is_none());

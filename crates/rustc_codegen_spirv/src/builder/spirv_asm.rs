@@ -12,14 +12,14 @@ use rspirv::spirv::{
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{AsmBuilderMethods, InlineAsmOperandRef};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::bug;
 use rustc_span::source_map::Span;
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
-use std::collections::{HashMap, HashSet};
 
 pub struct InstructionTable {
-    table: HashMap<&'static str, &'static rspirv::grammar::Instruction<'static>>,
+    table: FxHashMap<&'static str, &'static rspirv::grammar::Instruction<'static>>,
 }
 
 impl InstructionTable {
@@ -133,9 +133,9 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
             }
         }
 
-        let mut id_map = HashMap::new();
-        let mut defined_ids = HashSet::new();
-        let mut id_to_type_map = HashMap::new();
+        let mut id_map = FxHashMap::default();
+        let mut defined_ids = FxHashSet::default();
+        let mut id_to_type_map = FxHashMap::default();
         for operand in operands {
             if let InlineAsmOperandRef::In { reg: _, value } = operand {
                 let value = value.immediate();
@@ -241,8 +241,8 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
     fn insert_inst(
         &mut self,
-        id_map: &mut HashMap<&str, Word>,
-        defined_ids: &mut HashSet<Word>,
+        id_map: &mut FxHashMap<&str, Word>,
+        defined_ids: &mut FxHashSet<Word>,
         inst: dr::Instruction,
     ) {
         // Types declared must be registered in our type system.
@@ -339,9 +339,9 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
     fn codegen_asm<'a>(
         &mut self,
-        id_map: &mut HashMap<&'a str, Word>,
-        defined_ids: &mut HashSet<Word>,
-        id_to_type_map: &mut HashMap<Word, Word>,
+        id_map: &mut FxHashMap<&'a str, Word>,
+        defined_ids: &mut FxHashSet<Word>,
+        id_to_type_map: &mut FxHashMap<Word, Word>,
         mut tokens: impl Iterator<Item = Token<'a, 'cx, 'tcx>>,
     ) where
         'cx: 'a,
@@ -433,8 +433,8 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
     fn parse_operands<'a>(
         &mut self,
-        id_map: &mut HashMap<&'a str, Word>,
-        id_to_type_map: &HashMap<Word, Word>,
+        id_map: &mut FxHashMap<&'a str, Word>,
+        id_to_type_map: &FxHashMap<Word, Word>,
         mut tokens: impl Iterator<Item = Token<'a, 'cx, 'tcx>>,
         instruction: &mut dr::Instruction,
     ) where
@@ -537,7 +537,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
     fn infer_result_type(
         &self,
-        id_to_type_map: &HashMap<Word, Word>,
+        id_to_type_map: &FxHashMap<Word, Word>,
         instruction: &dr::Instruction,
     ) -> Option<Word> {
         use crate::spirv_type_constraints::{instruction_signatures, InstSig, TyListPat, TyPat};
@@ -673,8 +673,8 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
     fn parse_id_out<'a>(
         &mut self,
-        id_map: &mut HashMap<&'a str, Word>,
-        defined_ids: &mut HashSet<Word>,
+        id_map: &mut FxHashMap<&'a str, Word>,
+        defined_ids: &mut FxHashSet<Word>,
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<OutRegister<'a>> {
         match token {
@@ -762,7 +762,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
     fn parse_id_in<'a>(
         &mut self,
-        id_map: &mut HashMap<&'a str, Word>,
+        id_map: &mut FxHashMap<&'a str, Word>,
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<Word> {
         match token {
@@ -904,7 +904,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
     fn parse_one_operand<'a>(
         &mut self,
-        id_map: &mut HashMap<&'a str, Word>,
+        id_map: &mut FxHashMap<&'a str, Word>,
         inst: &mut dr::Instruction,
         kind: OperandKind,
         tokens: &mut impl Iterator<Item = Token<'a, 'cx, 'tcx>>,

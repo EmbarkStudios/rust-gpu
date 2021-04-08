@@ -13,13 +13,14 @@ use super::simple_passes::outgoing_edges;
 use super::{apply_rewrite_rules, id};
 use rspirv::dr::{Block, Function, Instruction, ModuleHeader, Operand};
 use rspirv::spirv::{Op, Word};
-use std::collections::{hash_map, HashMap, HashSet};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use std::collections::hash_map;
 
 pub fn mem2reg(
     header: &mut ModuleHeader,
     types_global_values: &mut Vec<Instruction>,
-    pointer_to_pointee: &HashMap<Word, Word>,
-    constants: &HashMap<Word, u32>,
+    pointer_to_pointee: &FxHashMap<Word, Word>,
+    constants: &FxHashMap<Word, u32>,
     func: &mut Function,
 ) {
     let reachable = compute_reachable(&func.blocks);
@@ -124,9 +125,12 @@ fn compute_idom(preds: &[Vec<usize>], reachable_blocks: &[bool]) -> Vec<Option<u
 }
 
 // Same paper as above
-fn compute_dominance_frontier(preds: &[Vec<usize>], idom: &[Option<usize>]) -> Vec<HashSet<usize>> {
+fn compute_dominance_frontier(
+    preds: &[Vec<usize>],
+    idom: &[Option<usize>],
+) -> Vec<FxHashSet<usize>> {
     assert_eq!(preds.len(), idom.len());
-    let mut dominance_frontier = vec![HashSet::new(); preds.len()];
+    let mut dominance_frontier = vec![FxHashSet::default(); preds.len()];
     for node in 0..preds.len() {
         if preds[node].len() >= 2 {
             let node_idom = idom[node].unwrap();
@@ -145,10 +149,10 @@ fn compute_dominance_frontier(preds: &[Vec<usize>], idom: &[Option<usize>]) -> V
 fn insert_phis_all(
     header: &mut ModuleHeader,
     types_global_values: &mut Vec<Instruction>,
-    pointer_to_pointee: &HashMap<Word, Word>,
-    constants: &HashMap<Word, u32>,
+    pointer_to_pointee: &FxHashMap<Word, Word>,
+    constants: &FxHashMap<Word, u32>,
     blocks: &mut [Block],
-    dominance_frontier: Vec<HashSet<usize>>,
+    dominance_frontier: Vec<FxHashSet<usize>>,
 ) {
     let thing = blocks[0]
         .instructions
@@ -172,10 +176,10 @@ fn insert_phis_all(
             blocks_with_phi,
             base_var_type,
             var_map,
-            phi_defs: HashSet::new(),
-            visited: HashSet::new(),
+            phi_defs: FxHashSet::default(),
+            visited: FxHashSet::default(),
             stack: Vec::new(),
-            rewrite_rules: HashMap::new(),
+            rewrite_rules: FxHashMap::default(),
         };
         renamer.rename(0, None);
         apply_rewrite_rules(&renamer.rewrite_rules, blocks);
@@ -193,15 +197,15 @@ struct VarInfo {
 }
 
 fn collect_access_chains(
-    pointer_to_pointee: &HashMap<Word, Word>,
-    constants: &HashMap<Word, u32>,
+    pointer_to_pointee: &FxHashMap<Word, Word>,
+    constants: &FxHashMap<Word, u32>,
     blocks: &[Block],
     base_var: Word,
     base_var_ty: Word,
-) -> Option<HashMap<Word, VarInfo>> {
+) -> Option<FxHashMap<Word, VarInfo>> {
     fn construct_access_chain_info(
-        pointer_to_pointee: &HashMap<Word, Word>,
-        constants: &HashMap<Word, u32>,
+        pointer_to_pointee: &FxHashMap<Word, Word>,
+        constants: &FxHashMap<Word, u32>,
         inst: &Instruction,
         base: &VarInfo,
     ) -> Option<VarInfo> {
@@ -217,7 +221,7 @@ fn collect_access_chains(
         })
     }
 
-    let mut variables = HashMap::new();
+    let mut variables = FxHashMap::default();
     variables.insert(
         base_var,
         VarInfo {
@@ -262,7 +266,7 @@ fn collect_access_chains(
     Some(variables)
 }
 
-fn has_store(block: &Block, var_map: &HashMap<Word, VarInfo>) -> bool {
+fn has_store(block: &Block, var_map: &FxHashMap<Word, VarInfo>) -> bool {
     block.instructions.iter().any(|inst| {
         let ptr = match inst.class.opcode {
             Op::Store => inst.operands[0].id_ref_any().unwrap(),
@@ -276,14 +280,14 @@ fn has_store(block: &Block, var_map: &HashMap<Word, VarInfo>) -> bool {
 
 fn insert_phis(
     blocks: &[Block],
-    dominance_frontier: &[HashSet<usize>],
-    var_map: &HashMap<Word, VarInfo>,
-) -> HashSet<usize> {
+    dominance_frontier: &[FxHashSet<usize>],
+    var_map: &FxHashMap<Word, VarInfo>,
+) -> FxHashSet<usize> {
     // TODO: Some algorithms check if the var is trivial in some way, e.g. all loads and stores are
     // in a single block. We should probably do that too.
-    let mut ever_on_work_list = HashSet::new();
+    let mut ever_on_work_list = FxHashSet::default();
     let mut work_list = Vec::new();
-    let mut blocks_with_phi = HashSet::new();
+    let mut blocks_with_phi = FxHashSet::default();
     for (block_idx, block) in blocks.iter().enumerate() {
         if has_store(block, var_map) {
             ever_on_work_list.insert(block_idx);
@@ -333,13 +337,13 @@ struct Renamer<'a> {
     header: &'a mut ModuleHeader,
     types_global_values: &'a mut Vec<Instruction>,
     blocks: &'a mut [Block],
-    blocks_with_phi: HashSet<usize>,
+    blocks_with_phi: FxHashSet<usize>,
     base_var_type: Word,
-    var_map: &'a HashMap<Word, VarInfo>,
-    phi_defs: HashSet<Word>,
-    visited: HashSet<usize>,
+    var_map: &'a FxHashMap<Word, VarInfo>,
+    phi_defs: FxHashSet<Word>,
+    visited: FxHashSet<usize>,
     stack: Vec<Word>,
-    rewrite_rules: HashMap<Word, Word>,
+    rewrite_rules: FxHashMap<Word, Word>,
 }
 
 impl Renamer<'_> {
@@ -484,7 +488,7 @@ fn remove_nops(blocks: &mut [Block]) {
     }
 }
 
-fn remove_old_variables(blocks: &mut [Block], thing: &[(HashMap<u32, VarInfo>, u32)]) {
+fn remove_old_variables(blocks: &mut [Block], thing: &[(FxHashMap<u32, VarInfo>, u32)]) {
     blocks[0].instructions.retain(|inst| {
         inst.class.opcode != Op::Variable || {
             let result_id = inst.result_id.unwrap();

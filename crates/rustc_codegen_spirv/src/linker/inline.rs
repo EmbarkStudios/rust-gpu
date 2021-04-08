@@ -8,10 +8,10 @@ use super::apply_rewrite_rules;
 use super::simple_passes::outgoing_edges;
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
-use std::collections::{HashMap, HashSet};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use std::mem::replace;
 
-type FunctionMap = HashMap<Word, Function>;
+type FunctionMap = FxHashMap<Word, Function>;
 
 pub fn inline(module: &mut Module) {
     let functions = module
@@ -28,7 +28,7 @@ pub fn inline(module: &mut Module) {
         .unwrap_or(0);
     // Drop all the functions we'll be inlining. (This also means we won't waste time processing
     // inlines in functions that will get inlined)
-    let mut dropped_ids = HashSet::new();
+    let mut dropped_ids = FxHashSet::default();
     module.functions.retain(|f| {
         if should_inline(&disallowed_argument_types, f) {
             // TODO: We should insert all defined IDs in this function.
@@ -58,7 +58,7 @@ pub fn inline(module: &mut Module) {
     }
 }
 
-fn compute_disallowed_argument_types(module: &Module) -> HashSet<Word> {
+fn compute_disallowed_argument_types(module: &Module) -> FxHashSet<Word> {
     let allowed_argument_storage_classes = &[
         StorageClass::UniformConstant,
         StorageClass::Function,
@@ -67,8 +67,8 @@ fn compute_disallowed_argument_types(module: &Module) -> HashSet<Word> {
         StorageClass::AtomicCounter,
         // TODO: StorageBuffer is allowed if VariablePointers is enabled
     ];
-    let mut disallowed_argument_types = HashSet::new();
-    let mut disallowed_pointees = HashSet::new();
+    let mut disallowed_argument_types = FxHashSet::default();
+    let mut disallowed_pointees = FxHashSet::default();
     for inst in &module.types_global_values {
         match inst.class.opcode {
             Op::TypePointer => {
@@ -115,7 +115,7 @@ fn compute_disallowed_argument_types(module: &Module) -> HashSet<Word> {
     disallowed_argument_types
 }
 
-fn should_inline(disallowed_argument_types: &HashSet<Word>, function: &Function) -> bool {
+fn should_inline(disallowed_argument_types: &FxHashSet<Word>, function: &Function) -> bool {
     let def = function.def.as_ref().unwrap();
     let control = def.operands[0].unwrap_function_control();
     control.contains(FunctionControl::INLINE)
@@ -136,8 +136,8 @@ struct Inliner<'m, 'map> {
     types_global_values: &'m mut Vec<Instruction>,
     void: Word,
     functions: &'map FunctionMap,
-    disallowed_argument_types: &'map HashSet<Word>,
-    // rewrite_rules: HashMap<Word, Word>,
+    disallowed_argument_types: &'map FxHashSet<Word>,
+    // rewrite_rules: FxHashMap<Word, Word>,
 }
 
 impl Inliner<'_, '_> {
@@ -298,7 +298,7 @@ impl Inliner<'_, '_> {
         true
     }
 
-    fn add_clone_id_rules(&mut self, rewrite_rules: &mut HashMap<Word, Word>, blocks: &[Block]) {
+    fn add_clone_id_rules(&mut self, rewrite_rules: &mut FxHashMap<Word, Word>, blocks: &[Block]) {
         for block in blocks {
             for inst in block.label.iter().chain(&block.instructions) {
                 if let Some(result_id) = inst.result_id {
