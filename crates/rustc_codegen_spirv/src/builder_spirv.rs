@@ -2,7 +2,7 @@ use crate::builder;
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{Block, Builder, Module, Operand};
-use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, Word};
+use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, StorageClass, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_middle::bug;
@@ -23,25 +23,8 @@ pub enum SpirvValueKind {
     // FIXME(eddyb) this shouldn't be needed, but `rustc_codegen_ssa` still relies
     // on converting `Function`s to `Value`s even for direct calls, the `Builder`
     // should just have direct and indirect `call` variants (or a `Callee` enum).
-    // FIXME(eddyb) document? not sure what to do with the `ConstantPointer` comment.
     FnAddr {
         function: Word,
-    },
-
-    /// There are a fair number of places where `rustc_codegen_ssa` creates a pointer to something
-    /// that cannot be pointed to in SPIR-V. For example, constant values are frequently emitted as
-    /// a pointer to constant memory, and then dereferenced where they're used. Functions are the
-    /// same way, when compiling a call, the function's pointer is loaded, then dereferenced, then
-    /// called. Directly translating these constructs is impossible, because SPIR-V doesn't allow
-    /// pointers to constants, or function pointers. So, instead, we create this ConstantPointer
-    /// "meta-value": directly using it is an error, however, if it is attempted to be
-    /// dereferenced, the "load" is instead a no-op that returns the underlying value directly.
-    ConstantPointer {
-        initializer: Word,
-
-        /// The global (module-scoped) `OpVariable` (with `initializer` set as
-        /// its initializer) to attach zombies to.
-        global_var: Word,
     },
 
     /// Deferred pointer cast, for the `Logical` addressing model (which doesn't
@@ -70,23 +53,29 @@ pub struct SpirvValue {
 }
 
 impl SpirvValue {
-    pub fn const_ptr_val(self, cx: &CodegenCx<'_>) -> Option<Self> {
+    pub fn const_fold_load(self, cx: &CodegenCx<'_>) -> Option<Self> {
         match self.kind {
-            SpirvValueKind::ConstantPointer {
-                initializer,
-                global_var: _,
-            } => {
-                let ty = match cx.lookup_type(self.ty) {
-                    SpirvType::Pointer { pointee } => pointee,
-                    ty => bug!("load called on variable that wasn't a pointer: {:?}", ty),
-                };
-                Some(initializer.with_type(ty))
+            SpirvValueKind::Def(id) | SpirvValueKind::IllegalConst(id) => {
+                let entry = cx.builder.id_to_const.borrow().get(&id)?.clone();
+                match entry.val {
+                    SpirvConst::PtrTo { pointee } => {
+                        let ty = match cx.lookup_type(self.ty) {
+                            SpirvType::Pointer { pointee } => pointee,
+                            ty => bug!("load called on value that wasn't a pointer: {:?}", ty),
+                        };
+                        // FIXME(eddyb) deduplicate this `if`-`else` and its other copies.
+                        let kind = if entry.legal.is_ok() {
+                            SpirvValueKind::Def(pointee)
+                        } else {
+                            SpirvValueKind::IllegalConst(pointee)
+                        };
+                        Some(SpirvValue { kind, ty })
+                    }
+                    _ => None,
+                }
             }
 
-            SpirvValueKind::FnAddr { .. }
-            | SpirvValueKind::Def(_)
-            | SpirvValueKind::IllegalConst(_)
-            | SpirvValueKind::LogicalPtrCast { .. } => None,
+            _ => None,
         }
     }
 
@@ -108,26 +97,47 @@ impl SpirvValue {
             SpirvValueKind::Def(id) => id,
 
             SpirvValueKind::IllegalConst(id) => {
-                let illegal = cx.builder.id_to_const.borrow()[&id].legal.unwrap_err();
-                if cx.is_system_crate() {
-                    cx.zombie_with_span(id, span, illegal.message());
-                } else {
-                    cx.tcx
-                        .sess
-                        .struct_span_err(span, illegal.message())
-                        .note(&format!("constant type: {}", cx.debug_type(self.ty)))
-                        .emit();
-                }
+                let entry = &cx.builder.id_to_const.borrow()[&id];
+                let msg = match entry.legal.unwrap_err() {
+                    IllegalConst::Shallow(cause) => {
+                        if let (
+                            LeafIllegalConst::CompositeContainsPtrTo,
+                            SpirvConst::Composite(_fields),
+                        ) = (cause, &entry.val)
+                        {
+                            // FIXME(eddyb) materialize this at runtime, using
+                            // `OpCompositeConstruct` (transitively, i.e. after
+                            // putting every field through `SpirvValue::def`),
+                            // if we have a `Builder` to do that in.
+                            // FIXME(eddyb) this isn't possible right now, as
+                            // the builder would be dynamically "locked" anyway
+                            // (i.e. attempting to do `bx.emit()` would panic).
+                        }
+
+                        cause.message()
+                    }
+
+                    IllegalConst::Indirect(cause) => cause.message(),
+                };
+
+                // HACK(eddyb) we don't know whether this constant originated
+                // in a system crate, so it's better to always zombie.
+                cx.zombie_even_in_user_code(id, span, msg);
 
                 id
             }
 
             SpirvValueKind::FnAddr { .. } => {
                 if cx.is_system_crate() {
-                    *cx.zombie_undefs_for_system_fn_addrs
+                    cx.builder
+                        .const_to_id
                         .borrow()
-                        .get(&self.ty)
+                        .get(&WithType {
+                            ty: self.ty,
+                            val: SpirvConst::ZombieUndefForFnAddr,
+                        })
                         .expect("FnAddr didn't go through proper undef registration")
+                        .val
                 } else {
                     cx.tcx
                         .sess
@@ -136,21 +146,6 @@ impl SpirvValue {
                     // emitting an invalid ID reference here is OK.
                     0
                 }
-            }
-
-            SpirvValueKind::ConstantPointer {
-                initializer: _,
-                global_var,
-            } => {
-                // HACK(eddyb) we don't know whether this constant originated
-                // in a system crate, so it's better to always zombie.
-                cx.zombie_even_in_user_code(
-                    global_var,
-                    span,
-                    "Cannot use this pointer directly, it must be dereferenced first",
-                );
-
-                global_var
             }
 
             SpirvValueKind::LogicalPtrCast {
@@ -201,9 +196,23 @@ pub enum SpirvConst {
     /// f64 isn't hash, so store bits
     F64(u64),
     Bool(bool),
-    Composite(Rc<[Word]>),
+
     Null,
     Undef,
+
+    /// Like `Undef`, but cached separately to avoid `FnAddr` zombies accidentally
+    /// applying to non-zombie `Undef`s of the same types.
+    // FIXME(eddyb) include the function ID so that multiple `fn` pointers to
+    // different functions, but of the same type, don't overlap their zombies.
+    ZombieUndefForFnAddr,
+
+    Composite(Rc<[Word]>),
+
+    /// Pointer to constant data, i.e. `&pointee`, represented as an `OpVariable`
+    /// in the `Private` storage class, and with `pointee` as its initializer.
+    PtrTo {
+        pointee: Word,
+    },
 }
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -212,13 +221,38 @@ struct WithType<V> {
     val: V,
 }
 
+/// Primary causes for a `SpirvConst` to be deemed illegal.
 #[derive(Copy, Clone, Debug)]
-enum IllegalConst {}
+enum LeafIllegalConst {
+    /// `SpirvConst::Composite` containing a `SpirvConst::PtrTo` as a field.
+    /// This is illegal because `OpConstantComposite` must have other constants
+    /// as its operands, and `OpVariable`s are never considered constant.
+    // FIXME(eddyb) figure out if this is an accidental omission in SPIR-V.
+    CompositeContainsPtrTo,
+}
 
-impl IllegalConst {
+impl LeafIllegalConst {
     fn message(&self) -> &'static str {
-        match *self {}
+        match *self {
+            Self::CompositeContainsPtrTo => {
+                "constant arrays/structs cannot contain pointers to other constants"
+            }
+        }
     }
+}
+
+#[derive(Copy, Clone, Debug)]
+enum IllegalConst {
+    /// This `SpirvConst` is (or contains) a "leaf" illegal constant. As there
+    /// is no indirection, some of these could still be materialized at runtime,
+    /// using e.g. `OpCompositeConstruct` instead of `OpConstantComposite`.
+    Shallow(LeafIllegalConst),
+
+    /// This `SpirvConst` is (or contains/points to) a `PtrTo` which points to
+    /// a "leaf" illegal constant. As the data would have to live for `'static`,
+    /// there is no way to materialize it as a pointer in SPIR-V. However, it
+    /// could still be legalized during codegen by e.g. folding loads from it.
+    Indirect(LeafIllegalConst),
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -384,6 +418,7 @@ impl BuilderSpirv {
         let val_with_type = WithType { ty, val };
         let mut builder = self.builder(BuilderCursor::default());
         if let Some(entry) = self.const_to_id.borrow().get(&val_with_type) {
+            // FIXME(eddyb) deduplicate this `if`-`else` and its other copies.
             let kind = if entry.legal.is_ok() {
                 SpirvValueKind::Def(entry.val)
             } else {
@@ -404,9 +439,15 @@ impl BuilderSpirv {
                     builder.constant_false(ty)
                 }
             }
-            SpirvConst::Composite(ref v) => builder.constant_composite(ty, v.iter().copied()),
+
             SpirvConst::Null => builder.constant_null(ty),
-            SpirvConst::Undef => builder.undef(ty, None),
+            SpirvConst::Undef | SpirvConst::ZombieUndefForFnAddr => builder.undef(ty, None),
+
+            SpirvConst::Composite(ref v) => builder.constant_composite(ty, v.iter().copied()),
+
+            SpirvConst::PtrTo { pointee } => {
+                builder.variable(ty, None, StorageClass::Private, Some(pointee))
+            }
         };
         #[allow(clippy::match_same_arms)]
         let legal = match val {
@@ -425,11 +466,52 @@ impl BuilderSpirv {
                 Ok(())
             }
 
-            SpirvConst::Composite(ref v) => v.iter().fold(Ok(()), |result, field| {
-                // FIXME(eddyb) combine `IllegalConst`s to account for some being
-                // "worse" than others.
-                result.and(self.id_to_const.borrow()[field].legal)
+            SpirvConst::ZombieUndefForFnAddr => {
+                // This can be considered legal as it's already marked as zombie.
+                // FIXME(eddyb) is it possible for the original zombie to lack a
+                // span, and should we go through `IllegalConst` in order to be
+                // able to attach a proper usesite span?
+                Ok(())
+            }
+
+            SpirvConst::Composite(ref v) => v.iter().fold(Ok(()), |composite_legal, field| {
+                let field_entry = &self.id_to_const.borrow()[field];
+                let field_legal_in_composite = field_entry.legal.and_then(|()| {
+                    // `field` is itself some legal `SpirvConst`, but can we have
+                    // it as part of an `OpConstantComposite`?
+                    match field_entry.val {
+                        SpirvConst::PtrTo { .. } => Err(IllegalConst::Shallow(
+                            LeafIllegalConst::CompositeContainsPtrTo,
+                        )),
+                        _ => Ok(()),
+                    }
+                });
+
+                match (composite_legal, field_legal_in_composite) {
+                    (Ok(()), Ok(())) => Ok(()),
+                    (Err(illegal), Ok(())) | (Ok(()), Err(illegal)) => Err(illegal),
+
+                    // Combining two causes of an illegal `SpirvConst` has to
+                    // take into account which is "worse", i.e. which imposes
+                    // more restrictions on how the resulting value can be used.
+                    // `Indirect` is worse than `Shallow` because it cannot be
+                    // materialized at runtime in the same way `Shallow` can be.
+                    (Err(illegal @ IllegalConst::Indirect(_)), Err(_))
+                    | (Err(_), Err(illegal @ IllegalConst::Indirect(_)))
+                    | (Err(illegal @ IllegalConst::Shallow(_)), Err(IllegalConst::Shallow(_))) => {
+                        Err(illegal)
+                    }
+                }
             }),
+
+            SpirvConst::PtrTo { pointee } => match self.id_to_const.borrow()[&pointee].legal {
+                Ok(()) => Ok(()),
+
+                // `Shallow` becomes `Indirect` when placed behind a pointer.
+                Err(IllegalConst::Shallow(cause)) | Err(IllegalConst::Indirect(cause)) => {
+                    Err(IllegalConst::Indirect(cause))
+                }
+            },
         };
         assert_matches!(
             self.const_to_id.borrow_mut().insert(
@@ -447,6 +529,7 @@ impl BuilderSpirv {
                 .insert(id, WithConstLegality { val, legal }),
             None
         );
+        // FIXME(eddyb) deduplicate this `if`-`else` and its other copies.
         let kind = if legal.is_ok() {
             SpirvValueKind::Def(id)
         } else {

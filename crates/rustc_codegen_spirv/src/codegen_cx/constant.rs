@@ -4,7 +4,7 @@ use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::place::PlaceRef;
-use rustc_codegen_ssa::traits::{ConstMethods, MiscMethods, StaticMethods};
+use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
 use rustc_middle::mir::interpret::{AllocId, Allocation, GlobalAlloc, Pointer, ScalarMaybeUninit};
 use rustc_middle::ty::layout::TyAndLayout;
@@ -166,7 +166,12 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             .spirv_type(DUMMY_SP, self);
         // FIXME(eddyb) include the actual byte data.
         (
-            self.make_constant_pointer(DUMMY_SP, self.undef(str_ty)),
+            self.builder.def_constant(
+                self.type_ptr_to(str_ty),
+                SpirvConst::PtrTo {
+                    pointee: self.undef(str_ty).def_cx(self),
+                },
+            ),
             self.const_usize(len as u64),
         )
     }
