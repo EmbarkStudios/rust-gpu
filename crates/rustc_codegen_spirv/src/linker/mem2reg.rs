@@ -22,8 +22,9 @@ pub fn mem2reg(
     constants: &HashMap<Word, u32>,
     func: &mut Function,
 ) {
-    let preds = compute_preds(&func.blocks);
-    let idom = compute_idom(&preds);
+    let reachable = compute_reachable(&func.blocks);
+    let preds = compute_preds(&func.blocks, &reachable);
+    let idom = compute_idom(&preds, &reachable);
     let dominance_frontier = compute_dominance_frontier(&preds, &idom);
     insert_phis_all(
         header,
@@ -35,24 +36,38 @@ pub fn mem2reg(
     );
 }
 
-pub fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
-    let mut result = vec![vec![]; blocks.len()];
-    for (source_idx, source) in blocks.iter().enumerate() {
-        let mut edges = outgoing_edges(source);
-        // HACK(eddyb) treat `OpSelectionMerge` as an edge, in case it points
-        // to an otherwise-unreachable block.
-        if let Some(before_last_idx) = source.instructions.len().checked_sub(2) {
-            if let Some(before_last) = source.instructions.get(before_last_idx) {
-                if before_last.class.opcode == Op::SelectionMerge {
-                    edges.push(before_last.operands[0].unwrap_id_ref());
-                }
+fn label_to_index(blocks: &[Block], id: Word) -> usize {
+    blocks
+        .iter()
+        .position(|b| b.label_id().unwrap() == id)
+        .unwrap()
+}
+
+fn compute_reachable(blocks: &[Block]) -> Vec<bool> {
+    fn recurse(blocks: &[Block], reachable: &mut [bool], block: usize) {
+        if !reachable[block] {
+            reachable[block] = true;
+            for dest_id in outgoing_edges(&blocks[block]) {
+                let dest_idx = label_to_index(blocks, dest_id);
+                recurse(blocks, reachable, dest_idx);
             }
         }
-        for dest_id in edges {
-            let dest_idx = blocks
-                .iter()
-                .position(|b| b.label_id().unwrap() == dest_id)
-                .unwrap();
+    }
+    let mut reachable = vec![false; blocks.len()];
+    recurse(blocks, &mut reachable, 0);
+    reachable
+}
+
+fn compute_preds(blocks: &[Block], reachable_blocks: &[bool]) -> Vec<Vec<usize>> {
+    let mut result = vec![vec![]; blocks.len()];
+    // Do not count unreachable blocks as valid preds of blocks
+    for (source_idx, source) in blocks
+        .iter()
+        .enumerate()
+        .filter(|&(b, _)| reachable_blocks[b])
+    {
+        for dest_id in outgoing_edges(source) {
+            let dest_idx = label_to_index(blocks, dest_id);
             result[dest_idx].push(source_idx);
         }
     }
@@ -62,7 +77,8 @@ pub fn compute_preds(blocks: &[Block]) -> Vec<Vec<usize>> {
 // Paper: A Simple, Fast Dominance Algorithm
 // https://www.cs.rice.edu/~keith/EMBED/dom.pdf
 // Note: requires nodes in reverse postorder
-fn compute_idom(preds: &[Vec<usize>]) -> Vec<usize> {
+// If a result is None, that means the block is unreachable, and therefore has no idom.
+fn compute_idom(preds: &[Vec<usize>], reachable_blocks: &[bool]) -> Vec<Option<usize>> {
     fn intersect(doms: &[Option<usize>], mut finger1: usize, mut finger2: usize) -> usize {
         // TODO: This may return an optional result?
         while finger1 != finger2 {
@@ -83,7 +99,8 @@ fn compute_idom(preds: &[Vec<usize>]) -> Vec<usize> {
     let mut changed = true;
     while changed {
         changed = false;
-        for node in 1..(preds.len()) {
+        // Unreachable blocks have no preds, and therefore no idom
+        for node in (1..(preds.len())).filter(|&i| reachable_blocks[i]) {
             let mut new_idom: Option<usize> = None;
             for &pred in &preds[node] {
                 if idom[pred].is_some() {
@@ -99,20 +116,25 @@ fn compute_idom(preds: &[Vec<usize>]) -> Vec<usize> {
             }
         }
     }
-    idom.iter().map(|x| x.unwrap()).collect()
+    assert!(idom
+        .iter()
+        .enumerate()
+        .all(|(i, x)| x.is_some() == reachable_blocks[i]));
+    idom
 }
 
 // Same paper as above
-fn compute_dominance_frontier(preds: &[Vec<usize>], idom: &[usize]) -> Vec<HashSet<usize>> {
+fn compute_dominance_frontier(preds: &[Vec<usize>], idom: &[Option<usize>]) -> Vec<HashSet<usize>> {
     assert_eq!(preds.len(), idom.len());
     let mut dominance_frontier = vec![HashSet::new(); preds.len()];
     for node in 0..preds.len() {
         if preds[node].len() >= 2 {
+            let node_idom = idom[node].unwrap();
             for &pred in &preds[node] {
                 let mut runner = pred;
-                while runner != idom[node] {
+                while runner != node_idom {
                     dominance_frontier[runner].insert(node);
-                    runner = idom[runner];
+                    runner = idom[runner].unwrap();
                 }
             }
         }
@@ -442,13 +464,9 @@ impl Renamer<'_> {
             }
         }
 
-        for dest_id in outgoing_edges(&self.blocks[block]) {
+        for dest_id in outgoing_edges(&self.blocks[block]).collect::<Vec<_>>() {
             // TODO: Don't do this find
-            let dest_idx = self
-                .blocks
-                .iter()
-                .position(|b| b.label_id().unwrap() == dest_id)
-                .unwrap();
+            let dest_idx = label_to_index(self.blocks, dest_id);
             self.rename(dest_idx, Some(block));
         }
 

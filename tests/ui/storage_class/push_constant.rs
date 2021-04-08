@@ -4,8 +4,6 @@
 use spirv_std as _;
 
 #[derive(Copy, Clone)]
-// `Block` decoration is required for push constants when compiling for Vulkan.
-#[cfg_attr(not(target_env = "unknown"), spirv(block))]
 pub struct ShaderConstants {
     pub width: u32,
     pub height: u32,

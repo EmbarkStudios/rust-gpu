@@ -237,6 +237,8 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
                     &constants,
                     func,
                 );
+                // mem2reg produces minimal SSA form, not pruned, so DCE the dead ones
+                dce::dce_phi(func);
             }
         }
     }

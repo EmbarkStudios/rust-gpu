@@ -208,7 +208,8 @@ fn retarget_loop_children_if_needed(builder: &mut Builder, cf_info: &ControlFlow
 
         while let Some(front) = next.pop_front() {
             let block_idx = find_block_index_from_id(builder, &front);
-            let mut new_edges = outgoing_edges(get_block_ref!(builder, block_idx));
+            let mut new_edges =
+                outgoing_edges(get_block_ref!(builder, block_idx)).collect::<Vec<_>>();
 
             // Make sure we are not looping or going into child loops.
             for loop_info in &cf_info.loops {
@@ -249,8 +250,7 @@ fn retarget_loop_children_if_needed(builder: &mut Builder, cf_info: &ControlFlow
 fn incoming_edges(id: Word, builder: &mut Builder) -> Vec<Word> {
     let mut incoming_edges = Vec::new();
     for block in get_blocks_ref(builder) {
-        let out = outgoing_edges(block);
-        if out.contains(&id) {
+        if outgoing_edges(block).any(|x| x == id) {
             incoming_edges.push(block.label_id().unwrap());
         }
     }
@@ -292,8 +292,8 @@ fn defer_loop_internals(builder: &mut Builder, cf_info: &ControlFlowInfo) {
         // find all blocks that branch to a merge block.
         let mut possible_intermediate_block_idexes = Vec::new();
         for (i, block) in get_blocks_ref(builder).iter().enumerate() {
-            let out = outgoing_edges(block);
-            if out.len() == 1 && out[0] == loop_info.merge_id {
+            let mut out = outgoing_edges(block);
+            if out.next() == Some(loop_info.merge_id) && out.next() == None {
                 possible_intermediate_block_idexes.push(i)
             }
         }
@@ -390,7 +390,7 @@ fn eliminate_multiple_continue_blocks(builder: &mut Builder, header: Word) -> Wo
     for block in get_blocks_ref(builder) {
         let block_id = block.label_id().unwrap();
         if ends_in_branch(block) {
-            let edge = outgoing_edges(block)[0];
+            let edge = outgoing_edges(block).next().unwrap();
             if edge == header && block_is_parent_of(builder, header, block_id) {
                 continue_blocks.push(block_id);
             }
@@ -421,7 +421,7 @@ fn block_leads_into_break(builder: &Builder, cf_info: &ControlFlowInfo, start: W
 
     while let Some(front) = next.pop_front() {
         let block_idx = find_block_index_from_id(builder, &front);
-        let mut new_edges = outgoing_edges(get_block_ref!(builder, block_idx));
+        let mut new_edges = outgoing_edges(get_block_ref!(builder, block_idx)).collect::<Vec<_>>();
 
         // Make sure we are not looping.
         for loop_info in &cf_info.loops {
@@ -456,7 +456,7 @@ fn block_leads_into_break(builder: &Builder, cf_info: &ControlFlowInfo, start: W
 
 fn block_leads_into_continue(builder: &Builder, cf_info: &ControlFlowInfo, start: Word) -> bool {
     let start_idx = find_block_index_from_id(builder, &start);
-    let new_edges = outgoing_edges(get_block_ref!(builder, start_idx));
+    let new_edges = outgoing_edges(get_block_ref!(builder, start_idx)).collect::<Vec<_>>();
     for loop_info in &cf_info.loops {
         if new_edges.len() == 1 && loop_info.continue_id == new_edges[0] {
             return true;
@@ -485,7 +485,7 @@ fn block_is_reverse_idom_of(
             continue;
         }
 
-        let mut new_edges = outgoing_edges(get_block_ref!(builder, block_idx));
+        let mut new_edges = outgoing_edges(get_block_ref!(builder, block_idx)).collect::<Vec<_>>();
 
         // Skip loop bodies by jumping to the merge block is we hit a header block.
         for loop_info in &cf_info.loops {
@@ -552,7 +552,7 @@ fn block_is_parent_of(builder: &Builder, parent: Word, child: Word) -> bool {
 
     while let Some(front) = next.pop_front() {
         let block_idx = find_block_index_from_id(builder, &front);
-        let mut new_edges = outgoing_edges(get_block_ref!(builder, block_idx));
+        let mut new_edges = outgoing_edges(get_block_ref!(builder, block_idx)).collect::<Vec<_>>();
 
         for id in &processed {
             if let Some(i) = new_edges.iter().position(|x| x == id) {
@@ -589,7 +589,7 @@ fn get_looping_branch_from_block(
         }
 
         let block_idx = find_block_index_from_id(builder, &front);
-        let mut new_edges = outgoing_edges(get_block_ref!(builder, block_idx));
+        let mut new_edges = outgoing_edges(get_block_ref!(builder, block_idx)).collect::<Vec<_>>();
 
         let edge_it = new_edges.iter().find(|&x| x == &start); // Check if the new_edges contain the start
         if new_edges.len() == 1 {
@@ -598,8 +598,8 @@ fn get_looping_branch_from_block(
                 let start_idx = find_block_index_from_id(builder, &front);
                 let start_edges = outgoing_edges(get_block_ref!(builder, start_idx));
 
-                for (i, start_edge) in start_edges.iter().enumerate() {
-                    if start_edge == edge_it || block_is_parent_of(builder, *start_edge, *edge_it) {
+                for (i, start_edge) in start_edges.enumerate() {
+                    if start_edge == *edge_it || block_is_parent_of(builder, start_edge, *edge_it) {
                         return Some(i);
                     }
                 }
@@ -696,7 +696,7 @@ pub fn insert_selection_merge_on_conditional_branch(
         };
 
         let bi = find_block_index_from_id(builder, id);
-        let out = outgoing_edges(&get_blocks_ref(builder)[bi]);
+        let out = outgoing_edges(&get_blocks_ref(builder)[bi]).collect::<Vec<_>>();
         let id = idx_to_id(builder, bi);
         let a_nexts = get_possible_merge_positions(builder, cf_info, out[0]);
         let b_nexts = get_possible_merge_positions(builder, cf_info, out[1]);
@@ -809,7 +809,7 @@ pub fn insert_loop_merge_on_conditional_branch(
 
         let merge_branch_idx = (looping_branch_idx + 1) % 2;
         let bi = find_block_index_from_id(builder, &id);
-        let out = outgoing_edges(&get_blocks_ref(builder)[bi]);
+        let out = outgoing_edges(&get_blocks_ref(builder)[bi]).collect::<Vec<_>>();
 
         let continue_block_id = eliminate_multiple_continue_blocks(builder, id);
         let merge_block_id = out[merge_branch_idx];

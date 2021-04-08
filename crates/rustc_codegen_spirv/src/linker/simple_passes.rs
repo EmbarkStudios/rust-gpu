@@ -1,7 +1,6 @@
 use rspirv::dr::{Block, Function, Module};
 use rspirv::spirv::{Op, Word};
 use std::collections::{HashMap, HashSet};
-use std::iter::once;
 use std::mem::replace;
 
 pub fn shift_ids(module: &mut Module, add: u32) {
@@ -44,7 +43,7 @@ pub fn block_ordering_pass(func: &mut Function) {
             .iter()
             .find(|b| b.label_id().unwrap() == current)
             .unwrap();
-        let mut edges = outgoing_edges(current_block);
+        let mut edges = outgoing_edges(current_block).collect::<Vec<_>>();
         // HACK(eddyb) treat `OpSelectionMerge` as an edge, in case it points
         // to an otherwise-unreachable block.
         if let Some(before_last_idx) = current_block.instructions.len().checked_sub(2) {
@@ -80,27 +79,17 @@ pub fn block_ordering_pass(func: &mut Function) {
     assert_eq!(func.blocks[0].label_id().unwrap(), entry_label);
 }
 
-// FIXME(eddyb) use `Either`, `Cow`, and/or `SmallVec`.
-pub fn outgoing_edges(block: &Block) -> Vec<Word> {
+pub fn outgoing_edges(block: &Block) -> impl Iterator<Item = Word> + '_ {
     let terminator = block.instructions.last().unwrap();
     // https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#Termination
-    match terminator.class.opcode {
-        Op::Branch => vec![terminator.operands[0].unwrap_id_ref()],
-        Op::BranchConditional => vec![
-            terminator.operands[1].unwrap_id_ref(),
-            terminator.operands[2].unwrap_id_ref(),
-        ],
-        Op::Switch => once(terminator.operands[1].unwrap_id_ref())
-            .chain(
-                terminator.operands[3..]
-                    .iter()
-                    .step_by(2)
-                    .map(|op| op.unwrap_id_ref()),
-            )
-            .collect(),
-        Op::Return | Op::ReturnValue | Op::Kill | Op::Unreachable => Vec::new(),
+    let operand_indices = match terminator.class.opcode {
+        Op::Branch => (0..1).step_by(1),
+        Op::BranchConditional => (1..3).step_by(1),
+        Op::Switch => (1..terminator.operands.len()).step_by(2),
+        Op::Return | Op::ReturnValue | Op::Kill | Op::Unreachable => (0..0).step_by(1),
         _ => panic!("Invalid block terminator: {:?}", terminator),
-    }
+    };
+    operand_indices.map(move |i| terminator.operands[i].unwrap_id_ref())
 }
 
 pub fn compact_ids(module: &mut Module) -> u32 {
