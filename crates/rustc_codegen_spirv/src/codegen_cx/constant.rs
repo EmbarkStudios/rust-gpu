@@ -105,8 +105,9 @@ impl<'tcx> CodegenCx<'tcx> {
         self.builder.def_constant(ty, SpirvConst::Bool(val))
     }
 
-    pub fn constant_composite(&self, ty: Word, val: Vec<Word>) -> SpirvValue {
-        self.builder.def_constant(ty, SpirvConst::Composite(val))
+    pub fn constant_composite(&self, ty: Word, fields: impl Iterator<Item = Word>) -> SpirvValue {
+        self.builder
+            .def_constant(ty, SpirvConst::Composite(fields.collect()))
     }
 
     pub fn constant_null(&self, ty: Word) -> SpirvValue {
@@ -182,7 +183,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             field_names: None,
         }
         .def(DUMMY_SP, self);
-        self.constant_composite(struct_ty, elts.iter().map(|f| f.def_cx(self)).collect())
+        self.constant_composite(struct_ty, elts.iter().map(|f| f.def_cx(self)))
     }
 
     fn const_to_opt_uint(&self, v: Self::Value) -> Option<u64> {
@@ -448,7 +449,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     "create_const_alloc must consume all bytes of an Allocation after an unsized struct"
                 );
                 }
-                self.constant_composite(ty, values)
+                self.constant_composite(ty, values.into_iter())
             }
             SpirvType::Opaque { name } => self.tcx.sess.fatal(&format!(
                 "Cannot create const alloc of type opaque: {}",
@@ -456,12 +457,10 @@ impl<'tcx> CodegenCx<'tcx> {
             )),
             SpirvType::Array { element, count } => {
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
-                let values = (0..count)
-                    .map(|_| {
-                        self.create_const_alloc2(alloc, offset, element)
-                            .def_cx(self)
-                    })
-                    .collect::<Vec<_>>();
+                let values = (0..count).map(|_| {
+                    self.create_const_alloc2(alloc, offset, element)
+                        .def_cx(self)
+                });
                 self.constant_composite(ty, values)
             }
             SpirvType::Vector { element, count } => {
@@ -469,16 +468,15 @@ impl<'tcx> CodegenCx<'tcx> {
                     .sizeof(self)
                     .expect("create_const_alloc: Vectors must be sized");
                 let final_offset = *offset + total_size;
-                let values = (0..count)
-                    .map(|_| {
-                        self.create_const_alloc2(alloc, offset, element)
-                            .def_cx(self)
-                    })
-                    .collect::<Vec<_>>();
+                let values = (0..count).map(|_| {
+                    self.create_const_alloc2(alloc, offset, element)
+                        .def_cx(self)
+                });
+                let result = self.constant_composite(ty, values);
                 assert!(*offset <= final_offset);
                 // Vectors sometimes have padding at the end (e.g. vec3), skip over it.
                 *offset = final_offset;
-                self.constant_composite(ty, values)
+                result
             }
             SpirvType::RuntimeArray { element } => {
                 let mut values = Vec::new();
@@ -488,7 +486,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             .def_cx(self),
                     );
                 }
-                let result = self.constant_composite(ty, values);
+                let result = self.constant_composite(ty, values.into_iter());
                 // TODO: Figure out how to do this. Compiling the below crashes both clspv *and* llvm-spirv:
                 /*
                 __constant struct A {
