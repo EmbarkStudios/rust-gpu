@@ -247,8 +247,8 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
     cargo.args(&[
         "build",
         "--message-format=json-render-diagnostics",
-        "-Z",
-        "build-std=core",
+        "-Zbuild-std=core",
+        "-Zbuild-std-features=compiler-builtins-mem",
         "--target",
         "spirv-unknown-unknown",
     ]);

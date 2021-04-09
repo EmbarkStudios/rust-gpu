@@ -174,6 +174,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
             "-p",
             "compiletests-deps-helper",
             "-Zbuild-std=core",
+            "-Zbuild-std-features=compiler-builtins-mem",
             &*format!("--target={}", target),
         ])
         .arg("--target-dir")
