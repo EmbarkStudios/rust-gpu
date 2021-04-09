@@ -123,6 +123,11 @@ impl std::str::FromStr for SpirvTarget {
             .next()
             .and_then(|env| env.parse().ok())
             .ok_or_else(error)?;
+
+        if iter.next().is_some() {
+            return Err(error());
+        }
+
         Ok(Self { env, vendor })
     }
 }
