@@ -58,7 +58,7 @@ const SHADER: &[u8] = include_bytes!(env!("<shader_name>.spv"));
 > **Note** This method will require manually rebuilding `rust-gpu` each
   time there has been changes to the repository.
 
-If you just want to compile a build a shader crate, and don't need to
+If you just want to build a shader crate, and don't need to
 automatically compile the SPIR-V binary at build time, you can use
 `.cargo/config` to set the necessary flags. Before you can do that however you
 need to do a couple of steps first to build the compiler backend.
@@ -86,6 +86,7 @@ rustflags = [
 
 [unstable]
 build-std=["core"]
+build-std-features=["compiler-builtins-mem"]
 ```
 
 Now we can build our crate with cargo as normal. 
