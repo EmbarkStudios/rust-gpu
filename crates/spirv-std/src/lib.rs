@@ -8,7 +8,6 @@
         core_intrinsics,
         lang_items,
         naked_functions,
-        abi_unadjusted
     ),
     register_attr(spirv)
 )]
@@ -17,6 +16,7 @@
     feature(const_generics),
     allow(incomplete_features)
 )]
+#![feature(abi_unadjusted)]
 // BEGIN - Embark standard lints v0.3
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
