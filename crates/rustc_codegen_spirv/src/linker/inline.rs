@@ -19,7 +19,8 @@ pub fn inline(module: &mut Module) {
         .iter()
         .map(|f| (f.def_id().unwrap(), f.clone()))
         .collect();
-    let disallowed_argument_types = compute_disallowed_argument_types(module);
+    let (disallowed_argument_types, disallowed_return_types) =
+        compute_disallowed_argument_and_return_types(module);
     let void = module
         .types_global_values
         .iter()
@@ -30,7 +31,7 @@ pub fn inline(module: &mut Module) {
     // inlines in functions that will get inlined)
     let mut dropped_ids = FxHashSet::default();
     module.functions.retain(|f| {
-        if should_inline(&disallowed_argument_types, f) {
+        if should_inline(&disallowed_argument_types, &disallowed_return_types, f) {
             // TODO: We should insert all defined IDs in this function.
             dropped_ids.insert(f.def_id().unwrap());
             false
@@ -51,6 +52,7 @@ pub fn inline(module: &mut Module) {
         void,
         functions: &functions,
         disallowed_argument_types: &disallowed_argument_types,
+        disallowed_return_types: &disallowed_return_types,
     };
     for function in &mut module.functions {
         inliner.inline_fn(function);
@@ -58,17 +60,19 @@ pub fn inline(module: &mut Module) {
     }
 }
 
-fn compute_disallowed_argument_types(module: &Module) -> FxHashSet<Word> {
+fn compute_disallowed_argument_and_return_types(
+    module: &Module,
+) -> (FxHashSet<Word>, FxHashSet<Word>) {
     let allowed_argument_storage_classes = &[
         StorageClass::UniformConstant,
         StorageClass::Function,
         StorageClass::Private,
         StorageClass::Workgroup,
         StorageClass::AtomicCounter,
-        // TODO: StorageBuffer is allowed if VariablePointers is enabled
     ];
     let mut disallowed_argument_types = FxHashSet::default();
     let mut disallowed_pointees = FxHashSet::default();
+    let mut disallowed_return_types = FxHashSet::default();
     for inst in &module.types_global_values {
         match inst.class.opcode {
             Op::TypePointer => {
@@ -81,23 +85,18 @@ fn compute_disallowed_argument_types(module: &Module) -> FxHashSet<Word> {
                     disallowed_argument_types.insert(inst.result_id.unwrap());
                 }
                 disallowed_pointees.insert(inst.result_id.unwrap());
+                disallowed_return_types.insert(inst.result_id.unwrap());
             }
             Op::TypeStruct => {
-                if inst
-                    .operands
-                    .iter()
-                    .map(|op| op.id_ref_any().unwrap())
-                    .any(|id| disallowed_argument_types.contains(&id))
-                {
+                let fields = || inst.operands.iter().map(|op| op.id_ref_any().unwrap());
+                if fields().any(|id| disallowed_argument_types.contains(&id)) {
                     disallowed_argument_types.insert(inst.result_id.unwrap());
                 }
-                if inst
-                    .operands
-                    .iter()
-                    .map(|op| op.id_ref_any().unwrap())
-                    .any(|id| disallowed_pointees.contains(&id))
-                {
+                if fields().any(|id| disallowed_pointees.contains(&id)) {
                     disallowed_pointees.insert(inst.result_id.unwrap());
+                }
+                if fields().any(|id| disallowed_return_types.contains(&id)) {
+                    disallowed_return_types.insert(inst.result_id.unwrap());
                 }
             }
             Op::TypeArray | Op::TypeRuntimeArray | Op::TypeVector => {
@@ -112,10 +111,14 @@ fn compute_disallowed_argument_types(module: &Module) -> FxHashSet<Word> {
             _ => {}
         }
     }
-    disallowed_argument_types
+    (disallowed_argument_types, disallowed_return_types)
 }
 
-fn should_inline(disallowed_argument_types: &FxHashSet<Word>, function: &Function) -> bool {
+fn should_inline(
+    disallowed_argument_types: &FxHashSet<Word>,
+    disallowed_return_types: &FxHashSet<Word>,
+    function: &Function,
+) -> bool {
     let def = function.def.as_ref().unwrap();
     let control = def.operands[0].unwrap_function_control();
     control.contains(FunctionControl::INLINE)
@@ -123,6 +126,7 @@ fn should_inline(disallowed_argument_types: &FxHashSet<Word>, function: &Functio
             .parameters
             .iter()
             .any(|inst| disallowed_argument_types.contains(inst.result_type.as_ref().unwrap()))
+        || disallowed_return_types.contains(&function.def.as_ref().unwrap().result_type.unwrap())
 }
 
 // Steps:
@@ -137,6 +141,7 @@ struct Inliner<'m, 'map> {
     void: Word,
     functions: &'map FunctionMap,
     disallowed_argument_types: &'map FxHashSet<Word>,
+    disallowed_return_types: &'map FxHashSet<Word>,
     // rewrite_rules: FxHashMap<Word, Word>,
 }
 
@@ -198,7 +203,13 @@ impl Inliner<'_, '_> {
                         .unwrap(),
                 )
             })
-            .find(|(_, _, f)| should_inline(self.disallowed_argument_types, f));
+            .find(|(_, _, f)| {
+                should_inline(
+                    self.disallowed_argument_types,
+                    self.disallowed_return_types,
+                    f,
+                )
+            });
         let (call_index, call_inst, callee) = match call {
             None => return false,
             Some(call) => call,

@@ -46,7 +46,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         self.emit_with_cursor(self.cursor)
     }
 
-    pub fn zombie(&self, word: Word, reason: &'static str) {
+    pub fn zombie(&self, word: Word, reason: &str) {
         if let Some(current_span) = self.current_span {
             self.zombie_with_span(word, current_span, reason);
         } else {

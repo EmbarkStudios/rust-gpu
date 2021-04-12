@@ -320,10 +320,6 @@ impl BuilderSpirv {
                 }
                 builder.capability(Capability::VulkanMemoryModel);
             }
-            builder.capability(Capability::VariablePointers);
-            if version < (1, 3) {
-                builder.extension("SPV_KHR_variable_pointers");
-            }
         }
 
         // The linker will always be ran on this module
