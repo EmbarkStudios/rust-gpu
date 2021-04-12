@@ -230,13 +230,12 @@ need to do a couple of steps first to build the compiler backend.</p>
 <p>Now you should have a <code>librustc_codegen_spirv</code> dynamic library available in
 <code>target/release</code>. You'll need to keep this somewhere stable that you can
 reference from your shader project.</p>
-<p>Now we need to add our <code>.cargo/config</code> file. This tells cargo to build for the
-<code>spirv-unknown-unknown</code> target, and provides a path to the codegen backend for
-that target. We have to also provide <code>-Zbuild-std</code> as the
-<code>spirv-unknown-unknown</code> sysroot is not currently available in the
-default installation.</p>
+<p>Now we need to add our <code>.cargo/config</code> file. This is a configuration file that
+tells cargo how to build for SPIR-V. You need provide the target you're
+compiling for (see <a href="./platform-support.html">platform support</a>) and provide a path to your built <code>rustc_codegen_spirv</code> dynamic
+library. We have to also provide <code>-Zbuild-std</code>.</p>
 <pre><code class="language-toml">[build]
-target = &quot;spirv-unknown-unknown&quot;
+target = &quot;spirv-unknown-spv1.3&quot;
 rustflags = [
    &quot;-Zcodegen-backend=&lt;path_to_librustc_codegen_spirv&gt;&quot;,
    &quot;-Zsymbol-mangling-version=v0&quot;
@@ -246,7 +245,7 @@ rustflags = [
 build-std=[&quot;core&quot;]
 build-std-features=[&quot;compiler-builtins-mem&quot;]
 </code></pre>
-<p>Now we can build our crate with cargo as normal. </p>
+<p>Now we can build our crate with cargo as normal.</p>
 <pre><code class="language-bash">cargo build
 </code></pre>
 <p>Now you should have <code>&lt;project_name&gt;.spv</code> SPIR-V file in <code>target/debug</code> that you

@@ -1233,7 +1233,7 @@
 
     <span class="kw">match</span> <span class="ident">scalar</span>.<span class="ident">value</span> {
         <span class="ident">Primitive</span>::<span class="ident">Int</span>(<span class="ident">width</span>, <span class="kw-2">mut</span> <span class="ident">signedness</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">kernel_mode</span> {
+            <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                 <span class="ident">signedness</span> <span class="op">=</span> <span class="bool-val">false</span>;
             }
             <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>.<span class="ident">size</span>().<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">signedness</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
@@ -1462,7 +1462,7 @@
 <span class="kw">fn</span> <span class="ident">trans_struct</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TyKind</span>::<span class="ident">Foreign</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">ty</span>.<span class="ident">kind</span>() {
         <span class="comment">// &quot;An unsized FFI type that is opaque to Rust&quot;, `extern type A;` (currently unstable)</span>
-        <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">kernel_mode</span> {
+        <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
             <span class="comment">// TODO: This should use the name of the struct as the name. However, names are not stable across crates,</span>
             <span class="comment">// e.g. core::fmt::Opaque in one crate and fmt::Opaque in core.</span>
             <span class="kw">return</span> <span class="ident">SpirvType</span>::<span class="ident">Opaque</span> {

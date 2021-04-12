@@ -564,7 +564,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">32</span>, <span class="op">!</span><span class="self">self</span>.<span class="ident">kernel_mode</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">32</span>, <span class="op">!</span><span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>()).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
     }
 
@@ -758,7 +758,7 @@
                     <span class="ident">Primitive</span>::<span class="ident">Int</span>(<span class="ident">int_size</span>, <span class="ident">int_signedness</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
                         <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="ident">spirv_signedness</span>) <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">width</span> <span class="kw">as</span> <span class="ident">u64</span>, <span class="ident">int_size</span>.<span class="ident">size</span>().<span class="ident">bits</span>());
-                            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">kernel_mode</span> {
+                            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">spirv_signedness</span>, <span class="ident">int_signedness</span>);
                             }
                             <span class="self">self</span>.<span class="ident">constant_int</span>(<span class="ident">ty</span>, <span class="ident">data</span> <span class="kw">as</span> <span class="ident">u64</span>)

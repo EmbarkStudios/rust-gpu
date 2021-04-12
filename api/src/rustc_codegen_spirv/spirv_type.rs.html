@@ -866,7 +866,7 @@
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">id</span>();
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">type_struct_id</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">field_types</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>());
                 <span class="comment">// The struct size is only used in our own sizeof_in_bits() (used in e.g. ArrayStride decoration)</span>
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">kernel_mode</span> {
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="comment">// TODO: kernel mode can&#39;t do this??</span>
                     <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">offset</span>) <span class="kw">in</span> <span class="ident">field_offsets</span>.<span class="ident">iter</span>().<span class="ident">copied</span>().<span class="ident">enumerate</span>() {
                         <span class="ident">emit</span>.<span class="ident">member_decorate</span>(
@@ -896,7 +896,7 @@
                     .<span class="ident">expect</span>(<span class="string">&quot;Element of sized array must be sized&quot;</span>)
                     .<span class="ident">bytes</span>();
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_array</span>(<span class="ident">element</span>, <span class="ident">count</span>.<span class="ident">def_cx</span>(<span class="ident">cx</span>));
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">kernel_mode</span> {
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="comment">// TODO: kernel mode can&#39;t do this??</span>
                     <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">decorate</span>(
                         <span class="ident">result</span>,
@@ -919,7 +919,7 @@
                     <span class="ident">Decoration</span>::<span class="ident">ArrayStride</span>,
                     <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">Operand</span>::<span class="ident">LiteralInt32</span>(<span class="ident">element_size</span> <span class="kw">as</span> <span class="ident">u32</span>)),
                 );
-                <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">kernel_mode</span> {
+                <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;RuntimeArray in kernel mode&quot;</span>);
                 }
                 <span class="ident">result</span>
