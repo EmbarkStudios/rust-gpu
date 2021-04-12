@@ -5,6 +5,7 @@ use crate::rustc_codegen_ssa::traits::BuilderMethods;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
 use rustc_target::abi::Align;
+use std::convert::TryInto;
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
     // walk down every member in the ADT recursively and load their values as uints
@@ -59,6 +60,25 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Vector { count, element: _ } => {
                 for offset in 0..count {
                     let load_res = self.extract_value(val, offset as u64);
+
+                    self.recurse_adt_for_stores(
+                        uint_ty,
+                        load_res,
+                        base_offset + offset,
+                        uint_values_and_offsets,
+                    );
+                }
+            }
+            SpirvType::Array { element: _, count } => {
+                let count = self
+                    .cx
+                    .builder
+                    .lookup_const_u64(count)
+                    .expect("Array type has invalid count value");
+                
+                for offset in 0..count {
+                    let load_res = self.extract_value(val, offset);
+                    let offset : u32 = offset.try_into().expect("Array count needs to fit in u32");
 
                     self.recurse_adt_for_stores(
                         uint_ty,
