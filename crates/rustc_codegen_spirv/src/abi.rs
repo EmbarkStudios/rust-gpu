@@ -415,7 +415,7 @@ fn trans_scalar<'tcx>(
 
     match scalar.value {
         Primitive::Int(width, mut signedness) => {
-            if cx.kernel_mode {
+            if cx.target.is_kernel() {
                 signedness = false;
             }
             SpirvType::Integer(width.size().bits() as u32, signedness).def(span, cx)
@@ -644,7 +644,7 @@ pub fn auto_struct_layout<'tcx>(
 fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
     if let TyKind::Foreign(_) = ty.ty.kind() {
         // "An unsized FFI type that is opaque to Rust", `extern type A;` (currently unstable)
-        if cx.kernel_mode {
+        if cx.target.is_kernel() {
             // TODO: This should use the name of the struct as the name. However, names are not stable across crates,
             // e.g. core::fmt::Opaque in one crate and fmt::Opaque in core.
             return SpirvType::Opaque {

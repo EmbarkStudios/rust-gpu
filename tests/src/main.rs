@@ -30,7 +30,7 @@ impl Opt {
     pub fn environments(&self) -> Vec<String> {
         match &self.target_env {
             Some(env) => env.split(',').map(String::from).collect(),
-            None => vec!["unknown".into()],
+            None => vec!["spv1.3".into()],
         }
     }
 }

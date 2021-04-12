@@ -25,7 +25,7 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     pub fn constant_i32(&self, span: Span, val: i32) -> SpirvValue {
-        let ty = SpirvType::Integer(32, !self.kernel_mode).def(span, self);
+        let ty = SpirvType::Integer(32, !self.target.is_kernel()).def(span, self);
         self.builder.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
@@ -219,7 +219,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     Primitive::Int(int_size, int_signedness) => match self.lookup_type(ty) {
                         SpirvType::Integer(width, spirv_signedness) => {
                             assert_eq!(width as u64, int_size.size().bits());
-                            if !self.kernel_mode {
+                            if !self.target.is_kernel() {
                                 assert_eq!(spirv_signedness, int_signedness);
                             }
                             self.constant_int(ty, data as u64)

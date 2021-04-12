@@ -147,7 +147,7 @@ impl SpirvType {
                 let id = emit.id();
                 let result = emit.type_struct_id(Some(id), field_types.iter().cloned());
                 // The struct size is only used in our own sizeof_in_bits() (used in e.g. ArrayStride decoration)
-                if !cx.kernel_mode {
+                if !cx.target.is_kernel() {
                     // TODO: kernel mode can't do this??
                     for (index, offset) in field_offsets.iter().copied().enumerate() {
                         emit.member_decorate(
@@ -177,7 +177,7 @@ impl SpirvType {
                     .expect("Element of sized array must be sized")
                     .bytes();
                 let result = cx.emit_global().type_array(element, count.def_cx(cx));
-                if !cx.kernel_mode {
+                if !cx.target.is_kernel() {
                     // TODO: kernel mode can't do this??
                     cx.emit_global().decorate(
                         result,
@@ -200,7 +200,7 @@ impl SpirvType {
                     Decoration::ArrayStride,
                     iter::once(Operand::LiteralInt32(element_size as u32)),
                 );
-                if cx.kernel_mode {
+                if cx.target.is_kernel() {
                     cx.zombie_with_span(result, def_span, "RuntimeArray in kernel mode");
                 }
                 result

@@ -79,7 +79,7 @@ fn setup(src: &str) -> Result<PathBuf, Box<dyn Error>> {
 
 fn build(src: &str) -> PathBuf {
     let project = setup(src).expect("Failed to set up project");
-    crate::SpirvBuilder::new(&project)
+    crate::SpirvBuilder::new(&project, "spirv-unknown-spv1.3")
         .print_metadata(false)
         .release(false)
         .build()

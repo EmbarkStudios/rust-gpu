@@ -1,6 +1,7 @@
 use crate::builder;
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
+use crate::target::SpirvTarget;
 use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, StorageClass, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
@@ -302,17 +303,14 @@ pub struct BuilderSpirv {
 }
 
 impl BuilderSpirv {
-    pub fn new(
-        version: Option<(u8, u8)>,
-        memory_model: Option<MemoryModel>,
-        kernel_mode: bool,
-    ) -> Self {
+    pub fn new(target: &SpirvTarget) -> Self {
+        let version = target.spirv_version();
+        let memory_model = target.memory_model();
+
         let mut builder = Builder::new();
-        // Default to spir-v 1.3
-        let version = version.unwrap_or((1, 3));
         builder.set_version(version.0, version.1);
-        let memory_model = memory_model.unwrap_or(MemoryModel::Vulkan);
-        if kernel_mode {
+
+        if target.is_kernel() {
             builder.capability(Capability::Kernel);
         } else {
             builder.capability(Capability::Shader);
@@ -327,18 +325,23 @@ impl BuilderSpirv {
                 builder.extension("SPV_KHR_variable_pointers");
             }
         }
+
         // The linker will always be ran on this module
         builder.capability(Capability::Linkage);
         builder.capability(Capability::Int8);
         builder.capability(Capability::Int16);
         builder.capability(Capability::Int64);
         builder.capability(Capability::Float64);
-        if kernel_mode {
+
+        let addressing_model = if target.is_kernel() {
             builder.capability(Capability::Addresses);
-            builder.memory_model(AddressingModel::Physical32, MemoryModel::OpenCL);
+            AddressingModel::Physical32
         } else {
-            builder.memory_model(AddressingModel::Logical, memory_model);
-        }
+            AddressingModel::Logical
+        };
+
+        builder.memory_model(addressing_model, memory_model);
+
         Self {
             builder: RefCell::new(builder),
             const_to_id: Default::default(),

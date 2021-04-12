@@ -106,17 +106,16 @@ pub struct SpirvBuilder {
     path_to_crate: PathBuf,
     print_metadata: bool,
     release: bool,
-    spirv_version: Option<(u8, u8)>,
-    memory_model: Option<MemoryModel>,
+    target: String,
 }
+
 impl SpirvBuilder {
-    pub fn new(path_to_crate: impl AsRef<Path>) -> Self {
+    pub fn new(path_to_crate: impl AsRef<Path>, target: impl Into<String>) -> Self {
         Self {
             path_to_crate: path_to_crate.as_ref().to_owned(),
             print_metadata: true,
             release: true,
-            spirv_version: None,
-            memory_model: None,
+            target: target.into(),
         }
     }
 
@@ -129,18 +128,6 @@ impl SpirvBuilder {
     /// Build in release. Defaults to true.
     pub fn release(mut self, v: bool) -> Self {
         self.release = v;
-        self
-    }
-
-    /// Sets the SPIR-V binary version to use. Defaults to v1.3.
-    pub fn spirv_version(mut self, major: u8, minor: u8) -> Self {
-        self.spirv_version = Some((major, minor));
-        self
-    }
-
-    /// Sets the SPIR-V memory model. Defaults to Vulkan.
-    pub fn memory_model(mut self, memory_model: MemoryModel) -> Self {
-        self.memory_model = Some(memory_model);
         self
     }
 
@@ -212,35 +199,13 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
     // rustc expects a full path, instead of a filename looked up via LD_LIBRARY_PATH, so we need
     // to copy cargo's understanding of library lookup and find the library and its full path.
     let rustc_codegen_spirv = find_rustc_codegen_spirv();
-    let mut target_features = Vec::new();
-    // these must match codegen_cx/mod.rs
-    if let Some((major, minor)) = builder.spirv_version {
-        target_features.push(format!("+spirv{}.{}", major, minor));
-    }
-    if let Some(memory_model) = &builder.memory_model {
-        target_features.push(
-            match memory_model {
-                MemoryModel::Simple => "+simple",
-                MemoryModel::Vulkan => "+vulkan",
-                MemoryModel::GLSL450 => "+glsl450",
-            }
-            .to_string(),
-        );
-    }
-    let feature_flag = if target_features.is_empty() {
-        String::new()
-    } else {
-        format!(" -C target-feature={}", target_features.join(","))
-    };
-    let llvm_args = if multimodule {
-        " -C llvm-args=--module-output=multiple"
-    } else {
-        ""
-    };
+    let llvm_args = multimodule
+        .then(|| " -C llvm-args=--module-output=multiple")
+        .unwrap_or_default();
+
     let rustflags = format!(
-        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}{}",
+        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}",
         rustc_codegen_spirv.display(),
-        feature_flag,
         llvm_args,
     );
     let mut cargo = Command::new("cargo");
@@ -250,7 +215,7 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
         "-Zbuild-std=core",
         "-Zbuild-std-features=compiler-builtins-mem",
         "--target",
-        "spirv-unknown-unknown",
+        &*builder.target,
     ]);
     if builder.release {
         cargo.arg("--release");
