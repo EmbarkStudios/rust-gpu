@@ -42,7 +42,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                             "<unknown>"
                         };
 
-                        self.fatal(&format!(
+                        self.err(&format!(
                             "Trying to store to unaligned field: `{}::{}`. Field must be aligned to multiple of 4 bytes, but has offset {}",
                             adt_name,
                             field_name,
