@@ -150,7 +150,6 @@ impl<'tcx> CodegenCx<'tcx> {
             field_types: vec![runtime_array_uint],
             field_offsets: vec![],
             field_names: None,
-            is_block: false,
         }
         .def(rustc_span::DUMMY_SP, self);
 

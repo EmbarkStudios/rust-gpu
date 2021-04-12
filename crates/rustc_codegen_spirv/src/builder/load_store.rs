@@ -1,13 +1,10 @@
-use rustc_middle::bug;
-
 use super::Builder;
-use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
+use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::BindlessDescriptorSets;
 use crate::rustc_codegen_ssa::traits::BuilderMethods;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
-use rustc_span::DUMMY_SP;
-use rustc_target::abi::{Abi, Align, Scalar, Size};
+use rustc_target::abi::Align;
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
     // walk down every member in the ADT recursively and load their values as uints
