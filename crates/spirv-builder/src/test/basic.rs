@@ -27,10 +27,8 @@ fn custom_entry_point() {
 pub fn main() { }
 "#,
         r#"OpCapability Shader
-OpCapability VulkanMemoryModel
 OpCapability VariablePointers
-OpExtension "SPV_KHR_vulkan_memory_model"
-OpMemoryModel Logical Vulkan
+OpMemoryModel Logical Simple
 OpEntryPoint Fragment %1 "hello_world"
 OpExecutionMode %1 OriginUpperLeft
 OpName %2 "test_project::main"
@@ -83,7 +81,7 @@ fn asm() {
         asm!(
             "%int = OpTypeInt 32 0",
             "%scope = OpConstant %int 2",
-            "%semantics = OpConstant %int 8452",
+            "%semantics = OpConstant %int 16",
             "OpMemoryBarrier %scope %semantics",
         );
     }
@@ -173,12 +171,10 @@ fn asm_op_decorate() {
             add_decorate();
         }"#,
         r#"OpCapability Shader
-OpCapability VulkanMemoryModel
 OpCapability VariablePointers
 OpCapability RuntimeDescriptorArray
-OpExtension "SPV_KHR_vulkan_memory_model"
 OpExtension "SPV_EXT_descriptor_indexing"
-OpMemoryModel Logical Vulkan
+OpMemoryModel Logical Simple
 OpEntryPoint Fragment %1 "main"
 OpExecutionMode %1 OriginUpperLeft
 OpName %2 "test_project::add_decorate"
