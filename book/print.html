@@ -185,7 +185,7 @@ a look at <a href="./building-rust-gpu.html"><em>&quot;Building Rust-GPU&quot;</
 <p><strong>optional</strong> Install <a href="https://github.com/KhronosGroup/SPIRV-Tools#downloads">SPIRV-Tools</a> and add it to your <code>PATH</code>. You can skip this step if you just want to run examples with the defaults. See <a href="building-rust-gpu.html#using-installed-spirv-tools">Using installed SPIRV-Tools</a> if you decide to go with this option.</p>
 </li>
 <li>
-<p>Next, look at the <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples">examples</a> folder. There are two kinds of targets here: [runners] and [shaders]. The projects inside <code>shaders</code> are &quot;GPU crates&quot;, i.e. ones that will be compiled one or more SPIR-V modules. The <code>runner</code> projects are normal, CPU crates that use some graphics backend (currently, we have a <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/runners/wgpu"><code>wgpu</code> runner</a>, a <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/runners/ash">Vulkan runner</a> through <code>ash</code>, and a barebones pure software <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/runners/cpu">CPU runner</a>) to actually run one of the &quot;GPU crate&quot; shaders.</p>
+<p>Next, look at the <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples">examples</a> folder. There are two kinds of targets here: [runners] and [shaders]. The projects inside <code>shaders</code> are &quot;GPU crates&quot;, i.e. ones that will be compiled to one or more SPIR-V modules. The <code>runner</code> projects are normal, CPU crates that use some graphics backend (currently, we have a <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/runners/wgpu"><code>wgpu</code> runner</a>, a <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/runners/ash">Vulkan runner</a> through <code>ash</code>, and a barebones pure software <a href="https://github.com/EmbarkStudios/rust-gpu/tree/main/examples/runners/cpu">CPU runner</a>) to actually run one of the &quot;GPU crate&quot; shaders.</p>
 <p>Run the example:</p>
 <pre><code class="language-shell">cargo run --bin example-runner-wgpu
 </code></pre>
@@ -373,7 +373,7 @@ crates to display, it's recommended to use <code>spirv-builder</code> in a build
 <p><strong>Note</strong> This method will require manually rebuilding <code>rust-gpu</code> each
 time there has been changes to the repository.</p>
 </blockquote>
-<p>If you just want to compile a build a shader crate, and don't need to
+<p>If you just want to build a shader crate, and don't need to
 automatically compile the SPIR-V binary at build time, you can use
 <code>.cargo/config</code> to set the necessary flags. Before you can do that however you
 need to do a couple of steps first to build the compiler backend.</p>
@@ -398,6 +398,7 @@ rustflags = [
 
 [unstable]
 build-std=[&quot;core&quot;]
+build-std-features=[&quot;compiler-builtins-mem&quot;]
 </code></pre>
 <p>Now we can build our crate with cargo as normal. </p>
 <pre><code class="language-bash">cargo build
