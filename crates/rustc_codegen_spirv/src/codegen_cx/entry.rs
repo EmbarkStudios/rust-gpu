@@ -163,9 +163,6 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         .def(rustc_span::DUMMY_SP, self);
 
-        let uniform_uint_ptr =
-            SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
-
         let mut emit_global = self.emit_global();
         let buffer = emit_global
             .variable(uniform_ptr_runtime_array, None, StorageClass::Uniform, None)
@@ -211,7 +208,6 @@ impl<'tcx> CodegenCx<'tcx> {
         dim: rspirv::spirv::Dim,
         sampled: bool,
     ) -> Word {
-        let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
         let float_ty = SpirvType::Float(32).def(rustc_span::DUMMY_SP, self);
 
         let image_2d = SpirvType::Image {

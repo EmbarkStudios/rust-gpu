@@ -120,7 +120,7 @@ impl<'tcx> CodegenCx<'tcx> {
             }
         }
         let codegen_args = CodegenArgs::from_session(tcx.sess);
-        let mut result = Self {
+        let result = Self {
             tcx,
             codegen_unit,
             builder: BuilderSpirv::new(spirv_version, memory_model, kernel_mode),

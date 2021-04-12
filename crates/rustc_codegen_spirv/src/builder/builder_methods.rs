@@ -2156,7 +2156,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         } else if self.internal_buffer_load_id.borrow().contains(&callee_val) {
             self.codegen_internal_buffer_load(result_type, &args)
         } else if self.internal_buffer_store_id.borrow().contains(&callee_val) {
-            self.codegen_internal_buffer_store(result_type, &args)
+            self.codegen_internal_buffer_store(&args)
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()

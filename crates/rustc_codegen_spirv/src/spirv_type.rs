@@ -714,7 +714,7 @@ impl TypeCache<'_> {
     }
 
     pub fn lookup_name(&self, word: Word) -> String {
-        let mut type_names = self.type_names.borrow();
+        let type_names = self.type_names.borrow();
         type_names
             .get(&word)
             .and_then(|names| names.iter().next().copied())

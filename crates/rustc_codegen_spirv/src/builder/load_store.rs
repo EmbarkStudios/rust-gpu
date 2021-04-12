@@ -26,7 +26,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 ref field_names,
                 ..
             } => {
-                for (element_idx, (ty, offset)) in
+                for (element_idx, (_ty, offset)) in
                     field_types.iter().zip(field_offsets.iter()).enumerate()
                 {
                     let load_res = self.extract_value(val, element_idx as u64);
@@ -56,7 +56,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     );
                 }
             }
-            SpirvType::Vector { count, element } => {
+            SpirvType::Vector { count, element: _ } => {
                 for offset in 0..count {
                     let load_res = self.extract_value(val, offset as u64);
 
@@ -177,7 +177,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
     pub(crate) fn codegen_internal_buffer_store(
         &mut self,
-        result_type: Word,
         args: &[SpirvValue],
     ) -> SpirvValue {
         let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
@@ -188,8 +187,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let zero = self.constant_int(uint_ty, 0).def(self);
 
         let sets = self.bindless_descriptor_sets.borrow().unwrap();
-
-        let mut data = self.lookup_type(args[2].ty);
 
         let bindless_idx = args[0].def(self);
         let offset_arg = args[1].def(self);
@@ -391,7 +388,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 ref field_types,
                 ref field_offsets,
                 ref field_names,
-                ref def_id,
+                def_id: _,
                 ..
             } => {
                 let mut composite_components = vec![];
