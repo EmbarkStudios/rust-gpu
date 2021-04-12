@@ -43,6 +43,7 @@
 )]
 
 use clap::Clap;
+use spirv_builder_macros::compile_spirv;
 use strum::{Display, EnumString};
 
 mod compute;
@@ -58,10 +59,22 @@ pub enum RustGPUShader {
 
 fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static> {
     match shader {
-        RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),
-        RustGPUShader::Sky => wgpu::include_spirv!(env!("sky_shader.spv")),
-        RustGPUShader::Compute => wgpu::include_spirv!(env!("compute_shader.spv")),
-        RustGPUShader::Mouse => wgpu::include_spirv!(env!("mouse_shader.spv")),
+        RustGPUShader::Simplest => wgpu::include_spirv!(compile_spirv! {
+            path: "examples/shaders/simplest-shader",
+            version: 1.0,
+        }),
+        RustGPUShader::Sky => wgpu::include_spirv!(compile_spirv! {
+            path: "examples/shaders/sky-shader",
+            version: 1.0,
+        }),
+        RustGPUShader::Compute => wgpu::include_spirv!(compile_spirv! {
+            path: "examples/shaders/compute-shader",
+            version: 1.0,
+        }),
+        RustGPUShader::Mouse => wgpu::include_spirv!(compile_spirv! {
+            path: "examples/shaders/mouse-shader",
+            version: 1.0,
+        }),
     }
 }
 
