@@ -105,14 +105,12 @@ impl RenderResourceHandle {
 #[repr(transparent)]
 pub struct Buffer(RenderResourceHandle);
 
-#[allow(unused_attributes)]
 #[spirv(internal_buffer_load)]
 #[spirv_std_macros::gpu_only]
 pub extern "unadjusted" fn internal_buffer_load<T>(_buffer: u32, _offset: u32) -> T {
     unimplemented!()
 } // actually implemented in the compiler
 
-#[allow(unused_attributes)]
 #[spirv(internal_buffer_store)]
 #[spirv_std_macros::gpu_only]
 pub unsafe extern "unadjusted" fn internal_buffer_store<T>(_buffer: u32, _offset: u32, _value: T) {
