@@ -289,6 +289,10 @@
 <span id="286">286</span>
 <span id="287">287</span>
 <span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -298,14 +302,14 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">FunctionControl</span>, <span class="ident">LinkageType</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
 <span class="kw">use</span> <span class="ident">rustc_attr</span>::<span class="ident">InlineAttr</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">PreDefineMethods</span>, <span class="ident">StaticMethods</span>};
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">PreDefineMethods</span>, <span class="ident">StaticMethods</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">middle</span>::<span class="ident">codegen_fn_attrs</span>::{<span class="ident">CodegenFnAttrFlags</span>, <span class="ident">CodegenFnAttrs</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">mir</span>::<span class="ident">mono</span>::{<span class="ident">Linkage</span>, <span class="ident">MonoItem</span>, <span class="ident">Visibility</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::<span class="ident">FnAbiExt</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::{<span class="self">self</span>, <span class="ident">Instance</span>, <span class="ident">ParamEnv</span>, <span class="ident">TypeFoldable</span>};
 <span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">def_id</span>::<span class="ident">DefId</span>;
-<span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
+<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">Span</span>;
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::<span class="ident">call</span>::<span class="ident">FnAbi</span>;
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{<span class="ident">Align</span>, <span class="ident">LayoutOf</span>};
 
@@ -534,7 +538,12 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">StaticMethods</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">static_addr_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cv</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">_align</span>: <span class="ident">Align</span>, <span class="ident">_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">make_constant_pointer</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">cv</span>)
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(
+            <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">cv</span>.<span class="ident">ty</span>),
+            <span class="ident">SpirvConst</span>::<span class="ident">PtrTo</span> {
+                <span class="ident">pointee</span>: <span class="ident">cv</span>.<span class="ident">def_cx</span>(<span class="self">self</span>),
+            },
+        )
     }
 
     <span class="kw">fn</span> <span class="ident">codegen_static</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <span class="ident">DefId</span>, <span class="ident">_is_mutable</span>: <span class="ident">bool</span>) {
@@ -556,9 +565,8 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_const_alloc</span>(<span class="ident">alloc</span>, <span class="ident">value_ty</span>);
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">v</span>.<span class="ident">ty</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span> {
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const</span>(<span class="ident">v</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">val_int</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">val</span> {
-                <span class="ident">SpirvConst</span>::<span class="ident">Bool</span>(<span class="kw">_</span>, <span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u8</span>,
+            <span class="kw">let</span> <span class="ident">val_int</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const</span>(<span class="ident">v</span>).<span class="ident">unwrap</span>() {
+                <span class="ident">SpirvConst</span>::<span class="ident">Bool</span>(<span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u8</span>,
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug</span><span class="macro">!</span>(),
             };
             <span class="ident">v</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_u8</span>(<span class="ident">span</span>, <span class="ident">val_int</span>);

@@ -533,6 +533,9 @@
 <span id="530">530</span>
 <span id="531">531</span>
 <span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -540,7 +543,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
 <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::<span class="ident">Word</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">place</span>::<span class="ident">PlaceRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">ConstMethods</span>, <span class="ident">MiscMethods</span>, <span class="ident">StaticMethods</span>};
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">ConstMethods</span>, <span class="ident">MiscMethods</span>, <span class="ident">StaticMethods</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">mir</span>::<span class="ident">interpret</span>::{<span class="ident">AllocId</span>, <span class="ident">Allocation</span>, <span class="ident">GlobalAlloc</span>, <span class="ident">Pointer</span>, <span class="ident">ScalarMaybeUninit</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::<span class="ident">TyAndLayout</span>;
@@ -552,27 +555,27 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">ty</span>, <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u16</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">u16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">16</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">ty</span>, <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">32</span>, <span class="op">!</span><span class="self">self</span>.<span class="ident">kernel_mode</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">ty</span>, <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">val</span> <span class="kw">as</span> <span class="ident">u32</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">32</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">ty</span>, <span class="ident">val</span>))
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="ident">val</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">64</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U64</span>(<span class="ident">ty</span>, <span class="ident">val</span>))
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">U64</span>(<span class="ident">val</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_int</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>, <span class="ident">val</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
@@ -580,18 +583,18 @@
             <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">bits</span> @ <span class="number">8</span>..<span class="op">=</span><span class="number">32</span>, <span class="ident">signed</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">Size</span>::<span class="ident">from_bits</span>(<span class="ident">bits</span>);
                 <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">val</span> <span class="kw">as</span> <span class="ident">u128</span>;
-                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U32</span>(
+                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(
                     <span class="ident">ty</span>,
-                    <span class="kw">if</span> <span class="ident">signed</span> {
+                    <span class="ident">SpirvConst</span>::<span class="ident">U32</span>(<span class="kw">if</span> <span class="ident">signed</span> {
                         <span class="ident">size</span>.<span class="ident">sign_extend</span>(<span class="ident">val</span>)
                     } <span class="kw">else</span> {
                         <span class="ident">size</span>.<span class="ident">truncate</span>(<span class="ident">val</span>)
-                    } <span class="kw">as</span> <span class="ident">u32</span>,
-                ))
+                    } <span class="kw">as</span> <span class="ident">u32</span>),
+                )
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">64</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">U64</span>(<span class="ident">ty</span>, <span class="ident">val</span>)),
+            <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="number">64</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">U64</span>(<span class="ident">val</span>)),
             <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">val</span> {
-                <span class="number">0</span> <span class="op">|</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">Bool</span>(<span class="ident">ty</span>, <span class="ident">val</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>)),
+                <span class="number">0</span> <span class="op">|</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">Bool</span>(<span class="ident">val</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>)),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                     .<span class="ident">tcx</span>
                     .<span class="ident">sess</span>
@@ -612,23 +615,23 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="number">32</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>
-            .<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">F32</span>(<span class="ident">ty</span>, <span class="ident">val</span>.<span class="ident">to_bits</span>()))
+            .<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">F32</span>(<span class="ident">val</span>.<span class="ident">to_bits</span>()))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_f64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="number">64</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
         <span class="self">self</span>.<span class="ident">builder</span>
-            .<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">F64</span>(<span class="ident">ty</span>, <span class="ident">val</span>.<span class="ident">to_bits</span>()))
+            .<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">F64</span>(<span class="ident">val</span>.<span class="ident">to_bits</span>()))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_float</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>, <span class="ident">val</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
             <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="number">32</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                 .<span class="ident">builder</span>
-                .<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">F32</span>(<span class="ident">ty</span>, (<span class="ident">val</span> <span class="kw">as</span> <span class="ident">f32</span>).<span class="ident">to_bits</span>())),
+                .<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">F32</span>((<span class="ident">val</span> <span class="kw">as</span> <span class="ident">f32</span>).<span class="ident">to_bits</span>())),
             <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="number">64</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                 .<span class="ident">builder</span>
-                .<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">F64</span>(<span class="ident">ty</span>, <span class="ident">val</span>.<span class="ident">to_bits</span>())),
+                .<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">F64</span>(<span class="ident">val</span>.<span class="ident">to_bits</span>())),
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;constant_float invalid on type {}&quot;</span>,
                 <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">ty</span>, <span class="self">self</span>)
@@ -638,19 +641,20 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_bool</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">val</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Bool</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">Bool</span>(<span class="ident">ty</span>, <span class="ident">val</span>))
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">Bool</span>(<span class="ident">val</span>))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_composite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>, <span class="ident">val</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">Composite</span>(<span class="ident">ty</span>, <span class="ident">val</span>))
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_composite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>, <span class="ident">fields</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Word</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="self">self</span>.<span class="ident">builder</span>
+            .<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">Composite</span>(<span class="ident">fields</span>.<span class="ident">collect</span>()))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constant_null</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">Null</span>(<span class="ident">ty</span>))
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">Null</span>)
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">undef</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">SpirvConst</span>::<span class="ident">Undef</span>(<span class="ident">ty</span>))
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">Undef</span>)
     }
 }
 
@@ -701,7 +705,12 @@
             .<span class="ident">spirv_type</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
         <span class="comment">// FIXME(eddyb) include the actual byte data.</span>
         (
-            <span class="self">self</span>.<span class="ident">make_constant_pointer</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">str_ty</span>)),
+            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">def_constant</span>(
+                <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">str_ty</span>),
+                <span class="ident">SpirvConst</span>::<span class="ident">PtrTo</span> {
+                    <span class="ident">pointee</span>: <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">str_ty</span>).<span class="ident">def_cx</span>(<span class="self">self</span>),
+                },
+            ),
             <span class="self">self</span>.<span class="ident">const_usize</span>(<span class="ident">len</span> <span class="kw">as</span> <span class="ident">u64</span>),
         )
     }
@@ -718,7 +727,7 @@
             <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
         }
         .<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="self">self</span>);
-        <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">struct_ty</span>, <span class="ident">elts</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">def_cx</span>(<span class="self">self</span>)).<span class="ident">collect</span>())
+        <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">struct_ty</span>, <span class="ident">elts</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">def_cx</span>(<span class="self">self</span>)))
     }
 
     <span class="kw">fn</span> <span class="ident">const_to_opt_uint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">v</span>: <span class="self">Self</span>::<span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
@@ -984,7 +993,7 @@
                     <span class="string">&quot;create_const_alloc must consume all bytes of an Allocation after an unsized struct&quot;</span>
                 );
                 }
-                <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>)
+                <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>.<span class="ident">into_iter</span>())
             }
             <span class="ident">SpirvType</span>::<span class="ident">Opaque</span> { <span class="ident">name</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
                 <span class="string">&quot;Cannot create const alloc of type opaque: {}&quot;</span>,
@@ -992,12 +1001,10 @@
             )),
             <span class="ident">SpirvType</span>::<span class="ident">Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>).<span class="ident">unwrap</span>() <span class="kw">as</span> <span class="ident">usize</span>;
-                <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">count</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                        <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>)
-                            .<span class="ident">def_cx</span>(<span class="self">self</span>)
-                    })
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+                <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">count</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                    <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>)
+                        .<span class="ident">def_cx</span>(<span class="self">self</span>)
+                });
                 <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>)
             }
             <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
@@ -1005,16 +1012,15 @@
                     .<span class="ident">sizeof</span>(<span class="self">self</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;create_const_alloc: Vectors must be sized&quot;</span>);
                 <span class="kw">let</span> <span class="ident">final_offset</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">offset</span> <span class="op">+</span> <span class="ident">total_size</span>;
-                <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">count</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                        <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>)
-                            .<span class="ident">def_cx</span>(<span class="self">self</span>)
-                    })
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+                <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">count</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                    <span class="self">self</span>.<span class="ident">create_const_alloc2</span>(<span class="ident">alloc</span>, <span class="ident">offset</span>, <span class="ident">element</span>)
+                        .<span class="ident">def_cx</span>(<span class="self">self</span>)
+                });
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>);
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">final_offset</span>);
                 <span class="comment">// Vectors sometimes have padding at the end (e.g. vec3), skip over it.</span>
                 <span class="kw-2">*</span><span class="ident">offset</span> <span class="op">=</span> <span class="ident">final_offset</span>;
-                <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>)
+                <span class="ident">result</span>
             }
             <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">values</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
@@ -1024,7 +1030,7 @@
                             .<span class="ident">def_cx</span>(<span class="self">self</span>),
                     );
                 }
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_composite</span>(<span class="ident">ty</span>, <span class="ident">values</span>.<span class="ident">into_iter</span>());
                 <span class="comment">// TODO: Figure out how to do this. Compiling the below crashes both clspv *and* llvm-spirv:</span>
                 <span class="comment">/*
                 __constant struct A {
