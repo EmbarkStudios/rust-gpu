@@ -217,7 +217,7 @@ impl SpirvType {
                     cx.zombie_even_in_user_code(
                         result,
                         def_span,
-                        "function pointer types are not allowed (def)",
+                        "function pointer types are not allowed",
                     );
                 }
                 result
