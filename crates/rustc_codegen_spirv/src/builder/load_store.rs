@@ -97,13 +97,30 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     uint_values_and_offsets,
                 );
             }
-            _ => {
-                let mut err = self.tcx.sess.struct_err(
-                    "Type unsupported for `codegen_internal_buffer_store` return / args:",
-                );
-                err.note(&format!("type `{:?}`", val));
-                err.emit();
-            }
+            SpirvType::Void => self.err("Type () unsupported for bindless buffer stores"),
+            SpirvType::Bool => self.err("Type bool unsupported for bindless buffer stores"),
+            SpirvType::Opaque { ref name } => self.err(&format!("Opaque type {} unsupported for bindless buffer stores", name)),
+            SpirvType::RuntimeArray { element: _ } => 
+                self.err("Type `RuntimeArray` unsupported for bindless buffer stores"),
+            SpirvType::Pointer { pointee: _ } => 
+                self.err("Pointer type unsupported for bindless buffer stores"),
+            SpirvType::Function {
+                return_type: _,
+                arguments: _,
+            } => self.err("Function type unsupported for bindless buffer stores"),
+            SpirvType::Image {
+                sampled_type: _,
+                dim: _,
+                depth: _,
+                arrayed: _,
+                multisampled: _,
+                sampled: _,
+                image_format: _,
+                access_qualifier: _,
+            } => self.err("Image type unsupported for bindless buffer stores (use bindless Texture type instead)"),
+            SpirvType::Sampler => self.err("Sampler type unsupported for bindless buffer stores"),
+            SpirvType::SampledImage { image_type: _ }  => self.err("SampledImage type unsupported for bindless buffer stores"),
+            SpirvType::InterfaceBlock { inner_type: _ } => self.err("InterfaceBlock type unsupported for bindless buffer stores"),
         }
     }
 
