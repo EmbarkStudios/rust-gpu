@@ -2177,6 +2177,24 @@
 <span id="2174">2174</span>
 <span id="2175">2175</span>
 <span id="2176">2176</span>
+<span id="2177">2177</span>
+<span id="2178">2178</span>
+<span id="2179">2179</span>
+<span id="2180">2180</span>
+<span id="2181">2181</span>
+<span id="2182">2182</span>
+<span id="2183">2183</span>
+<span id="2184">2184</span>
+<span id="2185">2185</span>
+<span id="2186">2186</span>
+<span id="2187">2187</span>
+<span id="2188">2188</span>
+<span id="2189">2189</span>
+<span id="2190">2190</span>
+<span id="2191">2191</span>
+<span id="2192">2192</span>
+<span id="2193">2193</span>
+<span id="2194">2194</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
@@ -2548,6 +2566,15 @@
             <span class="self">self</span>.<span class="ident">zombie</span>(
                 <span class="ident">def</span>,
                 <span class="string">&quot;OpConvertUToPtr OpCapability Addresses or PhysicalStorageBufferAddresses&quot;</span>,
+            );
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">zombie_ptr_equal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">Word</span>, <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability</span>::<span class="ident">VariablePointers</span>) {
+            <span class="self">self</span>.<span class="ident">zombie</span>(
+                <span class="ident">def</span>,
+                <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} without OpCapability VariablePointers&quot;</span>, <span class="ident">inst</span>),
             );
         }
     }
@@ -3613,7 +3640,12 @@
             <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">op</span> {
                 <span class="ident">IntEQ</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">version</span>().<span class="ident">unwrap</span>() <span class="op">&gt;</span> (<span class="number">1</span>, <span class="number">3</span>) {
-                        <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">ptr_equal</span>(<span class="ident">b</span>, <span class="prelude-val">None</span>, <span class="ident">lhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">rhs</span>.<span class="ident">def</span>(<span class="self">self</span>))
+                        <span class="self">self</span>.<span class="ident">emit</span>()
+                            .<span class="ident">ptr_equal</span>(<span class="ident">b</span>, <span class="prelude-val">None</span>, <span class="ident">lhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">rhs</span>.<span class="ident">def</span>(<span class="self">self</span>))
+                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">result</span><span class="op">|</span> {
+                                <span class="self">self</span>.<span class="ident">zombie_ptr_equal</span>(<span class="ident">result</span>, <span class="string">&quot;OpPtrEqual&quot;</span>);
+                                <span class="ident">result</span>
+                            })
                     } <span class="kw">else</span> {
                         <span class="kw">let</span> <span class="ident">int_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_usize</span>();
                         <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="self">self</span>
@@ -3633,6 +3665,10 @@
                     <span class="kw">if</span> <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">version</span>().<span class="ident">unwrap</span>() <span class="op">&gt;</span> (<span class="number">1</span>, <span class="number">3</span>) {
                         <span class="self">self</span>.<span class="ident">emit</span>()
                             .<span class="ident">ptr_not_equal</span>(<span class="ident">b</span>, <span class="prelude-val">None</span>, <span class="ident">lhs</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">rhs</span>.<span class="ident">def</span>(<span class="self">self</span>))
+                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">result</span><span class="op">|</span> {
+                                <span class="self">self</span>.<span class="ident">zombie_ptr_equal</span>(<span class="ident">result</span>, <span class="string">&quot;OpPtrNotEqual&quot;</span>);
+                                <span class="ident">result</span>
+                            })
                     } <span class="kw">else</span> {
                         <span class="kw">let</span> <span class="ident">int_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_usize</span>();
                         <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="self">self</span>
