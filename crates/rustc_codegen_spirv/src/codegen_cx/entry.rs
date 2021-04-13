@@ -177,7 +177,18 @@ impl<'tcx> CodegenCx<'tcx> {
         // Some types automatically specify a storage class. Compute that here.
         let inferred_storage_class_from_ty = match self.lookup_type(spirv_ty) {
             SpirvType::Image { .. } | SpirvType::Sampler | SpirvType::SampledImage { .. } => {
-                Some(StorageClass::UniformConstant)
+                if is_ref {
+                    Some(StorageClass::UniformConstant)
+                } else {
+                    self.tcx.sess.span_err(
+                        hir_param.ty_span,
+                        &format!(
+                            "entry parameter type must be by-reference: `&{}`",
+                            layout.ty,
+                        ),
+                    );
+                    None
+                }
             }
             _ => None,
         };
