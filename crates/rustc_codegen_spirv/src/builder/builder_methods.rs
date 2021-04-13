@@ -372,6 +372,15 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
+    fn zombie_ptr_equal(&self, def: Word, inst: &str) {
+        if !self.builder.has_capability(Capability::VariablePointers) {
+            self.zombie(
+                def,
+                &format!("{} without OpCapability VariablePointers", inst),
+            );
+        }
+    }
+
     /// If possible, return the appropriate `OpAccessChain` indices for going from
     /// a pointer to `ty`, to a pointer to `leaf_ty`, with an added `offset`.
     ///
@@ -1433,7 +1442,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => match op {
                 IntEQ => {
                     if self.emit().version().unwrap() > (1, 3) {
-                        self.emit().ptr_equal(b, None, lhs.def(self), rhs.def(self))
+                        self.emit()
+                            .ptr_equal(b, None, lhs.def(self), rhs.def(self))
+                            .map(|result| {
+                                self.zombie_ptr_equal(result, "OpPtrEqual");
+                                result
+                            })
                     } else {
                         let int_ty = self.type_usize();
                         let lhs = self
@@ -1453,6 +1467,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     if self.emit().version().unwrap() > (1, 3) {
                         self.emit()
                             .ptr_not_equal(b, None, lhs.def(self), rhs.def(self))
+                            .map(|result| {
+                                self.zombie_ptr_equal(result, "OpPtrNotEqual");
+                                result
+                            })
                     } else {
                         let int_ty = self.type_usize();
                         let lhs = self
