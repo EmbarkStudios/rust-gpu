@@ -104,7 +104,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 emit.execution_mode(fn_id, *execution_mode, execution_mode_extra);
             });
     }
-    
+
     pub fn lazy_add_bindless_descriptor_sets(&self) {
         self.bindless_descriptor_sets
             .replace(Some(BindlessDescriptorSets {

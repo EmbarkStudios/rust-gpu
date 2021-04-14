@@ -75,7 +75,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .builder
                     .lookup_const_u64(count)
                     .expect("Array type has invalid count value");
-                
+
                 for offset in 0..count {
                     let load_res = self.extract_value(val, offset);
                     let offset : u32 = offset.try_into().expect("Array count needs to fit in u32");
@@ -120,9 +120,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Void => self.err("Type () unsupported for bindless buffer stores"),
             SpirvType::Bool => self.err("Type bool unsupported for bindless buffer stores"),
             SpirvType::Opaque { ref name } => self.err(&format!("Opaque type {} unsupported for bindless buffer stores", name)),
-            SpirvType::RuntimeArray { element: _ } => 
+            SpirvType::RuntimeArray { element: _ } =>
                 self.err("Type `RuntimeArray` unsupported for bindless buffer stores"),
-            SpirvType::Pointer { pointee: _ } => 
+            SpirvType::Pointer { pointee: _ } =>
                 self.err("Pointer type unsupported for bindless buffer stores"),
             SpirvType::Function {
                 return_type: _,
@@ -137,7 +137,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 sampled: _,
                 image_format: _,
                 access_qualifier: _,
-            } => self.err("Image type unsupported for bindless buffer stores (use bindless Texture type instead)"),
+            } => self.err("Image type unsupported for bindless buffer stores (use a bindless Texture type instead)"),
             SpirvType::Sampler => self.err("Sampler type unsupported for bindless buffer stores"),
             SpirvType::SampledImage { image_type: _ }  => self.err("SampledImage type unsupported for bindless buffer stores"),
             SpirvType::InterfaceBlock { inner_type: _ } => self.err("InterfaceBlock type unsupported for bindless buffer stores"),
@@ -212,10 +212,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    pub(crate) fn codegen_internal_buffer_store(
-        &mut self,
-        args: &[SpirvValue],
-    ) -> SpirvValue {
+    pub(crate) fn codegen_internal_buffer_store(&mut self, args: &[SpirvValue]) -> SpirvValue {
         let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
 
         let uniform_uint_ptr =
@@ -402,8 +399,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 }
             }
             _ => self.fatal(&format!(
-                "Trying to load invalid data type, width: {} signed: {}",
-                bits, signed
+                "Trying to load invalid data type: {}{}",
+                if signed { "i" } else { "u" },
+                bits
             )),
         }
     }
@@ -526,12 +524,63 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 element_offset_literal,
                 sets,
             ),
-            _ => {
-                self.fatal(&format!(
-                    "Unhandled case for `internal_buffer_load` return / args: {:?}",
-                    data
-                ));
+            SpirvType::Array { element, count } => {
+                let count = self
+                    .cx
+                    .builder
+                    .lookup_const_u64(count)
+                    .expect("Array type has invalid count value");
+
+                let mut composite_components = vec![];
+
+                for offset in 0..count {
+                    let offset : u32 = offset.try_into().expect("Array count needs to fit in u32");
+
+                    composite_components.push(
+                        self.recurse_adt_for_loads(
+                            uint_ty,
+                            uniform_uint_ptr,
+                            bindless_idx,
+                            base_offset_var,
+                            element_offset_literal + offset,
+                            element,
+                            sets,
+                        )
+                        .def(self),
+                    );
+                }
+
+                let adt = data.def(rustc_span::DUMMY_SP, self);
+
+                self.emit()
+                    .composite_construct(adt, None, composite_components)
+                    .unwrap()
+                    .with_type(adt)
             }
+            SpirvType::Void => self.fatal("Type () unsupported for bindless buffer loads"),
+            SpirvType::Bool => self.fatal("Type bool unsupported for bindless buffer loads"),
+            SpirvType::Opaque { ref name } => self.fatal(&format!("Opaque type {} unsupported for bindless buffer loads", name)),
+            SpirvType::RuntimeArray { element: _ } =>
+                self.fatal("Type `RuntimeArray` unsupported for bindless buffer loads"),
+            SpirvType::Pointer { pointee: _ } =>
+                self.fatal("Pointer type unsupported for bindless buffer loads"),
+            SpirvType::Function {
+                return_type: _,
+                arguments: _,
+            } => self.fatal("Function type unsupported for bindless buffer loads"),
+            SpirvType::Image {
+                sampled_type: _,
+                dim: _,
+                depth: _,
+                arrayed: _,
+                multisampled: _,
+                sampled: _,
+                image_format: _,
+                access_qualifier: _,
+            } => self.fatal("Image type unsupported for bindless buffer loads (use a bindless Texture type instead)"),
+            SpirvType::Sampler => self.fatal("Sampler type unsupported for bindless buffer loads"),
+            SpirvType::SampledImage { image_type: _ }  => self.fatal("SampledImage type unsupported for bindless buffer loads"),
+            SpirvType::InterfaceBlock { inner_type: _ } => self.fatal("InterfaceBlock type unsupported for bindless buffer loads"),
         }
     }
 }

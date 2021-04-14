@@ -18,7 +18,7 @@ use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
 };
-use rustc_data_structures::fx::{FxHashSet, FxHashMap};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_hir::GlobalAsm;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
