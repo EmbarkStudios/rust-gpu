@@ -17,7 +17,7 @@ pub struct ExtInst {
 
 impl ExtInst {
     pub fn import_glsl<'a, 'tcx>(&mut self, bx: &Builder<'a, 'tcx>) -> Word {
-        assert!(!bx.kernel_mode);
+        assert!(!bx.target.is_kernel());
         match self.glsl {
             Some(id) => id,
             None => {
@@ -29,7 +29,7 @@ impl ExtInst {
     }
 
     pub fn import_opencl<'a, 'tcx>(&mut self, bx: &Builder<'a, 'tcx>) -> Word {
-        assert!(bx.kernel_mode);
+        assert!(bx.target.is_kernel());
         match self.opencl {
             Some(id) => id,
             None => {
@@ -42,7 +42,7 @@ impl ExtInst {
 
     pub fn import_integer_functions_2_intel<'tcx>(&mut self, cx: &CodegenCx<'tcx>) {
         if !self.integer_functions_2_intel {
-            assert!(!cx.kernel_mode);
+            assert!(!cx.target.is_kernel());
             self.integer_functions_2_intel = true;
             cx.emit_global()
                 .extension("SPV_INTEL_shader_integer_functions2");

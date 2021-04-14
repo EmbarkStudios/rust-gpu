@@ -30,7 +30,7 @@ impl Opt {
     pub fn environments(&self) -> Vec<String> {
         match &self.target_env {
             Some(env) => env.split(',').map(String::from).collect(),
-            None => vec!["unknown".into()],
+            None => vec!["spv1.3".into()],
         }
     }
 }
@@ -174,6 +174,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
             "-p",
             "compiletests-deps-helper",
             "-Zbuild-std=core",
+            "-Zbuild-std-features=compiler-builtins-mem",
             &*format!("--target={}", target),
         ])
         .arg("--target-dir")

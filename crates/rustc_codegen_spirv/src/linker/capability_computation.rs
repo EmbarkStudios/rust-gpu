@@ -1,10 +1,10 @@
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Op};
-use std::collections::HashSet;
+use rustc_data_structures::fx::FxHashSet;
 
 pub fn remove_extra_capabilities(module: &mut Module) {
     let used_capabilities = used_capabilities(module);
-    let removable_capabilities: HashSet<Capability> = [
+    let removable_capabilities: FxHashSet<Capability> = [
         Capability::Int8,
         Capability::Int16,
         Capability::Int64,
@@ -24,8 +24,8 @@ pub fn remove_extra_capabilities(module: &mut Module) {
     remove_capabilities(module, &to_remove);
 }
 
-fn used_capabilities(module: &Module) -> HashSet<Capability> {
-    let mut set = HashSet::new();
+fn used_capabilities(module: &Module) -> FxHashSet<Capability> {
+    let mut set = FxHashSet::default();
     for inst in module.all_inst_iter() {
         set.extend(inst.class.capabilities);
         match inst.class.opcode {
@@ -56,7 +56,7 @@ fn used_capabilities(module: &Module) -> HashSet<Capability> {
     set
 }
 
-fn remove_capabilities(module: &mut Module, set: &HashSet<Capability>) {
+fn remove_capabilities(module: &mut Module, set: &FxHashSet<Capability>) {
     module.capabilities.retain(|inst| {
         inst.class.opcode != Op::Capability || !set.contains(&inst.operands[0].unwrap_capability())
     });
@@ -87,7 +87,7 @@ fn additional_extensions(module: &Module, inst: &Instruction) -> &'static [&'sta
 }
 
 pub fn remove_extra_extensions(module: &mut Module) {
-    let set: HashSet<&str> = module
+    let set: FxHashSet<&str> = module
         .all_inst_iter()
         .flat_map(|inst| {
             let extensions = inst.class.extensions.iter().copied();

@@ -9,7 +9,7 @@
 
 use rspirv::dr::{Function, Instruction, Module};
 use rspirv::spirv::{Op, Word};
-use std::collections::HashSet;
+use rustc_data_structures::fx::FxHashSet;
 
 pub fn dce(module: &mut Module) {
     let mut rooted = collect_roots(module);
@@ -17,15 +17,15 @@ pub fn dce(module: &mut Module) {
     kill_unrooted(module, &rooted);
 }
 
-pub fn collect_roots(module: &Module) -> HashSet<Word> {
-    let mut rooted = HashSet::new();
+pub fn collect_roots(module: &Module) -> FxHashSet<Word> {
+    let mut rooted = FxHashSet::default();
     for inst in &module.entry_points {
         root(inst, &mut rooted);
     }
     rooted
 }
 
-fn spread_roots(module: &Module, rooted: &mut HashSet<Word>) -> bool {
+fn spread_roots(module: &Module, rooted: &mut FxHashSet<Word>) -> bool {
     let mut any = false;
     for inst in module.global_inst_iter() {
         if let Some(id) = inst.result_id {
@@ -44,7 +44,7 @@ fn spread_roots(module: &Module, rooted: &mut HashSet<Word>) -> bool {
     any
 }
 
-fn root(inst: &Instruction, rooted: &mut HashSet<Word>) -> bool {
+fn root(inst: &Instruction, rooted: &mut FxHashSet<Word>) -> bool {
     let mut any = false;
     if let Some(id) = inst.result_type {
         any |= rooted.insert(id);
@@ -57,7 +57,7 @@ fn root(inst: &Instruction, rooted: &mut HashSet<Word>) -> bool {
     any
 }
 
-fn is_rooted(inst: &Instruction, rooted: &HashSet<Word>) -> bool {
+fn is_rooted(inst: &Instruction, rooted: &FxHashSet<Word>) -> bool {
     if let Some(result_id) = inst.result_id {
         rooted.contains(&result_id)
     } else {
@@ -69,7 +69,7 @@ fn is_rooted(inst: &Instruction, rooted: &HashSet<Word>) -> bool {
     }
 }
 
-fn kill_unrooted(module: &mut Module, rooted: &HashSet<Word>) {
+fn kill_unrooted(module: &mut Module, rooted: &FxHashSet<Word>) {
     module
         .ext_inst_imports
         .retain(|inst| is_rooted(inst, rooted));
@@ -87,7 +87,7 @@ fn kill_unrooted(module: &mut Module, rooted: &HashSet<Word>) {
 }
 
 pub fn dce_phi(func: &mut Function) {
-    let mut used = HashSet::new();
+    let mut used = FxHashSet::default();
     loop {
         let mut changed = false;
         for inst in func.all_inst_iter() {

@@ -8,6 +8,7 @@ use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
 use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_hir as hir;
 use rustc_middle::ty::layout::TyAndLayout;
 use rustc_middle::ty::{Instance, Ty, TyKind};
@@ -16,7 +17,6 @@ use rustc_target::abi::{
     call::{ArgAbi, ArgAttribute, ArgAttributes, FnAbi, PassMode},
     Align, LayoutOf, Size,
 };
-use std::collections::HashMap;
 
 impl<'tcx> CodegenCx<'tcx> {
     // Entry points declare their "interface" (all uniforms, inputs, outputs, etc.) as parameters.
@@ -279,7 +279,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let mut bx = Builder::new_block(self, stub_fn, "");
         let mut call_args = vec![];
-        let mut decoration_locations = HashMap::new();
+        let mut decoration_locations = FxHashMap::default();
         for (entry_arg_abi, hir_param) in arg_abis.iter().zip(hir_params) {
             bx.set_span(hir_param.span);
             self.declare_shader_interface_for_param(
@@ -409,7 +409,7 @@ impl<'tcx> CodegenCx<'tcx> {
         op_entry_point_interface_operands: &mut Vec<Word>,
         bx: &mut Builder<'_, 'tcx>,
         call_args: &mut Vec<SpirvValue>,
-        decoration_locations: &mut HashMap<StorageClass, u32>,
+        decoration_locations: &mut FxHashMap<StorageClass, u32>,
     ) {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
 

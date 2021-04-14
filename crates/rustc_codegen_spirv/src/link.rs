@@ -2,6 +2,7 @@ use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::{CodegenResults, NativeLib};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_data_structures::owning_ref::OwningRef;
 use rustc_data_structures::rustc_erase_owner;
 use rustc_data_structures::sync::MetadataRef;
@@ -13,7 +14,6 @@ use rustc_session::config::{CrateType, DebugInfo, Lto, OptLevel, OutputFilenames
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
-use std::collections::{HashMap, HashSet};
 use std::env;
 use std::ffi::{CString, OsStr};
 use std::fs::File;
@@ -143,7 +143,7 @@ fn link_exe(
             if !out_dir.is_dir() {
                 std::fs::create_dir_all(&out_dir).unwrap();
             }
-            let mut hashmap = HashMap::new();
+            let mut hashmap = FxHashMap::default();
             for (name, spv_binary) in map {
                 let mut module_filename = out_dir.clone();
                 module_filename.push(sanitize_filename::sanitize(&name));
@@ -374,7 +374,7 @@ fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
         header.set_cksum();
         builder.append(&header, metadata).unwrap();
     }
-    let mut filenames = HashSet::new();
+    let mut filenames = FxHashSet::default();
     filenames.insert(OsStr::new(".metadata"));
     for file in files {
         assert!(

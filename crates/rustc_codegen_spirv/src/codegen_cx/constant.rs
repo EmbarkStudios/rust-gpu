@@ -4,7 +4,7 @@ use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::place::PlaceRef;
-use rustc_codegen_ssa::traits::{ConstMethods, MiscMethods, StaticMethods};
+use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
 use rustc_middle::mir::interpret::{AllocId, Allocation, GlobalAlloc, Pointer, ScalarMaybeUninit};
 use rustc_middle::ty::layout::TyAndLayout;
@@ -16,27 +16,27 @@ use rustc_target::abi::{self, AddressSpace, HasDataLayout, Integer, LayoutOf, Pr
 impl<'tcx> CodegenCx<'tcx> {
     pub fn constant_u8(&self, span: Span, val: u8) -> SpirvValue {
         let ty = SpirvType::Integer(8, false).def(span, self);
-        self.builder.def_constant(SpirvConst::U32(ty, val as u32))
+        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_u16(&self, span: Span, val: u16) -> SpirvValue {
         let ty = SpirvType::Integer(16, false).def(span, self);
-        self.builder.def_constant(SpirvConst::U32(ty, val as u32))
+        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_i32(&self, span: Span, val: i32) -> SpirvValue {
-        let ty = SpirvType::Integer(32, !self.kernel_mode).def(span, self);
-        self.builder.def_constant(SpirvConst::U32(ty, val as u32))
+        let ty = SpirvType::Integer(32, !self.target.is_kernel()).def(span, self);
+        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_u32(&self, span: Span, val: u32) -> SpirvValue {
         let ty = SpirvType::Integer(32, false).def(span, self);
-        self.builder.def_constant(SpirvConst::U32(ty, val))
+        self.builder.def_constant(ty, SpirvConst::U32(val))
     }
 
     pub fn constant_u64(&self, span: Span, val: u64) -> SpirvValue {
         let ty = SpirvType::Integer(64, false).def(span, self);
-        self.builder.def_constant(SpirvConst::U64(ty, val))
+        self.builder.def_constant(ty, SpirvConst::U64(val))
     }
 
     pub fn constant_int(&self, ty: Word, val: u64) -> SpirvValue {
@@ -44,18 +44,18 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Integer(bits @ 8..=32, signed) => {
                 let size = Size::from_bits(bits);
                 let val = val as u128;
-                self.builder.def_constant(SpirvConst::U32(
+                self.builder.def_constant(
                     ty,
-                    if signed {
+                    SpirvConst::U32(if signed {
                         size.sign_extend(val)
                     } else {
                         size.truncate(val)
-                    } as u32,
-                ))
+                    } as u32),
+                )
             }
-            SpirvType::Integer(64, _) => self.builder.def_constant(SpirvConst::U64(ty, val)),
+            SpirvType::Integer(64, _) => self.builder.def_constant(ty, SpirvConst::U64(val)),
             SpirvType::Bool => match val {
-                0 | 1 => self.builder.def_constant(SpirvConst::Bool(ty, val != 0)),
+                0 | 1 => self.builder.def_constant(ty, SpirvConst::Bool(val != 0)),
                 _ => self
                     .tcx
                     .sess
@@ -76,23 +76,23 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn constant_f32(&self, span: Span, val: f32) -> SpirvValue {
         let ty = SpirvType::Float(32).def(span, self);
         self.builder
-            .def_constant(SpirvConst::F32(ty, val.to_bits()))
+            .def_constant(ty, SpirvConst::F32(val.to_bits()))
     }
 
     pub fn constant_f64(&self, span: Span, val: f64) -> SpirvValue {
         let ty = SpirvType::Float(64).def(span, self);
         self.builder
-            .def_constant(SpirvConst::F64(ty, val.to_bits()))
+            .def_constant(ty, SpirvConst::F64(val.to_bits()))
     }
 
     pub fn constant_float(&self, ty: Word, val: f64) -> SpirvValue {
         match self.lookup_type(ty) {
             SpirvType::Float(32) => self
                 .builder
-                .def_constant(SpirvConst::F32(ty, (val as f32).to_bits())),
+                .def_constant(ty, SpirvConst::F32((val as f32).to_bits())),
             SpirvType::Float(64) => self
                 .builder
-                .def_constant(SpirvConst::F64(ty, val.to_bits())),
+                .def_constant(ty, SpirvConst::F64(val.to_bits())),
             other => self.tcx.sess.fatal(&format!(
                 "constant_float invalid on type {}",
                 other.debug(ty, self)
@@ -102,19 +102,20 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn constant_bool(&self, span: Span, val: bool) -> SpirvValue {
         let ty = SpirvType::Bool.def(span, self);
-        self.builder.def_constant(SpirvConst::Bool(ty, val))
+        self.builder.def_constant(ty, SpirvConst::Bool(val))
     }
 
-    pub fn constant_composite(&self, ty: Word, val: Vec<Word>) -> SpirvValue {
-        self.builder.def_constant(SpirvConst::Composite(ty, val))
+    pub fn constant_composite(&self, ty: Word, fields: impl Iterator<Item = Word>) -> SpirvValue {
+        self.builder
+            .def_constant(ty, SpirvConst::Composite(fields.collect()))
     }
 
     pub fn constant_null(&self, ty: Word) -> SpirvValue {
-        self.builder.def_constant(SpirvConst::Null(ty))
+        self.builder.def_constant(ty, SpirvConst::Null)
     }
 
     pub fn undef(&self, ty: Word) -> SpirvValue {
-        self.builder.def_constant(SpirvConst::Undef(ty))
+        self.builder.def_constant(ty, SpirvConst::Undef)
     }
 }
 
@@ -165,7 +166,12 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             .spirv_type(DUMMY_SP, self);
         // FIXME(eddyb) include the actual byte data.
         (
-            self.make_constant_pointer(DUMMY_SP, self.undef(str_ty)),
+            self.builder.def_constant(
+                self.type_ptr_to(str_ty),
+                SpirvConst::PtrTo {
+                    pointee: self.undef(str_ty).def_cx(self),
+                },
+            ),
             self.const_usize(len as u64),
         )
     }
@@ -182,7 +188,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             field_names: None,
         }
         .def(DUMMY_SP, self);
-        self.constant_composite(struct_ty, elts.iter().map(|f| f.def_cx(self)).collect())
+        self.constant_composite(struct_ty, elts.iter().map(|f| f.def_cx(self)))
     }
 
     fn const_to_opt_uint(&self, v: Self::Value) -> Option<u64> {
@@ -213,7 +219,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     Primitive::Int(int_size, int_signedness) => match self.lookup_type(ty) {
                         SpirvType::Integer(width, spirv_signedness) => {
                             assert_eq!(width as u64, int_size.size().bits());
-                            if !self.kernel_mode {
+                            if !self.target.is_kernel() {
                                 assert_eq!(spirv_signedness, int_signedness);
                             }
                             self.constant_int(ty, data as u64)
@@ -448,7 +454,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     "create_const_alloc must consume all bytes of an Allocation after an unsized struct"
                 );
                 }
-                self.constant_composite(ty, values)
+                self.constant_composite(ty, values.into_iter())
             }
             SpirvType::Opaque { name } => self.tcx.sess.fatal(&format!(
                 "Cannot create const alloc of type opaque: {}",
@@ -456,12 +462,10 @@ impl<'tcx> CodegenCx<'tcx> {
             )),
             SpirvType::Array { element, count } => {
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
-                let values = (0..count)
-                    .map(|_| {
-                        self.create_const_alloc2(alloc, offset, element)
-                            .def_cx(self)
-                    })
-                    .collect::<Vec<_>>();
+                let values = (0..count).map(|_| {
+                    self.create_const_alloc2(alloc, offset, element)
+                        .def_cx(self)
+                });
                 self.constant_composite(ty, values)
             }
             SpirvType::Vector { element, count } => {
@@ -469,16 +473,15 @@ impl<'tcx> CodegenCx<'tcx> {
                     .sizeof(self)
                     .expect("create_const_alloc: Vectors must be sized");
                 let final_offset = *offset + total_size;
-                let values = (0..count)
-                    .map(|_| {
-                        self.create_const_alloc2(alloc, offset, element)
-                            .def_cx(self)
-                    })
-                    .collect::<Vec<_>>();
+                let values = (0..count).map(|_| {
+                    self.create_const_alloc2(alloc, offset, element)
+                        .def_cx(self)
+                });
+                let result = self.constant_composite(ty, values);
                 assert!(*offset <= final_offset);
                 // Vectors sometimes have padding at the end (e.g. vec3), skip over it.
                 *offset = final_offset;
-                self.constant_composite(ty, values)
+                result
             }
             SpirvType::RuntimeArray { element } => {
                 let mut values = Vec::new();
@@ -488,7 +491,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             .def_cx(self),
                     );
                 }
-                let result = self.constant_composite(ty, values);
+                let result = self.constant_composite(ty, values.into_iter());
                 // TODO: Figure out how to do this. Compiling the below crashes both clspv *and* llvm-spirv:
                 /*
                 __constant struct A {

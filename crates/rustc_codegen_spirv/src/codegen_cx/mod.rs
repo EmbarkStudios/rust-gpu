@@ -4,19 +4,21 @@ mod entry;
 mod type_;
 
 use crate::builder::{ExtInst, InstructionTable};
-use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvValue, SpirvValueKind};
+use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvConst, SpirvValue, SpirvValueKind};
 use crate::decorations::{
     CustomDecoration, SerializedSpan, UnrollLoopsDecoration, ZombieDecoration,
 };
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
+use crate::target::SpirvTarget;
+
 use rspirv::dr::{Module, Operand};
-use rspirv::spirv::{AddressingModel, Decoration, LinkageType, MemoryModel, StorageClass, Word};
+use rspirv::spirv::{AddressingModel, Decoration, LinkageType, Word};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
 };
-use rustc_data_structures::fx::FxHashMap;
+use rustc_data_structures::fx::{FxHashSet, FxHashMap};
 use rustc_hir::GlobalAsm;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
@@ -30,7 +32,6 @@ use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
-use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
 use std::str::FromStr;
@@ -49,9 +50,9 @@ pub struct CodegenCx<'tcx> {
     /// Spir-v module builder
     pub builder: BuilderSpirv,
     /// Map from MIR function to spir-v function ID
-    pub instances: RefCell<HashMap<Instance<'tcx>, SpirvValue>>,
+    pub instances: RefCell<FxHashMap<Instance<'tcx>, SpirvValue>>,
     /// Map from function ID to parameter list
-    pub function_parameter_values: RefCell<HashMap<Word, Vec<SpirvValue>>>,
+    pub function_parameter_values: RefCell<FxHashMap<Word, Vec<SpirvValue>>>,
     pub type_cache: TypeCache<'tcx>,
     /// Cache generated vtables
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
@@ -59,22 +60,20 @@ pub struct CodegenCx<'tcx> {
     /// Invalid spir-v IDs that should be stripped from the final binary,
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
-    zombie_decorations: RefCell<HashMap<Word, ZombieDecoration>>,
+    zombie_decorations: RefCell<FxHashMap<Word, ZombieDecoration>>,
     /// Functions that have `#[spirv(unroll_loops)]`, and therefore should
     /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
     /// instructions, during structuralization.
-    unroll_loops_decorations: RefCell<HashMap<Word, UnrollLoopsDecoration>>,
-    pub kernel_mode: bool,
+    unroll_loops_decorations: RefCell<FxHashMap<Word, UnrollLoopsDecoration>>,
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
-    pub zombie_undefs_for_system_fn_addrs: RefCell<HashMap<Word, Word>>,
-    pub libm_intrinsics: RefCell<HashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
+    pub libm_intrinsics: RefCell<FxHashMap<Word, super::builder::libm_intrinsics::LibmIntrinsic>>,
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
     pub panic_fn_id: Cell<Option<Word>>,
-    pub internal_buffer_load_id: RefCell<HashSet<Word>>,
-    pub internal_buffer_store_id: RefCell<HashSet<Word>>,
+    pub internal_buffer_load_id: RefCell<FxHashSet<Word>>,
+    pub internal_buffer_store_id: RefCell<FxHashSet<Word>>,
     /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
     pub panic_bounds_check_fn_id: Cell<Option<Word>>,
 
@@ -86,44 +85,24 @@ pub struct CodegenCx<'tcx> {
     /// descriptor sets that are always bound.
     pub bindless_descriptor_sets: RefCell<Option<BindlessDescriptorSets>>,
     pub codegen_args: CodegenArgs,
+
+    /// Information about the SPIR-V target.
+    pub target: SpirvTarget,
 }
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         let sym = Symbols::get();
-        let mut spirv_version = None;
-        let mut memory_model = None;
-        let mut kernel_mode = false;
         for &feature in &tcx.sess.target_features {
-            if feature == sym.kernel {
-                kernel_mode = true;
-            } else if feature == sym.spirv10 {
-                spirv_version = Some((1, 0));
-            } else if feature == sym.spirv11 {
-                spirv_version = Some((1, 1));
-            } else if feature == sym.spirv12 {
-                spirv_version = Some((1, 2));
-            } else if feature == sym.spirv13 {
-                spirv_version = Some((1, 3));
-            } else if feature == sym.spirv14 {
-                spirv_version = Some((1, 4));
-            } else if feature == sym.spirv15 {
-                spirv_version = Some((1, 5));
-            } else if feature == sym.simple {
-                memory_model = Some(MemoryModel::Simple);
-            } else if feature == sym.vulkan {
-                memory_model = Some(MemoryModel::Vulkan);
-            } else if feature == sym.glsl450 {
-                memory_model = Some(MemoryModel::GLSL450);
-            } else {
-                tcx.sess.err(&format!("Unknown feature {}", feature));
-            }
+            tcx.sess.err(&format!("Unknown feature {}", feature));
         }
         let codegen_args = CodegenArgs::from_session(tcx.sess);
+        let target = tcx.sess.target.llvm_target.parse().unwrap();
+
         let result = Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(spirv_version, memory_model, kernel_mode),
+            builder: BuilderSpirv::new(&target),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
@@ -131,10 +110,9 @@ impl<'tcx> CodegenCx<'tcx> {
             ext_inst: Default::default(),
             zombie_decorations: Default::default(),
             unroll_loops_decorations: Default::default(),
-            kernel_mode,
+            target,
             sym,
             instruction_table: InstructionTable::new(),
-            zombie_undefs_for_system_fn_addrs: Default::default(),
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
             internal_buffer_load_id: Default::default(),
@@ -250,36 +228,6 @@ impl<'tcx> CodegenCx<'tcx> {
             Decoration::LinkageAttributes,
             once(Operand::LiteralString(name)).chain(once(Operand::LinkageType(linkage))),
         )
-    }
-
-    /// See note on `SpirvValueKind::ConstantPointer`
-    pub fn make_constant_pointer(&self, span: Span, value: SpirvValue) -> SpirvValue {
-        let ty = SpirvType::Pointer { pointee: value.ty }.def(span, self);
-        let initializer = value.def_cx(self);
-
-        // Create these up front instead of on demand in SpirvValue::def because
-        // SpirvValue::def can't use cx.emit()
-        // FIXME(eddyb) figure out what the correct storage class is.
-        let global_var =
-            self.emit_global()
-                .variable(ty, None, StorageClass::Private, Some(initializer));
-
-        // In all likelihood, this zombie message will get overwritten in SpirvValue::def_with_span
-        // to the use site of this constant. However, if this constant happens to never get used, we
-        // still want to zobmie it, so zombie here.
-        self.zombie_even_in_user_code(
-            global_var,
-            span,
-            "Cannot use this pointer directly, it must be dereferenced first",
-        );
-
-        SpirvValue {
-            kind: SpirvValueKind::ConstantPointer {
-                initializer,
-                global_var,
-            },
-            ty,
-        }
     }
 }
 
@@ -398,13 +346,8 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         if self.is_system_crate() {
             // Create these undefs up front instead of on demand in SpirvValue::def because
             // SpirvValue::def can't use cx.emit()
-            self.zombie_undefs_for_system_fn_addrs
-                .borrow_mut()
-                .entry(ty)
-                .or_insert_with(|| {
-                    // We want a unique ID for these undefs, so don't use the caching system.
-                    self.emit_global().undef(ty, None)
-                });
+            self.builder
+                .def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
         }
 
         SpirvValue {

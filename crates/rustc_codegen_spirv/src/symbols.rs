@@ -2,9 +2,9 @@ use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 /// Various places in the codebase (mostly attribute parsing) need to compare rustc Symbols to particular keywords.
@@ -20,16 +20,6 @@ pub struct Symbols {
     pub spirv_std: Symbol,
     pub libm: Symbol,
     pub num_traits: Symbol,
-    pub kernel: Symbol,
-    pub simple: Symbol,
-    pub vulkan: Symbol,
-    pub glsl450: Symbol,
-    pub spirv10: Symbol,
-    pub spirv11: Symbol,
-    pub spirv12: Symbol,
-    pub spirv13: Symbol,
-    pub spirv14: Symbol,
-    pub spirv15: Symbol,
     pub entry_point_name: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
@@ -41,10 +31,9 @@ pub struct Symbols {
     sampled: Symbol,
     image_format: Symbol,
     access_qualifier: Symbol,
-    attributes: HashMap<Symbol, SpirvAttribute>,
-    execution_modes: HashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
-    pub libm_intrinsics: HashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
-    pub spirv_bindless: Symbol,
+    attributes: FxHashMap<Symbol, SpirvAttribute>,
+    execution_modes: FxHashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
+    pub libm_intrinsics: FxHashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
 }
 
 const BUILTINS: &[(&str, BuiltIn)] = {
@@ -353,20 +342,20 @@ impl Symbols {
             .chain(execution_models)
             .chain(custom_attributes)
             .map(|(a, b)| (Symbol::intern(a), b));
-        let mut attributes = HashMap::new();
+        let mut attributes = FxHashMap::default();
         for (a, b) in attributes_iter {
             let old = attributes.insert(a, b);
-            // `.collect()` into a HashMap does not error on duplicates, so manually write out the
+            // `.collect()` into a FxHashMap does not error on duplicates, so manually write out the
             // loop here to error on duplicates.
             assert!(old.is_none());
         }
-        let mut execution_modes = HashMap::new();
+        let mut execution_modes = FxHashMap::default();
         for &(key, mode, dim) in EXECUTION_MODES {
             let old = execution_modes.insert(Symbol::intern(key), (mode, dim));
             assert!(old.is_none());
         }
 
-        let mut libm_intrinsics = HashMap::new();
+        let mut libm_intrinsics = FxHashMap::default();
         for &(a, b) in libm_intrinsics::TABLE {
             let old = libm_intrinsics.insert(Symbol::intern(a), b);
             assert!(old.is_none());
@@ -379,16 +368,6 @@ impl Symbols {
             spirv_std: Symbol::intern("spirv_std"),
             libm: Symbol::intern("libm"),
             num_traits: Symbol::intern("num_traits"),
-            kernel: Symbol::intern("kernel"),
-            simple: Symbol::intern("simple"),
-            vulkan: Symbol::intern("vulkan"),
-            glsl450: Symbol::intern("glsl450"),
-            spirv10: Symbol::intern("spirv1.0"),
-            spirv11: Symbol::intern("spirv1.1"),
-            spirv12: Symbol::intern("spirv1.2"),
-            spirv13: Symbol::intern("spirv1.3"),
-            spirv14: Symbol::intern("spirv1.4"),
-            spirv15: Symbol::intern("spirv1.5"),
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             image_type: Symbol::intern("image_type"),
@@ -402,7 +381,6 @@ impl Symbols {
             attributes,
             execution_modes,
             libm_intrinsics,
-            spirv_bindless: Symbol::intern("spirv_bindless"),
         }
     }
 
