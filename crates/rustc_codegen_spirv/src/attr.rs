@@ -61,6 +61,7 @@ impl From<ExecutionModel> for Entry {
 /// `struct` types that are used to represent special SPIR-V types.
 #[derive(Debug, Clone)]
 pub enum IntrinsicType {
+    GenericImageType,
     ImageType {
         dim: Dim,
         depth: u32,

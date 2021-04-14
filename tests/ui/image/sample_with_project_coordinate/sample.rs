@@ -1,11 +1,11 @@
 // Test `OpImageSampleProjImplicitLod`
 // build-pass
 
-use spirv_std::{arch, Image2d, Sampler};
+use spirv_std::{Image, Sampler};
 
 #[spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] image2d: &Image2d,
+    #[spirv(descriptor_set = 0, binding = 0)] image2d: &Image!(2D, type=f32, sampled),
     #[spirv(descriptor_set = 1, binding = 1)] sampler: &Sampler,
     output: &mut glam::Vec4,
 ) {

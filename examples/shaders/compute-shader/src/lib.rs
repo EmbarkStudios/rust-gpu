@@ -10,8 +10,7 @@
 extern crate spirv_std;
 
 #[cfg(not(target_arch = "spirv"))]
-#[macro_use]
-pub extern crate spirv_std_macros;
+use spirv_std::macros::spirv;
 
 // LocalSize/numthreads of (x = 32, y = 1, z = 1)
 #[spirv(compute(threads(32)))]

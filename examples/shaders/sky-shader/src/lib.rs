@@ -10,8 +10,7 @@
 #![deny(warnings)]
 
 #[cfg(not(target_arch = "spirv"))]
-#[macro_use]
-pub extern crate spirv_std_macros;
+use spirv_std::macros::spirv;
 
 use core::f32::consts::PI;
 use glam::{const_vec3, vec2, vec3, Vec2, Vec3, Vec4};

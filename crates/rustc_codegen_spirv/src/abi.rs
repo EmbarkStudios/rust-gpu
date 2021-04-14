@@ -10,7 +10,9 @@ use rustc_errors::ErrorReported;
 use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::subst::SubstsRef;
-use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind, TypeAndMut};
+use rustc_middle::ty::{
+    Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyKind, TypeAndMut, UintTy,
+};
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
@@ -20,6 +22,9 @@ use rustc_target::abi::{
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::fmt;
+
+use num_traits::cast::FromPrimitive;
+use rspirv::spirv;
 
 /// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk
 /// of the fields will result in an infinite loop. Because pointers are the only thing that are
@@ -768,6 +773,94 @@ fn trans_intrinsic_type<'tcx>(
             }
             // Hardcode to float for now
             let sampled_type = SpirvType::Float(32).def(span, cx);
+
+            let ty = SpirvType::Image {
+                sampled_type,
+                dim,
+                depth,
+                arrayed,
+                multisampled,
+                sampled,
+                image_format,
+                access_qualifier,
+            };
+
+            Ok(ty.def(span, cx))
+        }
+        IntrinsicType::GenericImageType => {
+            // see SpirvType::sizeof
+            if ty.size != Size::from_bytes(4) {
+                cx.tcx
+                    .sess
+                    .err("#[spirv(generic_image)] type must have size 4");
+                return Err(ErrorReported);
+            }
+
+            fn type_from_variant_discriminant<'tcx, P: FromPrimitive>(
+                cx: &CodegenCx<'tcx>,
+                const_: &'tcx Const<'tcx>,
+            ) -> P {
+                let adt_def = const_.ty.ty_adt_def().unwrap();
+                assert!(adt_def.is_enum());
+                let destructured = cx.tcx.destructure_const(ParamEnv::reveal_all().and(const_));
+                let idx = destructured.variant.unwrap();
+                let value = const_.ty.discriminant_for_variant(cx.tcx, idx).unwrap().val as u64;
+                <_>::from_u64(value).unwrap()
+            }
+
+            let sampled_type = match substs.type_at(0).kind() {
+                TyKind::Int(int) => match int {
+                    IntTy::Isize => {
+                        SpirvType::Integer(cx.tcx.data_layout.pointer_size.bits() as u32, true)
+                            .def(span, cx)
+                    }
+                    IntTy::I8 => SpirvType::Integer(8, true).def(span, cx),
+                    IntTy::I16 => SpirvType::Integer(16, true).def(span, cx),
+                    IntTy::I32 => SpirvType::Integer(32, true).def(span, cx),
+                    IntTy::I64 => SpirvType::Integer(64, true).def(span, cx),
+                    IntTy::I128 => SpirvType::Integer(128, true).def(span, cx),
+                },
+                TyKind::Uint(uint) => match uint {
+                    UintTy::Usize => {
+                        SpirvType::Integer(cx.tcx.data_layout.pointer_size.bits() as u32, false)
+                            .def(span, cx)
+                    }
+                    UintTy::U8 => SpirvType::Integer(8, false).def(span, cx),
+                    UintTy::U16 => SpirvType::Integer(16, false).def(span, cx),
+                    UintTy::U32 => SpirvType::Integer(32, false).def(span, cx),
+                    UintTy::U64 => SpirvType::Integer(64, false).def(span, cx),
+                    UintTy::U128 => SpirvType::Integer(128, false).def(span, cx),
+                },
+                TyKind::Float(FloatTy::F32) => SpirvType::Float(32).def(span, cx),
+                TyKind::Float(FloatTy::F64) => SpirvType::Float(64).def(span, cx),
+                _ => {
+                    cx.tcx
+                        .sess
+                        .span_err(span, "Invalid sampled type to `Image`.");
+                    return Err(ErrorReported);
+                }
+            };
+
+            let dim: spirv::Dim = type_from_variant_discriminant(cx, substs.const_at(1));
+            let depth: u32 = type_from_variant_discriminant(cx, substs.const_at(2));
+            let arrayed: u32 = type_from_variant_discriminant(cx, substs.const_at(3));
+            let multisampled: u32 = type_from_variant_discriminant(cx, substs.const_at(4));
+            let sampled: u32 = type_from_variant_discriminant(cx, substs.const_at(5));
+            let image_format: spirv::ImageFormat =
+                type_from_variant_discriminant(cx, substs.const_at(6));
+
+            let access_qualifier = {
+                let option = cx
+                    .tcx
+                    .destructure_const(ParamEnv::reveal_all().and(substs.const_at(7)));
+
+                match option.variant.map(|i| i.as_u32()).unwrap_or(0) {
+                    0 => None,
+                    1 => Some(type_from_variant_discriminant(cx, option.fields[0])),
+                    _ => unreachable!(),
+                }
+            };
+
             let ty = SpirvType::Image {
                 sampled_type,
                 dim,

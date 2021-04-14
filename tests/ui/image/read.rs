@@ -1,11 +1,11 @@
 // Test `OpImageRead`
 // build-pass
 
-use spirv_std::{arch, StorageImage2d};
+use spirv_std::{arch, Image};
 
 #[spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] image: &StorageImage2d,
+    #[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled=false),
     output: &mut glam::Vec4,
 ) {
     unsafe { asm!("OpCapability StorageImageReadWithoutFormat") };
