@@ -356,11 +356,17 @@ impl<'tcx> CodegenCx<'tcx> {
         };
         let spirv_ty = self.layout_of(value_ty).spirv_type(hir_param.ty_span, self);
         // Some types automatically specify a storage class. Compute that here.
-        let inferred_storage_class_from_ty = match self.lookup_type(spirv_ty) {
+        let element_ty = match self.lookup_type(spirv_ty) {
+            SpirvType::Array { element, .. } | SpirvType::RuntimeArray { element } => {
+                self.lookup_type(element)
+            }
+            ty => ty,
+        };
+        let inferred_storage_class_from_ty = match element_ty {
             SpirvType::Image { .. }
             | SpirvType::Sampler
             | SpirvType::SampledImage { .. }
-            | SpirvType::AccelerationStructureKhr => {
+            | SpirvType::AccelerationStructureKhr { .. } => {
                 if is_ref {
                     Some(StorageClass::UniformConstant)
                 } else {
@@ -471,6 +477,9 @@ impl<'tcx> CodegenCx<'tcx> {
         // which we represent with `SpirvType::InterfaceBlock` (see its doc comment).
         // This "interface block" construct is also required for "runtime arrays".
         let is_unsized = self.lookup_type(value_spirv_type).sizeof(self).is_none();
+        let is_pair = matches!(entry_arg_abi.mode, PassMode::Pair(..));
+        // is_pair implies is_unsized (but is_unsized doesn't imply is_pair, for RuntimeArray<T>)
+        assert!(!is_pair || is_unsized);
         let var_ptr_spirv_type;
         let (value_ptr, value_len) = match storage_class {
             StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer => {
@@ -483,7 +492,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
                 let value_ptr = bx.struct_gep(var.with_type(var_ptr_spirv_type), 0);
 
-                let value_len = if is_unsized {
+                let value_len = if is_pair {
                     match self.lookup_type(value_spirv_type) {
                         SpirvType::RuntimeArray { .. } => {}
                         _ => self.tcx.sess.span_err(
@@ -501,10 +510,48 @@ impl<'tcx> CodegenCx<'tcx> {
 
                     Some(len.with_type(len_spirv_type))
                 } else {
+                    if is_unsized {
+                        // It's OK to use a RuntimeArray<u32> and not have a length parameter, but
+                        // it's just nicer ergonomics to use a slice.
+                        self.tcx
+                            .sess
+                            .span_warn(hir_param.ty_span, "use &[T] instead of &RuntimeArray<T>");
+                    }
                     None
                 };
 
                 (value_ptr, value_len)
+            }
+            StorageClass::UniformConstant => {
+                var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+
+                match self.lookup_type(value_spirv_type) {
+                    SpirvType::RuntimeArray { .. } => {
+                        if is_pair {
+                            self.tcx.sess.span_err(
+                                hir_param.ty_span,
+                                "uniform_constant buffers must use &RuntimeArray<T>, not &[T]",
+                            )
+                        }
+                    }
+                    _ => {
+                        if is_unsized {
+                            self.tcx.sess.span_err(
+                                hir_param.ty_span,
+                                "only plain slices are supported as unsized types",
+                            )
+                        }
+                    }
+                }
+
+                let value_len = if is_pair {
+                    // We've already emitted an error, fill in a placeholder value
+                    Some(bx.undef(self.type_isize()))
+                } else {
+                    None
+                };
+
+                (var.with_type(var_ptr_spirv_type), value_len)
             }
             _ => {
                 var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
