@@ -723,7 +723,6 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
 
         // 3.37.25. Reserved Instructions
         // SPV_KHR_ray_tracing
-        // NOTE(eddyb) we actually use these despite not being in the standard yet.
         Op::TraceRayKHR
         | Op::ExecuteCallableKHR
         | Op::ConvertUToAccelerationStructureKHR
