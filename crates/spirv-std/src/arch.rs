@@ -10,12 +10,14 @@ mod arithmetic;
 mod barrier;
 mod derivative;
 mod primitive;
+mod ray_tracing;
 
 pub use arithmetic::*;
 #[cfg(feature = "const-generics")]
 pub use barrier::*;
 pub use derivative::*;
 pub use primitive::*;
+pub use ray_tracing::*;
 
 /// Result is true if any component of `vector` is true, otherwise result is
 /// false.

@@ -176,7 +176,10 @@ impl<'tcx> CodegenCx<'tcx> {
         let spirv_ty = self.layout_of(value_ty).spirv_type(hir_param.ty_span, self);
         // Some types automatically specify a storage class. Compute that here.
         let inferred_storage_class_from_ty = match self.lookup_type(spirv_ty) {
-            SpirvType::Image { .. } | SpirvType::Sampler | SpirvType::SampledImage { .. } => {
+            SpirvType::Image { .. }
+            | SpirvType::Sampler
+            | SpirvType::SampledImage { .. }
+            | SpirvType::AccelerationStructureKhr => {
                 if is_ref {
                     Some(StorageClass::UniformConstant)
                 } else {
