@@ -756,7 +756,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::TypeAccelerationStructureNV
         | Op::ExecuteCallableNV => {
             // NOTE(eddyb) Some KHR variants are aliased to the the NV instructions.
-            // reserved!(SPV_KHR_ray_tracing)
+            // reserved!(SPV_NV_ray_tracing)
         }
         // SPV_NV_cooperative_matrix
         Op::TypeCooperativeMatrixNV
