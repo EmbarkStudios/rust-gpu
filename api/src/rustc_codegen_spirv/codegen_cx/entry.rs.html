@@ -499,6 +499,9 @@
 <span id="496">496</span>
 <span id="497">497</span>
 <span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
@@ -678,7 +681,10 @@
         <span class="kw">let</span> <span class="ident">spirv_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">value_ty</span>).<span class="ident">spirv_type</span>(<span class="ident">hir_param</span>.<span class="ident">ty_span</span>, <span class="self">self</span>);
         <span class="comment">// Some types automatically specify a storage class. Compute that here.</span>
         <span class="kw">let</span> <span class="ident">inferred_storage_class_from_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">spirv_ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Image</span> { .. } <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Sampler</span> <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvType</span>::<span class="ident">Image</span> { .. }
+            <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">Sampler</span>
+            <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { .. }
+            <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">is_ref</span> {
                     <span class="prelude-val">Some</span>(<span class="ident">StorageClass</span>::<span class="ident">UniformConstant</span>)
                 } <span class="kw">else</span> {

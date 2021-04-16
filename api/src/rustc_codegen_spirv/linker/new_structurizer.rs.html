@@ -573,6 +573,12 @@
 <span id="570">570</span>
 <span id="571">571</span>
 <span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">decorations</span>::<span class="ident">UnrollLoopsDecoration</span>;
 <span class="kw">use</span> <span class="ident">indexmap</span>::{<span class="ident">indexmap</span>, <span class="ident">IndexMap</span>};
@@ -694,8 +700,9 @@
     <span class="doccomment">/// After structurizing a region, all paths through it must lead to a single</span>
     <span class="doccomment">/// &quot;merge&quot; block (i.e. `merge` post-dominates the entire region).</span>
     <span class="doccomment">/// The `merge` block must be terminated by one of `OpReturn`, `OpReturnValue`,</span>
-    <span class="doccomment">/// `OpKill`, or `OpUnreachable`. If `exits` isn&#39;t empty, `merge` will</span>
-    <span class="doccomment">/// receive an `OpBranch` from its parent region (to an outer merge block).</span>
+    <span class="doccomment">/// `OpKill`, `OpIgnoreIntersectionKHR`, `OpTerminateRayKHR` or</span>
+    <span class="doccomment">/// `OpUnreachable`. If `exits` isn&#39;t empty, `merge` will receive an</span>
+    <span class="doccomment">/// `OpBranch` from its parent region (to an outer merge block).</span>
     <span class="ident">merge</span>: <span class="ident">BlockIdx</span>,
     <span class="ident">merge_id</span>: <span class="ident">BlockId</span>,
 
@@ -744,7 +751,12 @@
             <span class="kw">let</span> <span class="ident">block_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">blocks</span>()[<span class="ident">block</span>].<span class="ident">label_id</span>().<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">terminator</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">func</span>.<span class="ident">blocks</span>()[<span class="ident">block</span>].<span class="ident">instructions</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">region</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">terminator</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-                <span class="ident">Op</span>::<span class="ident">Return</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">ReturnValue</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">Kill</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">Unreachable</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Region</span> {
+                <span class="ident">Op</span>::<span class="ident">Return</span>
+                <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">ReturnValue</span>
+                <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">Kill</span>
+                <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">IgnoreIntersectionKHR</span>
+                <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">TerminateRayKHR</span>
+                <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">Unreachable</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Region</span> {
                     <span class="ident">merge</span>: <span class="ident">block</span>,
                     <span class="ident">merge_id</span>: <span class="ident">block_id</span>,
                     <span class="ident">exits</span>: <span class="macro">indexmap</span><span class="macro">!</span> {},
