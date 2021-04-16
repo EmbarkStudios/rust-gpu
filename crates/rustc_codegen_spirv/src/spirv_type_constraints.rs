@@ -755,7 +755,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::TerminateRayNV
         | Op::TraceNV
         | Op::TypeAccelerationStructureNV
-        | Op::ExecuteCallableNV => {}
+        | Op::ExecuteCallableNV => reserved!(SPV_NV_ray_tracing),
         // SPV_NV_cooperative_matrix
         Op::TypeCooperativeMatrixNV
         | Op::CooperativeMatrixLoadNV
