@@ -3,7 +3,7 @@ use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::BindlessDescriptorSets;
 use crate::rustc_codegen_ssa::traits::BuilderMethods;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::Word;
+use rspirv::spirv::{Capability, Word};
 use rustc_target::abi::Align;
 use std::convert::TryInto;
 
@@ -227,6 +227,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
         let two = self.constant_int(uint_ty, 2).def(self);
 
+        self.emit_global().extension("SPV_EXT_descriptor_indexing");
+        self.emit_global().capability(Capability::RuntimeDescriptorArray);
+
         let dword_offset = self
             .emit()
             .shift_right_arithmetic(uint_ty, None, offset_arg, two)
@@ -271,6 +274,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
         let uniform_uint_ptr =
             SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
+
+        self.emit_global().extension("SPV_EXT_descriptor_indexing");
+        self.emit_global().capability(Capability::RuntimeDescriptorArray);
 
         let two = self.constant_int(uint_ty, 2).def(self);
 
