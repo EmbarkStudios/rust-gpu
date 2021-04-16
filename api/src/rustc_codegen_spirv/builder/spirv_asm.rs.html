@@ -1415,6 +1415,61 @@
 <span id="1412">1412</span>
 <span id="1413">1413</span>
 <span id="1414">1414</span>
+<span id="1415">1415</span>
+<span id="1416">1416</span>
+<span id="1417">1417</span>
+<span id="1418">1418</span>
+<span id="1419">1419</span>
+<span id="1420">1420</span>
+<span id="1421">1421</span>
+<span id="1422">1422</span>
+<span id="1423">1423</span>
+<span id="1424">1424</span>
+<span id="1425">1425</span>
+<span id="1426">1426</span>
+<span id="1427">1427</span>
+<span id="1428">1428</span>
+<span id="1429">1429</span>
+<span id="1430">1430</span>
+<span id="1431">1431</span>
+<span id="1432">1432</span>
+<span id="1433">1433</span>
+<span id="1434">1434</span>
+<span id="1435">1435</span>
+<span id="1436">1436</span>
+<span id="1437">1437</span>
+<span id="1438">1438</span>
+<span id="1439">1439</span>
+<span id="1440">1440</span>
+<span id="1441">1441</span>
+<span id="1442">1442</span>
+<span id="1443">1443</span>
+<span id="1444">1444</span>
+<span id="1445">1445</span>
+<span id="1446">1446</span>
+<span id="1447">1447</span>
+<span id="1448">1448</span>
+<span id="1449">1449</span>
+<span id="1450">1450</span>
+<span id="1451">1451</span>
+<span id="1452">1452</span>
+<span id="1453">1453</span>
+<span id="1454">1454</span>
+<span id="1455">1455</span>
+<span id="1456">1456</span>
+<span id="1457">1457</span>
+<span id="1458">1458</span>
+<span id="1459">1459</span>
+<span id="1460">1460</span>
+<span id="1461">1461</span>
+<span id="1462">1462</span>
+<span id="1463">1463</span>
+<span id="1464">1464</span>
+<span id="1465">1465</span>
+<span id="1466">1466</span>
+<span id="1467">1467</span>
+<span id="1468">1468</span>
+<span id="1469">1469</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
@@ -1433,7 +1488,7 @@
 <span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
 <span class="kw">use</span> <span class="ident">rustc_hir</span>::<span class="ident">LlvmInlineAsmInner</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">source_map</span>::<span class="ident">Span</span>;
+<span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
 <span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">asm</span>::{<span class="ident">InlineAsmRegClass</span>, <span class="ident">InlineAsmRegOrRegClass</span>, <span class="ident">SpirVInlineAsmRegClass</span>};
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstructionTable</span> {
@@ -1964,24 +2019,24 @@
         <span class="kw">struct</span> <span class="ident">Unapplicable</span>;
 
         <span class="doccomment">/// Recursively match `ty` against `pat`, returning one of:</span>
-        <span class="doccomment">/// * `Ok(None)`: `pat` matched but contained no type variables</span>
-        <span class="doccomment">/// * `Ok(Some(var))`: `pat` matched and `var` is the type variable</span>
+        <span class="doccomment">/// * `Ok([None])`: `pat` matched but contained no type variables</span>
+        <span class="doccomment">/// * `Ok([Some(var)])`: `pat` matched and `var` is the type variable</span>
         <span class="doccomment">/// * `Err(Mismatch)`: `pat` didn&#39;t match or isn&#39;t supported right now</span>
         <span class="kw">fn</span> <span class="ident">match_ty_pat</span>(
             <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
             <span class="ident">pat</span>: <span class="kw-2">&amp;</span><span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
             <span class="ident">ty</span>: <span class="ident">Word</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">Unapplicable</span><span class="op">&gt;</span> {
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>; <span class="number">1</span>], <span class="ident">Unapplicable</span><span class="op">&gt;</span> {
             <span class="kw">match</span> <span class="ident">pat</span> {
-                <span class="ident">TyPat</span>::<span class="ident">Any</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-                <span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">ty</span>)),
+                <span class="ident">TyPat</span>::<span class="ident">Any</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>([<span class="prelude-val">None</span>]),
+                <span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>([<span class="prelude-val">Some</span>(<span class="ident">ty</span>)]),
                 <span class="ident">TyPat</span>::<span class="ident">Either</span>(<span class="ident">a</span>, <span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">match_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">a</span>, <span class="ident">ty</span>).<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">Unapplicable</span><span class="op">|</span> <span class="ident">match_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">b</span>, <span class="ident">ty</span>))
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">pat</span>, <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>)) {
                     (<span class="ident">TyPat</span>::<span class="ident">Any</span>, <span class="kw">_</span>) <span class="op">|</span> (<span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span>, <span class="kw">_</span>) <span class="op">|</span> (<span class="ident">TyPat</span>::<span class="ident">Either</span>(..), <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
 
-                    (<span class="ident">TyPat</span>::<span class="ident">Void</span>, <span class="ident">SpirvType</span>::<span class="ident">Void</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+                    (<span class="ident">TyPat</span>::<span class="ident">Void</span>, <span class="ident">SpirvType</span>::<span class="ident">Void</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>([<span class="prelude-val">None</span>]),
                     (<span class="ident">TyPat</span>::<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">pat</span>), <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span>: <span class="ident">ty</span>, .. })
                     <span class="op">|</span> (<span class="ident">TyPat</span>::<span class="ident">Vector</span>(<span class="ident">pat</span>), <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>: <span class="ident">ty</span>, .. })
                     <span class="op">|</span> (
@@ -2005,6 +2060,60 @@
             }
         }
 
+        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+        <span class="kw">struct</span> <span class="ident">Ambiguous</span>;
+
+        <span class="doccomment">/// Construct a type from `pat`, replacing `TyPat::Var(i)` with `ty_vars[i]`.</span>
+        <span class="doccomment">/// `leftover_operands` is used for `IndexComposite` patterns, if any exist.</span>
+        <span class="doccomment">/// If the pattern isn&#39;t constraining enough to determine an unique type,</span>
+        <span class="doccomment">/// `Err(Ambiguous)` is returned instead.</span>
+        <span class="kw">fn</span> <span class="ident">subst_ty_pat</span>(
+            <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
+            <span class="ident">pat</span>: <span class="kw-2">&amp;</span><span class="ident">TyPat</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
+            <span class="ident">ty_vars</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>],
+            <span class="ident">leftover_operands</span>: <span class="kw-2">&amp;</span>[<span class="ident">dr</span>::<span class="ident">Operand</span>],
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Ambiguous</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">pat</span> {
+                <span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">Var</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ty_vars</span>.<span class="ident">get</span>(<span class="ident">i</span>) {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="ident">ty</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty</span>,
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Ambiguous</span>),
+                },
+
+                <span class="ident">TyPat</span>::<span class="ident">Pointer</span>(<span class="kw">_</span>, <span class="ident">pat</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
+                    <span class="ident">pointee</span>: <span class="ident">subst_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">pat</span>, <span class="ident">ty_vars</span>, <span class="ident">leftover_operands</span>)<span class="question-mark">?</span>,
+                }
+                .<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">cx</span>),
+
+                <span class="ident">TyPat</span>::<span class="ident">Vector4</span>(<span class="ident">pat</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">Vector</span> {
+                    <span class="ident">element</span>: <span class="ident">subst_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">pat</span>, <span class="ident">ty_vars</span>, <span class="ident">leftover_operands</span>)<span class="question-mark">?</span>,
+                    <span class="ident">count</span>: <span class="number">4</span>,
+                }
+                .<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">cx</span>),
+
+                <span class="ident">TyPat</span>::<span class="ident">SampledImage</span>(<span class="ident">pat</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> {
+                    <span class="ident">image_type</span>: <span class="ident">subst_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">pat</span>, <span class="ident">ty_vars</span>, <span class="ident">leftover_operands</span>)<span class="question-mark">?</span>,
+                }
+                .<span class="ident">def</span>(<span class="ident">DUMMY_SP</span>, <span class="ident">cx</span>),
+
+                <span class="ident">TyPat</span>::<span class="ident">IndexComposite</span>(<span class="ident">pat</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">subst_ty_pat</span>(<span class="ident">cx</span>, <span class="ident">pat</span>, <span class="ident">ty_vars</span>, <span class="ident">leftover_operands</span>)<span class="question-mark">?</span>;
+                    <span class="kw">for</span> <span class="ident">_index</span> <span class="kw">in</span> <span class="ident">leftover_operands</span> {
+                        <span class="comment">// FIXME(eddyb) support more than just arrays, by looking</span>
+                        <span class="comment">// up the indices (of struct fields) as constant integers.</span>
+                        <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>) {
+                            <span class="ident">SpirvType</span>::<span class="ident">Array</span> { <span class="ident">element</span>, .. }
+                            <span class="op">|</span> <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">element</span>,
+
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Ambiguous</span>),
+                        };
+                    }
+                    <span class="ident">ty</span>
+                }
+
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Ambiguous</span>),
+            })
+        }
+
         <span class="comment">// FIXME(eddyb) try multiple signatures until one fits.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sig</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">instruction_signatures</span>(<span class="ident">instruction</span>.<span class="ident">class</span>.<span class="ident">opcode</span>)<span class="question-mark">?</span> {
             [<span class="ident">sig</span>
@@ -2015,37 +2124,44 @@
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined_var</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined_ty_vars</span> <span class="op">=</span> [<span class="prelude-val">None</span>];
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ids</span> <span class="op">=</span> <span class="ident">instruction</span>.<span class="ident">operands</span>.<span class="ident">iter</span>().<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span>.<span class="ident">id_ref_any</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">operands</span> <span class="op">=</span> <span class="ident">instruction</span>.<span class="ident">operands</span>.<span class="ident">iter</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">next_id_operand</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> <span class="ident">operands</span>.<span class="ident">find_map</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span>.<span class="ident">id_ref_any</span>());
         <span class="kw">while</span> <span class="kw">let</span> <span class="ident">TyListPat</span>::<span class="ident">Cons</span> { <span class="ident">first</span>: <span class="ident">pat</span>, <span class="ident">suffix</span> } <span class="op">=</span> <span class="kw-2">*</span><span class="ident">sig</span>.<span class="ident">input_types</span> {
             <span class="ident">sig</span>.<span class="ident">input_types</span> <span class="op">=</span> <span class="ident">suffix</span>;
 
-            <span class="kw">let</span> <span class="ident">match_result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">id_to_type_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">ids</span>.<span class="ident">next</span>()<span class="question-mark">?</span>) {
+            <span class="kw">let</span> <span class="ident">match_result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">id_to_type_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">next_id_operand</span>()<span class="question-mark">?</span>) {
                 <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">match_ty_pat</span>(<span class="self">self</span>, <span class="ident">pat</span>, <span class="ident">ty</span>),
 
                 <span class="comment">// Non-value ID operand (or value operand of unknown type),</span>
                 <span class="comment">// only `TyPat::Any` is valid.</span>
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">pat</span> {
-                    <span class="ident">TyPat</span>::<span class="ident">Any</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+                    <span class="ident">TyPat</span>::<span class="ident">Any</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>([<span class="prelude-val">None</span>]),
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Unapplicable</span>),
                 },
             };
-            <span class="kw">match</span> <span class="ident">match_result</span> {
-                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">var</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">combined_var</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">combined_var</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="comment">// FIXME(eddyb) this could use some error reporting</span>
-                        <span class="comment">// (it&#39;s a type mismatch), although we could also</span>
-                        <span class="comment">// just use the first type and let validation take</span>
-                        <span class="comment">// care of the mismatch</span>
-                        <span class="kw">if</span> <span class="ident">var</span> <span class="op">!</span><span class="op">=</span> <span class="ident">combined_var</span> {
-                            <span class="kw">return</span> <span class="prelude-val">None</span>;
-                        }
-                    }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">combined_var</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">var</span>),
-                },
-                <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+
+            <span class="kw">let</span> <span class="ident">ty_vars</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">match_result</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">ty_vars</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty_vars</span>,
                 <span class="prelude-val">Err</span>(<span class="ident">Unapplicable</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
+            };
+
+            <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">var</span>, <span class="ident">combined_var</span>) <span class="kw">in</span> <span class="ident">ty_vars</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">combined_ty_vars</span>) {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">var</span>) <span class="op">=</span> <span class="ident">var</span> {
+                    <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">combined_var</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">combined_var</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="comment">// FIXME(eddyb) this could use some error reporting</span>
+                            <span class="comment">// (it&#39;s a type mismatch), although we could also</span>
+                            <span class="comment">// just use the first type and let validation take</span>
+                            <span class="comment">// care of the mismatch</span>
+                            <span class="kw">if</span> <span class="ident">var</span> <span class="op">!</span><span class="op">=</span> <span class="ident">combined_var</span> {
+                                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                            }
+                        }
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">combined_var</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">var</span>),
+                    }
+                }
             }
         }
         <span class="kw">match</span> <span class="ident">sig</span>.<span class="ident">input_types</span> {
@@ -2053,27 +2169,21 @@
 
             <span class="ident">TyListPat</span>::<span class="ident">Any</span> <span class="op">=</span><span class="op">&gt;</span> {}
             <span class="ident">TyListPat</span>::<span class="ident">Nil</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">ids</span>.<span class="ident">next</span>().<span class="ident">is_some</span>() {
+                <span class="kw">if</span> <span class="ident">next_id_operand</span>().<span class="ident">is_some</span>() {
                     <span class="kw">return</span> <span class="prelude-val">None</span>;
                 }
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
         }
 
-        <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">combined_var</span><span class="question-mark">?</span>;
-        <span class="kw">match</span> <span class="ident">sig</span>.<span class="ident">output_type</span>.<span class="ident">unwrap</span>() {
-            <span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">var</span>),
-            <span class="ident">TyPat</span>::<span class="ident">Vector4</span>(<span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(
-                <span class="ident">SpirvType</span>::<span class="ident">Vector</span> {
-                    <span class="ident">element</span>: <span class="ident">var</span>,
-                    <span class="ident">count</span>: <span class="number">4</span>,
-                }
-                .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
-            ),
-            <span class="ident">TyPat</span>::<span class="ident">SampledImage</span>(<span class="kw-2">&amp;</span><span class="ident">TyPat</span>::<span class="ident">T</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { <span class="ident">image_type</span>: <span class="ident">var</span> }.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>))
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">match</span> <span class="ident">subst_ty_pat</span>(
+            <span class="self">self</span>,
+            <span class="ident">sig</span>.<span class="ident">output_type</span>.<span class="ident">unwrap</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">combined_ty_vars</span>,
+            <span class="ident">operands</span>.<span class="ident">as_slice</span>(),
+        ) {
+            <span class="prelude-val">Ok</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">ty</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">Ambiguous</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
 
