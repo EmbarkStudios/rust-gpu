@@ -159,7 +159,16 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let mut emit_global = self.emit_global();
         let buffer = emit_global
-            .variable(uniform_ptr_runtime_array, None, StorageClass::Uniform, None)
+            .variable(
+                uniform_ptr_runtime_array,
+                None,
+                if self.target.spirv_version() < (1, 3) {
+                    StorageClass::Uniform
+                } else {
+                    StorageClass::StorageBuffer
+                },
+                None,
+            )
             .with_type(uniform_ptr_runtime_array)
             .def_cx(self);
 
@@ -174,11 +183,19 @@ impl<'tcx> CodegenCx<'tcx> {
             std::iter::once(Operand::LiteralInt32(0)),
         );
 
-        emit_global.decorate(
-            buffer_struct,
-            rspirv::spirv::Decoration::BufferBlock,
-            std::iter::empty(),
-        );
+        if self.target.spirv_version() < (1, 3) {
+            emit_global.decorate(
+                buffer_struct,
+                rspirv::spirv::Decoration::BufferBlock,
+                std::iter::empty(),
+            );
+        } else {
+            emit_global.decorate(
+                buffer_struct,
+                rspirv::spirv::Decoration::Block,
+                std::iter::empty(),
+            );
+        }
 
         emit_global.decorate(
             runtime_array_uint,

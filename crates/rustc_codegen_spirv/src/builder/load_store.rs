@@ -228,7 +228,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         let two = self.constant_int(uint_ty, 2).def(self);
 
         self.emit_global().extension("SPV_EXT_descriptor_indexing");
-        self.emit_global().capability(Capability::RuntimeDescriptorArray);
+        self.emit_global()
+            .capability(Capability::RuntimeDescriptorArray);
 
         let dword_offset = self
             .emit()
@@ -276,7 +277,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
 
         self.emit_global().extension("SPV_EXT_descriptor_indexing");
-        self.emit_global().capability(Capability::RuntimeDescriptorArray);
+        self.emit_global()
+            .capability(Capability::RuntimeDescriptorArray);
 
         let two = self.constant_int(uint_ty, 2).def(self);
 
