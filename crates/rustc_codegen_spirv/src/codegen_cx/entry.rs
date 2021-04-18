@@ -193,6 +193,17 @@ impl<'tcx> CodegenCx<'tcx> {
                     None
                 }
             }
+            SpirvType::DescriptorArray { element, .. }
+                if matches!(
+                    self.lookup_type(element),
+                    SpirvType::Image { .. }
+                        | SpirvType::Sampler
+                        | SpirvType::SampledImage { .. }
+                        | SpirvType::AccelerationStructureKhr
+                ) =>
+            {
+                Some(StorageClass::UniformConstant)
+            }
             _ => None,
         };
         // Storage classes can be specified via attribute. Compute that here, and emit diagnostics.
@@ -283,19 +294,36 @@ impl<'tcx> CodegenCx<'tcx> {
         // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
         let var = self.emit_global().id();
 
-        let (value_spirv_type, storage_class) =
+        let (value_spirv_type_id, storage_class) =
             self.infer_param_ty_and_storage_class(entry_arg_abi.layout, hir_param, &attrs);
-
+        let value_spirv_type = self.lookup_type(value_spirv_type_id);
         // Certain storage classes require an `OpTypeStruct` decorated with `Block`,
         // which we represent with `SpirvType::InterfaceBlock` (see its doc comment).
         // This "interface block" construct is also required for "runtime arrays".
-        let is_unsized = self.lookup_type(value_spirv_type).sizeof(self).is_none();
+        let is_unsized = value_spirv_type.sizeof(self).is_none();
         let var_ptr_spirv_type;
         let (value_ptr, value_len) = match storage_class {
+            StorageClass::Uniform | StorageClass::StorageBuffer | StorageClass::UniformConstant
+                if matches!(value_spirv_type, SpirvType::DescriptorArray { .. }) =>
+            {
+                // buffer with block decoration already applied,
+                // or image, sampler, sampled image, or acceleration structure
+                var_ptr_spirv_type = self.type_ptr_to(value_spirv_type_id);
+                (var.with_type(var_ptr_spirv_type), None)
+            }
+            _ if matches!(value_spirv_type, SpirvType::DescriptorArray { .. }) => {
+                self.tcx.sess.span_fatal(
+                    hir_param.ty_span,
+                    &format!(
+                        "descriptor arrays are not supported in storage class {:?}",
+                        storage_class,
+                    ),
+                )
+            }
             StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer => {
                 var_ptr_spirv_type = self.type_ptr_to(
                     SpirvType::InterfaceBlock {
-                        inner_type: value_spirv_type,
+                        inner_type: value_spirv_type_id,
                     }
                     .def(hir_param.span, self),
                 );
@@ -303,7 +331,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 let value_ptr = bx.struct_gep(var.with_type(var_ptr_spirv_type), 0);
 
                 let value_len = if is_unsized {
-                    match self.lookup_type(value_spirv_type) {
+                    match value_spirv_type {
                         SpirvType::RuntimeArray { .. } => {}
                         _ => self.tcx.sess.span_err(
                             hir_param.ty_span,
@@ -326,7 +354,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 (value_ptr, value_len)
             }
             _ => {
-                var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+                var_ptr_spirv_type = self.type_ptr_to(value_spirv_type_id);
 
                 if is_unsized {
                     self.tcx.sess.span_fatal(
@@ -343,7 +371,7 @@ impl<'tcx> CodegenCx<'tcx> {
         };
 
         // Compute call argument(s) to match what the Rust entry `fn` expects,
-        // starting from the `value_ptr` pointing to a `value_spirv_type`
+        // starting from the `value_ptr` pointing to a `value_spirv_type_id`
         // (e.g. `Input` doesn't use indirection, so we have to load from it).
         if let TyKind::Ref(..) = entry_arg_abi.layout.ty.kind() {
             call_args.push(value_ptr);

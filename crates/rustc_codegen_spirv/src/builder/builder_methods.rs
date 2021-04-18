@@ -9,7 +9,8 @@ use rustc_codegen_ssa::common::{
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
-    BuilderMethods, ConstMethods, IntrinsicCallMethods, LayoutTypeMethods, OverflowOp,
+    BaseTypeMethods, BuilderMethods, ConstMethods, IntrinsicCallMethods, LayoutTypeMethods,
+    OverflowOp,
 };
 use rustc_codegen_ssa::MemFlags;
 use rustc_middle::bug;
@@ -239,6 +240,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::AccelerationStructureKhr => {
                 self.fatal("cannot memset acceleration structure")
             }
+            SpirvType::DescriptorArray { .. } => self.fatal("Cannot memset descriptor array"),
         }
     }
 
@@ -299,6 +301,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::AccelerationStructureKhr => {
                 self.fatal("cannot memset acceleration structure")
             }
+            SpirvType::DescriptorArray { .. } => self.fatal("cannot memset descriptor array"),
         }
     }
 
@@ -1448,12 +1451,11 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => match op {
                 IntEQ => {
                     if self.emit().version().unwrap() > (1, 3) {
-                        self.emit()
-                            .ptr_equal(b, None, lhs.def(self), rhs.def(self))
-                            .map(|result| {
-                                self.zombie_ptr_equal(result, "OpPtrEqual");
-                                result
-                            })
+                        let result = self.emit().ptr_equal(b, None, lhs.def(self), rhs.def(self));
+                        result.map(|result| {
+                            self.zombie_ptr_equal(result, "OpPtrEqual");
+                            result
+                        })
                     } else {
                         let int_ty = self.type_usize();
                         let lhs = self
@@ -2176,6 +2178,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // needing to materialize `&core::panic::Location` or `format_args!`.
             self.abort();
             self.undef(result_type)
+        } else if self.descriptor_index_fn_ids.borrow().contains(&callee_val) {
+            if args.len() != 2 {
+                bug!(
+                    "expected 2 arguments for descriptor index fn, found {:?} args for fn {:?}",
+                    args.len(),
+                    callee
+                );
+            }
+            codegen_descriptor_index_fn(self, result_type, args[0], args[1])
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()
@@ -2196,5 +2207,82 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn do_not_inline(&mut self, _llret: Self::Value) {
         // Ignore
+    }
+}
+
+fn codegen_descriptor_index_fn(
+    bx: &Builder<'_, '_>,
+    result_type: Word,
+    base: SpirvValue,
+    index: SpirvValue,
+) -> SpirvValue {
+    let base_data_type = match bx.lookup_type(base.ty) {
+        SpirvType::Pointer { pointee } => match bx.lookup_type(pointee) {
+            SpirvType::DescriptorArray { element, .. } => element,
+            wrong_type => bug!(
+                "descriptor index fn expected `SpirvType::DesrcriptorArray`, found {:?}",
+                wrong_type
+            ),
+        },
+        wrong_type => bug!(
+            "descriptor index fn expected `SpirvType::Pointer`, found {:?}",
+            wrong_type
+        ),
+    };
+    match bx.lookup_type(base_data_type) {
+        SpirvType::Image { .. }
+        | SpirvType::Sampler
+        | SpirvType::SampledImage { .. }
+        | SpirvType::AccelerationStructureKhr => bx
+            .emit()
+            .access_chain(result_type, None, base.def(bx), Some(index.def(bx)))
+            .expect("descriptor_index access chain failed for opaque resource type")
+            .with_type(result_type),
+        SpirvType::InterfaceBlock { inner_type }
+            if bx.lookup_type(inner_type).sizeof(bx).is_some() =>
+        {
+            // descriptor arrays of regular data are wrapped in a block-decorated struct,
+            // so an additional 0 index is needed to unwrap that and return the expected type
+            let zero = bx.constant_u32(rustc_span::DUMMY_SP, 0).def(bx);
+            bx.emit()
+                .access_chain(
+                    result_type,
+                    None,
+                    base.def(bx),
+                    [index.def(bx), zero].iter().cloned(),
+                )
+                .expect("descriptor_index access chain failed for plain data type")
+                .with_type(result_type)
+        }
+        SpirvType::InterfaceBlock { inner_type }
+            if matches!(bx.lookup_type(inner_type), SpirvType::RuntimeArray { .. },) =>
+        {
+            // descriptor arrays of regular data are wrapped in a block-decorated struct,
+            // so an additional 0 index is needed to unwrap that and return the expected type
+            let zero = bx.constant_u32(rustc_span::DUMMY_SP, 0).def(bx);
+            let ptr_block_rta_ty = bx.type_ptr_to(base_data_type);
+            let ptr_block_rta = bx
+                .emit()
+                .access_chain(ptr_block_rta_ty, None, base.def(bx), Some(index.def(bx)))
+                .expect("descriptor_index access chain failed");
+            let len_type = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, bx);
+            let len = bx
+                .emit()
+                .array_length(len_type, None, ptr_block_rta, 0)
+                .expect("descriptor_index array length failed");
+            let ptr_rta_ty = bx.type_ptr_to(inner_type);
+            let ptr_rta = bx
+                .emit()
+                .in_bounds_access_chain(ptr_rta_ty, None, ptr_block_rta, Some(zero))
+                .expect("inbounds access chain to interface block rta failed");
+            bx.emit()
+                .composite_construct(result_type, None, [ptr_rta, len].iter().cloned())
+                .expect("fat pointer construction failed")
+                .with_type(result_type)
+        }
+        wrong_base_data_type => bug!(
+            "unexpected data type in descriptor array: {:?}",
+            wrong_base_data_type
+        ),
     }
 }

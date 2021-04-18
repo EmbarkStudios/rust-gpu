@@ -84,6 +84,9 @@ pub(crate) mod sealed;
 mod textures;
 pub mod vector;
 
+mod descriptor_indexing;
+
+pub use descriptor_indexing::*;
 pub use num_traits;
 pub use textures::*;
 

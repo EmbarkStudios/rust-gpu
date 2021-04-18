@@ -8,7 +8,7 @@ use rspirv::spirv::{Capability, StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
 use rustc_middle::bug;
-use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
+use rustc_middle::ty::layout::{FnAbiExt, HasParamEnv, TyAndLayout};
 use rustc_middle::ty::subst::SubstsRef;
 use rustc_middle::ty::{GeneratorSubsts, PolyFnSig, Ty, TyKind, TypeAndMut};
 use rustc_span::def_id::DefId;
@@ -810,6 +810,71 @@ fn trans_intrinsic_type<'tcx>(
                 cx.tcx
                     .sess
                     .err("#[spirv(sampled_image)] type must have a generic image type");
+                Err(ErrorReported)
+            }
+        }
+        IntrinsicType::DescriptorArray => {
+            if let (Some(data_ty), Some(count)) = (
+                substs.types().next(),
+                substs.consts().next().and_then(|count| {
+                    match count.try_eval_usize(cx.tcx, cx.param_env()) {
+                        // spirv does not allow zero length arrays, single descriptors should not be in an array
+                        Some(count) if count <= (u32::MAX as u64) && count > 1 => {
+                            Some(count as u32)
+                        }
+                        _ => None,
+                    }
+                }),
+            ) {
+                let inner_type = trans_type_impl(cx, span, cx.layout_of(data_ty), false);
+                let element = if matches!(
+                    cx.lookup_type(inner_type),
+                    SpirvType::Image { .. }
+                        | SpirvType::SampledImage { .. }
+                        | SpirvType::Sampler
+                        | SpirvType::AccelerationStructureKhr
+                ) {
+                    inner_type
+                } else {
+                    SpirvType::InterfaceBlock { inner_type }.def(span, cx)
+                };
+                let count = cx.constant_u32(span, count);
+                Ok(SpirvType::DescriptorArray {
+                    element,
+                    count: Some(count),
+                }
+                .def(span, cx))
+            } else {
+                cx.tcx.sess.err(
+                    "#[spirv(descriptor_array)] type must have a generic data type \
+                            and have a const generic length greater than 1",
+                );
+                Err(ErrorReported)
+            }
+        }
+        IntrinsicType::RuntimeDescriptorArray => {
+            if let Some(data_ty) = substs.types().next() {
+                let inner_type = trans_type_impl(cx, span, cx.layout_of(data_ty), false);
+                let element = if matches!(
+                    cx.lookup_type(inner_type),
+                    SpirvType::Image { .. }
+                        | SpirvType::SampledImage { .. }
+                        | SpirvType::Sampler
+                        | SpirvType::AccelerationStructureKhr
+                ) {
+                    inner_type
+                } else {
+                    SpirvType::InterfaceBlock { inner_type }.def(span, cx)
+                };
+                Ok(SpirvType::DescriptorArray {
+                    element,
+                    count: None,
+                }
+                .def(span, cx))
+            } else {
+                cx.tcx
+                    .sess
+                    .err("#[spirv(runtime_descriptor_array)] type must have a generic data type");
                 Err(ErrorReported)
             }
         }

@@ -73,6 +73,8 @@ pub enum IntrinsicType {
     Sampler,
     AccelerationStructureKhr,
     SampledImage,
+    DescriptorArray,
+    RuntimeDescriptorArray,
 }
 
 // NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside
@@ -96,6 +98,7 @@ pub enum SpirvAttribute {
 
     // `fn`/closure attributes:
     UnrollLoops,
+    DescriptorIndex,
 }
 
 // HACK(eddyb) this is similar to `rustc_span::Spanned` but with `value` as the
@@ -128,6 +131,7 @@ pub struct AggregatedSpirvAttributes {
 
     // `fn`/closure attributes:
     pub unroll_loops: Option<Spanned<()>>,
+    pub descriptor_index: Option<Spanned<()>>,
 }
 
 struct MultipleAttrs {
@@ -209,6 +213,12 @@ impl AggregatedSpirvAttributes {
             Flat => try_insert(&mut self.flat, (), span, "#[spirv(flat)]"),
             Invariant => try_insert(&mut self.invariant, (), span, "#[spirv(invariant)]"),
             UnrollLoops => try_insert(&mut self.unroll_loops, (), span, "#[spirv(unroll_loops)]"),
+            DescriptorIndex => try_insert(
+                &mut self.descriptor_index,
+                (),
+                span,
+                "#[spirv(descriptor_index)]",
+            ),
         }
     }
 }
@@ -341,6 +351,10 @@ impl CheckSpirvAttrVisitor<'_> {
                     | Target::Method(MethodKind::Inherent) => Ok(()),
 
                     _ => Err(Expected("function or closure")),
+                },
+                SpirvAttribute::DescriptorIndex => match target {
+                    Target::Method(MethodKind::Inherent) => Ok(()),
+                    _ => Err(Expected("compiler implemented inherent method")),
                 },
             };
             match valid_target {

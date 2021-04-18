@@ -450,7 +450,7 @@ fn ptr_copy_from_method() {
 }
 
 #[test]
-fn index_user_dst() {
+fn index_buffer_slice() {
     dis_entry_fn(
         r#"
 #[spirv(fragment)]
@@ -492,5 +492,141 @@ OpUnreachable
 %17 = OpLabel
 OpUnreachable
 OpFunctionEnd"#,
+    )
+}
+
+#[test]
+fn descriptor_indexing() {
+    dis_entry_fn(
+        r#"
+#[spirv(fragment)]
+pub fn main(
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] rta_rta: &RuntimeDescriptorArray<[usize]>,
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] arr_val: &DescriptorArray<usize, 5>,
+    #[spirv(descriptor_set = 0, binding = 0)] rta_res: &RuntimeDescriptorArray<Sampler>,
+) {
+    unsafe {
+        asm! {
+            "OpCapability RuntimeDescriptorArray",
+            "OpExtension \"SPV_EXT_descriptor_indexing\"",
+        }
+        let index1: usize = rta_rta.index_unchecked(5)[3];
+        let index2: usize = *arr_val.index_unchecked(index1);
+        let resource: &Sampler = rta_res.index_unchecked(index2);
+        let _ = resource;
+    }
+}
+        "#,
+        "main",
+        r#"%1 = OpFunction %2 None %3
+%4 = OpLabel
+%5 = OpAccessChain %6 %7 %8
+%9 = OpArrayLength %10 %5 0
+%11 = OpInBoundsAccessChain %12 %5 %13
+%14 = OpCompositeConstruct %15 %11 %9
+%16 = OpCompositeExtract %12 %14 0
+%17 = OpCompositeExtract %10 %14 1
+%18 = OpULessThan %19 %20 %17
+OpSelectionMerge %21 None
+OpBranchConditional %18 %22 %23
+%22 = OpLabel
+%24 = OpInBoundsAccessChain %25 %16 %20
+%26 = OpLoad %10 %24
+%27 = OpAccessChain %28 %29 %26 %13
+%30 = OpLoad %10 %27
+%31 = OpAccessChain %32 %33 %30
+OpReturn
+%23 = OpLabel
+OpBranch %34
+%34 = OpLabel
+OpBranch %35
+%35 = OpLabel
+%36 = OpPhi %19 %37 %34 %37 %38
+OpLoopMerge %39 %38 None
+OpBranchConditional %36 %40 %39
+%40 = OpLabel
+OpBranch %38
+%38 = OpLabel
+OpBranch %35
+%39 = OpLabel
+OpUnreachable
+%21 = OpLabel
+OpUnreachable
+OpFunctionEnd"#,
+    )
+}
+
+#[test]
+fn descriptor_arrays() {
+    dis_globals(
+        r#"
+#[spirv(fragment)]
+pub fn main(
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] rta_rta: &RuntimeDescriptorArray<[usize]>,
+    #[spirv(uniform, descriptor_set = 1, binding = 0)] arr_val: &DescriptorArray<usize, 5>,
+    #[spirv(descriptor_set = 2, binding = 0)] rta_res: &RuntimeDescriptorArray<Sampler>,
+) {
+    unsafe {
+        asm! {
+            "OpCapability RuntimeDescriptorArray",
+            "OpExtension \"SPV_EXT_descriptor_indexing\"",
+        }
+        let index1: usize = rta_rta.index_unchecked(5)[3];
+        let index2: usize = *arr_val.index_unchecked(index1);
+        let resource: &Sampler = rta_res.index_unchecked(index2);
+        let _ = resource;
+    }
+}
+        "#,
+        r#"OpCapability Shader
+OpCapability RuntimeDescriptorArray
+OpExtension "SPV_EXT_descriptor_indexing"
+OpMemoryModel Logical Simple
+OpEntryPoint Fragment %1 "main"
+OpExecutionMode %1 OriginUpperLeft
+OpName %2 "&[usize]"
+OpName %3 "rta_rta"
+OpName %4 "arr_val"
+OpName %5 "rta_res"
+OpDecorate %6 Block
+OpMemberDecorate %6 0 Offset 0
+OpDecorate %7 ArrayStride 4
+OpMemberDecorate %2 0 Offset 0
+OpMemberDecorate %2 1 Offset 4
+OpDecorate %8 Block
+OpMemberDecorate %8 0 Offset 0
+OpDecorate %3 DescriptorSet 0
+OpDecorate %3 Binding 0
+OpDecorate %4 DescriptorSet 1
+OpDecorate %4 Binding 0
+OpDecorate %5 DescriptorSet 2
+OpDecorate %5 Binding 0
+%9 = OpTypeInt 32 0
+%10 = OpTypePointer Uniform %9
+%11 = OpTypePointer StorageBuffer %9
+%6 = OpTypeStruct %9
+%12 = OpConstant %9 5
+%13 = OpTypeArray %6 %12
+%14 = OpTypePointer Uniform %13
+%15 = OpTypeSampler
+%16 = OpTypePointer UniformConstant %15
+%17 = OpTypeRuntimeArray %15
+%18 = OpTypePointer UniformConstant %17
+%7 = OpTypeRuntimeArray %9
+%19 = OpTypePointer StorageBuffer %7
+%2 = OpTypeStruct %19 %9
+%8 = OpTypeStruct %7
+%20 = OpTypeRuntimeArray %8
+%21 = OpTypePointer StorageBuffer %20
+%22 = OpTypeVoid
+%23 = OpTypeFunction %22
+%3 = OpVariable %21 StorageBuffer
+%4 = OpVariable %14 Uniform
+%5 = OpVariable %18 UniformConstant
+%24 = OpConstant %9 0
+%25 = OpTypePointer StorageBuffer %8
+%26 = OpConstant %9 3
+%27 = OpTypeBool
+%28 = OpConstantTrue %27"#,
     )
 }

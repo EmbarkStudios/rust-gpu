@@ -18,7 +18,7 @@ use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
 };
-use rustc_data_structures::fx::FxHashMap;
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_hir::GlobalAsm;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
@@ -57,6 +57,8 @@ pub struct CodegenCx<'tcx> {
     /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
     /// instructions, during structuralization.
     unroll_loops_decorations: RefCell<FxHashMap<Word, UnrollLoopsDecoration>>,
+    /// Compiler-implemented descriptor indexing functions
+    pub descriptor_index_fn_ids: RefCell<FxHashSet<Word>>,
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
@@ -97,6 +99,7 @@ impl<'tcx> CodegenCx<'tcx> {
             ext_inst: Default::default(),
             zombie_decorations: Default::default(),
             unroll_loops_decorations: Default::default(),
+            descriptor_index_fn_ids: Default::default(),
             target,
             sym,
             instruction_table: InstructionTable::new(),

@@ -58,6 +58,12 @@ pub enum SpirvType {
     RuntimeArray {
         element: Word,
     },
+    DescriptorArray {
+        element: Word,
+        /// count is None for runtime descriptor array,
+        /// or Some(const > 1) for descriptor array
+        count: Option<SpirvValue>,
+    },
     Pointer {
         pointee: Word,
     },
@@ -207,6 +213,20 @@ impl SpirvType {
                 }
                 result
             }
+            Self::DescriptorArray {
+                element,
+                count: Some(count),
+            } => {
+                // no array stride decorations on descriptor arrays
+                cx.emit_global().type_array(element, count.def_cx(cx))
+            }
+            Self::DescriptorArray {
+                element,
+                count: None,
+            } => {
+                // no array stride decoration on runtime descriptor arrays
+                cx.emit_global().type_runtime_array(element)
+            }
             Self::Pointer { pointee } => {
                 // NOTE(eddyb) we emit `StorageClass::Generic` here, but later
                 // the linker will specialize the entire SPIR-V module to use
@@ -338,7 +358,8 @@ impl SpirvType {
             Self::Void
             | Self::Opaque { .. }
             | Self::RuntimeArray { .. }
-            | Self::Function { .. } => return None,
+            | Self::Function { .. }
+            | Self::DescriptorArray { .. } => return None,
 
             Self::Bool => Size::from_bytes(1),
             Self::Integer(width, _) | Self::Float(width) => Size::from_bits(width),
@@ -387,6 +408,8 @@ impl SpirvType {
             | Self::SampledImage { .. } => Align::from_bytes(4).unwrap(),
 
             Self::InterfaceBlock { inner_type } => cx.lookup_type(inner_type).alignof(cx),
+            // Is this right? This type can't appear anywhere that alignof is called, in any case.
+            Self::DescriptorArray { .. } => Align::from_bytes(0).unwrap(),
         }
     }
 }
@@ -474,6 +497,30 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .finish(),
             SpirvType::RuntimeArray { element } => f
                 .debug_struct("RuntimeArray")
+                .field("id", &self.id)
+                .field("element", &self.cx.debug_type(element))
+                .finish(),
+            SpirvType::DescriptorArray {
+                element,
+                count: Some(count),
+            } => f
+                .debug_struct("DescriptorArray")
+                .field("id", &self.id)
+                .field("element", &self.cx.debug_type(element))
+                .field(
+                    "count",
+                    &self
+                        .cx
+                        .builder
+                        .lookup_const_u64(count)
+                        .expect("Array type has invalid count value"),
+                )
+                .finish(),
+            SpirvType::DescriptorArray {
+                element,
+                count: None,
+            } => f
+                .debug_struct("RuntimeDescriptorArray")
                 .field("id", &self.id)
                 .field("element", &self.cx.debug_type(element))
                 .finish(),
@@ -629,6 +676,24 @@ impl SpirvTypePrinter<'_, '_> {
             }
             SpirvType::RuntimeArray { element } => {
                 f.write_str("[")?;
+                ty(self.cx, stack, f, element)?;
+                f.write_str("]")
+            }
+            SpirvType::DescriptorArray {
+                element,
+                count: Some(count),
+            } => {
+                let len = self.cx.builder.lookup_const_u64(count);
+                let len = len.expect("Array type has invalid count value");
+                f.write_str("DescriptorArray [")?;
+                ty(self.cx, stack, f, element)?;
+                write!(f, "; {}]", len)
+            }
+            SpirvType::DescriptorArray {
+                element,
+                count: None,
+            } => {
+                f.write_str("RuntimeDescriptorArray [")?;
                 ty(self.cx, stack, f, element)?;
                 f.write_str("]")
             }

@@ -534,6 +534,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 .tcx
                 .sess
                 .fatal("Cannot create a constant acceleration structure"),
+            SpirvType::DescriptorArray { .. } => self
+                .tcx
+                .sess
+                .fatal("Cannot create a constant descriptor array value"),
         }
     }
 }

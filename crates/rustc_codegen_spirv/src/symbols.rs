@@ -329,6 +329,15 @@ impl Symbols {
                 SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),
             ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
+            (
+                "descriptor_array",
+                SpirvAttribute::IntrinsicType(IntrinsicType::DescriptorArray),
+            ),
+            (
+                "runtime_descriptor_array",
+                SpirvAttribute::IntrinsicType(IntrinsicType::RuntimeDescriptorArray),
+            ),
+            ("descriptor_index", SpirvAttribute::DescriptorIndex),
         ]
         .iter()
         .cloned();

@@ -124,6 +124,9 @@ impl<'tcx> CodegenCx<'tcx> {
                 .borrow_mut()
                 .insert(fn_id, UnrollLoopsDecoration {});
         }
+        if attrs.descriptor_index.is_some() {
+            self.descriptor_index_fn_ids.borrow_mut().insert(fn_id);
+        }
 
         let instance_def_id = instance.def_id();
         if self.tcx.crate_name(instance_def_id.krate) == self.sym.libm {
