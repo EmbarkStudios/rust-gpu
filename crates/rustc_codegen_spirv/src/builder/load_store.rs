@@ -141,6 +141,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Sampler => self.err("Sampler type unsupported for bindless buffer stores"),
             SpirvType::SampledImage { image_type: _ }  => self.err("SampledImage type unsupported for bindless buffer stores"),
             SpirvType::InterfaceBlock { inner_type: _ } => self.err("InterfaceBlock type unsupported for bindless buffer stores"),
+            SpirvType::AccelerationStructureKhr => self.fatal("AccelerationStructureKhr type unsupported for bindless buffer stores"),
         }
     }
 
@@ -589,6 +590,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Sampler => self.fatal("Sampler type unsupported for bindless buffer loads"),
             SpirvType::SampledImage { image_type: _ }  => self.fatal("SampledImage type unsupported for bindless buffer loads"),
             SpirvType::InterfaceBlock { inner_type: _ } => self.fatal("InterfaceBlock type unsupported for bindless buffer loads"),
+            SpirvType::AccelerationStructureKhr => self.fatal("AccelerationStructureKhr type unsupported for bindless buffer loads"),
         }
     }
 }
