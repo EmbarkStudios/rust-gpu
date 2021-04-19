@@ -236,6 +236,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Sampler => self.fatal("cannot memset sampler"),
             SpirvType::SampledImage { .. } => self.fatal("cannot memset sampled image"),
             SpirvType::InterfaceBlock { .. } => self.fatal("cannot memset interface block"),
+            SpirvType::AccelerationStructureKhr => {
+                self.fatal("cannot memset acceleration structure")
+            }
         }
     }
 
@@ -293,6 +296,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Sampler => self.fatal("cannot memset sampler"),
             SpirvType::SampledImage { .. } => self.fatal("cannot memset sampled image"),
             SpirvType::InterfaceBlock { .. } => self.fatal("cannot memset interface block"),
+            SpirvType::AccelerationStructureKhr => {
+                self.fatal("cannot memset acceleration structure")
+            }
         }
     }
 
@@ -368,6 +374,15 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             self.zombie(
                 def,
                 "OpConvertUToPtr OpCapability Addresses or PhysicalStorageBufferAddresses",
+            );
+        }
+    }
+
+    fn zombie_ptr_equal(&self, def: Word, inst: &str) {
+        if !self.builder.has_capability(Capability::VariablePointers) {
+            self.zombie(
+                def,
+                &format!("{} without OpCapability VariablePointers", inst),
             );
         }
     }
@@ -1433,7 +1448,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => match op {
                 IntEQ => {
                     if self.emit().version().unwrap() > (1, 3) {
-                        self.emit().ptr_equal(b, None, lhs.def(self), rhs.def(self))
+                        self.emit()
+                            .ptr_equal(b, None, lhs.def(self), rhs.def(self))
+                            .map(|result| {
+                                self.zombie_ptr_equal(result, "OpPtrEqual");
+                                result
+                            })
                     } else {
                         let int_ty = self.type_usize();
                         let lhs = self
@@ -1453,6 +1473,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     if self.emit().version().unwrap() > (1, 3) {
                         self.emit()
                             .ptr_not_equal(b, None, lhs.def(self), rhs.def(self))
+                            .map(|result| {
+                                self.zombie_ptr_equal(result, "OpPtrNotEqual");
+                                result
+                            })
                     } else {
                         let int_ty = self.type_usize();
                         let lhs = self

@@ -27,7 +27,6 @@ fn custom_entry_point() {
 pub fn main() { }
 "#,
         r#"OpCapability Shader
-OpCapability VariablePointers
 OpMemoryModel Logical Simple
 OpEntryPoint Fragment %1 "hello_world"
 OpExecutionMode %1 OriginUpperLeft
@@ -171,7 +170,6 @@ fn asm_op_decorate() {
             add_decorate();
         }"#,
         r#"OpCapability Shader
-OpCapability VariablePointers
 OpCapability RuntimeDescriptorArray
 OpExtension "SPV_EXT_descriptor_indexing"
 OpMemoryModel Logical Simple

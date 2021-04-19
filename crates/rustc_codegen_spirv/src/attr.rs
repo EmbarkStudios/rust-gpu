@@ -71,6 +71,7 @@ pub enum IntrinsicType {
         access_qualifier: Option<AccessQualifier>,
     },
     Sampler,
+    AccelerationStructureKhr,
     SampledImage,
 }
 

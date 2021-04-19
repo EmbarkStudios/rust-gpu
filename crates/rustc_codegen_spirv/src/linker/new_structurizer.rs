@@ -118,8 +118,9 @@ struct Region {
     /// After structurizing a region, all paths through it must lead to a single
     /// "merge" block (i.e. `merge` post-dominates the entire region).
     /// The `merge` block must be terminated by one of `OpReturn`, `OpReturnValue`,
-    /// `OpKill`, or `OpUnreachable`. If `exits` isn't empty, `merge` will
-    /// receive an `OpBranch` from its parent region (to an outer merge block).
+    /// `OpKill`, `OpIgnoreIntersectionKHR`, `OpTerminateRayKHR` or
+    /// `OpUnreachable`. If `exits` isn't empty, `merge` will receive an
+    /// `OpBranch` from its parent region (to an outer merge block).
     merge: BlockIdx,
     merge_id: BlockId,
 
@@ -168,7 +169,12 @@ impl Structurizer<'_> {
             let block_id = self.func.blocks()[block].label_id().unwrap();
             let terminator = self.func.blocks()[block].instructions.last().unwrap();
             let mut region = match terminator.class.opcode {
-                Op::Return | Op::ReturnValue | Op::Kill | Op::Unreachable => Region {
+                Op::Return
+                | Op::ReturnValue
+                | Op::Kill
+                | Op::IgnoreIntersectionKHR
+                | Op::TerminateRayKHR
+                | Op::Unreachable => Region {
                     merge: block,
                     merge_id: block_id,
                     exits: indexmap! {},
