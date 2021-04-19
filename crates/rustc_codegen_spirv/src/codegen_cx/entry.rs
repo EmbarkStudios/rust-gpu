@@ -162,7 +162,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .variable(
                 uniform_ptr_runtime_array,
                 None,
-                if self.target.spirv_version() < (1, 3) {
+                if self.target.spirv_version() <= (1, 3) {
                     StorageClass::Uniform
                 } else {
                     StorageClass::StorageBuffer
@@ -183,7 +183,7 @@ impl<'tcx> CodegenCx<'tcx> {
             std::iter::once(Operand::LiteralInt32(0)),
         );
 
-        if self.target.spirv_version() < (1, 3) {
+        if self.target.spirv_version() <= (1, 3) {
             emit_global.decorate(
                 buffer_struct,
                 rspirv::spirv::Decoration::BufferBlock,
