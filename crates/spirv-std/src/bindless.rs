@@ -86,6 +86,7 @@ impl RenderResourceHandle {
     /// is guaranteed to exist by the caller. `RenderResourceHandle` can't
     /// track lifetimes or keep ref-counts between GPU and CPU and thus
     /// requires extra caution from the user.
+    #[inline]
     pub unsafe fn index(self) -> u32 {
         self.0 & ((1 << 23) - 1)
     }
@@ -105,27 +106,30 @@ impl RenderResourceHandle {
 #[repr(transparent)]
 pub struct Buffer(RenderResourceHandle);
 
-#[spirv(internal_buffer_load)]
-#[spirv_std_macros::gpu_only]
-pub extern "unadjusted" fn internal_buffer_load<T>(_buffer: u32, _offset: u32) -> T {
-    unimplemented!()
-} // actually implemented in the compiler
+mod internal {
+    #[spirv(internal_buffer_load)]
+    #[spirv_std_macros::gpu_only]
+    pub extern "unadjusted" fn internal_buffer_load<T>(_buffer: u32, _offset: u32) -> T {
+        unimplemented!()
+    } // actually implemented in the compiler
 
-#[spirv(internal_buffer_store)]
-#[spirv_std_macros::gpu_only]
-pub unsafe extern "unadjusted" fn internal_buffer_store<T>(_buffer: u32, _offset: u32, _value: T) {
-    unimplemented!()
-} // actually implemented in the compiler
+    #[spirv(internal_buffer_store)]
+    #[spirv_std_macros::gpu_only]
+    pub unsafe extern "unadjusted" fn internal_buffer_store<T>(_buffer: u32, _offset: u32, _value: T) {
+        unimplemented!()
+    } // actually implemented in the compiler
+}
 
 impl Buffer {
     #[spirv_std_macros::gpu_only]
+    #[inline]
     pub extern "unadjusted" fn load<T>(self, dword_aligned_byte_offset: u32) -> T {
         // jb-todo: figure out why this assert breaks with complaints about pointers
         // assert!(self.0.tag() == RenderResourceTag::Buffer);
         // assert!(std::mem::sizeof::<T>() % 4 == 0);
         // assert!(dword_aligned_byte_offset % 4 == 0);
 
-        unsafe { internal_buffer_load(self.0.index(), dword_aligned_byte_offset) }
+        unsafe { internal::internal_buffer_load(self.0.index(), dword_aligned_byte_offset) }
     }
 
     #[spirv_std_macros::gpu_only]
@@ -133,7 +137,7 @@ impl Buffer {
         // jb-todo: figure out why this assert breaks with complaints about pointers
         // assert!(self.0.tag() == RenderResourceTag::Buffer);
 
-        internal_buffer_store(self.0.index(), dword_aligned_byte_offset, value)
+        internal::internal_buffer_store(self.0.index(), dword_aligned_byte_offset, value)
     }
 }
 
@@ -143,13 +147,14 @@ pub struct SimpleBuffer<T>(RenderResourceHandle, core::marker::PhantomData<T>);
 
 impl<T> SimpleBuffer<T> {
     #[spirv_std_macros::gpu_only]
+    #[inline]
     pub extern "unadjusted" fn load(self) -> T {
-        unsafe { internal_buffer_load(self.0.index(), 0) }
+        unsafe { internal::internal_buffer_load(self.0.index(), 0) }
     }
 
     #[spirv_std_macros::gpu_only]
     pub unsafe extern "unadjusted" fn store(self, value: T) {
-        internal_buffer_store(self.0.index(), 0, value)
+        internal::internal_buffer_store(self.0.index(), 0, value)
     }
 }
 
@@ -159,13 +164,14 @@ pub struct ArrayBuffer<T>(RenderResourceHandle, core::marker::PhantomData<T>);
 
 impl<T> ArrayBuffer<T> {
     #[spirv_std_macros::gpu_only]
+    #[inline]
     pub extern "unadjusted" fn load(self, index: u32) -> T {
-        unsafe { internal_buffer_load(self.0.index(), index * core::mem::size_of::<T>() as u32) }
+        unsafe { internal::internal_buffer_load(self.0.index(), index * core::mem::size_of::<T>() as u32) }
     }
 
     #[spirv_std_macros::gpu_only]
     pub unsafe extern "unadjusted" fn store(self, index: u32, value: T) {
-        internal_buffer_store(
+        internal::internal_buffer_store(
             self.0.index(),
             index * core::mem::size_of::<T>() as u32,
             value,
