@@ -1448,12 +1448,14 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => match op {
                 IntEQ => {
                     if self.emit().version().unwrap() > (1, 3) {
-                        self.emit()
-                            .ptr_equal(b, None, lhs.def(self), rhs.def(self))
-                            .map(|result| {
-                                self.zombie_ptr_equal(result, "OpPtrEqual");
-                                result
-                            })
+                       let ptr_equal = self.emit()
+                           .ptr_equal(b, None, lhs.def(self), rhs.def(self));
+
+                        ptr_equal
+                           .map(|result| {
+                               self.zombie_ptr_equal(result, "OpPtrEqual");
+                               result
+                           })
                     } else {
                         let int_ty = self.type_usize();
                         let lhs = self
