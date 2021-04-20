@@ -1,4 +1,4 @@
-use crate::memory::{Scope, Semantics};
+use crate::memory::Scope;
 
 /// Wait for other invocations of this module to reach the current point
 /// of execution.
@@ -30,11 +30,8 @@ use crate::memory::{Scope, Semantics};
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpControlBarrier")]
 #[inline]
-pub unsafe fn control_barrier<
-    const EXECUTION: Scope,
-    const MEMORY: Scope,
-    const SEMANTICS: Semantics,
->() {
+// FIXME(eddyb) use a `bitflags!` `Semantics` for `SEMANTICS`.
+pub unsafe fn control_barrier<const EXECUTION: Scope, const MEMORY: Scope, const SEMANTICS: u32>() {
     asm! {
         "%u32 = OpTypeInt 32 0",
         "%execution = OpConstant %u32 {execution}",
@@ -43,7 +40,7 @@ pub unsafe fn control_barrier<
         "OpControlBarrier %execution %memory %semantics",
         execution = const EXECUTION as u8,
         memory = const MEMORY as u8,
-        semantics = const SEMANTICS as u8,
+        semantics = const SEMANTICS,
     }
 }
 
