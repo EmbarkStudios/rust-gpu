@@ -312,6 +312,9 @@ impl<'tcx> CodegenCx<'tcx> {
         bx.call(entry_func, &call_args, None);
         bx.ret_void();
 
+        op_entry_point_interface_operands
+            .push(self.bindless_descriptor_sets.borrow().unwrap().buffers);
+
         let stub_fn_id = stub_fn.def_cx(self);
         self.emit_global().entry_point(
             execution_model,

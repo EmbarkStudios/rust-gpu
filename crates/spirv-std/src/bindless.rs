@@ -115,7 +115,11 @@ mod internal {
 
     #[spirv(internal_buffer_store)]
     #[spirv_std_macros::gpu_only]
-    pub unsafe extern "unadjusted" fn internal_buffer_store<T>(_buffer: u32, _offset: u32, _value: T) {
+    pub unsafe extern "unadjusted" fn internal_buffer_store<T>(
+        _buffer: u32,
+        _offset: u32,
+        _value: T,
+    ) {
         unimplemented!()
     } // actually implemented in the compiler
 }
@@ -166,7 +170,9 @@ impl<T> ArrayBuffer<T> {
     #[spirv_std_macros::gpu_only]
     #[inline]
     pub extern "unadjusted" fn load(self, index: u32) -> T {
-        unsafe { internal::internal_buffer_load(self.0.index(), index * core::mem::size_of::<T>() as u32) }
+        unsafe {
+            internal::internal_buffer_load(self.0.index(), index * core::mem::size_of::<T>() as u32)
+        }
     }
 
     #[spirv_std_macros::gpu_only]
