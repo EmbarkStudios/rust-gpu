@@ -124,6 +124,7 @@ impl<'tcx> CodegenCx<'tcx> {
         self.builder.builder(cursor)
     }
 
+    #[track_caller]
     pub fn lookup_type(&self, ty: Word) -> SpirvType {
         self.type_cache.lookup(ty)
     }
