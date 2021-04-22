@@ -30,7 +30,6 @@ use crate::memory::{Scope, Semantics};
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpControlBarrier")]
 #[inline]
-// FIXME(eddyb) use a `bitflags!` `Semantics` for `SEMANTICS`.
 pub unsafe fn control_barrier<
     const EXECUTION: Scope,
     const MEMORY: Scope,
