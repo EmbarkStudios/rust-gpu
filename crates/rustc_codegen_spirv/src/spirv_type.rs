@@ -705,6 +705,7 @@ impl TypeCache<'_> {
         self.type_defs.borrow().get_by_right(ty).copied()
     }
 
+    #[track_caller]
     pub fn lookup(&self, word: Word) -> SpirvType {
         self.type_defs
             .borrow()
