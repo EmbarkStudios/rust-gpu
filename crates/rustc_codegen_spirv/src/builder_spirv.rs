@@ -303,7 +303,7 @@ pub struct BuilderSpirv {
 }
 
 impl BuilderSpirv {
-    pub fn new(target: &SpirvTarget) -> Self {
+    pub fn new<'target, 'tcx>(target: &'target SpirvTarget, features: impl Iterator<Item=&'tcx rustc_span::symbol::Symbol>) -> Self {
         let version = target.spirv_version();
         let memory_model = target.memory_model();
 
@@ -324,10 +324,10 @@ impl BuilderSpirv {
 
         // The linker will always be ran on this module
         builder.capability(Capability::Linkage);
-        builder.capability(Capability::Int8);
-        builder.capability(Capability::Int16);
-        builder.capability(Capability::Int64);
-        builder.capability(Capability::Float64);
+
+        for feature in features {
+            builder.capability(feature.as_str().parse().unwrap());
+        }
 
         let addressing_model = if target.is_kernel() {
             builder.capability(Capability::Addresses);

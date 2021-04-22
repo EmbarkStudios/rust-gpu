@@ -5,11 +5,6 @@ use rustc_data_structures::fx::FxHashSet;
 pub fn remove_extra_capabilities(module: &mut Module) {
     let used_capabilities = used_capabilities(module);
     let removable_capabilities: FxHashSet<Capability> = [
-        Capability::Int8,
-        Capability::Int16,
-        Capability::Int64,
-        Capability::Float16,
-        Capability::Float64,
         Capability::IntegerFunctions2INTEL,
         Capability::DemoteToHelperInvocationEXT,
         Capability::DerivativeControl,

@@ -257,12 +257,19 @@ impl CodegenBackend for SpirvCodegenBackend {
     fn target_features(&self, sess: &Session) -> Vec<Symbol> {
         let cmdline = sess.opts.cg.target_feature.split(',');
         let cfg = sess.target.options.features.split(',');
-        cfg.chain(cmdline)
+        let result = cfg.chain(cmdline)
             .filter(|l| l.starts_with('+'))
             .map(|l| &l[1..])
-            .filter(|l| !l.is_empty())
-            .map(Symbol::intern)
-            .collect()
+            .map(|l| l.parse::<rspirv::spirv::Capability>().map(|_| Symbol::intern(l)).map_err(|_| l))
+            .collect::<Result<Vec<_>, _>>();
+
+        match result {
+            Ok(val) => val,
+            Err(input) => {
+                sess.err(&format!("Invalid capability: `{}`", input));
+                Vec::new()
+            }
+        }
     }
 
     fn target_override(&self, opts: &config::Options) -> Option<Target> {
@@ -353,8 +360,8 @@ impl CodegenBackend for SpirvCodegenBackend {
         codegen_results: CodegenResults,
         outputs: &OutputFilenames,
     ) -> Result<(), ErrorReported> {
-        // TODO: Can we merge this sym with the one in symbols.rs?
-        let legalize = !sess.target_features.contains(&Symbol::intern("kernel"));
+        let target = sess.target.llvm_target.parse::<target::SpirvTarget>().unwrap();
+        let legalize = !target.is_kernel();
         let codegen_args = CodegenArgs::from_session(sess);
         let emit_multiple_modules = codegen_args.module_output_type == ModuleOutputType::Multiple;
 
