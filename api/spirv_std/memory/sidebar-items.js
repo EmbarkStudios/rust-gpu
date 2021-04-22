@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Scope",""],["Semantics",""]]});
+initSidebarItems({"enum":[["Scope",""]],"struct":[["Semantics",""]]});

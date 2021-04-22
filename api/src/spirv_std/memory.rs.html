@@ -118,75 +118,75 @@
     <span class="ident">QueueFamily</span> <span class="op">=</span> <span class="number">5</span>,
 }
 
-<span class="comment">// FIXME(eddyb) use `bitflags!` for this.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Semantics</span> {
-    <span class="doccomment">/// No memory semantics.</span>
-    <span class="prelude-val">None</span> <span class="op">=</span> <span class="number">0</span>,
+<span class="ident">bitflags</span>::<span class="macro">bitflags</span><span class="macro">!</span> {
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Semantics</span>: <span class="ident">u32</span> {
+        <span class="doccomment">/// No memory semantics.</span>
+        <span class="kw">const</span> <span class="ident">NONE</span> <span class="op">=</span> <span class="number">0</span>;
 
-    <span class="doccomment">/// On an atomic instruction, orders memory operations provided in program</span>
-    <span class="doccomment">/// order after this atomic instruction against this atomic instruction. On</span>
-    <span class="doccomment">/// a barrier, orders memory operations provided in program order after this</span>
-    <span class="doccomment">/// barrier against atomic instructions before this barrier.</span>
-    <span class="ident">Acquire</span> <span class="op">=</span> <span class="number">0x2</span>,
+        <span class="doccomment">/// On an atomic instruction, orders memory operations provided in program</span>
+        <span class="doccomment">/// order after this atomic instruction against this atomic instruction. On</span>
+        <span class="doccomment">/// a barrier, orders memory operations provided in program order after this</span>
+        <span class="doccomment">/// barrier against atomic instructions before this barrier.</span>
+        <span class="kw">const</span> <span class="ident">ACQUIRE</span> <span class="op">=</span> <span class="number">0x2</span>;
 
-    <span class="doccomment">/// On an atomic instruction, orders memory operations provided in program</span>
-    <span class="doccomment">/// order before this atomic instruction against this atomic instruction. On</span>
-    <span class="doccomment">/// a barrier, orders memory operations provided in program order before</span>
-    <span class="doccomment">/// this barrier against atomic instructions after this barrier.</span>
-    <span class="ident">Release</span> <span class="op">=</span> <span class="number">0x4</span>,
+        <span class="doccomment">/// On an atomic instruction, orders memory operations provided in program</span>
+        <span class="doccomment">/// order before this atomic instruction against this atomic instruction. On</span>
+        <span class="doccomment">/// a barrier, orders memory operations provided in program order before</span>
+        <span class="doccomment">/// this barrier against atomic instructions after this barrier.</span>
+        <span class="kw">const</span> <span class="ident">RELEASE</span> <span class="op">=</span> <span class="number">0x4</span>;
 
-    <span class="doccomment">/// Has the properties of both [`Self::Acquire`] and [`Self::Release`] semantics. It</span>
-    <span class="doccomment">/// is used for read-modify-write operations.</span>
-    <span class="ident">AcquireRelease</span> <span class="op">=</span> <span class="number">0x8</span>,
+        <span class="doccomment">/// Has the properties of both [`Self::ACQUIRE`] and [`Self::RELEASE`] semantics. It</span>
+        <span class="doccomment">/// is used for read-modify-write operations.</span>
+        <span class="kw">const</span> <span class="ident">ACQUIRE_RELEASE</span> <span class="op">=</span> <span class="number">0x8</span>;
 
-    <span class="doccomment">/// All observers see this memory access in the same order with respect to</span>
-    <span class="doccomment">/// other sequentially-consistent memory accesses from this invocation.</span>
-    <span class="doccomment">/// If the declared memory model is `vulkan`, `SequentiallyConsistent` must</span>
-    <span class="doccomment">/// not be used.</span>
-    <span class="ident">SequentiallyConsistent</span> <span class="op">=</span> <span class="number">0x10</span>,
+        <span class="doccomment">/// All observers see this memory access in the same order with respect to</span>
+        <span class="doccomment">/// other sequentially-consistent memory accesses from this invocation.</span>
+        <span class="doccomment">/// If the declared memory model is `vulkan`, `SEQUENTIALLY_CONST` must</span>
+        <span class="doccomment">/// not be used.</span>
+        <span class="kw">const</span> <span class="ident">SEQUENTIALLY_CONST</span> <span class="op">=</span> <span class="number">0x10</span>;
 
-    <span class="doccomment">/// Apply the memory-ordering constraints to</span>
-    <span class="doccomment">/// [`crate::storage_class::StorageBuffer`],</span>
-    <span class="doccomment">/// [`crate::storage_class::PhysicalStorageBuffer`], or</span>
-    <span class="doccomment">/// [`crate::storage_class::Uniform`] Storage Class memory.</span>
-    <span class="ident">UniformMemory</span> <span class="op">=</span> <span class="number">0x40</span>,
+        <span class="doccomment">/// Apply the memory-ordering constraints to</span>
+        <span class="doccomment">/// [`crate::storage_class::StorageBuffer`],</span>
+        <span class="doccomment">/// [`crate::storage_class::PhysicalStorageBuffer`], or</span>
+        <span class="doccomment">/// [`crate::storage_class::Uniform`] Storage Class memory.</span>
+        <span class="kw">const</span> <span class="ident">UNIFORM_MEMORY</span> <span class="op">=</span> <span class="number">0x40</span>;
 
-    <span class="doccomment">/// Apply the memory-ordering constraints to subgroup memory.</span>
-    <span class="ident">SubgroupMemory</span> <span class="op">=</span> <span class="number">0x80</span>,
+        <span class="doccomment">/// Apply the memory-ordering constraints to subgroup memory.</span>
+        <span class="kw">const</span> <span class="ident">SUBGROUP_MEMORY</span> <span class="op">=</span> <span class="number">0x80</span>;
 
-    <span class="doccomment">/// Apply the memory-ordering constraints to</span>
-    <span class="doccomment">/// [`crate::storage_class::Workgroup`] Storage Class memory.</span>
-    <span class="ident">WorkgroupMemory</span> <span class="op">=</span> <span class="number">0x100</span>,
+        <span class="doccomment">/// Apply the memory-ordering constraints to</span>
+        <span class="doccomment">/// [`crate::storage_class::Workgroup`] Storage Class memory.</span>
+        <span class="kw">const</span> <span class="ident">WORKGROUP_MEMORY</span> <span class="op">=</span> <span class="number">0x100</span>;
 
-    <span class="doccomment">/// Apply the memory-ordering constraints to</span>
-    <span class="doccomment">/// [`crate::storage_class::CrossWorkgroup`] Storage Class memory.</span>
-    <span class="ident">CrossWorkgroupMemory</span> <span class="op">=</span> <span class="number">0x200</span>,
+        <span class="doccomment">/// Apply the memory-ordering constraints to</span>
+        <span class="doccomment">/// [`crate::storage_class::CrossWorkgroup`] Storage Class memory.</span>
+        <span class="kw">const</span> <span class="ident">CROSS_WORKGROUP_MEMORY</span> <span class="op">=</span> <span class="number">0x200</span>;
 
-    <span class="doccomment">/// Apply the memory-ordering constraints to</span>
-    <span class="doccomment">/// [`crate::storage_class::AtomicCounter`] Storage Class memory.</span>
-    <span class="ident">AtomicCounterMemory</span> <span class="op">=</span> <span class="number">0x400</span>,
+        <span class="doccomment">/// Apply the memory-ordering constraints to</span>
+        <span class="doccomment">/// [`crate::storage_class::AtomicCounter`] Storage Class memory.</span>
+        <span class="kw">const</span> <span class="ident">ATOMIC_COUNTER_MEMORY</span> <span class="op">=</span> <span class="number">0x400</span>;
 
-    <span class="doccomment">/// Apply the memory-ordering constraints to image contents (types declared</span>
-    <span class="doccomment">/// by `OpTypeImage`), or to accesses done through pointers to the</span>
-    <span class="doccomment">/// [`crate::storage_class::Image`] Storage Class.</span>
-    <span class="ident">ImageMemory</span> <span class="op">=</span> <span class="number">0x800</span>,
+        <span class="doccomment">/// Apply the memory-ordering constraints to image contents (types declared</span>
+        <span class="doccomment">/// by `OpTypeImage`), or to accesses done through pointers to the</span>
+        <span class="doccomment">/// [`crate::storage_class::Image`] Storage Class.</span>
+        <span class="kw">const</span> <span class="ident">IMAGE_MEMORY</span> <span class="op">=</span> <span class="number">0x800</span>;
 
-    <span class="doccomment">/// Apply the memory-ordering constraints to the</span>
-    <span class="doccomment">/// [`crate::storage_class::Output`] Storage Class memory.</span>
-    <span class="ident">OutputMemory</span> <span class="op">=</span> <span class="number">0x1000</span>,
+        <span class="doccomment">/// Apply the memory-ordering constraints to the</span>
+        <span class="doccomment">/// [`crate::storage_class::Output`] Storage Class memory.</span>
+        <span class="kw">const</span> <span class="ident">OUTPUT_MEMORY</span> <span class="op">=</span> <span class="number">0x1000</span>;
 
-    <span class="doccomment">/// Perform an availability operation on all references in the selected</span>
-    <span class="doccomment">/// storage classes.</span>
-    <span class="ident">MakeAvailable</span> <span class="op">=</span> <span class="number">0x2000</span>,
+        <span class="doccomment">/// Perform an availability operation on all references in the selected</span>
+        <span class="doccomment">/// storage classes.</span>
+        <span class="kw">const</span> <span class="ident">MAKE_AVAILABLE</span> <span class="op">=</span> <span class="number">0x2000</span>;
 
-    <span class="doccomment">/// Perform a visibility operation on all references in the selected</span>
-    <span class="doccomment">/// storage classes.</span>
-    <span class="ident">MakeVisible</span> <span class="op">=</span> <span class="number">0x4000</span>,
+        <span class="doccomment">/// Perform a visibility operation on all references in the selected</span>
+        <span class="doccomment">/// storage classes.</span>
+        <span class="kw">const</span> <span class="ident">MAKE_VISIBLE</span> <span class="op">=</span> <span class="number">0x4000</span>;
 
-    <span class="doccomment">/// This access cannot be eliminated, duplicated, or combined with</span>
-    <span class="doccomment">/// other accesses.</span>
-    <span class="ident">Volatile</span> <span class="op">=</span> <span class="number">0x8000</span>,
+        <span class="doccomment">/// This access cannot be eliminated, duplicated, or combined with</span>
+        <span class="doccomment">/// other accesses.</span>
+        <span class="kw">const</span> <span class="ident">VOLATILE</span> <span class="op">=</span> <span class="number">0x8000</span>;
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std" data-search-js="../../search-index.js"></div>
