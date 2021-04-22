@@ -11,7 +11,7 @@ pub fn main() {
         spirv_std::arch::control_barrier::<
             { Scope::Subgroup },
             { Scope::Subgroup },
-            { Semantics::None },
+            { Semantics::NONE },
         >();
     }
 }

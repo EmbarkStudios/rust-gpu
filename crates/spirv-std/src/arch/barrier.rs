@@ -11,12 +11,12 @@ use crate::memory::{Scope, Semantics};
 /// this instruction. When Execution is Subgroup or Invocation, the behavior of
 /// this instruction in non-uniform control flow is defined by the client API.
 ///
-/// If [`Semantics`] is not [`Semantics::None`], this instruction also serves as
+/// If [`Semantics`] is not [`Semantics::NONE`], this instruction also serves as
 /// an [`memory_barrier`] function call, and also performs and adheres to the
 /// description and semantics of an [`memory_barrier`] function with the same
 /// `MEMORY` and `SEMANTICS` operands. This allows atomically specifying both a
 /// control barrier and a memory barrier (that is, without needing two
-/// instructions). If [`Semantics`] is [`Semantics::None`], `MEMORY` is ignored.
+/// instructions). If [`Semantics`] is [`Semantics::NONE`], `MEMORY` is ignored.
 ///
 /// Before SPIRV-V version 1.3, it is only valid to use this instruction with
 /// `TessellationControl`, `GLCompute`, or `Kernel` execution models. There is
@@ -43,7 +43,7 @@ pub unsafe fn control_barrier<
         "OpControlBarrier %execution %memory %semantics",
         execution = const EXECUTION as u8,
         memory = const MEMORY as u8,
-        semantics = const SEMANTICS as u8,
+        semantics = const SEMANTICS.bits(),
     }
 }
 
@@ -66,13 +66,13 @@ pub unsafe fn control_barrier<
 #[doc(alias = "OpMemoryBarrier")]
 #[inline]
 // FIXME(eddyb) use a `bitflags!` `Semantics` for `SEMANTICS`.
-pub unsafe fn memory_barrier<const MEMORY: Scope, const SEMANTICS: u32>() {
+pub unsafe fn memory_barrier<const MEMORY: Scope, const SEMANTICS: Semantics>() {
     asm! {
         "%u32 = OpTypeInt 32 0",
         "%memory = OpConstant %u32 {memory}",
         "%semantics = OpConstant %u32 {semantics}",
         "OpMemoryBarrier %memory %semantics",
         memory = const MEMORY as u8,
-        semantics = const SEMANTICS,
+        semantics = const SEMANTICS.bits(),
     }
 }
