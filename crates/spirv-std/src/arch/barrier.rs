@@ -23,10 +23,9 @@ use crate::memory::{Scope, Semantics};
 /// no such restriction starting with version 1.3.
 ///
 /// If used with the `TessellationControl` execution model, it also implicitly
-/// synchronizes the [`crate::storage_class::Output`] Storage Class: Writes to
-/// `Output` variables performed by any invocation executed prior to a
-/// [`control_barrier`] are visible to any other invocation proceeding beyond
-/// that [`control_barrier`].
+/// synchronizes the `output` storage class: Writes to `output` variables
+/// performed by any invocation executed prior to a [`control_barrier`] are
+/// visible to any other invocation proceeding beyond that [`control_barrier`].
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpControlBarrier")]
 #[inline]
