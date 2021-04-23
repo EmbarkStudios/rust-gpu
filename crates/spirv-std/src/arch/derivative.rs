@@ -26,7 +26,7 @@ macro_rules! deriv_fn {
     };
 }
 
-/// Returns the partial derivative of `Self` with respect to the window's X
+/// Returns the partial derivative of `component` with respect to the window's X
 /// coordinate. Returns the same result as either [`ddx_fine`] or
 /// [`ddx_coarse`], selection of which one is dependent on external factors.
 #[spirv_std_macros::vectorized]
@@ -35,8 +35,8 @@ pub fn ddx<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdx, false)
 }
 
-/// Returns the partial derivative of `Self` with respect to the window's
-/// X coordinate. Uses local differencing based on the value of `Self` for
+/// Returns the partial derivative of `component` with respect to the window's X
+/// coordinate. Uses local differencing based on the value of `component` for
 /// the current fragment and its immediate neighbor(s).
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
@@ -44,19 +44,19 @@ pub fn ddx_fine<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdxFine, true)
 }
 
-/// Returns the partial derivative of `Self` with respect to the window's X
-/// coordinate. Uses local differencing based on the value of `Self` for the
-/// current fragment’s neighbors, and possibly, but not necessarily, includes
-/// the value of `Self` for the current fragment. That is, over a given area,
-/// the implementation can compute X derivatives in fewer unique locations than
-/// would be allowed by [`ddx_fine`].
+/// Returns the partial derivative of `component` with respect to the window's X
+/// coordinate. Uses local differencing based on the value of `component` for
+/// the current fragment’s neighbors, and possibly, but not necessarily,
+/// includes the value of `component` for the current fragment. That is, over a
+/// given area, the implementation can compute X derivatives in fewer unique
+/// locations than would be allowed by [`ddx_fine`].
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
 pub fn ddx_coarse<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdxCoarse, true)
 }
 
-/// Returns the partial derivative of `Self` with respect to the window's Y
+/// Returns the partial derivative of `component` with respect to the window's Y
 /// coordinate. Returns the same result as either [`ddy_fine`] or
 /// [`ddy_coarse`], selection of which one is dependent on external factors.
 #[spirv_std_macros::vectorized]
@@ -65,8 +65,8 @@ pub fn ddy<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdy, false)
 }
 
-/// Returns the partial derivative of `Self` with respect to the window's
-/// Y coordinate. Uses local differencing based on the value of `Self` for
+/// Returns the partial derivative of `component` with respect to the window's Y
+/// coordinate. Uses local differencing based on the value of `component` for
 /// the current fragment and its immediate neighbor(s).
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
@@ -74,12 +74,12 @@ pub fn ddy_fine<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdyFine, true)
 }
 
-/// Returns the partial derivative of `Self` with respect to the window's Y
-/// coordinate. Uses local differencing based on the value of `Self` for the
-/// current fragment’s neighbors, and possibly, but not necessarily, includes
-/// the value of `Self` for the current fragment. That is, over a given area,
-/// the implementation can compute Y derivatives in fewer unique locations than
-/// would be allowed by [`ddy_fine`].
+/// Returns the partial derivative of `component` with respect to the window's Y
+/// coordinate. Uses local differencing based on the value of `component` for
+/// the current fragment’s neighbors, and possibly, but not necessarily,
+/// includes the value of `component` for the current fragment. That is, over a
+/// given area, the implementation can compute Y derivatives in fewer unique
+/// locations than would be allowed by [`ddy_fine`].
 #[spirv_std_macros::vectorized]
 #[spirv_std_macros::gpu_only]
 pub fn ddy_coarse<F: Float>(component: F) -> F {

@@ -31,7 +31,7 @@ impl AccelerationStructure {
         loop {}
     }
 
-    /// Converts a vector of two 32 bit integers into an [`AccelerationStructureKHR`].
+    /// Converts a vector of two 32 bit integers into an [`AccelerationStructure`].
     /// # Safety
     /// The combination must point to a valid acceleration structure.
     #[spirv_std_macros::gpu_only]
