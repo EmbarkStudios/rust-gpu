@@ -112,13 +112,7 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! The [`Derivative`] trait for getting derivatives and handling derivative</span>
-<span class="doccomment">//! operations in SPIR-V.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">float</span>::<span class="ident">Float</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)]</span>
@@ -147,18 +141,17 @@
     };
 }
 
-<span class="doccomment">/// Returns the partial derivative of `Self` with respect to the window&#39;s</span>
-<span class="doccomment">/// X coordinate. Returns the same result as either</span>
-<span class="doccomment">/// [`Self::ddx_fine`] or [`Self::ddx_coarse`], selection of which one is</span>
-<span class="doccomment">/// dependent on external factors.</span>
+<span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s X</span>
+<span class="doccomment">/// coordinate. Returns the same result as either [`ddx_fine`] or</span>
+<span class="doccomment">/// [`ddx_coarse`], selection of which one is dependent on external factors.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">vectorized</span>]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
     <span class="macro">deriv_fn</span><span class="macro">!</span>(<span class="ident">component</span>, <span class="ident">OpDPdx</span>, <span class="bool-val">false</span>)
 }
 
-<span class="doccomment">/// Returns the partial derivative of `Self` with respect to the window&#39;s</span>
-<span class="doccomment">/// X coordinate. Uses local differencing based on the value of `Self` for</span>
+<span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s X</span>
+<span class="doccomment">/// coordinate. Uses local differencing based on the value of `component` for</span>
 <span class="doccomment">/// the current fragment and its immediate neighbor(s).</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">vectorized</span>]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
@@ -166,30 +159,29 @@
     <span class="macro">deriv_fn</span><span class="macro">!</span>(<span class="ident">component</span>, <span class="ident">OpDPdxFine</span>, <span class="bool-val">true</span>)
 }
 
-<span class="doccomment">/// Returns the partial derivative of `Self` with respect to the window&#39;s</span>
-<span class="doccomment">/// X coordinate. Uses local differencing based on the value of `Self` for</span>
+<span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s X</span>
+<span class="doccomment">/// coordinate. Uses local differencing based on the value of `component` for</span>
 <span class="doccomment">/// the current fragment’s neighbors, and possibly, but not necessarily,</span>
-<span class="doccomment">/// includes the value of `Self` for the current fragment. That is, over a</span>
-<span class="doccomment">/// given area, the implementation can compute X derivatives in fewer</span>
-<span class="doccomment">/// unique locations than would be allowed by [`Self::ddx_fine`].</span>
+<span class="doccomment">/// includes the value of `component` for the current fragment. That is, over a</span>
+<span class="doccomment">/// given area, the implementation can compute X derivatives in fewer unique</span>
+<span class="doccomment">/// locations than would be allowed by [`ddx_fine`].</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">vectorized</span>]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
     <span class="macro">deriv_fn</span><span class="macro">!</span>(<span class="ident">component</span>, <span class="ident">OpDPdxCoarse</span>, <span class="bool-val">true</span>)
 }
 
-<span class="doccomment">/// Returns the partial derivative of `Self` with respect to the window&#39;s</span>
-<span class="doccomment">/// Y coordinate. Returns the same result as either [`Self::ddy_fine`] or</span>
-<span class="doccomment">/// [`Self::ddy_coarse`], selection of which one is dependent on</span>
-<span class="doccomment">/// external factors.</span>
+<span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s Y</span>
+<span class="doccomment">/// coordinate. Returns the same result as either [`ddy_fine`] or</span>
+<span class="doccomment">/// [`ddy_coarse`], selection of which one is dependent on external factors.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">vectorized</span>]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
     <span class="macro">deriv_fn</span><span class="macro">!</span>(<span class="ident">component</span>, <span class="ident">OpDPdy</span>, <span class="bool-val">false</span>)
 }
 
-<span class="doccomment">/// Returns the partial derivative of `Self` with respect to the window&#39;s</span>
-<span class="doccomment">/// Y coordinate. Uses local differencing based on the value of `Self` for</span>
+<span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s Y</span>
+<span class="doccomment">/// coordinate. Uses local differencing based on the value of `component` for</span>
 <span class="doccomment">/// the current fragment and its immediate neighbor(s).</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">vectorized</span>]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
@@ -197,36 +189,36 @@
     <span class="macro">deriv_fn</span><span class="macro">!</span>(<span class="ident">component</span>, <span class="ident">OpDPdyFine</span>, <span class="bool-val">true</span>)
 }
 
-<span class="doccomment">/// Returns the partial derivative of `Self` with respect to the window&#39;s</span>
-<span class="doccomment">/// Y coordinate. Uses local differencing based on the value of `Self` for</span>
+<span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s Y</span>
+<span class="doccomment">/// coordinate. Uses local differencing based on the value of `component` for</span>
 <span class="doccomment">/// the current fragment’s neighbors, and possibly, but not necessarily,</span>
-<span class="doccomment">/// includes the value of `Self` for the current fragment. That is, over a</span>
-<span class="doccomment">/// given area, the implementation can compute Y derivatives in fewer</span>
-<span class="doccomment">/// unique locations than would be allowed by [`Derivative::ddy_fine`].</span>
+<span class="doccomment">/// includes the value of `component` for the current fragment. That is, over a</span>
+<span class="doccomment">/// given area, the implementation can compute Y derivatives in fewer unique</span>
+<span class="doccomment">/// locations than would be allowed by [`ddy_fine`].</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">vectorized</span>]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
     <span class="macro">deriv_fn</span><span class="macro">!</span>(<span class="ident">component</span>, <span class="ident">OpDPdyCoarse</span>, <span class="bool-val">true</span>)
 }
 
-<span class="doccomment">/// Returns the sum of the absolute values of [`Self::ddx`] and</span>
-<span class="doccomment">/// [`Self::ddy`] as a single operation.</span>
+<span class="doccomment">/// Returns the sum of the absolute values of [`ddx`] and [`ddy`] as a single</span>
+<span class="doccomment">/// operation.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">vectorized</span>]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
     <span class="macro">deriv_fn</span><span class="macro">!</span>(<span class="ident">component</span>, <span class="ident">OpFwidth</span>, <span class="bool-val">false</span>)
 }
 
-<span class="doccomment">/// Returns the sum of the absolute values of [`Self::ddx_fine`] and</span>
-<span class="doccomment">/// [`Self::ddy_fine`] as a single operation.</span>
+<span class="doccomment">/// Returns the sum of the absolute values of [`ddx_fine`] and [`ddy_fine`] as a</span>
+<span class="doccomment">/// single operation.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">vectorized</span>]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
     <span class="macro">deriv_fn</span><span class="macro">!</span>(<span class="ident">component</span>, <span class="ident">OpFwidthFine</span>, <span class="bool-val">true</span>)
 }
 
-<span class="doccomment">/// Returns the sum of the absolute values of [`Self::ddx_coarse`] and</span>
-<span class="doccomment">/// [`Self::ddy_coarse`] as a single operation.</span>
+<span class="doccomment">/// Returns the sum of the absolute values of [`ddx_coarse`] and [`ddy_coarse`]</span>
+<span class="doccomment">/// as a single operation.</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">vectorized</span>]</span>
 <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
