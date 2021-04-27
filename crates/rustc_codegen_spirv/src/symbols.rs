@@ -330,7 +330,7 @@ impl Symbols {
             ("invariant", SpirvAttribute::Invariant),
             (
                 "generic_image",
-                SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),
+                SpirvAttribute::IntrinsicType(IntrinsicType::GenericImageType),
             ),
             (
                 "sampled_image",
