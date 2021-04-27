@@ -20,6 +20,11 @@ pub mod __private {
     pub use {f32, f64, i16, i32, i64, i8, u16, u32, u64, u8};
 }
 
+pub type Image2d = crate::Image!(2D, type=f32, sampled, __crate_root=crate);
+pub type Cubemap = crate::Image!(cube, type=f32, sampled, __crate_root=crate);
+pub type Image2dArray = crate::Image!(cube, type=f32, sampled, arrayed, __crate_root=crate);
+pub type StorageImage2d = crate::Image!(cube, type=f32, sampled=false, __crate_root=crate);
+
 /// An opaque image type. Corresponds to `OpTypeImage`.
 #[spirv(generic_image_type)]
 #[derive(Copy, Clone)]

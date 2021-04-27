@@ -4,7 +4,7 @@ pub use crate::sampler::Sampler;
 
 #[cfg_attr(
     feature = "const-generics",
-    deprecated = "Legacy image type. Use `spirv_std::Image!(2D, type=f32, sampled)` instead."
+    deprecated = "Legacy image type. Use `spirv_std::image::Image2d` instead."
 )]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
@@ -415,7 +415,7 @@ impl Image2d {
 
 #[cfg_attr(
     feature = "const-generics",
-    deprecated = "Legacy image type. Use `spirv_std::Image!(2D, type=f32, sampled=false)` instead."
+    deprecated = "Legacy image type. Use `spirv_std::image::StorageImage2d` instead."
 )]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
@@ -482,7 +482,7 @@ impl StorageImage2d {
 
 #[cfg_attr(
     feature = "const-generics",
-    deprecated = "Legacy image type. Use `spirv_std::Image!(2D, type=f32, arrayed, sampled)` instead."
+    deprecated = "Legacy image type. Use `spirv_std::image::Image2dArray` instead."
 )]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
@@ -686,7 +686,7 @@ impl Image2dArray {
 
 #[cfg_attr(
     feature = "const-generics",
-    deprecated = "Legacy image type. Use `spirv_std::Image!(3D, type=f32, sampled)` instead."
+    deprecated = "Legacy image type. Use `spirv_std::image::Cubemap` instead."
 )]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now

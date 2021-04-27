@@ -24,7 +24,6 @@ pub struct Symbols {
     descriptor_set: Symbol,
     binding: Symbol,
     image_type: Symbol,
-    generic_image_type: Symbol,
     dim: Symbol,
     depth: Symbol,
     arrayed: Symbol,
@@ -319,12 +318,20 @@ impl Symbols {
                 SpirvAttribute::IntrinsicType(IntrinsicType::Sampler),
             ),
             (
+                "generic_image_type",
+                SpirvAttribute::IntrinsicType(IntrinsicType::GenericImageType),
+            ),
+            (
                 "acceleration_structure",
                 SpirvAttribute::IntrinsicType(IntrinsicType::AccelerationStructureKhr),
             ),
             ("block", SpirvAttribute::Block),
             ("flat", SpirvAttribute::Flat),
             ("invariant", SpirvAttribute::Invariant),
+            (
+                "generic_image",
+                SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),
+            ),
             (
                 "sampled_image",
                 SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),
@@ -367,7 +374,6 @@ impl Symbols {
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             image_type: Symbol::intern("image_type"),
-            generic_image_type: Symbol::intern("generic_image_type"),
             dim: Symbol::intern("dim"),
             depth: Symbol::intern("depth"),
             arrayed: Symbol::intern("arrayed"),
@@ -432,9 +438,7 @@ pub(crate) fn parse_attrs_for_checking<'a>(
             .into_iter()
             .chain(args.into_iter().map(move |ref arg| {
                 let span = arg.span();
-                let parsed_attr = if arg.has_name(sym.generic_image_type) {
-                    SpirvAttribute::IntrinsicType(IntrinsicType::GenericImageType)
-                } else if arg.has_name(sym.image_type) {
+                let parsed_attr = if arg.has_name(sym.image_type) {
                     parse_image_type(sym, arg)?
                 } else if arg.has_name(sym.descriptor_set) {
                     SpirvAttribute::DescriptorSet(parse_attr_int_value(arg)?)

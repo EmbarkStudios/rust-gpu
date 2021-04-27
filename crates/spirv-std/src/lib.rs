@@ -85,12 +85,13 @@ pub mod ray_tracing;
 mod sampler;
 pub mod scalar;
 pub(crate) mod sealed;
-mod textures;
+pub mod textures;
 pub mod vector;
 
 pub use self::sampler::Sampler;
 pub use crate::macros::Image;
 pub use num_traits;
+pub use textures::*;
 
 /// Calls the `OpDemoteToHelperInvocationEXT` instruction, which corresponds to discard() in HLSL
 #[spirv_std_macros::gpu_only]

@@ -15,6 +15,5 @@ pub fn main(
     let v3 = glam::Vec3A::new(0.0, 0.0, 1.0);
     *output = image.sample_depth_reference(*sampler, v2, 1.0);
     *output += image_array.sample_depth_reference(*sampler, v3, 1.0);
-    let sample: f32 = cubemap.sample_depth_reference(*sampler, v3, 1.0);
-    *output += sample;
+    *output += cubemap.sample_depth_reference(*sampler, v3, 1.0);
 }
