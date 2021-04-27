@@ -329,7 +329,7 @@ impl Symbols {
             ("flat", SpirvAttribute::Flat),
             ("invariant", SpirvAttribute::Invariant),
             (
-                "generic_image",
+                "generic_image_type",
                 SpirvAttribute::IntrinsicType(IntrinsicType::GenericImageType),
             ),
             (
