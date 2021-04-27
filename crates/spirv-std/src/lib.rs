@@ -85,7 +85,7 @@ pub mod ray_tracing;
 mod sampler;
 pub mod scalar;
 pub(crate) mod sealed;
-pub mod textures;
+mod textures;
 pub mod vector;
 
 pub use self::sampler::Sampler;
