@@ -724,6 +724,12 @@
 <span id="721">721</span>
 <span id="722">722</span>
 <span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::{<span class="ident">RecursivePointeeCache</span>, <span class="ident">TyLayoutNameKey</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
@@ -814,6 +820,7 @@
     },
 
     <span class="ident">AccelerationStructureKhr</span>,
+    <span class="ident">RayQueryKhr</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">SpirvType</span> {
@@ -978,6 +985,7 @@
             ),
             <span class="self">Self</span>::<span class="ident">Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampler</span>(),
             <span class="self">Self</span>::<span class="ident">AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_acceleration_structure_khr</span>(),
+            <span class="self">Self</span>::<span class="ident">RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_ray_query_khr</span>(),
             <span class="self">Self</span>::<span class="ident">SampledImage</span> { <span class="ident">image_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampled_image</span>(<span class="ident">image_type</span>),
 
             <span class="self">Self</span>::<span class="ident">InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> {
@@ -1079,6 +1087,7 @@
             <span class="self">Self</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">data_layout</span>.<span class="ident">pointer_size</span>,
             <span class="self">Self</span>::<span class="ident">Image</span> { .. }
             <span class="op">|</span> <span class="self">Self</span>::<span class="ident">AccelerationStructureKhr</span>
+            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">RayQueryKhr</span>
             <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Sampler</span>
             <span class="op">|</span> <span class="self">Self</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="number">4</span>),
 
@@ -1110,6 +1119,7 @@
             <span class="self">Self</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">data_layout</span>.<span class="ident">pointer_align</span>.<span class="ident">abi</span>,
             <span class="self">Self</span>::<span class="ident">Image</span> { .. }
             <span class="op">|</span> <span class="self">Self</span>::<span class="ident">AccelerationStructureKhr</span>
+            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">RayQueryKhr</span>
             <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Sampler</span>
             <span class="op">|</span> <span class="self">Self</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Align</span>::<span class="ident">from_bytes</span>(<span class="number">4</span>).<span class="ident">unwrap</span>(),
 
@@ -1256,6 +1266,7 @@
                 .<span class="ident">field</span>(<span class="string">&quot;inner_type&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">inner_type</span>))
                 .<span class="ident">finish</span>(),
             <span class="ident">SpirvType</span>::<span class="ident">AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;AccelerationStructure&quot;</span>).<span class="ident">finish</span>(),
+            <span class="ident">SpirvType</span>::<span class="ident">RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;RayQuery&quot;</span>).<span class="ident">finish</span>(),
         };
         {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">debug_stack</span> <span class="op">=</span> <span class="ident">DEBUG_STACK</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
@@ -1411,6 +1422,7 @@
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot; }&quot;</span>)
             }
             <span class="ident">SpirvType</span>::<span class="ident">AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;AccelerationStructureKhr&quot;</span>),
+            <span class="ident">SpirvType</span>::<span class="ident">RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;RayQuery&quot;</span>),
         }
     }
 }
