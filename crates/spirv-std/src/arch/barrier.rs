@@ -1,5 +1,12 @@
 use crate::memory::{Scope, Semantics};
 
+pub const fn scope_to_int(scope: Scope) -> usize {
+    scope as usize
+}
+pub const fn semantics_bits(semantics: Semantics) -> usize {
+    semantics.bits() as usize
+}
+
 /// Wait for other invocations of this module to reach the current point
 /// of execution.
 ///
@@ -33,16 +40,21 @@ pub unsafe fn control_barrier<
     const EXECUTION: Scope,
     const MEMORY: Scope,
     const SEMANTICS: Semantics,
->() {
+>()
+where
+    [(); scope_to_int(EXECUTION)]: Sized,
+    [(); scope_to_int(MEMORY)]: Sized,
+    [(); semantics_bits(SEMANTICS)]: Sized,
+{
     asm! {
         "%u32 = OpTypeInt 32 0",
         "%execution = OpConstant %u32 {execution}",
         "%memory = OpConstant %u32 {memory}",
         "%semantics = OpConstant %u32 {semantics}",
         "OpControlBarrier %execution %memory %semantics",
-        execution = const EXECUTION as u8,
-        memory = const MEMORY as u8,
-        semantics = const SEMANTICS.bits(),
+        execution = const scope_to_int(EXECUTION),
+        memory = const scope_to_int(MEMORY),
+        semantics = const semantics_bits(SEMANTICS),
     }
 }
 
@@ -65,13 +77,17 @@ pub unsafe fn control_barrier<
 #[doc(alias = "OpMemoryBarrier")]
 #[inline]
 // FIXME(eddyb) use a `bitflags!` `Semantics` for `SEMANTICS`.
-pub unsafe fn memory_barrier<const MEMORY: Scope, const SEMANTICS: Semantics>() {
+pub unsafe fn memory_barrier<const MEMORY: Scope, const SEMANTICS: Semantics>()
+where
+    [(); scope_to_int(MEMORY)]: Sized,
+    [(); semantics_bits(SEMANTICS)]: Sized,
+{
     asm! {
         "%u32 = OpTypeInt 32 0",
         "%memory = OpConstant %u32 {memory}",
         "%semantics = OpConstant %u32 {semantics}",
         "OpMemoryBarrier %memory %semantics",
-        memory = const MEMORY as u8,
-        semantics = const SEMANTICS.bits(),
+        memory = const scope_to_int(MEMORY),
+        semantics = const semantics_bits(SEMANTICS),
     }
 }

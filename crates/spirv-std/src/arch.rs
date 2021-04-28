@@ -5,7 +5,6 @@
 //! no additional safety checks beyond type-checking.
 use crate::{scalar::Scalar, vector::Vector};
 
-#[cfg(feature = "const-generics")]
 mod arithmetic;
 #[cfg(feature = "const-generics")]
 mod barrier;
@@ -13,7 +12,6 @@ mod derivative;
 mod primitive;
 mod ray_tracing;
 
-#[cfg(feature = "const-generics")]
 pub use arithmetic::*;
 #[cfg(feature = "const-generics")]
 pub use barrier::*;
