@@ -8,8 +8,8 @@
 #![deny(warnings)]
 
 #[cfg(not(target_arch = "spirv"))]
-#[macro_use]
-pub extern crate spirv_std_macros;
+use spirv_std::macros::spirv;
+
 use shared::glam::{vec4, Vec4};
 
 #[spirv(fragment)]

@@ -29,8 +29,8 @@ macro_rules! deriv_fn {
 /// Returns the partial derivative of `component` with respect to the window's X
 /// coordinate. Returns the same result as either [`ddx_fine`] or
 /// [`ddx_coarse`], selection of which one is dependent on external factors.
-#[spirv_std_macros::vectorized]
-#[spirv_std_macros::gpu_only]
+#[crate::macros::vectorized]
+#[crate::macros::gpu_only]
 pub fn ddx<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdx, false)
 }
@@ -38,8 +38,8 @@ pub fn ddx<F: Float>(component: F) -> F {
 /// Returns the partial derivative of `component` with respect to the window's X
 /// coordinate. Uses local differencing based on the value of `component` for
 /// the current fragment and its immediate neighbor(s).
-#[spirv_std_macros::vectorized]
-#[spirv_std_macros::gpu_only]
+#[crate::macros::vectorized]
+#[crate::macros::gpu_only]
 pub fn ddx_fine<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdxFine, true)
 }
@@ -50,8 +50,8 @@ pub fn ddx_fine<F: Float>(component: F) -> F {
 /// includes the value of `component` for the current fragment. That is, over a
 /// given area, the implementation can compute X derivatives in fewer unique
 /// locations than would be allowed by [`ddx_fine`].
-#[spirv_std_macros::vectorized]
-#[spirv_std_macros::gpu_only]
+#[crate::macros::vectorized]
+#[crate::macros::gpu_only]
 pub fn ddx_coarse<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdxCoarse, true)
 }
@@ -59,8 +59,8 @@ pub fn ddx_coarse<F: Float>(component: F) -> F {
 /// Returns the partial derivative of `component` with respect to the window's Y
 /// coordinate. Returns the same result as either [`ddy_fine`] or
 /// [`ddy_coarse`], selection of which one is dependent on external factors.
-#[spirv_std_macros::vectorized]
-#[spirv_std_macros::gpu_only]
+#[crate::macros::vectorized]
+#[crate::macros::gpu_only]
 pub fn ddy<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdy, false)
 }
@@ -68,8 +68,8 @@ pub fn ddy<F: Float>(component: F) -> F {
 /// Returns the partial derivative of `component` with respect to the window's Y
 /// coordinate. Uses local differencing based on the value of `component` for
 /// the current fragment and its immediate neighbor(s).
-#[spirv_std_macros::vectorized]
-#[spirv_std_macros::gpu_only]
+#[crate::macros::vectorized]
+#[crate::macros::gpu_only]
 pub fn ddy_fine<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdyFine, true)
 }
@@ -80,32 +80,32 @@ pub fn ddy_fine<F: Float>(component: F) -> F {
 /// includes the value of `component` for the current fragment. That is, over a
 /// given area, the implementation can compute Y derivatives in fewer unique
 /// locations than would be allowed by [`ddy_fine`].
-#[spirv_std_macros::vectorized]
-#[spirv_std_macros::gpu_only]
+#[crate::macros::vectorized]
+#[crate::macros::gpu_only]
 pub fn ddy_coarse<F: Float>(component: F) -> F {
     deriv_fn!(component, OpDPdyCoarse, true)
 }
 
 /// Returns the sum of the absolute values of [`ddx`] and [`ddy`] as a single
 /// operation.
-#[spirv_std_macros::vectorized]
-#[spirv_std_macros::gpu_only]
+#[crate::macros::vectorized]
+#[crate::macros::gpu_only]
 pub fn fwidth<F: Float>(component: F) -> F {
     deriv_fn!(component, OpFwidth, false)
 }
 
 /// Returns the sum of the absolute values of [`ddx_fine`] and [`ddy_fine`] as a
 /// single operation.
-#[spirv_std_macros::vectorized]
-#[spirv_std_macros::gpu_only]
+#[crate::macros::vectorized]
+#[crate::macros::gpu_only]
 pub fn fwidth_fine<F: Float>(component: F) -> F {
     deriv_fn!(component, OpFwidthFine, true)
 }
 
 /// Returns the sum of the absolute values of [`ddx_coarse`] and [`ddy_coarse`]
 /// as a single operation.
-#[spirv_std_macros::vectorized]
-#[spirv_std_macros::gpu_only]
+#[crate::macros::vectorized]
+#[crate::macros::gpu_only]
 pub fn fwidth_coarse<F: Float>(component: F) -> F {
     deriv_fn!(component, OpFwidthCoarse, true)
 }

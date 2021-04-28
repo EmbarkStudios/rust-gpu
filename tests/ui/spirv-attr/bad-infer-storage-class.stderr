@@ -1,29 +1,31 @@
 error: storage class mismatch
- --> $DIR/bad-infer-storage-class.rs:7:13
+ --> $DIR/bad-infer-storage-class.rs:8:5
   |
-7 | pub fn main(#[spirv(uniform)] error: &Image2d, #[spirv(uniform_constant)] warning: &Image2d) {}
-  |             ^^^^^^^^-------^^^^^^^^^^--------
-  |                     |                |
-  |                     |                UniformConstant inferred from type
-  |                     Uniform specified in attribute
+8 |     #[spirv(uniform)] error: &Image!(2D, type=f32),
+  |     ^^^^^^^^-------^^^^^^^^^^---------------------
+  |             |                |
+  |             |                UniformConstant inferred from type
+  |             Uniform specified in attribute
   |
 help: remove storage class attribute to use UniformConstant as storage class
- --> $DIR/bad-infer-storage-class.rs:7:21
+ --> $DIR/bad-infer-storage-class.rs:8:13
   |
-7 | pub fn main(#[spirv(uniform)] error: &Image2d, #[spirv(uniform_constant)] warning: &Image2d) {}
-  |                     ^^^^^^^
+8 |     #[spirv(uniform)] error: &Image!(2D, type=f32),
+  |             ^^^^^^^
 
 warning: redundant storage class specifier, storage class is inferred from type
- --> $DIR/bad-infer-storage-class.rs:7:56
+ --> $DIR/bad-infer-storage-class.rs:9:13
   |
-7 | pub fn main(#[spirv(uniform)] error: &Image2d, #[spirv(uniform_constant)] warning: &Image2d) {}
-  |                                                        ^^^^^^^^^^^^^^^^
+9 |     #[spirv(uniform_constant)] warning: &Image!(2D, type=f32),
+  |             ^^^^^^^^^^^^^^^^
 
-error: entry parameter type must be by-reference: `&spirv_std::Image2d`
-  --> $DIR/bad-infer-storage-class.rs:11:27
+error: entry parameter type must be by-reference: `&spirv_std::image::Image<f32, spirv_std::image::Dimensionality::TwoD, spirv_std::image::ImageDepth::Unknown, spirv_std::image::Arrayed::False, spirv_std::image::Multisampled::False, spirv_std::image::Sampled::Unknown, spirv_std::image::ImageFormat::Unknown, core::option::Option::<spirv_std::image::AccessQualifier>::None>`
+  --> $DIR/bad-infer-storage-class.rs:15:27
    |
-11 | pub fn issue_585(invalid: Image2d) {}
-   |                           ^^^^^^^
+15 | pub fn issue_585(invalid: Image!(2D, type=f32)) {}
+   |                           ^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: aborting due to 2 previous errors; 1 warning emitted
 

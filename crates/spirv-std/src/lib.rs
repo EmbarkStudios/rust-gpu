@@ -68,22 +68,28 @@
     // We deblierately provide an unimplemented version of our API on CPU
     // platforms so that code completion still works.
     clippy::unimplemented,
+    // The part of `const-generics` we're using (C-like enums) is not incomplete.
+    incomplete_features,
 )]
 
-#[macro_use]
-#[cfg(not(target_arch = "spirv"))]
+#[cfg_attr(not(target_arch = "spirv"), macro_use)]
 pub extern crate spirv_std_macros as macros;
 
 pub mod arch;
 pub mod float;
+#[cfg(feature = "const-generics")]
+pub mod image;
 pub mod integer;
 pub mod memory;
 pub mod ray_tracing;
+mod sampler;
 pub mod scalar;
 pub(crate) mod sealed;
 mod textures;
 pub mod vector;
 
+pub use self::sampler::Sampler;
+pub use crate::macros::Image;
 pub use num_traits;
 pub use textures::*;
 

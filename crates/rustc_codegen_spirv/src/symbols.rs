@@ -318,6 +318,10 @@ impl Symbols {
                 SpirvAttribute::IntrinsicType(IntrinsicType::Sampler),
             ),
             (
+                "generic_image_type",
+                SpirvAttribute::IntrinsicType(IntrinsicType::GenericImageType),
+            ),
+            (
                 "acceleration_structure",
                 SpirvAttribute::IntrinsicType(IntrinsicType::AccelerationStructureKhr),
             ),

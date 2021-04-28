@@ -204,7 +204,7 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
         .unwrap_or_default();
 
     let rustflags = format!(
-        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}",
+        "-Z codegen-backend={} -Zsymbol-mangling-version=v0{}",
         rustc_codegen_spirv.display(),
         llvm_args,
     );
