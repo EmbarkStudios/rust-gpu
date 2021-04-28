@@ -507,7 +507,7 @@ impl BuilderSpirv {
                 Ok(()) => Ok(()),
 
                 // `Shallow` becomes `Indirect` when placed behind a pointer.
-                Err(IllegalConst::Shallow(cause)) | Err(IllegalConst::Indirect(cause)) => {
+                Err(IllegalConst::Shallow(cause) | IllegalConst::Indirect(cause)) => {
                     Err(IllegalConst::Indirect(cause))
                 }
             },

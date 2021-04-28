@@ -9,7 +9,7 @@ use super::simple_passes::outgoing_edges;
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use std::mem::replace;
+use std::mem::take;
 
 type FunctionMap = FxHashMap<Word, Function>;
 
@@ -416,7 +416,7 @@ fn fuse_trivial_branches(function: &mut Function) {
         };
         let pred_insts = &function.blocks[pred].instructions;
         if pred_insts.last().unwrap().class.opcode == Op::Branch {
-            let mut dest_insts = replace(&mut function.blocks[dest_block].instructions, Vec::new());
+            let mut dest_insts = take(&mut function.blocks[dest_block].instructions);
             let pred_insts = &mut function.blocks[pred].instructions;
             pred_insts.pop(); // pop the branch
             pred_insts.append(&mut dest_insts);
