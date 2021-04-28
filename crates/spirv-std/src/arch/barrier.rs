@@ -4,17 +4,20 @@
 /// All invocations of this module within Execution scope reach this point of
 /// execution before any invocation proceeds beyond it.
 ///
-/// When Execution is [`Scope::Workgroup`] or larger, behavior is undefined
-/// unless all invocations within Execution execute the same dynamic instance of
-/// this instruction. When Execution is Subgroup or Invocation, the behavior of
-/// this instruction in non-uniform control flow is defined by the client API.
+/// When Execution is [`crate::memory::Scope::Workgroup`] or larger, behavior is
+/// undefined unless all invocations within Execution execute the same dynamic
+/// instance of this instruction. When Execution is Subgroup or Invocation, the
+/// behavior of this instruction in non-uniform control flow is defined by the
+/// client API.
 ///
-/// If [`Semantics`] is not [`Semantics::NONE`], this instruction also serves as
-/// an [`memory_barrier`] function call, and also performs and adheres to the
-/// description and semantics of an [`memory_barrier`] function with the same
-/// `MEMORY` and `SEMANTICS` operands. This allows atomically specifying both a
-/// control barrier and a memory barrier (that is, without needing two
-/// instructions). If [`Semantics`] is [`Semantics::NONE`], `MEMORY` is ignored.
+/// If [`crate::memory::Semantics`] is not [`crate::memory::Semantics::NONE`],
+/// this instruction also serves as an [`memory_barrier`] function call, and
+/// also performs and adheres to the description and semantics of an
+/// [`memory_barrier`] function with the same `MEMORY` and `SEMANTICS` operands.
+/// This allows atomically specifying both a control barrier and a memory
+/// barrier (that is, without needing two instructions). If
+/// [`crate::memory::Semantics`] is [`crate::memory::Semantics::NONE`], `MEMORY`
+/// is ignored.
 ///
 /// Before SPIRV-V version 1.3, it is only valid to use this instruction with
 /// `TessellationControl`, `GLCompute`, or `Kernel` execution models. There is
