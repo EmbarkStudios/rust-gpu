@@ -276,8 +276,8 @@ impl CheckSpirvAttrVisitor<'_> {
                 },
 
                 SpirvAttribute::Entry(_) => match target {
-                    Target::Fn |
-Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => {
+                    Target::Fn
+                    | Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => {
                         // FIXME(eddyb) further check entry-point attribute validity,
                         // e.g. signature, shouldn't have `#[inline]` or generics, etc.
                         Ok(())
@@ -336,8 +336,11 @@ Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => {
                 },
 
                 SpirvAttribute::UnrollLoops => match target {
-                    Target::Fn | Target::Closure |
-Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => Ok(()),
+                    Target::Fn
+                    | Target::Closure
+                    | Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => {
+                        Ok(())
+                    }
 
                     _ => Err(Expected("function or closure")),
                 },
