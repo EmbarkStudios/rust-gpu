@@ -23,14 +23,10 @@ where
 
     unsafe {
         asm! {
-            "%int_type = OpTypeInt {width} 1",
-            "%vec_type = OpTypeVector %int_type {length}",
-            "%operand = OpLoad %vec_type {operand}",
-            "%result = OpSNegate %vec_type %operand",
+            "%operand = OpLoad typeof*{operand} {operand}",
+            "%result = OpSNegate typeof*{operand} %operand",
             "OpStore {result} %result",
             operand = in(reg) &operand,
-            width = const S::WIDTH,
-            length = const N,
             result = in(reg) &mut result,
         }
     }
@@ -52,14 +48,10 @@ where
 
     unsafe {
         asm! {
-            "%float_type = OpTypeFloat {width}",
-            "%vec_type = OpTypeVector %float_type {length}",
-            "%operand = OpLoad %vec_type {operand}",
-            "%result = OpFNegate %vec_type %operand",
+            "%operand = OpLoad typeof*{operand} {operand}",
+            "%result = OpFNegate typeof*{operand} %operand",
             "OpStore {result} %result",
             operand = in(reg) &operand,
-            width = const F::WIDTH,
-            length = const N,
             result = in(reg) &mut result,
         }
     }
@@ -84,17 +76,12 @@ where
 
     unsafe {
         asm! {
-            "%int_type = OpTypeInt {width} {sign}",
-            "%vec_type = OpTypeVector %int_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpIAdd %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpIAdd typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            sign = const I::SIGNED as u8,
-            width = const I::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -115,16 +102,12 @@ where
 
     unsafe {
         asm! {
-            "%float_type = OpTypeFloat {width}",
-            "%vec_type = OpTypeVector %float_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpFAdd %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpFAdd typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const F::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -149,17 +132,12 @@ where
 
     unsafe {
         asm! {
-            "%int_type = OpTypeInt {width} {sign}",
-            "%vec_type = OpTypeVector %int_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpISub %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpISub typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            sign = const I::SIGNED as u8,
-            width = const I::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -180,16 +158,12 @@ where
 
     unsafe {
         asm! {
-            "%float_type = OpTypeFloat {width}",
-            "%vec_type = OpTypeVector %float_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpFSub %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpFSub typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const F::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -214,17 +188,12 @@ where
 
     unsafe {
         asm! {
-            "%int_type = OpTypeInt {width} {sign}",
-            "%vec_type = OpTypeVector %int_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpIMul %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpIMul typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            sign = const I::SIGNED as u8,
-            width = const I::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -246,16 +215,12 @@ where
 
     unsafe {
         asm! {
-            "%float_type = OpTypeFloat {width}",
-            "%vec_type = OpTypeVector %float_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpFMul %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpFMul typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const F::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -280,16 +245,12 @@ where
 
     unsafe {
         asm! {
-            "%int_type = OpTypeInt {width} 0",
-            "%vec_type = OpTypeVector %int_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpUDiv %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpUDiv typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const I::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -316,16 +277,12 @@ where
 
     unsafe {
         asm! {
-            "%int_type = OpTypeInt {width} 1",
-            "%vec_type = OpTypeVector %int_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpSDiv %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpSDiv typeof*{y} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const I::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -350,16 +307,12 @@ where
 
     unsafe {
         asm! {
-            "%float_type = OpTypeFloat {width}",
-            "%vec_type = OpTypeVector %float_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpFDiv %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpFDiv typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const F::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -384,16 +337,12 @@ where
 
     unsafe {
         asm! {
-            "%int_type = OpTypeInt {width} 0",
-            "%vec_type = OpTypeVector %int_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpUMod %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpUMod typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const I::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -419,16 +368,12 @@ where
 
     unsafe {
         asm! {
-            "%int_type = OpTypeInt {width} 1",
-            "%vec_type = OpTypeVector %int_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpSRem %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpSRem typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const I::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -454,16 +399,12 @@ where
 
     unsafe {
         asm! {
-            "%int_type = OpTypeInt {width} 1",
-            "%vec_type = OpTypeVector %int_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpSMod %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpSMod typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const I::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -489,16 +430,12 @@ where
 
     unsafe {
         asm! {
-            "%float_type = OpTypeFloat {width}",
-            "%vec_type = OpTypeVector %float_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpFRem %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpFRem typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const F::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -524,16 +461,12 @@ where
 
     unsafe {
         asm! {
-            "%float_type = OpTypeFloat {width}",
-            "%vec_type = OpTypeVector %float_type {length}",
-            "%x = OpLoad %vec_type {x}",
-            "%y = OpLoad %vec_type {y}",
-            "%result = OpFMod %vec_type %x %y",
+            "%x = OpLoad typeof*{x} {x}",
+            "%y = OpLoad typeof*{y} {y}",
+            "%result = OpFMod typeof*{x} %x %y",
             "OpStore {result} %result",
             x = in(reg) &x,
             y = in(reg) &y,
-            width = const F::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }
@@ -555,16 +488,12 @@ where
 
     unsafe {
         asm! {
-            "%float_type = OpTypeFloat {width}",
-            "%vec_type = OpTypeVector %float_type {length}",
-            "%vector = OpLoad %vec_type {vector}",
-            "%scalar = OpLoad %float_type {scalar}",
-            "%result = OpVectorTimesScalar %vec_type %vector %scalar",
+            "%vector = OpLoad typeof*{vector} {vector}",
+            "%scalar = OpLoad typeof*{scalar} {scalar}",
+            "%result = OpVectorTimesScalar typeof*{vector} %vector %scalar",
             "OpStore {result} %result",
             vector = in(reg) &vector,
             scalar = in(reg) &scalar,
-            width = const F::WIDTH,
-            length = const LEN,
             result = in(reg) &mut result,
         }
     }

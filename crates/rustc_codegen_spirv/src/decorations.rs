@@ -218,7 +218,7 @@ impl SerializedSpan {
 
         // Sanity check - assuming `SerializedSpan` isn't corrupted, this assert
         // could only ever fail because of a hash collision.
-        assert!(self.lo <= self.hi && self.hi <= file.byte_length());
+        assert!(self.lo <= self.hi && self.hi <= (file.end_pos.0 - file.start_pos.0));
 
         Some(Span::with_root_ctxt(
             file.start_pos + Pos::from_u32(self.lo),

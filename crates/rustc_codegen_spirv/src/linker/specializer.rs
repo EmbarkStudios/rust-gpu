@@ -2221,7 +2221,7 @@ impl<'a, S: Specialization> InferCx<'a, S> {
     /// are handled (using `generic_params` and `S::concrete_fallback()`).
     fn into_replacements(mut self, generic_params: RangeTo<Param>) -> Replacements {
         let mut with_instance: IndexMap<_, Vec<_>> = IndexMap::new();
-        for (loc, instance) in mem::replace(&mut self.instantiated_operands, vec![]) {
+        for (loc, instance) in mem::take(&mut self.instantiated_operands) {
             with_instance
                 .entry(Instance {
                     generic_id: instance.generic_id,
@@ -2233,7 +2233,7 @@ impl<'a, S: Specialization> InferCx<'a, S> {
                 .push(loc);
         }
 
-        let with_concrete_or_param = mem::replace(&mut self.inferred_operands, vec![])
+        let with_concrete_or_param = mem::take(&mut self.inferred_operands)
             .into_iter()
             .map(|(loc, v)| {
                 (
@@ -2345,11 +2345,11 @@ impl<'a, S: Specialization> Expander<'a, S> {
 
         // HACK(eddyb) steal `Vec`s so that we can still call methods on `self` below.
         let module = self.builder.module_mut();
-        let mut entry_points = mem::replace(&mut module.entry_points, vec![]);
-        let debugs = mem::replace(&mut module.debugs, vec![]);
-        let annotations = mem::replace(&mut module.annotations, vec![]);
-        let types_global_values = mem::replace(&mut module.types_global_values, vec![]);
-        let functions = mem::replace(&mut module.functions, vec![]);
+        let mut entry_points = mem::take(&mut module.entry_points);
+        let debugs = mem::take(&mut module.debugs);
+        let annotations = mem::take(&mut module.annotations);
+        let types_global_values = mem::take(&mut module.types_global_values);
+        let functions = mem::take(&mut module.functions);
 
         // Adjust `OpEntryPoint ...` in-place to use the new IDs for *Interface*
         // module-scoped `OpVariable`s (which should each have one instance).

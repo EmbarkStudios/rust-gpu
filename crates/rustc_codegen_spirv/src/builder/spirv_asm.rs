@@ -562,7 +562,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     match_ty_pat(cx, a, ty).or_else(|Unapplicable| match_ty_pat(cx, b, ty))
                 }
                 _ => match (pat, cx.lookup_type(ty)) {
-                    (TyPat::Any, _) | (&TyPat::T, _) | (TyPat::Either(..), _) => unreachable!(),
+                    (TyPat::Any | &TyPat::T | TyPat::Either(..), _) => unreachable!(),
 
                     (TyPat::Void, SpirvType::Void) => Ok([None]),
                     (TyPat::Pointer(_, pat), SpirvType::Pointer { pointee: ty, .. })
@@ -978,7 +978,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             Token::String(_) | Token::Placeholder(_, _) | Token::Typeof(_, _, _) => None,
         };
         match (kind, word) {
-            (OperandKind::IdResultType, _) | (OperandKind::IdResult, _) => {
+            (OperandKind::IdResultType | OperandKind::IdResult, _) => {
                 bug!("should be handled by parse_operands")
             }
             (OperandKind::IdMemorySemantics, _) => {

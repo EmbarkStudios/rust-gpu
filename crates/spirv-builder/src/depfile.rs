@@ -4,7 +4,7 @@
 use raw_string::{RawStr, RawString};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, ErrorKind, Read};
-use std::mem::replace;
+use std::mem::{replace, take};
 use std::path::Path;
 
 /// Read a Makfile-style dependency file.
@@ -136,7 +136,7 @@ impl State {
     ) -> Result<(), Error> {
         self.finish_path()?;
         if let Some(target) = self.target.take() {
-            f(target, replace(&mut self.deps, Vec::new()))?;
+            f(target, take(&mut self.deps))?;
         }
         Ok(())
     }

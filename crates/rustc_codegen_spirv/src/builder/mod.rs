@@ -217,10 +217,6 @@ impl<'a, 'tcx> Deref for Builder<'a, 'tcx> {
 }
 
 impl<'a, 'tcx> CoverageInfoBuilderMethods<'tcx> for Builder<'a, 'tcx> {
-    fn create_pgo_func_name_var(&self, _instance: Instance<'tcx>) -> Self::Value {
-        todo!()
-    }
-
     fn set_function_source_hash(&mut self, _: rustc_middle::ty::Instance<'tcx>, _: u64) -> bool {
         todo!()
     }

@@ -218,7 +218,7 @@ fn create_vectored_fn(
             syn::Pat::Ident(pat) if pat.ident == COMPONENT_ARG_NAME => Some(&mut ty.ty),
             _ => None,
         },
-        _ => None,
+        syn::FnArg::Receiver(_) => None,
     });
 
     if component_type.is_none() {
