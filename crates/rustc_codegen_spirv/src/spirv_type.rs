@@ -116,10 +116,11 @@ impl SpirvType {
                     }
                     8 | 16 | 32 | 64 => (),
                     128 => cx.zombie_with_span(result, def_span, "u128"),
-                    other => cx
-                        .tcx
-                        .sess
-                        .fatal(&format!("Integer width {} invalid for spir-v", other)),
+                    other => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        &format!("Integer width {} invalid for spir-v", other),
+                    ),
                 };
                 result
             }
@@ -130,10 +131,11 @@ impl SpirvType {
                         cx.zombie_with_span(result, def_span, "f64 without OpCapability Float64")
                     }
                     32 | 64 => (),
-                    other => cx
-                        .tcx
-                        .sess
-                        .fatal(&format!("Float width {} invalid for spir-v", other)),
+                    other => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        &format!("Float width {} invalid for spir-v", other),
+                    ),
                 };
                 result
             }

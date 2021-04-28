@@ -25,7 +25,7 @@ use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TyS};
 use rustc_session::Session;
-use rustc_span::def_id::LOCAL_CRATE;
+use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::FnAbi;
@@ -425,8 +425,14 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> CoverageInfoMethods for CodegenCx<'tcx> {
+impl<'tcx> CoverageInfoMethods<'tcx> for CodegenCx<'tcx> {
     fn coverageinfo_finalize(&self) {
+        todo!()
+    }
+    fn get_pgo_func_name_var(&self, _: Instance<'tcx>) -> SpirvValue {
+        todo!()
+    }
+    fn define_unused_fn(&self, _: DefId) {
         todo!()
     }
 }

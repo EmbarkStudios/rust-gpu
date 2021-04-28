@@ -1142,10 +1142,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         None
     }
 
-    fn fptosui_may_trap(&self, _val: Self::Value, _dest_ty: Self::Type) -> bool {
-        false
-    }
-
     fn fptoui(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         if val.ty == dest_ty {
             val
