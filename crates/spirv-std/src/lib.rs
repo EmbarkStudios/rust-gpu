@@ -6,7 +6,7 @@
 )]
 #![cfg_attr(
     feature = "const-generics",
-    feature(const_generics, const_evaluatable_checked),
+    feature(const_generics),
     allow(incomplete_features)
 )]
 // BEGIN - Embark standard lints v0.3

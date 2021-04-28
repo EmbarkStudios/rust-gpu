@@ -1,12 +1,3 @@
-use crate::memory::{Scope, Semantics};
-
-pub const fn scope_to_int(scope: Scope) -> usize {
-    scope as usize
-}
-pub const fn semantics_bits(semantics: Semantics) -> usize {
-    semantics.bits() as usize
-}
-
 /// Wait for other invocations of this module to reach the current point
 /// of execution.
 ///
@@ -37,24 +28,19 @@ pub const fn semantics_bits(semantics: Semantics) -> usize {
 #[doc(alias = "OpControlBarrier")]
 #[inline]
 pub unsafe fn control_barrier<
-    const EXECUTION: Scope,
-    const MEMORY: Scope,
-    const SEMANTICS: Semantics,
->()
-where
-    [(); scope_to_int(EXECUTION)]: Sized,
-    [(); scope_to_int(MEMORY)]: Sized,
-    [(); semantics_bits(SEMANTICS)]: Sized,
-{
+    const EXECUTION: u32, // Scope
+    const MEMORY: u32,    // Scope
+    const SEMANTICS: u32, // Semantics
+>() {
     asm! {
         "%u32 = OpTypeInt 32 0",
         "%execution = OpConstant %u32 {execution}",
         "%memory = OpConstant %u32 {memory}",
         "%semantics = OpConstant %u32 {semantics}",
         "OpControlBarrier %execution %memory %semantics",
-        execution = const scope_to_int(EXECUTION),
-        memory = const scope_to_int(MEMORY),
-        semantics = const semantics_bits(SEMANTICS),
+        execution = const EXECUTION,
+        memory = const MEMORY,
+        semantics = const SEMANTICS,
     }
 }
 
@@ -76,18 +62,16 @@ where
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpMemoryBarrier")]
 #[inline]
-// FIXME(eddyb) use a `bitflags!` `Semantics` for `SEMANTICS`.
-pub unsafe fn memory_barrier<const MEMORY: Scope, const SEMANTICS: Semantics>()
-where
-    [(); scope_to_int(MEMORY)]: Sized,
-    [(); semantics_bits(SEMANTICS)]: Sized,
-{
+pub unsafe fn memory_barrier<
+    const MEMORY: u32,    // Scope
+    const SEMANTICS: u32, // Semantics
+>() {
     asm! {
         "%u32 = OpTypeInt 32 0",
         "%memory = OpConstant %u32 {memory}",
         "%semantics = OpConstant %u32 {semantics}",
         "OpMemoryBarrier %memory %semantics",
-        memory = const scope_to_int(MEMORY),
-        semantics = const semantics_bits(SEMANTICS),
+        memory = const MEMORY,
+        semantics = const SEMANTICS,
     }
 }
