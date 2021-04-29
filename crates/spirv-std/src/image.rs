@@ -659,6 +659,185 @@ impl<
     }
 }
 
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DIM: Dimensionality,
+        const DEPTH: ImageDepth,
+        const ARRAYED: Arrayed,
+        const MULTISAMPLED: Multisampled,
+        const SAMPLED: Sampled,
+        const FORMAT: ImageFormat,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, ACCESS_QUALIFIER>
+{
+    /// Query the number of mipmap levels.
+    ///
+    /// Note: Const generics aren't able to reason about the constraints on this function (yet),
+    /// and so are enforced by the compiler. The constraints are:
+    ///
+    /// The image's dimension must be 1D, 2D, 3D, or Cube.
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageQueryLevels")]
+    pub fn query_levels(&self) -> u32 {
+        let result: u32;
+        unsafe {
+            asm! {
+                "%image = OpLoad _ {this}",
+                "{result} = OpImageQueryLevels typeof{result} %image",
+                this = in(reg) self,
+                result = out(reg) result,
+            }
+        }
+        result
+    }
+
+    /// Query the mipmap level and the level of detail for a hypothetical sampling of Image at
+    /// Coordinate using an implicit level of detail. The first component of the result contains
+    /// the mipmap array layer. The second component of the result contains the implicit level of
+    /// detail relative to the base level.
+    ///
+    /// Note: Const generics aren't able to reason about the constraints on this function (yet),
+    /// and so are enforced by the compiler. The constraints are:
+    ///
+    /// The image's dimension must be 1D, 2D, 3D, or Cube.
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageQueryLod")]
+    pub fn query_lod<V: Vector<f32, 2>>(
+        &self,
+        sampler: Sampler,
+        coord: impl ImageCoordinate<f32, DIM, { Arrayed::False }>,
+    ) -> V {
+        // Note: Arrayed::False isn't a typo in the ImageCoordinate, the spec states:
+        // Coordinate must be a scalar or vector of floating-point type or integer type. It
+        // contains (u[, v] ... ) as needed by the definition of Sampled Image, **not including any
+        // array layer index**. Unless the Kernel capability is being used, it must be floating
+        // point.
+        let mut result = Default::default();
+        unsafe {
+            asm! {
+                "%typeSampledImage = OpTypeSampledImage typeof*{this}",
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coord = OpLoad _ {coord}",
+                "%sampledImage = OpSampledImage %typeSampledImage %image %sampler",
+                "%result = OpImageQueryLod typeof*{result} %sampledImage %coord",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coord = in(reg) &coord
+            }
+        }
+        result
+    }
+
+    /// Query the dimensions of Image, with no level of detail.
+    ///
+    /// Note: Const generics aren't able to reason about the constraints on this function (yet),
+    /// and so are enforced by the compiler. The constraints are:
+    ///
+    /// The image's dimension must be 1D, 2D, 3D, Buffer, Rect, or Cube. If dimension is 1D, 2D,
+    /// 3D, or Cube, it must have *either* multisampled be true, *or* sampled of Unknown or No.
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageQuerySize")]
+    pub fn query_size<Size: ImageCoordinate<u32, DIM, ARRAYED> + Default>(&self) -> Size {
+        let mut result: Size = Default::default();
+        unsafe {
+            asm! {
+                "%image = OpLoad _ {this}",
+                "%result = OpImageQuerySize typeof*{result} %image",
+                "OpStore {result} %result",
+                this = in(reg) self,
+                result = in(reg) &mut result,
+            }
+        }
+        result
+    }
+}
+
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DIM: Dimensionality,
+        const DEPTH: ImageDepth,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const FORMAT: ImageFormat,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    >
+    Image<
+        SampledType,
+        DIM,
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+    /// Query the dimensions of Image, with no level of detail.
+    ///
+    /// Note: Const generics aren't able to reason about the constraints on this function (yet),
+    /// and so are enforced by the compiler. The constraints are:
+    ///
+    /// The image's dimension must be 1D, 2D, 3D, or Cube. Multisampled must be false.
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageQuerySizeLod")]
+    pub fn query_size_lod<Size: ImageCoordinate<u32, DIM, ARRAYED> + Default>(
+        &self,
+        lod: u32,
+    ) -> Size {
+        let mut result: Size = Default::default();
+        unsafe {
+            asm! {
+                "%image = OpLoad _ {this}",
+                "%result = OpImageQuerySizeLod typeof*{result} %image {lod}",
+                "OpStore {result} %result",
+                this = in(reg) self,
+                lod = in(reg) lod,
+                result = in(reg) &mut result,
+            }
+        }
+        result
+    }
+}
+
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const FORMAT: ImageFormat,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    >
+    Image<
+        SampledType,
+        { Dimensionality::TwoD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::True },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+    /// Query the number of samples available per texel fetch in a multisample image.
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageQuerySamples")]
+    pub fn query_samples(&self) -> u32 {
+        let result: u32;
+        unsafe {
+            asm! {
+                "%image = OpLoad _ {this}",
+                "{result} = OpImageQuerySamples typeof{result} %image",
+                this = in(reg) self,
+                result = out(reg) result,
+            }
+        }
+        result
+    }
+}
+
 /// An image combined with a sampler, enabling filtered accesses of the
 /// image’s contents.
 #[spirv(sampled_image)]
