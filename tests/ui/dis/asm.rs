@@ -7,8 +7,8 @@ fn asm() {
     unsafe {
         asm!(
             "%int = OpTypeInt 32 0",
-            "%scope = OpConstant %int 2",
-            "%semantics = OpConstant %int 16",
+            "%scope = OpConstant %int 3",
+            "%semantics = OpConstant %int 72",
             "OpMemoryBarrier %scope %semantics",
         );
     }
