@@ -1,0 +1,32 @@
+%1 = OpFunction  %2  None %3
+%4 = OpFunctionParameter  %2
+%5 = OpFunctionParameter  %2
+%6 = OpLabel
+OpBranch %7
+%7 = OpLabel
+OpBranch %8
+%8 = OpLabel
+%9 = OpPhi  %10  %11 %7 %12 %13
+%14 = OpPhi  %2  %4 %7 %15 %13
+%16 = OpPhi  %17  %18 %7 %19 %13
+OpLoopMerge %20 %13 Unroll
+OpBranchConditional %16 %21 %20
+%21 = OpLabel
+%22 = OpSLessThan  %17  %9 %23
+OpSelectionMerge %24 None
+OpBranchConditional %22 %25 %26
+%25 = OpLabel
+%27 = OpIMul  %2  %28 %14
+%15 = OpIAdd  %2  %27 %5
+%12 = OpIAdd  %10  %9 %29
+OpBranch %24
+%26 = OpLabel
+OpReturnValue %14
+%24 = OpLabel
+%19 = OpPhi  %17  %18 %25
+OpBranch %13
+%13 = OpLabel
+OpBranch %8
+%20 = OpLabel
+OpUnreachable
+OpFunctionEnd
