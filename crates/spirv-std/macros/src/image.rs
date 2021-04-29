@@ -77,9 +77,9 @@ impl Parse for ImageType {
                 let int = input.parse::<syn::LitInt>().unwrap();
                 set_unique!(
                     dimensionality = match (int.base10_digits(), int.suffix()) {
-                        ("1", "D" | "d") => Dimensionality::OneD,
-                        ("2", "D" | "d") => Dimensionality::TwoD,
-                        ("3", "D" | "d") => Dimensionality::ThreeD,
+                        ("1", "D") | ("1", "d") => Dimensionality::OneD,
+                        ("2", "D") | ("2", "d") => Dimensionality::TwoD,
+                        ("3", "D") | ("3", "d") => Dimensionality::ThreeD,
                         _ => return Err(syn::Error::new(int.span(), "Unexpected integer")),
                     }
                 );
