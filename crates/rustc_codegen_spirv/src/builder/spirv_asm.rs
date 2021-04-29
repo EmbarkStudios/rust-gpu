@@ -1335,6 +1335,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 ty => Some(ty),
             }
         }
+
         fn is_valid_query_size(ty: &SpirvType) -> bool {
             match *ty {
                 SpirvType::Image {
@@ -1352,6 +1353,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 _ => true,
             }
         }
+
         fn is_valid_query_size_lod(ty: &SpirvType) -> bool {
             match *ty {
                 SpirvType::Image {
@@ -1363,6 +1365,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 _ => true,
             }
         }
+
         match inst.class.opcode {
             Op::ImageQueryLevels | Op::ImageQueryLod => {
                 let image_ty = match find_image_ty(self, inst) {

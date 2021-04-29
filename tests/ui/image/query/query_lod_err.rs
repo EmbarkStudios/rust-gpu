@@ -1,4 +1,5 @@
 // build-fail
+// normalize-stderr-test "\S*/crates/spirv-std/src/" -> "$$SPIRV_STD_SRC/"
 
 use spirv_std::{arch, Image, Sampler};
 
