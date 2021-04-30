@@ -6,7 +6,7 @@ use crate::codegen_cx::CodegenCx;
 use rspirv::dr;
 use rspirv::grammar::{LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{
-    FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
+    Dim, FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
     LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, StorageClass, Word,
 };
 use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
@@ -321,6 +321,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 return;
             }
             _ => {
+                self.validate_instruction(&inst);
                 self.emit()
                     .insert_into_block(dr::InsertPoint::End, inst)
                     .unwrap();
@@ -1300,6 +1301,131 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             },
         }
         true
+    }
+
+    pub fn validate_instruction(&mut self, inst: &dr::Instruction) {
+        fn find_image_ty<'cx, 'tcx>(
+            builder: &mut Builder<'cx, 'tcx>,
+            inst: &dr::Instruction,
+        ) -> Option<SpirvType> {
+            // Assumes the image parameter is the first operand
+            let image_obj = inst.operands[0].unwrap_id_ref();
+            let emit = builder.emit();
+            // Assumes the image's value definition is in the current block
+            let block = &emit.module_ref().functions[emit.selected_function().unwrap()].blocks
+                [emit.selected_block().unwrap()];
+            // Loop through the block to find the defining instruction
+            let defining_inst = match block
+                .instructions
+                .iter()
+                .find(|inst| inst.result_id == Some(image_obj))
+            {
+                Some(defining_inst) => defining_inst,
+                None => {
+                    // Something has gone wrong. All the asm! blocks using these instructions
+                    // should produce the image value in their own basic blocks (usually with
+                    // an OpLoad), so there's probably some typo somewhere with an error
+                    // already emitted, so just skip validation. If there truly is something
+                    // bad going on, spirv-val will catch it.
+                    return None;
+                }
+            };
+            match builder.lookup_type(defining_inst.result_type.unwrap()) {
+                SpirvType::SampledImage { image_type } => Some(builder.lookup_type(image_type)),
+                ty => Some(ty),
+            }
+        }
+
+        fn is_valid_query_size(ty: &SpirvType) -> bool {
+            match *ty {
+                SpirvType::Image {
+                    dim,
+                    multisampled,
+                    sampled,
+                    ..
+                } => match dim {
+                    Dim::Dim1D | Dim::Dim2D | Dim::Dim3D | Dim::DimCube => {
+                        multisampled == 1 || sampled == 0 || sampled == 2
+                    }
+                    Dim::DimBuffer | Dim::DimRect => true,
+                    Dim::DimSubpassData => false,
+                },
+                _ => true,
+            }
+        }
+
+        fn is_valid_query_size_lod(ty: &SpirvType) -> bool {
+            match *ty {
+                SpirvType::Image {
+                    dim, multisampled, ..
+                } => match dim {
+                    Dim::Dim1D | Dim::Dim2D | Dim::Dim3D | Dim::DimCube => multisampled == 0,
+                    _ => false,
+                },
+                _ => true,
+            }
+        }
+
+        match inst.class.opcode {
+            Op::ImageQueryLevels | Op::ImageQueryLod => {
+                let image_ty = match find_image_ty(self, inst) {
+                    Some(ty) => ty,
+                    None => return,
+                };
+                if let SpirvType::Image { dim, .. } = image_ty {
+                    match dim {
+                        Dim::Dim1D | Dim::Dim2D | Dim::Dim3D | Dim::DimCube => {}
+                        bad => self
+                            .struct_err(&format!(
+                                "Op{}'s image has a dimension of {:?}",
+                                inst.class.opname, bad
+                            ))
+                            .note("Allowed dimensions are 1D, 2D, 3D, and Cube")
+                            .emit(),
+                    }
+                }
+                // If the type isn't an image, something has gone wrong. The functions in image.rs
+                // shouldn't allow it, so the user is doing something weird. Let spirv-val handle
+                // the error later on.
+            }
+            Op::ImageQuerySize => {
+                let image_ty = match find_image_ty(self, inst) {
+                    Some(ty) => ty,
+                    None => return,
+                };
+                if !is_valid_query_size(&image_ty) {
+                    let mut err =
+                        self.struct_err("OpImageQuerySize is invalid for this image type");
+                    err.note(
+                        "allowed dimensions are 1D, 2D, 3D, Buffer, Rect, or Cube. \
+                              if dimension is 1D, 2D, 3D, or Cube, it must have either \
+                              multisampled be true, *or* sampled of Unknown or No",
+                    );
+                    if is_valid_query_size_lod(&image_ty) {
+                        err.note("query_size_lod is valid for this image, did you mean to use it instead?");
+                    }
+                    err.emit();
+                }
+            }
+            Op::ImageQuerySizeLod => {
+                let image_ty = match find_image_ty(self, inst) {
+                    Some(ty) => ty,
+                    None => return,
+                };
+                if !is_valid_query_size_lod(&image_ty) {
+                    let mut err =
+                        self.struct_err("OpImageQuerySizeLod is invalid for this image type");
+                    err.note("The image's dimension must be 1D, 2D, 3D, or Cube. Multisampled must be false.");
+                    if is_valid_query_size(&image_ty) {
+                        err.note(
+                            "query_size is valid for this image, did you mean to use it instead?",
+                        );
+                    }
+                    err.emit();
+                }
+            }
+            _ => {}
+        }
     }
 }
 
