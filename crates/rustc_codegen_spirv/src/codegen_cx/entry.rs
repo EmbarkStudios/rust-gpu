@@ -312,8 +312,18 @@ impl<'tcx> CodegenCx<'tcx> {
         bx.call(entry_func, &call_args, None);
         bx.ret_void();
 
-        op_entry_point_interface_operands
-            .push(self.bindless_descriptor_sets.borrow().unwrap().buffers);
+        if self.bindless() && self.target.spirv_version() < (1, 3) {
+            let sets = self.bindless_descriptor_sets.borrow().unwrap();
+
+            op_entry_point_interface_operands.push(sets.buffers);
+
+            //op_entry_point_interface_operands
+            //  .push(sets.sampled_image_1d);
+            // op_entry_point_interface_operands
+            //   .push(sets.sampled_image_2d);
+            //op_entry_point_interface_operands
+            //.push(sets.sampled_image_3d);
+        }
 
         let stub_fn_id = stub_fn.def_cx(self);
         self.emit_global().entry_point(
@@ -552,6 +562,13 @@ impl<'tcx> CodegenCx<'tcx> {
             decoration_supersedes_location = true;
         }
         if let Some(index) = attrs.descriptor_set.map(|attr| attr.value) {
+            if self.bindless() {
+                self.tcx.sess.span_fatal(
+                    attrs.descriptor_set.unwrap().span,
+                    "Can't use #[spirv(descriptor_set)] attribute in bindless mode",
+                );
+            }
+
             self.emit_global().decorate(
                 var,
                 Decoration::DescriptorSet,
@@ -560,6 +577,12 @@ impl<'tcx> CodegenCx<'tcx> {
             decoration_supersedes_location = true;
         }
         if let Some(index) = attrs.binding.map(|attr| attr.value) {
+            if self.bindless() {
+                self.tcx.sess.span_fatal(
+                    attrs.binding.unwrap().span,
+                    "Can't use #[spirv(binding)] attribute in bindless mode",
+                );
+            }
             self.emit_global().decorate(
                 var,
                 Decoration::Binding,
@@ -609,7 +632,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
         // Record this `OpVariable` as needing to be added (if applicable),
         // to the *Interface* operands of the `OpEntryPoint` instruction.
-        if self.emit_global().version().unwrap() > (1, 3) {
+        if self.emit_global().version().unwrap() > (1, 3) && !self.bindless() {
             // SPIR-V >= v1.4 includes all OpVariables in the interface.
             op_entry_point_interface_operands.push(var);
         } else {

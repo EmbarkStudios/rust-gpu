@@ -93,8 +93,13 @@ pub struct CodegenCx<'tcx> {
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         let sym = Symbols::get();
+        let mut bindless = false;
         for &feature in &tcx.sess.target_features {
-            tcx.sess.err(&format!("Unknown feature {}", feature));
+            if feature == Symbol::intern("bindless") {
+                bindless = true;
+            } else {
+                tcx.sess.err(&format!("Unknown feature {}", feature));
+            }
         }
         let codegen_args = CodegenArgs::from_session(tcx.sess);
         let target = tcx.sess.target.llvm_target.parse().unwrap();
@@ -123,9 +128,17 @@ impl<'tcx> CodegenCx<'tcx> {
             bindless_descriptor_sets: Default::default(),
         };
 
-        result.lazy_add_bindless_descriptor_sets();
+        if bindless {
+            result.lazy_add_bindless_descriptor_sets();
+        }
 
         result
+    }
+
+    /// Temporary toggle to see if bindless has been enabled in the compiler, should
+    /// be removed longer term when we use bindless as the default model
+    pub fn bindless(&self) -> bool {
+        self.bindless_descriptor_sets.borrow().is_some()
     }
 
     /// See comment on `BuilderCursor`

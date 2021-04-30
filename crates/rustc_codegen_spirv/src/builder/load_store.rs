@@ -213,7 +213,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    pub(crate) fn codegen_internal_buffer_store(&mut self, args: &[SpirvValue]) -> SpirvValue {
+    pub(crate) fn codegen_internal_buffer_store(&mut self, args: &[SpirvValue]) {
+        if !self.bindless() {
+            self.fatal("Need to run the compiler with -Ctarget-feature=+bindless to be able to use the bindless features");
+        }
+
         let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
 
         let uniform_uint_ptr =
@@ -268,6 +272,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         result_type: Word,
         args: &[SpirvValue],
     ) -> SpirvValue {
+        if !self.bindless() {
+            self.fatal("Need to run the compiler with -Ctarget-feature=+bindless to be able to use the bindless features");
+        }
+
         let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
 
         let uniform_uint_ptr =
