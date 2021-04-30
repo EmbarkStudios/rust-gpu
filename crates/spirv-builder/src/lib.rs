@@ -53,9 +53,6 @@
 // crate-specific exceptions:
 #![allow()]
 
-#[cfg(test)]
-mod test;
-
 mod depfile;
 
 use raw_string::{RawStr, RawString};

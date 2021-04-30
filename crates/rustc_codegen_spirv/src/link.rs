@@ -131,10 +131,13 @@ fn link_exe(
 
     let spv_binary = do_link(sess, &objects, &rlibs, legalize, emit_multiple_modules);
 
+    let cg_args = crate::codegen_cx::CodegenArgs::from_session(sess);
+
     use rspirv::binary::Assemble;
     match spv_binary {
         linker::LinkResult::SingleModule(spv_binary) => {
             post_link_single_module(sess, spv_binary.assemble(), out_filename);
+            cg_args.do_disassemble(&spv_binary);
         }
         linker::LinkResult::MultipleModules(map) => {
             let mut root_file_name = out_filename.file_name().unwrap().to_owned();
