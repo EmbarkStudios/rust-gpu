@@ -286,9 +286,11 @@ impl CodegenArgs {
         }
 
         use rspirv::binary::Disassemble;
+
         if self.disassemble {
             eprintln!("{}", module.disassemble());
         }
+
         if let Some(func) = &self.disassemble_fn {
             let id = module
                 .debugs
@@ -316,6 +318,7 @@ impl CodegenArgs {
             compact_ids(&mut func);
             eprintln!("{}", func.disassemble());
         }
+
         if let Some(entry) = &self.disassemble_entry {
             let id = module
                 .entry_points
@@ -340,6 +343,7 @@ impl CodegenArgs {
             compact_ids(&mut func);
             eprintln!("{}", func.disassemble());
         }
+
         if self.disassemble_globals {
             for inst in module.global_inst_iter() {
                 eprintln!("{}", inst.disassemble());
