@@ -261,10 +261,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
             self.store(uint_value, access_chain, Align::from_bytes(0).unwrap());
         }
-
-        self.emit_global()
-            .type_void()
-            .with_type(SpirvType::Void.def(rustc_span::DUMMY_SP, self))
     }
 
     pub(crate) fn codegen_internal_buffer_load(
