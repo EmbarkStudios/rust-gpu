@@ -312,12 +312,19 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 image_type: inst.operands[0].unwrap_id_ref(),
             }
             .def(self.span(), self),
-            Op::Variable if inst.operands[0].unwrap_storage_class() != StorageClass::Function => {
+            Op::Variable => {
                 // OpVariable with Function storage class should be emitted inside the function,
                 // however, all other OpVariables should appear in the global scope instead.
-                self.emit_global()
-                    .insert_types_global_values(dr::InsertPoint::End, inst);
-                return;
+                if inst.operands[0].unwrap_storage_class() == StorageClass::Function {
+                    self.emit()
+                        .insert_into_block(dr::InsertPoint::Begin, inst)
+                        .unwrap();
+                    return;
+                } else {
+                    self.emit_global()
+                        .insert_types_global_values(dr::InsertPoint::End, inst);
+                    return;
+                }
             }
             _ => {
                 self.emit()

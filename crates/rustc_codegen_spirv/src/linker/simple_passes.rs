@@ -129,3 +129,25 @@ pub fn sort_globals(module: &mut Module) {
     // have a function declaration without a body in a fully linked module?
     module.functions.sort_by_key(|f| !f.blocks.is_empty());
 }
+
+pub fn sort_function_op_variables(module: &mut Module) {
+    //  All OpVariable instructions in a function must be the first instructions in the first block.
+    for f in &mut module.functions {
+        if !f.blocks.is_empty() {
+            let mut op_vars = vec![];
+            for b in &mut f.blocks {
+                b.instructions.retain(|inst| {
+                    if inst.class.opcode == Op::Variable {
+                        op_vars.push(inst.clone());
+                        false
+                    } else {
+                        true
+                    }
+                });
+            }
+
+            op_vars.append(&mut f.blocks[0].instructions);
+            f.blocks[0].instructions = op_vars;
+        }
+    }
+}

@@ -210,7 +210,7 @@ impl Texture2d {
                 "%sampled_image_2d      = OpTypeSampledImage %image_2d",
                 "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
                 "%ptr_image_array       = OpTypePointer Generic %image_array",
-                "%image_2d_var          = OpVariable %ptr_image_array Generic",
+                "%image_2d_var          = OpVariable %ptr_image_array Function",
                 "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
                 "", // ^^ type preamble
                 "%offset                = OpLoad _ {1}",
@@ -253,7 +253,7 @@ impl Texture2d {
                 "%sampled_image_2d      = OpTypeSampledImage %image_2d",
                 "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
                 "%ptr_image_array       = OpTypePointer Generic %image_array",
-                "%image_2d_var          = OpVariable %ptr_image_array Generic",
+                "%image_2d_var          = OpVariable %ptr_image_array Function",
                 "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
                 "", // ^^ type preamble
                 "%offset                = OpLoad _ {1}",
