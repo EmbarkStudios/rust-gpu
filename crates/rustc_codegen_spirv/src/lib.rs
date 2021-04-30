@@ -117,6 +117,7 @@ mod spirv_type;
 mod spirv_type_constraints;
 mod symbols;
 mod target;
+mod target_feature;
 
 use builder::Builder;
 use codegen_cx::{CodegenArgs, CodegenCx, ModuleOutputType};

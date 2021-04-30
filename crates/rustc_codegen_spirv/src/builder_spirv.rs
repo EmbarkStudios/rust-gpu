@@ -2,6 +2,7 @@ use crate::builder;
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use crate::target::SpirvTarget;
+use crate::target_feature::TargetFeature;
 use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, StorageClass, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
@@ -303,12 +304,19 @@ pub struct BuilderSpirv {
 }
 
 impl BuilderSpirv {
-    pub fn new(target: &SpirvTarget) -> Self {
+    pub fn new(target: &SpirvTarget, features: &[TargetFeature]) -> Self {
         let version = target.spirv_version();
         let memory_model = target.memory_model();
 
         let mut builder = Builder::new();
         builder.set_version(version.0, version.1);
+
+        for feature in features {
+            match feature {
+                TargetFeature::Capability(cap) => builder.capability(*cap),
+                TargetFeature::Extension(ext) => builder.extension(&*ext.as_str()),
+            }
+        }
 
         if target.is_kernel() {
             builder.capability(Capability::Kernel);
