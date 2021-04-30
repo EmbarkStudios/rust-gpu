@@ -726,6 +726,6 @@ impl TypeCache<'_> {
             .get(&word)
             .and_then(|names| names.iter().next().copied())
             .map(|v| v.to_string())
-            .unwrap_or("<unknown>".to_string())
+            .unwrap_or_else(|| "<unknown>".to_string())
     }
 }

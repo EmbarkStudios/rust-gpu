@@ -309,6 +309,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn load_from_u32(
         &mut self,
         bits: u32,
@@ -372,7 +373,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
                 let lower = self.emit().u_convert(ulong_ty, None, lower).unwrap();
 
-                let const_one = self.constant_int(uint_ty, 1 as u64).def(self);
+                let const_one = self.constant_int(uint_ty, 1u64).def(self);
 
                 let upper_offset = self.emit().i_add(uint_ty, None, offset, const_one).unwrap();
 
@@ -419,6 +420,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn recurse_adt_for_loads(
         &mut self,
         uint_ty: u32,

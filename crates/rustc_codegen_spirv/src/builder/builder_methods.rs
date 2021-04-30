@@ -1832,8 +1832,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn extract_value(&mut self, agg_val: Self::Value, idx: u64) -> Self::Value {
         let result_type = match self.lookup_type(agg_val.ty) {
             SpirvType::Adt { field_types, .. } => field_types[idx as usize],
-            SpirvType::Vector { element, .. } => element,
-            SpirvType::Array { element, .. } => element,
+            SpirvType::Array { element, .. } | SpirvType::Vector { element, .. } => element,
             other => self.fatal(&format!(
                 "extract_value not implemented on type {:?}",
                 other
@@ -2180,15 +2179,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             self.abort();
             self.undef(result_type)
         } else if self.internal_buffer_load_id.borrow().contains(&callee_val) {
-            self.codegen_internal_buffer_load(result_type, &args)
+            self.codegen_internal_buffer_load(result_type, args)
         } else if self.internal_buffer_store_id.borrow().contains(&callee_val) {
-            self.codegen_internal_buffer_store(&args);
+            self.codegen_internal_buffer_store(args);
 
             let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
-            return SpirvValue {
+            SpirvValue {
                 kind: SpirvValueKind::IllegalTypeUsed(void_ty),
                 ty: void_ty,
-            };
+            }
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()

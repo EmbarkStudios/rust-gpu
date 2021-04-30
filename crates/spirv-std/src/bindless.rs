@@ -9,9 +9,9 @@ use crate::vector::Vector;
 ///
 /// This handle is expected to be used engine-side to refer to descriptors within a descriptor set.
 /// To be able to use the bindless system in rust-gpu, an engine is expected to have created
-/// four DescriptorSets, each containing a large table of max 1 << 23 elements for each type.
+/// four `DescriptorSets`, each containing a large table of max 1 << 23 elements for each type.
 /// And to sub-allocate descriptors from those tables. It must use `RenderResourceHandle` to
-/// refer to slots within this table, and it's then expected that these RenderResourceHandle's
+/// refer to slots within this table, and it's then expected that these `RenderResourceHandle`'s
 /// are freely copied to the GPU to refer to resources there.
 ///
 /// | Buffer Type      | Set |
@@ -81,7 +81,7 @@ impl RenderResourceHandle {
         }
     }
 
-    /// Safety:
+    /// # Safety
     /// This method can only safely refer to a resource if that resource
     /// is guaranteed to exist by the caller. `RenderResourceHandle` can't
     /// track lifetimes or keep ref-counts between GPU and CPU and thus
