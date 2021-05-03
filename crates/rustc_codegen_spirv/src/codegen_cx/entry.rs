@@ -635,28 +635,16 @@ impl<'tcx> CodegenCx<'tcx> {
         // Emit the `OpVariable` with its *Result* ID set to `var`.
         self.emit_global()
             .variable(var_ptr_spirv_type, Some(var), storage_class, None);
-
-        if self.bindless() {
-            match storage_class {
-                StorageClass::Input | StorageClass::Output => {
-                    op_entry_point_interface_operands.push(var)
-                }
-                StorageClass::PushConstant if self.emit_global().version().unwrap() > (1, 3) => {
-                    op_entry_point_interface_operands.push(var)
-                }
-                _ => {}
-            }
+    
+        // Record this `OpVariable` as needing to be added (if applicable),
+        // to the *Interface* operands of the `OpEntryPoint` instruction.
+        if self.emit_global().version().unwrap() > (1, 3) {
+            // SPIR-V >= v1.4 includes all OpVariables in the interface.
+            op_entry_point_interface_operands.push(var);
         } else {
-            // Record this `OpVariable` as needing to be added (if applicable),
-            // to the *Interface* operands of the `OpEntryPoint` instruction.
-            if self.emit_global().version().unwrap() > (1, 3) {
-                // SPIR-V >= v1.4 includes all OpVariables in the interface.
+            // SPIR-V <= v1.3 only includes Input and Output in the interface.
+            if storage_class == StorageClass::Input || storage_class == StorageClass::Output {
                 op_entry_point_interface_operands.push(var);
-            } else {
-                // SPIR-V <= v1.3 only includes Input and Output in the interface.
-                if storage_class == StorageClass::Input || storage_class == StorageClass::Output {
-                    op_entry_point_interface_operands.push(var);
-                }
             }
         }
     }
