@@ -95,7 +95,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let sym = Symbols::get();
         let mut bindless = false;
         for &feature in &tcx.sess.target_features {
-            if feature == Symbol::intern("bindless") {
+            if feature == sym.bindless {
                 bindless = true;
             } else {
                 tcx.sess.err(&format!("Unknown feature {}", feature));
