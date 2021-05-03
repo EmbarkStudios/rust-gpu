@@ -125,5 +125,5 @@ extern "C" fn rust_eh_personality() {}
 
 // See: https://github.com/rust-lang/rust/issues/84738
 #[doc(hidden)]
-/// [`spirv_types`]
+/// [spirv_types]
 pub fn workaround_rustdoc_ice_84738() {}
