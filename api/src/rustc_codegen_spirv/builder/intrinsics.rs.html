@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/intrinsics.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>intrinsics.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -521,30 +521,30 @@
 <span id="518">518</span>
 <span id="519">519</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Builder</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::<span class="ident">ConvSpirvType</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">codegen_cx</span>::<span class="ident">CodegenCx</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::<span class="ident">SpirvType</span>;
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">CLOp</span>, <span class="ident">GLOp</span>};
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">operand</span>::<span class="ident">OperandRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">place</span>::<span class="ident">PlaceRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{<span class="ident">BuilderMethods</span>, <span class="ident">IntrinsicCallMethods</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::{<span class="ident">FnDef</span>, <span class="ident">Instance</span>, <span class="ident">ParamEnv</span>, <span class="ident">Ty</span>, <span class="ident">TyKind</span>};
-<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">source_map</span>::<span class="ident">Span</span>;
-<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">sym</span>;
-<span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::<span class="ident">call</span>::{<span class="ident">FnAbi</span>, <span class="ident">PassMode</span>};
-<span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::<span class="ident">LayoutOf</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::Builder</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::abi::ConvSpirvType</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::codegen_cx::CodegenCx</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::spirv_type::SpirvType</span>;
+<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">CLOp</span>, <span class="ident">GLOp</span>};
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::operand::OperandRef</span>;
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::place::PlaceRef</span>;
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{<span class="ident">BuilderMethods</span>, <span class="ident">IntrinsicCallMethods</span>};
+<span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
+<span class="kw">use</span> <span class="ident">rustc_middle::ty</span>::{<span class="ident">FnDef</span>, <span class="ident">Instance</span>, <span class="ident">ParamEnv</span>, <span class="ident">Ty</span>, <span class="ident">TyKind</span>};
+<span class="kw">use</span> <span class="ident">rustc_span::source_map::Span</span>;
+<span class="kw">use</span> <span class="ident">rustc_span::sym</span>;
+<span class="kw">use</span> <span class="ident">rustc_target::abi::call</span>::{<span class="ident">FnAbi</span>, <span class="ident">PassMode</span>};
+<span class="kw">use</span> <span class="ident">rustc_target::abi::LayoutOf</span>;
 
 <span class="kw">fn</span> <span class="ident">int_type_width_signed</span>(<span class="ident">ty</span>: <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">u64</span>, <span class="ident">bool</span>)<span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">kind</span>() {
-        <span class="ident">TyKind</span>::<span class="ident">Int</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>((
+        <span class="ident">TyKind::Int</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>((
             <span class="ident">t</span>.<span class="ident">bit_width</span>()
                 .<span class="ident">unwrap_or</span>(<span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">target</span>.<span class="ident">pointer_width</span> <span class="kw">as</span> <span class="ident">u64</span>),
             <span class="bool-val">true</span>,
         )),
-        <span class="ident">TyKind</span>::<span class="ident">Uint</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>((
+        <span class="ident">TyKind::Uint</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>((
             <span class="ident">t</span>.<span class="ident">bit_width</span>()
                 .<span class="ident">unwrap_or</span>(<span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">target</span>.<span class="ident">pointer_width</span> <span class="kw">as</span> <span class="ident">u64</span>),
             <span class="bool-val">false</span>,
@@ -556,23 +556,23 @@
 <span class="kw">impl</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">copysign</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">SpirvValue</span>, <span class="ident">sign</span>: <span class="ident">SpirvValue</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
         <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>) {
-            <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">width</span>,
-            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug</span><span class="macro">!</span>(
+            <span class="ident">SpirvType::Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">width</span>,
+            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug!</span>(
                 <span class="string">&quot;copysign must have float argument, not {}&quot;</span>,
                 <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">val</span>.<span class="ident">ty</span>, <span class="self">self</span>)
             ),
         };
-        <span class="kw">let</span> <span class="ident">int_ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">int_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Integer</span>(<span class="ident">width</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
         <span class="kw">let</span> (<span class="ident">mask_sign</span>, <span class="ident">mask_value</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">width</span> {
             <span class="number">32</span> <span class="op">=</span><span class="op">&gt;</span> (
                 <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">31</span>),
-                <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">u32</span>::<span class="ident">max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
+                <span class="self">self</span>.<span class="ident">constant_u32</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">u32::max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
             ),
             <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> (
                 <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">63</span>),
-                <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">u64</span>::<span class="ident">max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
+                <span class="self">self</span>.<span class="ident">constant_u64</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="ident">u64::max_value</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>),
             ),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug</span><span class="macro">!</span>(<span class="string">&quot;copysign must have width 32 or 64, not {}&quot;</span>, <span class="ident">width</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug!</span>(<span class="string">&quot;copysign must have width 32 or 64, not {}&quot;</span>, <span class="ident">width</span>),
         };
         <span class="kw">let</span> <span class="ident">val_bits</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bitcast</span>(<span class="ident">val</span>, <span class="ident">int_ty</span>);
         <span class="kw">let</span> <span class="ident">sign_bits</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bitcast</span>(<span class="ident">sign</span>, <span class="ident">int_ty</span>);
@@ -588,68 +588,68 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
         <span class="ident">fn_abi</span>: <span class="kw-2">&amp;</span><span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">OperandRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="self">Self</span>::<span class="ident">Value</span><span class="op">&gt;</span>],
-        <span class="ident">llresult</span>: <span class="self">Self</span>::<span class="ident">Value</span>,
+        <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">OperandRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="self">Self</span><span class="ident">::Value</span><span class="op">&gt;</span>],
+        <span class="ident">llresult</span>: <span class="self">Self</span><span class="ident">::Value</span>,
         <span class="ident">_span</span>: <span class="ident">Span</span>,
     ) {
-        <span class="kw">let</span> <span class="ident">callee_ty</span> <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">ParamEnv</span>::<span class="ident">reveal_all</span>());
+        <span class="kw">let</span> <span class="ident">callee_ty</span> <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">ParamEnv::reveal_all</span>());
 
         <span class="kw">let</span> (<span class="ident">def_id</span>, <span class="ident">substs</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">callee_ty</span>.<span class="ident">kind</span>() {
             <span class="ident">FnDef</span>(<span class="ident">def_id</span>, <span class="ident">substs</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">def_id</span>, <span class="ident">substs</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug</span><span class="macro">!</span>(<span class="string">&quot;expected fn item type, found {}&quot;</span>, <span class="ident">callee_ty</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug!</span>(<span class="string">&quot;expected fn item type, found {}&quot;</span>, <span class="ident">callee_ty</span>),
         };
 
         <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">callee_ty</span>.<span class="ident">fn_sig</span>(<span class="self">self</span>.<span class="ident">tcx</span>);
         <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">tcx</span>
-            .<span class="ident">normalize_erasing_late_bound_regions</span>(<span class="ident">ParamEnv</span>::<span class="ident">reveal_all</span>(), <span class="ident">sig</span>);
+            .<span class="ident">normalize_erasing_late_bound_regions</span>(<span class="ident">ParamEnv::reveal_all</span>(), <span class="ident">sig</span>);
         <span class="kw">let</span> <span class="ident">arg_tys</span> <span class="op">=</span> <span class="ident">sig</span>.<span class="ident">inputs</span>();
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">item_name</span>(<span class="ident">def_id</span>);
 
         <span class="kw">let</span> <span class="ident">ret_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">sig</span>.<span class="ident">output</span>()).<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">PlaceRef</span>::<span class="ident">new_sized</span>(<span class="ident">llresult</span>, <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">layout</span>);
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">PlaceRef::new_sized</span>(<span class="ident">llresult</span>, <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">layout</span>);
 
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">name</span> {
-            <span class="ident">sym</span>::<span class="ident">likely</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">unlikely</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::likely</span> <span class="op">|</span> <span class="ident">sym::unlikely</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// Ignore these for now.</span>
                 <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()
             }
 
-            <span class="ident">sym</span>::<span class="ident">breakpoint</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::breakpoint</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">abort</span>();
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">is_ignore</span>());
+                <span class="macro">assert!</span>(<span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">is_ignore</span>());
                 <span class="kw">return</span>;
             }
 
-            <span class="ident">sym</span>::<span class="ident">volatile_load</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">unaligned_volatile_load</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::volatile_load</span> <span class="op">|</span> <span class="ident">sym::unaligned_volatile_load</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">tp_ty</span> <span class="op">=</span> <span class="ident">substs</span>.<span class="ident">type_at</span>(<span class="number">0</span>);
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">PassMode</span>::<span class="ident">Cast</span>(<span class="ident">ty</span>) <span class="op">=</span> <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">mode</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">PassMode::Cast</span>(<span class="ident">ty</span>) <span class="op">=</span> <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">mode</span> {
                     <span class="kw">let</span> <span class="ident">pointee</span> <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">spirv_type</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
-                    <span class="kw">let</span> <span class="ident">pointer</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> }.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
+                    <span class="kw">let</span> <span class="ident">pointer</span> <span class="op">=</span> <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> }.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
                     <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pointercast</span>(<span class="ident">ptr</span>, <span class="ident">pointer</span>);
                 }
                 <span class="kw">let</span> <span class="ident">load</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">volatile_load</span>(<span class="ident">ptr</span>);
                 <span class="self">self</span>.<span class="ident">to_immediate</span>(<span class="ident">load</span>, <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">tp_ty</span>))
             }
 
-            <span class="ident">sym</span>::<span class="ident">prefetch_read_data</span>
-            <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">prefetch_write_data</span>
-            <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">prefetch_read_instruction</span>
-            <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">prefetch_write_instruction</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::prefetch_read_data</span>
+            <span class="op">|</span> <span class="ident">sym::prefetch_write_data</span>
+            <span class="op">|</span> <span class="ident">sym::prefetch_read_instruction</span>
+            <span class="op">|</span> <span class="ident">sym::prefetch_write_instruction</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// ignore</span>
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">is_ignore</span>());
+                <span class="macro">assert!</span>(<span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">is_ignore</span>());
                 <span class="kw">return</span>;
             }
 
-            <span class="ident">sym</span>::<span class="ident">saturating_add</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">arg_tys</span>[<span class="number">0</span>], <span class="ident">arg_tys</span>[<span class="number">1</span>]);
+            <span class="ident">sym::saturating_add</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">assert_eq!</span>(<span class="ident">arg_tys</span>[<span class="number">0</span>], <span class="ident">arg_tys</span>[<span class="number">1</span>]);
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">arg_tys</span>[<span class="number">0</span>].<span class="ident">kind</span>() {
-                    <span class="ident">TyKind</span>::<span class="ident">Int</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">TyKind</span>::<span class="ident">Uint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">TyKind::Int</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">TyKind::Uint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>())
                     }
-                    <span class="ident">TyKind</span>::<span class="ident">Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fadd</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()),
-                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                    <span class="ident">TyKind::Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fadd</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()),
+                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;Unimplemented saturating_add intrinsic type: {:#?}&quot;</span>,
                         <span class="ident">other</span>
                     )),
@@ -658,14 +658,14 @@
                 <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;saturating_add is not implemented yet&quot;</span>);
                 <span class="ident">result</span>
             }
-            <span class="ident">sym</span>::<span class="ident">saturating_sub</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">arg_tys</span>[<span class="number">0</span>], <span class="ident">arg_tys</span>[<span class="number">1</span>]);
+            <span class="ident">sym::saturating_sub</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">assert_eq!</span>(<span class="ident">arg_tys</span>[<span class="number">0</span>], <span class="ident">arg_tys</span>[<span class="number">1</span>]);
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">arg_tys</span>[<span class="number">0</span>].<span class="ident">kind</span>() {
-                    <span class="ident">TyKind</span>::<span class="ident">Int</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">TyKind</span>::<span class="ident">Uint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">TyKind::Int</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">TyKind::Uint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>())
                     }
-                    <span class="ident">TyKind</span>::<span class="ident">Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fsub</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()),
-                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                    <span class="ident">TyKind::Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fsub</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()),
+                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;Unimplemented saturating_sub intrinsic type: {:#?}&quot;</span>,
                         <span class="ident">other</span>
                     )),
@@ -676,97 +676,97 @@
             }
 
             <span class="comment">// TODO: Configure these to be ocl vs. gl ext instructions, etc.</span>
-            <span class="ident">sym</span>::<span class="ident">sqrtf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">sqrtf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::sqrtf32</span> <span class="op">|</span> <span class="ident">sym::sqrtf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">sqrt</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::sqrt</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Sqrt</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Sqrt</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">powif32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">powif64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::powif32</span> <span class="op">|</span> <span class="ident">sym::powif64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="self">self</span>.<span class="ident">cl_op</span>(
-                        <span class="ident">CLOp</span>::<span class="ident">pown</span>,
+                        <span class="ident">CLOp::pown</span>,
                         <span class="ident">ret_ty</span>,
                         [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
                     )
                 } <span class="kw">else</span> {
                     <span class="kw">let</span> <span class="ident">float</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sitofp</span>(<span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>);
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Pow</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">float</span>])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Pow</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">float</span>])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">sinf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">sinf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::sinf32</span> <span class="op">|</span> <span class="ident">sym::sinf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">sin</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::sin</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Sin</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Sin</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">cosf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">cosf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::cosf32</span> <span class="op">|</span> <span class="ident">sym::cosf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">cos</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::cos</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Cos</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Cos</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">powf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">powf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::powf32</span> <span class="op">|</span> <span class="ident">sym::powf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="self">self</span>.<span class="ident">cl_op</span>(
-                        <span class="ident">CLOp</span>::<span class="ident">pow</span>,
+                        <span class="ident">CLOp::pow</span>,
                         <span class="ident">ret_ty</span>,
                         [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
                     )
                 } <span class="kw">else</span> {
                     <span class="self">self</span>.<span class="ident">gl_op</span>(
-                        <span class="ident">GLOp</span>::<span class="ident">Pow</span>,
+                        <span class="ident">GLOp::Pow</span>,
                         <span class="ident">ret_ty</span>,
                         [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
                     )
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">expf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">expf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::expf32</span> <span class="op">|</span> <span class="ident">sym::expf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">exp</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::exp</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Exp</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Exp</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">exp2f32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">exp2f64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::exp2f32</span> <span class="op">|</span> <span class="ident">sym::exp2f64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">exp2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::exp2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Exp2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Exp2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">logf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">logf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::logf32</span> <span class="op">|</span> <span class="ident">sym::logf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">log</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::log</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Log</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Log</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">log2f32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">log2f64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::log2f32</span> <span class="op">|</span> <span class="ident">sym::log2f64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">log2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::log2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Log2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Log2</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">log10f32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">log10f64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::log10f32</span> <span class="op">|</span> <span class="ident">sym::log10f64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">log10</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::log10</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
                     <span class="comment">// spir-v glsl doesn&#39;t have log10, so,</span>
                     <span class="comment">// log10(x) == (1 / ln(10)) * ln(x)</span>
                     <span class="kw">let</span> <span class="ident">mul</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">constant_float</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>, <span class="number">1.0</span> <span class="op">/</span> <span class="number">10.0f64</span>.<span class="ident">ln</span>());
-                    <span class="kw">let</span> <span class="ident">ln</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Log</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]);
+                    <span class="kw">let</span> <span class="ident">ln</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Log</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()]);
                     <span class="self">self</span>.<span class="ident">mul</span>(<span class="ident">mul</span>, <span class="ident">ln</span>)
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">fmaf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">fmaf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::fmaf32</span> <span class="op">|</span> <span class="ident">sym::fmaf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="self">self</span>.<span class="ident">cl_op</span>(
-                        <span class="ident">CLOp</span>::<span class="ident">fma</span>,
+                        <span class="ident">CLOp::fma</span>,
                         <span class="ident">ret_ty</span>,
                         [
                             <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(),
@@ -776,7 +776,7 @@
                     )
                 } <span class="kw">else</span> {
                     <span class="self">self</span>.<span class="ident">gl_op</span>(
-                        <span class="ident">GLOp</span>::<span class="ident">Fma</span>,
+                        <span class="ident">GLOp::Fma</span>,
                         <span class="ident">ret_ty</span>,
                         [
                             <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(),
@@ -786,47 +786,47 @@
                     )
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">fabsf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">fabsf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::fabsf32</span> <span class="op">|</span> <span class="ident">sym::fabsf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">fabs</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::fabs</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">FAbs</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::FAbs</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">minnumf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">minnumf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::minnumf32</span> <span class="op">|</span> <span class="ident">sym::minnumf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="self">self</span>.<span class="ident">cl_op</span>(
-                        <span class="ident">CLOp</span>::<span class="ident">fmin</span>,
-                        <span class="ident">ret_ty</span>,
-                        [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
-                    )
-                } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(
-                        <span class="ident">GLOp</span>::<span class="ident">FMin</span>,
-                        <span class="ident">ret_ty</span>,
-                        [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
-                    )
-                }
-            }
-            <span class="ident">sym</span>::<span class="ident">maxnumf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">maxnumf64</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(
-                        <span class="ident">CLOp</span>::<span class="ident">fmax</span>,
+                        <span class="ident">CLOp::fmin</span>,
                         <span class="ident">ret_ty</span>,
                         [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
                     )
                 } <span class="kw">else</span> {
                     <span class="self">self</span>.<span class="ident">gl_op</span>(
-                        <span class="ident">GLOp</span>::<span class="ident">FMax</span>,
+                        <span class="ident">GLOp::FMin</span>,
                         <span class="ident">ret_ty</span>,
                         [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
                     )
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">copysignf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">copysignf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::maxnumf32</span> <span class="op">|</span> <span class="ident">sym::maxnumf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="self">self</span>.<span class="ident">cl_op</span>(
-                        <span class="ident">CLOp</span>::<span class="ident">copysign</span>,
+                        <span class="ident">CLOp::fmax</span>,
+                        <span class="ident">ret_ty</span>,
+                        [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
+                    )
+                } <span class="kw">else</span> {
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(
+                        <span class="ident">GLOp::FMax</span>,
+                        <span class="ident">ret_ty</span>,
+                        [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
+                    )
+                }
+            }
+            <span class="ident">sym::copysignf32</span> <span class="op">|</span> <span class="ident">sym::copysignf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(
+                        <span class="ident">CLOp::copysign</span>,
                         <span class="ident">ret_ty</span>,
                         [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>(), <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>()],
                     )
@@ -836,54 +836,54 @@
                     <span class="self">self</span>.<span class="ident">copysign</span>(<span class="ident">val</span>, <span class="ident">sign</span>)
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">floorf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">floorf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::floorf32</span> <span class="op">|</span> <span class="ident">sym::floorf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">floor</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::floor</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Floor</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Floor</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">ceilf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">ceilf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::ceilf32</span> <span class="op">|</span> <span class="ident">sym::ceilf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">ceil</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::ceil</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Ceil</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Ceil</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">truncf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">truncf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::truncf32</span> <span class="op">|</span> <span class="ident">sym::truncf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">trunc</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::trunc</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Trunc</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Trunc</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
             <span class="comment">// TODO: Correctness of all these rounds</span>
-            <span class="ident">sym</span>::<span class="ident">rintf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">rintf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::rintf32</span> <span class="op">|</span> <span class="ident">sym::rintf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">rint</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::rint</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Round</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Round</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">nearbyintf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">nearbyintf64</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">roundf32</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">roundf64</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::nearbyintf32</span> <span class="op">|</span> <span class="ident">sym::nearbyintf64</span> <span class="op">|</span> <span class="ident">sym::roundf32</span> <span class="op">|</span> <span class="ident">sym::roundf64</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">round</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::round</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp</span>::<span class="ident">Round</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">gl_op</span>(<span class="ident">GLOp::Round</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 }
             }
 
-            <span class="ident">sym</span>::<span class="ident">rotate_left</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">rotate_right</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">is_left</span> <span class="op">=</span> <span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sym</span>::<span class="ident">rotate_left</span>;
+            <span class="ident">sym::rotate_left</span> <span class="op">|</span> <span class="ident">sym::rotate_right</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">is_left</span> <span class="op">=</span> <span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sym::rotate_left</span>;
                 <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>();
                 <span class="kw">let</span> <span class="ident">shift</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">immediate</span>();
                 <span class="self">self</span>.<span class="ident">rotate</span>(<span class="ident">val</span>, <span class="ident">shift</span>, <span class="ident">is_left</span>)
             }
 
             <span class="comment">// TODO: Do we want to manually implement these instead of using intel instructions?</span>
-            <span class="ident">sym</span>::<span class="ident">ctlz</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">ctlz_nonzero</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::ctlz</span> <span class="op">|</span> <span class="ident">sym::ctlz_nonzero</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">clz</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::clz</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
                     <span class="self">self</span>.<span class="ident">ext_inst</span>
                         .<span class="ident">borrow_mut</span>()
@@ -898,9 +898,9 @@
                         .<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>)
                 }
             }
-            <span class="ident">sym</span>::<span class="ident">cttz</span> <span class="op">|</span> <span class="ident">sym</span>::<span class="ident">cttz_nonzero</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::cttz</span> <span class="op">|</span> <span class="ident">sym::cttz_nonzero</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
-                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp</span>::<span class="ident">ctz</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
+                    <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::ctz</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
                     <span class="self">self</span>.<span class="ident">ext_inst</span>
                         .<span class="ident">borrow_mut</span>()
@@ -916,18 +916,18 @@
                 }
             }
 
-            <span class="ident">sym</span>::<span class="ident">ctpop</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+            <span class="ident">sym::ctpop</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                 .<span class="ident">emit</span>()
                 .<span class="ident">bit_count</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">def</span>(<span class="self">self</span>))
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>),
-            <span class="ident">sym</span>::<span class="ident">bitreverse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+            <span class="ident">sym::bitreverse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
                 .<span class="ident">emit</span>()
                 .<span class="ident">bit_reverse</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>, <span class="prelude-val">None</span>, <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">def</span>(<span class="self">self</span>))
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>),
 
-            <span class="ident">sym</span>::<span class="ident">bswap</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">sym::bswap</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// https://github.com/KhronosGroup/SPIRV-LLVM/pull/221/files</span>
                 <span class="comment">// TODO: Definitely add tests to make sure this impl is right.</span>
                 <span class="kw">let</span> <span class="ident">arg</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>();
@@ -990,18 +990,18 @@
                         <span class="kw">let</span> <span class="ident">res3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">res3</span>, <span class="ident">res4</span>);
                         <span class="self">self</span>.<span class="ident">or</span>(<span class="ident">res1</span>, <span class="ident">res3</span>)
                     }
-                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;bswap not implemented for int width {}&quot;</span>, <span class="ident">other</span>)),
+                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;bswap not implemented for int width {}&quot;</span>, <span class="ident">other</span>)),
                 }
             }
 
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;TODO: Unknown intrinsic &#39;{}&#39;&quot;</span>, <span class="ident">name</span>)),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;TODO: Unknown intrinsic &#39;{}&#39;&quot;</span>, <span class="ident">name</span>)),
         };
 
         <span class="kw">if</span> <span class="op">!</span><span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">is_ignore</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">PassMode</span>::<span class="ident">Cast</span>(<span class="ident">_ty</span>) <span class="op">=</span> <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">mode</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">PassMode::Cast</span>(<span class="ident">_ty</span>) <span class="op">=</span> <span class="ident">fn_abi</span>.<span class="ident">ret</span>.<span class="ident">mode</span> {
                 <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;TODO: PassMode::Cast not implemented yet in intrinsics&quot;</span>);
             } <span class="kw">else</span> {
-                <span class="ident">OperandRef</span>::<span class="ident">from_immediate_or_packed_pair</span>(<span class="self">self</span>, <span class="ident">value</span>, <span class="ident">result</span>.<span class="ident">layout</span>)
+                <span class="ident">OperandRef::from_immediate_or_packed_pair</span>(<span class="self">self</span>, <span class="ident">value</span>, <span class="ident">result</span>.<span class="ident">layout</span>)
                     .<span class="ident">val</span>
                     .<span class="ident">store</span>(<span class="self">self</span>, <span class="ident">result</span>);
             }
@@ -1018,11 +1018,11 @@
         <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_sibling_block</span>(<span class="string">&quot;abort_continue&quot;</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">assume</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="self">Self</span>::<span class="ident">Value</span>) {
+    <span class="kw">fn</span> <span class="ident">assume</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="self">Self</span><span class="ident">::Value</span>) {
         <span class="comment">// TODO: llvm.assume</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">expect</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">cond</span>: <span class="self">Self</span>::<span class="ident">Value</span>, <span class="ident">_expected</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
+    <span class="kw">fn</span> <span class="ident">expect</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">cond</span>: <span class="self">Self</span><span class="ident">::Value</span>, <span class="ident">_expected</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Value</span> {
         <span class="comment">// TODO: llvm.expect</span>
         <span class="ident">cond</span>
     }
@@ -1032,14 +1032,14 @@
         <span class="comment">// It corresponds to the llvm.sideeffect intrinsic - does spir-v have an equivalent?</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">va_start</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="self">Self</span>::<span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    <span class="kw">fn</span> <span class="ident">va_start</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="self">Self</span><span class="ident">::Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Value</span> {
+        <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">va_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="self">Self</span>::<span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    <span class="kw">fn</span> <span class="ident">va_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_val</span>: <span class="self">Self</span><span class="ident">::Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Value</span> {
+        <span class="macro">todo!</span>()
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-js="../../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

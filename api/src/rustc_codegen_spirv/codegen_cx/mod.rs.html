@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/codegen_cx/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -439,44 +439,170 @@
 <span id="436">436</span>
 <span id="437">437</span>
 <span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
 <span class="kw">mod</span> <span class="ident">entry</span>;
 <span class="kw">mod</span> <span class="ident">type_</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder</span>::{<span class="ident">ExtInst</span>, <span class="ident">InstructionTable</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">BuilderSpirv</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueKind</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">decorations</span>::{
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder</span>::{<span class="ident">ExtInst</span>, <span class="ident">InstructionTable</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">BuilderSpirv</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueKind</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::decorations</span>::{
     <span class="ident">CustomDecoration</span>, <span class="ident">SerializedSpan</span>, <span class="ident">UnrollLoopsDecoration</span>, <span class="ident">ZombieDecoration</span>,
 };
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv_type</span>::{<span class="ident">SpirvType</span>, <span class="ident">SpirvTypePrinter</span>, <span class="ident">TypeCache</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">symbols</span>::<span class="ident">Symbols</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">target</span>::<span class="ident">SpirvTarget</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::spirv_type</span>::{<span class="ident">SpirvType</span>, <span class="ident">SpirvTypePrinter</span>, <span class="ident">TypeCache</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::symbols::Symbols</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::target::SpirvTarget</span>;
 
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Module</span>, <span class="ident">Operand</span>};
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">AddressingModel</span>, <span class="ident">Decoration</span>, <span class="ident">LinkageType</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">mir</span>::<span class="ident">debuginfo</span>::{<span class="ident">FunctionDebugContext</span>, <span class="ident">VariableKind</span>};
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">traits</span>::{
+<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Module</span>, <span class="ident">Operand</span>};
+<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">AddressingModel</span>, <span class="ident">Decoration</span>, <span class="ident">LinkageType</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::debuginfo</span>::{<span class="ident">FunctionDebugContext</span>, <span class="ident">VariableKind</span>};
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{
     <span class="ident">AsmMethods</span>, <span class="ident">BackendTypes</span>, <span class="ident">CoverageInfoMethods</span>, <span class="ident">DebugInfoMethods</span>, <span class="ident">MiscMethods</span>,
 };
-<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::<span class="ident">FxHashMap</span>;
-<span class="kw">use</span> <span class="ident">rustc_hir</span>::<span class="ident">GlobalAsm</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">mir</span>::<span class="ident">mono</span>::<span class="ident">CodegenUnit</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">mir</span>::<span class="ident">Body</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">layout</span>::{<span class="ident">HasParamEnv</span>, <span class="ident">HasTyCtxt</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::{<span class="ident">Instance</span>, <span class="ident">ParamEnv</span>, <span class="ident">PolyExistentialTraitRef</span>, <span class="ident">Ty</span>, <span class="ident">TyCtxt</span>, <span class="ident">TyS</span>};
-<span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
-<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">def_id</span>::<span class="ident">LOCAL_CRATE</span>;
-<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">symbol</span>::{<span class="ident">sym</span>, <span class="ident">Symbol</span>};
+<span class="kw">use</span> <span class="ident">rustc_data_structures::fx::FxHashMap</span>;
+<span class="kw">use</span> <span class="ident">rustc_hir::GlobalAsm</span>;
+<span class="kw">use</span> <span class="ident">rustc_middle::mir::mono::CodegenUnit</span>;
+<span class="kw">use</span> <span class="ident">rustc_middle::mir::Body</span>;
+<span class="kw">use</span> <span class="ident">rustc_middle::ty::layout</span>::{<span class="ident">HasParamEnv</span>, <span class="ident">HasTyCtxt</span>};
+<span class="kw">use</span> <span class="ident">rustc_middle::ty</span>::{<span class="ident">Instance</span>, <span class="ident">ParamEnv</span>, <span class="ident">PolyExistentialTraitRef</span>, <span class="ident">Ty</span>, <span class="ident">TyCtxt</span>, <span class="ident">TyS</span>};
+<span class="kw">use</span> <span class="ident">rustc_session::Session</span>;
+<span class="kw">use</span> <span class="ident">rustc_span::def_id</span>::{<span class="ident">DefId</span>, <span class="ident">LOCAL_CRATE</span>};
+<span class="kw">use</span> <span class="ident">rustc_span::symbol</span>::{<span class="ident">sym</span>, <span class="ident">Symbol</span>};
 <span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">SourceFile</span>, <span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
-<span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::<span class="ident">call</span>::<span class="ident">FnAbi</span>;
-<span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{<span class="ident">HasDataLayout</span>, <span class="ident">TargetDataLayout</span>};
-<span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">spec</span>::{<span class="ident">HasTargetSpec</span>, <span class="ident">Target</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::{<span class="ident">Cell</span>, <span class="ident">RefCell</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">once</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
+<span class="kw">use</span> <span class="ident">rustc_target::abi::call::FnAbi</span>;
+<span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{<span class="ident">HasDataLayout</span>, <span class="ident">TargetDataLayout</span>};
+<span class="kw">use</span> <span class="ident">rustc_target::spec</span>::{<span class="ident">HasTargetSpec</span>, <span class="ident">Target</span>};
+<span class="kw">use</span> <span class="ident">std::cell</span>::{<span class="ident">Cell</span>, <span class="ident">RefCell</span>};
+<span class="kw">use</span> <span class="ident">std::iter::once</span>;
+<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
+<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">tcx</span>: <span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
@@ -502,7 +628,7 @@
     <span class="doccomment">/// Cache of all the builtin symbols we need</span>
     <span class="kw">pub</span> <span class="ident">sym</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Symbols</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">instruction_table</span>: <span class="ident">InstructionTable</span>,
-    <span class="kw">pub</span> <span class="ident">libm_intrinsics</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw">super</span>::<span class="ident">builder</span>::<span class="ident">libm_intrinsics</span>::<span class="ident">LibmIntrinsic</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">libm_intrinsics</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw">super</span><span class="ident">::builder::libm_intrinsics::LibmIntrinsic</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 
     <span class="doccomment">/// Simple `panic!(&quot;...&quot;)` and builtin panics (from MIR `Assert`s) call `#[lang = &quot;panic&quot;]`.</span>
     <span class="kw">pub</span> <span class="ident">panic_fn_id</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -521,37 +647,45 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">tcx</span>: <span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">codegen_unit</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">CodegenUnit</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">sym</span> <span class="op">=</span> <span class="ident">Symbols</span>::<span class="ident">get</span>();
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">feature</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">target_features</span> {
-            <span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Unknown feature {}&quot;</span>, <span class="ident">feature</span>));
-        }
-        <span class="kw">let</span> <span class="ident">codegen_args</span> <span class="op">=</span> <span class="ident">CodegenArgs</span>::<span class="ident">from_session</span>(<span class="ident">tcx</span>.<span class="ident">sess</span>);
+        <span class="kw">let</span> <span class="ident">sym</span> <span class="op">=</span> <span class="ident">Symbols::get</span>();
+        <span class="kw">let</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">tcx</span>
+            .<span class="ident">sess</span>
+            .<span class="ident">target_features</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">as_str</span>().<span class="ident">parse</span>())
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> {
+                <span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>);
+                <span class="ident">Vec::new</span>()
+            });
+
+        <span class="kw">let</span> <span class="ident">codegen_args</span> <span class="op">=</span> <span class="ident">CodegenArgs::from_session</span>(<span class="ident">tcx</span>.<span class="ident">sess</span>);
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">target</span>.<span class="ident">llvm_target</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>();
 
         <span class="self">Self</span> {
             <span class="ident">tcx</span>,
             <span class="ident">codegen_unit</span>,
-            <span class="ident">builder</span>: <span class="ident">BuilderSpirv</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>),
-            <span class="ident">instances</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">function_parameter_values</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">type_cache</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">vtables</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">ext_inst</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">zombie_decorations</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">unroll_loops_decorations</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">builder</span>: <span class="ident">BuilderSpirv::new</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="kw-2">&amp;</span><span class="ident">features</span>),
+            <span class="ident">instances</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">function_parameter_values</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">type_cache</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">vtables</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">ext_inst</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">zombie_decorations</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">unroll_loops_decorations</span>: <span class="ident">Default::default</span>(),
             <span class="ident">target</span>,
             <span class="ident">sym</span>,
-            <span class="ident">instruction_table</span>: <span class="ident">InstructionTable</span>::<span class="ident">new</span>(),
-            <span class="ident">libm_intrinsics</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">panic_fn_id</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">panic_bounds_check_fn_id</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">instruction_table</span>: <span class="ident">InstructionTable::new</span>(),
+            <span class="ident">libm_intrinsics</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">panic_fn_id</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">panic_bounds_check_fn_id</span>: <span class="ident">Default::default</span>(),
             <span class="ident">i8_i16_atomics_allowed</span>: <span class="bool-val">false</span>,
             <span class="ident">codegen_args</span>,
         }
     }
 
     <span class="doccomment">/// See comment on `BuilderCursor`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">emit_global</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Builder</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">emit_global</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::cell::RefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">rspirv::dr::Builder</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">builder</span>(<span class="ident">BuilderCursor</span> {
             <span class="ident">function</span>: <span class="prelude-val">None</span>,
             <span class="ident">block</span>: <span class="prelude-val">None</span>,
@@ -562,7 +696,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">emit_with_cursor</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">cursor</span>: <span class="ident">BuilderCursor</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Builder</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::cell::RefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">rspirv::dr::Builder</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">builder</span>(<span class="ident">cursor</span>)
     }
 
@@ -602,7 +736,7 @@
             <span class="ident">word</span>,
             <span class="ident">ZombieDecoration</span> {
                 <span class="ident">reason</span>: <span class="ident">reason</span>.<span class="ident">to_string</span>(),
-                <span class="ident">span</span>: <span class="ident">SerializedSpan</span>::<span class="ident">from_rustc</span>(<span class="ident">span</span>, <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">source_map</span>()),
+                <span class="ident">span</span>: <span class="ident">SerializedSpan::from_rustc</span>(<span class="ident">span</span>, <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">source_map</span>()),
             },
         );
     }
@@ -610,8 +744,8 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_system_crate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">tcx</span>
             .<span class="ident">sess</span>
-            .<span class="ident">contains_name</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">krate_attrs</span>(), <span class="ident">sym</span>::<span class="ident">compiler_builtins</span>)
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">LOCAL_CRATE</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">sym</span>::<span class="ident">core</span>
+            .<span class="ident">contains_name</span>(<span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">krate_attrs</span>(), <span class="ident">sym::compiler_builtins</span>)
+            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">LOCAL_CRATE</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">sym::core</span>
             <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">LOCAL_CRATE</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">spirv_std</span>
             <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">LOCAL_CRATE</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">libm</span>
             <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">LOCAL_CRATE</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">num_traits</span>
@@ -624,7 +758,7 @@
             .<span class="ident">memory_model</span>
             .<span class="ident">as_ref</span>()
             .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-                <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_addressing_model</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">AddressingModel</span>::<span class="ident">Logical</span>
+                <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_addressing_model</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">AddressingModel::Logical</span>
             })
     }
 
@@ -648,37 +782,149 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_linkage</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">target</span>: <span class="ident">Word</span>, <span class="ident">name</span>: <span class="ident">String</span>, <span class="ident">linkage</span>: <span class="ident">LinkageType</span>) {
         <span class="self">self</span>.<span class="ident">emit_global</span>().<span class="ident">decorate</span>(
             <span class="ident">target</span>,
-            <span class="ident">Decoration</span>::<span class="ident">LinkageAttributes</span>,
-            <span class="ident">once</span>(<span class="ident">Operand</span>::<span class="ident">LiteralString</span>(<span class="ident">name</span>)).<span class="ident">chain</span>(<span class="ident">once</span>(<span class="ident">Operand</span>::<span class="ident">LinkageType</span>(<span class="ident">linkage</span>))),
+            <span class="ident">Decoration::LinkageAttributes</span>,
+            <span class="ident">once</span>(<span class="ident">Operand::LiteralString</span>(<span class="ident">name</span>)).<span class="ident">chain</span>(<span class="ident">once</span>(<span class="ident">Operand::LinkageType</span>(<span class="ident">linkage</span>))),
         )
     }
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CodegenArgs</span> {
     <span class="kw">pub</span> <span class="ident">module_output_type</span>: <span class="ident">ModuleOutputType</span>,
+    <span class="kw">pub</span> <span class="ident">disassemble</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">disassemble_fn</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">disassemble_entry</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">disassemble_globals</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">CodegenArgs</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_session</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">CodegenArgs</span>::<span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">cg</span>.<span class="ident">llvm_args</span>) {
+        <span class="kw">match</span> <span class="ident">CodegenArgs::parse</span>(<span class="kw-2">&amp;</span><span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">cg</span>.<span class="ident">llvm_args</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ok</span>,
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Unable to parse llvm-args: {}&quot;</span>, <span class="ident">err</span>)),
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Unable to parse llvm-args: {}&quot;</span>, <span class="ident">err</span>)),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">rustc_session</span>::<span class="ident">getopts</span>::<span class="ident">Fail</span><span class="op">&gt;</span> {
-        <span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">getopts</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">opts</span> <span class="op">=</span> <span class="ident">getopts</span>::<span class="ident">Options</span>::<span class="ident">new</span>();
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">rustc_session::getopts::Fail</span><span class="op">&gt;</span> {
+        <span class="kw">use</span> <span class="ident">rustc_session::getopts</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">opts</span> <span class="op">=</span> <span class="ident">getopts::Options::new</span>();
         <span class="ident">opts</span>.<span class="ident">optopt</span>(
             <span class="string">&quot;&quot;</span>,
             <span class="string">&quot;module-output&quot;</span>,
             <span class="string">&quot;single output or multiple output&quot;</span>,
             <span class="string">&quot;[single|multiple]&quot;</span>,
         );
+        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;disassemble&quot;</span>, <span class="string">&quot;print module to stderr&quot;</span>, <span class="string">&quot;&quot;</span>);
+        <span class="ident">opts</span>.<span class="ident">optopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;disassemble-fn&quot;</span>, <span class="string">&quot;print function to stderr&quot;</span>, <span class="string">&quot;NAME&quot;</span>);
+        <span class="ident">opts</span>.<span class="ident">optopt</span>(
+            <span class="string">&quot;&quot;</span>,
+            <span class="string">&quot;disassemble-entry&quot;</span>,
+            <span class="string">&quot;print entry point to stderr&quot;</span>,
+            <span class="string">&quot;NAME&quot;</span>,
+        );
+        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;disassemble-globals&quot;</span>, <span class="string">&quot;print globals to stderr&quot;</span>, <span class="string">&quot;&quot;</span>);
         <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span> <span class="ident">opts</span>.<span class="ident">parse</span>(<span class="ident">args</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">module_output_type</span> <span class="op">=</span>
-            <span class="ident">matches</span>.<span class="ident">opt_get_default</span>(<span class="string">&quot;module-output&quot;</span>, <span class="ident">ModuleOutputType</span>::<span class="ident">Single</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">module_output_type</span> })
+            <span class="ident">matches</span>.<span class="ident">opt_get_default</span>(<span class="string">&quot;module-output&quot;</span>, <span class="ident">ModuleOutputType::Single</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">disassemble</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;disassemble&quot;</span>);
+        <span class="kw">let</span> <span class="ident">disassemble_fn</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_str</span>(<span class="string">&quot;disassemble-fn&quot;</span>);
+        <span class="kw">let</span> <span class="ident">disassemble_entry</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_str</span>(<span class="string">&quot;disassemble-entry&quot;</span>);
+        <span class="kw">let</span> <span class="ident">disassemble_globals</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;disassemble-globals&quot;</span>);
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
+            <span class="ident">module_output_type</span>,
+            <span class="ident">disassemble</span>,
+            <span class="ident">disassemble_fn</span>,
+            <span class="ident">disassemble_entry</span>,
+            <span class="ident">disassemble_globals</span>,
+        })
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">do_disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) {
+        <span class="kw">fn</span> <span class="ident">compact_ids</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rspirv::dr::Function</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remap</span> <span class="op">=</span> <span class="ident">std::collections::HashMap::new</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">insert</span> <span class="op">=</span> <span class="op">|</span><span class="ident">current_id</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">u32</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">remap</span>.<span class="ident">len</span>();
+                <span class="kw-2">*</span><span class="ident">current_id</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">remap</span>.<span class="ident">entry</span>(<span class="kw-2">*</span><span class="ident">current_id</span>).<span class="ident">or_insert_with</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">len</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="number">1</span>)
+            };
+            <span class="ident">module</span>.<span class="ident">all_inst_iter_mut</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">result_id</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
+                    <span class="ident">insert</span>(<span class="ident">result_id</span>)
+                }
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">result_type</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inst</span>.<span class="ident">result_type</span> {
+                    <span class="ident">insert</span>(<span class="ident">result_type</span>)
+                }
+                <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">iter_mut</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> {
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">w</span>) <span class="op">=</span> <span class="ident">op</span>.<span class="ident">id_ref_any_mut</span>() {
+                        <span class="ident">insert</span>(<span class="ident">w</span>)
+                    }
+                })
+            });
+            <span class="ident">remap</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="number">1</span>
+        }
+
+        <span class="kw">use</span> <span class="ident">rspirv::binary::Disassemble</span>;
+
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">disassemble</span> {
+            <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">module</span>.<span class="ident">disassemble</span>());
+        }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">func</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">disassemble_fn</span> {
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">module</span>
+                .<span class="ident">debugs</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
+                    <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rspirv::spirv::Op::Name</span>
+                        <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_string</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">func</span>
+                })
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                    <span class="macro">panic!</span>(
+                        <span class="string">&quot;no function with the name `{}` found in:\n{}\n&quot;</span>,
+                        <span class="ident">func</span>,
+                        <span class="ident">module</span>.<span class="ident">disassemble</span>()
+                    )
+                })
+                .<span class="ident">operands</span>[<span class="number">0</span>]
+                .<span class="ident">unwrap_id_ref</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">func</span> <span class="op">=</span> <span class="ident">module</span>
+                .<span class="ident">functions</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">id</span>)
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">clone</span>();
+            <span class="comment">// Compact to make IDs more stable</span>
+            <span class="ident">compact_ids</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func</span>);
+            <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">func</span>.<span class="ident">disassemble</span>());
+        }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">disassemble_entry</span> {
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">module</span>
+                .<span class="ident">entry_points</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>().<span class="ident">unwrap_literal_string</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">entry</span>)
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                    <span class="macro">panic!</span>(
+                        <span class="string">&quot;no entry point with the name `{}` found in:\n{}\n&quot;</span>,
+                        <span class="ident">entry</span>,
+                        <span class="ident">module</span>.<span class="ident">disassemble</span>()
+                    )
+                })
+                .<span class="ident">operands</span>[<span class="number">1</span>]
+                .<span class="ident">unwrap_id_ref</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">func</span> <span class="op">=</span> <span class="ident">module</span>
+                .<span class="ident">functions</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">id</span>)
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">clone</span>();
+            <span class="comment">// Compact to make IDs more stable</span>
+            <span class="ident">compact_ids</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func</span>);
+            <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">func</span>.<span class="ident">disassemble</span>());
+        }
+
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">disassemble_globals</span> {
+            <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">global_inst_iter</span>() {
+                <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">inst</span>.<span class="ident">disassemble</span>());
+            }
+        }
     }
 }
 
@@ -689,12 +935,12 @@
 }
 
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">ModuleOutputType</span> {
-    <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">rustc_session</span>::<span class="ident">getopts</span>::<span class="ident">Fail</span>;
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span>::<span class="prelude-val">Err</span><span class="op">&gt;</span> {
+    <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">rustc_session::getopts::Fail</span>;
+    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span><span class="ident">::Err</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">s</span> {
-            <span class="string">&quot;single&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="self">Self</span>::<span class="ident">Single</span>),
-            <span class="string">&quot;multiple&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="self">Self</span>::<span class="ident">Multiple</span>),
-            <span class="ident">v</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="self">Self</span>::<span class="prelude-val">Err</span>::<span class="ident">UnrecognizedOption</span>(<span class="ident">v</span>.<span class="ident">to_string</span>())),
+            <span class="string">&quot;single&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="self">Self</span><span class="ident">::Single</span>),
+            <span class="string">&quot;multiple&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="self">Self</span><span class="ident">::Multiple</span>),
+            <span class="ident">v</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="self">Self</span><span class="ident">::Err::UnrecognizedOption</span>(<span class="ident">v</span>.<span class="ident">to_string</span>())),
         }
     }
 }
@@ -734,15 +980,15 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">HasParamEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">param_env</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParamEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-        <span class="ident">ParamEnv</span>::<span class="ident">reveal_all</span>()
+        <span class="ident">ParamEnv::reveal_all</span>()
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">MiscMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">type_complexity</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
     <span class="kw">fn</span> <span class="ident">vtables</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span>(<span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PolyExistentialTraitRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="self">Self</span>::<span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span>(<span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PolyExistentialTraitRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="self">Self</span><span class="ident">::Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">vtables</span>
     }
 
@@ -750,18 +996,18 @@
         <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">overflow_checks</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_fn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Function</span> {
+    <span class="kw">fn</span> <span class="ident">get_fn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Function</span> {
         <span class="self">self</span>.<span class="ident">get_fn_ext</span>(<span class="ident">instance</span>)
     }
 
     <span class="comment">// NOTE(eddyb) see the comment on `SpirvValueKind::FnAddr`, this should</span>
     <span class="comment">// be fixed upstream, so we never see any &quot;function pointer&quot; values being</span>
     <span class="comment">// created just to perform direct calls.</span>
-    <span class="kw">fn</span> <span class="ident">get_fn_addr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
+    <span class="kw">fn</span> <span class="ident">get_fn_addr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Value</span> {
         <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_fn</span>(<span class="ident">instance</span>);
         <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">def_span</span>(<span class="ident">instance</span>.<span class="ident">def_id</span>());
 
-        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> {
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType::Pointer</span> {
             <span class="ident">pointee</span>: <span class="ident">function</span>.<span class="ident">ty</span>,
         }
         .<span class="ident">def</span>(<span class="ident">span</span>, <span class="self">self</span>);
@@ -770,19 +1016,19 @@
             <span class="comment">// Create these undefs up front instead of on demand in SpirvValue::def because</span>
             <span class="comment">// SpirvValue::def can&#39;t use cx.emit()</span>
             <span class="self">self</span>.<span class="ident">builder</span>
-                .<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst</span>::<span class="ident">ZombieUndefForFnAddr</span>);
+                .<span class="ident">def_constant</span>(<span class="ident">ty</span>, <span class="ident">SpirvConst::ZombieUndefForFnAddr</span>);
         }
 
         <span class="ident">SpirvValue</span> {
-            <span class="ident">kind</span>: <span class="ident">SpirvValueKind</span>::<span class="ident">FnAddr</span> {
+            <span class="ident">kind</span>: <span class="ident">SpirvValueKind::FnAddr</span> {
                 <span class="ident">function</span>: <span class="ident">function</span>.<span class="ident">def_cx</span>(<span class="self">self</span>),
             },
             <span class="ident">ty</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">eh_personality</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Value</span> {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    <span class="kw">fn</span> <span class="ident">eh_personality</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Value</span> {
+        <span class="macro">todo!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">sess</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Session</span> {
@@ -793,91 +1039,97 @@
         <span class="self">self</span>.<span class="ident">codegen_unit</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">used_statics</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    <span class="kw">fn</span> <span class="ident">used_statics</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">set_frame_pointer_elimination</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_llfn</span>: <span class="self">Self</span>::<span class="ident">Function</span>) {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    <span class="kw">fn</span> <span class="ident">set_frame_pointer_elimination</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_llfn</span>: <span class="self">Self</span><span class="ident">::Function</span>) {
+        <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">apply_target_cpu_attr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_llfn</span>: <span class="self">Self</span>::<span class="ident">Function</span>) {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    <span class="kw">fn</span> <span class="ident">apply_target_cpu_attr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_llfn</span>: <span class="self">Self</span><span class="ident">::Function</span>) {
+        <span class="macro">todo!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">create_used_variable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="macro">todo</span><span class="macro">!</span>()
+        <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">declare_c_main</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_fn_type</span>: <span class="self">Self</span>::<span class="ident">Type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Function</span><span class="op">&gt;</span> {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    <span class="kw">fn</span> <span class="ident">declare_c_main</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_fn_type</span>: <span class="self">Self</span><span class="ident">::Type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Function</span><span class="op">&gt;</span> {
+        <span class="macro">todo!</span>()
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">DebugInfoMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">create_vtable_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_ty</span>: <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">_vtable</span>: <span class="self">Self</span>::<span class="ident">Value</span>) {
+    <span class="kw">fn</span> <span class="ident">create_vtable_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_ty</span>: <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">_vtable</span>: <span class="self">Self</span><span class="ident">::Value</span>) {
         <span class="comment">// Ignore.</span>
     }
 
     <span class="kw">fn</span> <span class="ident">dbg_scope_fn</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">rustc_middle</span>::<span class="ident">ty</span>::<span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
+        <span class="kw">_</span>: <span class="ident">rustc_middle::ty::Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
         <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">TyS</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="kw">_</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Function</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">DIScope</span> {
-        <span class="macro">todo</span><span class="macro">!</span>()
+        <span class="kw">_</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Function</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::DIScope</span> {
+        <span class="macro">todo!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">dbg_loc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="self">Self</span>::<span class="ident">DIScope</span>, <span class="kw">_</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">DILocation</span><span class="op">&gt;</span>, <span class="kw">_</span>: <span class="ident">Span</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">DILocation</span> {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    <span class="kw">fn</span> <span class="ident">dbg_loc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="self">Self</span><span class="ident">::DIScope</span>, <span class="kw">_</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::DILocation</span><span class="op">&gt;</span>, <span class="kw">_</span>: <span class="ident">Span</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::DILocation</span> {
+        <span class="macro">todo!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">create_function_debug_context</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_instance</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
         <span class="ident">_fn_abi</span>: <span class="kw-2">&amp;</span><span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">_llfn</span>: <span class="self">Self</span>::<span class="ident">Function</span>,
+        <span class="ident">_llfn</span>: <span class="self">Self</span><span class="ident">::Function</span>,
         <span class="ident">_mir</span>: <span class="kw-2">&amp;</span><span class="ident">Body</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FunctionDebugContext</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">DIScope</span>, <span class="self">Self</span>::<span class="ident">DILocation</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FunctionDebugContext</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::DIScope</span>, <span class="self">Self</span><span class="ident">::DILocation</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="comment">// TODO: This is ignored. Do we want to implement this at some point?</span>
         <span class="prelude-val">None</span>
     }
 
     <span class="kw">fn</span> <span class="ident">extend_scope_to_file</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_scope_metadata</span>: <span class="self">Self</span>::<span class="ident">DIScope</span>,
+        <span class="ident">_scope_metadata</span>: <span class="self">Self</span><span class="ident">::DIScope</span>,
         <span class="ident">_file</span>: <span class="kw-2">&amp;</span><span class="ident">SourceFile</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">DIScope</span> {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::DIScope</span> {
+        <span class="macro">todo!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">debuginfo_finalize</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="macro">todo</span><span class="macro">!</span>()
+        <span class="macro">todo!</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">create_dbg_var</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_variable_name</span>: <span class="ident">Symbol</span>,
         <span class="ident">_variable_type</span>: <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
-        <span class="ident">_scope_metadata</span>: <span class="self">Self</span>::<span class="ident">DIScope</span>,
+        <span class="ident">_scope_metadata</span>: <span class="self">Self</span><span class="ident">::DIScope</span>,
         <span class="ident">_variable_kind</span>: <span class="ident">VariableKind</span>,
         <span class="ident">_span</span>: <span class="ident">Span</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">DIVariable</span> {
-        <span class="macro">todo</span><span class="macro">!</span>()
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::DIVariable</span> {
+        <span class="macro">todo!</span>()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CoverageInfoMethods</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">CoverageInfoMethods</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">coverageinfo_finalize</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="macro">todo</span><span class="macro">!</span>()
+        <span class="macro">todo!</span>()
+    }
+    <span class="kw">fn</span> <span class="ident">get_pgo_func_name_var</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SpirvValue</span> {
+        <span class="macro">todo!</span>()
+    }
+    <span class="kw">fn</span> <span class="ident">define_unused_fn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="ident">DefId</span>) {
+        <span class="macro">todo!</span>()
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">AsmMethods</span> <span class="kw">for</span> <span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">codegen_global_asm</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_ga</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalAsm</span>) {
-        <span class="macro">todo</span><span class="macro">!</span>()
+        <span class="macro">todo!</span>()
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-js="../../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

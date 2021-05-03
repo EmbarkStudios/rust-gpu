@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/decorations.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>decorations.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -233,12 +233,12 @@
 <span class="doccomment">//! SPIR-V decorations specific to `rustc_codegen_spirv`, produced during</span>
 <span class="doccomment">//! the original codegen of a crate, and consumed by the `linker`.</span>
 
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">Decoration</span>, <span class="ident">Op</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">source_map</span>::<span class="ident">SourceMap</span>, <span class="ident">FileName</span>, <span class="ident">Pos</span>, <span class="ident">Span</span>};
+<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
+<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">Decoration</span>, <span class="ident">Op</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">source_map::SourceMap</span>, <span class="ident">FileName</span>, <span class="ident">Pos</span>, <span class="ident">Span</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">PathBuf</span>;
+<span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
+<span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">iter</span>, <span class="ident">slice</span>};
 
 <span class="doccomment">/// Decorations not native to SPIR-V require some form of encoding into existing</span>
@@ -262,28 +262,28 @@
         <span class="comment">// in `serde_json` for writing to something that impls `fmt::Write`,</span>
         <span class="comment">// only for `io::Write`, which would require performing redundant UTF-8</span>
         <span class="comment">// (re)validation, or relying on `unsafe` code, to use with `String`.</span>
-        <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">encoded</span> <span class="op">=</span> [<span class="self">Self</span>::<span class="ident">ENCODING_PREFIX</span>, <span class="kw-2">&amp;</span><span class="ident">json</span>].<span class="ident">concat</span>();
+        <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">encoded</span> <span class="op">=</span> [<span class="self">Self</span><span class="ident">::ENCODING_PREFIX</span>, <span class="kw-2">&amp;</span><span class="ident">json</span>].<span class="ident">concat</span>();
 
-        <span class="ident">Instruction</span>::<span class="ident">new</span>(
-            <span class="ident">Op</span>::<span class="ident">DecorateString</span>,
+        <span class="ident">Instruction::new</span>(
+            <span class="ident">Op::DecorateString</span>,
             <span class="prelude-val">None</span>,
             <span class="prelude-val">None</span>,
-            <span class="macro">vec</span><span class="macro">!</span>[
-                <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">id</span>),
-                <span class="ident">Operand</span>::<span class="ident">Decoration</span>(<span class="ident">Decoration</span>::<span class="ident">UserTypeGOOGLE</span>),
-                <span class="ident">Operand</span>::<span class="ident">LiteralString</span>(<span class="ident">encoded</span>),
+            <span class="macro">vec!</span>[
+                <span class="ident">Operand::IdRef</span>(<span class="ident">id</span>),
+                <span class="ident">Operand::Decoration</span>(<span class="ident">Decoration::UserTypeGOOGLE</span>),
+                <span class="ident">Operand::LiteralString</span>(<span class="ident">encoded</span>),
             ],
         )
     }
 
     <span class="kw">fn</span> <span class="ident">try_decode</span>(<span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">LazilyDeserialized</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="self">Self</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">DecorateString</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_decoration</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">Decoration</span>::<span class="ident">UserTypeGOOGLE</span>
+        <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::DecorateString</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_decoration</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">Decoration::UserTypeGOOGLE</span>
         {
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>();
             <span class="kw">let</span> <span class="ident">encoded</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">2</span>].<span class="ident">unwrap_literal_string</span>();
-            <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="ident">encoded</span>.<span class="ident">strip_prefix</span>(<span class="self">Self</span>::<span class="ident">ENCODING_PREFIX</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="ident">encoded</span>.<span class="ident">strip_prefix</span>(<span class="self">Self</span><span class="ident">::ENCODING_PREFIX</span>)<span class="question-mark">?</span>;
 
             <span class="prelude-val">Some</span>((
                 <span class="ident">id</span>,
@@ -301,20 +301,20 @@
         <span class="ident">module</span>
             .<span class="ident">annotations</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">filter_map</span>(<span class="self">Self</span>::<span class="ident">try_decode</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span>)
+            .<span class="ident">filter_map</span>(<span class="self">Self</span><span class="ident">::try_decode</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">_</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">remove_all</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Module</span>) {
         <span class="ident">module</span>
             .<span class="ident">annotations</span>
-            .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="self">Self</span>::<span class="ident">try_decode</span>(<span class="ident">inst</span>).<span class="ident">is_none</span>())
+            .<span class="ident">retain</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="self">Self</span><span class="ident">::try_decode</span>(<span class="ident">inst</span>).<span class="ident">is_none</span>())
     }
 }
 
 <span class="comment">// HACK(eddyb) return type of `CustomDecoration::decode_all`, in lieu of</span>
 <span class="comment">// `-&gt; impl Iterator&lt;Item = (Word, LazilyDeserialized&lt;&#39;_, Self&gt;)` in the trait.</span>
-<span class="kw">type</span> <span class="ident">DecodeAllIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">iter</span>::<span class="ident">FilterMap</span><span class="op">&lt;</span>
-    <span class="ident">slice</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
+<span class="kw">type</span> <span class="ident">DecodeAllIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">iter::FilterMap</span><span class="op">&lt;</span>
+    <span class="ident">slice::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Instruction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">LazilyDeserialized</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
 <span class="op">&gt;</span>;
 
@@ -327,7 +327,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span>: <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">LazilyDeserialized</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">D</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">D</span> {
-        <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="self">self</span>.<span class="ident">json</span>).<span class="ident">unwrap</span>()
+        <span class="ident">serde_json::from_str</span>(<span class="self">self</span>.<span class="ident">json</span>).<span class="ident">unwrap</span>()
     }
 }
 
@@ -359,7 +359,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SerializedSpan</span> {
     <span class="ident">file</span>: <span class="ident">PathBuf</span>,
-    <span class="ident">hash</span>: <span class="ident">serde_adapters</span>::<span class="ident">SourceFileHash</span>,
+    <span class="ident">hash</span>: <span class="ident">serde_adapters::SourceFileHash</span>,
     <span class="ident">lo</span>: <span class="ident">u32</span>,
     <span class="ident">hi</span>: <span class="ident">u32</span>,
 }
@@ -376,12 +376,12 @@
         <span class="ident">Sha256</span>,
     }
 
-    <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">rustc_span</span>::<span class="ident">SourceFileHashAlgorithm</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SourceFileHashAlgorithm</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">kind</span>: <span class="ident">rustc_span</span>::<span class="ident">SourceFileHashAlgorithm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">rustc_span::SourceFileHashAlgorithm</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SourceFileHashAlgorithm</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">kind</span>: <span class="ident">rustc_span::SourceFileHashAlgorithm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">match</span> <span class="ident">kind</span> {
-                <span class="ident">rustc_span</span>::<span class="ident">SourceFileHashAlgorithm</span>::<span class="ident">Md5</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Md5</span>,
-                <span class="ident">rustc_span</span>::<span class="ident">SourceFileHashAlgorithm</span>::<span class="ident">Sha1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Sha1</span>,
-                <span class="ident">rustc_span</span>::<span class="ident">SourceFileHashAlgorithm</span>::<span class="ident">Sha256</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Sha256</span>,
+                <span class="ident">rustc_span::SourceFileHashAlgorithm::Md5</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Md5</span>,
+                <span class="ident">rustc_span::SourceFileHashAlgorithm::Sha1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Sha1</span>,
+                <span class="ident">rustc_span::SourceFileHashAlgorithm::Sha256</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Sha256</span>,
             }
         }
     }
@@ -392,12 +392,12 @@
         <span class="ident">value</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
     }
 
-    <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">rustc_span</span>::<span class="ident">SourceFileHash</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SourceFileHash</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">hash</span>: <span class="ident">rustc_span</span>::<span class="ident">SourceFileHash</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">rustc_span::SourceFileHash</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SourceFileHash</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">hash</span>: <span class="ident">rustc_span::SourceFileHash</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">hash</span>.<span class="ident">hash_bytes</span>();
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="self">Self</span> {
                 <span class="ident">kind</span>: <span class="ident">hash</span>.<span class="ident">kind</span>.<span class="ident">into</span>(),
-                <span class="ident">value</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+                <span class="ident">value</span>: <span class="ident">Default::default</span>(),
             };
             <span class="ident">hash</span>.<span class="ident">value</span>[..<span class="ident">bytes</span>.<span class="ident">len</span>()].<span class="ident">copy_from_slice</span>(<span class="ident">bytes</span>);
             <span class="ident">hash</span>
@@ -429,7 +429,7 @@
             <span class="ident">file</span>: <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">file</span>.<span class="ident">name</span> {
                 <span class="comment">// We can only support real files, not &quot;synthetic&quot; ones (which</span>
                 <span class="comment">// are almost never exposed to the compiler backend anyway).</span>
-                <span class="ident">FileName</span>::<span class="ident">Real</span>(<span class="ident">real_name</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">real_name</span>.<span class="ident">local_path</span>().<span class="ident">to_path_buf</span>(),
+                <span class="ident">FileName::Real</span>(<span class="ident">real_name</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">real_name</span>.<span class="ident">local_path</span>().<span class="ident">to_path_buf</span>(),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
             },
             <span class="ident">hash</span>: <span class="ident">file</span>.<span class="ident">src_hash</span>.<span class="ident">into</span>(),
@@ -450,14 +450,14 @@
 
         <span class="comment">// Sanity check - assuming `SerializedSpan` isn&#39;t corrupted, this assert</span>
         <span class="comment">// could only ever fail because of a hash collision.</span>
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">lo</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">hi</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">hi</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">file</span>.<span class="ident">byte_length</span>());
+        <span class="macro">assert!</span>(<span class="self">self</span>.<span class="ident">lo</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">hi</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">hi</span> <span class="op">&lt;</span><span class="op">=</span> (<span class="ident">file</span>.<span class="ident">end_pos</span>.<span class="number">0</span> <span class="op">-</span> <span class="ident">file</span>.<span class="ident">start_pos</span>.<span class="number">0</span>));
 
-        <span class="prelude-val">Some</span>(<span class="ident">Span</span>::<span class="ident">with_root_ctxt</span>(
-            <span class="ident">file</span>.<span class="ident">start_pos</span> <span class="op">+</span> <span class="ident">Pos</span>::<span class="ident">from_u32</span>(<span class="self">self</span>.<span class="ident">lo</span>),
-            <span class="ident">file</span>.<span class="ident">start_pos</span> <span class="op">+</span> <span class="ident">Pos</span>::<span class="ident">from_u32</span>(<span class="self">self</span>.<span class="ident">hi</span>),
+        <span class="prelude-val">Some</span>(<span class="ident">Span::with_root_ctxt</span>(
+            <span class="ident">file</span>.<span class="ident">start_pos</span> <span class="op">+</span> <span class="ident">Pos::from_u32</span>(<span class="self">self</span>.<span class="ident">lo</span>),
+            <span class="ident">file</span>.<span class="ident">start_pos</span> <span class="op">+</span> <span class="ident">Pos::from_u32</span>(<span class="self">self</span>.<span class="ident">hi</span>),
         ))
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

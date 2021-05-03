@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/macros/src/image.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>image.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../spirv_std_macros/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../spirv_std_macros/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -556,25 +556,25 @@
 <span id="553">553</span>
 <span id="554">554</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">Ident</span>;
+<span class="kw">use</span> <span class="ident">proc_macro2::Ident</span>;
 
 <span class="kw">use</span> <span class="ident">quote</span>::{<span class="ident">quote</span>, <span class="ident">TokenStreamExt</span>};
-<span class="kw">use</span> <span class="ident">spirv_types</span>::<span class="ident">image_params</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">spirv_types::image_params</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
 
-<span class="kw">use</span> <span class="self">self</span>::<span class="ident">params</span>::<span class="ident">SampledType</span>;
+<span class="kw">use</span> <span class="self">self</span><span class="ident">::params::SampledType</span>;
 
 <span class="kw">mod</span> <span class="ident">kw</span> {
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">u8</span>);
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">u16</span>);
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">u32</span>);
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">u64</span>);
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">i8</span>);
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">i16</span>);
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">i32</span>);
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">i64</span>);
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">f32</span>);
-    <span class="ident">syn</span>::<span class="macro">custom_keyword</span><span class="macro">!</span>(<span class="ident">f64</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">u8</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">u16</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">u32</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">u64</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">i8</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">i16</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">i32</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">i64</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">f32</span>);
+    <span class="macro">syn::custom_keyword!</span>(<span class="ident">f64</span>);
 }
 
 <span class="kw">const</span> <span class="ident">MISSING_SAMPLE_ERROR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;Expected either `type` or `format` to be \
@@ -585,7 +585,7 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ImageType</span> {
     <span class="ident">access_qualifier</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AccessQualifier</span><span class="op">&gt;</span>,
     <span class="ident">arrayed</span>: <span class="ident">Arrayed</span>,
-    <span class="ident">crate_root</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn</span>::<span class="ident">Path</span><span class="op">&gt;</span>,
+    <span class="ident">crate_root</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::Path</span><span class="op">&gt;</span>,
     <span class="ident">depth</span>: <span class="ident">ImageDepth</span>,
     <span class="ident">dimensionality</span>: <span class="ident">Dimensionality</span>,
     <span class="ident">format</span>: <span class="ident">ImageFormat</span>,
@@ -595,7 +595,7 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ImageType</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">syn</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">syn::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">access_qualifier</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sampled_type</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dimensionality</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -608,21 +608,21 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
 
         <span class="kw">let</span> <span class="ident">starting_span</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">span</span>();
 
-        <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">set_unique</span> {
+        <span class="macro">macro_rules!</span> <span class="ident">set_unique</span> {
             (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">ident</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ex</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {{
                 <span class="kw">if</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>.<span class="ident">replace</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ex</span>).<span class="ident">is_some</span>() {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn::Error::new</span>(
                         <span class="ident">input</span>.<span class="ident">span</span>(),
-                        <span class="macro">concat</span><span class="macro">!</span>(<span class="string">&quot;Unexpected duplicate parameter for `&quot;</span>, <span class="macro">stringify</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>), <span class="string">&quot;`&quot;</span>),
+                        <span class="macro">concat!</span>(<span class="string">&quot;Unexpected duplicate parameter for `&quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>), <span class="string">&quot;`&quot;</span>),
                     ));
                 }
             }};
         }
 
-        <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">peek_and_eat_value</span> {
+        <span class="macro">macro_rules!</span> <span class="ident">peek_and_eat_value</span> {
             (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {{
-                <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">syn</span>::<span class="macro">Token</span><span class="macro">!</span>[<span class="op">=</span>]) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn</span>::<span class="macro">Token</span><span class="macro">!</span>[<span class="op">=</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">syn::Token!</span>[<span class="op">=</span>]) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">syn::Token!</span>[<span class="op">=</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
                     <span class="prelude-val">Some</span>(<span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span><span class="op">&gt;</span>()<span class="question-mark">?</span>)
                 } <span class="kw">else</span> {
                     <span class="prelude-val">None</span>
@@ -631,26 +631,26 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
         }
 
         <span class="kw">while</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">syn</span>::<span class="ident">LitInt</span>) {
-                <span class="kw">let</span> <span class="ident">int</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn</span>::<span class="ident">LitInt</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
-                <span class="macro">set_unique</span><span class="macro">!</span>(
+            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">syn::LitInt</span>) {
+                <span class="kw">let</span> <span class="ident">int</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn::LitInt</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
+                <span class="macro">set_unique!</span>(
                     <span class="ident">dimensionality</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">int</span>.<span class="ident">base10_digits</span>(), <span class="ident">int</span>.<span class="ident">suffix</span>()) {
-                        (<span class="string">&quot;1&quot;</span>, <span class="string">&quot;D&quot;</span>) <span class="op">|</span> (<span class="string">&quot;1&quot;</span>, <span class="string">&quot;d&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Dimensionality</span>::<span class="ident">OneD</span>,
-                        (<span class="string">&quot;2&quot;</span>, <span class="string">&quot;D&quot;</span>) <span class="op">|</span> (<span class="string">&quot;2&quot;</span>, <span class="string">&quot;d&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Dimensionality</span>::<span class="ident">TwoD</span>,
-                        (<span class="string">&quot;3&quot;</span>, <span class="string">&quot;D&quot;</span>) <span class="op">|</span> (<span class="string">&quot;3&quot;</span>, <span class="string">&quot;d&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Dimensionality</span>::<span class="ident">ThreeD</span>,
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">int</span>.<span class="ident">span</span>(), <span class="string">&quot;Unexpected integer&quot;</span>)),
+                        (<span class="string">&quot;1&quot;</span>, <span class="string">&quot;D&quot;</span>) <span class="op">|</span> (<span class="string">&quot;1&quot;</span>, <span class="string">&quot;d&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Dimensionality::OneD</span>,
+                        (<span class="string">&quot;2&quot;</span>, <span class="string">&quot;D&quot;</span>) <span class="op">|</span> (<span class="string">&quot;2&quot;</span>, <span class="string">&quot;d&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Dimensionality::TwoD</span>,
+                        (<span class="string">&quot;3&quot;</span>, <span class="string">&quot;D&quot;</span>) <span class="op">|</span> (<span class="string">&quot;3&quot;</span>, <span class="string">&quot;d&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Dimensionality::ThreeD</span>,
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn::Error::new</span>(<span class="ident">int</span>.<span class="ident">span</span>(), <span class="string">&quot;Unexpected integer&quot;</span>)),
                     }
                 );
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">syn</span>::<span class="ident">Ident</span>) {
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">syn::Ident</span>) {
                 <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">Ident</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
 
                 <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;access&quot;</span> {
-                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="macro">peek_and_eat_value</span><span class="macro">!</span>(<span class="ident">syn</span>::<span class="ident">Ident</span>)
+                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="macro">peek_and_eat_value!</span>(<span class="ident">syn::Ident</span>)
                         .<span class="ident">as_ref</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">params</span>::<span class="ident">access_qualifier_from_str</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">to_string</span>()));
+                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">params::access_qualifier_from_str</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">to_string</span>()));
 
                     <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">is_none</span>() {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn::Error::new</span>(
                             <span class="ident">ident</span>.<span class="ident">span</span>(),
                             <span class="string">&quot;Expected argument for `access`.&quot;</span>,
                         ));
@@ -658,116 +658,116 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
 
                     <span class="ident">access_qualifier</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">unwrap</span>().<span class="ident">ok</span>();
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;buffer&quot;</span> {
-                    <span class="macro">set_unique</span><span class="macro">!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality</span>::<span class="ident">Buffer</span>);
+                    <span class="macro">set_unique!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality::Buffer</span>);
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;cube&quot;</span> {
-                    <span class="macro">set_unique</span><span class="macro">!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality</span>::<span class="ident">Cube</span>);
+                    <span class="macro">set_unique!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality::Cube</span>);
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;rect&quot;</span> {
-                    <span class="macro">set_unique</span><span class="macro">!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality</span>::<span class="ident">Rect</span>);
+                    <span class="macro">set_unique!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality::Rect</span>);
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;subpass&quot;</span> {
-                    <span class="macro">set_unique</span><span class="macro">!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality</span>::<span class="ident">SubpassData</span>);
+                    <span class="macro">set_unique!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality::SubpassData</span>);
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;arrayed&quot;</span> {
-                    <span class="macro">set_unique</span><span class="macro">!</span>(
-                        <span class="ident">arrayed</span> <span class="op">=</span> <span class="macro">peek_and_eat_value</span><span class="macro">!</span>(<span class="ident">syn</span>::<span class="ident">LitBool</span>)
+                    <span class="macro">set_unique!</span>(
+                        <span class="ident">arrayed</span> <span class="op">=</span> <span class="macro">peek_and_eat_value!</span>(<span class="ident">syn::LitBool</span>)
                             .<span class="ident">as_ref</span>()
-                            .<span class="ident">map</span>(<span class="ident">syn</span>::<span class="ident">LitBool</span>::<span class="ident">value</span>)
-                            .<span class="ident">map_or</span>(<span class="ident">Arrayed</span>::<span class="ident">True</span>, <span class="ident">From</span>::<span class="ident">from</span>)
+                            .<span class="ident">map</span>(<span class="ident">syn::LitBool::value</span>)
+                            .<span class="ident">map_or</span>(<span class="ident">Arrayed::True</span>, <span class="ident">From::from</span>)
                     );
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;multisampled&quot;</span> {
-                    <span class="macro">set_unique</span><span class="macro">!</span>(
-                        <span class="ident">multisampled</span> <span class="op">=</span> <span class="macro">peek_and_eat_value</span><span class="macro">!</span>(<span class="ident">syn</span>::<span class="ident">LitBool</span>)
+                    <span class="macro">set_unique!</span>(
+                        <span class="ident">multisampled</span> <span class="op">=</span> <span class="macro">peek_and_eat_value!</span>(<span class="ident">syn::LitBool</span>)
                             .<span class="ident">as_ref</span>()
-                            .<span class="ident">map</span>(<span class="ident">syn</span>::<span class="ident">LitBool</span>::<span class="ident">value</span>)
-                            .<span class="ident">map_or</span>(<span class="ident">Multisampled</span>::<span class="ident">True</span>, <span class="ident">From</span>::<span class="ident">from</span>)
+                            .<span class="ident">map</span>(<span class="ident">syn::LitBool::value</span>)
+                            .<span class="ident">map_or</span>(<span class="ident">Multisampled::True</span>, <span class="ident">From::from</span>)
                     );
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;sampled&quot;</span> {
-                    <span class="macro">set_unique</span><span class="macro">!</span>(
-                        <span class="ident">sampled</span> <span class="op">=</span> <span class="macro">peek_and_eat_value</span><span class="macro">!</span>(<span class="ident">syn</span>::<span class="ident">LitBool</span>)
+                    <span class="macro">set_unique!</span>(
+                        <span class="ident">sampled</span> <span class="op">=</span> <span class="macro">peek_and_eat_value!</span>(<span class="ident">syn::LitBool</span>)
                             .<span class="ident">as_ref</span>()
-                            .<span class="ident">map</span>(<span class="ident">syn</span>::<span class="ident">LitBool</span>::<span class="ident">value</span>)
-                            .<span class="ident">map_or</span>(<span class="ident">Sampled</span>::<span class="ident">Yes</span>, <span class="ident">From</span>::<span class="ident">from</span>)
+                            .<span class="ident">map</span>(<span class="ident">syn::LitBool::value</span>)
+                            .<span class="ident">map_or</span>(<span class="ident">Sampled::Yes</span>, <span class="ident">From::from</span>)
                     );
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;depth&quot;</span> {
-                    <span class="macro">set_unique</span><span class="macro">!</span>(
-                        <span class="ident">depth</span> <span class="op">=</span> <span class="macro">peek_and_eat_value</span><span class="macro">!</span>(<span class="ident">syn</span>::<span class="ident">LitBool</span>)
+                    <span class="macro">set_unique!</span>(
+                        <span class="ident">depth</span> <span class="op">=</span> <span class="macro">peek_and_eat_value!</span>(<span class="ident">syn::LitBool</span>)
                             .<span class="ident">as_ref</span>()
-                            .<span class="ident">map</span>(<span class="ident">syn</span>::<span class="ident">LitBool</span>::<span class="ident">value</span>)
-                            .<span class="ident">map_or</span>(<span class="ident">ImageDepth</span>::<span class="ident">True</span>, <span class="ident">From</span>::<span class="ident">from</span>)
+                            .<span class="ident">map</span>(<span class="ident">syn::LitBool::value</span>)
+                            .<span class="ident">map_or</span>(<span class="ident">ImageDepth::True</span>, <span class="ident">From::from</span>)
                     );
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;format&quot;</span> {
-                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="macro">peek_and_eat_value</span><span class="macro">!</span>(<span class="ident">syn</span>::<span class="ident">Ident</span>);
+                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="macro">peek_and_eat_value!</span>(<span class="ident">syn::Ident</span>);
 
                     <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">is_none</span>() {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn::Error::new</span>(
                             <span class="ident">ident</span>.<span class="ident">span</span>(),
                             <span class="string">&quot;Expected argument for `format`.&quot;</span>,
                         ));
                     }
 
-                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">params</span>::<span class="ident">image_format_from_str</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>.<span class="ident">unwrap</span>().<span class="ident">to_string</span>());
+                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">params::image_format_from_str</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>.<span class="ident">unwrap</span>().<span class="ident">to_string</span>());
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">value</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">ident</span>.<span class="ident">span</span>(), <span class="ident">err</span>));
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn::Error::new</span>(<span class="ident">ident</span>.<span class="ident">span</span>(), <span class="ident">err</span>));
                     }
 
                     <span class="ident">format</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">ok</span>();
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;__crate_root&quot;</span> {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn</span>::<span class="macro">Token</span><span class="macro">!</span>[<span class="op">=</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
-                    <span class="ident">crate_root</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn</span>::<span class="ident">Path</span><span class="op">&gt;</span>()<span class="question-mark">?</span>);
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">syn::Token!</span>[<span class="op">=</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">crate_root</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn::Path</span><span class="op">&gt;</span>()<span class="question-mark">?</span>);
                 }
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">syn</span>::<span class="ident">token</span>::<span class="ident">Type</span>) {
-                <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn</span>::<span class="ident">token</span>::<span class="ident">Type</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-                <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn</span>::<span class="macro">Token</span><span class="macro">!</span>[<span class="op">=</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">syn::token::Type</span>) {
+                <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn::token::Type</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">syn::Token!</span>[<span class="op">=</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                <span class="ident">sampled_type</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">u8</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">u8</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                <span class="ident">sampled_type</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::u8</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::u8</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">U8</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">u16</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">u16</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">SampledType::U8</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::u16</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::u16</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">U16</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">u32</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">u32</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">SampledType::U16</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::u32</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::u32</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">U32</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">u64</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">u64</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">SampledType::U32</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::u64</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::u64</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">U64</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">i8</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">i8</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">SampledType::U64</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::i8</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::i8</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">I8</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">i16</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">i16</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">SampledType::I8</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::i16</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::i16</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">I16</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">i32</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">i32</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">SampledType::I16</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::i32</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::i32</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">I32</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">i64</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">i64</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">SampledType::I32</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::i64</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::i64</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">I64</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">f32</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">f32</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">SampledType::I64</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::f32</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::f32</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">F32</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw</span>::<span class="ident">f64</span>) {
-                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw</span>::<span class="ident">f64</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                    <span class="ident">SampledType::F32</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">kw::f64</span>) {
+                    <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">kw::f64</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
-                    <span class="ident">SampledType</span>::<span class="ident">F64</span>
+                    <span class="ident">SampledType::F64</span>
                 } <span class="kw">else</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn::Error::new</span>(
                         <span class="ident">input</span>.<span class="ident">span</span>(),
                         <span class="string">&quot;Unknown value provided to `unknown(_)`.&quot;</span>,
                     ));
                 });
             }
 
-            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">syn</span>::<span class="macro">Token</span><span class="macro">!</span>[,]) {
-                <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">syn</span>::<span class="macro">Token</span><span class="macro">!</span>[,]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">syn::Token!</span>[,]) {
+                <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">syn::Token!</span>[,]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
                 <span class="kw">continue</span>;
             } <span class="kw">else</span> {
                 <span class="kw">break</span>;
@@ -775,14 +775,14 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
         }
 
         <span class="kw">if</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn::Error::new</span>(
                 <span class="ident">input</span>.<span class="ident">span</span>(),
                 <span class="string">&quot;Unexpected trailing arguments.&quot;</span>,
             ));
         }
 
         <span class="kw">let</span> <span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">dimensionality</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(
+            <span class="ident">syn::Error::new</span>(
                 <span class="ident">starting_span</span>,
                 <span class="string">&quot;Expected either `1D`, `2D`, `3D`, `cube`, `rect`, `buffer`, \
                 or `subpass` to be present&quot;</span>,
@@ -790,72 +790,72 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
         })<span class="question-mark">?</span>;
 
         <span class="kw">if</span> <span class="ident">format</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> <span class="ident">sampled_type</span>.<span class="ident">is_some</span>() {
-            <span class="kw">if</span> <span class="ident">format</span> <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">ImageFormat</span>::<span class="ident">Unknown</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(
+            <span class="kw">if</span> <span class="ident">format</span> <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">ImageFormat::Unknown</span>) {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn::Error::new</span>(
                     <span class="ident">starting_span</span>,
                     <span class="string">&quot;Can&#39;t specify `type` with a known image format. Either \
                         specify just the `format` or use `format=unknown`.&quot;</span>,
                 ));
             }
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">sampled_type</span>.<span class="ident">is_some</span>() {
-            <span class="ident">format</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">ImageFormat</span>::<span class="ident">Unknown</span>);
+            <span class="ident">format</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">ImageFormat::Unknown</span>);
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">format</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">format</span> {
             <span class="ident">sampled_type</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">format</span> {
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba32f</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16f</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R32f</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba8</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba8Snorm</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg32f</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16f</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R11fG11fB10f</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R16f</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgb10A2</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg8</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R16</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R8</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16Snorm</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16Snorm</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg8Snorm</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R16Snorm</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType</span>::<span class="ident">F32</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba32i</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16i</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba8i</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R32i</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg32i</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16i</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg8i</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R16i</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R8i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType</span>::<span class="ident">I32</span>,
+                <span class="ident">ImageFormat::Rgba32f</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgba16f</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R32f</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgba8</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgba8Snorm</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg32f</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg16f</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R11fG11fB10f</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R16f</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgba16</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgb10A2</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg16</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg8</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R16</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R8</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgba16Snorm</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg16Snorm</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg8Snorm</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R16Snorm</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType::F32</span>,
+                <span class="ident">ImageFormat::Rgba32i</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgba16i</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgba8i</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R32i</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg32i</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg16i</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg8i</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R16i</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R8i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType::I32</span>,
 
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba32ui</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16ui</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba8ui</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R32ui</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgb10A2ui</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg32ui</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16ui</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg8ui</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R16ui</span>
-                <span class="op">|</span> <span class="ident">ImageFormat</span>::<span class="ident">R8ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType</span>::<span class="ident">U32</span>,
+                <span class="ident">ImageFormat::Rgba32ui</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgba16ui</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgba8ui</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R32ui</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rgb10A2ui</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg32ui</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg16ui</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::Rg8ui</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R16ui</span>
+                <span class="op">|</span> <span class="ident">ImageFormat::R8ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType::U32</span>,
 
-                <span class="ident">ImageFormat</span>::<span class="ident">R64ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType</span>::<span class="ident">U64</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R64i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType</span>::<span class="ident">I64</span>,
+                <span class="ident">ImageFormat::R64ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType::U64</span>,
+                <span class="ident">ImageFormat::R64i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SampledType::I64</span>,
 
-                <span class="ident">ImageFormat</span>::<span class="ident">Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                <span class="ident">ImageFormat::Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
             });
         }
 
         <span class="kw">let</span> <span class="ident">sampled_type</span> <span class="op">=</span>
-            <span class="ident">sampled_type</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">starting_span</span>, <span class="ident">MISSING_SAMPLE_ERROR</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="ident">format</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">syn</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">starting_span</span>, <span class="ident">MISSING_SAMPLE_ERROR</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="ident">depth</span>.<span class="ident">unwrap_or</span>(<span class="ident">ImageDepth</span>::<span class="ident">Unknown</span>);
-        <span class="kw">let</span> <span class="ident">arrayed</span> <span class="op">=</span> <span class="ident">arrayed</span>.<span class="ident">unwrap_or</span>(<span class="ident">Arrayed</span>::<span class="ident">False</span>);
-        <span class="kw">let</span> <span class="ident">multisampled</span> <span class="op">=</span> <span class="ident">multisampled</span>.<span class="ident">unwrap_or</span>(<span class="ident">Multisampled</span>::<span class="ident">False</span>);
-        <span class="kw">let</span> <span class="ident">sampled</span> <span class="op">=</span> <span class="ident">sampled</span>.<span class="ident">unwrap_or</span>(<span class="ident">Sampled</span>::<span class="ident">Unknown</span>);
+            <span class="ident">sampled_type</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">syn::Error::new</span>(<span class="ident">starting_span</span>, <span class="ident">MISSING_SAMPLE_ERROR</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="ident">format</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">syn::Error::new</span>(<span class="ident">starting_span</span>, <span class="ident">MISSING_SAMPLE_ERROR</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="ident">depth</span>.<span class="ident">unwrap_or</span>(<span class="ident">ImageDepth::Unknown</span>);
+        <span class="kw">let</span> <span class="ident">arrayed</span> <span class="op">=</span> <span class="ident">arrayed</span>.<span class="ident">unwrap_or</span>(<span class="ident">Arrayed::False</span>);
+        <span class="kw">let</span> <span class="ident">multisampled</span> <span class="op">=</span> <span class="ident">multisampled</span>.<span class="ident">unwrap_or</span>(<span class="ident">Multisampled::False</span>);
+        <span class="kw">let</span> <span class="ident">sampled</span> <span class="op">=</span> <span class="ident">sampled</span>.<span class="ident">unwrap_or</span>(<span class="ident">Sampled::Unknown</span>);
 
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">access_qualifier</span>,
@@ -871,41 +871,41 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
     }
 }
 
-<span class="kw">impl</span> <span class="ident">quote</span>::<span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">ImageType</span> {
-    <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">proc_macro2</span>::<span class="ident">TokenStream</span>) {
-        <span class="kw">let</span> <span class="ident">crate_root</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">crate_root</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">syn</span>::<span class="ident">Path</span> {
+<span class="kw">impl</span> <span class="ident">quote::ToTokens</span> <span class="kw">for</span> <span class="ident">ImageType</span> {
+    <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">proc_macro2::TokenStream</span>) {
+        <span class="kw">let</span> <span class="ident">crate_root</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">crate_root</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">syn::Path</span> {
             <span class="ident">leading_colon</span>: <span class="prelude-val">None</span>,
             <span class="ident">segments</span>: {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">syn</span>::<span class="ident">punctuated</span>::<span class="ident">Punctuated</span>::<span class="ident">new</span>();
-                <span class="ident">punct</span>.<span class="ident">push</span>(<span class="ident">Ident</span>::<span class="ident">new</span>(<span class="string">&quot;spirv_std&quot;</span>, <span class="ident">proc_macro2</span>::<span class="ident">Span</span>::<span class="ident">mixed_site</span>()).<span class="ident">into</span>());
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">punct</span> <span class="op">=</span> <span class="ident">syn::punctuated::Punctuated::new</span>();
+                <span class="ident">punct</span>.<span class="ident">push</span>(<span class="ident">Ident::new</span>(<span class="string">&quot;spirv_std&quot;</span>, <span class="ident">proc_macro2::Span::mixed_site</span>()).<span class="ident">into</span>());
 
                 <span class="ident">punct</span>
             },
         });
         <span class="kw">let</span> <span class="ident">access_qualifier</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">access_qualifier</span> {
             <span class="prelude-val">Some</span>(<span class="ident">aq</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">aq</span> <span class="op">=</span> <span class="ident">params</span>::<span class="ident">access_qualifier_to_tokens</span>(<span class="kw-2">&amp;</span><span class="ident">aq</span>);
-                <span class="macro">quote</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(#<span class="ident">crate_root</span>::<span class="ident">image</span>::#<span class="ident">aq</span>))
+                <span class="kw">let</span> <span class="ident">aq</span> <span class="op">=</span> <span class="ident">params::access_qualifier_to_tokens</span>(<span class="kw-2">&amp;</span><span class="ident">aq</span>);
+                <span class="macro">quote!</span>(<span class="prelude-val">Some</span>(#<span class="ident">crate_root::image</span>::#<span class="ident">aq</span>))
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="prelude-val">None</span>),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="prelude-val">None</span>),
         };
-        <span class="kw">let</span> <span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">params</span>::<span class="ident">dimensionality_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dimensionality</span>);
-        <span class="kw">let</span> <span class="ident">arrayed</span> <span class="op">=</span> <span class="ident">params</span>::<span class="ident">arrayed_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">arrayed</span>);
-        <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="ident">params</span>::<span class="ident">image_depth_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">depth</span>);
-        <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="ident">params</span>::<span class="ident">image_format_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">format</span>);
-        <span class="kw">let</span> <span class="ident">multisampled</span> <span class="op">=</span> <span class="ident">params</span>::<span class="ident">multisampled_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">multisampled</span>);
-        <span class="kw">let</span> <span class="ident">sampled</span> <span class="op">=</span> <span class="ident">params</span>::<span class="ident">sampled_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sampled</span>);
+        <span class="kw">let</span> <span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">params::dimensionality_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dimensionality</span>);
+        <span class="kw">let</span> <span class="ident">arrayed</span> <span class="op">=</span> <span class="ident">params::arrayed_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">arrayed</span>);
+        <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="ident">params::image_depth_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">depth</span>);
+        <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="ident">params::image_format_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">format</span>);
+        <span class="kw">let</span> <span class="ident">multisampled</span> <span class="op">=</span> <span class="ident">params::multisampled_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">multisampled</span>);
+        <span class="kw">let</span> <span class="ident">sampled</span> <span class="op">=</span> <span class="ident">params::sampled_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sampled</span>);
         <span class="kw">let</span> <span class="ident">sampled_type</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sampled_type</span>;
 
-        <span class="ident">tokens</span>.<span class="ident">append_all</span>(<span class="ident">quote</span>::<span class="macro">quote</span><span class="macro">!</span> {
-            #<span class="ident">crate_root</span>::<span class="ident">image</span>::<span class="ident">Image</span><span class="op">&lt;</span>
-                #<span class="ident">crate_root</span>::<span class="ident">image</span>::<span class="ident">__private</span>::#<span class="ident">sampled_type</span>,
-                { #<span class="ident">crate_root</span>::<span class="ident">image</span>::#<span class="ident">dimensionality</span> },
-                { #<span class="ident">crate_root</span>::<span class="ident">image</span>::#<span class="ident">depth</span> },
-                { #<span class="ident">crate_root</span>::<span class="ident">image</span>::#<span class="ident">arrayed</span> },
-                { #<span class="ident">crate_root</span>::<span class="ident">image</span>::#<span class="ident">multisampled</span> },
-                { #<span class="ident">crate_root</span>::<span class="ident">image</span>::#<span class="ident">sampled</span> },
-                { #<span class="ident">crate_root</span>::<span class="ident">image</span>::#<span class="ident">format</span> },
+        <span class="ident">tokens</span>.<span class="ident">append_all</span>(<span class="macro">quote::quote!</span> {
+            #<span class="ident">crate_root::image::Image</span><span class="op">&lt;</span>
+                #<span class="ident">crate_root::image::__private</span>::#<span class="ident">sampled_type</span>,
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">dimensionality</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">depth</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">arrayed</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">multisampled</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">sampled</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">format</span> },
                 { #<span class="ident">access_qualifier</span> },
             <span class="op">&gt;</span>
         })
@@ -914,60 +914,60 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
 
 <span class="kw">mod</span> <span class="ident">params</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">TokenStream</span>;
+    <span class="kw">use</span> <span class="ident">proc_macro2::TokenStream</span>;
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">access_qualifier_from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AccessQualifier</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">s</span> {
-            <span class="string">&quot;read&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">AccessQualifier</span>::<span class="ident">ReadOnly</span>),
-            <span class="string">&quot;write&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">AccessQualifier</span>::<span class="ident">WriteOnly</span>),
-            <span class="string">&quot;read_write&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">AccessQualifier</span>::<span class="ident">ReadWrite</span>),
+            <span class="string">&quot;read&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">AccessQualifier::ReadOnly</span>),
+            <span class="string">&quot;write&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">AccessQualifier::WriteOnly</span>),
+            <span class="string">&quot;read_write&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">AccessQualifier::ReadWrite</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Invalid access qualifier.&quot;</span>),
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">image_format_from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ImageFormat</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">s</span> {
-            <span class="string">&quot;rgba32f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba32f</span>,
-            <span class="string">&quot;rgba16f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16f</span>,
-            <span class="string">&quot;r32f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R32f</span>,
-            <span class="string">&quot;rgba8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba8</span>,
-            <span class="string">&quot;rgba8_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba8Snorm</span>,
-            <span class="string">&quot;rg32f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg32f</span>,
-            <span class="string">&quot;rg16f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16f</span>,
-            <span class="string">&quot;r11f_g11f_b10f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R11fG11fB10f</span>,
-            <span class="string">&quot;r16f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R16f</span>,
-            <span class="string">&quot;rgba16&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16</span>,
-            <span class="string">&quot;rgb10_a2&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgb10A2</span>,
-            <span class="string">&quot;rg16&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16</span>,
-            <span class="string">&quot;rg8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg8</span>,
-            <span class="string">&quot;r16&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R16</span>,
-            <span class="string">&quot;r8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R8</span>,
-            <span class="string">&quot;rgba16_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16Snorm</span>,
-            <span class="string">&quot;rg16_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16Snorm</span>,
-            <span class="string">&quot;rg8_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg8Snorm</span>,
-            <span class="string">&quot;r16_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R16Snorm</span>,
-            <span class="string">&quot;r8_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R8Snorm</span>,
-            <span class="string">&quot;rgba32i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba32i</span>,
-            <span class="string">&quot;rgba16i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16i</span>,
-            <span class="string">&quot;rgba8i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba8i</span>,
-            <span class="string">&quot;r32i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R32i</span>,
-            <span class="string">&quot;rg32i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg32i</span>,
-            <span class="string">&quot;rg16i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16i</span>,
-            <span class="string">&quot;rg8i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg8i</span>,
-            <span class="string">&quot;r16i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R16i</span>,
-            <span class="string">&quot;r8i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R8i</span>,
-            <span class="string">&quot;rgba32ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba32ui</span>,
-            <span class="string">&quot;rgba16ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba16ui</span>,
-            <span class="string">&quot;rgba8ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgba8ui</span>,
-            <span class="string">&quot;r32ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R32ui</span>,
-            <span class="string">&quot;rgb10_a2ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rgb10A2ui</span>,
-            <span class="string">&quot;rg32ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg32ui</span>,
-            <span class="string">&quot;rg16ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg16ui</span>,
-            <span class="string">&quot;rg8ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">Rg8ui</span>,
-            <span class="string">&quot;r16ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R16ui</span>,
-            <span class="string">&quot;r8ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R8ui</span>,
-            <span class="string">&quot;r64ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R64ui</span>,
-            <span class="string">&quot;r64i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat</span>::<span class="ident">R64i</span>,
+            <span class="string">&quot;rgba32f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba32f</span>,
+            <span class="string">&quot;rgba16f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba16f</span>,
+            <span class="string">&quot;r32f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R32f</span>,
+            <span class="string">&quot;rgba8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba8</span>,
+            <span class="string">&quot;rgba8_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba8Snorm</span>,
+            <span class="string">&quot;rg32f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg32f</span>,
+            <span class="string">&quot;rg16f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg16f</span>,
+            <span class="string">&quot;r11f_g11f_b10f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R11fG11fB10f</span>,
+            <span class="string">&quot;r16f&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R16f</span>,
+            <span class="string">&quot;rgba16&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba16</span>,
+            <span class="string">&quot;rgb10_a2&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgb10A2</span>,
+            <span class="string">&quot;rg16&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg16</span>,
+            <span class="string">&quot;rg8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg8</span>,
+            <span class="string">&quot;r16&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R16</span>,
+            <span class="string">&quot;r8&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R8</span>,
+            <span class="string">&quot;rgba16_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba16Snorm</span>,
+            <span class="string">&quot;rg16_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg16Snorm</span>,
+            <span class="string">&quot;rg8_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg8Snorm</span>,
+            <span class="string">&quot;r16_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R16Snorm</span>,
+            <span class="string">&quot;r8_snorm&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R8Snorm</span>,
+            <span class="string">&quot;rgba32i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba32i</span>,
+            <span class="string">&quot;rgba16i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba16i</span>,
+            <span class="string">&quot;rgba8i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba8i</span>,
+            <span class="string">&quot;r32i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R32i</span>,
+            <span class="string">&quot;rg32i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg32i</span>,
+            <span class="string">&quot;rg16i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg16i</span>,
+            <span class="string">&quot;rg8i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg8i</span>,
+            <span class="string">&quot;r16i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R16i</span>,
+            <span class="string">&quot;r8i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R8i</span>,
+            <span class="string">&quot;rgba32ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba32ui</span>,
+            <span class="string">&quot;rgba16ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba16ui</span>,
+            <span class="string">&quot;rgba8ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgba8ui</span>,
+            <span class="string">&quot;r32ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R32ui</span>,
+            <span class="string">&quot;rgb10_a2ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rgb10A2ui</span>,
+            <span class="string">&quot;rg32ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg32ui</span>,
+            <span class="string">&quot;rg16ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg16ui</span>,
+            <span class="string">&quot;rg8ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::Rg8ui</span>,
+            <span class="string">&quot;r16ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R16ui</span>,
+            <span class="string">&quot;r8ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R8ui</span>,
+            <span class="string">&quot;r64ui&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R64ui</span>,
+            <span class="string">&quot;r64i&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ImageFormat::R64i</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(
                 <span class="string">&quot;Unknown specified image format. Use `type=&lt;type&gt;` instead if this is intentional.&quot;</span>,
             ),
@@ -988,128 +988,128 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
         <span class="ident">F64</span>,
     }
 
-    <span class="kw">impl</span> <span class="ident">quote</span>::<span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">SampledType</span> {
+    <span class="kw">impl</span> <span class="ident">quote::ToTokens</span> <span class="kw">for</span> <span class="ident">SampledType</span> {
         <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">stream</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TokenStream</span>) {
             <span class="ident">stream</span>.<span class="ident">append_all</span>(<span class="kw">match</span> <span class="self">self</span> {
-                <span class="self">Self</span>::<span class="ident">U8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">u8</span>),
-                <span class="self">Self</span>::<span class="ident">U16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">u16</span>),
-                <span class="self">Self</span>::<span class="ident">U32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">u32</span>),
-                <span class="self">Self</span>::<span class="ident">U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">u64</span>),
-                <span class="self">Self</span>::<span class="ident">I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">i8</span>),
-                <span class="self">Self</span>::<span class="ident">I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">i16</span>),
-                <span class="self">Self</span>::<span class="ident">I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">i32</span>),
-                <span class="self">Self</span>::<span class="ident">I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">i64</span>),
-                <span class="self">Self</span>::<span class="ident">F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">f32</span>),
-                <span class="self">Self</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">f64</span>),
+                <span class="self">Self</span><span class="ident">::U8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">u8</span>),
+                <span class="self">Self</span><span class="ident">::U16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">u16</span>),
+                <span class="self">Self</span><span class="ident">::U32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">u32</span>),
+                <span class="self">Self</span><span class="ident">::U64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">u64</span>),
+                <span class="self">Self</span><span class="ident">::I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">i8</span>),
+                <span class="self">Self</span><span class="ident">::I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">i16</span>),
+                <span class="self">Self</span><span class="ident">::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">i32</span>),
+                <span class="self">Self</span><span class="ident">::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">i64</span>),
+                <span class="self">Self</span><span class="ident">::F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">f32</span>),
+                <span class="self">Self</span><span class="ident">::F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">f64</span>),
             });
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">access_qualifier_to_tokens</span>(<span class="ident">aq</span>: <span class="kw-2">&amp;</span><span class="ident">AccessQualifier</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
         <span class="kw">match</span> <span class="ident">aq</span> {
-            <span class="ident">AccessQualifier</span>::<span class="ident">ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">AccessQualifier</span>::<span class="ident">ReadOnly</span>),
-            <span class="ident">AccessQualifier</span>::<span class="ident">WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">AccessQualifier</span>::<span class="ident">WriteOnly</span>),
-            <span class="ident">AccessQualifier</span>::<span class="ident">ReadWrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">AccessQualifier</span>::<span class="ident">ReadWrite</span>),
+            <span class="ident">AccessQualifier::ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">AccessQualifier::ReadOnly</span>),
+            <span class="ident">AccessQualifier::WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">AccessQualifier::WriteOnly</span>),
+            <span class="ident">AccessQualifier::ReadWrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">AccessQualifier::ReadWrite</span>),
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">image_depth_to_tokens</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">ImageDepth</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
         <span class="kw">match</span> <span class="ident">id</span> {
-            <span class="ident">ImageDepth</span>::<span class="ident">True</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">ImageDepth</span>::<span class="ident">True</span>),
-            <span class="ident">ImageDepth</span>::<span class="ident">False</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">ImageDepth</span>::<span class="ident">False</span>),
-            <span class="ident">ImageDepth</span>::<span class="ident">Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">ImageDepth</span>::<span class="ident">Unknown</span>),
+            <span class="ident">ImageDepth::True</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">ImageDepth::True</span>),
+            <span class="ident">ImageDepth::False</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">ImageDepth::False</span>),
+            <span class="ident">ImageDepth::Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">ImageDepth::Unknown</span>),
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arrayed_to_tokens</span>(<span class="ident">arrayed</span>: <span class="kw-2">&amp;</span><span class="ident">Arrayed</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
         <span class="kw">match</span> <span class="ident">arrayed</span> {
-            <span class="ident">Arrayed</span>::<span class="ident">True</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Arrayed</span>::<span class="ident">True</span>),
-            <span class="ident">Arrayed</span>::<span class="ident">False</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Arrayed</span>::<span class="ident">False</span>),
+            <span class="ident">Arrayed::True</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Arrayed::True</span>),
+            <span class="ident">Arrayed::False</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Arrayed::False</span>),
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dimensionality_to_tokens</span>(<span class="ident">dim</span>: <span class="kw-2">&amp;</span><span class="ident">Dimensionality</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
         <span class="kw">match</span> <span class="ident">dim</span> {
-            <span class="ident">Dimensionality</span>::<span class="ident">OneD</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Dimensionality</span>::<span class="ident">OneD</span>),
-            <span class="ident">Dimensionality</span>::<span class="ident">TwoD</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Dimensionality</span>::<span class="ident">TwoD</span>),
-            <span class="ident">Dimensionality</span>::<span class="ident">ThreeD</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Dimensionality</span>::<span class="ident">ThreeD</span>),
-            <span class="ident">Dimensionality</span>::<span class="ident">Rect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Dimensionality</span>::<span class="ident">Rect</span>),
-            <span class="ident">Dimensionality</span>::<span class="ident">Cube</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Dimensionality</span>::<span class="ident">Cube</span>),
-            <span class="ident">Dimensionality</span>::<span class="ident">Buffer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Dimensionality</span>::<span class="ident">Buffer</span>),
-            <span class="ident">Dimensionality</span>::<span class="ident">SubpassData</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Dimensionality</span>::<span class="ident">SubpassData</span>),
+            <span class="ident">Dimensionality::OneD</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Dimensionality::OneD</span>),
+            <span class="ident">Dimensionality::TwoD</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Dimensionality::TwoD</span>),
+            <span class="ident">Dimensionality::ThreeD</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Dimensionality::ThreeD</span>),
+            <span class="ident">Dimensionality::Rect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Dimensionality::Rect</span>),
+            <span class="ident">Dimensionality::Cube</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Dimensionality::Cube</span>),
+            <span class="ident">Dimensionality::Buffer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Dimensionality::Buffer</span>),
+            <span class="ident">Dimensionality::SubpassData</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Dimensionality::SubpassData</span>),
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">multisampled_to_tokens</span>(<span class="ident">multisampled</span>: <span class="kw-2">&amp;</span><span class="ident">Multisampled</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
         <span class="kw">match</span> <span class="ident">multisampled</span> {
-            <span class="ident">Multisampled</span>::<span class="ident">True</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Multisampled</span>::<span class="ident">True</span>),
-            <span class="ident">Multisampled</span>::<span class="ident">False</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Multisampled</span>::<span class="ident">False</span>),
+            <span class="ident">Multisampled::True</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Multisampled::True</span>),
+            <span class="ident">Multisampled::False</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Multisampled::False</span>),
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sampled_to_tokens</span>(<span class="ident">sampled</span>: <span class="kw-2">&amp;</span><span class="ident">Sampled</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
         <span class="kw">match</span> <span class="ident">sampled</span> {
-            <span class="ident">Sampled</span>::<span class="ident">Yes</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Sampled</span>::<span class="ident">Yes</span>),
-            <span class="ident">Sampled</span>::<span class="ident">No</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Sampled</span>::<span class="ident">No</span>),
-            <span class="ident">Sampled</span>::<span class="ident">Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">Sampled</span>::<span class="ident">Unknown</span>),
+            <span class="ident">Sampled::Yes</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Sampled::Yes</span>),
+            <span class="ident">Sampled::No</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Sampled::No</span>),
+            <span class="ident">Sampled::Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">Sampled::Unknown</span>),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">image_format_to_tokens</span>(<span class="ident">format</span>: <span class="kw-2">&amp;</span><span class="ident">ImageFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">proc_macro2</span>::<span class="ident">TokenStream</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">image_format_to_tokens</span>(<span class="ident">format</span>: <span class="kw-2">&amp;</span><span class="ident">ImageFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">proc_macro2::TokenStream</span> {
         <span class="kw">let</span> <span class="ident">variant</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">variant</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">format</span> {
-                <span class="ident">ImageFormat</span>::<span class="ident">Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Unknown&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba32f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba32f&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba16f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16f&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R32f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R32f&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba8&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba8Snorm&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg32f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg32f&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg16f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16f&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R11fG11fB10f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R11fG11fB10f&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R16f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16f&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgb10A2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgb10A2&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg8&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R8&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba16Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16Snorm&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg16Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16Snorm&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg8Snorm&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R16Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16Snorm&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R8Snorm&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba32i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba32i&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba16i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16i&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba8i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba8i&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R32i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R32i&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg32i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg32i&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg16i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16i&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg8i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg8i&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R16i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16i&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R8i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R8i&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba32ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba32ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba16ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgba8ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba8ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R32ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R32ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rgb10A2ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgb10A2ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg32ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg32ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg16ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">Rg8ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg8ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R16ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R8ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R8ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R64ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R64ui&quot;</span>,
-                <span class="ident">ImageFormat</span>::<span class="ident">R64i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R64i&quot;</span>,
+                <span class="ident">ImageFormat::Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Unknown&quot;</span>,
+                <span class="ident">ImageFormat::Rgba32f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba32f&quot;</span>,
+                <span class="ident">ImageFormat::Rgba16f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16f&quot;</span>,
+                <span class="ident">ImageFormat::R32f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R32f&quot;</span>,
+                <span class="ident">ImageFormat::Rgba8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba8&quot;</span>,
+                <span class="ident">ImageFormat::Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba8Snorm&quot;</span>,
+                <span class="ident">ImageFormat::Rg32f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg32f&quot;</span>,
+                <span class="ident">ImageFormat::Rg16f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16f&quot;</span>,
+                <span class="ident">ImageFormat::R11fG11fB10f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R11fG11fB10f&quot;</span>,
+                <span class="ident">ImageFormat::R16f</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16f&quot;</span>,
+                <span class="ident">ImageFormat::Rgba16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16&quot;</span>,
+                <span class="ident">ImageFormat::Rgb10A2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgb10A2&quot;</span>,
+                <span class="ident">ImageFormat::Rg16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16&quot;</span>,
+                <span class="ident">ImageFormat::Rg8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg8&quot;</span>,
+                <span class="ident">ImageFormat::R16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16&quot;</span>,
+                <span class="ident">ImageFormat::R8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R8&quot;</span>,
+                <span class="ident">ImageFormat::Rgba16Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16Snorm&quot;</span>,
+                <span class="ident">ImageFormat::Rg16Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16Snorm&quot;</span>,
+                <span class="ident">ImageFormat::Rg8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg8Snorm&quot;</span>,
+                <span class="ident">ImageFormat::R16Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16Snorm&quot;</span>,
+                <span class="ident">ImageFormat::R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R8Snorm&quot;</span>,
+                <span class="ident">ImageFormat::Rgba32i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba32i&quot;</span>,
+                <span class="ident">ImageFormat::Rgba16i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16i&quot;</span>,
+                <span class="ident">ImageFormat::Rgba8i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba8i&quot;</span>,
+                <span class="ident">ImageFormat::R32i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R32i&quot;</span>,
+                <span class="ident">ImageFormat::Rg32i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg32i&quot;</span>,
+                <span class="ident">ImageFormat::Rg16i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16i&quot;</span>,
+                <span class="ident">ImageFormat::Rg8i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg8i&quot;</span>,
+                <span class="ident">ImageFormat::R16i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16i&quot;</span>,
+                <span class="ident">ImageFormat::R8i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R8i&quot;</span>,
+                <span class="ident">ImageFormat::Rgba32ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba32ui&quot;</span>,
+                <span class="ident">ImageFormat::Rgba16ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba16ui&quot;</span>,
+                <span class="ident">ImageFormat::Rgba8ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgba8ui&quot;</span>,
+                <span class="ident">ImageFormat::R32ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R32ui&quot;</span>,
+                <span class="ident">ImageFormat::Rgb10A2ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rgb10A2ui&quot;</span>,
+                <span class="ident">ImageFormat::Rg32ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg32ui&quot;</span>,
+                <span class="ident">ImageFormat::Rg16ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg16ui&quot;</span>,
+                <span class="ident">ImageFormat::Rg8ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rg8ui&quot;</span>,
+                <span class="ident">ImageFormat::R16ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R16ui&quot;</span>,
+                <span class="ident">ImageFormat::R8ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R8ui&quot;</span>,
+                <span class="ident">ImageFormat::R64ui</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R64ui&quot;</span>,
+                <span class="ident">ImageFormat::R64i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;R64i&quot;</span>,
             };
 
-            <span class="kw">let</span> <span class="ident">variant</span> <span class="op">=</span> <span class="ident">proc_macro2</span>::<span class="ident">Ident</span>::<span class="ident">new</span>(<span class="ident">variant</span>, <span class="ident">proc_macro2</span>::<span class="ident">Span</span>::<span class="ident">mixed_site</span>());
+            <span class="kw">let</span> <span class="ident">variant</span> <span class="op">=</span> <span class="ident">proc_macro2::Ident::new</span>(<span class="ident">variant</span>, <span class="ident">proc_macro2::Span::mixed_site</span>());
 
-            <span class="macro">quote</span><span class="macro">!</span>(#<span class="ident">variant</span>)
+            <span class="macro">quote!</span>(#<span class="ident">variant</span>)
         };
 
-        <span class="macro">quote</span><span class="macro">!</span>(<span class="ident">ImageFormat</span>::#<span class="ident">variant</span>)
+        <span class="macro">quote!</span>(<span class="ident">ImageFormat</span>::#<span class="ident">variant</span>)
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std_macros" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std_macros" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

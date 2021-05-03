@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/linker/inline.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>inline.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -448,12 +448,12 @@
 <span class="doccomment">//! `&amp;Input&lt;T&gt;` in a function! So, we inline all functions that take these &quot;illegal&quot; pointers, then</span>
 <span class="doccomment">//! run mem2reg (see mem2reg.rs) on the result to &quot;unwrap&quot; the Function pointer.</span>
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">apply_rewrite_rules</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">simple_passes</span>::<span class="ident">outgoing_edges</span>;
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::{<span class="ident">Block</span>, <span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">ModuleHeader</span>, <span class="ident">Operand</span>};
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{<span class="ident">FunctionControl</span>, <span class="ident">Op</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">replace</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::apply_rewrite_rules</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::simple_passes::outgoing_edges</span>;
+<span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Block</span>, <span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">ModuleHeader</span>, <span class="ident">Operand</span>};
+<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">FunctionControl</span>, <span class="ident">Op</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rustc_data_structures::fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
+<span class="kw">use</span> <span class="ident">std::mem::take</span>;
 
 <span class="kw">type</span> <span class="ident">FunctionMap</span> <span class="op">=</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Function</span><span class="op">&gt;</span>;
 
@@ -468,12 +468,12 @@
     <span class="kw">let</span> <span class="ident">void</span> <span class="op">=</span> <span class="ident">module</span>
         .<span class="ident">types_global_values</span>
         .<span class="ident">iter</span>()
-        .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">TypeVoid</span>)
+        .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::TypeVoid</span>)
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>())
         .<span class="ident">unwrap_or</span>(<span class="number">0</span>);
     <span class="comment">// Drop all the functions we&#39;ll be inlining. (This also means we won&#39;t waste time processing</span>
     <span class="comment">// inlines in functions that will get inlined)</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dropped_ids</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dropped_ids</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
     <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> {
         <span class="kw">if</span> <span class="ident">should_inline</span>(<span class="kw-2">&amp;</span><span class="ident">disallowed_argument_types</span>, <span class="kw-2">&amp;</span><span class="ident">disallowed_return_types</span>, <span class="ident">f</span>) {
             <span class="comment">// TODO: We should insert all defined IDs in this function.</span>
@@ -508,18 +508,18 @@
     <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="ident">allowed_argument_storage_classes</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[
-        <span class="ident">StorageClass</span>::<span class="ident">UniformConstant</span>,
-        <span class="ident">StorageClass</span>::<span class="ident">Function</span>,
-        <span class="ident">StorageClass</span>::<span class="ident">Private</span>,
-        <span class="ident">StorageClass</span>::<span class="ident">Workgroup</span>,
-        <span class="ident">StorageClass</span>::<span class="ident">AtomicCounter</span>,
+        <span class="ident">StorageClass::UniformConstant</span>,
+        <span class="ident">StorageClass::Function</span>,
+        <span class="ident">StorageClass::Private</span>,
+        <span class="ident">StorageClass::Workgroup</span>,
+        <span class="ident">StorageClass::AtomicCounter</span>,
     ];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_argument_types</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_pointees</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_return_types</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_argument_types</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_pointees</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">disallowed_return_types</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
     <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types_global_values</span> {
         <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-            <span class="ident">Op</span>::<span class="ident">TypePointer</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Op::TypePointer</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">storage_class</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>();
                 <span class="kw">let</span> <span class="ident">pointee</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>();
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">allowed_argument_storage_classes</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">storage_class</span>)
@@ -531,7 +531,7 @@
                 <span class="ident">disallowed_pointees</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
                 <span class="ident">disallowed_return_types</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
             }
-            <span class="ident">Op</span>::<span class="ident">TypeStruct</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Op::TypeStruct</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">fields</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>());
                 <span class="kw">if</span> <span class="ident">fields</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="ident">disallowed_argument_types</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)) {
                     <span class="ident">disallowed_argument_types</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
@@ -543,7 +543,7 @@
                     <span class="ident">disallowed_return_types</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
                 }
             }
-            <span class="ident">Op</span>::<span class="ident">TypeArray</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">TypeRuntimeArray</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">TypeVector</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Op::TypeArray</span> <span class="op">|</span> <span class="ident">Op::TypeRuntimeArray</span> <span class="op">|</span> <span class="ident">Op::TypeVector</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>();
                 <span class="kw">if</span> <span class="ident">disallowed_argument_types</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
                     <span class="ident">disallowed_argument_types</span>.<span class="ident">insert</span>(<span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>());
@@ -565,7 +565,7 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="ident">def</span> <span class="op">=</span> <span class="ident">function</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">control</span> <span class="op">=</span> <span class="ident">def</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_function_control</span>();
-    <span class="ident">control</span>.<span class="ident">contains</span>(<span class="ident">FunctionControl</span>::<span class="ident">INLINE</span>)
+    <span class="ident">control</span>.<span class="ident">contains</span>(<span class="ident">FunctionControl::INLINE</span>)
         <span class="op">|</span><span class="op">|</span> <span class="ident">function</span>
             .<span class="ident">parameters</span>
             .<span class="ident">iter</span>()
@@ -599,21 +599,21 @@
     <span class="kw">fn</span> <span class="ident">ptr_ty</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pointee</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
         <span class="comment">// TODO: This is horribly slow, fix this</span>
         <span class="kw">let</span> <span class="ident">existing</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types_global_values</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-            <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">TypePointer</span>
-                <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">StorageClass</span>::<span class="ident">Function</span>
+            <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::TypePointer</span>
+                <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">StorageClass::Function</span>
                 <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">pointee</span>
         });
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">existing</span>) <span class="op">=</span> <span class="ident">existing</span> {
             <span class="kw">return</span> <span class="ident">existing</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>();
         }
         <span class="kw">let</span> <span class="ident">inst_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
-        <span class="self">self</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">Instruction</span>::<span class="ident">new</span>(
-            <span class="ident">Op</span>::<span class="ident">TypePointer</span>,
+        <span class="self">self</span>.<span class="ident">types_global_values</span>.<span class="ident">push</span>(<span class="ident">Instruction::new</span>(
+            <span class="ident">Op::TypePointer</span>,
             <span class="prelude-val">None</span>,
             <span class="prelude-val">Some</span>(<span class="ident">inst_id</span>),
-            <span class="macro">vec</span><span class="macro">!</span>[
-                <span class="ident">Operand</span>::<span class="ident">StorageClass</span>(<span class="ident">StorageClass</span>::<span class="ident">Function</span>),
-                <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">pointee</span>),
+            <span class="macro">vec!</span>[
+                <span class="ident">Operand::StorageClass</span>(<span class="ident">StorageClass::Function</span>),
+                <span class="ident">Operand::IdRef</span>(<span class="ident">pointee</span>),
             ],
         ));
         <span class="ident">inst_id</span>
@@ -637,7 +637,7 @@
             .<span class="ident">instructions</span>
             .<span class="ident">iter</span>()
             .<span class="ident">enumerate</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">inst</span>)<span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">FunctionCall</span>)
+            .<span class="ident">filter</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">inst</span>)<span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::FunctionCall</span>)
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">inst</span>)<span class="op">|</span> {
                 (
                     <span class="ident">index</span>,
@@ -674,7 +674,7 @@
             .<span class="ident">skip</span>(<span class="number">1</span>)
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">op</span><span class="op">|</span> <span class="ident">op</span>.<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>());
         <span class="kw">let</span> <span class="ident">callee_parameters</span> <span class="op">=</span> <span class="ident">callee</span>.<span class="ident">parameters</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">FunctionParameter</span>);
+            <span class="macro">assert!</span>(<span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::FunctionParameter</span>);
             <span class="ident">inst</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>()
         });
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rewrite_rules</span> <span class="op">=</span> <span class="ident">callee_parameters</span>.<span class="ident">zip</span>(<span class="ident">call_arguments</span>).<span class="ident">collect</span>();
@@ -698,7 +698,7 @@
             .<span class="ident">split_off</span>(<span class="ident">call_index</span> <span class="op">+</span> <span class="number">1</span>);
         <span class="comment">// pop off OpFunctionCall</span>
         <span class="kw">let</span> <span class="ident">call</span> <span class="op">=</span> <span class="ident">caller</span>.<span class="ident">blocks</span>[<span class="ident">block_idx</span>].<span class="ident">instructions</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">call</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">FunctionCall</span>);
+        <span class="macro">assert!</span>(<span class="ident">call</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::FunctionCall</span>);
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">call_result_type</span>) <span class="op">=</span> <span class="ident">call_result_type</span> {
             <span class="comment">// Generate the storage space for the return value: Do this *after* the split above,</span>
@@ -716,7 +716,7 @@
         <span class="comment">// TODO: OpLine handling</span>
         <span class="kw">let</span> <span class="ident">num_variables</span> <span class="op">=</span> <span class="ident">callee_header</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">position</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">Variable</span>)
+            .<span class="ident">position</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Variable</span>)
             .<span class="ident">unwrap_or</span>(<span class="ident">callee_header</span>.<span class="ident">len</span>());
         <span class="ident">caller</span>.<span class="ident">blocks</span>[<span class="ident">block_idx</span>]
             .<span class="ident">instructions</span>
@@ -729,17 +729,17 @@
             <span class="comment">// OpPhi instructions since we just split this block.</span>
             <span class="ident">post_call_block_insts</span>.<span class="ident">insert</span>(
                 <span class="number">0</span>,
-                <span class="ident">Instruction</span>::<span class="ident">new</span>(
-                    <span class="ident">Op</span>::<span class="ident">Load</span>,
+                <span class="ident">Instruction::new</span>(
+                    <span class="ident">Op::Load</span>,
                     <span class="prelude-val">Some</span>(<span class="ident">call_result_type</span>),
                     <span class="prelude-val">Some</span>(<span class="ident">call_result_id</span>),
-                    <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">return_variable</span>.<span class="ident">unwrap</span>())],
+                    <span class="macro">vec!</span>[<span class="ident">Operand::IdRef</span>(<span class="ident">return_variable</span>.<span class="ident">unwrap</span>())],
                 ),
             );
         }
         <span class="comment">// Insert the second half of the split block.</span>
         <span class="kw">let</span> <span class="ident">continue_block</span> <span class="op">=</span> <span class="ident">Block</span> {
-            <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Label</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">return_jump</span>), <span class="macro">vec</span><span class="macro">!</span>[])),
+            <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="ident">Instruction::new</span>(<span class="ident">Op::Label</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">return_jump</span>), <span class="macro">vec!</span>[])),
             <span class="ident">instructions</span>: <span class="ident">post_call_block_insts</span>,
         };
         <span class="ident">caller</span>.<span class="ident">blocks</span>.<span class="ident">insert</span>(<span class="ident">block_idx</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">continue_block</span>);
@@ -759,7 +759,7 @@
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_id</span>) <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">result_id</span> {
                     <span class="kw">let</span> <span class="ident">new_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>();
                     <span class="kw">let</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">rewrite_rules</span>.<span class="ident">insert</span>(<span class="ident">result_id</span>, <span class="ident">new_id</span>);
-                    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">old</span>.<span class="ident">is_none</span>());
+                    <span class="macro">assert!</span>(<span class="ident">old</span>.<span class="ident">is_none</span>());
                 }
             }
         }
@@ -774,26 +774,26 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="ident">function</span>.<span class="ident">blocks</span>.<span class="ident">clone</span>();
     <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">blocks</span> {
         <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Op</span>::<span class="ident">Return</span> <span class="op">|</span> <span class="ident">Op</span>::<span class="ident">ReturnValue</span> <span class="op">=</span> <span class="ident">last</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-            <span class="kw">if</span> <span class="ident">Op</span>::<span class="ident">ReturnValue</span> <span class="op">=</span><span class="op">=</span> <span class="ident">last</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Op::Return</span> <span class="op">|</span> <span class="ident">Op::ReturnValue</span> <span class="op">=</span> <span class="ident">last</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
+            <span class="kw">if</span> <span class="ident">Op::ReturnValue</span> <span class="op">=</span><span class="op">=</span> <span class="ident">last</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
                 <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">last</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>();
                 <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(
                     <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>,
-                    <span class="ident">Instruction</span>::<span class="ident">new</span>(
-                        <span class="ident">Op</span>::<span class="ident">Store</span>,
+                    <span class="ident">Instruction::new</span>(
+                        <span class="ident">Op::Store</span>,
                         <span class="prelude-val">None</span>,
                         <span class="prelude-val">None</span>,
-                        <span class="macro">vec</span><span class="macro">!</span>[
-                            <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">return_variable</span>.<span class="ident">unwrap</span>()),
-                            <span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">return_value</span>),
+                        <span class="macro">vec!</span>[
+                            <span class="ident">Operand::IdRef</span>(<span class="ident">return_variable</span>.<span class="ident">unwrap</span>()),
+                            <span class="ident">Operand::IdRef</span>(<span class="ident">return_value</span>),
                         ],
                     ),
                 )
             } <span class="kw">else</span> {
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">return_variable</span>.<span class="ident">is_none</span>())
+                <span class="macro">assert!</span>(<span class="ident">return_variable</span>.<span class="ident">is_none</span>())
             }
             <span class="kw-2">*</span><span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>() <span class="op">=</span>
-                <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Branch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">return_jump</span>)]);
+                <span class="ident">Instruction::new</span>(<span class="ident">Op::Branch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="macro">vec!</span>[<span class="ident">Operand::IdRef</span>(<span class="ident">return_jump</span>)]);
         }
     }
     <span class="ident">blocks</span>
@@ -805,17 +805,17 @@
         .<span class="ident">iter</span>()
         .<span class="ident">enumerate</span>()
         .<span class="ident">find_map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">inst</span>)<span class="op">|</span> {
-            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">Variable</span> {
+            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Variable</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">index</span>)
             } <span class="kw">else</span> {
                 <span class="prelude-val">None</span>
             }
         });
-    <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(
-        <span class="ident">Op</span>::<span class="ident">Variable</span>,
+    <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::new</span>(
+        <span class="ident">Op::Variable</span>,
         <span class="prelude-val">Some</span>(<span class="ident">ptr_ty</span>),
         <span class="prelude-val">Some</span>(<span class="ident">result_id</span>),
-        <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Operand</span>::<span class="ident">StorageClass</span>(<span class="ident">StorageClass</span>::<span class="ident">Function</span>)],
+        <span class="macro">vec!</span>[<span class="ident">Operand::StorageClass</span>(<span class="ident">StorageClass::Function</span>)],
     );
     <span class="kw">match</span> <span class="ident">index</span> {
         <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(<span class="ident">index</span>, <span class="ident">inst</span>),
@@ -829,7 +829,7 @@
         .<span class="ident">iter</span>()
         .<span class="ident">enumerate</span>()
         .<span class="ident">find_map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">inst</span>)<span class="op">|</span> {
-            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">Variable</span> {
+            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Variable</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">index</span>)
             } <span class="kw">else</span> {
                 <span class="prelude-val">None</span>
@@ -859,8 +859,8 @@
             <span class="ident">preds</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">all_preds</span>[<span class="ident">pred</span>];
         };
         <span class="kw">let</span> <span class="ident">pred_insts</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">function</span>.<span class="ident">blocks</span>[<span class="ident">pred</span>].<span class="ident">instructions</span>;
-        <span class="kw">if</span> <span class="ident">pred_insts</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>().<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op</span>::<span class="ident">Branch</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dest_insts</span> <span class="op">=</span> <span class="ident">replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">function</span>.<span class="ident">blocks</span>[<span class="ident">dest_block</span>].<span class="ident">instructions</span>, <span class="ident">Vec</span>::<span class="ident">new</span>());
+        <span class="kw">if</span> <span class="ident">pred_insts</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>().<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::Branch</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dest_insts</span> <span class="op">=</span> <span class="ident">take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">function</span>.<span class="ident">blocks</span>[<span class="ident">dest_block</span>].<span class="ident">instructions</span>);
             <span class="kw">let</span> <span class="ident">pred_insts</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">function</span>.<span class="ident">blocks</span>[<span class="ident">pred</span>].<span class="ident">instructions</span>;
             <span class="ident">pred_insts</span>.<span class="ident">pop</span>(); <span class="comment">// pop the branch</span>
             <span class="ident">pred_insts</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">dest_insts</span>);
@@ -870,7 +870,7 @@
 }
 
 <span class="kw">fn</span> <span class="ident">compute_preds</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="macro">vec</span><span class="macro">!</span>[]; <span class="ident">blocks</span>.<span class="ident">len</span>()];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="macro">vec!</span>[]; <span class="ident">blocks</span>.<span class="ident">len</span>()];
     <span class="kw">for</span> (<span class="ident">source_idx</span>, <span class="ident">source</span>) <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
         <span class="kw">for</span> <span class="ident">dest_id</span> <span class="kw">in</span> <span class="ident">outgoing_edges</span>(<span class="ident">source</span>) {
             <span class="kw">let</span> <span class="ident">dest_idx</span> <span class="op">=</span> <span class="ident">blocks</span>
@@ -883,5 +883,5 @@
     <span class="ident">result</span>
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-js="../../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

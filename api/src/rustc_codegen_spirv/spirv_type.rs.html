@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/spirv_type.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spirv_type.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -730,25 +730,27 @@
 <span id="727">727</span>
 <span id="728">728</span>
 <span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">abi</span>::{<span class="ident">RecursivePointeeCache</span>, <span class="ident">TyLayoutNameKey</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">builder_spirv</span>::<span class="ident">SpirvValue</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">codegen_cx</span>::<span class="ident">CodegenCx</span>;
-<span class="kw">use</span> <span class="ident">bimap</span>::<span class="ident">BiHashMap</span>;
-<span class="kw">use</span> <span class="ident">indexmap</span>::<span class="ident">IndexSet</span>;
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Operand</span>;
-<span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">spirv</span>::{
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::abi</span>::{<span class="ident">RecursivePointeeCache</span>, <span class="ident">TyLayoutNameKey</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder_spirv::SpirvValue</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::codegen_cx::CodegenCx</span>;
+<span class="kw">use</span> <span class="ident">bimap::BiHashMap</span>;
+<span class="kw">use</span> <span class="ident">indexmap::IndexSet</span>;
+<span class="kw">use</span> <span class="ident">rspirv::dr::Operand</span>;
+<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{
     <span class="ident">AccessQualifier</span>, <span class="ident">Capability</span>, <span class="ident">Decoration</span>, <span class="ident">Dim</span>, <span class="ident">ImageFormat</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>,
 };
-<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::<span class="ident">FxHashMap</span>;
-<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">def_id</span>::<span class="ident">DefId</span>;
-<span class="kw">use</span> <span class="ident">rustc_span</span>::<span class="ident">Span</span>;
-<span class="kw">use</span> <span class="ident">rustc_target</span>::<span class="ident">abi</span>::{<span class="ident">Align</span>, <span class="ident">Size</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">lazy</span>::<span class="ident">SyncLazy</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Mutex</span>;
+<span class="kw">use</span> <span class="ident">rustc_data_structures::fx::FxHashMap</span>;
+<span class="kw">use</span> <span class="ident">rustc_span::def_id::DefId</span>;
+<span class="kw">use</span> <span class="ident">rustc_span::Span</span>;
+<span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{<span class="ident">Align</span>, <span class="ident">Size</span>};
+<span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
+<span class="kw">use</span> <span class="ident">std::fmt</span>;
+<span class="kw">use</span> <span class="ident">std::iter</span>;
+<span class="kw">use</span> <span class="ident">std::lazy::SyncLazy</span>;
+<span class="kw">use</span> <span class="ident">std::sync::Mutex</span>;
 
 <span class="doccomment">/// Spir-v types are represented as simple Words, which are the `result_id` of instructions like</span>
 <span class="doccomment">/// `OpTypeInteger`. Sometimes, however, we want to inspect one of these Words and ask questions</span>
@@ -831,46 +833,48 @@
             <span class="kw">return</span> <span class="ident">cached</span>;
         }
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_void</span>(),
-            <span class="self">Self</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_bool</span>(),
-            <span class="self">Self</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="ident">signedness</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_void</span>(),
+            <span class="self">Self</span><span class="ident">::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_bool</span>(),
+            <span class="self">Self</span><span class="ident">::Integer</span>(<span class="ident">width</span>, <span class="ident">signedness</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>
                     .<span class="ident">emit_global</span>()
                     .<span class="ident">type_int</span>(<span class="ident">width</span>, <span class="kw">if</span> <span class="ident">signedness</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> });
                 <span class="kw">match</span> <span class="ident">width</span> {
-                    <span class="number">8</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability</span>::<span class="ident">Int8</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="number">8</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int8</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u8 without OpCapability Int8&quot;</span>)
                     }
-                    <span class="number">16</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability</span>::<span class="ident">Int16</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="number">16</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int16</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u16 without OpCapability Int16&quot;</span>)
                     }
-                    <span class="number">64</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability</span>::<span class="ident">Int64</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="number">64</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int64</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u64 without OpCapability Int64&quot;</span>)
                     }
                     <span class="number">8</span> <span class="op">|</span> <span class="number">16</span> <span class="op">|</span> <span class="number">32</span> <span class="op">|</span> <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> (),
                     <span class="number">128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u128&quot;</span>),
-                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
-                        .<span class="ident">tcx</span>
-                        .<span class="ident">sess</span>
-                        .<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Integer width {} invalid for spir-v&quot;</span>, <span class="ident">other</span>)),
+                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(
+                        <span class="ident">result</span>,
+                        <span class="ident">def_span</span>,
+                        <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Integer width {} invalid for spir-v&quot;</span>, <span class="ident">other</span>),
+                    ),
                 };
                 <span class="ident">result</span>
             }
-            <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_float</span>(<span class="ident">width</span>);
                 <span class="kw">match</span> <span class="ident">width</span> {
-                    <span class="number">64</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability</span>::<span class="ident">Float64</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="number">64</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Float64</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;f64 without OpCapability Float64&quot;</span>)
                     }
                     <span class="number">32</span> <span class="op">|</span> <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> (),
-                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
-                        .<span class="ident">tcx</span>
-                        .<span class="ident">sess</span>
-                        .<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Float width {} invalid for spir-v&quot;</span>, <span class="ident">other</span>)),
+                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(
+                        <span class="ident">result</span>,
+                        <span class="ident">def_span</span>,
+                        <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Float width {} invalid for spir-v&quot;</span>, <span class="ident">other</span>),
+                    ),
                 };
                 <span class="ident">result</span>
             }
-            <span class="self">Self</span>::<span class="ident">Adt</span> {
+            <span class="self">Self</span><span class="ident">::Adt</span> {
                 <span class="ident">def_id</span>: <span class="kw">_</span>,
                 <span class="ident">align</span>: <span class="kw">_</span>,
                 <span class="ident">size</span>: <span class="kw">_</span>,
@@ -889,8 +893,8 @@
                         <span class="ident">emit</span>.<span class="ident">member_decorate</span>(
                             <span class="ident">result</span>,
                             <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                            <span class="ident">Decoration</span>::<span class="ident">Offset</span>,
-                            [<span class="ident">Operand</span>::<span class="ident">LiteralInt32</span>(<span class="ident">offset</span>.<span class="ident">bytes</span>() <span class="kw">as</span> <span class="ident">u32</span>)]
+                            <span class="ident">Decoration::Offset</span>,
+                            [<span class="ident">Operand::LiteralInt32</span>(<span class="ident">offset</span>.<span class="ident">bytes</span>() <span class="kw">as</span> <span class="ident">u32</span>)]
                                 .<span class="ident">iter</span>()
                                 .<span class="ident">cloned</span>(),
                         );
@@ -903,9 +907,9 @@
                 }
                 <span class="ident">result</span>
             }
-            <span class="self">Self</span>::<span class="ident">Opaque</span> { <span class="kw-2">ref</span> <span class="ident">name</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_opaque</span>(<span class="ident">name</span>),
-            <span class="self">Self</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_vector</span>(<span class="ident">element</span>, <span class="ident">count</span>),
-            <span class="self">Self</span>::<span class="ident">Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::Opaque</span> { <span class="kw-2">ref</span> <span class="ident">name</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_opaque</span>(<span class="ident">name</span>),
+            <span class="self">Self</span><span class="ident">::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_vector</span>(<span class="ident">element</span>, <span class="ident">count</span>),
+            <span class="self">Self</span><span class="ident">::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// ArrayStride decoration wants in *bytes*</span>
                 <span class="kw">let</span> <span class="ident">element_size</span> <span class="op">=</span> <span class="ident">cx</span>
                     .<span class="ident">lookup_type</span>(<span class="ident">element</span>)
@@ -917,13 +921,13 @@
                     <span class="comment">// TODO: kernel mode can&#39;t do this??</span>
                     <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">decorate</span>(
                         <span class="ident">result</span>,
-                        <span class="ident">Decoration</span>::<span class="ident">ArrayStride</span>,
-                        <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">Operand</span>::<span class="ident">LiteralInt32</span>(<span class="ident">element_size</span> <span class="kw">as</span> <span class="ident">u32</span>)),
+                        <span class="ident">Decoration::ArrayStride</span>,
+                        <span class="ident">iter::once</span>(<span class="ident">Operand::LiteralInt32</span>(<span class="ident">element_size</span> <span class="kw">as</span> <span class="ident">u32</span>)),
                     );
                 }
                 <span class="ident">result</span>
             }
-            <span class="self">Self</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_runtime_array</span>(<span class="ident">element</span>);
                 <span class="comment">// ArrayStride decoration wants in *bytes*</span>
                 <span class="kw">let</span> <span class="ident">element_size</span> <span class="op">=</span> <span class="ident">cx</span>
@@ -933,23 +937,23 @@
                     .<span class="ident">bytes</span>();
                 <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">decorate</span>(
                     <span class="ident">result</span>,
-                    <span class="ident">Decoration</span>::<span class="ident">ArrayStride</span>,
-                    <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">Operand</span>::<span class="ident">LiteralInt32</span>(<span class="ident">element_size</span> <span class="kw">as</span> <span class="ident">u32</span>)),
+                    <span class="ident">Decoration::ArrayStride</span>,
+                    <span class="ident">iter::once</span>(<span class="ident">Operand::LiteralInt32</span>(<span class="ident">element_size</span> <span class="kw">as</span> <span class="ident">u32</span>)),
                 );
                 <span class="kw">if</span> <span class="ident">cx</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;RuntimeArray in kernel mode&quot;</span>);
                 }
                 <span class="ident">result</span>
             }
-            <span class="self">Self</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// NOTE(eddyb) we emit `StorageClass::Generic` here, but later</span>
                 <span class="comment">// the linker will specialize the entire SPIR-V module to use</span>
                 <span class="comment">// storage classes inferred from `OpVariable`s.</span>
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>
                     .<span class="ident">emit_global</span>()
-                    .<span class="ident">type_pointer</span>(<span class="prelude-val">None</span>, <span class="ident">StorageClass</span>::<span class="ident">Generic</span>, <span class="ident">pointee</span>);
+                    .<span class="ident">type_pointer</span>(<span class="prelude-val">None</span>, <span class="ident">StorageClass::Generic</span>, <span class="ident">pointee</span>);
                 <span class="comment">// no pointers to functions</span>
-                <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span>::<span class="ident">Function</span> { .. } <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span><span class="ident">::Function</span> { .. } <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
                     <span class="ident">cx</span>.<span class="ident">zombie_even_in_user_code</span>(
                         <span class="ident">result</span>,
                         <span class="ident">def_span</span>,
@@ -958,13 +962,13 @@
                 }
                 <span class="ident">result</span>
             }
-            <span class="self">Self</span>::<span class="ident">Function</span> {
+            <span class="self">Self</span><span class="ident">::Function</span> {
                 <span class="ident">return_type</span>,
                 <span class="kw-2">ref</span> <span class="ident">arguments</span>,
             } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
                 .<span class="ident">emit_global</span>()
                 .<span class="ident">type_function</span>(<span class="ident">return_type</span>, <span class="ident">arguments</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>()),
-            <span class="self">Self</span>::<span class="ident">Image</span> {
+            <span class="self">Self</span><span class="ident">::Image</span> {
                 <span class="ident">sampled_type</span>,
                 <span class="ident">dim</span>,
                 <span class="ident">depth</span>,
@@ -983,21 +987,21 @@
                 <span class="ident">image_format</span>,
                 <span class="ident">access_qualifier</span>,
             ),
-            <span class="self">Self</span>::<span class="ident">Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampler</span>(),
-            <span class="self">Self</span>::<span class="ident">AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_acceleration_structure_khr</span>(),
-            <span class="self">Self</span>::<span class="ident">RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_ray_query_khr</span>(),
-            <span class="self">Self</span>::<span class="ident">SampledImage</span> { <span class="ident">image_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampled_image</span>(<span class="ident">image_type</span>),
+            <span class="self">Self</span><span class="ident">::Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampler</span>(),
+            <span class="self">Self</span><span class="ident">::AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_acceleration_structure_khr</span>(),
+            <span class="self">Self</span><span class="ident">::RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_ray_query_khr</span>(),
+            <span class="self">Self</span><span class="ident">::SampledImage</span> { <span class="ident">image_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampled_image</span>(<span class="ident">image_type</span>),
 
-            <span class="self">Self</span>::<span class="ident">InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>();
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">id</span>();
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">type_struct_id</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">inner_type</span>));
-                <span class="ident">emit</span>.<span class="ident">decorate</span>(<span class="ident">result</span>, <span class="ident">Decoration</span>::<span class="ident">Block</span>, <span class="ident">iter</span>::<span class="ident">empty</span>());
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">type_struct_id</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">iter::once</span>(<span class="ident">inner_type</span>));
+                <span class="ident">emit</span>.<span class="ident">decorate</span>(<span class="ident">result</span>, <span class="ident">Decoration::Block</span>, <span class="ident">iter::empty</span>());
                 <span class="ident">emit</span>.<span class="ident">member_decorate</span>(
                     <span class="ident">result</span>,
                     <span class="number">0</span>,
-                    <span class="ident">Decoration</span>::<span class="ident">Offset</span>,
-                    [<span class="ident">Operand</span>::<span class="ident">LiteralInt32</span>(<span class="number">0</span>)].<span class="ident">iter</span>().<span class="ident">cloned</span>(),
+                    <span class="ident">Decoration::Offset</span>,
+                    [<span class="ident">Operand::LiteralInt32</span>(<span class="number">0</span>)].<span class="ident">iter</span>().<span class="ident">cloned</span>(),
                 );
                 <span class="ident">result</span>
             }
@@ -1010,19 +1014,19 @@
     <span class="doccomment">/// emitting the subsequent `OpTypePointer`, the ID is already known and must be re-used.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def_with_id</span>(<span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">def_span</span>: <span class="ident">Span</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cached</span>) <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">type_cache</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">cached</span>, <span class="ident">id</span>);
+            <span class="macro">assert_eq!</span>(<span class="ident">cached</span>, <span class="ident">id</span>);
             <span class="kw">return</span> <span class="ident">cached</span>;
         }
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// NOTE(eddyb) we emit `StorageClass::Generic` here, but later</span>
                 <span class="comment">// the linker will specialize the entire SPIR-V module to use</span>
                 <span class="comment">// storage classes inferred from `OpVariable`s.</span>
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
                     <span class="ident">cx</span>.<span class="ident">emit_global</span>()
-                        .<span class="ident">type_pointer</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">StorageClass</span>::<span class="ident">Generic</span>, <span class="ident">pointee</span>);
+                        .<span class="ident">type_pointer</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">StorageClass::Generic</span>, <span class="ident">pointee</span>);
                 <span class="comment">// no pointers to functions</span>
-                <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span>::<span class="ident">Function</span> { .. } <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span><span class="ident">::Function</span> { .. } <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
                     <span class="ident">cx</span>.<span class="ident">zombie_even_in_user_code</span>(
                         <span class="ident">result</span>,
                         <span class="ident">def_span</span>,
@@ -1034,7 +1038,7 @@
             <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
                 .<span class="ident">tcx</span>
                 .<span class="ident">sess</span>
-                .<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;def_with_id invalid for type {:?}&quot;</span>, <span class="ident">other</span>)),
+                .<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;def_with_id invalid for type {:?}&quot;</span>, <span class="ident">other</span>)),
         };
         <span class="ident">cx</span>.<span class="ident">type_cache</span>.<span class="ident">def</span>(<span class="ident">result</span>, <span class="self">self</span>);
         <span class="ident">result</span>
@@ -1070,28 +1074,28 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sizeof</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Size</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="comment">// Types that have a dynamic size, or no concept of size at all.</span>
-            <span class="self">Self</span>::<span class="ident">Void</span>
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Opaque</span> { .. }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">RuntimeArray</span> { .. }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Function</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
+            <span class="self">Self</span><span class="ident">::Void</span>
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::Opaque</span> { .. }
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::RuntimeArray</span> { .. }
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::Function</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
 
-            <span class="self">Self</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="number">1</span>),
-            <span class="self">Self</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="kw">_</span>) <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Size</span>::<span class="ident">from_bits</span>(<span class="ident">width</span>),
-            <span class="self">Self</span>::<span class="ident">Adt</span> { <span class="ident">size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span><span class="question-mark">?</span>,
-            <span class="self">Self</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Size::from_bytes</span>(<span class="number">1</span>),
+            <span class="self">Self</span><span class="ident">::Integer</span>(<span class="ident">width</span>, <span class="kw">_</span>) <span class="op">|</span> <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Size::from_bits</span>(<span class="ident">width</span>),
+            <span class="self">Self</span><span class="ident">::Adt</span> { <span class="ident">size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span><span class="question-mark">?</span>,
+            <span class="self">Self</span><span class="ident">::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>).<span class="ident">sizeof</span>(<span class="ident">cx</span>)<span class="question-mark">?</span> <span class="op">*</span> <span class="ident">count</span>.<span class="ident">next_power_of_two</span>() <span class="kw">as</span> <span class="ident">u64</span>
             }
-            <span class="self">Self</span>::<span class="ident">Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>).<span class="ident">sizeof</span>(<span class="ident">cx</span>)<span class="question-mark">?</span> <span class="op">*</span> <span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>).<span class="ident">unwrap</span>()
             }
-            <span class="self">Self</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">data_layout</span>.<span class="ident">pointer_size</span>,
-            <span class="self">Self</span>::<span class="ident">Image</span> { .. }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">AccelerationStructureKhr</span>
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">RayQueryKhr</span>
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Sampler</span>
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Size</span>::<span class="ident">from_bytes</span>(<span class="number">4</span>),
+            <span class="self">Self</span><span class="ident">::Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">data_layout</span>.<span class="ident">pointer_size</span>,
+            <span class="self">Self</span><span class="ident">::Image</span> { .. }
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::AccelerationStructureKhr</span>
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::RayQueryKhr</span>
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::Sampler</span>
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Size::from_bytes</span>(<span class="number">4</span>),
 
-            <span class="self">Self</span>::<span class="ident">InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">inner_type</span>).<span class="ident">sizeof</span>(<span class="ident">cx</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span><span class="ident">::InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">inner_type</span>).<span class="ident">sizeof</span>(<span class="ident">cx</span>)<span class="question-mark">?</span>,
         };
         <span class="prelude-val">Some</span>(<span class="ident">result</span>)
     }
@@ -1099,31 +1103,31 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alignof</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Align</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="comment">// Types that have no concept of size or alignment.</span>
-            <span class="self">Self</span>::<span class="ident">Void</span> <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Opaque</span> { .. } <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Function</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">Align</span>::<span class="ident">from_bytes</span>(<span class="number">0</span>).<span class="ident">unwrap</span>()
+            <span class="self">Self</span><span class="ident">::Void</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::Opaque</span> { .. } <span class="op">|</span> <span class="self">Self</span><span class="ident">::Function</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Align::from_bytes</span>(<span class="number">0</span>).<span class="ident">unwrap</span>()
             }
 
-            <span class="self">Self</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Align</span>::<span class="ident">from_bytes</span>(<span class="number">1</span>).<span class="ident">unwrap</span>(),
-            <span class="self">Self</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="kw">_</span>) <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Align</span>::<span class="ident">from_bits</span>(<span class="ident">width</span> <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">unwrap</span>(),
-            <span class="self">Self</span>::<span class="ident">Adt</span> { <span class="ident">align</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">align</span>,
+            <span class="self">Self</span><span class="ident">::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Align::from_bytes</span>(<span class="number">1</span>).<span class="ident">unwrap</span>(),
+            <span class="self">Self</span><span class="ident">::Integer</span>(<span class="ident">width</span>, <span class="kw">_</span>) <span class="op">|</span> <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Align::from_bits</span>(<span class="ident">width</span> <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">unwrap</span>(),
+            <span class="self">Self</span><span class="ident">::Adt</span> { <span class="ident">align</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">align</span>,
             <span class="comment">// Vectors have size==align</span>
-            <span class="self">Self</span>::<span class="ident">Vector</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Align</span>::<span class="ident">from_bytes</span>(
+            <span class="self">Self</span><span class="ident">::Vector</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Align::from_bytes</span>(
                 <span class="self">self</span>.<span class="ident">sizeof</span>(<span class="ident">cx</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;alignof: Vectors must be sized&quot;</span>)
                     .<span class="ident">bytes</span>(),
             )
             .<span class="ident">expect</span>(<span class="string">&quot;alignof: Vectors must have power-of-2 size&quot;</span>),
-            <span class="self">Self</span>::<span class="ident">Array</span> { <span class="ident">element</span>, .. } <span class="op">|</span> <span class="self">Self</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="self">Self</span><span class="ident">::Array</span> { <span class="ident">element</span>, .. } <span class="op">|</span> <span class="self">Self</span><span class="ident">::RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>).<span class="ident">alignof</span>(<span class="ident">cx</span>)
             }
-            <span class="self">Self</span>::<span class="ident">Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">data_layout</span>.<span class="ident">pointer_align</span>.<span class="ident">abi</span>,
-            <span class="self">Self</span>::<span class="ident">Image</span> { .. }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">AccelerationStructureKhr</span>
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">RayQueryKhr</span>
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Sampler</span>
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Align</span>::<span class="ident">from_bytes</span>(<span class="number">4</span>).<span class="ident">unwrap</span>(),
+            <span class="self">Self</span><span class="ident">::Pointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">data_layout</span>.<span class="ident">pointer_align</span>.<span class="ident">abi</span>,
+            <span class="self">Self</span><span class="ident">::Image</span> { .. }
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::AccelerationStructureKhr</span>
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::RayQueryKhr</span>
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::Sampler</span>
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::SampledImage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Align::from_bytes</span>(<span class="number">4</span>).<span class="ident">unwrap</span>(),
 
-            <span class="self">Self</span>::<span class="ident">InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">inner_type</span>).<span class="ident">alignof</span>(<span class="ident">cx</span>),
+            <span class="self">Self</span><span class="ident">::InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">inner_type</span>).<span class="ident">alignof</span>(<span class="ident">cx</span>),
         }
     }
 }
@@ -1138,32 +1142,32 @@
 <span class="doccomment">/// track of a stack of what types are currently being printed, to not infinitely loop.</span>
 <span class="doccomment">/// Unfortunately, unlike `fmt::Display`, we can&#39;t easily pass down the &quot;stack&quot; of</span>
 <span class="doccomment">/// currently-being-printed types, so we use a global static.</span>
-<span class="kw">static</span> <span class="ident">DEBUG_STACK</span>: <span class="ident">SyncLazy</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SyncLazy</span>::<span class="ident">new</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>()));
+<span class="kw">static</span> <span class="ident">DEBUG_STACK</span>: <span class="ident">SyncLazy</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SyncLazy::new</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Mutex::new</span>(<span class="ident">Vec::new</span>()));
 
-<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">SpirvTypePrinter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">SpirvTypePrinter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">debug_stack</span> <span class="op">=</span> <span class="ident">DEBUG_STACK</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
             <span class="kw">if</span> <span class="ident">debug_stack</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>) {
-                <span class="kw">return</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;&lt;recursive type id={}&gt;&quot;</span>, <span class="self">self</span>.<span class="ident">id</span>);
+                <span class="kw">return</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;&lt;recursive type id={}&gt;&quot;</span>, <span class="self">self</span>.<span class="ident">id</span>);
             }
             <span class="ident">debug_stack</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">id</span>);
         }
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ty</span> {
-            <span class="ident">SpirvType</span>::<span class="ident">Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;Void&quot;</span>).<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>).<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;Bool&quot;</span>).<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>).<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="ident">signedness</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;Void&quot;</span>).<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>).<span class="ident">finish</span>(),
+            <span class="ident">SpirvType::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;Bool&quot;</span>).<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>).<span class="ident">finish</span>(),
+            <span class="ident">SpirvType::Integer</span>(<span class="ident">width</span>, <span class="ident">signedness</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;Integer&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;width&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">width</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;signedness&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">signedness</span>)
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;Float&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;width&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">width</span>)
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Adt</span> {
+            <span class="ident">SpirvType::Adt</span> {
                 <span class="ident">def_id</span>,
                 <span class="ident">align</span>,
                 <span class="ident">size</span>,
@@ -1185,18 +1189,18 @@
                     .<span class="ident">field</span>(<span class="string">&quot;field_names&quot;</span>, <span class="ident">field_names</span>)
                     .<span class="ident">finish</span>()
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Opaque</span> { <span class="kw-2">ref</span> <span class="ident">name</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::Opaque</span> { <span class="kw-2">ref</span> <span class="ident">name</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;Opaque&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;name&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">name</span>)
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;Vector&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;element&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">element</span>))
                 .<span class="ident">field</span>(<span class="string">&quot;count&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">count</span>)
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;Array&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;element&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">element</span>))
@@ -1209,17 +1213,17 @@
                         .<span class="ident">expect</span>(<span class="string">&quot;Array type has invalid count value&quot;</span>),
                 )
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;RuntimeArray&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;element&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">element</span>))
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;Pointer&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;pointee&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">pointee</span>))
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Function</span> {
+            <span class="ident">SpirvType::Function</span> {
                 <span class="ident">return_type</span>,
                 <span class="kw-2">ref</span> <span class="ident">arguments</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
@@ -1233,7 +1237,7 @@
                     .<span class="ident">field</span>(<span class="string">&quot;arguments&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>)
                     .<span class="ident">finish</span>()
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Image</span> {
+            <span class="ident">SpirvType::Image</span> {
                 <span class="ident">sampled_type</span>,
                 <span class="ident">dim</span>,
                 <span class="ident">depth</span>,
@@ -1254,19 +1258,19 @@
                 .<span class="ident">field</span>(<span class="string">&quot;image_format&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">image_format</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;access_qualifier&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">access_qualifier</span>)
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;Sampler&quot;</span>).<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>).<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { <span class="ident">image_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;Sampler&quot;</span>).<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>).<span class="ident">finish</span>(),
+            <span class="ident">SpirvType::SampledImage</span> { <span class="ident">image_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;SampledImage&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;image_type&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">image_type</span>))
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;InterfaceBlock&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;inner_type&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">inner_type</span>))
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;AccelerationStructure&quot;</span>).<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;RayQuery&quot;</span>).<span class="ident">finish</span>(),
+            <span class="ident">SpirvType::AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;AccelerationStructure&quot;</span>).<span class="ident">finish</span>(),
+            <span class="ident">SpirvType::RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;RayQuery&quot;</span>).<span class="ident">finish</span>(),
         };
         {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">debug_stack</span> <span class="op">=</span> <span class="ident">DEBUG_STACK</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
@@ -1281,38 +1285,38 @@
 <span class="doccomment">/// use `fmt::Display::fmt` as an &quot;entry point&quot;, and then call through to our own (recursive)</span>
 <span class="doccomment">/// custom function that has a parameter for the current stack. Make sure to not call Display on a</span>
 <span class="doccomment">/// type inside the custom function!</span>
-<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">SpirvTypePrinter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="self">self</span>.<span class="ident">display</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span>::<span class="ident">new</span>(), <span class="ident">f</span>)
+<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">SpirvTypePrinter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+        <span class="self">self</span>.<span class="ident">display</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec::new</span>(), <span class="ident">f</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">SpirvTypePrinter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">display</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">stack</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">display</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">stack</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">fn</span> <span class="ident">ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(
             <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
             <span class="ident">stack</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-            <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
+            <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
             <span class="ident">ty</span>: <span class="ident">Word</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
             <span class="kw">if</span> <span class="ident">stack</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">ty</span>) {
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;&lt;recursive type&gt;&quot;</span>)
             } <span class="kw">else</span> {
                 <span class="ident">stack</span>.<span class="ident">push</span>(<span class="ident">ty</span>);
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">ty</span>).<span class="ident">display</span>(<span class="ident">stack</span>, <span class="ident">f</span>);
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ty</span>, <span class="ident">stack</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>());
+                <span class="macro">assert_eq!</span>(<span class="ident">ty</span>, <span class="ident">stack</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>());
                 <span class="ident">result</span>
             }
         }
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ty</span> {
-            <span class="ident">SpirvType</span>::<span class="ident">Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;void&quot;</span>),
-            <span class="ident">SpirvType</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;bool&quot;</span>),
-            <span class="ident">SpirvType</span>::<span class="ident">Integer</span>(<span class="ident">width</span>, <span class="ident">signedness</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvType::Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;void&quot;</span>),
+            <span class="ident">SpirvType::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;bool&quot;</span>),
+            <span class="ident">SpirvType::Integer</span>(<span class="ident">width</span>, <span class="ident">signedness</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">signedness</span> { <span class="string">&quot;i&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;u&quot;</span> };
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}{}&quot;</span>, <span class="ident">prefix</span>, <span class="ident">width</span>)
+                <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}{}&quot;</span>, <span class="ident">prefix</span>, <span class="ident">width</span>)
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;f{}&quot;</span>, <span class="ident">width</span>),
-            <span class="ident">SpirvType</span>::<span class="ident">Adt</span> {
+            <span class="ident">SpirvType::Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;f{}&quot;</span>, <span class="ident">width</span>),
+            <span class="ident">SpirvType::Adt</span> {
                 <span class="ident">def_id</span>: <span class="kw">_</span>,
                 <span class="ident">align</span>: <span class="kw">_</span>,
                 <span class="ident">size</span>: <span class="kw">_</span>,
@@ -1320,7 +1324,7 @@
                 <span class="ident">field_offsets</span>: <span class="kw">_</span>,
                 <span class="kw-2">ref</span> <span class="ident">field_names</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;struct&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;struct&quot;</span>)<span class="question-mark">?</span>;
 
                 <span class="comment">// HACK(eddyb) use the first name (in insertion order, i.e.</span>
                 <span class="comment">// from the first invocation of `def_with_name` for this type)</span>
@@ -1335,7 +1339,7 @@
                 };
 
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="ident">first_name</span> {
-                    <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; {}&quot;</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot; {}&quot;</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
                 }
 
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot; { &quot;</span>)<span class="question-mark">?</span>;
@@ -1346,35 +1350,35 @@
                         <span class="string">&quot;, &quot;</span>
                     };
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">field_names</span>) <span class="op">=</span> <span class="ident">field_names</span> {
-                        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}: &quot;</span>, <span class="ident">field_names</span>[<span class="ident">index</span>])<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}: &quot;</span>, <span class="ident">field_names</span>[<span class="ident">index</span>])<span class="question-mark">?</span>;
                     }
                     <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">field</span>)<span class="question-mark">?</span>;
-                    <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">suffix</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">suffix</span>)<span class="question-mark">?</span>;
                 }
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot; }&quot;</span>)
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Opaque</span> { <span class="kw-2">ref</span> <span class="ident">name</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;struct {}&quot;</span>, <span class="ident">name</span>),
-            <span class="ident">SpirvType</span>::<span class="ident">Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvType::Opaque</span> { <span class="kw-2">ref</span> <span class="ident">name</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;struct {}&quot;</span>, <span class="ident">name</span>),
+            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">element</span>)<span class="question-mark">?</span>;
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;x{}&quot;</span>, <span class="ident">count</span>)
+                <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;x{}&quot;</span>, <span class="ident">count</span>)
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>);
                 <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">len</span>.<span class="ident">expect</span>(<span class="string">&quot;Array type has invalid count value&quot;</span>);
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;[&quot;</span>)<span class="question-mark">?</span>;
                 <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">element</span>)<span class="question-mark">?</span>;
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;; {}]&quot;</span>, <span class="ident">len</span>)
+                <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;; {}]&quot;</span>, <span class="ident">len</span>)
             }
-            <span class="ident">SpirvType</span>::<span class="ident">RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;[&quot;</span>)<span class="question-mark">?</span>;
                 <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">element</span>)<span class="question-mark">?</span>;
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;]&quot;</span>)
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;*&quot;</span>)<span class="question-mark">?</span>;
                 <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">pointee</span>)
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Function</span> {
+            <span class="ident">SpirvType::Function</span> {
                 <span class="ident">return_type</span>,
                 <span class="kw-2">ref</span> <span class="ident">arguments</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
@@ -1386,12 +1390,12 @@
                         <span class="string">&quot;, &quot;</span>
                     };
                     <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">arg</span>)<span class="question-mark">?</span>;
-                    <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">suffix</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">suffix</span>)<span class="question-mark">?</span>;
                 }
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;) -&gt; &quot;</span>)<span class="question-mark">?</span>;
                 <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">return_type</span>)
             }
-            <span class="ident">SpirvType</span>::<span class="ident">Image</span> {
+            <span class="ident">SpirvType::Image</span> {
                 <span class="ident">sampled_type</span>,
                 <span class="ident">dim</span>,
                 <span class="ident">depth</span>,
@@ -1411,18 +1415,18 @@
                 .<span class="ident">field</span>(<span class="string">&quot;image_format&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">image_format</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;access_qualifier&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">access_qualifier</span>)
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Sampler&quot;</span>),
-            <span class="ident">SpirvType</span>::<span class="ident">SampledImage</span> { <span class="ident">image_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
+            <span class="ident">SpirvType::Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Sampler&quot;</span>),
+            <span class="ident">SpirvType::SampledImage</span> { <span class="ident">image_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>
                 .<span class="ident">debug_struct</span>(<span class="string">&quot;SampledImage&quot;</span>)
                 .<span class="ident">field</span>(<span class="string">&quot;image_type&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">image_type</span>))
                 .<span class="ident">finish</span>(),
-            <span class="ident">SpirvType</span>::<span class="ident">InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvType::InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;interface block { &quot;</span>)<span class="question-mark">?</span>;
                 <span class="ident">ty</span>(<span class="self">self</span>.<span class="ident">cx</span>, <span class="ident">stack</span>, <span class="ident">f</span>, <span class="ident">inner_type</span>)<span class="question-mark">?</span>;
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot; }&quot;</span>)
             }
-            <span class="ident">SpirvType</span>::<span class="ident">AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;AccelerationStructureKhr&quot;</span>),
-            <span class="ident">SpirvType</span>::<span class="ident">RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;RayQuery&quot;</span>),
+            <span class="ident">SpirvType::AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;AccelerationStructureKhr&quot;</span>),
+            <span class="ident">SpirvType::RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;RayQuery&quot;</span>),
         }
     }
 }
@@ -1461,5 +1465,5 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

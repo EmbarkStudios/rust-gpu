@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/exp2.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>exp2.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../libm/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../libm/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -422,7 +422,7 @@
 <span class="comment">// OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF</span>
 <span class="comment">// SUCH DAMAGE.</span>
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">scalbn</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::scalbn</span>;
 
 <span class="kw">const</span> <span class="ident">TBLSIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">256</span>;
 
@@ -720,25 +720,25 @@
 <span class="doccomment">/// Exponential, base 2 (f64)</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Calculate `2^x`, that is, 2 raised to the power `x`.</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic</span>::<span class="ident">no_panic</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exp2</span>(<span class="kw-2">mut</span> <span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
-    <span class="kw">let</span> <span class="ident">redux</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x4338000000000000</span>) <span class="op">/</span> <span class="ident">TBLSIZE</span> <span class="kw">as</span> <span class="ident">f64</span>;
-    <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x3fe62e42fefa39ef</span>);
-    <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x3fcebfbdff82c575</span>);
-    <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x3fac6b08d704a0a6</span>);
-    <span class="kw">let</span> <span class="ident">p4</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x3f83b2ab88f70400</span>);
-    <span class="kw">let</span> <span class="ident">p5</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x3f55d88003875c74</span>);
+    <span class="kw">let</span> <span class="ident">redux</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x4338000000000000</span>) <span class="op">/</span> <span class="ident">TBLSIZE</span> <span class="kw">as</span> <span class="ident">f64</span>;
+    <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3fe62e42fefa39ef</span>);
+    <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3fcebfbdff82c575</span>);
+    <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3fac6b08d704a0a6</span>);
+    <span class="kw">let</span> <span class="ident">p4</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3f83b2ab88f70400</span>);
+    <span class="kw">let</span> <span class="ident">p5</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3f55d88003875c74</span>);
 
     <span class="comment">// double_t r, t, z;</span>
     <span class="comment">// uint32_t ix, i0;</span>
     <span class="comment">// union {double f; uint64_t i;} u = {x};</span>
     <span class="comment">// union {uint32_t u; int32_t i;} k;</span>
-    <span class="kw">let</span> <span class="ident">x1p1023</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x7fe0000000000000</span>);
-    <span class="kw">let</span> <span class="ident">x1p52</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x4330000000000000</span>);
-    <span class="kw">let</span> <span class="ident">_0x1p_149</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0xb6a0000000000000</span>);
+    <span class="kw">let</span> <span class="ident">x1p1023</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x7fe0000000000000</span>);
+    <span class="kw">let</span> <span class="ident">x1p52</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x4330000000000000</span>);
+    <span class="kw">let</span> <span class="ident">_0x1p_149</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0xb6a0000000000000</span>);
 
     <span class="comment">/* Filter out exceptional cases. */</span>
-    <span class="kw">let</span> <span class="ident">ui</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">to_bits</span>(<span class="ident">x</span>);
+    <span class="kw">let</span> <span class="ident">ui</span> <span class="op">=</span> <span class="ident">f64::to_bits</span>(<span class="ident">x</span>);
     <span class="kw">let</span> <span class="ident">ix</span> <span class="op">=</span> <span class="ident">ui</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span> <span class="op">&amp;</span> <span class="number">0x7fffffff</span>;
     <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0x408ff000</span> {
         <span class="comment">/* |x| &gt;= 1022 or nan */</span>
@@ -756,7 +756,7 @@
             <span class="comment">/* x &lt;= -1022 */</span>
             <span class="comment">/* underflow */</span>
             <span class="kw">if</span> <span class="ident">x</span> <span class="op">&lt;</span><span class="op">=</span> <span class="op">-</span><span class="number">1075.0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">x</span> <span class="op">-</span> <span class="ident">x1p52</span> <span class="op">+</span> <span class="ident">x1p52</span> <span class="op">!</span><span class="op">=</span> <span class="ident">x</span> {
-                <span class="macro">force_eval</span><span class="macro">!</span>((<span class="ident">_0x1p_149</span> <span class="op">/</span> <span class="ident">x</span>) <span class="kw">as</span> <span class="ident">f32</span>);
+                <span class="macro">force_eval!</span>((<span class="ident">_0x1p_149</span> <span class="op">/</span> <span class="ident">x</span>) <span class="kw">as</span> <span class="ident">f32</span>);
             }
             <span class="kw">if</span> <span class="ident">x</span> <span class="op">&lt;</span><span class="op">=</span> <span class="op">-</span><span class="number">1075.0</span> {
                 <span class="kw">return</span> <span class="number">0.0</span>;
@@ -768,18 +768,18 @@
     }
 
     <span class="comment">/* Reduce x, computing z, i0, and k. */</span>
-    <span class="kw">let</span> <span class="ident">ui</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">to_bits</span>(<span class="ident">x</span> <span class="op">+</span> <span class="ident">redux</span>);
+    <span class="kw">let</span> <span class="ident">ui</span> <span class="op">=</span> <span class="ident">f64::to_bits</span>(<span class="ident">x</span> <span class="op">+</span> <span class="ident">redux</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i0</span> <span class="op">=</span> <span class="ident">ui</span> <span class="kw">as</span> <span class="ident">u32</span>;
     <span class="ident">i0</span> <span class="op">=</span> <span class="ident">i0</span>.<span class="ident">wrapping_add</span>(<span class="ident">TBLSIZE</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">/</span> <span class="number">2</span>);
     <span class="kw">let</span> <span class="ident">ku</span> <span class="op">=</span> <span class="ident">i0</span> <span class="op">/</span> <span class="ident">TBLSIZE</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="ident">TBLSIZE</span> <span class="kw">as</span> <span class="ident">u32</span>;
     <span class="kw">let</span> <span class="ident">ki</span> <span class="op">=</span> <span class="ident">ku</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">/</span> <span class="ident">TBLSIZE</span> <span class="kw">as</span> <span class="ident">i32</span>;
     <span class="ident">i0</span> <span class="op">%</span><span class="op">=</span> <span class="ident">TBLSIZE</span> <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">uf</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">ui</span>) <span class="op">-</span> <span class="ident">redux</span>;
+    <span class="kw">let</span> <span class="ident">uf</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="ident">ui</span>) <span class="op">-</span> <span class="ident">redux</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">-</span> <span class="ident">uf</span>;
 
     <span class="comment">/* Compute r = exp2(y) = exp2t[i0] * p(z - eps[i]). */</span>
-    <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">TBL</span>[<span class="number">2</span> <span class="op">*</span> <span class="ident">i0</span> <span class="kw">as</span> <span class="ident">usize</span>]); <span class="comment">/* exp2t[i0] */</span>
-    <span class="ident">z</span> <span class="op">-</span><span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="ident">TBL</span>[<span class="number">2</span> <span class="op">*</span> <span class="ident">i0</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="number">1</span>]); <span class="comment">/* eps[i0]   */</span>
+    <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="ident">TBL</span>[<span class="number">2</span> <span class="op">*</span> <span class="ident">i0</span> <span class="kw">as</span> <span class="ident">usize</span>]); <span class="comment">/* exp2t[i0] */</span>
+    <span class="ident">z</span> <span class="op">-</span><span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="ident">TBL</span>[<span class="number">2</span> <span class="op">*</span> <span class="ident">i0</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="number">1</span>]); <span class="comment">/* eps[i0]   */</span>
     <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">t</span> <span class="op">+</span> <span class="ident">t</span> <span class="op">*</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">p1</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">p2</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">p3</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> (<span class="ident">p4</span> <span class="op">+</span> <span class="ident">z</span> <span class="op">*</span> <span class="ident">p5</span>))));
 
     <span class="ident">scalbn</span>(<span class="ident">r</span>, <span class="ident">ki</span>)
@@ -788,8 +788,8 @@
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">i0_wrap_test</span>() {
     <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="op">-</span><span class="number">3.0</span> <span class="op">/</span> <span class="number">256.0</span>;
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">exp2</span>(<span class="ident">x</span>), <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x3fefbdba3692d514</span>));
+    <span class="macro">assert_eq!</span>(<span class="ident">exp2</span>(<span class="ident">x</span>), <span class="ident">f64::from_bits</span>(<span class="number">0x3fefbdba3692d514</span>));
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-search-js="../../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

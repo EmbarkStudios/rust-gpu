@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libm-0.2.1/src/math/fma.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fma.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../libm/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../libm/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -227,7 +227,7 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">f32</span>, <span class="ident">f64</span>};
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">scalbn</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::scalbn</span>;
 
 <span class="kw">const</span> <span class="ident">ZEROINFNAN</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">0x7ff</span> <span class="op">-</span> <span class="number">0x3ff</span> <span class="op">-</span> <span class="number">52</span> <span class="op">-</span> <span class="number">1</span>;
 
@@ -238,7 +238,7 @@
 }
 
 <span class="kw">fn</span> <span class="ident">normalize</span>(<span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Num</span> {
-    <span class="kw">let</span> <span class="ident">x1p63</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x43e0000000000000</span>); <span class="comment">// 0x1p63 === 2 ^ 63</span>
+    <span class="kw">let</span> <span class="ident">x1p63</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x43e0000000000000</span>); <span class="comment">// 0x1p63 === 2 ^ 63</span>
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ix</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">to_bits</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">e</span>: <span class="ident">i32</span> <span class="op">=</span> (<span class="ident">ix</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">52</span>) <span class="kw">as</span> <span class="ident">i32</span>;
@@ -278,10 +278,10 @@
 <span class="doccomment">/// Computes `(x*y)+z`, rounded as one ternary operation:</span>
 <span class="doccomment">/// Computes the value (as if) to infinite precision and rounds once to the result format,</span>
 <span class="doccomment">/// according to the rounding mode characterized by the value of FLT_ROUNDS.</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic</span>::<span class="ident">no_panic</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">test</span>, <span class="ident">assert_no_panic</span>), <span class="ident">no_panic::no_panic</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fma</span>(<span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">z</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
-    <span class="kw">let</span> <span class="ident">x1p63</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x43e0000000000000</span>); <span class="comment">// 0x1p63 === 2 ^ 63</span>
-    <span class="kw">let</span> <span class="ident">x0_ffffff8p_63</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from_bits</span>(<span class="number">0x3bfffffff0000000</span>); <span class="comment">// 0x0.ffffff8p-63</span>
+    <span class="kw">let</span> <span class="ident">x1p63</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x43e0000000000000</span>); <span class="comment">// 0x1p63 === 2 ^ 63</span>
+    <span class="kw">let</span> <span class="ident">x0_ffffff8p_63</span> <span class="op">=</span> <span class="ident">f64::from_bits</span>(<span class="number">0x3bfffffff0000000</span>); <span class="comment">// 0x0.ffffff8p-63</span>
 
     <span class="comment">/* normalize so top 10bits and last bit are 0 */</span>
     <span class="kw">let</span> <span class="ident">nx</span> <span class="op">=</span> <span class="ident">normalize</span>(<span class="ident">x</span>);
@@ -397,8 +397,8 @@
                 <span class="comment">/* min normal after rounding, underflow depends
                 on arch behaviour which can be imitated by
                 a double to float conversion */</span>
-                <span class="kw">let</span> <span class="ident">fltmin</span>: <span class="ident">f32</span> <span class="op">=</span> (<span class="ident">x0_ffffff8p_63</span> <span class="op">*</span> <span class="ident">f32</span>::<span class="ident">MIN_POSITIVE</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">r</span>) <span class="kw">as</span> <span class="ident">f32</span>;
-                <span class="kw">return</span> <span class="ident">f64</span>::<span class="ident">MIN_POSITIVE</span> <span class="op">/</span> <span class="ident">f32</span>::<span class="ident">MIN_POSITIVE</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">fltmin</span> <span class="kw">as</span> <span class="ident">f64</span>;
+                <span class="kw">let</span> <span class="ident">fltmin</span>: <span class="ident">f32</span> <span class="op">=</span> (<span class="ident">x0_ffffff8p_63</span> <span class="op">*</span> <span class="ident">f32::MIN_POSITIVE</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">r</span>) <span class="kw">as</span> <span class="ident">f32</span>;
+                <span class="kw">return</span> <span class="ident">f64::MIN_POSITIVE</span> <span class="op">/</span> <span class="ident">f32::MIN_POSITIVE</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">fltmin</span> <span class="kw">as</span> <span class="ident">f64</span>;
             }
             <span class="comment">/* one bit is lost when scaled, add another top bit to
             only round once at conversion if it is inexact */</span>
@@ -413,7 +413,7 @@
                 <span class="comment">/* raise underflow portably, such that it
                 cannot be optimized away */</span>
                 {
-                    <span class="kw">let</span> <span class="ident">tiny</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">MIN_POSITIVE</span> <span class="op">/</span> <span class="ident">f32</span>::<span class="ident">MIN_POSITIVE</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">r</span>;
+                    <span class="kw">let</span> <span class="ident">tiny</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">f64::MIN_POSITIVE</span> <span class="op">/</span> <span class="ident">f32::MIN_POSITIVE</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">r</span>;
                     <span class="ident">r</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">tiny</span> <span class="op">*</span> <span class="ident">tiny</span>) <span class="op">*</span> (<span class="ident">r</span> <span class="op">-</span> <span class="ident">r</span>);
                 }
             }
@@ -436,7 +436,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">fma_segfault</span>() {
         <span class="comment">// These two inputs cause fma to segfault on release due to overflow:</span>
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="ident">fma</span>(
                 <span class="op">-</span><span class="number">0.0000000000000002220446049250313</span>,
                 <span class="op">-</span><span class="number">0.0000000000000002220446049250313</span>,
@@ -445,9 +445,9 @@
             <span class="op">-</span><span class="number">0.00000000000000022204460492503126</span>,
         );
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">fma</span>(<span class="op">-</span><span class="number">0.992</span>, <span class="op">-</span><span class="number">0.992</span>, <span class="op">-</span><span class="number">0.992</span>), <span class="op">-</span><span class="number">0.00793599999988632</span>,);
+        <span class="macro">assert_eq!</span>(<span class="ident">fma</span>(<span class="op">-</span><span class="number">0.992</span>, <span class="op">-</span><span class="number">0.992</span>, <span class="op">-</span><span class="number">0.992</span>), <span class="op">-</span><span class="number">0.00793599999988632</span>,);
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-search-js="../../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libm" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

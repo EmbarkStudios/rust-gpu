@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/tar-0.4.33/src/entry.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>entry.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../tar/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../tar/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -798,22 +798,22 @@
 <span id="795">795</span>
 <span id="796">796</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">OpenOptions</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="self">self</span>, <span class="ident">Error</span>, <span class="ident">ErrorKind</span>, <span class="ident">SeekFrom</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::{<span class="ident">Component</span>, <span class="ident">Path</span>, <span class="ident">PathBuf</span>};
+<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+<span class="kw">use</span> <span class="ident">std::cmp</span>;
+<span class="kw">use</span> <span class="ident">std::fs</span>;
+<span class="kw">use</span> <span class="ident">std::fs::OpenOptions</span>;
+<span class="kw">use</span> <span class="ident">std::io::prelude</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">std::io</span>::{<span class="self">self</span>, <span class="ident">Error</span>, <span class="ident">ErrorKind</span>, <span class="ident">SeekFrom</span>};
+<span class="kw">use</span> <span class="ident">std::marker</span>;
+<span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Component</span>, <span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 
 <span class="kw">use</span> <span class="ident">filetime</span>::{<span class="self">self</span>, <span class="ident">FileTime</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">archive</span>::<span class="ident">ArchiveInner</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">TarError</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">header</span>::<span class="ident">bytes2path</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">other</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">pax</span>::<span class="ident">pax_extensions</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::archive::ArchiveInner</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::error::TarError</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::header::bytes2path</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::other</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::pax::pax_extensions</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Archive</span>, <span class="ident">Header</span>, <span class="ident">PaxExtensions</span>};
 
 <span class="doccomment">/// A read-only view into an entry of an archive.</span>
@@ -823,7 +823,7 @@
 <span class="doccomment">/// entry cannot be rewritten once inserted into an archive.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Entry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">R</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">Read</span><span class="op">&gt;</span> {
     <span class="ident">fields</span>: <span class="ident">EntryFields</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    <span class="ident">_ignored</span>: <span class="ident">marker</span>::<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Archive</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">_ignored</span>: <span class="ident">marker::PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Archive</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="comment">// private implementation detail of `Entry`, but concrete (no type parameters)</span>
@@ -844,8 +844,8 @@
 }
 
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">EntryIo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">Pad</span>(<span class="ident">io</span>::<span class="ident">Take</span><span class="op">&lt;</span><span class="ident">io</span>::<span class="ident">Repeat</span><span class="op">&gt;</span>),
-    <span class="ident">Data</span>(<span class="ident">io</span>::<span class="ident">Take</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ArchiveInner</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Read</span> <span class="op">+</span> <span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>),
+    <span class="ident">Pad</span>(<span class="ident">io::Take</span><span class="op">&lt;</span><span class="ident">io::Repeat</span><span class="op">&gt;</span>),
+    <span class="ident">Data</span>(<span class="ident">io::Take</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ArchiveInner</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Read</span> <span class="op">+</span> <span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>),
 }
 
 <span class="doccomment">/// When unpacking items the unpacked thing is returned to allow custom</span>
@@ -854,7 +854,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Unpacked</span> {
     <span class="doccomment">/// A file was unpacked.</span>
-    <span class="ident">File</span>(<span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>),
+    <span class="ident">File</span>(<span class="ident">std::fs::File</span>),
     <span class="doccomment">/// A directory, hardlink, symlink, or other node was unpacked.</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
     <span class="ident">__Nonexhaustive</span>,
@@ -873,7 +873,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// It is recommended to use this method instead of inspecting the `header`</span>
     <span class="doccomment">/// directly to ensure that various archive formats are handled correctly.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">fields</span>.<span class="ident">path</span>()
     }
 
@@ -900,7 +900,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// It is recommended to use this method instead of inspecting the `header`</span>
     <span class="doccomment">/// directly to ensure that various archive formats are handled correctly.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">link_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">link_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">fields</span>.<span class="ident">link_name</span>()
     }
 
@@ -931,7 +931,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Also note that this function will read the entire entry if the entry</span>
     <span class="doccomment">/// itself is a list of extensions.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pax_extensions</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PaxExtensions</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pax_extensions</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PaxExtensions</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">fields</span>.<span class="ident">pax_extensions</span>()
     }
 
@@ -999,7 +999,7 @@
     <span class="doccomment">///     file.unpack(format!(&quot;file-{}&quot;, i)).unwrap();</span>
     <span class="doccomment">/// }</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unpack</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dst</span>: <span class="ident">P</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Unpacked</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unpack</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dst</span>: <span class="ident">P</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">Unpacked</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">fields</span>.<span class="ident">unpack</span>(<span class="prelude-val">None</span>, <span class="ident">dst</span>.<span class="ident">as_ref</span>())
     }
 
@@ -1027,7 +1027,7 @@
     <span class="doccomment">///     file.unpack_in(&quot;target&quot;).unwrap();</span>
     <span class="doccomment">/// }</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unpack_in</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dst</span>: <span class="ident">P</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unpack_in</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dst</span>: <span class="ident">P</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">fields</span>.<span class="ident">unpack_in</span>(<span class="ident">dst</span>.<span class="ident">as_ref</span>())
     }
 
@@ -1061,7 +1061,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">R</span>: <span class="ident">Read</span><span class="op">&gt;</span> <span class="ident">Read</span> <span class="kw">for</span> <span class="ident">Entry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">R</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">into</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">into</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">fields</span>.<span class="ident">read</span>(<span class="ident">into</span>)
     }
 }
@@ -1074,18 +1074,18 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_entry</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Read</span><span class="op">&gt;</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Entry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">R</span><span class="op">&gt;</span> {
         <span class="ident">Entry</span> {
             <span class="ident">fields</span>: <span class="self">self</span>,
-            <span class="ident">_ignored</span>: <span class="ident">marker</span>::<span class="ident">PhantomData</span>,
+            <span class="ident">_ignored</span>: <span class="ident">marker::PhantomData</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="comment">// Preallocate some data but don&#39;t let ourselves get too crazy now.</span>
-        <span class="kw">let</span> <span class="ident">cap</span> <span class="op">=</span> <span class="ident">cmp</span>::<span class="ident">min</span>(<span class="self">self</span>.<span class="ident">size</span>, <span class="number">128</span> <span class="op">*</span> <span class="number">1024</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">cap</span> <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="kw">let</span> <span class="ident">cap</span> <span class="op">=</span> <span class="ident">cmp::min</span>(<span class="self">self</span>.<span class="ident">size</span>, <span class="number">128</span> <span class="op">*</span> <span class="number">1024</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">cap</span> <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="self">self</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">v</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">v</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">bytes2path</span>(<span class="self">self</span>.<span class="ident">path_bytes</span>())
     }
 
@@ -1093,9 +1093,9 @@
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">long_pathname</span> {
             <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">0</span>) <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">last</span>() {
-                    <span class="ident">Cow</span>::<span class="ident">Borrowed</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..<span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>])
+                    <span class="ident">Cow::Borrowed</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..<span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>])
                 } <span class="kw">else</span> {
-                    <span class="ident">Cow</span>::<span class="ident">Borrowed</span>(<span class="ident">bytes</span>)
+                    <span class="ident">Cow::Borrowed</span>(<span class="ident">bytes</span>)
                 }
             }
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -1105,7 +1105,7 @@
                         .<span class="ident">find</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">key_bytes</span>() <span class="op">=</span><span class="op">=</span> <span class="string">b&quot;path&quot;</span>)
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">value_bytes</span>());
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">field</span>) <span class="op">=</span> <span class="ident">pax</span> {
-                        <span class="kw">return</span> <span class="ident">Cow</span>::<span class="ident">Borrowed</span>(<span class="ident">field</span>);
+                        <span class="kw">return</span> <span class="ident">Cow::Borrowed</span>(<span class="ident">field</span>);
                     }
                 }
                 <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">path_bytes</span>()
@@ -1115,10 +1115,10 @@
 
     <span class="doccomment">/// Gets the path in a &quot;lossy&quot; way, used for error reporting ONLY.</span>
     <span class="kw">fn</span> <span class="ident">path_lossy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">path_bytes</span>()).<span class="ident">to_string</span>()
+        <span class="ident">String::from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">path_bytes</span>()).<span class="ident">to_string</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">link_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">link_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">link_name_bytes</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bytes2path</span>(<span class="ident">bytes</span>).<span class="ident">map</span>(<span class="prelude-val">Some</span>),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
@@ -1129,16 +1129,16 @@
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">long_linkname</span> {
             <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">0</span>) <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">last</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">Cow</span>::<span class="ident">Borrowed</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..<span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>]))
+                    <span class="prelude-val">Some</span>(<span class="ident">Cow::Borrowed</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..<span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>]))
                 } <span class="kw">else</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">Cow</span>::<span class="ident">Borrowed</span>(<span class="ident">bytes</span>))
+                    <span class="prelude-val">Some</span>(<span class="ident">Cow::Borrowed</span>(<span class="ident">bytes</span>))
                 }
             }
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">link_name_bytes</span>(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">pax_extensions</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PaxExtensions</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">pax_extensions</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PaxExtensions</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pax_extensions</span>.<span class="ident">is_none</span>() {
             <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">header</span>.<span class="ident">entry_type</span>().<span class="ident">is_pax_global_extensions</span>()
                 <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">header</span>.<span class="ident">entry_type</span>().<span class="ident">is_pax_local_extensions</span>()
@@ -1150,7 +1150,7 @@
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">pax_extensions</span>(<span class="self">self</span>.<span class="ident">pax_extensions</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())))
     }
 
-    <span class="kw">fn</span> <span class="ident">unpack_in</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">unpack_in</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="comment">// Notes regarding bsdtar 2.8.3 / libarchive 2.8.3:</span>
         <span class="comment">// * Leading &#39;/&#39;s are trimmed. For example, `///test` is treated as</span>
         <span class="comment">//   `test`.</span>
@@ -1167,8 +1167,8 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file_dst</span> <span class="op">=</span> <span class="ident">dst</span>.<span class="ident">to_path_buf</span>();
         {
             <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">path</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">TarError</span>::<span class="ident">new</span>(
-                    <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;invalid path in entry header: {}&quot;</span>, <span class="self">self</span>.<span class="ident">path_lossy</span>()),
+                <span class="ident">TarError::new</span>(
+                    <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;invalid path in entry header: {}&quot;</span>, <span class="self">self</span>.<span class="ident">path_lossy</span>()),
                     <span class="ident">e</span>,
                 )
             })<span class="question-mark">?</span>;
@@ -1177,15 +1177,15 @@
                     <span class="comment">// Leading &#39;/&#39; characters, root paths, and &#39;.&#39;</span>
                     <span class="comment">// components are just ignored and treated as &quot;empty</span>
                     <span class="comment">// components&quot;</span>
-                    <span class="ident">Component</span>::<span class="ident">Prefix</span>(..) <span class="op">|</span> <span class="ident">Component</span>::<span class="ident">RootDir</span> <span class="op">|</span> <span class="ident">Component</span>::<span class="ident">CurDir</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                    <span class="ident">Component::Prefix</span>(..) <span class="op">|</span> <span class="ident">Component::RootDir</span> <span class="op">|</span> <span class="ident">Component::CurDir</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
 
                     <span class="comment">// If any part of the filename is &#39;..&#39;, then skip over</span>
                     <span class="comment">// unpacking the file to prevent directory traversal</span>
                     <span class="comment">// security issues.  See, e.g.: CVE-2001-1267,</span>
                     <span class="comment">// CVE-2002-0399, CVE-2005-1918, CVE-2007-4131</span>
-                    <span class="ident">Component</span>::<span class="ident">ParentDir</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                    <span class="ident">Component::ParentDir</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
 
-                    <span class="ident">Component</span>::<span class="ident">Normal</span>(<span class="ident">part</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">file_dst</span>.<span class="ident">push</span>(<span class="ident">part</span>),
+                    <span class="ident">Component::Normal</span>(<span class="ident">part</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">file_dst</span>.<span class="ident">push</span>(<span class="ident">part</span>),
                 }
             }
         }
@@ -1203,38 +1203,38 @@
         };
 
         <span class="kw">if</span> <span class="ident">parent</span>.<span class="ident">symlink_metadata</span>().<span class="ident">is_err</span>() {
-            <span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">parent</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">TarError</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;failed to create `{}`&quot;</span>, <span class="ident">parent</span>.<span class="ident">display</span>()), <span class="ident">e</span>)
+            <span class="ident">fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">parent</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">TarError::new</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;failed to create `{}`&quot;</span>, <span class="ident">parent</span>.<span class="ident">display</span>()), <span class="ident">e</span>)
             })<span class="question-mark">?</span>;
         }
 
         <span class="kw">let</span> <span class="ident">canon_target</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">validate_inside_dst</span>(<span class="kw-2">&amp;</span><span class="ident">dst</span>, <span class="ident">parent</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.<span class="ident">unpack</span>(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">canon_target</span>), <span class="kw-2">&amp;</span><span class="ident">file_dst</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TarError</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;failed to unpack `{}`&quot;</span>, <span class="ident">file_dst</span>.<span class="ident">display</span>()), <span class="ident">e</span>))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TarError::new</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;failed to unpack `{}`&quot;</span>, <span class="ident">file_dst</span>.<span class="ident">display</span>()), <span class="ident">e</span>))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
     }
 
     <span class="doccomment">/// Unpack as destination directory `dst`.</span>
-    <span class="kw">fn</span> <span class="ident">unpack_dir</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">unpack_dir</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="comment">// If the directory already exists just let it slide</span>
-        <span class="ident">fs</span>::<span class="ident">create_dir</span>(<span class="ident">dst</span>).<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-            <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">ErrorKind</span>::<span class="ident">AlreadyExists</span> {
-                <span class="kw">let</span> <span class="ident">prev</span> <span class="op">=</span> <span class="ident">fs</span>::<span class="ident">metadata</span>(<span class="ident">dst</span>);
+        <span class="ident">fs::create_dir</span>(<span class="ident">dst</span>).<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+            <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">ErrorKind::AlreadyExists</span> {
+                <span class="kw">let</span> <span class="ident">prev</span> <span class="op">=</span> <span class="ident">fs::metadata</span>(<span class="ident">dst</span>);
                 <span class="kw">if</span> <span class="ident">prev</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">is_dir</span>()).<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>) {
                     <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
                 }
             }
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">new</span>(
+            <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(
                 <span class="ident">err</span>.<span class="ident">kind</span>(),
-                <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} when creating dir {}&quot;</span>, <span class="ident">err</span>, <span class="ident">dst</span>.<span class="ident">display</span>()),
+                <span class="macro">format!</span>(<span class="string">&quot;{} when creating dir {}&quot;</span>, <span class="ident">err</span>, <span class="ident">dst</span>.<span class="ident">display</span>()),
             ))
         })
     }
 
     <span class="doccomment">/// Returns access to the header of this entry in the archive.</span>
-    <span class="kw">fn</span> <span class="ident">unpack</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">target_base</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Unpacked</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">unpack</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">target_base</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">Unpacked</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">entry_type</span>();
 
         <span class="kw">if</span> <span class="ident">kind</span>.<span class="ident">is_dir</span>() {
@@ -1242,22 +1242,22 @@
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">mode</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">mode</span>() {
                 <span class="ident">set_perms</span>(<span class="ident">dst</span>, <span class="prelude-val">None</span>, <span class="ident">mode</span>, <span class="self">self</span>.<span class="ident">preserve_permissions</span>)<span class="question-mark">?</span>;
             }
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked</span>::<span class="ident">__Nonexhaustive</span>);
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked::__Nonexhaustive</span>);
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">kind</span>.<span class="ident">is_hard_link</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">kind</span>.<span class="ident">is_symlink</span>() {
             <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">link_name</span>()<span class="question-mark">?</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">name</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">name</span>,
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">other</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">other</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;hard link listed for {} but no link name found&quot;</span>,
-                        <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="self">self</span>.<span class="ident">header</span>.<span class="ident">as_bytes</span>())
+                        <span class="ident">String::from_utf8_lossy</span>(<span class="self">self</span>.<span class="ident">header</span>.<span class="ident">as_bytes</span>())
                     )));
                 }
             };
 
             <span class="kw">if</span> <span class="ident">src</span>.<span class="ident">iter</span>().<span class="ident">count</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">other</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">other</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;symlink destination for {} is empty&quot;</span>,
-                    <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="self">self</span>.<span class="ident">header</span>.<span class="ident">as_bytes</span>())
+                    <span class="ident">String::from_utf8_lossy</span>(<span class="self">self</span>.<span class="ident">header</span>.<span class="ident">as_bytes</span>())
                 )));
             }
 
@@ -1281,10 +1281,10 @@
                     }
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">src</span>.<span class="ident">into_owned</span>(),
                 };
-                <span class="ident">fs</span>::<span class="ident">hard_link</span>(<span class="kw-2">&amp;</span><span class="ident">link_src</span>, <span class="ident">dst</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                    <span class="ident">Error</span>::<span class="ident">new</span>(
+                <span class="ident">fs::hard_link</span>(<span class="kw-2">&amp;</span><span class="ident">link_src</span>, <span class="ident">dst</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                    <span class="ident">Error::new</span>(
                         <span class="ident">err</span>.<span class="ident">kind</span>(),
-                        <span class="macro">format</span><span class="macro">!</span>(
+                        <span class="macro">format!</span>(
                             <span class="string">&quot;{} when hard linking {} to {}&quot;</span>,
                             <span class="ident">err</span>,
                             <span class="ident">link_src</span>.<span class="ident">display</span>(),
@@ -1295,17 +1295,17 @@
             } <span class="kw">else</span> {
                 <span class="ident">symlink</span>(<span class="kw-2">&amp;</span><span class="ident">src</span>, <span class="ident">dst</span>)
                     .<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">err_io</span><span class="op">|</span> {
-                        <span class="kw">if</span> <span class="ident">err_io</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">AlreadyExists</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">overwrite</span> {
+                        <span class="kw">if</span> <span class="ident">err_io</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">io::ErrorKind::AlreadyExists</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">overwrite</span> {
                             <span class="comment">// remove dest and try once more</span>
-                            <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">remove_file</span>(<span class="ident">dst</span>).<span class="ident">and_then</span>(<span class="op">|</span>()<span class="op">|</span> <span class="ident">symlink</span>(<span class="kw-2">&amp;</span><span class="ident">src</span>, <span class="ident">dst</span>))
+                            <span class="ident">std::fs::remove_file</span>(<span class="ident">dst</span>).<span class="ident">and_then</span>(<span class="op">|</span>()<span class="op">|</span> <span class="ident">symlink</span>(<span class="kw-2">&amp;</span><span class="ident">src</span>, <span class="ident">dst</span>))
                         } <span class="kw">else</span> {
                             <span class="prelude-val">Err</span>(<span class="ident">err_io</span>)
                         }
                     })
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                        <span class="ident">Error</span>::<span class="ident">new</span>(
+                        <span class="ident">Error::new</span>(
                             <span class="ident">err</span>.<span class="ident">kind</span>(),
-                            <span class="macro">format</span><span class="macro">!</span>(
+                            <span class="macro">format!</span>(
                                 <span class="string">&quot;{} when symlinking {} to {}&quot;</span>,
                                 <span class="ident">err</span>,
                                 <span class="ident">src</span>.<span class="ident">display</span>(),
@@ -1314,29 +1314,29 @@
                         )
                     })<span class="question-mark">?</span>;
             };
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked</span>::<span class="ident">__Nonexhaustive</span>);
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked::__Nonexhaustive</span>);
 
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
             <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_variables</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">symlink</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">Other</span>, <span class="string">&quot;Not implemented&quot;</span>))
+            <span class="kw">fn</span> <span class="ident">symlink</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+                <span class="prelude-val">Err</span>(<span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::Other</span>, <span class="string">&quot;Not implemented&quot;</span>))
             }
 
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">symlink</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-                ::<span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">windows</span>::<span class="ident">fs</span>::<span class="ident">symlink_file</span>(<span class="ident">src</span>, <span class="ident">dst</span>)
+            <span class="kw">fn</span> <span class="ident">symlink</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+                <span class="ident">::std::os::windows::fs::symlink_file</span>(<span class="ident">src</span>, <span class="ident">dst</span>)
             }
 
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">unix</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">symlink</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-                ::<span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">unix</span>::<span class="ident">fs</span>::<span class="ident">symlink</span>(<span class="ident">src</span>, <span class="ident">dst</span>)
+            <span class="kw">fn</span> <span class="ident">symlink</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+                <span class="ident">::std::os::unix::fs::symlink</span>(<span class="ident">src</span>, <span class="ident">dst</span>)
             }
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">kind</span>.<span class="ident">is_pax_global_extensions</span>()
             <span class="op">|</span><span class="op">|</span> <span class="ident">kind</span>.<span class="ident">is_pax_local_extensions</span>()
             <span class="op">|</span><span class="op">|</span> <span class="ident">kind</span>.<span class="ident">is_gnu_longname</span>()
             <span class="op">|</span><span class="op">|</span> <span class="ident">kind</span>.<span class="ident">is_gnu_longlink</span>()
         {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked</span>::<span class="ident">__Nonexhaustive</span>);
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked::__Nonexhaustive</span>);
         };
 
         <span class="comment">// Old BSD-tar compatibility.</span>
@@ -1347,7 +1347,7 @@
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">mode</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">mode</span>() {
                 <span class="ident">set_perms</span>(<span class="ident">dst</span>, <span class="prelude-val">None</span>, <span class="ident">mode</span>, <span class="self">self</span>.<span class="ident">preserve_permissions</span>)<span class="question-mark">?</span>;
             }
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked</span>::<span class="ident">__Nonexhaustive</span>);
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked::__Nonexhaustive</span>);
         }
 
         <span class="comment">// Note the lack of `else` clause above. According to the FreeBSD</span>
@@ -1361,17 +1361,17 @@
 
         <span class="comment">// Ensure we write a new file rather than overwriting in-place which</span>
         <span class="comment">// is attackable; if an existing file is found unlink it.</span>
-        <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span><span class="op">&gt;</span> {
-            <span class="ident">OpenOptions</span>::<span class="ident">new</span>().<span class="ident">write</span>(<span class="bool-val">true</span>).<span class="ident">create_new</span>(<span class="bool-val">true</span>).<span class="ident">open</span>(<span class="ident">dst</span>)
+        <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">std::fs::File</span><span class="op">&gt;</span> {
+            <span class="ident">OpenOptions::new</span>().<span class="ident">write</span>(<span class="bool-val">true</span>).<span class="ident">create_new</span>(<span class="bool-val">true</span>).<span class="ident">open</span>(<span class="ident">dst</span>)
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> (<span class="op">|</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> (<span class="op">|</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">std::fs::File</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">dst</span>).<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">kind</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">ErrorKind</span>::<span class="ident">AlreadyExists</span> {
+                <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">kind</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">ErrorKind::AlreadyExists</span> {
                     <span class="prelude-val">Err</span>(<span class="ident">err</span>)
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">overwrite</span> {
-                    <span class="kw">match</span> <span class="ident">fs</span>::<span class="ident">remove_file</span>(<span class="ident">dst</span>) {
+                    <span class="kw">match</span> <span class="ident">fs::remove_file</span>(<span class="ident">dst</span>) {
                         <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">open</span>(<span class="ident">dst</span>),
-                        <span class="prelude-val">Err</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">NotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">open</span>(<span class="ident">dst</span>),
+                        <span class="prelude-val">Err</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">io::ErrorKind::NotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">open</span>(<span class="ident">dst</span>),
                         <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
                     }
                 } <span class="kw">else</span> {
@@ -1380,15 +1380,15 @@
             })<span class="question-mark">?</span>;
             <span class="kw">for</span> <span class="ident">io</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">drain</span>(..) {
                 <span class="kw">match</span> <span class="ident">io</span> {
-                    <span class="ident">EntryIo</span>::<span class="ident">Data</span>(<span class="kw-2">mut</span> <span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">EntryIo::Data</span>(<span class="kw-2">mut</span> <span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">d</span>.<span class="ident">limit</span>();
-                        <span class="kw">if</span> <span class="ident">io</span>::<span class="ident">copy</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">d</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">f</span>)<span class="question-mark">?</span> <span class="op">!</span><span class="op">=</span> <span class="ident">expected</span> {
+                        <span class="kw">if</span> <span class="ident">io::copy</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">d</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">f</span>)<span class="question-mark">?</span> <span class="op">!</span><span class="op">=</span> <span class="ident">expected</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">other</span>(<span class="string">&quot;failed to write entire file&quot;</span>));
                         }
                     }
-                    <span class="ident">EntryIo</span>::<span class="ident">Pad</span>(<span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">EntryIo::Pad</span>(<span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="comment">// TODO: checked cast to i64</span>
-                        <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">SeekFrom</span>::<span class="ident">Current</span>(<span class="ident">d</span>.<span class="ident">limit</span>() <span class="kw">as</span> <span class="ident">i64</span>);
+                        <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">SeekFrom::Current</span>(<span class="ident">d</span>.<span class="ident">limit</span>() <span class="kw">as</span> <span class="ident">i64</span>);
                         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">seek</span>(<span class="ident">to</span>)<span class="question-mark">?</span>;
                         <span class="ident">f</span>.<span class="ident">set_len</span>(<span class="ident">size</span>)<span class="question-mark">?</span>;
                     }
@@ -1398,10 +1398,10 @@
         })()
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">path_bytes</span>();
-            <span class="ident">TarError</span>::<span class="ident">new</span>(
-                <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+            <span class="ident">TarError::new</span>(
+                <span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;failed to unpack `{}` into `{}`&quot;</span>,
-                    <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">header</span>),
+                    <span class="ident">String::from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">header</span>),
                     <span class="ident">dst</span>.<span class="ident">display</span>()
                 ),
                 <span class="ident">e</span>,
@@ -1410,9 +1410,9 @@
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">preserve_mtime</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">mtime</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">mtime</span>() {
-                <span class="kw">let</span> <span class="ident">mtime</span> <span class="op">=</span> <span class="ident">FileTime</span>::<span class="ident">from_unix_time</span>(<span class="ident">mtime</span> <span class="kw">as</span> <span class="ident">i64</span>, <span class="number">0</span>);
-                <span class="ident">filetime</span>::<span class="ident">set_file_handle_times</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>, <span class="prelude-val">Some</span>(<span class="ident">mtime</span>), <span class="prelude-val">Some</span>(<span class="ident">mtime</span>)).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="ident">TarError</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;failed to set mtime for `{}`&quot;</span>, <span class="ident">dst</span>.<span class="ident">display</span>()), <span class="ident">e</span>)
+                <span class="kw">let</span> <span class="ident">mtime</span> <span class="op">=</span> <span class="ident">FileTime::from_unix_time</span>(<span class="ident">mtime</span> <span class="kw">as</span> <span class="ident">i64</span>, <span class="number">0</span>);
+                <span class="ident">filetime::set_file_handle_times</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>, <span class="prelude-val">Some</span>(<span class="ident">mtime</span>), <span class="prelude-val">Some</span>(<span class="ident">mtime</span>)).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="ident">TarError::new</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;failed to set mtime for `{}`&quot;</span>, <span class="ident">dst</span>.<span class="ident">display</span>()), <span class="ident">e</span>)
                 })<span class="question-mark">?</span>;
             }
         }
@@ -1422,17 +1422,17 @@
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">unpack_xattrs</span> {
             <span class="ident">set_xattrs</span>(<span class="self">self</span>, <span class="ident">dst</span>)<span class="question-mark">?</span>;
         }
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked</span>::<span class="ident">File</span>(<span class="ident">f</span>));
+        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Unpacked::File</span>(<span class="ident">f</span>));
 
         <span class="kw">fn</span> <span class="ident">set_perms</span>(
             <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
-            <span class="ident">f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span><span class="op">&gt;</span>,
+            <span class="ident">f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fs::File</span><span class="op">&gt;</span>,
             <span class="ident">mode</span>: <span class="ident">u32</span>,
             <span class="ident">preserve</span>: <span class="ident">bool</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">TarError</span><span class="op">&gt;</span> {
             <span class="ident">_set_perms</span>(<span class="ident">dst</span>, <span class="ident">f</span>, <span class="ident">mode</span>, <span class="ident">preserve</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">TarError</span>::<span class="ident">new</span>(
-                    <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                <span class="ident">TarError::new</span>(
+                    <span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;failed to set permissions to {:o} \
                          for `{}`&quot;</span>,
                         <span class="ident">mode</span>,
@@ -1446,27 +1446,27 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">unix</span>)]</span>
         <span class="kw">fn</span> <span class="ident">_set_perms</span>(
             <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
-            <span class="ident">f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span><span class="op">&gt;</span>,
+            <span class="ident">f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fs::File</span><span class="op">&gt;</span>,
             <span class="ident">mode</span>: <span class="ident">u32</span>,
             <span class="ident">preserve</span>: <span class="ident">bool</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">unix</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">use</span> <span class="ident">std::os::unix::prelude</span>::<span class="kw-2">*</span>;
 
             <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">preserve</span> { <span class="ident">mode</span> } <span class="kw">else</span> { <span class="ident">mode</span> <span class="op">&amp;</span> <span class="number">0o777</span> };
-            <span class="kw">let</span> <span class="ident">perm</span> <span class="op">=</span> <span class="ident">fs</span>::<span class="ident">Permissions</span>::<span class="ident">from_mode</span>(<span class="ident">mode</span> <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="kw">let</span> <span class="ident">perm</span> <span class="op">=</span> <span class="ident">fs::Permissions::from_mode</span>(<span class="ident">mode</span> <span class="kw">as</span> <span class="kw">_</span>);
             <span class="kw">match</span> <span class="ident">f</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">set_permissions</span>(<span class="ident">perm</span>),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fs</span>::<span class="ident">set_permissions</span>(<span class="ident">dst</span>, <span class="ident">perm</span>),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fs::set_permissions</span>(<span class="ident">dst</span>, <span class="ident">perm</span>),
             }
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
         <span class="kw">fn</span> <span class="ident">_set_perms</span>(
             <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
-            <span class="ident">f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span><span class="op">&gt;</span>,
+            <span class="ident">f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fs::File</span><span class="op">&gt;</span>,
             <span class="ident">mode</span>: <span class="ident">u32</span>,
             <span class="ident">_preserve</span>: <span class="ident">bool</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
             <span class="kw">if</span> <span class="ident">mode</span> <span class="op">&amp;</span> <span class="number">0o200</span> <span class="op">=</span><span class="op">=</span> <span class="number">0o200</span> {
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
             }
@@ -1477,9 +1477,9 @@
                     <span class="ident">f</span>.<span class="ident">set_permissions</span>(<span class="ident">perm</span>)
                 }
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">perm</span> <span class="op">=</span> <span class="ident">fs</span>::<span class="ident">metadata</span>(<span class="ident">dst</span>)<span class="question-mark">?</span>.<span class="ident">permissions</span>();
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">perm</span> <span class="op">=</span> <span class="ident">fs::metadata</span>(<span class="ident">dst</span>)<span class="question-mark">?</span>.<span class="ident">permissions</span>();
                     <span class="ident">perm</span>.<span class="ident">set_readonly</span>(<span class="bool-val">true</span>);
-                    <span class="ident">fs</span>::<span class="ident">set_permissions</span>(<span class="ident">dst</span>, <span class="ident">perm</span>)
+                    <span class="ident">fs::set_permissions</span>(<span class="ident">dst</span>, <span class="ident">perm</span>)
                 }
             }
         }
@@ -1488,17 +1488,17 @@
         <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_variables</span>)]</span>
         <span class="kw">fn</span> <span class="ident">_set_perms</span>(
             <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
-            <span class="ident">f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span><span class="op">&gt;</span>,
+            <span class="ident">f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fs::File</span><span class="op">&gt;</span>,
             <span class="ident">mode</span>: <span class="ident">u32</span>,
             <span class="ident">_preserve</span>: <span class="ident">bool</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">Other</span>, <span class="string">&quot;Not implemented&quot;</span>))
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::Other</span>, <span class="string">&quot;Not implemented&quot;</span>))
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">unix</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;xattr&quot;</span>))]</span>
-        <span class="kw">fn</span> <span class="ident">set_xattrs</span>(<span class="ident">me</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">EntryFields</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">OsStr</span>;
-            <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">unix</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+        <span class="kw">fn</span> <span class="ident">set_xattrs</span>(<span class="ident">me</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">EntryFields</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">use</span> <span class="ident">std::ffi::OsStr</span>;
+            <span class="kw">use</span> <span class="ident">std::os::unix::prelude</span>::<span class="kw-2">*</span>;
 
             <span class="kw">let</span> <span class="ident">exts</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">me</span>.<span class="ident">pax_extensions</span>() {
                 <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">e</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">e</span>,
@@ -1515,18 +1515,18 @@
                         <span class="prelude-val">None</span>
                     }
                 })
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">e</span>)<span class="op">|</span> (<span class="ident">OsStr</span>::<span class="ident">from_bytes</span>(<span class="ident">key</span>), <span class="ident">e</span>.<span class="ident">value_bytes</span>()));
+                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">e</span>)<span class="op">|</span> (<span class="ident">OsStr::from_bytes</span>(<span class="ident">key</span>), <span class="ident">e</span>.<span class="ident">value_bytes</span>()));
 
             <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">value</span>) <span class="kw">in</span> <span class="ident">exts</span> {
-                <span class="ident">xattr</span>::<span class="ident">set</span>(<span class="ident">dst</span>, <span class="ident">key</span>, <span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="ident">TarError</span>::<span class="ident">new</span>(
-                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                <span class="ident">xattr::set</span>(<span class="ident">dst</span>, <span class="ident">key</span>, <span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="ident">TarError::new</span>(
+                        <span class="kw-2">&amp;</span><span class="macro">format!</span>(
                             <span class="string">&quot;failed to set extended \
                              attributes to {}. \
                              Xattrs: key={:?}, value={:?}.&quot;</span>,
                             <span class="ident">dst</span>.<span class="ident">display</span>(),
                             <span class="ident">key</span>,
-                            <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="ident">value</span>)
+                            <span class="ident">String::from_utf8_lossy</span>(<span class="ident">value</span>)
                         ),
                         <span class="ident">e</span>,
                     )
@@ -1538,33 +1538,33 @@
         <span class="comment">// Windows does not completely support posix xattrs</span>
         <span class="comment">// https://en.wikipedia.org/wiki/Extended_file_attributes#Windows_NT</span>
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">windows</span>, <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;xattr&quot;</span>), <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-        <span class="kw">fn</span> <span class="ident">set_xattrs</span>(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">EntryFields</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">set_xattrs</span>(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">EntryFields</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
             <span class="prelude-val">Ok</span>(())
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">validate_inside_dst</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">file_dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">validate_inside_dst</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">file_dst</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> {
         <span class="comment">// Abort if target (canonical) parent is outside of `dst`</span>
         <span class="kw">let</span> <span class="ident">canon_parent</span> <span class="op">=</span> <span class="ident">file_dst</span>.<span class="ident">canonicalize</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-            <span class="ident">Error</span>::<span class="ident">new</span>(
+            <span class="ident">Error::new</span>(
                 <span class="ident">err</span>.<span class="ident">kind</span>(),
-                <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} while canonicalizing {}&quot;</span>, <span class="ident">err</span>, <span class="ident">file_dst</span>.<span class="ident">display</span>()),
+                <span class="macro">format!</span>(<span class="string">&quot;{} while canonicalizing {}&quot;</span>, <span class="ident">err</span>, <span class="ident">file_dst</span>.<span class="ident">display</span>()),
             )
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">canon_target</span> <span class="op">=</span> <span class="ident">dst</span>.<span class="ident">canonicalize</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-            <span class="ident">Error</span>::<span class="ident">new</span>(
+            <span class="ident">Error::new</span>(
                 <span class="ident">err</span>.<span class="ident">kind</span>(),
-                <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} while canonicalizing {}&quot;</span>, <span class="ident">err</span>, <span class="ident">dst</span>.<span class="ident">display</span>()),
+                <span class="macro">format!</span>(<span class="string">&quot;{} while canonicalizing {}&quot;</span>, <span class="ident">err</span>, <span class="ident">dst</span>.<span class="ident">display</span>()),
             )
         })<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="op">!</span><span class="ident">canon_parent</span>.<span class="ident">starts_with</span>(<span class="kw-2">&amp;</span><span class="ident">canon_target</span>) {
-            <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">TarError</span>::<span class="ident">new</span>(
-                <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+            <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">TarError::new</span>(
+                <span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;trying to unpack outside of destination path: {}&quot;</span>,
                     <span class="ident">canon_target</span>.<span class="ident">display</span>()
                 ),
                 <span class="comment">// TODO: use ErrorKind::InvalidInput here? (minor breaking change)</span>
-                <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">ErrorKind</span>::<span class="ident">Other</span>, <span class="string">&quot;Invalid argument&quot;</span>),
+                <span class="ident">Error::new</span>(<span class="ident">ErrorKind::Other</span>, <span class="string">&quot;Invalid argument&quot;</span>),
             );
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>());
         }
@@ -1573,7 +1573,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Read</span> <span class="kw">for</span> <span class="ident">EntryFields</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">into</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">into</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="kw">loop</span> {
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">get_mut</span>(<span class="number">0</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">io</span><span class="op">|</span> <span class="ident">io</span>.<span class="ident">read</span>(<span class="ident">into</span>)) {
                 <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="number">0</span>)) <span class="op">=</span><span class="op">&gt;</span> {
@@ -1587,13 +1587,13 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Read</span> <span class="kw">for</span> <span class="ident">EntryIo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">into</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">into</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">EntryIo</span>::<span class="ident">Pad</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">io</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">io</span>.<span class="ident">read</span>(<span class="ident">into</span>),
-            <span class="ident">EntryIo</span>::<span class="ident">Data</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">io</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">io</span>.<span class="ident">read</span>(<span class="ident">into</span>),
+            <span class="ident">EntryIo::Pad</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">io</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">io</span>.<span class="ident">read</span>(<span class="ident">into</span>),
+            <span class="ident">EntryIo::Data</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">io</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">io</span>.<span class="ident">read</span>(<span class="ident">into</span>),
         }
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="tar" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="tar" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

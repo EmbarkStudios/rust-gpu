@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rustc-demangle-0.1.18/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_demangle/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_demangle/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -416,7 +416,7 @@
 <span class="kw">mod</span> <span class="ident">legacy</span>;
 <span class="kw">mod</span> <span class="ident">v0</span>;
 
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>;
+<span class="kw">use</span> <span class="ident">core::fmt</span>;
 
 <span class="doccomment">/// Representation of a demangled symbol name.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -426,8 +426,8 @@
 }
 
 <span class="kw">enum</span> <span class="ident">DemangleStyle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">Legacy</span>(<span class="ident">legacy</span>::<span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
-    <span class="ident">V0</span>(<span class="ident">v0</span>::<span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="ident">Legacy</span>(<span class="ident">legacy::Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="ident">V0</span>(<span class="ident">v0::Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
 }
 
 <span class="doccomment">/// De-mangles a Rust symbol into a more readable version</span>
@@ -463,17 +463,17 @@
     }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">suffix</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">style</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">legacy</span>::<span class="ident">demangle</span>(<span class="ident">s</span>) {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">style</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">legacy::demangle</span>(<span class="ident">s</span>) {
         <span class="prelude-val">Ok</span>((<span class="ident">d</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="ident">suffix</span> <span class="op">=</span> <span class="ident">s</span>;
-            <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle</span>::<span class="ident">Legacy</span>(<span class="ident">d</span>))
+            <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle::Legacy</span>(<span class="ident">d</span>))
         }
-        <span class="prelude-val">Err</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">v0</span>::<span class="ident">demangle</span>(<span class="ident">s</span>) {
+        <span class="prelude-val">Err</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">v0::demangle</span>(<span class="ident">s</span>) {
             <span class="prelude-val">Ok</span>((<span class="ident">d</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">suffix</span> <span class="op">=</span> <span class="ident">s</span>;
-                <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle</span>::<span class="ident">V0</span>(<span class="ident">d</span>))
+                <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle::V0</span>(<span class="ident">d</span>))
             }
-            <span class="prelude-val">Err</span>(<span class="ident">v0</span>::<span class="ident">Invalid</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="prelude-val">Err</span>(<span class="ident">v0::Invalid</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         },
     };
 
@@ -559,122 +559,122 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">style</span> {
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="self">self</span>.<span class="ident">original</span>)<span class="question-mark">?</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle</span>::<span class="ident">Legacy</span>(<span class="kw-2">ref</span> <span class="ident">d</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">d</span>, <span class="ident">f</span>)<span class="question-mark">?</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle</span>::<span class="ident">V0</span>(<span class="kw-2">ref</span> <span class="ident">d</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">d</span>, <span class="ident">f</span>)<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle::Legacy</span>(<span class="kw-2">ref</span> <span class="ident">d</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt::Display::fmt</span>(<span class="ident">d</span>, <span class="ident">f</span>)<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(<span class="ident">DemangleStyle::V0</span>(<span class="kw-2">ref</span> <span class="ident">d</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt::Display::fmt</span>(<span class="ident">d</span>, <span class="ident">f</span>)<span class="question-mark">?</span>,
         }
         <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="self">self</span>.<span class="ident">suffix</span>)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="ident">fmt</span>::<span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="self">self</span>, <span class="ident">f</span>)
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Demangle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+        <span class="ident">fmt::Display::fmt</span>(<span class="self">self</span>, <span class="ident">f</span>)
     }
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">prelude</span>::<span class="ident">v1</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">std::prelude::v1</span>::<span class="kw-2">*</span>;
 
-    <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">t</span> {
+    <span class="macro">macro_rules!</span> <span class="ident">t</span> {
         (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">ok</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>))
+            <span class="macro">assert!</span>(<span class="ident">ok</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>))
         };
     }
 
-    <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">t_err</span> {
+    <span class="macro">macro_rules!</span> <span class="ident">t_err</span> {
         (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">ok_err</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>))
+            <span class="macro">assert!</span>(<span class="ident">ok_err</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>))
         };
     }
 
-    <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">t_nohash</span> {
+    <span class="macro">macro_rules!</span> <span class="ident">t_nohash</span> {
         (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {{
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:#}&quot;</span>, <span class="kw">super</span>::<span class="ident">demangle</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>)), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>);
+            <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#}&quot;</span>, <span class="kw">super</span><span class="ident">::demangle</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>)), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>);
         }};
     }
 
     <span class="kw">fn</span> <span class="ident">ok</span>(<span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="kw">super</span>::<span class="ident">try_demangle</span>(<span class="ident">sym</span>) {
+        <span class="kw">match</span> <span class="kw">super</span><span class="ident">::try_demangle</span>(<span class="ident">sym</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">to_string</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span> {
                     <span class="bool-val">true</span>
                 } <span class="kw">else</span> {
-                    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;\n{}\n!=\n{}\n&quot;</span>, <span class="ident">s</span>, <span class="ident">expected</span>);
+                    <span class="macro">println!</span>(<span class="string">&quot;\n{}\n!=\n{}\n&quot;</span>, <span class="ident">s</span>, <span class="ident">expected</span>);
                     <span class="bool-val">false</span>
                 }
             }
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;error demangling&quot;</span>);
+                <span class="macro">println!</span>(<span class="string">&quot;error demangling&quot;</span>);
                 <span class="bool-val">false</span>
             }
         }
     }
 
     <span class="kw">fn</span> <span class="ident">ok_err</span>(<span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="kw">super</span>::<span class="ident">try_demangle</span>(<span class="ident">sym</span>) {
+        <span class="kw">match</span> <span class="kw">super</span><span class="ident">::try_demangle</span>(<span class="ident">sym</span>) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;succeeded in demangling&quot;</span>);
+                <span class="macro">println!</span>(<span class="string">&quot;succeeded in demangling&quot;</span>);
                 <span class="bool-val">false</span>
             }
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span>::<span class="ident">demangle</span>(<span class="ident">sym</span>).<span class="ident">to_string</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">sym</span>,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span><span class="ident">::demangle</span>(<span class="ident">sym</span>).<span class="ident">to_string</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">sym</span>,
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle</span>() {
-        <span class="macro">t_err</span><span class="macro">!</span>(<span class="string">&quot;test&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN4testE&quot;</span>, <span class="string">&quot;test&quot;</span>);
-        <span class="macro">t_err</span><span class="macro">!</span>(<span class="string">&quot;_ZN4test&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN4test1a2bcE&quot;</span>, <span class="string">&quot;test::a::bc&quot;</span>);
+        <span class="macro">t_err!</span>(<span class="string">&quot;test&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN4testE&quot;</span>, <span class="string">&quot;test&quot;</span>);
+        <span class="macro">t_err!</span>(<span class="string">&quot;_ZN4test&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN4test1a2bcE&quot;</span>, <span class="string">&quot;test::a::bc&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_dollars</span>() {
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN4$RP$E&quot;</span>, <span class="string">&quot;)&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN8$RF$testE&quot;</span>, <span class="string">&quot;&amp;test&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN8$BP$test4foobE&quot;</span>, <span class="string">&quot;*test::foob&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN9$u20$test4foobE&quot;</span>, <span class="string">&quot; test::foob&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN35Bar$LT$$u5b$u32$u3b$$u20$4$u5d$$GT$E&quot;</span>, <span class="string">&quot;Bar&lt;[u32; 4]&gt;&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN4$RP$E&quot;</span>, <span class="string">&quot;)&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN8$RF$testE&quot;</span>, <span class="string">&quot;&amp;test&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN8$BP$test4foobE&quot;</span>, <span class="string">&quot;*test::foob&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN9$u20$test4foobE&quot;</span>, <span class="string">&quot; test::foob&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN35Bar$LT$$u5b$u32$u3b$$u20$4$u5d$$GT$E&quot;</span>, <span class="string">&quot;Bar&lt;[u32; 4]&gt;&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_many_dollars</span>() {
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN13test$u20$test4foobE&quot;</span>, <span class="string">&quot;test test::foob&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN12test$BP$test4foobE&quot;</span>, <span class="string">&quot;test*test::foob&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN13test$u20$test4foobE&quot;</span>, <span class="string">&quot;test test::foob&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN12test$BP$test4foobE&quot;</span>, <span class="string">&quot;test*test::foob&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_osx</span>() {
-        <span class="macro">t</span><span class="macro">!</span>(
+        <span class="macro">t!</span>(
             <span class="string">&quot;__ZN5alloc9allocator6Layout9for_value17h02a996811f781011E&quot;</span>,
             <span class="string">&quot;alloc::allocator::Layout::for_value::h02a996811f781011&quot;</span>
         );
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;__ZN38_$LT$core..option..Option$LT$T$GT$$GT$6unwrap18_MSG_FILE_LINE_COL17haf7cb8d5824ee659E&quot;</span>, <span class="string">&quot;&lt;core::option::Option&lt;T&gt;&gt;::unwrap::_MSG_FILE_LINE_COL::haf7cb8d5824ee659&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;__ZN4core5slice89_$LT$impl$u20$core..iter..traits..IntoIterator$u20$for$u20$$RF$$u27$a$u20$$u5b$T$u5d$$GT$9into_iter17h450e234d27262170E&quot;</span>, <span class="string">&quot;core::slice::&lt;impl core::iter::traits::IntoIterator for &amp;&#39;a [T]&gt;::into_iter::h450e234d27262170&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;__ZN38_$LT$core..option..Option$LT$T$GT$$GT$6unwrap18_MSG_FILE_LINE_COL17haf7cb8d5824ee659E&quot;</span>, <span class="string">&quot;&lt;core::option::Option&lt;T&gt;&gt;::unwrap::_MSG_FILE_LINE_COL::haf7cb8d5824ee659&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;__ZN4core5slice89_$LT$impl$u20$core..iter..traits..IntoIterator$u20$for$u20$$RF$$u27$a$u20$$u5b$T$u5d$$GT$9into_iter17h450e234d27262170E&quot;</span>, <span class="string">&quot;core::slice::&lt;impl core::iter::traits::IntoIterator for &amp;&#39;a [T]&gt;::into_iter::h450e234d27262170&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_windows</span>() {
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;ZN4testE&quot;</span>, <span class="string">&quot;test&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;ZN13test$u20$test4foobE&quot;</span>, <span class="string">&quot;test test::foob&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;ZN12test$RF$test4foobE&quot;</span>, <span class="string">&quot;test&amp;test::foob&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;ZN4testE&quot;</span>, <span class="string">&quot;test&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;ZN13test$u20$test4foobE&quot;</span>, <span class="string">&quot;test test::foob&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;ZN12test$RF$test4foobE&quot;</span>, <span class="string">&quot;test&amp;test::foob&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_elements_beginning_with_underscore</span>() {
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN13_$LT$test$GT$E&quot;</span>, <span class="string">&quot;&lt;test&gt;&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN28_$u7b$$u7b$closure$u7d$$u7d$E&quot;</span>, <span class="string">&quot;{{closure}}&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN15__STATIC_FMTSTRE&quot;</span>, <span class="string">&quot;__STATIC_FMTSTR&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN13_$LT$test$GT$E&quot;</span>, <span class="string">&quot;&lt;test&gt;&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN28_$u7b$$u7b$closure$u7d$$u7d$E&quot;</span>, <span class="string">&quot;{{closure}}&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN15__STATIC_FMTSTRE&quot;</span>, <span class="string">&quot;__STATIC_FMTSTR&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_trait_impls</span>() {
-        <span class="macro">t</span><span class="macro">!</span>(
+        <span class="macro">t!</span>(
             <span class="string">&quot;_ZN71_$LT$Test$u20$$u2b$$u20$$u27$static$u20$as$u20$foo..Bar$LT$Test$GT$$GT$3barE&quot;</span>,
             <span class="string">&quot;&lt;Test + &#39;static as foo::Bar&lt;Test&gt;&gt;::bar&quot;</span>
         );
@@ -683,34 +683,34 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_without_hash</span>() {
         <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="string">&quot;_ZN3foo17h05af221e174051e9E&quot;</span>;
-        <span class="macro">t</span><span class="macro">!</span>(<span class="ident">s</span>, <span class="string">&quot;foo::h05af221e174051e9&quot;</span>);
-        <span class="macro">t_nohash</span><span class="macro">!</span>(<span class="ident">s</span>, <span class="string">&quot;foo&quot;</span>);
+        <span class="macro">t!</span>(<span class="ident">s</span>, <span class="string">&quot;foo::h05af221e174051e9&quot;</span>);
+        <span class="macro">t_nohash!</span>(<span class="ident">s</span>, <span class="string">&quot;foo&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_without_hash_edgecases</span>() {
         <span class="comment">// One element, no hash.</span>
-        <span class="macro">t_nohash</span><span class="macro">!</span>(<span class="string">&quot;_ZN3fooE&quot;</span>, <span class="string">&quot;foo&quot;</span>);
+        <span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN3fooE&quot;</span>, <span class="string">&quot;foo&quot;</span>);
         <span class="comment">// Two elements, no hash.</span>
-        <span class="macro">t_nohash</span><span class="macro">!</span>(<span class="string">&quot;_ZN3foo3barE&quot;</span>, <span class="string">&quot;foo::bar&quot;</span>);
+        <span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN3foo3barE&quot;</span>, <span class="string">&quot;foo::bar&quot;</span>);
         <span class="comment">// Longer-than-normal hash.</span>
-        <span class="macro">t_nohash</span><span class="macro">!</span>(<span class="string">&quot;_ZN3foo20h05af221e174051e9abcE&quot;</span>, <span class="string">&quot;foo&quot;</span>);
+        <span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN3foo20h05af221e174051e9abcE&quot;</span>, <span class="string">&quot;foo&quot;</span>);
         <span class="comment">// Shorter-than-normal hash.</span>
-        <span class="macro">t_nohash</span><span class="macro">!</span>(<span class="string">&quot;_ZN3foo5h05afE&quot;</span>, <span class="string">&quot;foo&quot;</span>);
+        <span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN3foo5h05afE&quot;</span>, <span class="string">&quot;foo&quot;</span>);
         <span class="comment">// Valid hash, but not at the end.</span>
-        <span class="macro">t_nohash</span><span class="macro">!</span>(<span class="string">&quot;_ZN17h05af221e174051e93fooE&quot;</span>, <span class="string">&quot;h05af221e174051e9::foo&quot;</span>);
+        <span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN17h05af221e174051e93fooE&quot;</span>, <span class="string">&quot;h05af221e174051e9::foo&quot;</span>);
         <span class="comment">// Not a valid hash, missing the &#39;h&#39;.</span>
-        <span class="macro">t_nohash</span><span class="macro">!</span>(<span class="string">&quot;_ZN3foo16ffaf221e174051e9E&quot;</span>, <span class="string">&quot;foo::ffaf221e174051e9&quot;</span>);
+        <span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN3foo16ffaf221e174051e9E&quot;</span>, <span class="string">&quot;foo::ffaf221e174051e9&quot;</span>);
         <span class="comment">// Not a valid hash, has a non-hex-digit.</span>
-        <span class="macro">t_nohash</span><span class="macro">!</span>(<span class="string">&quot;_ZN3foo17hg5af221e174051e9E&quot;</span>, <span class="string">&quot;foo::hg5af221e174051e9&quot;</span>);
+        <span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN3foo17hg5af221e174051e9E&quot;</span>, <span class="string">&quot;foo::hg5af221e174051e9&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_thinlto</span>() {
         <span class="comment">// One element, no hash.</span>
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN3fooE.llvm.9D1C9369&quot;</span>, <span class="string">&quot;foo&quot;</span>);
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN3fooE.llvm.9D1C9369@@16&quot;</span>, <span class="string">&quot;foo&quot;</span>);
-        <span class="macro">t_nohash</span><span class="macro">!</span>(
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN3fooE.llvm.9D1C9369&quot;</span>, <span class="string">&quot;foo&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN3fooE.llvm.9D1C9369@@16&quot;</span>, <span class="string">&quot;foo&quot;</span>);
+        <span class="macro">t_nohash!</span>(
             <span class="string">&quot;_ZN9backtrace3foo17hbb467fcdaea5d79bE.llvm.A5310EB9&quot;</span>,
             <span class="string">&quot;backtrace::foo&quot;</span>
         );
@@ -718,21 +718,21 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_llvm_ir_branch_labels</span>() {
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN4core5slice77_$LT$impl$u20$core..ops..index..IndexMut$LT$I$GT$$u20$for$u20$$u5b$T$u5d$$GT$9index_mut17haf9727c2edfbc47bE.exit.i.i&quot;</span>, <span class="string">&quot;core::slice::&lt;impl core::ops::index::IndexMut&lt;I&gt; for [T]&gt;::index_mut::haf9727c2edfbc47b.exit.i.i&quot;</span>);
-        <span class="macro">t_nohash</span><span class="macro">!</span>(<span class="string">&quot;_ZN4core5slice77_$LT$impl$u20$core..ops..index..IndexMut$LT$I$GT$$u20$for$u20$$u5b$T$u5d$$GT$9index_mut17haf9727c2edfbc47bE.exit.i.i&quot;</span>, <span class="string">&quot;core::slice::&lt;impl core::ops::index::IndexMut&lt;I&gt; for [T]&gt;::index_mut.exit.i.i&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN4core5slice77_$LT$impl$u20$core..ops..index..IndexMut$LT$I$GT$$u20$for$u20$$u5b$T$u5d$$GT$9index_mut17haf9727c2edfbc47bE.exit.i.i&quot;</span>, <span class="string">&quot;core::slice::&lt;impl core::ops::index::IndexMut&lt;I&gt; for [T]&gt;::index_mut::haf9727c2edfbc47b.exit.i.i&quot;</span>);
+        <span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN4core5slice77_$LT$impl$u20$core..ops..index..IndexMut$LT$I$GT$$u20$for$u20$$u5b$T$u5d$$GT$9index_mut17haf9727c2edfbc47bE.exit.i.i&quot;</span>, <span class="string">&quot;core::slice::&lt;impl core::ops::index::IndexMut&lt;I&gt; for [T]&gt;::index_mut.exit.i.i&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">demangle_ignores_suffix_that_doesnt_look_like_a_symbol</span>() {
-        <span class="macro">t_err</span><span class="macro">!</span>(<span class="string">&quot;_ZN3fooE.llvm moocow&quot;</span>);
+        <span class="macro">t_err!</span>(<span class="string">&quot;_ZN3fooE.llvm moocow&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">dont_panic</span>() {
-        <span class="kw">super</span>::<span class="ident">demangle</span>(<span class="string">&quot;_ZN2222222222222222222222EE&quot;</span>).<span class="ident">to_string</span>();
-        <span class="kw">super</span>::<span class="ident">demangle</span>(<span class="string">&quot;_ZN5*70527e27.ll34csaғE&quot;</span>).<span class="ident">to_string</span>();
-        <span class="kw">super</span>::<span class="ident">demangle</span>(<span class="string">&quot;_ZN5*70527a54.ll34_$b.1E&quot;</span>).<span class="ident">to_string</span>();
-        <span class="kw">super</span>::<span class="ident">demangle</span>(
+        <span class="kw">super</span><span class="ident">::demangle</span>(<span class="string">&quot;_ZN2222222222222222222222EE&quot;</span>).<span class="ident">to_string</span>();
+        <span class="kw">super</span><span class="ident">::demangle</span>(<span class="string">&quot;_ZN5*70527e27.ll34csaғE&quot;</span>).<span class="ident">to_string</span>();
+        <span class="kw">super</span><span class="ident">::demangle</span>(<span class="string">&quot;_ZN5*70527a54.ll34_$b.1E&quot;</span>).<span class="ident">to_string</span>();
+        <span class="kw">super</span><span class="ident">::demangle</span>(
             <span class="string">&quot;\
              _ZN5~saäb4e\n\
              2734cOsbE\n\
@@ -744,22 +744,22 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">invalid_no_chop</span>() {
-        <span class="macro">t_err</span><span class="macro">!</span>(<span class="string">&quot;_ZNfooE&quot;</span>);
+        <span class="macro">t_err!</span>(<span class="string">&quot;_ZNfooE&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">handle_assoc_types</span>() {
-        <span class="macro">t</span><span class="macro">!</span>(<span class="string">&quot;_ZN151_$LT$alloc..boxed..Box$LT$alloc..boxed..FnBox$LT$A$C$$u20$Output$u3d$R$GT$$u20$$u2b$$u20$$u27$a$GT$$u20$as$u20$core..ops..function..FnOnce$LT$A$GT$$GT$9call_once17h69e8f44b3723e1caE&quot;</span>, <span class="string">&quot;&lt;alloc::boxed::Box&lt;alloc::boxed::FnBox&lt;A, Output=R&gt; + &#39;a&gt; as core::ops::function::FnOnce&lt;A&gt;&gt;::call_once::h69e8f44b3723e1ca&quot;</span>);
+        <span class="macro">t!</span>(<span class="string">&quot;_ZN151_$LT$alloc..boxed..Box$LT$alloc..boxed..FnBox$LT$A$C$$u20$Output$u3d$R$GT$$u20$$u2b$$u20$$u27$a$GT$$u20$as$u20$core..ops..function..FnOnce$LT$A$GT$$GT$9call_once17h69e8f44b3723e1caE&quot;</span>, <span class="string">&quot;&lt;alloc::boxed::Box&lt;alloc::boxed::FnBox&lt;A, Output=R&gt; + &#39;a&gt; as core::ops::function::FnOnce&lt;A&gt;&gt;::call_once::h69e8f44b3723e1ca&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">handle_bang</span>() {
-        <span class="macro">t</span><span class="macro">!</span>(
+        <span class="macro">t!</span>(
             <span class="string">&quot;_ZN88_$LT$core..result..Result$LT$$u21$$C$$u20$E$GT$$u20$as$u20$std..process..Termination$GT$6report17hfc41d0da4a40b3e8E&quot;</span>,
             <span class="string">&quot;&lt;core::result::Result&lt;!, E&gt; as std::process::Termination&gt;::report::hfc41d0da4a40b3e8&quot;</span>
         );
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_demangle" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_demangle" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/rspirv-50a5048e4e24b3a2/719cf08/rspirv/binary/disassemble.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>disassemble.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rspirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rspirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -395,10 +395,10 @@
 <span id="392">392</span>
 <span id="393">393</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">dr</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::dr</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::spirv</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">tracker</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::tracker</span>;
 
 <span class="doccomment">/// Trait for disassembling functionalities.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Disassemble</span> {
@@ -406,34 +406,34 @@
     <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr</span>::<span class="ident">ModuleHeader</span> {
+<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::ModuleHeader</span> {
     <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> (<span class="ident">major</span>, <span class="ident">minor</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">version</span>();
         <span class="kw">let</span> (<span class="ident">vendor</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">generator</span>();
-        <span class="macro">format</span><span class="macro">!</span>(
+        <span class="macro">format!</span>(
             <span class="string">&quot;; SPIR-V\n; Version: {}.{}\n; Generator: {}\n; Bound: {}&quot;</span>,
             <span class="ident">major</span>, <span class="ident">minor</span>, <span class="ident">vendor</span>, <span class="self">self</span>.<span class="ident">bound</span>
         )
     }
 }
 
-<span class="macro">include</span><span class="macro">!</span>(<span class="string">&quot;autogen_disas_operand.rs&quot;</span>);
+<span class="macro">include!</span>(<span class="string">&quot;autogen_disas_operand.rs&quot;</span>);
 
-<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr</span>::<span class="ident">Operand</span> {
+<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::Operand</span> {
     <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">IdMemorySemantics</span>(<span class="ident">v</span>) <span class="op">|</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">IdScope</span>(<span class="ident">v</span>) <span class="op">|</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;%{}&quot;</span>, <span class="ident">v</span>)
+            <span class="ident">dr::Operand::IdMemorySemantics</span>(<span class="ident">v</span>) <span class="op">|</span> <span class="ident">dr::Operand::IdScope</span>(<span class="ident">v</span>) <span class="op">|</span> <span class="ident">dr::Operand::IdRef</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">format!</span>(<span class="string">&quot;%{}&quot;</span>, <span class="ident">v</span>)
             }
-            <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">ImageOperands</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">FPFastMathMode</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">SelectionControl</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">LoopControl</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">FunctionControl</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">MemorySemantics</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">MemoryAccess</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">KernelProfilingInfo</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>),
+            <span class="ident">dr::Operand::ImageOperands</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::FPFastMathMode</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::SelectionControl</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::LoopControl</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::MemorySemantics</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::MemoryAccess</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="ident">dr::Operand::KernelProfilingInfo</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">disassemble</span>(),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>),
         }
     }
 }
@@ -448,32 +448,32 @@
         .<span class="ident">join</span>(<span class="ident">delimiter</span>)
 }
 
-<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr</span>::<span class="ident">Instruction</span> {
+<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::Instruction</span> {
     <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">space</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">operands</span>.<span class="ident">is_empty</span>() { <span class="string">&quot; &quot;</span> } <span class="kw">else</span> { <span class="string">&quot;&quot;</span> };
-        <span class="macro">format</span><span class="macro">!</span>(
+        <span class="macro">format!</span>(
             <span class="string">&quot;{rid}{opcode}{rtype}{space}{operands}&quot;</span>,
             <span class="ident">rid</span> <span class="op">=</span> <span class="self">self</span>
                 .<span class="ident">result_id</span>
-                .<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;%{} = &quot;</span>, <span class="ident">w</span>)),
-            <span class="ident">opcode</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Op{}&quot;</span>, <span class="self">self</span>.<span class="ident">class</span>.<span class="ident">opname</span>),
+                .<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;%{} = &quot;</span>, <span class="ident">w</span>)),
+            <span class="ident">opcode</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Op{}&quot;</span>, <span class="self">self</span>.<span class="ident">class</span>.<span class="ident">opname</span>),
             <span class="comment">// extra space both before and after the reseult type</span>
             <span class="ident">rtype</span> <span class="op">=</span> <span class="self">self</span>
                 .<span class="ident">result_type</span>
-                .<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;  %{}{}&quot;</span>, <span class="ident">w</span>, <span class="ident">space</span>)),
+                .<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;  %{}{}&quot;</span>, <span class="ident">w</span>, <span class="ident">space</span>)),
             <span class="ident">space</span> <span class="op">=</span> <span class="ident">space</span>,
             <span class="ident">operands</span> <span class="op">=</span> <span class="ident">disas_join</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operands</span>, <span class="string">&quot; &quot;</span>)
         )
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr</span>::<span class="ident">Block</span> {
+<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::Block</span> {
     <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">label</span>
             .<span class="ident">as_ref</span>()
-            .<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>());
-        <span class="macro">format</span><span class="macro">!</span>(
+            .<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>());
+        <span class="macro">format!</span>(
             <span class="string">&quot;{label}\n{insts}&quot;</span>,
             <span class="ident">label</span> <span class="op">=</span> <span class="ident">label</span>,
             <span class="ident">insts</span> <span class="op">=</span> <span class="ident">disas_join</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instructions</span>, <span class="string">&quot;\n&quot;</span>)
@@ -481,19 +481,19 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr</span>::<span class="ident">Function</span> {
+<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::Function</span> {
     <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="kw">let</span> <span class="ident">def</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>());
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">end</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>());
+        <span class="kw">let</span> <span class="ident">def</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>());
+        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">end</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>());
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">parameters</span>.<span class="ident">is_empty</span>() {
-            <span class="macro">format</span><span class="macro">!</span>(
+            <span class="macro">format!</span>(
                 <span class="string">&quot;{def}\n{blocks}\n{end}&quot;</span>,
                 <span class="ident">def</span> <span class="op">=</span> <span class="ident">def</span>,
                 <span class="ident">blocks</span> <span class="op">=</span> <span class="ident">disas_join</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">blocks</span>, <span class="string">&quot;\n&quot;</span>),
                 <span class="ident">end</span> <span class="op">=</span> <span class="ident">end</span>
             )
         } <span class="kw">else</span> {
-            <span class="macro">format</span><span class="macro">!</span>(
+            <span class="macro">format!</span>(
                 <span class="string">&quot;{def}\n{params}\n{blocks}\n{end}&quot;</span>,
                 <span class="ident">def</span> <span class="op">=</span> <span class="ident">def</span>,
                 <span class="ident">params</span> <span class="op">=</span> <span class="ident">disas_join</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">parameters</span>, <span class="string">&quot;\n&quot;</span>),
@@ -505,7 +505,7 @@
 }
 
 <span class="doccomment">/// Pushes the given value to the given container if the value is not empty.</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">push</span> {
+<span class="macro">macro_rules!</span> <span class="ident">push</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">container</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>: <span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>.<span class="ident">is_empty</span>() {
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">container</span>.<span class="ident">push</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>)
@@ -513,21 +513,21 @@
     };
 }
 
-<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr</span>::<span class="ident">Module</span> {
+<span class="kw">impl</span> <span class="ident">Disassemble</span> <span class="kw">for</span> <span class="ident">dr::Module</span> {
     <span class="doccomment">/// Disassembles this module and returns the disassembly text.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This method will try to link information together to be wise. E.g.,</span>
     <span class="doccomment">/// If the extended instruction set is recognized, the symbolic opcode for</span>
     <span class="doccomment">/// instructions in it will be shown.</span>
     <span class="kw">fn</span> <span class="ident">disassemble</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ext_inst_set_tracker</span> <span class="op">=</span> <span class="ident">tracker</span>::<span class="ident">ExtInstSetTracker</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ext_inst_set_tracker</span> <span class="op">=</span> <span class="ident">tracker::ExtInstSetTracker::new</span>();
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ext_inst_imports</span> {
             <span class="ident">ext_inst_set_tracker</span>.<span class="ident">track</span>(<span class="ident">i</span>)
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">text</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">text</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">header</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">header</span> {
-            <span class="macro">push</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">header</span>.<span class="ident">disassemble</span>());
+            <span class="macro">push!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">header</span>.<span class="ident">disassemble</span>());
         }
 
         <span class="kw">let</span> <span class="ident">global_insts</span> <span class="op">=</span> <span class="self">self</span>
@@ -535,34 +535,34 @@
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>())
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
             .<span class="ident">join</span>(<span class="string">&quot;\n&quot;</span>);
-        <span class="macro">push</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">global_insts</span>);
+        <span class="macro">push!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">global_insts</span>);
 
         <span class="comment">// TODO: Code here is essentially duplicated. Ideally we should be able</span>
         <span class="comment">// to call dr::Function and dr::BasicBlock&#39;s disassemble() method here</span>
         <span class="comment">// but because of the ExtInstSetTracker, we are not able to directly.</span>
         <span class="kw">for</span> <span class="ident">f</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">functions</span> {
-            <span class="macro">push</span><span class="macro">!</span>(
+            <span class="macro">push!</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>,
-                <span class="ident">f</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>())
+                <span class="ident">f</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>())
             );
-            <span class="macro">push</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">disas_join</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>.<span class="ident">parameters</span>, <span class="string">&quot;\n&quot;</span>));
+            <span class="macro">push!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">disas_join</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>.<span class="ident">parameters</span>, <span class="string">&quot;\n&quot;</span>));
             <span class="kw">for</span> <span class="ident">bb</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">f</span>.<span class="ident">blocks</span> {
-                <span class="macro">push</span><span class="macro">!</span>(
+                <span class="macro">push!</span>(
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>,
-                    <span class="ident">bb</span>.<span class="ident">label</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>())
+                    <span class="ident">bb</span>.<span class="ident">label</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>())
                 );
                 <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">bb</span>.<span class="ident">instructions</span> {
                     <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
-                        <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">ExtInst</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="macro">push</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">disas_ext_inst</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">ext_inst_set_tracker</span>))
+                        <span class="ident">spirv::Op::ExtInst</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">push!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">disas_ext_inst</span>(<span class="ident">inst</span>, <span class="kw-2">&amp;</span><span class="ident">ext_inst_set_tracker</span>))
                         }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">push</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">inst</span>.<span class="ident">disassemble</span>()),
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">push!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>, <span class="ident">inst</span>.<span class="ident">disassemble</span>()),
                     }
                 }
             }
-            <span class="macro">push</span><span class="macro">!</span>(
+            <span class="macro">push!</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">text</span>,
-                <span class="ident">f</span>.<span class="ident">end</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>())
+                <span class="ident">f</span>.<span class="ident">end</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">disassemble</span>())
             );
         }
 
@@ -571,34 +571,34 @@
 }
 
 <span class="kw">fn</span> <span class="ident">disas_ext_inst</span>(
-    <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">dr</span>::<span class="ident">Instruction</span>,
-    <span class="ident">ext_inst_set_tracker</span>: <span class="kw-2">&amp;</span><span class="ident">tracker</span>::<span class="ident">ExtInstSetTracker</span>,
+    <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">dr::Instruction</span>,
+    <span class="ident">ext_inst_set_tracker</span>: <span class="kw-2">&amp;</span><span class="ident">tracker::ExtInstSetTracker</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
     <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
         <span class="kw">return</span> <span class="ident">inst</span>.<span class="ident">disassemble</span>();
     }
-    <span class="kw">if</span> <span class="kw">let</span> (<span class="kw-2">&amp;</span><span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">id</span>), <span class="kw-2">&amp;</span><span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">LiteralExtInstInteger</span>(<span class="ident">opcode</span>)) <span class="op">=</span>
+    <span class="kw">if</span> <span class="kw">let</span> (<span class="kw-2">&amp;</span><span class="ident">dr::Operand::IdRef</span>(<span class="ident">id</span>), <span class="kw-2">&amp;</span><span class="ident">dr::Operand::LiteralExtInstInteger</span>(<span class="ident">opcode</span>)) <span class="op">=</span>
         (<span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>], <span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>])
     {
         <span class="kw">if</span> <span class="op">!</span><span class="ident">ext_inst_set_tracker</span>.<span class="ident">have</span>(<span class="ident">id</span>) {
             <span class="kw">return</span> <span class="ident">inst</span>.<span class="ident">disassemble</span>();
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">grammar</span>) <span class="op">=</span> <span class="ident">ext_inst_set_tracker</span>.<span class="ident">resolve</span>(<span class="ident">id</span>, <span class="ident">opcode</span>) {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">operands</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">operands</span> <span class="op">=</span> <span class="macro">vec!</span>[];
             <span class="ident">operands</span>.<span class="ident">push</span>(<span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">disassemble</span>());
             <span class="ident">operands</span>.<span class="ident">push</span>(<span class="ident">grammar</span>.<span class="ident">opname</span>.<span class="ident">to_string</span>());
             <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">2</span>..] {
                 <span class="ident">operands</span>.<span class="ident">push</span>(<span class="ident">operand</span>.<span class="ident">disassemble</span>())
             }
-            <span class="macro">format</span><span class="macro">!</span>(
+            <span class="macro">format!</span>(
                 <span class="string">&quot;{rid}{opcode}{rtype} {operands}&quot;</span>,
                 <span class="ident">rid</span> <span class="op">=</span> <span class="ident">inst</span>
                     .<span class="ident">result_id</span>
-                    .<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;%{} = &quot;</span>, <span class="ident">w</span>)),
-                <span class="ident">opcode</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Op{}&quot;</span>, <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opname</span>),
+                    .<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;%{} = &quot;</span>, <span class="ident">w</span>)),
+                <span class="ident">opcode</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Op{}&quot;</span>, <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opname</span>),
                 <span class="ident">rtype</span> <span class="op">=</span> <span class="ident">inst</span>
                     .<span class="ident">result_type</span>
-                    .<span class="ident">map_or</span>(<span class="ident">String</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;  %{} &quot;</span>, <span class="ident">w</span>)),
+                    .<span class="ident">map_or</span>(<span class="ident">String::new</span>(), <span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;  %{} &quot;</span>, <span class="ident">w</span>)),
                 <span class="ident">operands</span> <span class="op">=</span> <span class="ident">operands</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>)
             )
         } <span class="kw">else</span> {
@@ -611,72 +611,72 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">dr</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">spirv</span>;
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::dr</span>;
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::spirv</span>;
 
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">binary</span>::<span class="ident">Disassemble</span>;
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::binary::Disassemble</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_disassemble_operand_function_control</span>() {
-        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">FunctionControl</span>(<span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">NONE</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;None&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
-        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">FunctionControl</span>(<span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">INLINE</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;Inline&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
-        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">FunctionControl</span>(
-            <span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">INLINE</span> <span class="op">|</span> <span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">PURE</span>,
+        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">spirv::FunctionControl::NONE</span>);
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;None&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
+        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">spirv::FunctionControl::INLINE</span>);
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;Inline&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
+        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr::Operand::FunctionControl</span>(
+            <span class="ident">spirv::FunctionControl::INLINE</span> <span class="op">|</span> <span class="ident">spirv::FunctionControl::PURE</span>,
         );
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;Inline|Pure&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
-        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">FunctionControl</span>(<span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">all</span>());
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;Inline|DontInline|Pure|Const&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;Inline|Pure&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
+        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr::Operand::FunctionControl</span>(<span class="ident">spirv::FunctionControl::all</span>());
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;Inline|DontInline|Pure|Const&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_disassemble_operand_memory_semantics</span>() {
-        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">MemorySemantics</span>(<span class="ident">spirv</span>::<span class="ident">MemorySemantics</span>::<span class="ident">NONE</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;None&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
-        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">MemorySemantics</span>(<span class="ident">spirv</span>::<span class="ident">MemorySemantics</span>::<span class="ident">RELAXED</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;None&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
-        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">MemorySemantics</span>(<span class="ident">spirv</span>::<span class="ident">MemorySemantics</span>::<span class="ident">RELEASE</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;Release&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
-        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">MemorySemantics</span>(
-            <span class="ident">spirv</span>::<span class="ident">MemorySemantics</span>::<span class="ident">RELEASE</span> <span class="op">|</span> <span class="ident">spirv</span>::<span class="ident">MemorySemantics</span>::<span class="ident">WORKGROUP_MEMORY</span>,
+        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr::Operand::MemorySemantics</span>(<span class="ident">spirv::MemorySemantics::NONE</span>);
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;None&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
+        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr::Operand::MemorySemantics</span>(<span class="ident">spirv::MemorySemantics::RELAXED</span>);
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;None&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
+        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr::Operand::MemorySemantics</span>(<span class="ident">spirv::MemorySemantics::RELEASE</span>);
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;Release&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
+        <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">dr::Operand::MemorySemantics</span>(
+            <span class="ident">spirv::MemorySemantics::RELEASE</span> <span class="op">|</span> <span class="ident">spirv::MemorySemantics::WORKGROUP_MEMORY</span>,
         );
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;Release|WorkgroupMemory&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;Release|WorkgroupMemory&quot;</span>, <span class="ident">o</span>.<span class="ident">disassemble</span>());
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_disassemble_module_one_inst_in_each_section</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Builder</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">dr::Builder::new</span>();
 
-        <span class="ident">b</span>.<span class="ident">capability</span>(<span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">Shader</span>);
+        <span class="ident">b</span>.<span class="ident">capability</span>(<span class="ident">spirv::Capability::Shader</span>);
         <span class="ident">b</span>.<span class="ident">extension</span>(<span class="string">&quot;awesome-extension&quot;</span>);
         <span class="ident">b</span>.<span class="ident">ext_inst_import</span>(<span class="string">&quot;GLSL.std.450&quot;</span>);
-        <span class="ident">b</span>.<span class="ident">memory_model</span>(<span class="ident">spirv</span>::<span class="ident">AddressingModel</span>::<span class="ident">Logical</span>, <span class="ident">spirv</span>::<span class="ident">MemoryModel</span>::<span class="ident">Simple</span>);
-        <span class="ident">b</span>.<span class="ident">source</span>(<span class="ident">spirv</span>::<span class="ident">SourceLanguage</span>::<span class="ident">GLSL</span>, <span class="number">450</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>);
+        <span class="ident">b</span>.<span class="ident">memory_model</span>(<span class="ident">spirv::AddressingModel::Logical</span>, <span class="ident">spirv::MemoryModel::Simple</span>);
+        <span class="ident">b</span>.<span class="ident">source</span>(<span class="ident">spirv::SourceLanguage::GLSL</span>, <span class="number">450</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>);
 
         <span class="kw">let</span> <span class="ident">void</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_void</span>();
         <span class="kw">let</span> <span class="ident">float32</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_float</span>(<span class="number">32</span>);
-        <span class="kw">let</span> <span class="ident">voidfvoid</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_function</span>(<span class="ident">void</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">void</span>]);
+        <span class="kw">let</span> <span class="ident">voidfvoid</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_function</span>(<span class="ident">void</span>, <span class="macro">vec!</span>[<span class="ident">void</span>]);
 
         <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">b</span>
             .<span class="ident">begin_function</span>(
                 <span class="ident">void</span>,
                 <span class="prelude-val">None</span>,
-                <span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">DONT_INLINE</span> <span class="op">|</span> <span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">CONST</span>,
+                <span class="ident">spirv::FunctionControl::DONT_INLINE</span> <span class="op">|</span> <span class="ident">spirv::FunctionControl::CONST</span>,
                 <span class="ident">voidfvoid</span>,
             )
             .<span class="ident">unwrap</span>();
         <span class="ident">b</span>.<span class="ident">begin_block</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">variable</span>(<span class="ident">float32</span>, <span class="prelude-val">None</span>, <span class="ident">spirv</span>::<span class="ident">StorageClass</span>::<span class="ident">Function</span>, <span class="prelude-val">None</span>);
+        <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">variable</span>(<span class="ident">float32</span>, <span class="prelude-val">None</span>, <span class="ident">spirv::StorageClass::Function</span>, <span class="prelude-val">None</span>);
         <span class="ident">b</span>.<span class="ident">ret</span>().<span class="ident">unwrap</span>();
         <span class="ident">b</span>.<span class="ident">end_function</span>().<span class="ident">unwrap</span>();
 
-        <span class="ident">b</span>.<span class="ident">entry_point</span>(<span class="ident">spirv</span>::<span class="ident">ExecutionModel</span>::<span class="ident">Fragment</span>, <span class="ident">f</span>, <span class="string">&quot;main&quot;</span>, <span class="macro">vec</span><span class="macro">!</span>[]);
-        <span class="ident">b</span>.<span class="ident">execution_mode</span>(<span class="ident">f</span>, <span class="ident">spirv</span>::<span class="ident">ExecutionMode</span>::<span class="ident">OriginUpperLeft</span>, <span class="macro">vec</span><span class="macro">!</span>[]);
+        <span class="ident">b</span>.<span class="ident">entry_point</span>(<span class="ident">spirv::ExecutionModel::Fragment</span>, <span class="ident">f</span>, <span class="string">&quot;main&quot;</span>, <span class="macro">vec!</span>[]);
+        <span class="ident">b</span>.<span class="ident">execution_mode</span>(<span class="ident">f</span>, <span class="ident">spirv::ExecutionMode::OriginUpperLeft</span>, <span class="macro">vec!</span>[]);
         <span class="ident">b</span>.<span class="ident">name</span>(<span class="ident">f</span>, <span class="string">&quot;main&quot;</span>);
-        <span class="ident">b</span>.<span class="ident">decorate</span>(<span class="ident">var</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">RelaxedPrecision</span>, <span class="macro">vec</span><span class="macro">!</span>[]);
+        <span class="ident">b</span>.<span class="ident">decorate</span>(<span class="ident">var</span>, <span class="ident">spirv::Decoration::RelaxedPrecision</span>, <span class="macro">vec!</span>[]);
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="ident">b</span>.<span class="ident">module</span>().<span class="ident">disassemble</span>(),
             <span class="string">&quot;; SPIR-V\n\
                     ; Version: 1.5\n\
@@ -704,27 +704,27 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_disassemble_ext_inst_glsl</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Builder</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">dr::Builder::new</span>();
 
-        <span class="ident">b</span>.<span class="ident">capability</span>(<span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">Shader</span>);
+        <span class="ident">b</span>.<span class="ident">capability</span>(<span class="ident">spirv::Capability::Shader</span>);
         <span class="kw">let</span> <span class="ident">glsl</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">ext_inst_import</span>(<span class="string">&quot;GLSL.std.450&quot;</span>);
-        <span class="ident">b</span>.<span class="ident">memory_model</span>(<span class="ident">spirv</span>::<span class="ident">AddressingModel</span>::<span class="ident">Logical</span>, <span class="ident">spirv</span>::<span class="ident">MemoryModel</span>::<span class="ident">Simple</span>);
+        <span class="ident">b</span>.<span class="ident">memory_model</span>(<span class="ident">spirv::AddressingModel::Logical</span>, <span class="ident">spirv::MemoryModel::Simple</span>);
 
         <span class="kw">let</span> <span class="ident">void</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_void</span>();
         <span class="kw">let</span> <span class="ident">float32</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_float</span>(<span class="number">32</span>);
-        <span class="kw">let</span> <span class="ident">voidfvoid</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_function</span>(<span class="ident">void</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">void</span>]);
+        <span class="kw">let</span> <span class="ident">voidfvoid</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_function</span>(<span class="ident">void</span>, <span class="macro">vec!</span>[<span class="ident">void</span>]);
 
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">b</span>
-            .<span class="ident">begin_function</span>(<span class="ident">void</span>, <span class="prelude-val">None</span>, <span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">NONE</span>, <span class="ident">voidfvoid</span>)
+        <span class="macro">assert!</span>(<span class="ident">b</span>
+            .<span class="ident">begin_function</span>(<span class="ident">void</span>, <span class="prelude-val">None</span>, <span class="ident">spirv::FunctionControl::NONE</span>, <span class="ident">voidfvoid</span>)
             .<span class="ident">is_ok</span>());
         <span class="ident">b</span>.<span class="ident">begin_block</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">variable</span>(<span class="ident">float32</span>, <span class="prelude-val">None</span>, <span class="ident">spirv</span>::<span class="ident">StorageClass</span>::<span class="ident">Function</span>, <span class="prelude-val">None</span>);
-        <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">var</span>));
+        <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">variable</span>(<span class="ident">float32</span>, <span class="prelude-val">None</span>, <span class="ident">spirv::StorageClass::Function</span>, <span class="prelude-val">None</span>);
+        <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">std::iter::once</span>(<span class="ident">dr::Operand::IdRef</span>(<span class="ident">var</span>));
         <span class="ident">b</span>.<span class="ident">ext_inst</span>(<span class="ident">float32</span>, <span class="prelude-val">None</span>, <span class="ident">glsl</span>, <span class="number">6</span>, <span class="ident">args</span>).<span class="ident">unwrap</span>();
         <span class="ident">b</span>.<span class="ident">ret</span>().<span class="ident">unwrap</span>();
         <span class="ident">b</span>.<span class="ident">end_function</span>().<span class="ident">unwrap</span>();
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="ident">b</span>.<span class="ident">module</span>().<span class="ident">disassemble</span>(),
             <span class="string">&quot;; SPIR-V\n\
                     ; Version: 1.5\n\
@@ -747,28 +747,28 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_disassemble_ext_inst_opencl</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">dr</span>::<span class="ident">Builder</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">dr::Builder::new</span>();
 
         <span class="kw">let</span> <span class="ident">opencl</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">ext_inst_import</span>(<span class="string">&quot;OpenCL.std&quot;</span>);
-        <span class="ident">b</span>.<span class="ident">memory_model</span>(<span class="ident">spirv</span>::<span class="ident">AddressingModel</span>::<span class="ident">Logical</span>, <span class="ident">spirv</span>::<span class="ident">MemoryModel</span>::<span class="ident">OpenCL</span>);
+        <span class="ident">b</span>.<span class="ident">memory_model</span>(<span class="ident">spirv::AddressingModel::Logical</span>, <span class="ident">spirv::MemoryModel::OpenCL</span>);
 
         <span class="kw">let</span> <span class="ident">void</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_void</span>();
         <span class="kw">let</span> <span class="ident">float32</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_float</span>(<span class="number">32</span>);
-        <span class="kw">let</span> <span class="ident">voidfvoid</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_function</span>(<span class="ident">void</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">void</span>]);
+        <span class="kw">let</span> <span class="ident">voidfvoid</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">type_function</span>(<span class="ident">void</span>, <span class="macro">vec!</span>[<span class="ident">void</span>]);
 
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">b</span>
-            .<span class="ident">begin_function</span>(<span class="ident">void</span>, <span class="prelude-val">None</span>, <span class="ident">spirv</span>::<span class="ident">FunctionControl</span>::<span class="ident">NONE</span>, <span class="ident">voidfvoid</span>)
+        <span class="macro">assert!</span>(<span class="ident">b</span>
+            .<span class="ident">begin_function</span>(<span class="ident">void</span>, <span class="prelude-val">None</span>, <span class="ident">spirv::FunctionControl::NONE</span>, <span class="ident">voidfvoid</span>)
             .<span class="ident">is_ok</span>());
         <span class="ident">b</span>.<span class="ident">begin_block</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">variable</span>(<span class="ident">float32</span>, <span class="prelude-val">None</span>, <span class="ident">spirv</span>::<span class="ident">StorageClass</span>::<span class="ident">Function</span>, <span class="prelude-val">None</span>);
+        <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">b</span>.<span class="ident">variable</span>(<span class="ident">float32</span>, <span class="prelude-val">None</span>, <span class="ident">spirv::StorageClass::Function</span>, <span class="prelude-val">None</span>);
 
-        <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">dr</span>::<span class="ident">Operand</span>::<span class="ident">IdRef</span>(<span class="ident">var</span>));
+        <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">std::iter::once</span>(<span class="ident">dr::Operand::IdRef</span>(<span class="ident">var</span>));
         <span class="ident">b</span>.<span class="ident">ext_inst</span>(<span class="ident">float32</span>, <span class="prelude-val">None</span>, <span class="ident">opencl</span>, <span class="number">15</span>, <span class="ident">args</span>).<span class="ident">unwrap</span>();
         <span class="ident">b</span>.<span class="ident">ret</span>().<span class="ident">unwrap</span>();
 
         <span class="ident">b</span>.<span class="ident">end_function</span>().<span class="ident">unwrap</span>();
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="ident">b</span>.<span class="ident">module</span>().<span class="ident">disassemble</span>(),
             <span class="string">&quot;; SPIR-V\n\
                     ; Version: 1.5\n\
@@ -789,5 +789,5 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rspirv" data-search-js="../../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rspirv" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

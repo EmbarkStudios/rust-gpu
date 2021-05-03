@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/textures.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>textures.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../spirv_std/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../spirv_std/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -922,9 +922,9 @@
 <span id="919">919</span>
 <span id="920">920</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">integer</span>::<span class="ident">Integer</span>, <span class="ident">vector</span>::<span class="ident">Vector</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">integer::Integer</span>, <span class="ident">vector::Vector</span>};
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sampler</span>::<span class="ident">Sampler</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::sampler::Sampler</span>;
 
 <span class="attribute">#[<span class="ident">cfg_attr</span>(
     <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;const-generics&quot;</span>,
@@ -946,7 +946,7 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Image2d</span> {
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleImplicitLod&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -954,8 +954,8 @@
         <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
         <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -971,7 +971,7 @@
         }
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image at a coordinate by a lod</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_by_lod</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
@@ -980,9 +980,9 @@
         <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
         <span class="ident">lod</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1000,7 +1000,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_by_gradient</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
@@ -1010,9 +1010,9 @@
         <span class="ident">gradient_dx</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
         <span class="ident">gradient_dy</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1032,7 +1032,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleProjImplicitLod&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_with_project_coordinate</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1040,8 +1040,8 @@
         <span class="ident">project_coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
         <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%project_coordinate = OpLoad _ {project_coordinate}&quot;</span>,
@@ -1057,7 +1057,7 @@
         }
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleProjExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image with a project coordinate by a lod</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_with_project_coordinate_by_lod</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
@@ -1066,9 +1066,9 @@
         <span class="ident">project_coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
         <span class="ident">lod</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%project_coordinate = OpLoad _ {project_coordinate}&quot;</span>,
@@ -1086,7 +1086,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleProjExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image with a project coordinate based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_with_project_coordinate_by_gradient</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
@@ -1096,9 +1096,9 @@
         <span class="ident">gradient_dx</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
         <span class="ident">gradient_dy</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%project_coordinate = OpLoad _ {project_coordinate}&quot;</span>,
@@ -1118,7 +1118,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleDrefImplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_depth_reference</span>(
@@ -1127,9 +1127,9 @@
         <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
         <span class="ident">depth_reference</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1147,7 +1147,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleDrefExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference based on an explicit lod</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_depth_reference_by_lod</span>(
@@ -1157,9 +1157,9 @@
         <span class="ident">depth_reference</span>: <span class="ident">f32</span>,
         <span class="ident">lod</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1179,7 +1179,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleDrefExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference based on a gradient formed by (dx, dy).</span>
     <span class="doccomment">/// Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])</span>
@@ -1191,9 +1191,9 @@
         <span class="ident">gradient_dx</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
         <span class="ident">gradient_dy</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1215,7 +1215,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleProjDrefImplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference with the project coordinate</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_depth_reference_with_project_coordinate</span>(
@@ -1224,9 +1224,9 @@
         <span class="ident">project_coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
         <span class="ident">depth_reference</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%project_coordinate = OpLoad _ {project_coordinate}&quot;</span>,
@@ -1244,7 +1244,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleProjDrefExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference with the project coordinate based on an explicit lod</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_depth_reference_with_project_coordinate_by_lod</span>(
@@ -1254,9 +1254,9 @@
         <span class="ident">depth_reference</span>: <span class="ident">f32</span>,
         <span class="ident">lod</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1276,7 +1276,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleProjDrefExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference with the project coordinate based on a gradient formed by (dx, dy).</span>
     <span class="doccomment">/// Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])</span>
@@ -1288,9 +1288,9 @@
         <span class="ident">gradient_dx</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
         <span class="ident">gradient_dy</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1313,16 +1313,16 @@
     }
 
     <span class="doccomment">/// Fetch a single texel with a sampler set at compile time</span>
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageFetch&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fetch</span><span class="op">&lt;</span><span class="ident">V</span>, <span class="ident">I</span>, <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">usize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">N</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span>,
         <span class="ident">I</span>: <span class="ident">Integer</span>,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">V</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">V::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span> {
+            <span class="macro">asm!</span> {
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
                 <span class="string">&quot;%result = OpImageFetch typeof*{result} %image %coordinate&quot;</span>,
@@ -1358,17 +1358,17 @@
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
 <span class="kw">impl</span> <span class="ident">StorageImage2d</span> {
     <span class="doccomment">/// Read a texel from an image without a sampler.</span>
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageRead&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">V</span>, <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">usize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="number">2</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span>
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">Integer</span>,
         <span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">N</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">V</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">V::default</span>();
 
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span> {
+            <span class="macro">asm!</span> {
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
                 <span class="string">&quot;%result = OpImageRead typeof*{result} %image %coordinate&quot;</span>,
@@ -1383,7 +1383,7 @@
     }
 
     <span class="doccomment">/// Write a texel to an image without a sampler.</span>
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageWrite&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">usize</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1392,7 +1392,7 @@
     ) <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">Integer</span>,
     {
-        <span class="macro">asm</span><span class="macro">!</span> {
+        <span class="macro">asm!</span> {
             <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
             <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
             <span class="string">&quot;%texels = OpLoad _ {texels}&quot;</span>,
@@ -1424,7 +1424,7 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Image2dArray</span> {
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleImplicitLod&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1432,8 +1432,8 @@
         <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
         <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">V</span>::<span class="ident">default</span>();
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">V::default</span>();
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1449,7 +1449,7 @@
         }
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image at a coordinate by a lod</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_by_lod</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
@@ -1458,9 +1458,9 @@
         <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
         <span class="ident">lod</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1478,7 +1478,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_by_gradient</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
@@ -1488,9 +1488,9 @@
         <span class="ident">gradient_dx</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
         <span class="ident">gradient_dy</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1510,7 +1510,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleDrefImplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_depth_reference</span>(
@@ -1519,9 +1519,9 @@
         <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
         <span class="ident">depth_reference</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1539,7 +1539,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleDrefExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference based on an explicit lod</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_depth_reference_by_lod</span>(
@@ -1549,9 +1549,9 @@
         <span class="ident">depth_reference</span>: <span class="ident">f32</span>,
         <span class="ident">lod</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1571,7 +1571,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleDrefExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference based on a gradient formed by (dx, dy).</span>
     <span class="doccomment">/// Specifically, ([du/dx, dv/dx], [du/dy, dv/dy])</span>
@@ -1583,9 +1583,9 @@
         <span class="ident">gradient_dx</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
         <span class="ident">gradient_dy</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1628,7 +1628,7 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Cubemap</span> {
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpSampledImage&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1636,8 +1636,8 @@
         <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
         <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1653,7 +1653,7 @@
         }
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image at a coordinate by a lod</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_by_lod</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
@@ -1662,9 +1662,9 @@
         <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
         <span class="ident">lod</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1682,7 +1682,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image based on a gradient formed by (dx, dy). Specifically, ([du/dx, dv/dx, dw/dx], [du/dy, dv/dy, dw/dy])</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_by_gradient</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(
@@ -1692,9 +1692,9 @@
         <span class="ident">gradient_dx</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
         <span class="ident">gradient_dy</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1714,7 +1714,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleDrefImplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_depth_reference</span>(
@@ -1723,9 +1723,9 @@
         <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
         <span class="ident">depth_reference</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1743,7 +1743,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleDrefExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference based on an explicit lod</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_depth_reference_by_lod</span>(
@@ -1753,9 +1753,9 @@
         <span class="ident">depth_reference</span>: <span class="ident">f32</span>,
         <span class="ident">lod</span>: <span class="ident">f32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1775,7 +1775,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleDrefExplicitLod&quot;</span>)]</span>
     <span class="doccomment">/// Sample the image&#39;s depth reference based on a gradient formed by (dx, dy).</span>
     <span class="doccomment">/// Specifically, ([du/dx, dv/dx, dw/dx], [du/dy, dv/dy, dw/dy])</span>
@@ -1787,9 +1787,9 @@
         <span class="ident">gradient_dx</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
         <span class="ident">gradient_dy</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">3</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">unsafe</span> {
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%image = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%sampler = OpLoad _ {sampler}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
@@ -1824,12 +1824,12 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
 <span class="kw">impl</span> <span class="ident">SampledImage</span><span class="op">&lt;</span><span class="ident">Image2d</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">spirv_std_macros</span>::<span class="ident">gpu_only</span>]</span>
+    <span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpImageSampleImplicitLod&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">4</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coordinate</span>: <span class="kw">impl</span> <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="number">2</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
         <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
-            <span class="macro">asm</span><span class="macro">!</span>(
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+            <span class="macro">asm!</span>(
                 <span class="string">&quot;%sampledImage = OpLoad _ {this}&quot;</span>,
                 <span class="string">&quot;%coordinate = OpLoad _ {coordinate}&quot;</span>,
                 <span class="string">&quot;%result = OpImageSampleImplicitLod _ %sampledImage %coordinate&quot;</span>,
@@ -1843,5 +1843,5 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/convert_case-0.4.0/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../convert_case/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../convert_case/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -449,8 +449,8 @@
 
 <span class="kw">mod</span> <span class="ident">case</span>;
 <span class="kw">mod</span> <span class="ident">words</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">case</span>::<span class="ident">Case</span>;
-<span class="kw">use</span> <span class="ident">words</span>::<span class="ident">Words</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">case::Case</span>;
+<span class="kw">use</span> <span class="ident">words::Words</span>;
 
 <span class="doccomment">/// Describes items that can be converted into a case.</span>
 <span class="doccomment">///</span>
@@ -466,21 +466,21 @@
 
 <span class="kw">impl</span> <span class="ident">Casing</span> <span class="kw">for</span> <span class="ident">str</span> {
     <span class="kw">fn</span> <span class="ident">to_case</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">case</span>: <span class="ident">Case</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="ident">Words</span>::<span class="ident">new</span>(<span class="self">self</span>).<span class="ident">into_case</span>(<span class="ident">case</span>)
+        <span class="ident">Words::new</span>(<span class="self">self</span>).<span class="ident">into_case</span>(<span class="ident">case</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">from_case</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">case</span>: <span class="ident">Case</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FromCasing</span> {
-        <span class="ident">FromCasing</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">to_string</span>(), <span class="ident">case</span>)
+        <span class="ident">FromCasing::new</span>(<span class="self">self</span>.<span class="ident">to_string</span>(), <span class="ident">case</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Casing</span> <span class="kw">for</span> <span class="ident">String</span> {
     <span class="kw">fn</span> <span class="ident">to_case</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">case</span>: <span class="ident">Case</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="ident">Words</span>::<span class="ident">new</span>(<span class="self">self</span>).<span class="ident">into_case</span>(<span class="ident">case</span>)
+        <span class="ident">Words::new</span>(<span class="self">self</span>).<span class="ident">into_case</span>(<span class="ident">case</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">from_case</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">case</span>: <span class="ident">Case</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FromCasing</span> {
-        <span class="ident">FromCasing</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">to_string</span>(), <span class="ident">case</span>)
+        <span class="ident">FromCasing::new</span>(<span class="self">self</span>.<span class="ident">to_string</span>(), <span class="ident">case</span>)
     }
 }
 
@@ -507,46 +507,46 @@
 
 <span class="kw">impl</span> <span class="ident">Casing</span> <span class="kw">for</span> <span class="ident">FromCasing</span> {
     <span class="kw">fn</span> <span class="ident">to_case</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">case</span>: <span class="ident">Case</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="ident">Words</span>::<span class="ident">from_casing</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">name</span>, <span class="self">self</span>.<span class="ident">case</span>).<span class="ident">into_case</span>(<span class="ident">case</span>)
+        <span class="ident">Words::from_casing</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">name</span>, <span class="self">self</span>.<span class="ident">case</span>).<span class="ident">into_case</span>(<span class="ident">case</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">from_case</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">case</span>: <span class="ident">Case</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">name</span>.<span class="ident">to_string</span>(), <span class="ident">case</span>)
+        <span class="self">Self</span><span class="ident">::new</span>(<span class="self">self</span>.<span class="ident">name</span>.<span class="ident">to_string</span>(), <span class="ident">case</span>)
     }
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">strum</span>::<span class="ident">IntoEnumIterator</span>;
+    <span class="kw">use</span> <span class="ident">strum::IntoEnumIterator</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">lossless_against_lossless</span>() {
-        <span class="kw">let</span> <span class="ident">examples</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
-            (<span class="ident">Case</span>::<span class="ident">Lower</span>, <span class="string">&quot;my variable 22 name&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Upper</span>, <span class="string">&quot;MY VARIABLE 22 NAME&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Title</span>, <span class="string">&quot;My Variable 22 Name&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Camel</span>, <span class="string">&quot;myVariable22Name&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Pascal</span>, <span class="string">&quot;MyVariable22Name&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Snake</span>, <span class="string">&quot;my_variable_22_name&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">ScreamingSnake</span>, <span class="string">&quot;MY_VARIABLE_22_NAME&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Kebab</span>, <span class="string">&quot;my-variable-22-name&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Cobol</span>, <span class="string">&quot;MY-VARIABLE-22-NAME&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Toggle</span>, <span class="string">&quot;mY vARIABLE 22 nAME&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Train</span>, <span class="string">&quot;My-Variable-22-Name&quot;</span>),
-            (<span class="ident">Case</span>::<span class="ident">Alternating</span>, <span class="string">&quot;mY vArIaBlE 22 nAmE&quot;</span>),
+        <span class="kw">let</span> <span class="ident">examples</span> <span class="op">=</span> <span class="macro">vec!</span>[
+            (<span class="ident">Case::Lower</span>, <span class="string">&quot;my variable 22 name&quot;</span>),
+            (<span class="ident">Case::Upper</span>, <span class="string">&quot;MY VARIABLE 22 NAME&quot;</span>),
+            (<span class="ident">Case::Title</span>, <span class="string">&quot;My Variable 22 Name&quot;</span>),
+            (<span class="ident">Case::Camel</span>, <span class="string">&quot;myVariable22Name&quot;</span>),
+            (<span class="ident">Case::Pascal</span>, <span class="string">&quot;MyVariable22Name&quot;</span>),
+            (<span class="ident">Case::Snake</span>, <span class="string">&quot;my_variable_22_name&quot;</span>),
+            (<span class="ident">Case::ScreamingSnake</span>, <span class="string">&quot;MY_VARIABLE_22_NAME&quot;</span>),
+            (<span class="ident">Case::Kebab</span>, <span class="string">&quot;my-variable-22-name&quot;</span>),
+            (<span class="ident">Case::Cobol</span>, <span class="string">&quot;MY-VARIABLE-22-NAME&quot;</span>),
+            (<span class="ident">Case::Toggle</span>, <span class="string">&quot;mY vARIABLE 22 nAME&quot;</span>),
+            (<span class="ident">Case::Train</span>, <span class="string">&quot;My-Variable-22-Name&quot;</span>),
+            (<span class="ident">Case::Alternating</span>, <span class="string">&quot;mY vArIaBlE 22 nAmE&quot;</span>),
         ];
 
         <span class="kw">for</span> (<span class="ident">case_a</span>, <span class="ident">str_a</span>) <span class="kw">in</span> <span class="ident">examples</span>.<span class="ident">iter</span>() {
             <span class="kw">for</span> (<span class="ident">case_b</span>, <span class="ident">str_b</span>) <span class="kw">in</span> <span class="ident">examples</span>.<span class="ident">iter</span>() {
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">str_a</span>, <span class="ident">str_b</span>.<span class="ident">from_case</span>(<span class="kw-2">*</span><span class="ident">case_b</span>).<span class="ident">to_case</span>(<span class="kw-2">*</span><span class="ident">case_a</span>))
+                <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">str_a</span>, <span class="ident">str_b</span>.<span class="ident">from_case</span>(<span class="kw-2">*</span><span class="ident">case_b</span>).<span class="ident">to_case</span>(<span class="kw-2">*</span><span class="ident">case_a</span>))
             }
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">obvious_default_parsing</span>() {
-        <span class="kw">let</span> <span class="ident">examples</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
+        <span class="kw">let</span> <span class="ident">examples</span> <span class="op">=</span> <span class="macro">vec!</span>[
             <span class="string">&quot;SuperMario64Game&quot;</span>,
             <span class="string">&quot;super-mario64-game&quot;</span>,
             <span class="string">&quot;superMario64 game&quot;</span>,
@@ -556,126 +556,126 @@
         ];
 
         <span class="kw">for</span> <span class="ident">example</span> <span class="kw">in</span> <span class="ident">examples</span> {
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;super_mario_64_game&quot;</span>, <span class="ident">example</span>.<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>));
+            <span class="macro">assert_eq!</span>(<span class="string">&quot;super_mario_64_game&quot;</span>, <span class="ident">example</span>.<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>));
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">multiline_strings</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;One\ntwo\nthree&quot;</span>,
-            <span class="string">&quot;one\ntwo\nthree&quot;</span>.<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Title</span>)
+            <span class="string">&quot;one\ntwo\nthree&quot;</span>.<span class="ident">to_case</span>(<span class="ident">Case::Title</span>)
         );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">camel_case_acroynms</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;xml_http_request&quot;</span>,
-            <span class="string">&quot;XMLHttpRequest&quot;</span>.<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Camel</span>).<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+            <span class="string">&quot;XMLHttpRequest&quot;</span>.<span class="ident">from_case</span>(<span class="ident">Case::Camel</span>).<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;xml_http_request&quot;</span>,
             <span class="string">&quot;XMLHttpRequest&quot;</span>
-                .<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">UpperCamel</span>)
-                .<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+                .<span class="ident">from_case</span>(<span class="ident">Case::UpperCamel</span>)
+                .<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;xml_http_request&quot;</span>,
             <span class="string">&quot;XMLHttpRequest&quot;</span>
-                .<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Pascal</span>)
-                .<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+                .<span class="ident">from_case</span>(<span class="ident">Case::Pascal</span>)
+                .<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">leading_tailing_delimeters</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;leading_underscore&quot;</span>,
             <span class="string">&quot;_leading_underscore&quot;</span>
-                .<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
-                .<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+                .<span class="ident">from_case</span>(<span class="ident">Case::Snake</span>)
+                .<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;tailing_underscore&quot;</span>,
             <span class="string">&quot;tailing_underscore_&quot;</span>
-                .<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
-                .<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+                .<span class="ident">from_case</span>(<span class="ident">Case::Snake</span>)
+                .<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;leading_hyphen&quot;</span>,
             <span class="string">&quot;-leading-hyphen&quot;</span>
-                .<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Kebab</span>)
-                .<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+                .<span class="ident">from_case</span>(<span class="ident">Case::Kebab</span>)
+                .<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;tailing_hyphen&quot;</span>,
             <span class="string">&quot;tailing-hyphen-&quot;</span>
-                .<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Kebab</span>)
-                .<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+                .<span class="ident">from_case</span>(<span class="ident">Case::Kebab</span>)
+                .<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">double_delimeters</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;many_underscores&quot;</span>,
             <span class="string">&quot;many___underscores&quot;</span>
-                .<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
-                .<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+                .<span class="ident">from_case</span>(<span class="ident">Case::Snake</span>)
+                .<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;many-underscores&quot;</span>,
             <span class="string">&quot;many---underscores&quot;</span>
-                .<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Kebab</span>)
-                .<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Kebab</span>)
+                .<span class="ident">from_case</span>(<span class="ident">Case::Kebab</span>)
+                .<span class="ident">to_case</span>(<span class="ident">Case::Kebab</span>)
         );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">early_word_boundaries</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;a_bagel&quot;</span>,
-            <span class="string">&quot;aBagel&quot;</span>.<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Camel</span>).<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+            <span class="string">&quot;aBagel&quot;</span>.<span class="ident">from_case</span>(<span class="ident">Case::Camel</span>).<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">late_word_boundaries</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;team_a&quot;</span>,
-            <span class="string">&quot;teamA&quot;</span>.<span class="ident">from_case</span>(<span class="ident">Case</span>::<span class="ident">Camel</span>).<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+            <span class="string">&quot;teamA&quot;</span>.<span class="ident">from_case</span>(<span class="ident">Case::Camel</span>).<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">empty_string</span>() {
-        <span class="kw">for</span> (<span class="ident">case_a</span>, <span class="ident">case_b</span>) <span class="kw">in</span> <span class="ident">Case</span>::<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">Case</span>::<span class="ident">iter</span>()) {
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>.<span class="ident">from_case</span>(<span class="ident">case_a</span>).<span class="ident">to_case</span>(<span class="ident">case_b</span>));
+        <span class="kw">for</span> (<span class="ident">case_a</span>, <span class="ident">case_b</span>) <span class="kw">in</span> <span class="ident">Case::iter</span>().<span class="ident">zip</span>(<span class="ident">Case::iter</span>()) {
+            <span class="macro">assert_eq!</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>.<span class="ident">from_case</span>(<span class="ident">case_a</span>).<span class="ident">to_case</span>(<span class="ident">case_b</span>));
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">owned_string</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;test_variable&quot;</span>,
-            <span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;TestVariable&quot;</span>).<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+            <span class="ident">String::from</span>(<span class="string">&quot;TestVariable&quot;</span>).<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         )
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">default_all_boundaries</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="macro">assert_eq!</span>(
             <span class="string">&quot;abc_abc_abc_abc_abc_abc&quot;</span>,
-            <span class="string">&quot;ABC-abc_abcAbc ABCAbc&quot;</span>.<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Snake</span>)
+            <span class="string">&quot;ABC-abc_abcAbc ABCAbc&quot;</span>.<span class="ident">to_case</span>(<span class="ident">Case::Snake</span>)
         );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">alternating_ignore_symbols</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;tHaT&#39;s&quot;</span>, <span class="string">&quot;that&#39;s&quot;</span>.<span class="ident">to_case</span>(<span class="ident">Case</span>::<span class="ident">Alternating</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;tHaT&#39;s&quot;</span>, <span class="string">&quot;that&#39;s&quot;</span>.<span class="ident">to_case</span>(<span class="ident">Case::Alternating</span>));
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="convert_case" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="convert_case" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

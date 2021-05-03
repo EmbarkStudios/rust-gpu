@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/link.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>link.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -536,29 +536,32 @@
 <span id="533">533</span>
 <span id="534">534</span>
 <span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">linker</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>};
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">back</span>::<span class="ident">lto</span>::{<span class="ident">LtoModuleCodegen</span>, <span class="ident">SerializedModule</span>, <span class="ident">ThinModule</span>, <span class="ident">ThinShared</span>};
-<span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::<span class="ident">back</span>::<span class="ident">write</span>::<span class="ident">CodegenContext</span>;
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::back::lto</span>::{<span class="ident">LtoModuleCodegen</span>, <span class="ident">SerializedModule</span>, <span class="ident">ThinModule</span>, <span class="ident">ThinShared</span>};
+<span class="kw">use</span> <span class="ident">rustc_codegen_ssa::back::write::CodegenContext</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::{<span class="ident">CodegenResults</span>, <span class="ident">NativeLib</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
-<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">owning_ref</span>::<span class="ident">OwningRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">rustc_erase_owner</span>;
-<span class="kw">use</span> <span class="ident">rustc_data_structures</span>::<span class="ident">sync</span>::<span class="ident">MetadataRef</span>;
-<span class="kw">use</span> <span class="ident">rustc_errors</span>::<span class="ident">FatalError</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">dep_graph</span>::<span class="ident">WorkProduct</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle</span>::<span class="ident">middle</span>::<span class="ident">dependency_format</span>::<span class="ident">Linkage</span>;
-<span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">config</span>::{<span class="ident">CrateType</span>, <span class="ident">DebugInfo</span>, <span class="ident">Lto</span>, <span class="ident">OptLevel</span>, <span class="ident">OutputFilenames</span>, <span class="ident">OutputType</span>};
-<span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">output</span>::{<span class="ident">check_file_is_writeable</span>, <span class="ident">invalid_output_for_target</span>, <span class="ident">out_filename</span>};
-<span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">utils</span>::<span class="ident">NativeLibKind</span>;
-<span class="kw">use</span> <span class="ident">rustc_session</span>::<span class="ident">Session</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::{<span class="ident">CString</span>, <span class="ident">OsStr</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="ident">BufWriter</span>, <span class="ident">Read</span>, <span class="ident">Write</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
+<span class="kw">use</span> <span class="ident">rustc_data_structures::fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
+<span class="kw">use</span> <span class="ident">rustc_data_structures::owning_ref::OwningRef</span>;
+<span class="kw">use</span> <span class="ident">rustc_data_structures::rustc_erase_owner</span>;
+<span class="kw">use</span> <span class="ident">rustc_data_structures::sync::MetadataRef</span>;
+<span class="kw">use</span> <span class="ident">rustc_errors::FatalError</span>;
+<span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
+<span class="kw">use</span> <span class="ident">rustc_middle::dep_graph::WorkProduct</span>;
+<span class="kw">use</span> <span class="ident">rustc_middle::middle::dependency_format::Linkage</span>;
+<span class="kw">use</span> <span class="ident">rustc_session::config</span>::{<span class="ident">CrateType</span>, <span class="ident">DebugInfo</span>, <span class="ident">Lto</span>, <span class="ident">OptLevel</span>, <span class="ident">OutputFilenames</span>, <span class="ident">OutputType</span>};
+<span class="kw">use</span> <span class="ident">rustc_session::output</span>::{<span class="ident">check_file_is_writeable</span>, <span class="ident">invalid_output_for_target</span>, <span class="ident">out_filename</span>};
+<span class="kw">use</span> <span class="ident">rustc_session::utils::NativeLibKind</span>;
+<span class="kw">use</span> <span class="ident">rustc_session::Session</span>;
+<span class="kw">use</span> <span class="ident">std::env</span>;
+<span class="kw">use</span> <span class="ident">std::ffi</span>::{<span class="ident">CString</span>, <span class="ident">OsStr</span>};
+<span class="kw">use</span> <span class="ident">std::fs::File</span>;
+<span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">BufWriter</span>, <span class="ident">Read</span>, <span class="ident">Write</span>};
+<span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
+<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 <span class="kw">use</span> <span class="ident">tar</span>::{<span class="ident">Archive</span>, <span class="ident">Builder</span>, <span class="ident">Header</span>};
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">link</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
@@ -569,17 +572,17 @@
     <span class="ident">legalize</span>: <span class="ident">bool</span>,
     <span class="ident">emit_multiple_modules</span>: <span class="ident">bool</span>,
 ) {
-    <span class="kw">let</span> <span class="ident">output_metadata</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">output_types</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">OutputType</span>::<span class="ident">Metadata</span>);
+    <span class="kw">let</span> <span class="ident">output_metadata</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">output_types</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">OutputType::Metadata</span>);
     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">crate_type</span> <span class="kw">in</span> <span class="ident">sess</span>.<span class="ident">crate_types</span>().<span class="ident">iter</span>() {
         <span class="kw">if</span> (<span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debugging_opts</span>.<span class="ident">no_codegen</span> <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">output_types</span>.<span class="ident">should_codegen</span>())
             <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">output_metadata</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">crate_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">CrateType</span>::<span class="ident">Executable</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">crate_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">CrateType::Executable</span>
         {
             <span class="kw">continue</span>;
         }
 
         <span class="kw">if</span> <span class="ident">invalid_output_for_target</span>(<span class="ident">sess</span>, <span class="ident">crate_type</span>) {
-            <span class="macro">bug</span><span class="macro">!</span>(
+            <span class="macro">bug!</span>(
                 <span class="string">&quot;invalid output type `{:?}` for target os `{}`&quot;</span>,
                 <span class="ident">crate_type</span>,
                 <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">target_triple</span>
@@ -597,10 +600,10 @@
         <span class="kw">if</span> <span class="ident">outputs</span>.<span class="ident">outputs</span>.<span class="ident">should_codegen</span>() {
             <span class="kw">let</span> <span class="ident">out_filename</span> <span class="op">=</span> <span class="ident">out_filename</span>(<span class="ident">sess</span>, <span class="ident">crate_type</span>, <span class="ident">outputs</span>, <span class="ident">crate_name</span>);
             <span class="kw">match</span> <span class="ident">crate_type</span> {
-                <span class="ident">CrateType</span>::<span class="ident">Rlib</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">CrateType::Rlib</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">link_rlib</span>(<span class="ident">sess</span>, <span class="ident">codegen_results</span>, <span class="kw-2">&amp;</span><span class="ident">out_filename</span>);
                 }
-                <span class="ident">CrateType</span>::<span class="ident">Executable</span> <span class="op">|</span> <span class="ident">CrateType</span>::<span class="ident">Cdylib</span> <span class="op">|</span> <span class="ident">CrateType</span>::<span class="ident">Dylib</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">link_exe</span>(
+                <span class="ident">CrateType::Executable</span> <span class="op">|</span> <span class="ident">CrateType::Cdylib</span> <span class="op">|</span> <span class="ident">CrateType::Dylib</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">link_exe</span>(
                     <span class="ident">sess</span>,
                     <span class="ident">crate_type</span>,
                     <span class="kw-2">&amp;</span><span class="ident">out_filename</span>,
@@ -608,14 +611,14 @@
                     <span class="ident">legalize</span>,
                     <span class="ident">emit_multiple_modules</span>,
                 ),
-                <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;CrateType {:?} not supported yet&quot;</span>, <span class="ident">other</span>)),
+                <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;CrateType {:?} not supported yet&quot;</span>, <span class="ident">other</span>)),
             }
         }
     }
 }
 
 <span class="kw">fn</span> <span class="ident">link_rlib</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">codegen_results</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenResults</span>, <span class="ident">out_filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file_list</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Path</span><span class="op">&gt;</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file_list</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="ident">::new</span>();
     <span class="kw">for</span> <span class="ident">obj</span> <span class="kw">in</span> <span class="ident">codegen_results</span>
         .<span class="ident">modules</span>
         .<span class="ident">iter</span>()
@@ -625,15 +628,15 @@
     }
     <span class="kw">for</span> <span class="ident">lib</span> <span class="kw">in</span> <span class="ident">codegen_results</span>.<span class="ident">crate_info</span>.<span class="ident">used_libraries</span>.<span class="ident">iter</span>() {
         <span class="kw">match</span> <span class="ident">lib</span>.<span class="ident">kind</span> {
-            <span class="ident">NativeLibKind</span>::<span class="ident">StaticBundle</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="ident">NativeLibKind</span>::<span class="ident">StaticNoBundle</span>
-            <span class="op">|</span> <span class="ident">NativeLibKind</span>::<span class="ident">Dylib</span>
-            <span class="op">|</span> <span class="ident">NativeLibKind</span>::<span class="ident">Framework</span>
-            <span class="op">|</span> <span class="ident">NativeLibKind</span>::<span class="ident">RawDylib</span>
-            <span class="op">|</span> <span class="ident">NativeLibKind</span>::<span class="ident">Unspecified</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+            <span class="ident">NativeLibKind::StaticBundle</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="ident">NativeLibKind::StaticNoBundle</span>
+            <span class="op">|</span> <span class="ident">NativeLibKind::Dylib</span>
+            <span class="op">|</span> <span class="ident">NativeLibKind::Framework</span>
+            <span class="op">|</span> <span class="ident">NativeLibKind::RawDylib</span>
+            <span class="op">|</span> <span class="ident">NativeLibKind::Unspecified</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="ident">lib</span>.<span class="ident">name</span> {
-            <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+            <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;Adding native library to rlib not supported yet: {}&quot;</span>,
                 <span class="ident">name</span>
             ));
@@ -651,8 +654,8 @@
     <span class="ident">legalize</span>: <span class="ident">bool</span>,
     <span class="ident">emit_multiple_modules</span>: <span class="ident">bool</span>,
 ) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">objects</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rlibs</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">objects</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rlibs</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">for</span> <span class="ident">obj</span> <span class="kw">in</span> <span class="ident">codegen_results</span>
         .<span class="ident">modules</span>
         .<span class="ident">iter</span>()
@@ -670,40 +673,43 @@
 
     <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="ident">do_link</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">objects</span>, <span class="kw-2">&amp;</span><span class="ident">rlibs</span>, <span class="ident">legalize</span>, <span class="ident">emit_multiple_modules</span>);
 
-    <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">Assemble</span>;
+    <span class="kw">let</span> <span class="ident">cg_args</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::codegen_cx::CodegenArgs::from_session</span>(<span class="ident">sess</span>);
+
+    <span class="kw">use</span> <span class="ident">rspirv::binary::Assemble</span>;
     <span class="kw">match</span> <span class="ident">spv_binary</span> {
-        <span class="ident">linker</span>::<span class="ident">LinkResult</span>::<span class="ident">SingleModule</span>(<span class="ident">spv_binary</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">linker::LinkResult::SingleModule</span>(<span class="ident">spv_binary</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="ident">post_link_single_module</span>(<span class="ident">sess</span>, <span class="ident">spv_binary</span>.<span class="ident">assemble</span>(), <span class="ident">out_filename</span>);
+            <span class="ident">cg_args</span>.<span class="ident">do_disassemble</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>);
         }
-        <span class="ident">linker</span>::<span class="ident">LinkResult</span>::<span class="ident">MultipleModules</span>(<span class="ident">map</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">linker::LinkResult::MultipleModules</span>(<span class="ident">map</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">root_file_name</span> <span class="op">=</span> <span class="ident">out_filename</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>().<span class="ident">to_owned</span>();
             <span class="ident">root_file_name</span>.<span class="ident">push</span>(<span class="string">&quot;.dir&quot;</span>);
             <span class="kw">let</span> <span class="ident">out_dir</span> <span class="op">=</span> <span class="ident">out_filename</span>.<span class="ident">with_file_name</span>(<span class="ident">root_file_name</span>);
             <span class="kw">if</span> <span class="op">!</span><span class="ident">out_dir</span>.<span class="ident">is_dir</span>() {
-                <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">out_dir</span>).<span class="ident">unwrap</span>();
+                <span class="ident">std::fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">out_dir</span>).<span class="ident">unwrap</span>();
             }
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashmap</span> <span class="op">=</span> <span class="ident">FxHashMap</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashmap</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
             <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">spv_binary</span>) <span class="kw">in</span> <span class="ident">map</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module_filename</span> <span class="op">=</span> <span class="ident">out_dir</span>.<span class="ident">clone</span>();
-                <span class="ident">module_filename</span>.<span class="ident">push</span>(<span class="ident">sanitize_filename</span>::<span class="ident">sanitize</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>));
+                <span class="ident">module_filename</span>.<span class="ident">push</span>(<span class="ident">sanitize_filename::sanitize</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>));
                 <span class="ident">post_link_single_module</span>(<span class="ident">sess</span>, <span class="ident">spv_binary</span>.<span class="ident">assemble</span>(), <span class="kw-2">&amp;</span><span class="ident">module_filename</span>);
                 <span class="ident">hashmap</span>.<span class="ident">insert</span>(<span class="ident">name</span>, <span class="ident">module_filename</span>);
             }
-            <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">out_filename</span>).<span class="ident">unwrap</span>();
-            <span class="ident">serde_json</span>::<span class="ident">to_writer</span>(<span class="ident">BufWriter</span>::<span class="ident">new</span>(<span class="ident">file</span>), <span class="kw-2">&amp;</span><span class="ident">hashmap</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="ident">out_filename</span>).<span class="ident">unwrap</span>();
+            <span class="ident">serde_json::to_writer</span>(<span class="ident">BufWriter::new</span>(<span class="ident">file</span>), <span class="kw-2">&amp;</span><span class="ident">hashmap</span>).<span class="ident">unwrap</span>();
         }
     }
 }
 
 <span class="kw">fn</span> <span class="ident">post_link_single_module</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">spv_binary</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">out_filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">ref</span> <span class="ident">path</span>) <span class="op">=</span> <span class="ident">std</span>::<span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;DUMP_POST_LINK&quot;</span>) {
-        <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">path</span>)
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">ref</span> <span class="ident">path</span>) <span class="op">=</span> <span class="ident">std::env::var</span>(<span class="string">&quot;DUMP_POST_LINK&quot;</span>) {
+        <span class="ident">File::create</span>(<span class="ident">path</span>)
             .<span class="ident">unwrap</span>()
-            .<span class="ident">write_all</span>(<span class="ident">spirv_tools</span>::<span class="ident">binary</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>))
+            .<span class="ident">write_all</span>(<span class="ident">spirv_tools::binary::from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>))
             .<span class="ident">unwrap</span>();
     }
 
-    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">OptLevel</span>::<span class="ident">No</span> <span class="op">|</span><span class="op">|</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo</span>::<span class="prelude-val">None</span>
+    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">OptLevel::No</span> <span class="op">|</span><span class="op">|</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span>
     {
         <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_spirv_opt&quot;</span>);
         <span class="ident">do_spirv_opt</span>(<span class="ident">sess</span>, <span class="ident">spv_binary</span>, <span class="ident">out_filename</span>)
@@ -711,17 +717,17 @@
         <span class="ident">spv_binary</span>
     };
 
-    <span class="kw">if</span> <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;NO_SPIRV_VAL&quot;</span>).<span class="ident">is_err</span>() {
+    <span class="kw">if</span> <span class="ident">env::var</span>(<span class="string">&quot;NO_SPIRV_VAL&quot;</span>).<span class="ident">is_err</span>() {
         <span class="ident">do_spirv_val</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">spv_binary</span>, <span class="ident">out_filename</span>);
     }
 
     {
         <span class="kw">let</span> <span class="ident">save_modules_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_save_modules&quot;</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">write</span>(<span class="ident">out_filename</span>, <span class="ident">spirv_tools</span>::<span class="ident">binary</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>))
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">std::fs::write</span>(<span class="ident">out_filename</span>, <span class="ident">spirv_tools::binary::from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>))
         {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="string">&quot;failed to serialize spirv-binary to disk&quot;</span>);
-            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">out_filename</span>.<span class="ident">display</span>()));
-            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;I/O error: {:#}&quot;</span>, <span class="ident">e</span>));
+            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">out_filename</span>.<span class="ident">display</span>()));
+            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;I/O error: {:#}&quot;</span>, <span class="ident">e</span>));
             <span class="ident">err</span>.<span class="ident">emit</span>();
         }
 
@@ -735,39 +741,39 @@
         <span class="ident">opt</span>::{<span class="self">self</span>, <span class="ident">Optimizer</span>},
     };
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">optimizer</span> <span class="op">=</span> <span class="ident">opt</span>::<span class="ident">create</span>(<span class="prelude-val">None</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">optimizer</span> <span class="op">=</span> <span class="ident">opt::create</span>(<span class="prelude-val">None</span>);
 
     <span class="kw">match</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> {
-        <span class="ident">OptLevel</span>::<span class="ident">No</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="ident">OptLevel</span>::<span class="ident">Less</span> <span class="op">|</span> <span class="ident">OptLevel</span>::<span class="ident">Default</span> <span class="op">|</span> <span class="ident">OptLevel</span>::<span class="ident">Aggressive</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">OptLevel::No</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">OptLevel::Less</span> <span class="op">|</span> <span class="ident">OptLevel::Default</span> <span class="op">|</span> <span class="ident">OptLevel::Aggressive</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="ident">optimizer</span>.<span class="ident">register_performance_passes</span>();
         }
-        <span class="ident">OptLevel</span>::<span class="ident">Size</span> <span class="op">|</span> <span class="ident">OptLevel</span>::<span class="ident">SizeMin</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">OptLevel::Size</span> <span class="op">|</span> <span class="ident">OptLevel::SizeMin</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="ident">optimizer</span>.<span class="ident">register_size_passes</span>();
         }
     }
 
-    <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo</span>::<span class="prelude-val">None</span> {
+    <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> {
         <span class="ident">optimizer</span>
-            .<span class="ident">register_pass</span>(<span class="ident">opt</span>::<span class="ident">Passes</span>::<span class="ident">EliminateDeadConstant</span>)
-            .<span class="ident">register_pass</span>(<span class="ident">opt</span>::<span class="ident">Passes</span>::<span class="ident">StripDebugInfo</span>);
+            .<span class="ident">register_pass</span>(<span class="ident">opt::Passes::EliminateDeadConstant</span>)
+            .<span class="ident">register_pass</span>(<span class="ident">opt::Passes::StripDebugInfo</span>);
     }
 
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">optimizer</span>.<span class="ident">optimize</span>(
         <span class="kw-2">&amp;</span><span class="ident">spv_binary</span>,
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">|</span><span class="ident">msg</span>: <span class="ident">error</span>::<span class="ident">Message</span><span class="op">|</span> {
-            <span class="kw">use</span> <span class="ident">error</span>::<span class="ident">MessageLevel</span> <span class="kw">as</span> <span class="ident">Level</span>;
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">|</span><span class="ident">msg</span>: <span class="ident">error::Message</span><span class="op">|</span> {
+            <span class="kw">use</span> <span class="ident">error::MessageLevel</span> <span class="kw">as</span> <span class="ident">Level</span>;
 
             <span class="comment">// TODO: Adds spans here? Not sure how useful with binary, but maybe?</span>
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">level</span> {
-                <span class="ident">Level</span>::<span class="ident">Fatal</span> <span class="op">|</span> <span class="ident">Level</span>::<span class="ident">InternalError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_fatal</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
-                <span class="ident">Level</span>::<span class="ident">Error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
-                <span class="ident">Level</span>::<span class="ident">Warning</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_warn</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
-                <span class="ident">Level</span>::<span class="ident">Info</span> <span class="op">|</span> <span class="ident">Level</span>::<span class="ident">Debug</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_note_without_error</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level::Fatal</span> <span class="op">|</span> <span class="ident">Level::InternalError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_fatal</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level::Error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level::Warning</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_warn</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
+                <span class="ident">Level::Info</span> <span class="op">|</span> <span class="ident">Level::Debug</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">struct_note_without_error</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">message</span>),
             };
 
-            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">filename</span>.<span class="ident">display</span>()));
+            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">filename</span>.<span class="ident">display</span>()));
             <span class="ident">err</span>.<span class="ident">emit</span>();
         },
         <span class="comment">// We currently run the validator separately after optimization or even</span>
@@ -776,11 +782,11 @@
     );
 
     <span class="kw">match</span> <span class="ident">result</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">binary</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span>::<span class="ident">from</span>(<span class="ident">binary</span>.<span class="ident">as_ref</span>()),
+        <span class="prelude-val">Ok</span>(<span class="ident">binary</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec::from</span>(<span class="ident">binary</span>.<span class="ident">as_ref</span>()),
         <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_warn</span>(<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="ident">to_string</span>());
             <span class="ident">err</span>.<span class="ident">note</span>(<span class="string">&quot;spirv-opt failed, leaving as unoptimized&quot;</span>);
-            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">filename</span>.<span class="ident">display</span>()));
+            <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">filename</span>.<span class="ident">display</span>()));
             <span class="ident">err</span>.<span class="ident">emit</span>();
             <span class="ident">spv_binary</span>
         }
@@ -788,14 +794,14 @@
 }
 
 <span class="kw">fn</span> <span class="ident">do_spirv_val</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">spv_binary</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>], <span class="ident">filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) {
-    <span class="kw">use</span> <span class="ident">spirv_tools</span>::<span class="ident">val</span>::{<span class="self">self</span>, <span class="ident">Validator</span>};
+    <span class="kw">use</span> <span class="ident">spirv_tools::val</span>::{<span class="self">self</span>, <span class="ident">Validator</span>};
 
-    <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">val</span>::<span class="ident">create</span>(<span class="ident">sess</span>.<span class="ident">target</span>.<span class="ident">options</span>.<span class="ident">env</span>.<span class="ident">parse</span>().<span class="ident">ok</span>());
+    <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">val::create</span>(<span class="ident">sess</span>.<span class="ident">target</span>.<span class="ident">options</span>.<span class="ident">env</span>.<span class="ident">parse</span>().<span class="ident">ok</span>());
 
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">validator</span>.<span class="ident">validate</span>(<span class="ident">spv_binary</span>, <span class="prelude-val">None</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">struct_err</span>(<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="ident">to_string</span>());
         <span class="ident">err</span>.<span class="ident">note</span>(<span class="string">&quot;spirv-val failed&quot;</span>);
-        <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">filename</span>.<span class="ident">display</span>()));
+        <span class="ident">err</span>.<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;module `{}`&quot;</span>, <span class="ident">filename</span>.<span class="ident">display</span>()));
         <span class="ident">err</span>.<span class="ident">emit</span>();
     }
 }
@@ -821,7 +827,7 @@
         .<span class="ident">used_libraries</span>
         .<span class="ident">iter</span>()
         .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">relevant_lib</span>(<span class="ident">sess</span>, <span class="ident">l</span>));
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">relevant_libs</span>.<span class="ident">count</span>(), <span class="number">0</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">relevant_libs</span>.<span class="ident">count</span>(), <span class="number">0</span>);
 }
 
 <span class="kw">fn</span> <span class="ident">add_upstream_rust_crates</span>(
@@ -840,10 +846,10 @@
     <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">cnum</span>, <span class="kw">_</span>) <span class="kw">in</span> <span class="ident">deps</span>.<span class="ident">iter</span>() {
         <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">codegen_results</span>.<span class="ident">crate_info</span>.<span class="ident">used_crate_source</span>[<span class="kw-2">&amp;</span><span class="ident">cnum</span>];
         <span class="kw">match</span> <span class="ident">data</span>[<span class="ident">cnum</span>.<span class="ident">as_usize</span>() <span class="op">-</span> <span class="number">1</span>] {
-            <span class="ident">Linkage</span>::<span class="ident">NotLinked</span> <span class="op">|</span> <span class="ident">Linkage</span>::<span class="ident">IncludedFromDylib</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="ident">Linkage</span>::<span class="ident">Static</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rlibs</span>.<span class="ident">push</span>(<span class="ident">src</span>.<span class="ident">rlib</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="number">0</span>.<span class="ident">clone</span>()),
+            <span class="ident">Linkage::NotLinked</span> <span class="op">|</span> <span class="ident">Linkage::IncludedFromDylib</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="ident">Linkage::Static</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rlibs</span>.<span class="ident">push</span>(<span class="ident">src</span>.<span class="ident">rlib</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="number">0</span>.<span class="ident">clone</span>()),
             <span class="comment">//Linkage::Dynamic =&gt; rlibs.push(src.dylib.as_ref().unwrap().0.clone()),</span>
-            <span class="ident">Linkage</span>::<span class="ident">Dynamic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">err</span>(<span class="string">&quot;TODO: Linkage::Dynamic not supported yet&quot;</span>),
+            <span class="ident">Linkage::Dynamic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">err</span>(<span class="string">&quot;TODO: Linkage::Dynamic not supported yet&quot;</span>),
         }
     }
 }
@@ -871,25 +877,25 @@
                 <span class="kw">continue</span>;
             }
             <span class="kw">match</span> <span class="ident">lib</span>.<span class="ident">kind</span> {
-                <span class="ident">NativeLibKind</span>::<span class="ident">Dylib</span> <span class="op">|</span> <span class="ident">NativeLibKind</span>::<span class="ident">Unspecified</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                <span class="ident">NativeLibKind::Dylib</span> <span class="op">|</span> <span class="ident">NativeLibKind::Unspecified</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;TODO: dylib nativelibkind not supported yet: {}&quot;</span>,
                     <span class="ident">name</span>
                 )),
-                <span class="ident">NativeLibKind</span>::<span class="ident">Framework</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                <span class="ident">NativeLibKind::Framework</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;TODO: framework nativelibkind not supported yet: {}&quot;</span>,
                     <span class="ident">name</span>
                 )),
-                <span class="ident">NativeLibKind</span>::<span class="ident">StaticNoBundle</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">if</span> <span class="ident">data</span>[<span class="ident">cnum</span>.<span class="ident">as_usize</span>() <span class="op">-</span> <span class="number">1</span>] <span class="op">=</span><span class="op">=</span> <span class="ident">Linkage</span>::<span class="ident">Static</span> {
-                        <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+                <span class="ident">NativeLibKind::StaticNoBundle</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="ident">data</span>[<span class="ident">cnum</span>.<span class="ident">as_usize</span>() <span class="op">-</span> <span class="number">1</span>] <span class="op">=</span><span class="op">=</span> <span class="ident">Linkage::Static</span> {
+                        <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                             <span class="string">&quot;TODO: staticnobundle nativelibkind not supported yet: {}&quot;</span>,
                             <span class="ident">name</span>
                         ))
                     }
                 }
-                <span class="ident">NativeLibKind</span>::<span class="ident">StaticBundle</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                <span class="ident">NativeLibKind</span>::<span class="ident">RawDylib</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;raw_dylib feature not yet implemented: {}&quot;</span>, <span class="ident">name</span>))
+                <span class="ident">NativeLibKind::StaticBundle</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                <span class="ident">NativeLibKind::RawDylib</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">sess</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;raw_dylib feature not yet implemented: {}&quot;</span>, <span class="ident">name</span>))
                 }
             }
         }
@@ -898,25 +904,25 @@
 
 <span class="kw">fn</span> <span class="ident">relevant_lib</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">lib</span>: <span class="kw-2">&amp;</span><span class="ident">NativeLib</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="ident">lib</span>.<span class="ident">cfg</span> {
-        <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">cfg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rustc_attr</span>::<span class="ident">cfg_matches</span>(<span class="ident">cfg</span>, <span class="kw-2">&amp;</span><span class="ident">sess</span>.<span class="ident">parse_sess</span>, <span class="prelude-val">None</span>),
+        <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">cfg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rustc_attr::cfg_matches</span>(<span class="ident">cfg</span>, <span class="kw-2">&amp;</span><span class="ident">sess</span>.<span class="ident">parse_sess</span>, <span class="prelude-val">None</span>),
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
     }
 }
 
 <span class="kw">fn</span> <span class="ident">create_archive</span>(<span class="ident">files</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Path</span>], <span class="ident">metadata</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">out_filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) {
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">out_filename</span>).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>(<span class="ident">file</span>);
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="ident">out_filename</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder::new</span>(<span class="ident">file</span>);
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">Header</span>::<span class="ident">new_gnu</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">Header::new_gnu</span>();
         <span class="ident">header</span>.<span class="ident">set_path</span>(<span class="string">&quot;.metadata&quot;</span>).<span class="ident">unwrap</span>();
         <span class="ident">header</span>.<span class="ident">set_size</span>(<span class="ident">metadata</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
         <span class="ident">header</span>.<span class="ident">set_cksum</span>();
         <span class="ident">builder</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="ident">header</span>, <span class="ident">metadata</span>).<span class="ident">unwrap</span>();
     }
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">filenames</span> <span class="op">=</span> <span class="ident">FxHashSet</span>::<span class="ident">default</span>();
-    <span class="ident">filenames</span>.<span class="ident">insert</span>(<span class="ident">OsStr</span>::<span class="ident">new</span>(<span class="string">&quot;.metadata&quot;</span>));
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">filenames</span> <span class="op">=</span> <span class="ident">FxHashSet::default</span>();
+    <span class="ident">filenames</span>.<span class="ident">insert</span>(<span class="ident">OsStr::new</span>(<span class="string">&quot;.metadata&quot;</span>));
     <span class="kw">for</span> <span class="ident">file</span> <span class="kw">in</span> <span class="ident">files</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="ident">filenames</span>.<span class="ident">insert</span>(<span class="ident">file</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>()),
             <span class="string">&quot;Duplicate filename in archive: {:?}&quot;</span>,
             <span class="ident">file</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>()
@@ -929,22 +935,22 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_metadata</span>(<span class="ident">rlib</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MetadataRef</span>, <span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">read_metadata_internal</span>(<span class="ident">rlib</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MetadataRef</span><span class="op">&gt;</span>, <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">for</span> <span class="ident">entry</span> <span class="kw">in</span> <span class="ident">Archive</span>::<span class="ident">new</span>(<span class="ident">File</span>::<span class="ident">open</span>(<span class="ident">rlib</span>)<span class="question-mark">?</span>).<span class="ident">entries</span>()<span class="question-mark">?</span> {
+    <span class="kw">fn</span> <span class="ident">read_metadata_internal</span>(<span class="ident">rlib</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MetadataRef</span><span class="op">&gt;</span>, <span class="ident">std::io::Error</span><span class="op">&gt;</span> {
+        <span class="kw">for</span> <span class="ident">entry</span> <span class="kw">in</span> <span class="ident">Archive::new</span>(<span class="ident">File::open</span>(<span class="ident">rlib</span>)<span class="question-mark">?</span>).<span class="ident">entries</span>()<span class="question-mark">?</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">entry</span><span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">path</span>()<span class="question-mark">?</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Path</span>::<span class="ident">new</span>(<span class="string">&quot;.metadata&quot;</span>) {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">path</span>()<span class="question-mark">?</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Path::new</span>(<span class="string">&quot;.metadata&quot;</span>) {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
                 <span class="ident">entry</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">buf</span>: <span class="ident">OwningRef</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, [<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OwningRef</span>::<span class="ident">new</span>(<span class="ident">bytes</span>);
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="macro">rustc_erase_owner</span><span class="macro">!</span>(<span class="ident">buf</span>.<span class="ident">map_owner_box</span>())));
+                <span class="kw">let</span> <span class="ident">buf</span>: <span class="ident">OwningRef</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, [<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OwningRef::new</span>(<span class="ident">bytes</span>);
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="macro">rustc_erase_owner!</span>(<span class="ident">buf</span>.<span class="ident">map_owner_box</span>())));
             }
         }
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
     <span class="kw">match</span> <span class="ident">read_metadata_internal</span>(<span class="ident">rlib</span>) {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">m</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">m</span>),
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;No .metadata file in rlib: {:?}&quot;</span>, <span class="ident">rlib</span>)),
-        <span class="prelude-val">Err</span>(<span class="ident">io</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Failed to read rlib at {:?}: {}&quot;</span>, <span class="ident">rlib</span>, <span class="ident">io</span>)),
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;No .metadata file in rlib: {:?}&quot;</span>, <span class="ident">rlib</span>)),
+        <span class="prelude-val">Err</span>(<span class="ident">io</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Failed to read rlib at {:?}: {}&quot;</span>, <span class="ident">rlib</span>, <span class="ident">io</span>)),
     }
 }
 
@@ -956,122 +962,122 @@
     <span class="ident">rlibs</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>],
     <span class="ident">legalize</span>: <span class="ident">bool</span>,
     <span class="ident">emit_multiple_modules</span>: <span class="ident">bool</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">linker</span>::<span class="ident">LinkResult</span> {
-    <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Module</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">rspirv</span>::<span class="ident">dr</span>::<span class="ident">Loader</span>::<span class="ident">new</span>();
-        <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">parse_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">loader</span>).<span class="ident">unwrap</span>();
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">linker::LinkResult</span> {
+    <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rspirv::dr::Module</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">rspirv::dr::Loader::new</span>();
+        <span class="ident">rspirv::binary::parse_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">loader</span>).<span class="ident">unwrap</span>();
         <span class="ident">loader</span>.<span class="ident">module</span>()
     }
 
     <span class="kw">let</span> <span class="ident">load_modules_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_load_modules&quot;</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modules</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modules</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="comment">// `objects` are the plain obj files we need to link - usually produced by the final crate.</span>
     <span class="kw">for</span> <span class="ident">obj</span> <span class="kw">in</span> <span class="ident">objects</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-        <span class="ident">File</span>::<span class="ident">open</span>(<span class="ident">obj</span>).<span class="ident">unwrap</span>().<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="ident">File::open</span>(<span class="ident">obj</span>).<span class="ident">unwrap</span>().<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>).<span class="ident">unwrap</span>();
         <span class="ident">modules</span>.<span class="ident">push</span>(<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>));
     }
     <span class="comment">// `rlibs` are archive files we&#39;ve created in `create_archive`, usually produced by crates that are being</span>
     <span class="comment">// referenced. We need to unpack them and add the modules inside.</span>
     <span class="kw">for</span> <span class="ident">rlib</span> <span class="kw">in</span> <span class="ident">rlibs</span> {
-        <span class="kw">for</span> <span class="ident">entry</span> <span class="kw">in</span> <span class="ident">Archive</span>::<span class="ident">new</span>(<span class="ident">File</span>::<span class="ident">open</span>(<span class="ident">rlib</span>).<span class="ident">unwrap</span>()).<span class="ident">entries</span>().<span class="ident">unwrap</span>() {
+        <span class="kw">for</span> <span class="ident">entry</span> <span class="kw">in</span> <span class="ident">Archive::new</span>(<span class="ident">File::open</span>(<span class="ident">rlib</span>).<span class="ident">unwrap</span>()).<span class="ident">entries</span>().<span class="ident">unwrap</span>() {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">unwrap</span>();
-            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">path</span>().<span class="ident">unwrap</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">Path</span>::<span class="ident">new</span>(<span class="string">&quot;.metadata&quot;</span>) {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">path</span>().<span class="ident">unwrap</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">Path::new</span>(<span class="string">&quot;.metadata&quot;</span>) {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
                 <span class="ident">entry</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>).<span class="ident">unwrap</span>();
                 <span class="ident">modules</span>.<span class="ident">push</span>(<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>));
             }
         }
     }
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">ref</span> <span class="ident">path</span>) <span class="op">=</span> <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;DUMP_PRE_LINK&quot;</span>) {
-        <span class="kw">use</span> <span class="ident">rspirv</span>::<span class="ident">binary</span>::<span class="ident">Assemble</span>;
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path</span>::<span class="ident">new</span>(<span class="ident">path</span>);
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">ref</span> <span class="ident">path</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="string">&quot;DUMP_PRE_LINK&quot;</span>) {
+        <span class="kw">use</span> <span class="ident">rspirv::binary::Assemble</span>;
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="ident">path</span>);
         <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">is_file</span>() {
-            <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">remove_file</span>(<span class="ident">path</span>).<span class="ident">unwrap</span>();
+            <span class="ident">std::fs::remove_file</span>(<span class="ident">path</span>).<span class="ident">unwrap</span>();
         }
-        <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="ident">path</span>).<span class="ident">unwrap</span>();
+        <span class="ident">std::fs::create_dir_all</span>(<span class="ident">path</span>).<span class="ident">unwrap</span>();
         <span class="kw">for</span> (<span class="ident">num</span>, <span class="ident">module</span>) <span class="kw">in</span> <span class="ident">modules</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">path</span>.<span class="ident">join</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;mod_{}.spv&quot;</span>, <span class="ident">num</span>)))
+            <span class="ident">File::create</span>(<span class="ident">path</span>.<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;mod_{}.spv&quot;</span>, <span class="ident">num</span>)))
                 .<span class="ident">unwrap</span>()
-                .<span class="ident">write_all</span>(<span class="ident">spirv_tools</span>::<span class="ident">binary</span>::<span class="ident">from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">assemble</span>()))
+                .<span class="ident">write_all</span>(<span class="ident">spirv_tools::binary::from_binary</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">assemble</span>()))
                 .<span class="ident">unwrap</span>();
         }
     }
     <span class="ident">drop</span>(<span class="ident">load_modules_timer</span>);
 
     <span class="comment">// Do the link...</span>
-    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">linker</span>::<span class="ident">Options</span> {
-        <span class="ident">dce</span>: <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;NO_DCE&quot;</span>).<span class="ident">is_err</span>(),
-        <span class="ident">compact_ids</span>: <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;NO_COMPACT_IDS&quot;</span>).<span class="ident">is_err</span>(),
+    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">linker::Options</span> {
+        <span class="ident">dce</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_DCE&quot;</span>).<span class="ident">is_err</span>(),
+        <span class="ident">compact_ids</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_COMPACT_IDS&quot;</span>).<span class="ident">is_err</span>(),
         <span class="ident">inline</span>: <span class="ident">legalize</span>,
         <span class="ident">mem2reg</span>: <span class="ident">legalize</span>,
-        <span class="ident">structurize</span>: <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;NO_STRUCTURIZE&quot;</span>).<span class="ident">is_err</span>(),
-        <span class="ident">use_new_structurizer</span>: <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;OLD_STRUCTURIZER&quot;</span>).<span class="ident">is_err</span>(),
+        <span class="ident">structurize</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_STRUCTURIZE&quot;</span>).<span class="ident">is_err</span>(),
+        <span class="ident">use_new_structurizer</span>: <span class="ident">env::var</span>(<span class="string">&quot;OLD_STRUCTURIZER&quot;</span>).<span class="ident">is_err</span>(),
         <span class="ident">emit_multiple_modules</span>,
     };
 
-    <span class="kw">let</span> <span class="ident">link_result</span> <span class="op">=</span> <span class="ident">linker</span>::<span class="ident">link</span>(<span class="ident">sess</span>, <span class="ident">modules</span>, <span class="kw-2">&amp;</span><span class="ident">options</span>);
+    <span class="kw">let</span> <span class="ident">link_result</span> <span class="op">=</span> <span class="ident">linker::link</span>(<span class="ident">sess</span>, <span class="ident">modules</span>, <span class="kw-2">&amp;</span><span class="ident">options</span>);
 
     <span class="kw">match</span> <span class="ident">link_result</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">rustc_errors</span>::<span class="ident">ErrorReported</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Err</span>(<span class="ident">rustc_errors::ErrorReported</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="ident">sess</span>.<span class="ident">abort_if_errors</span>();
-            <span class="macro">bug</span><span class="macro">!</span>(<span class="string">&quot;Linker errored, but no error reported&quot;</span>)
+            <span class="macro">bug!</span>(<span class="string">&quot;Linker errored, but no error reported&quot;</span>)
         }
     }
 }
 
 <span class="doccomment">/// As of right now, this is essentially a no-op, just plumbing through all the files.</span>
 <span class="comment">// TODO: WorkProduct impl</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">unnecessary_wraps</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::unnecessary_wraps</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">run_thin</span>(
     <span class="ident">cgcx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenContext</span><span class="op">&lt;</span><span class="ident">SpirvCodegenBackend</span><span class="op">&gt;</span>,
     <span class="ident">modules</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">SpirvThinBuffer</span>)<span class="op">&gt;</span>,
     <span class="ident">cached_modules</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">SerializedModule</span><span class="op">&lt;</span><span class="ident">SpirvModuleBuffer</span><span class="op">&gt;</span>, <span class="ident">WorkProduct</span>)<span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">LtoModuleCodegen</span><span class="op">&lt;</span><span class="ident">SpirvCodegenBackend</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">WorkProduct</span><span class="op">&gt;</span>), <span class="ident">FatalError</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">cgcx</span>.<span class="ident">opts</span>.<span class="ident">cg</span>.<span class="ident">linker_plugin_lto</span>.<span class="ident">enabled</span>() {
-        <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;We should never reach this case if the LTO step is deferred to the linker&quot;</span>);
+        <span class="macro">unreachable!</span>(<span class="string">&quot;We should never reach this case if the LTO step is deferred to the linker&quot;</span>);
     }
-    <span class="kw">if</span> <span class="ident">cgcx</span>.<span class="ident">lto</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Lto</span>::<span class="ident">ThinLocal</span> {
+    <span class="kw">if</span> <span class="ident">cgcx</span>.<span class="ident">lto</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Lto::ThinLocal</span> {
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="ident">cgcx</span>.<span class="ident">each_linked_rlib_for_lto</span>.<span class="ident">iter</span>() {
-            <span class="macro">bug</span><span class="macro">!</span>(<span class="string">&quot;TODO: Implement whatever the heck this is&quot;</span>);
+            <span class="macro">bug!</span>(<span class="string">&quot;TODO: Implement whatever the heck this is&quot;</span>);
         }
     }
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">thin_buffers</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">modules</span>.<span class="ident">len</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module_names</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">modules</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">cached_modules</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">thin_buffers</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">modules</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module_names</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">modules</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">cached_modules</span>.<span class="ident">len</span>());
 
     <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">buffer</span>) <span class="kw">in</span> <span class="ident">modules</span> {
-        <span class="kw">let</span> <span class="ident">cname</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">name</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">cname</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="ident">name</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
         <span class="ident">thin_buffers</span>.<span class="ident">push</span>(<span class="ident">buffer</span>);
         <span class="ident">module_names</span>.<span class="ident">push</span>(<span class="ident">cname</span>);
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">serialized_modules</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">cached_modules</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">serialized_modules</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">cached_modules</span>.<span class="ident">len</span>());
 
     <span class="kw">for</span> (<span class="ident">sm</span>, <span class="ident">wp</span>) <span class="kw">in</span> <span class="ident">cached_modules</span> {
         <span class="kw">let</span> <span class="ident">_slice_u8</span> <span class="op">=</span> <span class="ident">sm</span>.<span class="ident">data</span>();
         <span class="ident">serialized_modules</span>.<span class="ident">push</span>(<span class="ident">sm</span>);
-        <span class="ident">module_names</span>.<span class="ident">push</span>(<span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">wp</span>.<span class="ident">cgu_name</span>).<span class="ident">unwrap</span>());
+        <span class="ident">module_names</span>.<span class="ident">push</span>(<span class="ident">CString::new</span>(<span class="ident">wp</span>.<span class="ident">cgu_name</span>).<span class="ident">unwrap</span>());
     }
 
-    <span class="kw">let</span> <span class="ident">shared</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">ThinShared</span> {
+    <span class="kw">let</span> <span class="ident">shared</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">ThinShared</span> {
         <span class="ident">data</span>: (),
         <span class="ident">thin_buffers</span>,
         <span class="ident">serialized_modules</span>,
         <span class="ident">module_names</span>,
     });
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">opt_jobs</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">opt_jobs</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">for</span> (<span class="ident">module_index</span>, <span class="kw">_</span>) <span class="kw">in</span> <span class="ident">shared</span>.<span class="ident">module_names</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="ident">opt_jobs</span>.<span class="ident">push</span>(<span class="ident">LtoModuleCodegen</span>::<span class="ident">Thin</span>(<span class="ident">ThinModule</span> {
+        <span class="ident">opt_jobs</span>.<span class="ident">push</span>(<span class="ident">LtoModuleCodegen::Thin</span>(<span class="ident">ThinModule</span> {
             <span class="ident">shared</span>: <span class="ident">shared</span>.<span class="ident">clone</span>(),
             <span class="ident">idx</span>: <span class="ident">module_index</span>,
         }));
     }
 
-    <span class="prelude-val">Ok</span>((<span class="ident">opt_jobs</span>, <span class="macro">vec</span><span class="macro">!</span>[]))
+    <span class="prelude-val">Ok</span>((<span class="ident">opt_jobs</span>, <span class="macro">vec!</span>[]))
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
