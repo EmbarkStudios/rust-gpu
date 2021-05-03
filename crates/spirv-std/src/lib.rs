@@ -1,13 +1,7 @@
 #![no_std]
 #![cfg_attr(
     target_arch = "spirv",
-    feature(
-        asm,
-        register_attr,
-        repr_simd,
-        core_intrinsics,
-        lang_items,
-    ),
+    feature(asm, register_attr, repr_simd, core_intrinsics, lang_items,),
     register_attr(spirv)
 )]
 #![cfg_attr(

@@ -212,15 +212,24 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
         .then(|| " -C llvm-args=--module-output=multiple")
         .unwrap_or_default();
 
-    let mut rustflags = format!(
-        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}",
-        rustc_codegen_spirv.display(),
-        llvm_args,
-    );
+    let mut target_features = Vec::new();
 
     if builder.bindless {
-        rustflags += " -Ctarget-feature=+bindless";
+        target_features.push("+bindless");
     }
+
+    let feature_flag = if target_features.is_empty() {
+        String::new()
+    } else {
+        format!(" -C target-feature={}", target_features.join(","))
+    };
+
+    let mut rustflags = format!(
+        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}{}",
+        rustc_codegen_spirv.display(),
+        feature_flag,
+        llvm_args,
+    );
 
     let mut cargo = Command::new("cargo");
     cargo.args(&[
