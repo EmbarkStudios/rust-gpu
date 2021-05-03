@@ -122,3 +122,8 @@ fn panic(_: &core::panic::PanicInfo<'_>) -> ! {
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[lang = "eh_personality"]
 extern "C" fn rust_eh_personality() {}
+
+// See: https://github.com/rust-lang/rust/issues/84738
+#[doc(hidden)]
+/// [`spirv_types`]
+pub fn workaround_rustdoc_ice_84738() {}
