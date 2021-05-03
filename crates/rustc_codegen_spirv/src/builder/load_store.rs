@@ -180,6 +180,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     (val.ty, val_def)
                 };
 
+                // note: assumes little endian
                 // [base] => uint(ulong_data)
                 // [base + 1] => uint(ulong_data >> 32)
                 let lower = self
@@ -361,6 +362,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .with_type(target_ty)
             }
             (64, _) => {
+                // note: assumes little endian
                 // lower = u64(base[0])
                 // upper = u64(base[1])
                 // result = lower | (upper << 32)
