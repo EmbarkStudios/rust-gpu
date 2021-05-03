@@ -246,10 +246,6 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         let _timer = sess.timer("link_sort_globals");
         simple_passes::sort_globals(&mut output);
     }
-    {
-        let _timer = sess.timer("sort_function_op_variables");
-        simple_passes::sort_function_op_variables(&mut output);
-    }
 
     let mut output = if opts.emit_multiple_modules {
         let modules = output

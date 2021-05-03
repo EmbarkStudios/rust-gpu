@@ -1,6 +1,5 @@
-use crate::builder_spirv::SpirvValue;
+use crate::builder_spirv::{BuilderCursor, SpirvValue};
 use crate::spirv_type::SpirvType;
-
 use super::Builder;
 use crate::codegen_cx::CodegenCx;
 use rspirv::dr;
@@ -316,9 +315,12 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 // OpVariable with Function storage class should be emitted inside the function,
                 // however, all other OpVariables should appear in the global scope instead.
                 if inst.operands[0].unwrap_storage_class() == StorageClass::Function {
-                    self.emit()
-                        .insert_into_block(dr::InsertPoint::Begin, inst)
-                        .unwrap();
+                    self.emit_with_cursor(BuilderCursor {
+                        block: Some(0),
+                        ..self.cursor
+                    })
+                    .insert_into_block(dr::InsertPoint::Begin, inst)
+                    .unwrap();
                     return;
                 } else {
                     self.emit_global()
