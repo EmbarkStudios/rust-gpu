@@ -6,7 +6,7 @@ use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::BindlessDescriptorSets;
 use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
-use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
+use rspirv::spirv::{Capability, Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir as hir;
@@ -312,17 +312,23 @@ impl<'tcx> CodegenCx<'tcx> {
         bx.call(entry_func, &call_args, None);
         bx.ret_void();
 
-        if self.bindless() && self.target.spirv_version() < (1, 3) {
-            let sets = self.bindless_descriptor_sets.borrow().unwrap();
+        if self.bindless() {
+            self.emit_global().extension("SPV_EXT_descriptor_indexing");
+            self.emit_global()
+                .capability(Capability::RuntimeDescriptorArray);
 
-            op_entry_point_interface_operands.push(sets.buffers);
+            if self.target.spirv_version() < (1, 3) {
+                let sets = self.bindless_descriptor_sets.borrow().unwrap();
 
-            //op_entry_point_interface_operands
-            //  .push(sets.sampled_image_1d);
-            // op_entry_point_interface_operands
-            //   .push(sets.sampled_image_2d);
-            //op_entry_point_interface_operands
-            //.push(sets.sampled_image_3d);
+                op_entry_point_interface_operands.push(sets.buffers);
+
+                //op_entry_point_interface_operands
+                //  .push(sets.sampled_image_1d);
+                // op_entry_point_interface_operands
+                //   .push(sets.sampled_image_2d);
+                //op_entry_point_interface_operands
+                //.push(sets.sampled_image_3d);
+            }
         }
 
         let stub_fn_id = stub_fn.def_cx(self);
