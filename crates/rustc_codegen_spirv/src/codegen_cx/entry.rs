@@ -317,7 +317,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.emit_global()
                 .capability(Capability::RuntimeDescriptorArray);
 
-            if self.target.spirv_version() < (1, 3) {
+            if self.target.spirv_version() > (1, 3) {
                 let sets = self.bindless_descriptor_sets.borrow().unwrap();
 
                 op_entry_point_interface_operands.push(sets.buffers);
@@ -636,15 +636,27 @@ impl<'tcx> CodegenCx<'tcx> {
         self.emit_global()
             .variable(var_ptr_spirv_type, Some(var), storage_class, None);
 
-        // Record this `OpVariable` as needing to be added (if applicable),
-        // to the *Interface* operands of the `OpEntryPoint` instruction.
-        if self.emit_global().version().unwrap() > (1, 3) && !self.bindless() {
-            // SPIR-V >= v1.4 includes all OpVariables in the interface.
-            op_entry_point_interface_operands.push(var);
+        if self.bindless() {
+            match storage_class {
+                StorageClass::Input | StorageClass::Output => {
+                    op_entry_point_interface_operands.push(var)
+                }
+                StorageClass::PushConstant if self.emit_global().version().unwrap() > (1, 3) => {
+                    op_entry_point_interface_operands.push(var)
+                }
+                _ => {}
+            }
         } else {
-            // SPIR-V <= v1.3 only includes Input and Output in the interface.
-            if storage_class == StorageClass::Input || storage_class == StorageClass::Output {
+            // Record this `OpVariable` as needing to be added (if applicable),
+            // to the *Interface* operands of the `OpEntryPoint` instruction.
+            if self.emit_global().version().unwrap() > (1, 3) {
+                // SPIR-V >= v1.4 includes all OpVariables in the interface.
                 op_entry_point_interface_operands.push(var);
+            } else {
+                // SPIR-V <= v1.3 only includes Input and Output in the interface.
+                if storage_class == StorageClass::Input || storage_class == StorageClass::Output {
+                    op_entry_point_interface_operands.push(var);
+                }
             }
         }
     }
