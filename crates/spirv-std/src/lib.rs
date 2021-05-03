@@ -83,6 +83,7 @@ pub mod integer;
 pub mod memory;
 pub mod ray_tracing;
 mod sampler;
+pub mod number;
 pub mod scalar;
 pub(crate) mod sealed;
 mod textures;
