@@ -1,4 +1,5 @@
 // build-pass
+// compile-flags: -C target-feature=+RuntimeDescriptorArray,+ext:SPV_EXT_descriptor_indexing
 // compile-flags: -C llvm-args=--disassemble-globals
 // normalize-stderr-test "OpCapability VulkanMemoryModel\n" -> ""
 // normalize-stderr-test "OpExtension .SPV_KHR_vulkan_memory_model.\n" -> ""
@@ -10,8 +11,6 @@ fn add_decorate() {
     unsafe {
         let offset = 1u32;
         asm!(
-            "OpExtension \"SPV_EXT_descriptor_indexing\"",
-            "OpCapability RuntimeDescriptorArray",
             "OpDecorate %image_2d_var DescriptorSet 0",
             "OpDecorate %image_2d_var Binding 0",
             "%uint                  = OpTypeInt 32 0",

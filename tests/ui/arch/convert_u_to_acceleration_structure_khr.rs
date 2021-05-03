@@ -1,11 +1,9 @@
 // build-pass
+// compile-flags: -Ctarget-feature=+RayTracingKHR,+ext:SPV_KHR_ray_tracing
 
 #[spirv(ray_generation)]
 pub fn main(#[spirv(ray_payload)] payload: &mut glam::Vec3) {
     unsafe {
-        asm!(r#"OpExtension "SPV_KHR_ray_tracing""#);
-        asm!("OpCapability RayTracingKHR");
-
         let handle = spirv_std::ray_tracing::AccelerationStructure::from_u64(0xffff_ffff);
         let handle2 =
             spirv_std::ray_tracing::AccelerationStructure::from_vec(glam::UVec2::new(0, 0));

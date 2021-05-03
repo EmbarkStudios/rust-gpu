@@ -1,4 +1,5 @@
 // build-pass
+// compile-flags: -Ctarget-feature=+RuntimeDescriptorArray,+ext:SPV_EXT_descriptor_indexing
 // compile-flags: -C llvm-args=--disassemble-fn=complex_image_sample_inst::sample_proj_lod
 
 use spirv_std as _;
@@ -14,8 +15,6 @@ fn sample_proj_lod(
         let mut result = glam::Vec4::default();
         let index = 0u32;
         asm!(
-            "OpExtension \"SPV_EXT_descriptor_indexing\"",
-            "OpCapability RuntimeDescriptorArray",
             "OpDecorate %image_2d_var DescriptorSet 0",
             "OpDecorate %image_2d_var Binding 0",
             "%uint                  = OpTypeInt 32 0",

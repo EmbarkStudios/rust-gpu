@@ -1,4 +1,5 @@
 // build-pass
+// compile-flags: -Ctarget-feature=+RayQueryKHR,+ext:SPV_KHR_ray_query
 
 use glam::Vec3;
 use spirv_std::ray_tracing::{AccelerationStructure, RayFlags, RayQuery};
@@ -11,8 +12,6 @@ pub fn main(
     #[spirv(ray_payload)] payload: &mut Vec3,
 ) {
     unsafe {
-        asm!(r#"OpExtension "SPV_KHR_ray_query""#);
-        asm!("OpCapability RayQueryKHR");
         spirv_std::ray_query!(let mut ray_query);
 
         ray_query.initialize(

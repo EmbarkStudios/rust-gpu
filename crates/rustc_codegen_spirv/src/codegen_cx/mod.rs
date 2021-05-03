@@ -80,16 +80,24 @@ pub struct CodegenCx<'tcx> {
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         let sym = Symbols::get();
-        for &feature in &tcx.sess.target_features {
-            tcx.sess.err(&format!("Unknown feature {}", feature));
-        }
+        let features = tcx
+            .sess
+            .target_features
+            .iter()
+            .map(|s| s.as_str().parse())
+            .collect::<Result<_, String>>()
+            .unwrap_or_else(|error| {
+                tcx.sess.err(&error);
+                Vec::new()
+            });
+
         let codegen_args = CodegenArgs::from_session(tcx.sess);
         let target = tcx.sess.target.llvm_target.parse().unwrap();
 
         Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(&target),
+            builder: BuilderSpirv::new(&target, &features),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
