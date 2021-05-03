@@ -1,7 +1,7 @@
-use crate::builder_spirv::{BuilderCursor, SpirvValue};
-use crate::spirv_type::SpirvType;
 use super::Builder;
+use crate::builder_spirv::{BuilderCursor, SpirvValue};
 use crate::codegen_cx::CodegenCx;
+use crate::spirv_type::SpirvType;
 use rspirv::dr;
 use rspirv::grammar::{LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{

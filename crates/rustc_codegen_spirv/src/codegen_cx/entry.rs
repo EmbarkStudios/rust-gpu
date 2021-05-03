@@ -635,7 +635,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // Emit the `OpVariable` with its *Result* ID set to `var`.
         self.emit_global()
             .variable(var_ptr_spirv_type, Some(var), storage_class, None);
-    
+
         // Record this `OpVariable` as needing to be added (if applicable),
         // to the *Interface* operands of the `OpEntryPoint` instruction.
         if self.emit_global().version().unwrap() > (1, 3) {

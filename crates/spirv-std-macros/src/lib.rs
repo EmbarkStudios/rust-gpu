@@ -105,6 +105,8 @@ pub fn gpu_only(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let fn_name = sig.ident.clone();
 
+    let sig = syn::Signature { abi: None, ..sig };
+
     let output = quote::quote! {
         // Don't warn on unused arguments on the CPU side.
         #[cfg_attr(not(target_arch = "spirv"), allow(unused_variables))]

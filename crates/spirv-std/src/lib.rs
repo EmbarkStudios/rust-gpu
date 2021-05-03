@@ -1,7 +1,14 @@
 #![no_std]
 #![cfg_attr(
     target_arch = "spirv",
-    feature(asm, register_attr, repr_simd, core_intrinsics, lang_items,),
+    feature(
+        asm,
+        register_attr,
+        repr_simd,
+        core_intrinsics,
+        lang_items,
+        abi_unadjusted
+    ),
     register_attr(spirv)
 )]
 #![cfg_attr(
@@ -9,7 +16,6 @@
     feature(const_generics),
     allow(incomplete_features)
 )]
-#![feature(abi_unadjusted)]
 // BEGIN - Embark standard lints v0.3
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
