@@ -7,7 +7,6 @@
         repr_simd,
         core_intrinsics,
         lang_items,
-        naked_functions,
     ),
     register_attr(spirv)
 )]
