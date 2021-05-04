@@ -2,6 +2,7 @@
 // contain references, and where the `T` values aren't immediatelly loaded from.
 
 // build-pass
+// compile-flags: -C target-feature=+VariablePointers
 
 use spirv_std as _;
 
@@ -26,7 +27,6 @@ pub fn main(
     bool_out: &mut bool,
     vec_out: &mut Vec2,
 ) {
-    unsafe { asm!("OpCapability VariablePointers") };
     *scalar_out = deep_load(&&123);
     *bool_out = vec_in == &Vec2::ZERO;
     *vec_out = deep_transpose(&ROT90) * *vec_in;

@@ -1,19 +1,10 @@
 use crate::float::Float;
 
 #[cfg(target_arch = "spirv")]
-macro_rules! deriv_caps {
-    (true) => {
-        asm!("OpCapability DerivativeControl")
-    };
-    (false) => {};
-}
-
-#[cfg(target_arch = "spirv")]
 macro_rules! deriv_fn {
-    ($p:ident, $inst:ident, $needs_caps:tt) => {
+    ($p:ident, $inst:ident) => {
         unsafe {
             let mut o = Default::default();
-            deriv_caps!($needs_caps);
             asm!(
                 "%input = OpLoad _ {0}",
                 concat!("%result = ", stringify!($inst), " _ %input"),
@@ -32,7 +23,7 @@ macro_rules! deriv_fn {
 #[crate::macros::vectorized]
 #[crate::macros::gpu_only]
 pub fn ddx<F: Float>(component: F) -> F {
-    deriv_fn!(component, OpDPdx, false)
+    deriv_fn!(component, OpDPdx)
 }
 
 /// Returns the partial derivative of `component` with respect to the window's X
@@ -41,7 +32,7 @@ pub fn ddx<F: Float>(component: F) -> F {
 #[crate::macros::vectorized]
 #[crate::macros::gpu_only]
 pub fn ddx_fine<F: Float>(component: F) -> F {
-    deriv_fn!(component, OpDPdxFine, true)
+    deriv_fn!(component, OpDPdxFine)
 }
 
 /// Returns the partial derivative of `component` with respect to the window's X
@@ -53,7 +44,7 @@ pub fn ddx_fine<F: Float>(component: F) -> F {
 #[crate::macros::vectorized]
 #[crate::macros::gpu_only]
 pub fn ddx_coarse<F: Float>(component: F) -> F {
-    deriv_fn!(component, OpDPdxCoarse, true)
+    deriv_fn!(component, OpDPdxCoarse)
 }
 
 /// Returns the partial derivative of `component` with respect to the window's Y
@@ -62,7 +53,7 @@ pub fn ddx_coarse<F: Float>(component: F) -> F {
 #[crate::macros::vectorized]
 #[crate::macros::gpu_only]
 pub fn ddy<F: Float>(component: F) -> F {
-    deriv_fn!(component, OpDPdy, false)
+    deriv_fn!(component, OpDPdy)
 }
 
 /// Returns the partial derivative of `component` with respect to the window's Y
@@ -71,7 +62,7 @@ pub fn ddy<F: Float>(component: F) -> F {
 #[crate::macros::vectorized]
 #[crate::macros::gpu_only]
 pub fn ddy_fine<F: Float>(component: F) -> F {
-    deriv_fn!(component, OpDPdyFine, true)
+    deriv_fn!(component, OpDPdyFine)
 }
 
 /// Returns the partial derivative of `component` with respect to the window's Y
@@ -83,7 +74,7 @@ pub fn ddy_fine<F: Float>(component: F) -> F {
 #[crate::macros::vectorized]
 #[crate::macros::gpu_only]
 pub fn ddy_coarse<F: Float>(component: F) -> F {
-    deriv_fn!(component, OpDPdyCoarse, true)
+    deriv_fn!(component, OpDPdyCoarse)
 }
 
 /// Returns the sum of the absolute values of [`ddx`] and [`ddy`] as a single
@@ -91,7 +82,7 @@ pub fn ddy_coarse<F: Float>(component: F) -> F {
 #[crate::macros::vectorized]
 #[crate::macros::gpu_only]
 pub fn fwidth<F: Float>(component: F) -> F {
-    deriv_fn!(component, OpFwidth, false)
+    deriv_fn!(component, OpFwidth)
 }
 
 /// Returns the sum of the absolute values of [`ddx_fine`] and [`ddy_fine`] as a
@@ -99,7 +90,7 @@ pub fn fwidth<F: Float>(component: F) -> F {
 #[crate::macros::vectorized]
 #[crate::macros::gpu_only]
 pub fn fwidth_fine<F: Float>(component: F) -> F {
-    deriv_fn!(component, OpFwidthFine, true)
+    deriv_fn!(component, OpFwidthFine)
 }
 
 /// Returns the sum of the absolute values of [`ddx_coarse`] and [`ddy_coarse`]
@@ -107,5 +98,5 @@ pub fn fwidth_fine<F: Float>(component: F) -> F {
 #[crate::macros::vectorized]
 #[crate::macros::gpu_only]
 pub fn fwidth_coarse<F: Float>(component: F) -> F {
-    deriv_fn!(component, OpFwidthCoarse, true)
+    deriv_fn!(component, OpFwidthCoarse)
 }

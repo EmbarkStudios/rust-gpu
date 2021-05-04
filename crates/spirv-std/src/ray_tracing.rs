@@ -491,17 +491,15 @@ impl RayQuery {
     #[doc(alias = "OpRayQueryGetIntersectionFrontFaceKHR")]
     #[inline]
     pub unsafe fn get_intersection_front_face<const INTERSECTION: u32>(&self) -> bool {
-        let mut result = 0u8;
+        let mut result: u32;
 
         asm! {
-            "%u8 = OpTypeInt 8 0",
             "%u32 = OpTypeInt 32 0",
             "%intersection = OpConstant %u32 {intersection}",
-            "%result = OpRayQueryGetIntersectionFrontFaceKHR %u8 {ray_query} %intersection",
-            "OpStore {result} %result",
+            "{result} = OpRayQueryGetIntersectionFrontFaceKHR %u32 {ray_query} %intersection",
             ray_query = in(reg) self,
             intersection = const INTERSECTION,
-            result = in(reg) &mut result,
+            result = out(reg) result,
         }
 
         result != 0
@@ -513,14 +511,13 @@ impl RayQuery {
     #[doc(alias = "OpRayQueryGetIntersectionCandidateAABBOpaqueKHR")]
     #[inline]
     pub unsafe fn get_intersection_candidate_aabb_opaque(&self) -> bool {
-        let mut result = 0u8;
+        let result: u32;
 
         asm! {
-            "%u8 = OpTypeInt 8 0",
-            "%result = OpRayQueryGetIntersectionCandidateAABBOpaqueKHR %u8 {ray_query}",
-            "OpStore {result} %result",
+            "%u32 = OpTypeInt 8 0",
+            "{result} = OpRayQueryGetIntersectionCandidateAABBOpaqueKHR %u32 {ray_query}",
             ray_query = in(reg) self,
-            result = in(reg) &mut result,
+            result = out(reg) result,
         }
 
         result != 0

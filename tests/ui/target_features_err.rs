@@ -7,4 +7,3 @@ use spirv_std as _;
 pub fn main() {
     unsafe { spirv_std::arch::terminate_ray() }
 }
-
