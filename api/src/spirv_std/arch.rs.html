@@ -143,6 +143,23 @@
 <span id="140">140</span>
 <span id="141">141</span>
 <span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! SPIR-V Instrinics</span>
 <span class="doccomment">//!</span>
@@ -154,6 +171,7 @@
 <span class="kw">mod</span> <span class="ident">arithmetic</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;const-generics&quot;</span>)]</span>
 <span class="kw">mod</span> <span class="ident">barrier</span>;
+<span class="kw">mod</span> <span class="ident">demote_to_helper_invocation_ext</span>;
 <span class="kw">mod</span> <span class="ident">derivative</span>;
 <span class="kw">mod</span> <span class="ident">primitive</span>;
 <span class="kw">mod</span> <span class="ident">ray_tracing</span>;
@@ -161,6 +179,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">arithmetic</span>::<span class="kw-2">*</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;const-generics&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">barrier</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">demote_to_helper_invocation_ext</span>::<span class="kw-2">*</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">derivative</span>::<span class="kw-2">*</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">primitive</span>::<span class="kw-2">*</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ray_tracing</span>::<span class="kw-2">*</span>;
@@ -285,6 +304,21 @@
     }
 
     <span class="ident">result</span>
+}
+
+<span class="doccomment">/// Fragment-shader discard. Equivalvent to `discard()` from GLSL</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Ceases all further processing in any invocation that executes it: Only</span>
+<span class="doccomment">/// instructions these invocations executed before [kill] have observable side</span>
+<span class="doccomment">/// effects.</span>
+<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpKill&quot;</span>, <span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;discard&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::empty_loop</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kill</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="op">!</span> {
+    <span class="kw">unsafe</span> {
+        <span class="macro">asm!</span>(<span class="string">&quot;OpKill&quot;</span>, <span class="string">&quot;%unused = OpLabel&quot;</span>);
+    }
+    <span class="kw">loop</span> {}
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_std" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>

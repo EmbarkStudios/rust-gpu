@@ -648,9 +648,6 @@
 <span id="645">645</span>
 <span id="646">646</span>
 <span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Ray-tracing data types</span>
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::vector::Vector</span>;
@@ -1145,17 +1142,15 @@
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionFrontFaceKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_intersection_front_face</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">INTERSECTION</span>: <span class="ident">u32</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0u8</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span>: <span class="ident">u32</span>;
 
         <span class="macro">asm!</span> {
-            <span class="string">&quot;%u8 = OpTypeInt 8 0&quot;</span>,
             <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
             <span class="string">&quot;%intersection = OpConstant %u32 {intersection}&quot;</span>,
-            <span class="string">&quot;%result = OpRayQueryGetIntersectionFrontFaceKHR %u8 {ray_query} %intersection&quot;</span>,
-            <span class="string">&quot;OpStore {result} %result&quot;</span>,
+            <span class="string">&quot;{result} = OpRayQueryGetIntersectionFrontFaceKHR %u32 {ray_query} %intersection&quot;</span>,
             <span class="ident">ray_query</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="self">self</span>,
             <span class="ident">intersection</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">INTERSECTION</span>,
-            <span class="ident">result</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result</span>,
+            <span class="ident">result</span> <span class="op">=</span> <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">result</span>,
         }
 
         <span class="ident">result</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
@@ -1167,14 +1162,13 @@
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpRayQueryGetIntersectionCandidateAABBOpaqueKHR&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_intersection_candidate_aabb_opaque</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0u8</span>;
+        <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">u32</span>;
 
         <span class="macro">asm!</span> {
-            <span class="string">&quot;%u8 = OpTypeInt 8 0&quot;</span>,
-            <span class="string">&quot;%result = OpRayQueryGetIntersectionCandidateAABBOpaqueKHR %u8 {ray_query}&quot;</span>,
-            <span class="string">&quot;OpStore {result} %result&quot;</span>,
+            <span class="string">&quot;%u32 = OpTypeInt 8 0&quot;</span>,
+            <span class="string">&quot;{result} = OpRayQueryGetIntersectionCandidateAABBOpaqueKHR %u32 {ray_query}&quot;</span>,
             <span class="ident">ray_query</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="self">self</span>,
-            <span class="ident">result</span> <span class="op">=</span> <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result</span>,
+            <span class="ident">result</span> <span class="op">=</span> <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">result</span>,
         }
 
         <span class="ident">result</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>

@@ -103,32 +103,14 @@
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
-<span id="103">103</span>
-<span id="104">104</span>
-<span id="105">105</span>
-<span id="106">106</span>
-<span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::float::Float</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)]</span>
-<span class="macro">macro_rules!</span> <span class="ident">deriv_caps</span> {
-    (<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="macro">asm!</span>(<span class="string">&quot;OpCapability DerivativeControl&quot;</span>)
-    };
-    (<span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> {};
-}
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)]</span>
 <span class="macro">macro_rules!</span> <span class="ident">deriv_fn</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">p</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">needs_caps</span>:<span class="ident">tt</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">p</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">o</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-            <span class="macro">deriv_caps!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">needs_caps</span>);
             <span class="macro">asm!</span>(
                 <span class="string">&quot;%input = OpLoad _ {0}&quot;</span>,
                 <span class="macro">concat!</span>(<span class="string">&quot;%result = &quot;</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">inst</span>), <span class="string">&quot; _ %input&quot;</span>),
@@ -147,7 +129,7 @@
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
-    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdx</span>, <span class="bool-val">false</span>)
+    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdx</span>)
 }
 
 <span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s X</span>
@@ -156,7 +138,7 @@
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
-    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdxFine</span>, <span class="bool-val">true</span>)
+    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdxFine</span>)
 }
 
 <span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s X</span>
@@ -168,7 +150,7 @@
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddx_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
-    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdxCoarse</span>, <span class="bool-val">true</span>)
+    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdxCoarse</span>)
 }
 
 <span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s Y</span>
@@ -177,7 +159,7 @@
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
-    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdy</span>, <span class="bool-val">false</span>)
+    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdy</span>)
 }
 
 <span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s Y</span>
@@ -186,7 +168,7 @@
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
-    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdyFine</span>, <span class="bool-val">true</span>)
+    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdyFine</span>)
 }
 
 <span class="doccomment">/// Returns the partial derivative of `component` with respect to the window&#39;s Y</span>
@@ -198,7 +180,7 @@
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ddy_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
-    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdyCoarse</span>, <span class="bool-val">true</span>)
+    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpDPdyCoarse</span>)
 }
 
 <span class="doccomment">/// Returns the sum of the absolute values of [`ddx`] and [`ddy`] as a single</span>
@@ -206,7 +188,7 @@
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
-    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpFwidth</span>, <span class="bool-val">false</span>)
+    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpFwidth</span>)
 }
 
 <span class="doccomment">/// Returns the sum of the absolute values of [`ddx_fine`] and [`ddy_fine`] as a</span>
@@ -214,7 +196,7 @@
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth_fine</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
-    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpFwidthFine</span>, <span class="bool-val">true</span>)
+    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpFwidthFine</span>)
 }
 
 <span class="doccomment">/// Returns the sum of the absolute values of [`ddx_coarse`] and [`ddy_coarse`]</span>
@@ -222,7 +204,7 @@
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::vectorized</span>]</span>
 <span class="attribute">#[<span class="kw">crate</span><span class="ident">::macros::gpu_only</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fwidth_coarse</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Float</span><span class="op">&gt;</span>(<span class="ident">component</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
-    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpFwidthCoarse</span>, <span class="bool-val">true</span>)
+    <span class="macro">deriv_fn!</span>(<span class="ident">component</span>, <span class="ident">OpFwidthCoarse</span>)
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_std" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
