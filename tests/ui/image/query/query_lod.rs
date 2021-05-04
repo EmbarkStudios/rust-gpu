@@ -1,4 +1,5 @@
 // build-pass
+// compile-flags: -C target-feature=+ImageQuery
 
 use spirv_std::{arch, Image, Sampler};
 
@@ -8,6 +9,5 @@ pub fn main(
     #[spirv(descriptor_set = 0, binding = 1)] sampler: &Sampler,
     output: &mut glam::Vec2,
 ) {
-    unsafe { asm!("OpCapability ImageQuery") };
     *output = image.query_lod(*sampler, glam::Vec2::new(0.0, 1.0));
 }

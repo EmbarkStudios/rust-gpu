@@ -93,26 +93,6 @@ pub use crate::macros::Image;
 pub use num_traits;
 pub use textures::*;
 
-/// Calls the `OpDemoteToHelperInvocationEXT` instruction, which corresponds to discard() in HLSL
-#[spirv_std_macros::gpu_only]
-pub fn demote_to_helper_invocation() {
-    unsafe {
-        asm!(
-            "OpExtension \"SPV_EXT_demote_to_helper_invocation\"",
-            "OpCapability DemoteToHelperInvocationEXT",
-            "OpDemoteToHelperInvocationEXT"
-        );
-    }
-}
-
-/// Calls the `OpKill` instruction, which corresponds to discard() in GLSL
-#[spirv_std_macros::gpu_only]
-pub fn discard() {
-    unsafe {
-        asm!("OpKill", "%unused = OpLabel");
-    }
-}
-
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo<'_>) -> ! {

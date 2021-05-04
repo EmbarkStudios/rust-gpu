@@ -8,6 +8,7 @@ use crate::{scalar::Scalar, vector::Vector};
 mod arithmetic;
 #[cfg(feature = "const-generics")]
 mod barrier;
+mod demote_to_helper_invocation_ext;
 mod derivative;
 mod primitive;
 mod ray_tracing;
@@ -15,6 +16,7 @@ mod ray_tracing;
 pub use arithmetic::*;
 #[cfg(feature = "const-generics")]
 pub use barrier::*;
+pub use demote_to_helper_invocation_ext::*;
 pub use derivative::*;
 pub use primitive::*;
 pub use ray_tracing::*;
@@ -139,4 +141,19 @@ pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T, N>, const N: usize>(
     }
 
     result
+}
+
+/// Fragment-shader discard. Equivalvent to `discard()` from GLSL
+///
+/// Ceases all further processing in any invocation that executes it: Only
+/// instructions these invocations executed before [kill] have observable side
+/// effects.
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "OpKill", alias = "discard")]
+#[allow(clippy::empty_loop)]
+pub fn kill() -> ! {
+    unsafe {
+        asm!("OpKill", "%unused = OpLabel");
+    }
+    loop {}
 }
