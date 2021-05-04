@@ -93,7 +93,7 @@ pub struct CodegenCx<'tcx> {
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         let sym = Symbols::get();
-        
+
         let features = tcx
             .sess
             .target_features
@@ -113,7 +113,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 tcx.sess.err(&format!("Unknown feature {}", feature));
             }
         }
-        
+
         let codegen_args = CodegenArgs::from_session(tcx.sess);
         let target = tcx.sess.target.llvm_target.parse().unwrap();
 
