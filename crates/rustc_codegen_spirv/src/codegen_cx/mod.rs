@@ -25,7 +25,7 @@ use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TyS};
 use rustc_session::Session;
-use rustc_span::def_id::LOCAL_CRATE;
+use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::FnAbi;
@@ -93,6 +93,18 @@ pub struct CodegenCx<'tcx> {
 impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         let sym = Symbols::get();
+        
+        let features = tcx
+            .sess
+            .target_features
+            .iter()
+            .map(|s| s.as_str().parse())
+            .collect::<Result<_, String>>()
+            .unwrap_or_else(|error| {
+                tcx.sess.err(&error);
+                Vec::new()
+            });
+
         let mut bindless = false;
         for &feature in &tcx.sess.target_features {
             if feature == sym.bindless {
@@ -101,13 +113,14 @@ impl<'tcx> CodegenCx<'tcx> {
                 tcx.sess.err(&format!("Unknown feature {}", feature));
             }
         }
+        
         let codegen_args = CodegenArgs::from_session(tcx.sess);
         let target = tcx.sess.target.llvm_target.parse().unwrap();
 
         let result = Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(&target),
+            builder: BuilderSpirv::new(&target, &features),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
@@ -157,6 +170,7 @@ impl<'tcx> CodegenCx<'tcx> {
         self.builder.builder(cursor)
     }
 
+    #[track_caller]
     pub fn lookup_type(&self, ty: Word) -> SpirvType {
         self.type_cache.lookup(ty)
     }
@@ -246,6 +260,10 @@ impl<'tcx> CodegenCx<'tcx> {
 
 pub struct CodegenArgs {
     pub module_output_type: ModuleOutputType,
+    pub disassemble: bool,
+    pub disassemble_fn: Option<String>,
+    pub disassemble_entry: Option<String>,
+    pub disassemble_globals: bool,
 }
 
 impl CodegenArgs {
@@ -265,10 +283,118 @@ impl CodegenArgs {
             "single output or multiple output",
             "[single|multiple]",
         );
+        opts.optflagopt("", "disassemble", "print module to stderr", "");
+        opts.optopt("", "disassemble-fn", "print function to stderr", "NAME");
+        opts.optopt(
+            "",
+            "disassemble-entry",
+            "print entry point to stderr",
+            "NAME",
+        );
+        opts.optflagopt("", "disassemble-globals", "print globals to stderr", "");
         let matches = opts.parse(args)?;
         let module_output_type =
             matches.opt_get_default("module-output", ModuleOutputType::Single)?;
-        Ok(Self { module_output_type })
+        let disassemble = matches.opt_present("disassemble");
+        let disassemble_fn = matches.opt_str("disassemble-fn");
+        let disassemble_entry = matches.opt_str("disassemble-entry");
+        let disassemble_globals = matches.opt_present("disassemble-globals");
+        Ok(Self {
+            module_output_type,
+            disassemble,
+            disassemble_fn,
+            disassemble_entry,
+            disassemble_globals,
+        })
+    }
+
+    pub fn do_disassemble(&self, module: &Module) {
+        fn compact_ids(module: &mut rspirv::dr::Function) -> u32 {
+            let mut remap = std::collections::HashMap::new();
+            let mut insert = |current_id: &mut u32| {
+                let len = remap.len();
+                *current_id = *remap.entry(*current_id).or_insert_with(|| len as u32 + 1)
+            };
+            module.all_inst_iter_mut().for_each(|inst| {
+                if let Some(ref mut result_id) = &mut inst.result_id {
+                    insert(result_id)
+                }
+                if let Some(ref mut result_type) = &mut inst.result_type {
+                    insert(result_type)
+                }
+                inst.operands.iter_mut().for_each(|op| {
+                    if let Some(w) = op.id_ref_any_mut() {
+                        insert(w)
+                    }
+                })
+            });
+            remap.len() as u32 + 1
+        }
+
+        use rspirv::binary::Disassemble;
+
+        if self.disassemble {
+            eprintln!("{}", module.disassemble());
+        }
+
+        if let Some(func) = &self.disassemble_fn {
+            let id = module
+                .debugs
+                .iter()
+                .find(|inst| {
+                    inst.class.opcode == rspirv::spirv::Op::Name
+                        && inst.operands[1].unwrap_literal_string() == func
+                })
+                .unwrap_or_else(|| {
+                    panic!(
+                        "no function with the name `{}` found in:\n{}\n",
+                        func,
+                        module.disassemble()
+                    )
+                })
+                .operands[0]
+                .unwrap_id_ref();
+            let mut func = module
+                .functions
+                .iter()
+                .find(|f| f.def_id().unwrap() == id)
+                .unwrap()
+                .clone();
+            // Compact to make IDs more stable
+            compact_ids(&mut func);
+            eprintln!("{}", func.disassemble());
+        }
+
+        if let Some(entry) = &self.disassemble_entry {
+            let id = module
+                .entry_points
+                .iter()
+                .find(|inst| inst.operands.last().unwrap().unwrap_literal_string() == entry)
+                .unwrap_or_else(|| {
+                    panic!(
+                        "no entry point with the name `{}` found in:\n{}\n",
+                        entry,
+                        module.disassemble()
+                    )
+                })
+                .operands[1]
+                .unwrap_id_ref();
+            let mut func = module
+                .functions
+                .iter()
+                .find(|f| f.def_id().unwrap() == id)
+                .unwrap()
+                .clone();
+            // Compact to make IDs more stable
+            compact_ids(&mut func);
+            eprintln!("{}", func.disassemble());
+        }
+
+        if self.disassemble_globals {
+            for inst in module.global_inst_iter() {
+                eprintln!("{}", inst.disassemble());
+            }
+        }
     }
 }
 
@@ -457,8 +583,14 @@ impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> CoverageInfoMethods for CodegenCx<'tcx> {
+impl<'tcx> CoverageInfoMethods<'tcx> for CodegenCx<'tcx> {
     fn coverageinfo_finalize(&self) {
+        todo!()
+    }
+    fn get_pgo_func_name_var(&self, _: Instance<'tcx>) -> SpirvValue {
+        todo!()
+    }
+    fn define_unused_fn(&self, _: DefId) {
         todo!()
     }
 }

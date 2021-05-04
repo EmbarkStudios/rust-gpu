@@ -811,7 +811,10 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::RayQueryGetWorldRayDirectionKHR
         | Op::RayQueryGetWorldRayOriginKHR
         | Op::RayQueryGetIntersectionObjectToWorldKHR
-        | Op::RayQueryGetIntersectionWorldToObjectKHR => reserved!(SPV_KHR_ray_query),
+        | Op::RayQueryGetIntersectionWorldToObjectKHR => {
+            // NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_KHR_ray_query)
+        }
 
         // Instructions not present in current SPIR-V specification
         // SPV_INTEL_function_pointers

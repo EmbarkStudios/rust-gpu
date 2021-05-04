@@ -1,13 +1,13 @@
 // Test `OpImageSampleExplicitLod` Grad
 // build-pass
 
-use spirv_std::{arch, Cubemap, Image2d, Image2dArray, Sampler};
+use spirv_std::{arch, Image, Sampler};
 
 #[spirv(fragment)]
 pub fn main(
-    #[spirv(descriptor_set = 0, binding = 0)] image2d: &Image2d,
-    #[spirv(descriptor_set = 1, binding = 1)] image2d_array: &Image2dArray,
-    #[spirv(descriptor_set = 2, binding = 2)] cubemap: &Cubemap,
+    #[spirv(descriptor_set = 0, binding = 0)] image2d: &Image!(2D, type=f32, sampled),
+    #[spirv(descriptor_set = 1, binding = 1)] image2d_array: &Image!(2D, type=f32, arrayed, sampled),
+    #[spirv(descriptor_set = 2, binding = 2)] cubemap: &Image!(3D, type=f32, sampled),
     #[spirv(descriptor_set = 3, binding = 3)] sampler: &Sampler,
     output: &mut glam::Vec4,
 ) {

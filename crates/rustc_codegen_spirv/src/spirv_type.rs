@@ -87,6 +87,7 @@ pub enum SpirvType {
     },
 
     AccelerationStructureKhr,
+    RayQueryKhr,
 }
 
 impl SpirvType {
@@ -115,10 +116,11 @@ impl SpirvType {
                     }
                     8 | 16 | 32 | 64 => (),
                     128 => cx.zombie_with_span(result, def_span, "u128"),
-                    other => cx
-                        .tcx
-                        .sess
-                        .fatal(&format!("Integer width {} invalid for spir-v", other)),
+                    other => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        &format!("Integer width {} invalid for spir-v", other),
+                    ),
                 };
                 result
             }
@@ -129,10 +131,11 @@ impl SpirvType {
                         cx.zombie_with_span(result, def_span, "f64 without OpCapability Float64")
                     }
                     32 | 64 => (),
-                    other => cx
-                        .tcx
-                        .sess
-                        .fatal(&format!("Float width {} invalid for spir-v", other)),
+                    other => cx.zombie_with_span(
+                        result,
+                        def_span,
+                        &format!("Float width {} invalid for spir-v", other),
+                    ),
                 };
                 result
             }
@@ -251,6 +254,7 @@ impl SpirvType {
             ),
             Self::Sampler => cx.emit_global().type_sampler(),
             Self::AccelerationStructureKhr => cx.emit_global().type_acceleration_structure_khr(),
+            Self::RayQueryKhr => cx.emit_global().type_ray_query_khr(),
             Self::SampledImage { image_type } => cx.emit_global().type_sampled_image(image_type),
 
             Self::InterfaceBlock { inner_type } => {
@@ -352,6 +356,7 @@ impl SpirvType {
             Self::Pointer { .. } => cx.tcx.data_layout.pointer_size,
             Self::Image { .. }
             | Self::AccelerationStructureKhr
+            | Self::RayQueryKhr
             | Self::Sampler
             | Self::SampledImage { .. } => Size::from_bytes(4),
 
@@ -383,6 +388,7 @@ impl SpirvType {
             Self::Pointer { .. } => cx.tcx.data_layout.pointer_align.abi,
             Self::Image { .. }
             | Self::AccelerationStructureKhr
+            | Self::RayQueryKhr
             | Self::Sampler
             | Self::SampledImage { .. } => Align::from_bytes(4).unwrap(),
 
@@ -529,6 +535,7 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("inner_type", &self.cx.debug_type(inner_type))
                 .finish(),
             SpirvType::AccelerationStructureKhr => f.debug_struct("AccelerationStructure").finish(),
+            SpirvType::RayQueryKhr => f.debug_struct("RayQuery").finish(),
         };
         {
             let mut debug_stack = DEBUG_STACK.lock().unwrap();
@@ -684,6 +691,7 @@ impl SpirvTypePrinter<'_, '_> {
                 f.write_str(" }")
             }
             SpirvType::AccelerationStructureKhr => f.write_str("AccelerationStructureKhr"),
+            SpirvType::RayQueryKhr => f.write_str("RayQuery"),
         }
     }
 }
@@ -705,6 +713,7 @@ impl TypeCache<'_> {
         self.type_defs.borrow().get_by_right(ty).copied()
     }
 
+    #[track_caller]
     pub fn lookup(&self, word: Word) -> SpirvType {
         self.type_defs
             .borrow()

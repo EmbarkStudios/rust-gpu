@@ -9,8 +9,8 @@ use spirv_std::memory::{Scope, Semantics};
 pub fn main() {
     unsafe {
         spirv_std::arch::memory_barrier::<
-            { Scope::Subgroup },
-            { (Semantics::AcquireRelease as u32) | (Semantics::UniformMemory as u32) },
+            { Scope::Subgroup as u32 },
+            { Semantics::ACQUIRE_RELEASE.bits() | Semantics::UNIFORM_MEMORY.bits() },
         >();
     }
 }

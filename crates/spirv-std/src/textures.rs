@@ -1,11 +1,11 @@
 use crate::{integer::Integer, vector::Vector};
 
-#[spirv(sampler)]
-#[derive(Copy, Clone)]
-pub struct Sampler {
-    _x: u32,
-}
+pub use crate::sampler::Sampler;
 
+#[cfg_attr(
+    feature = "const-generics",
+    deprecated = "Legacy image type. Use `spirv_std::image::Image2d` instead."
+)]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
@@ -20,6 +20,7 @@ pub struct Image2d {
     _x: u32,
 }
 
+#[allow(deprecated)]
 impl Image2d {
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpImageSampleImplicitLod")]
@@ -412,6 +413,10 @@ impl Image2d {
     }
 }
 
+#[cfg_attr(
+    feature = "const-generics",
+    deprecated = "Legacy image type. Use `spirv_std::image::StorageImage2d` instead."
+)]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
@@ -426,6 +431,7 @@ pub struct StorageImage2d {
     _x: u32,
 }
 
+#[allow(deprecated)]
 impl StorageImage2d {
     /// Read a texel from an image without a sampler.
     #[spirv_std_macros::gpu_only]
@@ -474,6 +480,10 @@ impl StorageImage2d {
     }
 }
 
+#[cfg_attr(
+    feature = "const-generics",
+    deprecated = "Legacy image type. Use `spirv_std::image::Image2dArray` instead."
+)]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "Dim2D",
@@ -488,6 +498,7 @@ pub struct Image2dArray {
     _x: u32,
 }
 
+#[allow(deprecated)]
 impl Image2dArray {
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpImageSampleImplicitLod")]
@@ -673,6 +684,10 @@ impl Image2dArray {
     }
 }
 
+#[cfg_attr(
+    feature = "const-generics",
+    deprecated = "Legacy image type. Use `spirv_std::image::Cubemap` instead."
+)]
 #[spirv(image_type(
     // sampled_type is hardcoded to f32 for now
     dim = "DimCube",
@@ -687,6 +702,7 @@ pub struct Cubemap {
     _x: u32,
 }
 
+#[allow(deprecated)]
 impl Cubemap {
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpSampledImage")]
@@ -872,12 +888,17 @@ impl Cubemap {
     }
 }
 
+#[cfg_attr(
+    feature = "const-generics",
+    deprecated = "Legacy image type. Use `spirv_std::image::SampledImage` instead."
+)]
 #[spirv(sampled_image)]
 #[derive(Copy, Clone)]
 pub struct SampledImage<I> {
     _image: I,
 }
 
+#[allow(deprecated)]
 impl SampledImage<Image2d> {
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpImageSampleImplicitLod")]

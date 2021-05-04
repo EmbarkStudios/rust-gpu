@@ -53,9 +53,6 @@
 // crate-specific exceptions:
 #![allow()]
 
-#[cfg(test)]
-mod test;
-
 mod depfile;
 
 use raw_string::{RawStr, RawString};
@@ -225,7 +222,7 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
     };
 
     let rustflags = format!(
-        "-Z codegen-backend={} -Z symbol-mangling-version=v0{}{}",
+        "-Z codegen-backend={} -Zsymbol-mangling-version=v0{}{}",
         rustc_codegen_spirv.display(),
         feature_flag,
         llvm_args,

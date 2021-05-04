@@ -1,7 +1,7 @@
 use rspirv::dr::{Block, Function, Module};
 use rspirv::spirv::{Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use std::mem::replace;
+use std::mem::take;
 
 pub fn shift_ids(module: &mut Module, add: u32) {
     module.all_inst_iter_mut().for_each(|inst| {
@@ -66,7 +66,7 @@ pub fn block_ordering_pass(func: &mut Function) {
     let entry_label = func.blocks[0].label_id().unwrap();
     visit_postorder(func, &mut visited, &mut postorder, entry_label);
 
-    let mut old_blocks = replace(&mut func.blocks, Vec::new());
+    let mut old_blocks = take(&mut func.blocks);
     // Order blocks according to reverse postorder
     for &block in postorder.iter().rev() {
         let index = old_blocks

@@ -1,4 +1,5 @@
 // build-pass
+// compile-flags: -Ctarget-feature=+RayTracingKHR,+ext:SPV_KHR_ray_tracing
 
 #[spirv(ray_generation)]
 // Rustfmt will eat long attributes (https://github.com/rust-lang/rustfmt/issues/4579)
@@ -9,8 +10,6 @@ pub fn main(
     #[spirv(ray_payload)] payload: &mut glam::Vec3,
 ) {
     unsafe {
-        asm!(r#"OpExtension "SPV_KHR_ray_tracing""#);
-        asm!("OpCapability RayTracingKHR");
         acceleration_structure.trace_ray(
             spirv_std::ray_tracing::RayFlags::NONE,
             0,

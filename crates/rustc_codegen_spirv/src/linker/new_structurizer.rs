@@ -327,7 +327,7 @@ impl Structurizer<'_> {
                 // Also update the existing merge if it happens to be the `block`
                 // we just moved (this should only be relevant to infinite loops).
                 self.func.blocks_mut()[while_body_block].instructions =
-                    mem::replace(&mut self.func.blocks_mut()[block].instructions, vec![]);
+                    mem::take(&mut self.func.blocks_mut()[block].instructions);
                 if region.merge == block {
                     region.merge = while_body_block;
                     region.merge_id = while_body_block_id;

@@ -75,45 +75,31 @@
     // We deblierately provide an unimplemented version of our API on CPU
     // platforms so that code completion still works.
     clippy::unimplemented,
+    // The part of `const-generics` we're using (C-like enums) is not incomplete.
+    incomplete_features,
 )]
 
-#[macro_use]
-#[cfg(not(target_arch = "spirv"))]
+#[cfg_attr(not(target_arch = "spirv"), macro_use)]
 pub extern crate spirv_std_macros as macros;
 
 pub mod arch;
 pub mod bindless;
 pub mod float;
+#[cfg(feature = "const-generics")]
+pub mod image;
 pub mod integer;
 pub mod memory;
 pub mod ray_tracing;
+mod sampler;
 pub mod scalar;
 pub(crate) mod sealed;
 mod textures;
 pub mod vector;
 
+pub use self::sampler::Sampler;
+pub use crate::macros::Image;
 pub use num_traits;
 pub use textures::*;
-
-/// Calls the `OpDemoteToHelperInvocationEXT` instruction, which corresponds to discard() in HLSL
-#[spirv_std_macros::gpu_only]
-pub fn demote_to_helper_invocation() {
-    unsafe {
-        asm!(
-            "OpExtension \"SPV_EXT_demote_to_helper_invocation\"",
-            "OpCapability DemoteToHelperInvocationEXT",
-            "OpDemoteToHelperInvocationEXT"
-        );
-    }
-}
-
-/// Calls the `OpKill` instruction, which corresponds to discard() in GLSL
-#[spirv_std_macros::gpu_only]
-pub fn discard() {
-    unsafe {
-        asm!("OpKill", "%unused = OpLabel");
-    }
-}
 
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[panic_handler]
@@ -124,3 +110,8 @@ fn panic(_: &core::panic::PanicInfo<'_>) -> ! {
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[lang = "eh_personality"]
 extern "C" fn rust_eh_personality() {}
+
+// See: https://github.com/rust-lang/rust/issues/84738
+#[doc(hidden)]
+/// [spirv_types]
+pub fn workaround_rustdoc_ice_84738() {}

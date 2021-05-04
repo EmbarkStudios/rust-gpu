@@ -534,6 +534,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 .tcx
                 .sess
                 .fatal("Cannot create a constant acceleration structure"),
+            SpirvType::RayQueryKhr => self.tcx.sess.fatal("Cannot create a constant ray query"),
         }
     }
 }

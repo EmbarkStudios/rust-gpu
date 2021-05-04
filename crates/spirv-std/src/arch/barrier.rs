@@ -1,39 +1,39 @@
-use crate::memory::{Scope, Semantics};
-
 /// Wait for other invocations of this module to reach the current point
 /// of execution.
 ///
 /// All invocations of this module within Execution scope reach this point of
 /// execution before any invocation proceeds beyond it.
 ///
-/// When Execution is [`Scope::Workgroup`] or larger, behavior is undefined
-/// unless all invocations within Execution execute the same dynamic instance of
-/// this instruction. When Execution is Subgroup or Invocation, the behavior of
-/// this instruction in non-uniform control flow is defined by the client API.
+/// When Execution is [`crate::memory::Scope::Workgroup`] or larger, behavior is
+/// undefined unless all invocations within Execution execute the same dynamic
+/// instance of this instruction. When Execution is Subgroup or Invocation, the
+/// behavior of this instruction in non-uniform control flow is defined by the
+/// client API.
 ///
-/// If [`Semantics`] is not [`Semantics::None`], this instruction also serves as
-/// an [`memory_barrier`] function call, and also performs and adheres to the
-/// description and semantics of an [`memory_barrier`] function with the same
-/// `MEMORY` and `SEMANTICS` operands. This allows atomically specifying both a
-/// control barrier and a memory barrier (that is, without needing two
-/// instructions). If [`Semantics`] is [`Semantics::None`], `MEMORY` is ignored.
+/// If [`crate::memory::Semantics`] is not [`crate::memory::Semantics::NONE`],
+/// this instruction also serves as an [`memory_barrier`] function call, and
+/// also performs and adheres to the description and semantics of an
+/// [`memory_barrier`] function with the same `MEMORY` and `SEMANTICS` operands.
+/// This allows atomically specifying both a control barrier and a memory
+/// barrier (that is, without needing two instructions). If
+/// [`crate::memory::Semantics`] is [`crate::memory::Semantics::NONE`], `MEMORY`
+/// is ignored.
 ///
 /// Before SPIRV-V version 1.3, it is only valid to use this instruction with
 /// `TessellationControl`, `GLCompute`, or `Kernel` execution models. There is
 /// no such restriction starting with version 1.3.
 ///
 /// If used with the `TessellationControl` execution model, it also implicitly
-/// synchronizes the [`crate::storage_class::Output`] Storage Class: Writes to
-/// `Output` variables performed by any invocation executed prior to a
-/// [`control_barrier`] are visible to any other invocation proceeding beyond
-/// that [`control_barrier`].
+/// synchronizes the `output` storage class: Writes to `output` variables
+/// performed by any invocation executed prior to a [`control_barrier`] are
+/// visible to any other invocation proceeding beyond that [`control_barrier`].
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpControlBarrier")]
 #[inline]
 pub unsafe fn control_barrier<
-    const EXECUTION: Scope,
-    const MEMORY: Scope,
-    const SEMANTICS: Semantics,
+    const EXECUTION: u32, // Scope
+    const MEMORY: u32,    // Scope
+    const SEMANTICS: u32, // Semantics
 >() {
     asm! {
         "%u32 = OpTypeInt 32 0",
@@ -41,9 +41,9 @@ pub unsafe fn control_barrier<
         "%memory = OpConstant %u32 {memory}",
         "%semantics = OpConstant %u32 {semantics}",
         "OpControlBarrier %execution %memory %semantics",
-        execution = const EXECUTION as u8,
-        memory = const MEMORY as u8,
-        semantics = const SEMANTICS as u8,
+        execution = const EXECUTION,
+        memory = const MEMORY,
+        semantics = const SEMANTICS,
     }
 }
 
@@ -65,14 +65,16 @@ pub unsafe fn control_barrier<
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpMemoryBarrier")]
 #[inline]
-// FIXME(eddyb) use a `bitflags!` `Semantics` for `SEMANTICS`.
-pub unsafe fn memory_barrier<const MEMORY: Scope, const SEMANTICS: u32>() {
+pub unsafe fn memory_barrier<
+    const MEMORY: u32,    // Scope
+    const SEMANTICS: u32, // Semantics
+>() {
     asm! {
         "%u32 = OpTypeInt 32 0",
         "%memory = OpConstant %u32 {memory}",
         "%semantics = OpConstant %u32 {semantics}",
         "OpMemoryBarrier %memory %semantics",
-        memory = const MEMORY as u8,
+        memory = const MEMORY,
         semantics = const SEMANTICS,
     }
 }

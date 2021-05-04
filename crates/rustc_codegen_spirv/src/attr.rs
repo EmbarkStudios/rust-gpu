@@ -61,6 +61,7 @@ impl From<ExecutionModel> for Entry {
 /// `struct` types that are used to represent special SPIR-V types.
 #[derive(Debug, Clone)]
 pub enum IntrinsicType {
+    GenericImageType,
     ImageType {
         dim: Dim,
         depth: u32,
@@ -73,6 +74,7 @@ pub enum IntrinsicType {
     Sampler,
     AccelerationStructureKhr,
     SampledImage,
+    RayQueryKhr,
 }
 
 // NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside
@@ -291,8 +293,7 @@ impl CheckSpirvAttrVisitor<'_> {
 
                 SpirvAttribute::Entry(_) => match target {
                     Target::Fn
-                    | Target::Method(MethodKind::Trait { body: true })
-                    | Target::Method(MethodKind::Inherent) => {
+                    | Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => {
                         // FIXME(eddyb) further check entry-point attribute validity,
                         // e.g. signature, shouldn't have `#[inline]` or generics, etc.
                         Ok(())
@@ -354,8 +355,9 @@ impl CheckSpirvAttrVisitor<'_> {
                 | SpirvAttribute::UnrollLoops => match target {
                     Target::Fn
                     | Target::Closure
-                    | Target::Method(MethodKind::Trait { body: true })
-                    | Target::Method(MethodKind::Inherent) => Ok(()),
+                    | Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => {
+                        Ok(())
+                    }
 
                     _ => Err(Expected("function or closure")),
                 },

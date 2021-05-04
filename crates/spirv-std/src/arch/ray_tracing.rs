@@ -38,24 +38,27 @@ pub unsafe fn report_intersection(hit: f32, hit_kind: u32) -> bool {
 
 /// Ignores the current potential intersection, terminating the invocation that
 /// executes it, and continues the ray traversal.  This instruction is allowed
-/// only in `any_hit` execution model.  This instruction must be the last
-/// instruction in a block.
+/// only in `any_hit` execution model.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpIgnoreIntersectionKHR")]
 #[inline]
-pub unsafe fn ignore_intersection() {
-    asm!("OpIgnoreIntersectionKHR", "%unused = OpLabel")
+#[allow(clippy::empty_loop)]
+pub unsafe fn ignore_intersection() -> ! {
+    asm!("OpIgnoreIntersectionKHR", "%unused = OpLabel");
+    loop {}
 }
 
 /// Terminates the invocation that executes it, stops the ray traversal, accepts
 /// the current hit, and invokes the `closest_hit` execution model
-/// (if active).  This instruction is allowed only in the `any_hit`
-/// execution model.  This instruction must be the last instruction in a block.
+/// (if active). This instruction is allowed only in the `any_hit`
+/// execution model.
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpTerminateRayKHR")]
 #[inline]
-pub unsafe fn terminate_ray() {
-    asm!("OpTerminateRayKHR", "%unused = OpLabel")
+#[allow(clippy::empty_loop)]
+pub unsafe fn terminate_ray() -> ! {
+    asm!("OpTerminateRayKHR", "%unused = OpLabel");
+    loop {}
 }
 
 /// Invoke a callable shader.
