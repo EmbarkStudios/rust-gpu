@@ -322,12 +322,11 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     })
                     .insert_into_block(dr::InsertPoint::Begin, inst)
                     .unwrap();
-                    return;
                 } else {
                     self.emit_global()
                         .insert_types_global_values(dr::InsertPoint::End, inst);
-                    return;
                 }
+                return;
             }
             _ => {
                 self.validate_instruction(&inst);
