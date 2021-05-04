@@ -109,8 +109,7 @@ impl<'tcx> CodegenCx<'tcx> {
         for &feature in &tcx.sess.target_features {
             if feature == sym.bindless {
                 bindless = true;
-            } else {
-                tcx.sess.err(&format!("Unknown feature {}", feature));
+                break;
             }
         }
 
