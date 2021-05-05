@@ -221,7 +221,7 @@ impl<'tcx> CodegenCx<'tcx> {
     ) -> Word {
         let float_ty = SpirvType::Float(32).def(rustc_span::DUMMY_SP, self);
 
-        let image_2d = SpirvType::Image {
+        let image = SpirvType::Image {
             sampled_type: float_ty,
             dim,
             depth: 0,
@@ -233,13 +233,13 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         .def(rustc_span::DUMMY_SP, self);
 
-        let sampled_image_2d = SpirvType::SampledImage {
-            image_type: image_2d,
+        let sampled_image = SpirvType::SampledImage {
+            image_type: image,
         }
         .def(rustc_span::DUMMY_SP, self);
 
         let runtime_array_image = SpirvType::RuntimeArray {
-            element: sampled_image_2d,
+            element: sampled_image,
         }
         .def(rustc_span::DUMMY_SP, self);
 
