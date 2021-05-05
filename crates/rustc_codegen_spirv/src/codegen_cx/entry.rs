@@ -233,10 +233,8 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         .def(rustc_span::DUMMY_SP, self);
 
-        let sampled_image = SpirvType::SampledImage {
-            image_type: image,
-        }
-        .def(rustc_span::DUMMY_SP, self);
+        let sampled_image =
+            SpirvType::SampledImage { image_type: image }.def(rustc_span::DUMMY_SP, self);
 
         let runtime_array_image = SpirvType::RuntimeArray {
             element: sampled_image,
