@@ -520,6 +520,23 @@
 <span id="517">517</span>
 <span id="518">518</span>
 <span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! `#[spirv(...)]` attribute support.</span>
 <span class="doccomment">//!</span>
@@ -621,6 +638,8 @@
 
     <span class="comment">// `fn`/closure attributes:</span>
     <span class="ident">UnrollLoops</span>,
+    <span class="ident">InternalBufferLoad</span>,
+    <span class="ident">InternalBufferStore</span>,
 }
 
 <span class="comment">// HACK(eddyb) this is similar to `rustc_span::Spanned` but with `value` as the</span>
@@ -653,6 +672,8 @@
 
     <span class="comment">// `fn`/closure attributes:</span>
     <span class="kw">pub</span> <span class="ident">unroll_loops</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">internal_buffer_load</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">internal_buffer_store</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">struct</span> <span class="ident">MultipleAttrs</span> {
@@ -734,6 +755,18 @@
             <span class="ident">Flat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">flat</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(flat)]&quot;</span>),
             <span class="ident">Invariant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">invariant</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(invariant)]&quot;</span>),
             <span class="ident">UnrollLoops</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">unroll_loops</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(unroll_loops)]&quot;</span>),
+            <span class="ident">InternalBufferLoad</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">internal_buffer_load</span>,
+                (),
+                <span class="ident">span</span>,
+                <span class="string">&quot;#[spirv(internal_buffer_load)]&quot;</span>,
+            ),
+            <span class="ident">InternalBufferStore</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">internal_buffer_store</span>,
+                (),
+                <span class="ident">span</span>,
+                <span class="string">&quot;#[spirv(internal_buffer_store)]&quot;</span>,
+            ),
         }
     }
 }
@@ -857,8 +890,9 @@
 
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Expected</span>(<span class="string">&quot;function parameter&quot;</span>)),
                 },
-
-                <span class="ident">SpirvAttribute::UnrollLoops</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">target</span> {
+                <span class="ident">SpirvAttribute::InternalBufferLoad</span>
+                <span class="op">|</span> <span class="ident">SpirvAttribute::InternalBufferStore</span>
+                <span class="op">|</span> <span class="ident">SpirvAttribute::UnrollLoops</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">target</span> {
                     <span class="ident">Target::Fn</span>
                     <span class="op">|</span> <span class="ident">Target::Closure</span>
                     <span class="op">|</span> <span class="ident">Target::Method</span>(<span class="ident">MethodKind::Trait</span> { <span class="ident">body</span>: <span class="bool-val">true</span> } <span class="op">|</span> <span class="ident">MethodKind::Inherent</span>) <span class="op">=</span><span class="op">&gt;</span> {

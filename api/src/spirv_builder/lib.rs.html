@@ -316,6 +316,30 @@
 <span id="313">313</span>
 <span id="314">314</span>
 <span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// BEGIN - Embark standard lints v0.3</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -423,6 +447,7 @@
     <span class="ident">print_metadata</span>: <span class="ident">bool</span>,
     <span class="ident">release</span>: <span class="ident">bool</span>,
     <span class="ident">target</span>: <span class="ident">String</span>,
+    <span class="ident">bindless</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">SpirvBuilder</span> {
@@ -431,6 +456,7 @@
             <span class="ident">path_to_crate</span>: <span class="ident">path_to_crate</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>(),
             <span class="ident">print_metadata</span>: <span class="bool-val">true</span>,
             <span class="ident">release</span>: <span class="bool-val">true</span>,
+            <span class="ident">bindless</span>: <span class="bool-val">false</span>,
             <span class="ident">target</span>: <span class="ident">target</span>.<span class="ident">into</span>(),
         }
     }
@@ -438,6 +464,13 @@
     <span class="doccomment">/// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to true.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print_metadata</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">print_metadata</span> <span class="op">=</span> <span class="ident">v</span>;
+        <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// Run the compiler in bindless mode, this flag is in preparation for the full feature</span>
+    <span class="doccomment">/// and it&#39;s expected to be the default mode going forward</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bindless</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">bindless</span> <span class="op">=</span> <span class="ident">v</span>;
         <span class="self">self</span>
     }
 
@@ -519,11 +552,25 @@
         .<span class="ident">then</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot; -C llvm-args=--module-output=multiple&quot;</span>)
         .<span class="ident">unwrap_or_default</span>();
 
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">target_features</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+
+    <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">bindless</span> {
+        <span class="ident">target_features</span>.<span class="ident">push</span>(<span class="string">&quot;+bindless&quot;</span>);
+    }
+
+    <span class="kw">let</span> <span class="ident">feature_flag</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">target_features</span>.<span class="ident">is_empty</span>() {
+        <span class="ident">String::new</span>()
+    } <span class="kw">else</span> {
+        <span class="macro">format!</span>(<span class="string">&quot; -C target-feature={}&quot;</span>, <span class="ident">target_features</span>.<span class="ident">join</span>(<span class="string">&quot;,&quot;</span>))
+    };
+
     <span class="kw">let</span> <span class="ident">rustflags</span> <span class="op">=</span> <span class="macro">format!</span>(
-        <span class="string">&quot;-Z codegen-backend={} -Zsymbol-mangling-version=v0{}&quot;</span>,
+        <span class="string">&quot;-Z codegen-backend={} -Zsymbol-mangling-version=v0{}{}&quot;</span>,
         <span class="ident">rustc_codegen_spirv</span>.<span class="ident">display</span>(),
+        <span class="ident">feature_flag</span>,
         <span class="ident">llvm_args</span>,
     );
+
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cargo</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="string">&quot;cargo&quot;</span>);
     <span class="ident">cargo</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
         <span class="string">&quot;build&quot;</span>,
@@ -533,6 +580,7 @@
         <span class="string">&quot;--target&quot;</span>,
         <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">builder</span>.<span class="ident">target</span>,
     ]);
+
     <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">release</span> {
         <span class="ident">cargo</span>.<span class="ident">arg</span>(<span class="string">&quot;--release&quot;</span>);
     }

@@ -293,6 +293,13 @@
 <span id="290">290</span>
 <span id="291">291</span>
 <span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::abi::ConvSpirvType</span>;
@@ -390,7 +397,7 @@
         <span class="comment">// HACK(eddyb) this is a bit roundabout, but the easiest way to get a</span>
         <span class="comment">// fully absolute path that contains at least as much information as</span>
         <span class="comment">// `instance.to_string()` (at least with `-Z symbol-mangling-version=v0`).</span>
-        <span class="comment">// While we could use the mangled symbol insyead, like we do for linkage,</span>
+        <span class="comment">// While we could use the mangled symbol instead, like we do for linkage,</span>
         <span class="comment">// `OpName` is more of a debugging aid, so not having to separately</span>
         <span class="comment">// demangle the SPIR-V can help. However, if some tools assume `OpName`</span>
         <span class="comment">// is always a valid identifier, we may have to offer the mangled name</span>
@@ -420,8 +427,15 @@
                 .<span class="ident">borrow_mut</span>()
                 .<span class="ident">insert</span>(<span class="ident">fn_id</span>, <span class="ident">UnrollLoopsDecoration</span> {});
         }
+        <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">internal_buffer_load</span>.<span class="ident">is_some</span>() {
+            <span class="self">self</span>.<span class="ident">internal_buffer_load_id</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">fn_id</span>);
+        }
+        <span class="kw">if</span> <span class="ident">attrs</span>.<span class="ident">internal_buffer_store</span>.<span class="ident">is_some</span>() {
+            <span class="self">self</span>.<span class="ident">internal_buffer_store_id</span>.<span class="ident">borrow_mut</span>().<span class="ident">insert</span>(<span class="ident">fn_id</span>);
+        }
 
         <span class="kw">let</span> <span class="ident">instance_def_id</span> <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">def_id</span>();
+
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">crate_name</span>(<span class="ident">instance_def_id</span>.<span class="ident">krate</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">libm</span> {
             <span class="kw">let</span> <span class="ident">item_name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">item_name</span>(<span class="ident">instance_def_id</span>);
             <span class="kw">let</span> <span class="ident">intrinsic</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sym</span>.<span class="ident">libm_intrinsics</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">item_name</span>);

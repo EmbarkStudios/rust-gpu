@@ -1597,12 +1597,19 @@
 <span id="1594">1594</span>
 <span id="1595">1595</span>
 <span id="1596">1596</span>
+<span id="1597">1597</span>
+<span id="1598">1598</span>
+<span id="1599">1599</span>
+<span id="1600">1600</span>
+<span id="1601">1601</span>
+<span id="1602">1602</span>
+<span id="1603">1603</span>
+<span id="1604">1604</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder_spirv::SpirvValue</span>;
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::spirv_type::SpirvType</span>;
-
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::Builder</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvValue</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::codegen_cx::CodegenCx</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::spirv_type::SpirvType</span>;
 <span class="kw">use</span> <span class="ident">rspirv::dr</span>;
 <span class="kw">use</span> <span class="ident">rspirv::grammar</span>::{<span class="ident">LogicalOperand</span>, <span class="ident">OperandKind</span>, <span class="ident">OperandQuantifier</span>};
 <span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{
@@ -1913,11 +1920,20 @@
             }
             .<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
             <span class="ident">Op::TypeRayQueryKHR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType::RayQueryKhr</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
-            <span class="ident">Op::Variable</span> <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">StorageClass::Function</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Op::Variable</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// OpVariable with Function storage class should be emitted inside the function,</span>
                 <span class="comment">// however, all other OpVariables should appear in the global scope instead.</span>
-                <span class="self">self</span>.<span class="ident">emit_global</span>()
-                    .<span class="ident">insert_types_global_values</span>(<span class="ident">dr::InsertPoint::End</span>, <span class="ident">inst</span>);
+                <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_storage_class</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">StorageClass::Function</span> {
+                    <span class="self">self</span>.<span class="ident">emit_with_cursor</span>(<span class="ident">BuilderCursor</span> {
+                        <span class="ident">block</span>: <span class="prelude-val">Some</span>(<span class="number">0</span>),
+                        ..<span class="self">self</span>.<span class="ident">cursor</span>
+                    })
+                    .<span class="ident">insert_into_block</span>(<span class="ident">dr::InsertPoint::Begin</span>, <span class="ident">inst</span>)
+                    .<span class="ident">unwrap</span>();
+                } <span class="kw">else</span> {
+                    <span class="self">self</span>.<span class="ident">emit_global</span>()
+                        .<span class="ident">insert_types_global_values</span>(<span class="ident">dr::InsertPoint::End</span>, <span class="ident">inst</span>);
+                }
                 <span class="kw">return</span>;
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
