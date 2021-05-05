@@ -1,7 +1,14 @@
 #![no_std]
 #![cfg_attr(
     target_arch = "spirv",
-    feature(asm, register_attr, repr_simd, core_intrinsics, lang_items),
+    feature(
+        asm,
+        register_attr,
+        repr_simd,
+        core_intrinsics,
+        lang_items,
+        abi_unadjusted
+    ),
     register_attr(spirv)
 )]
 #![cfg_attr(
@@ -76,6 +83,7 @@
 pub extern crate spirv_std_macros as macros;
 
 pub mod arch;
+pub mod bindless;
 pub mod float;
 #[cfg(feature = "const-generics")]
 pub mod image;

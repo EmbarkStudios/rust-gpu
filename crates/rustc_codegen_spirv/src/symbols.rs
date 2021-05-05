@@ -31,6 +31,7 @@ pub struct Symbols {
     sampled: Symbol,
     image_format: Symbol,
     access_qualifier: Symbol,
+    pub bindless: Symbol,
     attributes: FxHashMap<Symbol, SpirvAttribute>,
     execution_modes: FxHashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
     pub libm_intrinsics: FxHashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
@@ -337,6 +338,8 @@ impl Symbols {
                 SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),
             ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
+            ("internal_buffer_load", SpirvAttribute::InternalBufferLoad),
+            ("internal_buffer_store", SpirvAttribute::InternalBufferStore),
         ]
         .iter()
         .cloned();
@@ -381,6 +384,7 @@ impl Symbols {
             sampled: Symbol::intern("sampled"),
             image_format: Symbol::intern("image_format"),
             access_qualifier: Symbol::intern("access_qualifier"),
+            bindless: Symbol::intern("bindless"),
             attributes,
             execution_modes,
             libm_intrinsics,

@@ -94,7 +94,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // HACK(eddyb) this is a bit roundabout, but the easiest way to get a
         // fully absolute path that contains at least as much information as
         // `instance.to_string()` (at least with `-Z symbol-mangling-version=v0`).
-        // While we could use the mangled symbol insyead, like we do for linkage,
+        // While we could use the mangled symbol instead, like we do for linkage,
         // `OpName` is more of a debugging aid, so not having to separately
         // demangle the SPIR-V can help. However, if some tools assume `OpName`
         // is always a valid identifier, we may have to offer the mangled name
@@ -124,8 +124,15 @@ impl<'tcx> CodegenCx<'tcx> {
                 .borrow_mut()
                 .insert(fn_id, UnrollLoopsDecoration {});
         }
+        if attrs.internal_buffer_load.is_some() {
+            self.internal_buffer_load_id.borrow_mut().insert(fn_id);
+        }
+        if attrs.internal_buffer_store.is_some() {
+            self.internal_buffer_store_id.borrow_mut().insert(fn_id);
+        }
 
         let instance_def_id = instance.def_id();
+
         if self.tcx.crate_name(instance_def_id.krate) == self.sym.libm {
             let item_name = self.tcx.item_name(instance_def_id);
             let intrinsic = self.sym.libm_intrinsics.get(&item_name);

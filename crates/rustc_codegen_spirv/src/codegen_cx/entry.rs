@@ -3,9 +3,10 @@ use crate::abi::ConvSpirvType;
 use crate::attr::{AggregatedSpirvAttributes, Entry};
 use crate::builder::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
+use crate::codegen_cx::BindlessDescriptorSets;
 use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
-use rspirv::spirv::{Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
+use rspirv::spirv::{Capability, Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir as hir;
@@ -14,7 +15,7 @@ use rustc_middle::ty::{Instance, Ty, TyKind};
 use rustc_span::Span;
 use rustc_target::abi::{
     call::{ArgAbi, ArgAttribute, ArgAttributes, FnAbi, PassMode},
-    LayoutOf, Size,
+    Align, LayoutOf, Size,
 };
 
 impl<'tcx> CodegenCx<'tcx> {
@@ -104,6 +105,167 @@ impl<'tcx> CodegenCx<'tcx> {
             });
     }
 
+    pub fn lazy_add_bindless_descriptor_sets(&self) {
+        self.bindless_descriptor_sets
+            .replace(Some(BindlessDescriptorSets {
+                // all storage buffers are compatible and go in set 0
+                buffers: self.buffer_descriptor_set(0),
+
+                // sampled images are all compatible in vulkan, so we can overlap them
+                sampled_image_1d: self.texture_bindless_descriptor_set(
+                    1,
+                    rspirv::spirv::Dim::Dim1D,
+                    true,
+                ),
+                sampled_image_2d: self.texture_bindless_descriptor_set(
+                    1,
+                    rspirv::spirv::Dim::Dim2D,
+                    true,
+                ),
+                sampled_image_3d: self.texture_bindless_descriptor_set(
+                    1,
+                    rspirv::spirv::Dim::Dim3D,
+                    true,
+                ),
+                // jb-todo: storage images are all compatible so they can live in the same descriptor set too
+            }));
+    }
+
+    fn buffer_descriptor_set(&self, descriptor_set: u32) -> Word {
+        let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
+
+        let runtime_array_uint =
+            SpirvType::RuntimeArray { element: uint_ty }.def(rustc_span::DUMMY_SP, self);
+
+        let buffer_struct = SpirvType::Adt {
+            def_id: None,
+            size: Some(Size::from_bytes(4)),
+            align: Align::from_bytes(4).unwrap(),
+            field_types: vec![runtime_array_uint],
+            field_offsets: vec![],
+            field_names: None,
+        }
+        .def(rustc_span::DUMMY_SP, self);
+
+        let runtime_array_struct = SpirvType::RuntimeArray {
+            element: buffer_struct,
+        }
+        .def(rustc_span::DUMMY_SP, self);
+
+        let uniform_ptr_runtime_array = SpirvType::Pointer {
+            pointee: runtime_array_struct,
+        }
+        .def(rustc_span::DUMMY_SP, self);
+
+        let mut emit_global = self.emit_global();
+        let buffer = emit_global
+            .variable(
+                uniform_ptr_runtime_array,
+                None,
+                if self.target.spirv_version() <= (1, 3) {
+                    StorageClass::Uniform
+                } else {
+                    StorageClass::StorageBuffer
+                },
+                None,
+            )
+            .with_type(uniform_ptr_runtime_array)
+            .def_cx(self);
+
+        emit_global.decorate(
+            buffer,
+            rspirv::spirv::Decoration::DescriptorSet,
+            std::iter::once(Operand::LiteralInt32(descriptor_set)),
+        );
+        emit_global.decorate(
+            buffer,
+            rspirv::spirv::Decoration::Binding,
+            std::iter::once(Operand::LiteralInt32(0)),
+        );
+
+        if self.target.spirv_version() <= (1, 3) {
+            emit_global.decorate(
+                buffer_struct,
+                rspirv::spirv::Decoration::BufferBlock,
+                std::iter::empty(),
+            );
+        } else {
+            emit_global.decorate(
+                buffer_struct,
+                rspirv::spirv::Decoration::Block,
+                std::iter::empty(),
+            );
+        }
+
+        emit_global.decorate(
+            runtime_array_uint,
+            rspirv::spirv::Decoration::ArrayStride,
+            std::iter::once(Operand::LiteralInt32(4)),
+        );
+
+        emit_global.member_decorate(
+            buffer_struct,
+            0,
+            rspirv::spirv::Decoration::Offset,
+            std::iter::once(Operand::LiteralInt32(0)),
+        );
+
+        buffer
+    }
+
+    fn texture_bindless_descriptor_set(
+        &self,
+        descriptor_set: u32,
+        dim: rspirv::spirv::Dim,
+        sampled: bool,
+    ) -> Word {
+        let float_ty = SpirvType::Float(32).def(rustc_span::DUMMY_SP, self);
+
+        let image = SpirvType::Image {
+            sampled_type: float_ty,
+            dim,
+            depth: 0,
+            arrayed: 0,
+            multisampled: 0,
+            sampled: if sampled { 1 } else { 0 },
+            image_format: rspirv::spirv::ImageFormat::Unknown,
+            access_qualifier: None,
+        }
+        .def(rustc_span::DUMMY_SP, self);
+
+        let sampled_image =
+            SpirvType::SampledImage { image_type: image }.def(rustc_span::DUMMY_SP, self);
+
+        let runtime_array_image = SpirvType::RuntimeArray {
+            element: sampled_image,
+        }
+        .def(rustc_span::DUMMY_SP, self);
+
+        let uniform_ptr_runtime_array = SpirvType::Pointer {
+            pointee: runtime_array_image,
+        }
+        .def(rustc_span::DUMMY_SP, self);
+
+        let mut emit_global = self.emit_global();
+        let image_array = emit_global
+            .variable(uniform_ptr_runtime_array, None, StorageClass::Uniform, None)
+            .with_type(uniform_ptr_runtime_array)
+            .def_cx(self);
+
+        emit_global.decorate(
+            image_array,
+            rspirv::spirv::Decoration::DescriptorSet,
+            std::iter::once(Operand::LiteralInt32(descriptor_set)),
+        );
+        emit_global.decorate(
+            image_array,
+            rspirv::spirv::Decoration::Binding,
+            std::iter::once(Operand::LiteralInt32(0)),
+        );
+
+        image_array
+    }
+
     fn shader_entry_stub(
         &self,
         span: Span,
@@ -147,6 +309,25 @@ impl<'tcx> CodegenCx<'tcx> {
         bx.set_span(span);
         bx.call(entry_func, &call_args, None);
         bx.ret_void();
+
+        if self.bindless() {
+            self.emit_global().extension("SPV_EXT_descriptor_indexing");
+            self.emit_global()
+                .capability(Capability::RuntimeDescriptorArray);
+
+            if self.target.spirv_version() > (1, 3) {
+                let sets = self.bindless_descriptor_sets.borrow().unwrap();
+
+                op_entry_point_interface_operands.push(sets.buffers);
+
+                //op_entry_point_interface_operands
+                //  .push(sets.sampled_image_1d);
+                // op_entry_point_interface_operands
+                //   .push(sets.sampled_image_2d);
+                //op_entry_point_interface_operands
+                //.push(sets.sampled_image_3d);
+            }
+        }
 
         let stub_fn_id = stub_fn.def_cx(self);
         self.emit_global().entry_point(
@@ -385,6 +566,13 @@ impl<'tcx> CodegenCx<'tcx> {
             decoration_supersedes_location = true;
         }
         if let Some(index) = attrs.descriptor_set.map(|attr| attr.value) {
+            if self.bindless() {
+                self.tcx.sess.span_fatal(
+                    attrs.descriptor_set.unwrap().span,
+                    "Can't use #[spirv(descriptor_set)] attribute in bindless mode",
+                );
+            }
+
             self.emit_global().decorate(
                 var,
                 Decoration::DescriptorSet,
@@ -393,6 +581,12 @@ impl<'tcx> CodegenCx<'tcx> {
             decoration_supersedes_location = true;
         }
         if let Some(index) = attrs.binding.map(|attr| attr.value) {
+            if self.bindless() {
+                self.tcx.sess.span_fatal(
+                    attrs.binding.unwrap().span,
+                    "Can't use #[spirv(binding)] attribute in bindless mode",
+                );
+            }
             self.emit_global().decorate(
                 var,
                 Decoration::Binding,

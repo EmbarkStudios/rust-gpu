@@ -98,6 +98,8 @@ pub enum SpirvAttribute {
 
     // `fn`/closure attributes:
     UnrollLoops,
+    InternalBufferLoad,
+    InternalBufferStore,
 }
 
 // HACK(eddyb) this is similar to `rustc_span::Spanned` but with `value` as the
@@ -130,6 +132,8 @@ pub struct AggregatedSpirvAttributes {
 
     // `fn`/closure attributes:
     pub unroll_loops: Option<Spanned<()>>,
+    pub internal_buffer_load: Option<Spanned<()>>,
+    pub internal_buffer_store: Option<Spanned<()>>,
 }
 
 struct MultipleAttrs {
@@ -211,6 +215,18 @@ impl AggregatedSpirvAttributes {
             Flat => try_insert(&mut self.flat, (), span, "#[spirv(flat)]"),
             Invariant => try_insert(&mut self.invariant, (), span, "#[spirv(invariant)]"),
             UnrollLoops => try_insert(&mut self.unroll_loops, (), span, "#[spirv(unroll_loops)]"),
+            InternalBufferLoad => try_insert(
+                &mut self.internal_buffer_load,
+                (),
+                span,
+                "#[spirv(internal_buffer_load)]",
+            ),
+            InternalBufferStore => try_insert(
+                &mut self.internal_buffer_store,
+                (),
+                span,
+                "#[spirv(internal_buffer_store)]",
+            ),
         }
     }
 }
@@ -334,8 +350,9 @@ impl CheckSpirvAttrVisitor<'_> {
 
                     _ => Err(Expected("function parameter")),
                 },
-
-                SpirvAttribute::UnrollLoops => match target {
+                SpirvAttribute::InternalBufferLoad
+                | SpirvAttribute::InternalBufferStore
+                | SpirvAttribute::UnrollLoops => match target {
                     Target::Fn
                     | Target::Closure
                     | Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => {

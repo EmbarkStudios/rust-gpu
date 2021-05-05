@@ -1448,12 +1448,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Pointer { .. } => match op {
                 IntEQ => {
                     if self.emit().version().unwrap() > (1, 3) {
-                        self.emit()
-                            .ptr_equal(b, None, lhs.def(self), rhs.def(self))
-                            .map(|result| {
-                                self.zombie_ptr_equal(result, "OpPtrEqual");
-                                result
-                            })
+                        let ptr_equal =
+                            self.emit().ptr_equal(b, None, lhs.def(self), rhs.def(self));
+
+                        ptr_equal.map(|result| {
+                            self.zombie_ptr_equal(result, "OpPtrEqual");
+                            result
+                        })
                     } else {
                         let int_ty = self.type_usize();
                         let lhs = self
@@ -1831,6 +1832,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn extract_value(&mut self, agg_val: Self::Value, idx: u64) -> Self::Value {
         let result_type = match self.lookup_type(agg_val.ty) {
             SpirvType::Adt { field_types, .. } => field_types[idx as usize],
+            SpirvType::Array { element, .. } | SpirvType::Vector { element, .. } => element,
             other => self.fatal(&format!(
                 "extract_value not implemented on type {:?}",
                 other
@@ -2176,6 +2178,16 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // needing to materialize `&core::panic::Location` or `format_args!`.
             self.abort();
             self.undef(result_type)
+        } else if self.internal_buffer_load_id.borrow().contains(&callee_val) {
+            self.codegen_internal_buffer_load(result_type, args)
+        } else if self.internal_buffer_store_id.borrow().contains(&callee_val) {
+            self.codegen_internal_buffer_store(args);
+
+            let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
+            SpirvValue {
+                kind: SpirvValueKind::IllegalTypeUsed(void_ty),
+                ty: void_ty,
+            }
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()

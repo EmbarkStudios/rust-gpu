@@ -104,6 +104,7 @@ pub struct SpirvBuilder {
     print_metadata: bool,
     release: bool,
     target: String,
+    bindless: bool,
 }
 
 impl SpirvBuilder {
@@ -112,6 +113,7 @@ impl SpirvBuilder {
             path_to_crate: path_to_crate.as_ref().to_owned(),
             print_metadata: true,
             release: true,
+            bindless: false,
             target: target.into(),
         }
     }
@@ -119,6 +121,13 @@ impl SpirvBuilder {
     /// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to true.
     pub fn print_metadata(mut self, v: bool) -> Self {
         self.print_metadata = v;
+        self
+    }
+
+    /// Run the compiler in bindless mode, this flag is in preparation for the full feature
+    /// and it's expected to be the default mode going forward
+    pub fn bindless(mut self, v: bool) -> Self {
+        self.bindless = v;
         self
     }
 
@@ -200,11 +209,25 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
         .then(|| " -C llvm-args=--module-output=multiple")
         .unwrap_or_default();
 
+    let mut target_features = Vec::new();
+
+    if builder.bindless {
+        target_features.push("+bindless");
+    }
+
+    let feature_flag = if target_features.is_empty() {
+        String::new()
+    } else {
+        format!(" -C target-feature={}", target_features.join(","))
+    };
+
     let rustflags = format!(
-        "-Z codegen-backend={} -Zsymbol-mangling-version=v0{}",
+        "-Z codegen-backend={} -Zsymbol-mangling-version=v0{}{}",
         rustc_codegen_spirv.display(),
+        feature_flag,
         llvm_args,
     );
+
     let mut cargo = Command::new("cargo");
     cargo.args(&[
         "build",
@@ -214,6 +237,7 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
         "--target",
         &*builder.target,
     ]);
+
     if builder.release {
         cargo.arg("--release");
     }
