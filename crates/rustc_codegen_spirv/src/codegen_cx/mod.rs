@@ -98,6 +98,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .sess
             .target_features
             .iter()
+            .filter(|s| *s != &sym.bindless)
             .map(|s| s.as_str().parse())
             .collect::<Result<_, String>>()
             .unwrap_or_else(|error| {
