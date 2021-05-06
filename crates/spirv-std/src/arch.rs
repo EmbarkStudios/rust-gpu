@@ -12,6 +12,7 @@ mod demote_to_helper_invocation_ext;
 mod derivative;
 mod primitive;
 mod ray_tracing;
+mod relational;
 
 pub use arithmetic::*;
 #[cfg(feature = "const-generics")]
@@ -20,6 +21,7 @@ pub use demote_to_helper_invocation_ext::*;
 pub use derivative::*;
 pub use primitive::*;
 pub use ray_tracing::*;
+pub use relational::*;
 
 /// Result is true if any component of `vector` is true, otherwise result is
 /// false.
