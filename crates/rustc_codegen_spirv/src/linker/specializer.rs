@@ -113,7 +113,7 @@ pub fn specialize(module: Module, specialization: impl Specialization) -> Module
     let mut debug_names = FxHashMap::default();
     if debug || dump_instances.is_some() {
         debug_names = module
-            .debugs
+            .debug_names
             .iter()
             .filter(|inst| inst.class.opcode == Op::Name)
             .map(|inst| {
@@ -2346,7 +2346,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
         // HACK(eddyb) steal `Vec`s so that we can still call methods on `self` below.
         let module = self.builder.module_mut();
         let mut entry_points = mem::take(&mut module.entry_points);
-        let debugs = mem::take(&mut module.debugs);
+        let debug_names = mem::take(&mut module.debug_names);
         let annotations = mem::take(&mut module.annotations);
         let types_global_values = mem::take(&mut module.types_global_values);
         let functions = mem::take(&mut module.functions);
@@ -2418,7 +2418,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
         };
 
         // Expand `Op(Member)Name %target ...` when `target` is "generic".
-        let expanded_debugs = expand_debug_or_annotation(debugs);
+        let expanded_debug_names = expand_debug_or_annotation(debug_names);
 
         // Expand `Op(Member)Decorate* %target ...`, when `target` is "generic".
         let expanded_annotations = expand_debug_or_annotation(annotations);
@@ -2516,7 +2516,7 @@ impl<'a, S: Specialization> Expander<'a, S> {
 
         let module = self.builder.module_mut();
         module.entry_points = entry_points;
-        module.debugs = expanded_debugs;
+        module.debug_names = expanded_debug_names;
         module.annotations = expanded_annotations;
         module.types_global_values = expanded_types_global_values;
         module.functions = expanded_functions;

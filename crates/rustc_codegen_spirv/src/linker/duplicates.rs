@@ -94,8 +94,8 @@ fn gather_annotations(annotations: &[Instruction]) -> FxHashMap<Word, Vec<u32>> 
         .collect()
 }
 
-fn gather_names(debugs: &[Instruction]) -> FxHashMap<Word, String> {
-    debugs
+fn gather_names(debug_names: &[Instruction]) -> FxHashMap<Word, String> {
+    debug_names
         .iter()
         .filter(|inst| inst.class.opcode == Op::Name)
         .map(|inst| {
@@ -200,7 +200,7 @@ pub fn remove_duplicate_types(module: &mut Module) {
 
     // Collect a map from type ID to an annotation "key blob" (to append to the type key)
     let annotations = gather_annotations(&module.annotations);
-    let names = gather_names(&module.debugs);
+    let names = gather_names(&module.debug_names);
 
     for inst in &mut module.types_global_values {
         if inst.class.opcode == Op::TypeForwardPointer {
@@ -269,7 +269,27 @@ pub fn remove_duplicate_types(module: &mut Module) {
         .retain(|inst| anno_set.insert(inst.assemble()));
     // Same thing with OpName
     let mut name_ids = FxHashSet::default();
-    module.debugs.retain(|inst| {
+    module.debug_names.retain(|inst| {
         inst.class.opcode != Op::Name || name_ids.insert(inst.operands[0].unwrap_id_ref())
     });
+}
+
+pub fn remove_duplicate_lines(module: &mut Module) {
+    for func in &mut module.functions {
+        for block in &mut func.blocks {
+            let mut i = block.instructions.len();
+            loop {
+                if i == 0 {
+                    break;
+                }
+                i -= 1;
+                if i + 1 < block.instructions.len()
+                    && block.instructions[i].class.opcode == Op::Line
+                    && block.instructions[i + 1].class.opcode == Op::Line
+                {
+                    block.instructions.remove(i);
+                }
+            }
+        }
+    }
 }

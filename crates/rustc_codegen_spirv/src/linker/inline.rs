@@ -40,7 +40,7 @@ pub fn inline(module: &mut Module) {
         }
     });
     // Drop OpName etc. for inlined functions
-    module.debugs.retain(|inst| {
+    module.debug_names.retain(|inst| {
         !inst.operands.iter().any(|op| {
             op.id_ref_any()
                 .map_or(false, |id| dropped_ids.contains(&id))

@@ -76,7 +76,13 @@ fn kill_unrooted(module: &mut Module, rooted: &FxHashSet<Word>) {
     module
         .execution_modes
         .retain(|inst| is_rooted(inst, rooted));
-    module.debugs.retain(|inst| is_rooted(inst, rooted));
+    module
+        .debug_string_source
+        .retain(|inst| is_rooted(inst, rooted));
+    module.debug_names.retain(|inst| is_rooted(inst, rooted));
+    module
+        .debug_module_processed
+        .retain(|inst| is_rooted(inst, rooted));
     module.annotations.retain(|inst| is_rooted(inst, rooted));
     module
         .types_global_values

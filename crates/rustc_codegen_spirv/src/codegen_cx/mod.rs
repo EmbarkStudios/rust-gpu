@@ -339,7 +339,7 @@ impl CodegenArgs {
 
         if let Some(func) = &self.disassemble_fn {
             let id = module
-                .debugs
+                .debug_names
                 .iter()
                 .find(|inst| {
                     inst.class.opcode == rspirv::spirv::Op::Name

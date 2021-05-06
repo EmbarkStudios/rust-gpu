@@ -242,6 +242,12 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             }
         }
     }
+
+    {
+        let _timer = sess.timer("link_remove_duplicate_lines");
+        duplicates::remove_duplicate_lines(&mut output);
+    }
+
     {
         let _timer = sess.timer("link_sort_globals");
         simple_passes::sort_globals(&mut output);

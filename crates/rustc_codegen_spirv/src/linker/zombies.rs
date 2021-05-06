@@ -105,7 +105,7 @@ fn spread_zombie(module: &mut Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_
 
 fn get_names(module: &Module) -> FxHashMap<Word, &str> {
     module
-        .debugs
+        .debug_names
         .iter()
         .filter(|i| i.class.opcode == Op::Name)
         .map(|i| {
@@ -177,7 +177,7 @@ pub fn remove_zombies(sess: &Session, module: &mut Module) {
         for f in &module.functions {
             if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
                 let name_id = f.def_id().unwrap();
-                let name = module.debugs.iter().find(|inst| {
+                let name = module.debug_names.iter().find(|inst| {
                     inst.class.opcode == Op::Name && inst.operands[0].unwrap_id_ref() == name_id
                 });
                 let name = match name {
@@ -214,7 +214,13 @@ pub fn remove_zombies(sess: &Session, module: &mut Module) {
         .execution_modes
         .retain(|inst| is_zombie(inst, &zombies).is_none());
     module
-        .debugs
+        .debug_string_source
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    module
+        .debug_names
+        .retain(|inst| is_zombie(inst, &zombies).is_none());
+    module
+        .debug_module_processed
         .retain(|inst| is_zombie(inst, &zombies).is_none());
     module
         .annotations
