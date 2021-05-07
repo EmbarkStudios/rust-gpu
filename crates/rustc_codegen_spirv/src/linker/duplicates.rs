@@ -277,19 +277,16 @@ pub fn remove_duplicate_types(module: &mut Module) {
 pub fn remove_duplicate_lines(module: &mut Module) {
     for func in &mut module.functions {
         for block in &mut func.blocks {
-            let mut i = block.instructions.len();
-            loop {
-                if i == 0 {
-                    break;
+            block.instructions.dedup_by(|a, b| {
+                if a.class.opcode == Op::Line && b.class.opcode == Op::Line {
+                    // dedup_by removes the *second* element in a pair of duplicates. We want to
+                    // remove the *first* (so the last OpLine is kept). So, swap them! :D
+                    std::mem::swap(a, b);
+                    true
+                } else {
+                    false
                 }
-                i -= 1;
-                if i + 1 < block.instructions.len()
-                    && block.instructions[i].class.opcode == Op::Line
-                    && block.instructions[i + 1].class.opcode == Op::Line
-                {
-                    block.instructions.remove(i);
-                }
-            }
+            });
         }
     }
 }

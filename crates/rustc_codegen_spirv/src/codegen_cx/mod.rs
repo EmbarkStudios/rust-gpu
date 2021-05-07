@@ -13,7 +13,7 @@ use crate::symbols::Symbols;
 use crate::target::SpirvTarget;
 
 use rspirv::dr::{Module, Operand};
-use rspirv::spirv::{AddressingModel, Decoration, LinkageType, Word};
+use rspirv::spirv::{AddressingModel, Decoration, LinkageType, Op, Word};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
@@ -33,6 +33,7 @@ use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
 use std::iter::once;
+use std::path::Path;
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -392,6 +393,25 @@ impl CodegenArgs {
 
         if self.disassemble_globals {
             for inst in module.global_inst_iter() {
+                // HACK: On Windows, paths are printed like `OpString "D:\\dir\\blah"`.
+                // Unfortunately, compiletest will only normalize `D:\dir\blah` to `$DIR/blah` -
+                // one backslash, not two. So, when disassembling for compiletest, check if the
+                // argument to OpString can be parsed as an absolute path, and if it is, replace it
+                // with just the filename component of the path.
+                if inst.class.opcode == Op::String {
+                    let path = Path::new(inst.operands[0].unwrap_literal_string());
+                    if path.is_absolute() {
+                        if let Some(file_name) = path.file_name() {
+                            let mut inst = inst.clone();
+                            inst.operands[0] = Operand::LiteralString(format!(
+                                "$OPSTRING_FILENAME/{}",
+                                file_name.to_string_lossy(),
+                            ));
+                            eprintln!("{}", inst.disassemble());
+                            continue;
+                        }
+                    }
+                }
                 eprintln!("{}", inst.disassemble());
             }
         }
