@@ -160,16 +160,19 @@ pub fn gpu_only(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let fn_name = sig.ident.clone();
 
-    let sig = syn::Signature { abi: None, ..sig };
+    let sig_cpu = syn::Signature { abi: None, ..sig.clone() };
 
     let output = quote::quote! {
         // Don't warn on unused arguments on the CPU side.
-        #[cfg_attr(not(target_arch = "spirv"), allow(unused_variables))]
+        #[cfg(not(target_arch="spirv"))]
+        #[allow(unused_variables)]
+        #(#attrs)* #vis #sig_cpu {
+            unimplemented!(concat!("`", stringify!(#fn_name), "` is only available on SPIR-V platforms."))
+        }
+
+        #[cfg(target_arch="spirv")]
         #(#attrs)* #vis #sig {
-            #[cfg(target_arch="spirv")] { #block }
-            #[cfg(not(target_arch="spirv"))] {
-                unimplemented!(concat!("`", stringify!(#fn_name), "` is only available on SPIR-V platforms."))
-            }
+            #block
         }
     };
 
