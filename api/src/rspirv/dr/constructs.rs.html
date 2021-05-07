@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/rspirv-50a5048e4e24b3a2/719cf08/rspirv/dr/constructs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>constructs.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/git/checkouts/rspirv-50a5048e4e24b3a2/4419db4/rspirv/dr/constructs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>constructs.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rspirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -391,6 +391,20 @@
 <span id="388">388</span>
 <span id="389">389</span>
 <span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::grammar</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::spirv</span>;
@@ -428,8 +442,12 @@
     <span class="kw">pub</span> <span class="ident">entry_points</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="doccomment">/// All execution mode declarations, using OpExecutionMode.</span>
     <span class="kw">pub</span> <span class="ident">execution_modes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// All non-location debug instructions.</span>
-    <span class="kw">pub</span> <span class="ident">debugs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Debug subsection: All OpString, OpSourceExtension, OpSource, and OpSourceContinued.</span>
+    <span class="kw">pub</span> <span class="ident">debug_string_source</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Debug subsection: All OpName and all OpMemberName.</span>
+    <span class="kw">pub</span> <span class="ident">debug_names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Debug subsection: All OpModuleProcessed instructions.</span>
+    <span class="kw">pub</span> <span class="ident">debug_module_processed</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="doccomment">/// All annotation instructions.</span>
     <span class="kw">pub</span> <span class="ident">annotations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="doccomment">/// All types, constants, and global variables.</span>
@@ -506,7 +524,9 @@
             <span class="ident">memory_model</span>: <span class="prelude-val">None</span>,
             <span class="ident">entry_points</span>: <span class="macro">vec!</span>[],
             <span class="ident">execution_modes</span>: <span class="macro">vec!</span>[],
-            <span class="ident">debugs</span>: <span class="macro">vec!</span>[],
+            <span class="ident">debug_string_source</span>: <span class="macro">vec!</span>[],
+            <span class="ident">debug_names</span>: <span class="macro">vec!</span>[],
+            <span class="ident">debug_module_processed</span>: <span class="macro">vec!</span>[],
             <span class="ident">annotations</span>: <span class="macro">vec!</span>[],
             <span class="ident">types_global_values</span>: <span class="macro">vec!</span>[],
             <span class="ident">functions</span>: <span class="macro">vec!</span>[],
@@ -522,7 +542,9 @@
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">memory_model</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entry_points</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">execution_modes</span>)
-            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debugs</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debug_string_source</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debug_names</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debug_module_processed</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">annotations</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">types_global_values</span>)
     }
@@ -536,7 +558,9 @@
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">memory_model</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">entry_points</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">execution_modes</span>)
-            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">debugs</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">debug_string_source</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">debug_names</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">debug_module_processed</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">annotations</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">types_global_values</span>)
     }
@@ -550,7 +574,9 @@
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">memory_model</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entry_points</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">execution_modes</span>)
-            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debugs</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debug_string_source</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debug_names</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debug_module_processed</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">annotations</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">types_global_values</span>)
             .<span class="ident">chain</span>(<span class="self">self</span>.<span class="ident">functions</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">all_inst_iter</span>()))
@@ -565,7 +591,9 @@
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">memory_model</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">entry_points</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">execution_modes</span>)
-            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">debugs</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">debug_string_source</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">debug_names</span>)
+            .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">debug_module_processed</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">annotations</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">types_global_values</span>)
             .<span class="ident">chain</span>(

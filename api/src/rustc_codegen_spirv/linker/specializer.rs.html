@@ -2726,7 +2726,7 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">debug_names</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
     <span class="kw">if</span> <span class="ident">debug</span> <span class="op">|</span><span class="op">|</span> <span class="ident">dump_instances</span>.<span class="ident">is_some</span>() {
         <span class="ident">debug_names</span> <span class="op">=</span> <span class="ident">module</span>
-            .<span class="ident">debugs</span>
+            .<span class="ident">debug_names</span>
             .<span class="ident">iter</span>()
             .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::Name</span>)
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
@@ -4959,7 +4959,7 @@
         <span class="comment">// HACK(eddyb) steal `Vec`s so that we can still call methods on `self` below.</span>
         <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">module_mut</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entry_points</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">entry_points</span>);
-        <span class="kw">let</span> <span class="ident">debugs</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">debugs</span>);
+        <span class="kw">let</span> <span class="ident">debug_names</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">debug_names</span>);
         <span class="kw">let</span> <span class="ident">annotations</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">annotations</span>);
         <span class="kw">let</span> <span class="ident">types_global_values</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">types_global_values</span>);
         <span class="kw">let</span> <span class="ident">functions</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">module</span>.<span class="ident">functions</span>);
@@ -5031,7 +5031,7 @@
         };
 
         <span class="comment">// Expand `Op(Member)Name %target ...` when `target` is &quot;generic&quot;.</span>
-        <span class="kw">let</span> <span class="ident">expanded_debugs</span> <span class="op">=</span> <span class="ident">expand_debug_or_annotation</span>(<span class="ident">debugs</span>);
+        <span class="kw">let</span> <span class="ident">expanded_debug_names</span> <span class="op">=</span> <span class="ident">expand_debug_or_annotation</span>(<span class="ident">debug_names</span>);
 
         <span class="comment">// Expand `Op(Member)Decorate* %target ...`, when `target` is &quot;generic&quot;.</span>
         <span class="kw">let</span> <span class="ident">expanded_annotations</span> <span class="op">=</span> <span class="ident">expand_debug_or_annotation</span>(<span class="ident">annotations</span>);
@@ -5129,7 +5129,7 @@
 
         <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">module_mut</span>();
         <span class="ident">module</span>.<span class="ident">entry_points</span> <span class="op">=</span> <span class="ident">entry_points</span>;
-        <span class="ident">module</span>.<span class="ident">debugs</span> <span class="op">=</span> <span class="ident">expanded_debugs</span>;
+        <span class="ident">module</span>.<span class="ident">debug_names</span> <span class="op">=</span> <span class="ident">expanded_debug_names</span>;
         <span class="ident">module</span>.<span class="ident">annotations</span> <span class="op">=</span> <span class="ident">expanded_annotations</span>;
         <span class="ident">module</span>.<span class="ident">types_global_values</span> <span class="op">=</span> <span class="ident">expanded_types_global_values</span>;
         <span class="ident">module</span>.<span class="ident">functions</span> <span class="op">=</span> <span class="ident">expanded_functions</span>;

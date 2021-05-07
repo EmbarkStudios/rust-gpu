@@ -603,6 +603,26 @@
 <span id="600">600</span>
 <span id="601">601</span>
 <span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
@@ -619,7 +639,7 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::target::SpirvTarget</span>;
 
 <span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Module</span>, <span class="ident">Operand</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">AddressingModel</span>, <span class="ident">Decoration</span>, <span class="ident">LinkageType</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">AddressingModel</span>, <span class="ident">Decoration</span>, <span class="ident">LinkageType</span>, <span class="ident">Op</span>, <span class="ident">Word</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::debuginfo</span>::{<span class="ident">FunctionDebugContext</span>, <span class="ident">VariableKind</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{
     <span class="ident">AsmMethods</span>, <span class="ident">BackendTypes</span>, <span class="ident">CoverageInfoMethods</span>, <span class="ident">DebugInfoMethods</span>, <span class="ident">MiscMethods</span>,
@@ -639,6 +659,7 @@
 <span class="kw">use</span> <span class="ident">rustc_target::spec</span>::{<span class="ident">HasTargetSpec</span>, <span class="ident">Target</span>};
 <span class="kw">use</span> <span class="ident">std::cell</span>::{<span class="ident">Cell</span>, <span class="ident">RefCell</span>};
 <span class="kw">use</span> <span class="ident">std::iter::once</span>;
+<span class="kw">use</span> <span class="ident">std::path::Path</span>;
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
@@ -945,7 +966,7 @@
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">func</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">disassemble_fn</span> {
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">module</span>
-                .<span class="ident">debugs</span>
+                .<span class="ident">debug_names</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
                     <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rspirv::spirv::Op::Name</span>
@@ -998,6 +1019,25 @@
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">disassemble_globals</span> {
             <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">global_inst_iter</span>() {
+                <span class="comment">// HACK: On Windows, paths are printed like `OpString &quot;D:\\dir\\blah&quot;`.</span>
+                <span class="comment">// Unfortunately, compiletest will only normalize `D:\dir\blah` to `$DIR/blah` -</span>
+                <span class="comment">// one backslash, not two. So, when disassembling for compiletest, check if the</span>
+                <span class="comment">// argument to OpString can be parsed as an absolute path, and if it is, replace it</span>
+                <span class="comment">// with just the filename component of the path.</span>
+                <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::String</span> {
+                    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_literal_string</span>());
+                    <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">is_absolute</span>() {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">file_name</span>) <span class="op">=</span> <span class="ident">path</span>.<span class="ident">file_name</span>() {
+                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">clone</span>();
+                            <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">Operand::LiteralString</span>(<span class="macro">format!</span>(
+                                <span class="string">&quot;$OPSTRING_FILENAME/{}&quot;</span>,
+                                <span class="ident">file_name</span>.<span class="ident">to_string_lossy</span>(),
+                            ));
+                            <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">inst</span>.<span class="ident">disassemble</span>());
+                            <span class="kw">continue</span>;
+                        }
+                    }
+                }
                 <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">inst</span>.<span class="ident">disassemble</span>());
             }
         }
