@@ -160,7 +160,10 @@ pub fn gpu_only(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let fn_name = sig.ident.clone();
 
-    let sig_cpu = syn::Signature { abi: None, ..sig.clone() };
+    let sig_cpu = syn::Signature {
+        abi: None,
+        ..sig.clone()
+    };
 
     let output = quote::quote! {
         // Don't warn on unused arguments on the CPU side.
