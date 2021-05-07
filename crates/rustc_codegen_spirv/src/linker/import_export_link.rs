@@ -170,7 +170,7 @@ fn import_kill_annotations_and_debug(
                 !rewrite_rules.contains_key(&id) && !killed_parameters.contains(&id)
             })
     });
-    module.debugs.retain(|inst| {
+    module.debug_names.retain(|inst| {
         inst.operands.is_empty()
             || inst.operands[0].id_ref_any().map_or(true, |id| {
                 !rewrite_rules.contains_key(&id) && !killed_parameters.contains(&id)

@@ -1,30 +1,37 @@
 %1 = OpFunction  %2  None %3
 %4 = OpLabel
-%5 = OpAccessChain  %6  %7 %8
-%9 = OpArrayLength  %10  %7 0
-%11 = OpCompositeInsert  %12  %5 %13 0
-%14 = OpCompositeInsert  %12  %9 %11 1
-%15 = OpULessThan  %16  %8 %9
-OpSelectionMerge %17 None
-OpBranchConditional %15 %18 %19
-%18 = OpLabel
-%20 = OpInBoundsAccessChain  %21  %5 %8
-%22 = OpLoad  %23  %20
-OpReturn
+OpLine %5 7 12
+%6 = OpAccessChain  %7  %8 %9
+%10 = OpArrayLength  %11  %8 0
+OpLine %5 7 0
+%12 = OpCompositeInsert  %13  %6 %14 0
+%15 = OpCompositeInsert  %13  %10 %12 1
+OpLine %5 8 21
+%16 = OpULessThan  %17  %9 %10
+OpLine %5 8 21
+OpSelectionMerge %18 None
+OpBranchConditional %16 %19 %20
 %19 = OpLabel
-OpBranch %24
-%24 = OpLabel
+OpLine %5 8 21
+%21 = OpInBoundsAccessChain  %22  %6 %9
+%23 = OpLoad  %24  %21
+OpLine %5 10 1
+OpReturn
+%20 = OpLabel
+OpLine %5 8 21
 OpBranch %25
 %25 = OpLabel
-%26 = OpPhi  %16  %27 %24 %27 %28
-OpLoopMerge %29 %28 None
-OpBranchConditional %26 %30 %29
-%30 = OpLabel
-OpBranch %28
-%28 = OpLabel
-OpBranch %25
+OpBranch %26
+%26 = OpLabel
+%27 = OpPhi  %17  %28 %25 %28 %29
+OpLoopMerge %30 %29 None
+OpBranchConditional %27 %31 %30
+%31 = OpLabel
+OpBranch %29
 %29 = OpLabel
+OpBranch %26
+%30 = OpLabel
 OpUnreachable
-%17 = OpLabel
+%18 = OpLabel
 OpUnreachable
 OpFunctionEnd

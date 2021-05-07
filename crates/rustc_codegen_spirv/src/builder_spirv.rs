@@ -318,6 +318,7 @@ pub struct BuilderSpirv {
     // allows getting that legality information without additional lookups.
     const_to_id: RefCell<FxHashMap<WithType<SpirvConst>, WithConstLegality<Word>>>,
     id_to_const: RefCell<FxHashMap<Word, WithConstLegality<SpirvConst>>>,
+    string_cache: RefCell<FxHashMap<String, Word>>,
 }
 
 impl BuilderSpirv {
@@ -367,6 +368,7 @@ impl BuilderSpirv {
             builder: RefCell::new(builder),
             const_to_id: Default::default(),
             id_to_const: Default::default(),
+            string_cache: Default::default(),
         }
     }
 
@@ -576,6 +578,17 @@ impl BuilderSpirv {
             SpirvConst::U32(v) => Some(v as u64),
             SpirvConst::U64(v) => Some(v),
             _ => None,
+        }
+    }
+
+    pub fn def_string(&self, s: String) -> Word {
+        use std::collections::hash_map::Entry;
+        match self.string_cache.borrow_mut().entry(s) {
+            Entry::Occupied(entry) => *entry.get(),
+            Entry::Vacant(entry) => {
+                let key = entry.key().clone();
+                *entry.insert(self.builder(Default::default()).string(key))
+            }
         }
     }
 

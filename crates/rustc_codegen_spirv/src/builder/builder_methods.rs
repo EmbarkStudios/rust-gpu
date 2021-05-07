@@ -517,6 +517,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn set_span(&mut self, span: Span) {
         self.current_span = Some(span);
+        let loc = self.cx.tcx.sess.source_map().lookup_char_pos(span.lo());
+        let file = self.builder.def_string(format!("{}", loc.file.name));
+        self.emit()
+            .line(file, loc.line as u32, loc.col_display as u32);
     }
 
     fn position_at_end(&mut self, llbb: Self::BasicBlock) {
