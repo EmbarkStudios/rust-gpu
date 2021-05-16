@@ -330,6 +330,10 @@ impl Symbols {
                 "ray_query",
                 SpirvAttribute::IntrinsicType(IntrinsicType::RayQueryKhr),
             ),
+            (
+                "vector",
+                SpirvAttribute::IntrinsicType(IntrinsicType::Vector),
+            ),
             ("block", SpirvAttribute::Block),
             ("flat", SpirvAttribute::Flat),
             ("invariant", SpirvAttribute::Invariant),

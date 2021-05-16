@@ -347,9 +347,7 @@ impl SpirvType {
             Self::Bool => Size::from_bytes(1),
             Self::Integer(width, _) | Self::Float(width) => Size::from_bits(width),
             Self::Adt { size, .. } => size?,
-            Self::Vector { element, count } => {
-                cx.lookup_type(element).sizeof(cx)? * count.next_power_of_two() as u64
-            }
+            Self::Vector { element, count } => cx.lookup_type(element).sizeof(cx)? * count as u64,
             Self::Array { element, count } => {
                 cx.lookup_type(element).sizeof(cx)? * cx.builder.lookup_const_u64(count).unwrap()
             }
