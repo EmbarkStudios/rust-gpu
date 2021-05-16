@@ -86,9 +86,9 @@ impl fmt::Display for SpirvBuilderError {
                 write!(f, "Crate path {} does not exist", path.display())
             }
             SpirvBuilderError::BuildFailed => f.write_str("Build failed"),
-            SpirvBuilderError::MultiModuleWithPrintMetadata => {
-                f.write_str("Multi-module build cannot be used with print_metadata = true")
-            }
+            SpirvBuilderError::MultiModuleWithPrintMetadata => f.write_str(
+                "Multi-module build cannot be used with print_metadata = MetadataPrintout::Full",
+            ),
             SpirvBuilderError::MetadataFileMissing(_) => {
                 f.write_str("Multi-module metadata file missing")
             }
@@ -107,9 +107,21 @@ pub enum MemoryModel {
     GLSL450,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum MetadataPrintout {
+    /// Print no cargo metadata.
+    None,
+    /// Print only dependency information (eg for multiple modules).
+    DependencyOnly,
+    /// Print all cargo metadata.
+    ///
+    /// Includes dependency information and spirv environment variable.
+    Full,
+}
+
 pub struct SpirvBuilder {
     path_to_crate: PathBuf,
-    print_metadata: bool,
+    print_metadata: MetadataPrintout,
     release: bool,
     target: String,
     bindless: bool,
@@ -130,7 +142,7 @@ impl SpirvBuilder {
     pub fn new(path_to_crate: impl AsRef<Path>, target: impl Into<String>) -> Self {
         Self {
             path_to_crate: path_to_crate.as_ref().to_owned(),
-            print_metadata: true,
+            print_metadata: MetadataPrintout::Full,
             release: true,
             target: target.into(),
             bindless: false,
@@ -147,8 +159,8 @@ impl SpirvBuilder {
         }
     }
 
-    /// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to true.
-    pub fn print_metadata(mut self, v: bool) -> Self {
+    /// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to [`MetadataPrintout::Full`].
+    pub fn print_metadata(mut self, v: MetadataPrintout) -> Self {
         self.print_metadata = v;
         self
     }
@@ -230,10 +242,10 @@ impl SpirvBuilder {
         self
     }
 
-    /// Builds the module. If `print_metadata` is true, you usually don't have to inspect the path
+    /// Builds the module. If `print_metadata` is [`MetadataPrintout::Full`], you usually don't have to inspect the path
     /// in the result, as the environment variable for the path to the module will already be set.
     pub fn build(self) -> Result<CompileResult, SpirvBuilderError> {
-        if self.print_metadata && self.multimodule {
+        if (self.print_metadata == MetadataPrintout::Full) && self.multimodule {
             return Err(SpirvBuilderError::MultiModuleWithPrintMetadata);
         }
         if !self.path_to_crate.is_dir() {
@@ -248,7 +260,7 @@ impl SpirvBuilder {
             ModuleResult::SingleModule(spirv_module) => {
                 assert!(!self.multimodule);
                 let env_var = metadata_file.file_name().unwrap().to_str().unwrap();
-                if self.print_metadata {
+                if self.print_metadata == MetadataPrintout::Full {
                     println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
                 }
             }
@@ -414,8 +426,9 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     let artifact = get_last_artifact(&stdout);
 
     if build.status.success() {
-        if builder.print_metadata {
-            print_deps_of(&artifact);
+        match builder.print_metadata {
+            MetadataPrintout::Full | MetadataPrintout::DependencyOnly => print_deps_of(&artifact),
+            MetadataPrintout::None => (),
         }
         Ok(artifact)
     } else {

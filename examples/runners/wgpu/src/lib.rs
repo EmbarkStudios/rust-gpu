@@ -59,7 +59,7 @@ pub enum RustGPUShader {
 fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
-        use spirv_builder::{Capability, SpirvBuilder};
+        use spirv_builder::{Capability, MetadataPrintout, SpirvBuilder};
         use std::borrow::Cow;
         use std::path::PathBuf;
         // Hack: spirv_builder builds into a custom directory if running under cargo, to not
@@ -78,11 +78,11 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static>
         };
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
         let crate_path = [manifest_dir, "..", "..", "shaders", crate_name]
-            .iter()
-            .copied()
-            .collect::<PathBuf>();
-        let mut builder =
-            SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.1").print_metadata(false);
+        .iter()
+        .copied()
+        .collect::<PathBuf>();
+        let mut builder = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.1")
+            .print_metadata(MetadataPrintout::None);
         for &cap in capabilities {
             builder = builder.capability(cap);
         }
