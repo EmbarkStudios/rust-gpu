@@ -322,6 +322,12 @@
 <span id="319">319</span>
 <span id="320">320</span>
 <span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// BEGIN - Embark standard lints v0.3</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -485,16 +491,22 @@
 
     <span class="kw">let</span> <span class="ident">fn_name</span> <span class="op">=</span> <span class="ident">sig</span>.<span class="ident">ident</span>.<span class="ident">clone</span>();
 
-    <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">syn::Signature</span> { <span class="ident">abi</span>: <span class="prelude-val">None</span>, ..<span class="ident">sig</span> };
+    <span class="kw">let</span> <span class="ident">sig_cpu</span> <span class="op">=</span> <span class="ident">syn::Signature</span> {
+        <span class="ident">abi</span>: <span class="prelude-val">None</span>,
+        ..<span class="ident">sig</span>.<span class="ident">clone</span>()
+    };
 
     <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="macro">quote::quote!</span> {
         <span class="comment">// Don&#39;t warn on unused arguments on the CPU side.</span>
-        <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>), <span class="ident">allow</span>(<span class="ident">unused_variables</span>))]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;spirv&quot;</span>))]</span>
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_variables</span>)]</span>
+        #(#<span class="ident">attrs</span>)<span class="op">*</span> #<span class="ident">vis</span> #<span class="ident">sig_cpu</span> {
+            <span class="macro">unimplemented!</span>(<span class="macro">concat!</span>(<span class="string">&quot;`&quot;</span>, <span class="macro">stringify!</span>(#<span class="ident">fn_name</span>), <span class="string">&quot;` is only available on SPIR-V platforms.&quot;</span>))
+        }
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;spirv&quot;</span>)]</span>
         #(#<span class="ident">attrs</span>)<span class="op">*</span> #<span class="ident">vis</span> #<span class="ident">sig</span> {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;spirv&quot;</span>)]</span> { #<span class="ident">block</span> }
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;spirv&quot;</span>))]</span> {
-                <span class="macro">unimplemented!</span>(<span class="macro">concat!</span>(<span class="string">&quot;`&quot;</span>, <span class="macro">stringify!</span>(#<span class="ident">fn_name</span>), <span class="string">&quot;` is only available on SPIR-V platforms.&quot;</span>))
-            }
+            #<span class="ident">block</span>
         }
     };
 
