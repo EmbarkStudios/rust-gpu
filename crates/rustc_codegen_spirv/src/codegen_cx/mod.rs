@@ -14,12 +14,13 @@ use crate::target::SpirvTarget;
 
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{AddressingModel, Decoration, LinkageType, Op, Word};
+use rustc_ast::ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_codegen_ssa::mir::debuginfo::{FunctionDebugContext, VariableKind};
 use rustc_codegen_ssa::traits::{
-    AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, MiscMethods,
+    AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, GlobalAsmOperandRef,
+    MiscMethods,
 };
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_hir::GlobalAsm;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
@@ -616,7 +617,13 @@ impl<'tcx> CoverageInfoMethods<'tcx> for CodegenCx<'tcx> {
 }
 
 impl<'tcx> AsmMethods for CodegenCx<'tcx> {
-    fn codegen_global_asm(&self, _ga: &GlobalAsm) {
+    fn codegen_global_asm(
+        &self,
+        _template: &[InlineAsmTemplatePiece],
+        _operands: &[GlobalAsmOperandRef],
+        _options: InlineAsmOptions,
+        _line_spans: &[Span],
+    ) {
         todo!()
     }
 }

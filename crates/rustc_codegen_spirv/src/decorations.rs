@@ -197,7 +197,7 @@ impl SerializedSpan {
             file: match &file.name {
                 // We can only support real files, not "synthetic" ones (which
                 // are almost never exposed to the compiler backend anyway).
-                FileName::Real(real_name) => real_name.local_path().to_path_buf(),
+                FileName::Real(real_name) => real_name.local_path()?.to_path_buf(),
                 _ => return None,
             },
             hash: file.src_hash.into(),

@@ -328,6 +328,12 @@ impl CodegenBackend for SpirvCodegenBackend {
         Box::new(rustc_codegen_ssa::base::codegen_crate(
             Self,
             tcx,
+            tcx.sess
+                .opts
+                .cg
+                .target_cpu
+                .clone()
+                .unwrap_or_else(|| tcx.sess.target.cpu.clone()),
             metadata,
             need_metadata_module,
         ))
@@ -472,7 +478,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
         _: &ModuleCodegen<Self::Module>,
         _: &ModuleConfig,
         _: bool,
-    ) {
+    ) -> Result<(), FatalError> {
         todo!()
     }
 }
