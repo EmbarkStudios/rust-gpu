@@ -149,32 +149,46 @@ fn link_exe(
     }
 
     use rspirv::binary::Assemble;
-    let module_result = match spv_binary {
+    let compile_result = match spv_binary {
         linker::LinkResult::SingleModule(spv_binary) => {
             let mut module_filename = out_dir;
             module_filename.push("module");
             post_link_single_module(sess, spv_binary.assemble(), &module_filename);
             cg_args.do_disassemble(&spv_binary);
-            ModuleResult::SingleModule(module_filename)
+            let module_result = ModuleResult::SingleModule(module_filename);
+            CompileResult {
+                module: module_result,
+                entry_points: entry_points(&spv_binary),
+            }
         }
         linker::LinkResult::MultipleModules(map) => {
             let mut hashmap = FxHashMap::default();
+            let entry_points = map.keys().cloned().collect();
             for (name, spv_binary) in map {
                 let mut module_filename = out_dir.clone();
                 module_filename.push(sanitize_filename::sanitize(&name));
                 post_link_single_module(sess, spv_binary.assemble(), &module_filename);
                 hashmap.insert(name, module_filename);
             }
-            ModuleResult::MultiModule(hashmap)
+            let module_result = ModuleResult::MultiModule(hashmap);
+            CompileResult {
+                module: module_result,
+                entry_points,
+            }
         }
-    };
-
-    let compile_result = CompileResult {
-        module: module_result,
     };
 
     let file = File::create(out_filename).unwrap();
     serde_json::to_writer(BufWriter::new(file), &compile_result).unwrap();
+}
+
+fn entry_points(module: &rspirv::dr::Module) -> Vec<String> {
+    module
+        .entry_points
+        .iter()
+        .filter(|inst| inst.class.opcode == rspirv::spirv::Op::EntryPoint)
+        .map(|inst| inst.operands[2].unwrap_literal_string().to_string())
+        .collect()
 }
 
 fn post_link_single_module(sess: &Session, spv_binary: Vec<u32>, out_filename: &Path) {
