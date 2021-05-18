@@ -61,7 +61,7 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static>
     {
         use spirv_builder::{Capability, SpirvBuilder};
         use std::borrow::Cow;
-        use std::path::{Path, PathBuf};
+        use std::path::PathBuf;
         // Hack: spirv_builder builds into a custom directory if running under cargo, to not
         // deadlock, and the default target directory if not. However, packages like `proc-macro2`
         // have different configurations when being built here vs. when building
@@ -73,22 +73,16 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static>
         let (crate_name, capabilities): (_, &[Capability]) = match shader {
             RustGPUShader::Simplest => ("simplest-shader", &[]),
             RustGPUShader::Sky => ("sky-shader", &[]),
-            RustGPUShader::Compute => ("compute-shader", &[]),
+            RustGPUShader::Compute => ("compute-shader", &[Capability::Int8]),
             RustGPUShader::Mouse => ("mouse-shader", &[]),
         };
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
-        let crate_path = [
-            Path::new(manifest_dir),
-            Path::new(".."),
-            Path::new(".."),
-            Path::new("shaders"),
-            Path::new(crate_name),
-        ]
-        .iter()
-        .copied()
-        .collect::<PathBuf>();
+        let crate_path = [manifest_dir, "..", "..", "shaders", crate_name]
+            .iter()
+            .copied()
+            .collect::<PathBuf>();
         let mut builder =
-            SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.0").print_metadata(false);
+            SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.1").print_metadata(false);
         for &cap in capabilities {
             builder = builder.capability(cap);
         }
