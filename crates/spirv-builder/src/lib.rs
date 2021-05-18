@@ -66,8 +66,11 @@ use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+pub use rustc_codegen_spirv::{CompileResult, ModuleResult};
+
 #[derive(Debug)]
 pub enum SpirvBuilderError {
+    CratePathDoesntExist(PathBuf),
     BuildFailed,
     MultiModuleWithPrintMetadata,
     MetadataFileMissing(std::io::Error),
@@ -77,6 +80,9 @@ pub enum SpirvBuilderError {
 impl fmt::Display for SpirvBuilderError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            SpirvBuilderError::CratePathDoesntExist(path) => {
+                write!(f, "Crate path {} does not exist", path.display())
+            }
             SpirvBuilderError::BuildFailed => f.write_str("Build failed"),
             SpirvBuilderError::MultiModuleWithPrintMetadata => {
                 f.write_str("Multi-module build cannot be used with print_metadata = true")
@@ -105,6 +111,7 @@ pub struct SpirvBuilder {
     release: bool,
     target: String,
     bindless: bool,
+    multimodule: bool,
 }
 
 impl SpirvBuilder {
@@ -113,8 +120,9 @@ impl SpirvBuilder {
             path_to_crate: path_to_crate.as_ref().to_owned(),
             print_metadata: true,
             release: true,
-            bindless: false,
             target: target.into(),
+            bindless: false,
+            multimodule: false,
         }
     }
 
@@ -137,27 +145,40 @@ impl SpirvBuilder {
         self
     }
 
-    /// Builds the module. Returns the path to the built spir-v file. If `print_metadata` is true,
-    /// you usually don't have to inspect the path, as the environment variable will already be
-    /// set.
-    pub fn build(self) -> Result<PathBuf, SpirvBuilderError> {
-        let spirv_module = invoke_rustc(&self, false)?;
-        let env_var = spirv_module.file_name().unwrap().to_str().unwrap();
-        if self.print_metadata {
-            println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
-        }
-        Ok(spirv_module)
+    /// Splits the resulting SPIR-V file into one module per entry point. This is useful in cases
+    /// where ecosystem tooling has bugs around multiple entry points per module - having all entry
+    /// points bundled into a single file is the preferred system.
+    pub fn multimodule(mut self, v: bool) -> Self {
+        self.multimodule = v;
+        self
     }
 
-    pub fn build_multimodule(self) -> Result<HashMap<String, PathBuf>, SpirvBuilderError> {
-        if self.print_metadata {
+    /// Builds the module. If `print_metadata` is true, you usually don't have to inspect the path
+    /// in the result, as the environment variable for the path to the module will already be set.
+    pub fn build(self) -> Result<CompileResult, SpirvBuilderError> {
+        if self.print_metadata && self.multimodule {
             return Err(SpirvBuilderError::MultiModuleWithPrintMetadata);
         }
-        let metadata_file = invoke_rustc(&self, true)?;
+        if !self.path_to_crate.is_dir() {
+            return Err(SpirvBuilderError::CratePathDoesntExist(self.path_to_crate));
+        }
+        let metadata_file = invoke_rustc(&self)?;
         let metadata_contents =
-            File::open(metadata_file).map_err(SpirvBuilderError::MetadataFileMissing)?;
-        let metadata = serde_json::from_reader(BufReader::new(metadata_contents))
+            File::open(&metadata_file).map_err(SpirvBuilderError::MetadataFileMissing)?;
+        let metadata: CompileResult = serde_json::from_reader(BufReader::new(metadata_contents))
             .map_err(SpirvBuilderError::MetadataFileMalformed)?;
+        match &metadata.module {
+            ModuleResult::SingleModule(spirv_module) => {
+                assert!(!self.multimodule);
+                let env_var = metadata_file.file_name().unwrap().to_str().unwrap();
+                if self.print_metadata {
+                    println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
+                }
+            }
+            ModuleResult::MultiModule(_) => {
+                assert!(self.multimodule);
+            }
+        }
         Ok(metadata)
     }
 }
@@ -194,8 +215,8 @@ fn find_rustc_codegen_spirv() -> PathBuf {
     panic!("Could not find {} in library path", filename);
 }
 
-// Note: in case of multimodule, returns path to the metadata json
-fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, SpirvBuilderError> {
+// Returns path to the metadata json.
+fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // Okay, this is a little bonkers: in a normal world, we'd have the user clone
     // rustc_codegen_spirv and pass in the path to it, and then we'd invoke cargo to build it, grab
     // the resulting .so, and pass it into -Z codegen-backend. But that's really gross: the user
@@ -205,7 +226,8 @@ fn invoke_rustc(builder: &SpirvBuilder, multimodule: bool) -> Result<PathBuf, Sp
     // rustc expects a full path, instead of a filename looked up via LD_LIBRARY_PATH, so we need
     // to copy cargo's understanding of library lookup and find the library and its full path.
     let rustc_codegen_spirv = find_rustc_codegen_spirv();
-    let llvm_args = multimodule
+    let llvm_args = builder
+        .multimodule
         .then(|| " -C llvm-args=--module-output=multiple")
         .unwrap_or_default();
 

@@ -160,6 +160,7 @@ use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::{Target, TargetTriple};
+use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::env;
 use std::fs::{create_dir_all, File};
@@ -167,6 +168,38 @@ use std::io::Cursor;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ModuleResult {
+    SingleModule(PathBuf),
+    MultiModule(FxHashMap<String, PathBuf>),
+}
+
+impl ModuleResult {
+    pub fn unwrap_single(&self) -> &Path {
+        match self {
+            ModuleResult::SingleModule(result) => result,
+            ModuleResult::MultiModule(_) => {
+                panic!("called `ModuleResult::unwrap_single()` on a `MultiModule` result")
+            }
+        }
+    }
+
+    pub fn unwrap_multi(&self) -> &FxHashMap<String, PathBuf> {
+        match self {
+            ModuleResult::MultiModule(result) => result,
+            ModuleResult::SingleModule(_) => {
+                panic!("called `ModuleResult::unwrap_multi()` on a `SingleModule` result")
+            }
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CompileResult {
+    pub module: ModuleResult,
+}
 
 fn dump_mir<'tcx>(
     tcx: TyCtxt<'tcx>,
