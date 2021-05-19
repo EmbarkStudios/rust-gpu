@@ -66,6 +66,7 @@ use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+pub use rustc_codegen_spirv::rspirv::spirv::Capability;
 pub use rustc_codegen_spirv::{CompileResult, ModuleResult};
 
 #[derive(Debug)]
@@ -112,6 +113,8 @@ pub struct SpirvBuilder {
     target: String,
     bindless: bool,
     multimodule: bool,
+    capabilities: Vec<Capability>,
+    extensions: Vec<String>,
 }
 
 impl SpirvBuilder {
@@ -123,6 +126,8 @@ impl SpirvBuilder {
             target: target.into(),
             bindless: false,
             multimodule: false,
+            capabilities: Vec::new(),
+            extensions: Vec::new(),
         }
     }
 
@@ -150,6 +155,20 @@ impl SpirvBuilder {
     /// points bundled into a single file is the preferred system.
     pub fn multimodule(mut self, v: bool) -> Self {
         self.multimodule = v;
+        self
+    }
+
+    /// Adds a capability to the SPIR-V module. Checking if a capability is enabled in code can be
+    /// done via `#[cfg(target_feature = "TheCapability")]`.
+    pub fn capability(mut self, capability: Capability) -> Self {
+        self.capabilities.push(capability);
+        self
+    }
+
+    /// Adds an extension to the SPIR-V module. Checking if an extension is enabled in code can be
+    /// done via `#[cfg(target_feature = "ext:the_extension")]`.
+    pub fn extension(mut self, extension: impl Into<String>) -> Self {
+        self.extensions.push(extension.into());
         self
     }
 
@@ -234,8 +253,10 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     let mut target_features = Vec::new();
 
     if builder.bindless {
-        target_features.push("+bindless");
+        target_features.push("+bindless".into());
     }
+    target_features.extend(builder.capabilities.iter().map(|cap| format!("+{:?}", cap)));
+    target_features.extend(builder.extensions.iter().map(|ext| format!("+ext:{}", ext)));
 
     let feature_flag = if target_features.is_empty() {
         String::new()

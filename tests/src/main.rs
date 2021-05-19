@@ -299,6 +299,7 @@ fn rust_flags(codegen_backend_path: &Path) -> String {
         "-Cdebug-assertions=off",
         "-Cdebuginfo=2",
         "-Cembed-bitcode=no",
+        "-Ctarget-feature=+Int8,+Int16,+Int64,+Float64",
     ]
     .join(" ")
 }

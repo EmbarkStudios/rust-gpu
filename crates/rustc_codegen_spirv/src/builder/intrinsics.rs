@@ -362,34 +362,36 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
                 if self.target.is_kernel() {
                     self.cl_op(CLOp::clz, ret_ty, [args[0].immediate()])
                 } else {
-                    self.ext_inst
-                        .borrow_mut()
-                        .import_integer_functions_2_intel(self);
-                    self.emit()
+                    let result = self
+                        .emit()
                         .u_count_leading_zeros_intel(
                             args[0].immediate().ty,
                             None,
                             args[0].immediate().def(self),
                         )
-                        .unwrap()
-                        .with_type(args[0].immediate().ty)
+                        .unwrap();
+                    self.ext_inst
+                        .borrow_mut()
+                        .require_integer_functions_2_intel(self, result);
+                    result.with_type(args[0].immediate().ty)
                 }
             }
             sym::cttz | sym::cttz_nonzero => {
                 if self.target.is_kernel() {
                     self.cl_op(CLOp::ctz, ret_ty, [args[0].immediate()])
                 } else {
-                    self.ext_inst
-                        .borrow_mut()
-                        .import_integer_functions_2_intel(self);
-                    self.emit()
+                    let result = self
+                        .emit()
                         .u_count_trailing_zeros_intel(
                             args[0].immediate().ty,
                             None,
                             args[0].immediate().def(self),
                         )
-                        .unwrap()
-                        .with_type(args[0].immediate().ty)
+                        .unwrap();
+                    self.ext_inst
+                        .borrow_mut()
+                        .require_integer_functions_2_intel(self, result);
+                    result.with_type(args[0].immediate().ty)
                 }
             }
 

@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod test;
 
-mod capability_computation;
 mod dce;
 mod duplicates;
 mod import_export_link;
@@ -291,11 +290,6 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         if opts.dce {
             let _timer = sess.timer("link_dce_2");
             dce::dce(output);
-        }
-        {
-            let _timer = sess.timer("link_remove_extra_capabilities");
-            capability_computation::remove_extra_capabilities(output);
-            capability_computation::remove_extra_extensions(output);
         }
 
         if opts.compact_ids {

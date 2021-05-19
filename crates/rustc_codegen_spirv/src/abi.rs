@@ -15,6 +15,7 @@ use rustc_middle::ty::{
 };
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
+use rustc_span::DUMMY_SP;
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{
     Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, TagEncoding, VariantIdx, Variants,
@@ -323,11 +324,15 @@ impl<'tcx> ConvSpirvType<'tcx> for TyAndLayout<'tcx> {
 
 fn trans_type_impl<'tcx>(
     cx: &CodegenCx<'tcx>,
-    span: Span,
+    mut span: Span,
     ty: TyAndLayout<'tcx>,
     is_immediate: bool,
 ) -> Word {
     if let TyKind::Adt(adt, substs) = *ty.ty.kind() {
+        if span == DUMMY_SP {
+            span = cx.tcx.def_span(adt.did);
+        }
+
         let attrs = AggregatedSpirvAttributes::parse(cx, cx.tcx.get_attrs(adt.did));
 
         if let Some(intrinsic_type_attr) = attrs.intrinsic_type.map(|attr| attr.value) {
