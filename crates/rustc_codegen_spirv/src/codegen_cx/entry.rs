@@ -129,6 +129,8 @@ impl<'tcx> CodegenCx<'tcx> {
                     rspirv::spirv::Dim::Dim3D,
                     true,
                 ),
+                samplers: self.sampler_descriptor_set(2),
+                acceleration_structures: self.acceleration_structure_descriptor_set(3),
                 // jb-todo: storage images are all compatible so they can live in the same descriptor set too
             }));
     }
@@ -235,11 +237,8 @@ impl<'tcx> CodegenCx<'tcx> {
         }
         .def(rustc_span::DUMMY_SP, self);
 
-        let sampled_image =
-            SpirvType::SampledImage { image_type: image }.def(rustc_span::DUMMY_SP, self);
-
         let runtime_array_image = SpirvType::RuntimeArray {
-            element: sampled_image,
+            element: image,
         }
         .def(rustc_span::DUMMY_SP, self);
 
@@ -250,7 +249,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let mut emit_global = self.emit_global();
         let image_array = emit_global
-            .variable(uniform_ptr_runtime_array, None, StorageClass::Uniform, None)
+            .variable(uniform_ptr_runtime_array, None, StorageClass::UniformConstant, None)
             .with_type(uniform_ptr_runtime_array)
             .def_cx(self);
 
@@ -266,6 +265,62 @@ impl<'tcx> CodegenCx<'tcx> {
         );
 
         image_array
+    }
+
+    fn sampler_descriptor_set(&self, descriptor_set: u32) -> Word {
+        let sampler = SpirvType::Sampler.def(rustc_span::DUMMY_SP, self);
+        let runtime_array_sampler = SpirvType::RuntimeArray { element: sampler }.def(rustc_span::DUMMY_SP, self);
+        let uniform_ptr_runtime_array = SpirvType::Pointer {
+            pointee: runtime_array_sampler,
+        }
+        .def(rustc_span::DUMMY_SP, self);
+
+        let mut emit_global = self.emit_global();
+        let sampler_array = emit_global
+            .variable(uniform_ptr_runtime_array, None, StorageClass::UniformConstant, None)
+            .with_type(uniform_ptr_runtime_array)
+            .def_cx(self);
+
+        emit_global.decorate(
+            sampler_array,
+            rspirv::spirv::Decoration::DescriptorSet,
+            std::iter::once(Operand::LiteralInt32(descriptor_set)),
+        );
+        emit_global.decorate(
+            sampler_array,
+            rspirv::spirv::Decoration::Binding,
+            std::iter::once(Operand::LiteralInt32(0)),
+        );
+
+        sampler_array
+    }
+
+    fn acceleration_structure_descriptor_set(&self, descriptor_set: u32) -> Word {
+        let acceleration_structure = SpirvType::AccelerationStructureKhr.def(rustc_span::DUMMY_SP, self);
+        let runtime_array_as = SpirvType::RuntimeArray { element: acceleration_structure }.def(rustc_span::DUMMY_SP, self);
+        let uniform_ptr_runtime_array = SpirvType::Pointer {
+            pointee: runtime_array_as,
+        }
+        .def(rustc_span::DUMMY_SP, self);
+
+        let mut emit_global = self.emit_global();
+        let acceleration_structure_array = emit_global
+            .variable(uniform_ptr_runtime_array, None, StorageClass::UniformConstant, None)
+            .with_type(uniform_ptr_runtime_array)
+            .def_cx(self);
+
+        emit_global.decorate(
+            acceleration_structure_array,
+            rspirv::spirv::Decoration::DescriptorSet,
+            std::iter::once(Operand::LiteralInt32(descriptor_set)),
+        );
+        emit_global.decorate(
+            acceleration_structure_array,
+            rspirv::spirv::Decoration::Binding,
+            std::iter::once(Operand::LiteralInt32(0)),
+        );
+
+        acceleration_structure_array
     }
 
     fn shader_entry_stub(
@@ -322,12 +377,14 @@ impl<'tcx> CodegenCx<'tcx> {
 
                 op_entry_point_interface_operands.push(sets.buffers);
 
-                //op_entry_point_interface_operands
-                //  .push(sets.sampled_image_1d);
                 // op_entry_point_interface_operands
-                //   .push(sets.sampled_image_2d);
-                //op_entry_point_interface_operands
-                //.push(sets.sampled_image_3d);
+                //     .push(sets.sampled_image_1d);
+                op_entry_point_interface_operands
+                    .push(sets.sampled_image_2d);
+                // op_entry_point_interface_operands
+                //     .push(sets.sampled_image_3d);
+                op_entry_point_interface_operands
+                    .push(sets.samplers);
             }
         }
 

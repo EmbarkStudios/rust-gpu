@@ -1,4 +1,4 @@
-use crate::vector::Vector;
+use crate::{ray_tracing::{RayFlags, RayQuery}, vector::Vector};
 
 /// A handle that points to a rendering related resource (TLAS, Sampler, Buffer, Texture etc)
 /// this handle can be uploaded directly to the GPU to refer to our resources in a bindless
@@ -18,8 +18,8 @@ use crate::vector::Vector;
 /// |------------------|-----|
 /// | Buffers          | 0   |
 /// | Textures         | 1   |
-/// | Storage textures | 2   |
-/// | Tlas             | 3   |
+/// | Sampler          | 2   |
+/// | TLAS             | 3   |
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 #[repr(transparent)]
 pub struct RenderResourceHandle(u32);
@@ -189,13 +189,13 @@ impl<T> ArrayBuffer<T> {
 #[repr(transparent)]
 pub struct Texture2d(RenderResourceHandle);
 
-// #[derive(Copy, Clone)]
-// #[repr(transparent)]
-// struct SamplerState(RenderResourceHandle);
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct Sampler(RenderResourceHandle);
 
 impl Texture2d {
     #[spirv_std_macros::gpu_only]
-    pub fn sample<V: Vector<f32, 4>>(self, coord: impl Vector<f32, 2>) -> V {
+    pub fn sample<V: Vector<f32, 4>>(self, sampler: Sampler, coord: impl Vector<f32, 2>) -> V {
         // jb-todo: also do a bindless fetch of the sampler
         unsafe {
             let mut result = Default::default();
@@ -204,23 +204,34 @@ impl Texture2d {
                 "OpCapability RuntimeDescriptorArray",
                 "OpDecorate %image_2d_var DescriptorSet 1",
                 "OpDecorate %image_2d_var Binding 0",
+                "OpDecorate %sampler_var DescriptorSet 2",
+                "OpDecorate %sampler_var Binding 0",
                 "%uint                  = OpTypeInt 32 0",
                 "%float                 = OpTypeFloat 32",
                 "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
-                "%sampled_image_2d      = OpTypeSampledImage %image_2d",
-                "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
+                "%sampler               = OpTypeSampler",
+                "%image_array           = OpTypeRuntimeArray %image_2d",
+                "%sampler_array         = OpTypeRuntimeArray %sampler",
                 "%ptr_image_array       = OpTypePointer Generic %image_array",
+                "%ptr_sampler_array     = OpTypePointer Generic %sampler_array",
                 "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
-                "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
+                "%sampler_var           = OpVariable %ptr_sampler_array UniformConstant",
+                "%ptr_image_2d          = OpTypePointer Generic %image_2d",
+                "%ptr_sampler           = OpTypePointer Generic %sampler",
                 "", // ^^ type preamble
-                "%offset                = OpLoad _ {1}",
-                "%24                    = OpAccessChain %ptr_sampled_image_2d %image_2d_var %offset",
-                "%25                    = OpLoad %sampled_image_2d %24",
+                "%offset_image          = OpLoad _ {1}",
+                "%image_ptr             = OpAccessChain %ptr_image_2d %image_2d_var %offset_image",
+                "%25                    = OpLoad %image_2d %image_ptr",
+                "%offset_sampler        = OpLoad _ {2}",
+                "%sampler_ptr           = OpAccessChain %ptr_sampler %sampler_var %offset_sampler",
+                "%26                    = OpLoad %sampler %sampler_ptr",
+                "%combined              = OpSampledImage _ %25 %26",
                 "%coord                 = OpLoad _ {0}",
-                "%result                = OpImageSampleImplicitLod _ %25 %coord",
-                "OpStore {2} %result",
+                "%result                = OpImageSampleImplicitLod _ %combined %coord",
+                "OpStore {3} %result",
                 in(reg) &coord,
                 in(reg) &self.0.index(),
+                in(reg) &sampler.0.index(),
                 in(reg) &mut result,
             );
             result
@@ -276,6 +287,61 @@ impl Texture2d {
                 in(reg) &offset_y,
             );
             result
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct AccelerationStructure(RenderResourceHandle);
+
+impl AccelerationStructure {
+    #[spirv_std_macros::gpu_only]
+    #[doc(alias = "OpRayQueryInitializeKHR")]
+    #[inline]
+    #[allow(clippy::too_many_arguments)]
+    pub unsafe fn ray_query_init(
+        &self,
+        ray_query: &mut RayQuery,
+        ray_flags: RayFlags,
+        cull_mask: u32,
+        ray_origin: impl Vector<f32, 3>,
+        ray_tmin: f32,
+        ray_direction: impl Vector<f32, 3>,
+        ray_tmax: f32,
+    ) {
+        asm! {
+            "OpExtension \"SPV_EXT_descriptor_indexing\"",
+            "OpCapability RuntimeDescriptorArray",
+            "OpDecorate %accel_var DescriptorSet 3",
+            "OpDecorate %accel_var Binding 0",
+            "%accel_struct           = OpTypeAccelerationStructureKHR",
+            "%accel_struct_array     = OpTypeRuntimeArray %accel_struct",
+            "%ptr_accel_struct_array = OpTypePointer Generic %accel_struct_array",
+            "%accel_var              = OpVariable %ptr_accel_struct_array UniformConstant",
+            "%ptr_accel_Struct       = OpTypePointer Generic %accel_struct",
+            "%offset                 = OpLoad _ {idx}",
+            "%ptr_accel              = OpAccessChain %ptr_accel_Struct %accel_var %offset",
+            "%acceleration_structure = OpLoad %accel_struct %ptr_accel",
+            "%origin = OpLoad _ {ray_origin}",
+            "%direction = OpLoad _ {ray_direction}",
+            "OpRayQueryInitializeKHR \
+                {ray_query} \
+                %acceleration_structure \
+                {ray_flags} \
+                {cull_mask} \
+                %origin \
+                {ray_tmin} \
+                %direction \
+                {ray_tmax}",
+            ray_query = in(reg) ray_query,
+            idx = in(reg) self.0.index(),
+            ray_flags = in(reg) ray_flags.bits(),
+            cull_mask = in(reg) cull_mask,
+            ray_origin = in(reg) &ray_origin,
+            ray_tmin = in(reg) ray_tmin,
+            ray_direction = in(reg) &ray_direction,
+            ray_tmax = in(reg) ray_tmax,
         }
     }
 }

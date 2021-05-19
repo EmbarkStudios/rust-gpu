@@ -44,6 +44,8 @@ pub struct BindlessDescriptorSets {
     pub sampled_image_1d: Word,
     pub sampled_image_2d: Word,
     pub sampled_image_3d: Word,
+    pub samplers: Word,
+    pub acceleration_structures: Word,
 }
 
 pub struct CodegenCx<'tcx> {
