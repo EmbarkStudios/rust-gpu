@@ -8,6 +8,7 @@ mod import_export_link;
 mod inline;
 mod mem2reg;
 mod new_structurizer;
+mod peephole_opts;
 mod simple_passes;
 mod specializer;
 mod structurizer;
@@ -240,6 +241,15 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
                 // mem2reg produces minimal SSA form, not pruned, so DCE the dead ones
                 dce::dce_phi(func);
             }
+        }
+    }
+
+    {
+        let _timer = sess.timer("peephole_opts");
+        let types = peephole_opts::collect_types(&output);
+        for func in &mut output.functions {
+            peephole_opts::composite_construct(&types, func);
+            peephole_opts::vector_ops(output.header.as_mut().unwrap(), &types, func);
         }
     }
 
