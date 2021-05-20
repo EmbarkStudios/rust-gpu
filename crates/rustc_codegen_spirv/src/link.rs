@@ -86,10 +86,16 @@ fn link_rlib(sess: &Session, codegen_results: &CodegenResults, out_filename: &Pa
     }
     for lib in codegen_results.crate_info.used_libraries.iter() {
         match lib.kind {
-            NativeLibKind::StaticBundle => {}
-            NativeLibKind::StaticNoBundle
-            | NativeLibKind::Dylib
-            | NativeLibKind::Framework
+            NativeLibKind::Static {
+                bundle: None | Some(true),
+                ..
+            } => {}
+            NativeLibKind::Static {
+                bundle: Some(false),
+                ..
+            }
+            | NativeLibKind::Dylib { .. }
+            | NativeLibKind::Framework { .. }
             | NativeLibKind::RawDylib
             | NativeLibKind::Unspecified => continue,
         }
@@ -335,15 +341,18 @@ fn add_upstream_native_libraries(
                 continue;
             }
             match lib.kind {
-                NativeLibKind::Dylib | NativeLibKind::Unspecified => sess.fatal(&format!(
+                NativeLibKind::Dylib { .. } | NativeLibKind::Unspecified => sess.fatal(&format!(
                     "TODO: dylib nativelibkind not supported yet: {}",
                     name
                 )),
-                NativeLibKind::Framework => sess.fatal(&format!(
+                NativeLibKind::Framework { .. } => sess.fatal(&format!(
                     "TODO: framework nativelibkind not supported yet: {}",
                     name
                 )),
-                NativeLibKind::StaticNoBundle => {
+                NativeLibKind::Static {
+                    bundle: Some(false),
+                    ..
+                } => {
                     if data[cnum.as_usize() - 1] == Linkage::Static {
                         sess.fatal(&format!(
                             "TODO: staticnobundle nativelibkind not supported yet: {}",
@@ -351,7 +360,10 @@ fn add_upstream_native_libraries(
                         ))
                     }
                 }
-                NativeLibKind::StaticBundle => {}
+                NativeLibKind::Static {
+                    bundle: None | Some(true),
+                    ..
+                } => {}
                 NativeLibKind::RawDylib => {
                     sess.fatal(&format!("raw_dylib feature not yet implemented: {}", name))
                 }

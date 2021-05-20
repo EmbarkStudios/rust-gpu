@@ -747,7 +747,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<OutRegister<'a>> {
         match token {
-            Token::Word(word) => match word.strip_prefix("%") {
+            Token::Word(word) => match word.strip_prefix('%') {
                 Some(id) => Some(OutRegister::Regular({
                     let num = *id_map.entry(id).or_insert_with(|| self.emit().id());
                     if !defined_ids.insert(num) {
@@ -835,7 +835,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         token: Token<'a, 'cx, 'tcx>,
     ) -> Option<Word> {
         match token {
-            Token::Word(word) => match word.strip_prefix("%") {
+            Token::Word(word) => match word.strip_prefix('%') {
                 Some(id) => Some(*id_map.entry(id).or_insert_with(|| self.emit().id())),
                 None => {
                     self.err("expected ID");

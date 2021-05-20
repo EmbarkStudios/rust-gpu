@@ -212,10 +212,13 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         let linkage = match linkage {
             Linkage::External => Some(LinkageType::Export),
             Linkage::Internal => None,
-            other => self.tcx.sess.fatal(&format!(
-                "TODO: Linkage type not supported yet: {:?}",
-                other
-            )),
+            other => {
+                self.tcx.sess.err(&format!(
+                    "TODO: Linkage type {:?} not supported yet for static var symbol {}",
+                    other, symbol_name
+                ));
+                None
+            }
         };
 
         let g = self.declare_global(span, spvty);
@@ -231,15 +234,21 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
         instance: Instance<'tcx>,
         linkage: Linkage,
         _visibility: Visibility,
-        _symbol_name: &str,
+        symbol_name: &str,
     ) {
         let linkage2 = match linkage {
-            Linkage::External => Some(LinkageType::Export),
+            // super sketchy hack: memcpy, memmove, memset, memcmp, and bcmp in the
+            // compiler_builtins crate use the WeakAny linkage type. Treat it as actually External
+            // linkage because we know there's only one of them.
+            Linkage::External | Linkage::WeakAny => Some(LinkageType::Export),
             Linkage::Internal => None,
-            other => self.tcx.sess.fatal(&format!(
-                "TODO: Linkage type not supported yet: {:?}",
-                other
-            )),
+            other => {
+                self.tcx.sess.err(&format!(
+                    "TODO: Linkage type {:?} not supported yet for function symbol {}",
+                    other, symbol_name
+                ));
+                None
+            }
         };
         let declared = self.declare_fn_ext(instance, linkage2);
 
