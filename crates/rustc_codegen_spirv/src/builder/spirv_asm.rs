@@ -312,7 +312,9 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             }
             .def(self.span(), self),
             Op::TypeSampler => SpirvType::Sampler.def(self.span(), self),
-            Op::TypeAccelerationStructureKHR => SpirvType::AccelerationStructureKhr.def(self.span(), self),
+            Op::TypeAccelerationStructureKHR => {
+                SpirvType::AccelerationStructureKhr.def(self.span(), self)
+            }
             Op::TypeRayQueryKHR => SpirvType::RayQueryKhr.def(self.span(), self),
             Op::Variable => {
                 // OpVariable with Function storage class should be emitted inside the function,
