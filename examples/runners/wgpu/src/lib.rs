@@ -43,9 +43,6 @@
 )]
 
 use clap::Clap;
-use spirv_builder::SpirvBuilder;
-use std::borrow::Cow;
-use std::path::{Path, PathBuf};
 use strum::{Display, EnumString};
 
 mod compute;
@@ -62,6 +59,9 @@ pub enum RustGPUShader {
 fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
+        use spirv_builder::SpirvBuilder;
+        use std::borrow::Cow;
+        use std::path::{Path, PathBuf};
         let crate_name = match shader {
             RustGPUShader::Simplest => "sky-shader",
             RustGPUShader::Sky => "simplest-shader",
