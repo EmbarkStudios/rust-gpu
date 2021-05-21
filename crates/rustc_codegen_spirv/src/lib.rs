@@ -80,6 +80,17 @@
 )]
 #![deny(clippy::unimplemented, clippy::ok_expect)]
 
+// Unfortunately, this will not fail fast when compiling, but rather will wait for
+// rustc_codegen_spirv to be compiled. Putting this in build.rs will solve that problem, however,
+// that creates the much worse problem that then running `cargo check` will cause
+// rustc_codegen_spirv to be *compiled* instead of merely checked, something that takes
+// significantly longer. So, the trade-off between detecting a bad configuration slower for a
+// faster `cargo check` is worth it.
+#[cfg(all(feature = "use-compiled-tools", feature = "use-installed-tools"))]
+compile_error!(
+    "Either \"use-compiled-tools\" (enabled by default) or \"use-installed-tools\" may be enabled."
+);
+
 extern crate rustc_ast;
 extern crate rustc_attr;
 extern crate rustc_codegen_ssa;

@@ -43,6 +43,9 @@
 )]
 
 use clap::Clap;
+use spirv_builder::SpirvBuilder;
+use std::borrow::Cow;
+use std::path::{Path, PathBuf};
 use strum::{Display, EnumString};
 
 mod compute;
@@ -57,6 +60,43 @@ pub enum RustGPUShader {
 }
 
 fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static> {
+    #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+    {
+        let crate_name = match shader {
+            RustGPUShader::Simplest => "sky-shader",
+            RustGPUShader::Sky => "simplest-shader",
+            RustGPUShader::Compute => "compute-shader",
+            RustGPUShader::Mouse => "mouse-shader",
+        };
+        let manifest_dir = env!("CARGO_MANIFEST_DIR");
+        let crate_path = [
+            Path::new(manifest_dir),
+            Path::new(".."),
+            Path::new(".."),
+            Path::new("shaders"),
+            Path::new(crate_name),
+        ]
+        .iter()
+        .copied()
+        .collect::<PathBuf>();
+        let result = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.0")
+            .build()
+            .unwrap();
+        let data = std::fs::read(result).unwrap();
+        let spirv = wgpu::util::make_spirv(&data);
+        let spirv = match spirv {
+            wgpu::ShaderSource::Wgsl(cow) => wgpu::ShaderSource::Wgsl(Cow::Owned(cow.into_owned())),
+            wgpu::ShaderSource::SpirV(cow) => {
+                wgpu::ShaderSource::SpirV(Cow::Owned(cow.into_owned()))
+            }
+        };
+        wgpu::ShaderModuleDescriptor {
+            label: None,
+            source: spirv,
+            flags: wgpu::ShaderFlags::default(),
+        }
+    }
+    #[cfg(any(target_os = "android", target_arch = "wasm32"))]
     match shader {
         RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),
         RustGPUShader::Sky => wgpu::include_spirv!(env!("sky_shader.spv")),
