@@ -20,10 +20,10 @@ fn mouse_button_index(button: MouseButton) -> usize {
 }
 
 async fn run(
-    options: &Options,
     event_loop: EventLoop<()>,
     window: Window,
     swapchain_format: wgpu::TextureFormat,
+    shader_binary: wgpu::ShaderModuleDescriptor<'_>,
 ) {
     let size = window.inner_size();
     let instance = wgpu::Instance::new(wgpu::BackendBit::VULKAN | wgpu::BackendBit::METAL);
@@ -65,7 +65,7 @@ async fn run(
         .expect("Failed to create device");
 
     // Load the shaders from disk
-    let module = device.create_shader_module(&shader_module(options.shader));
+    let module = device.create_shader_module(&shader_binary);
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
@@ -273,6 +273,9 @@ async fn run(
 }
 
 pub fn start(options: &Options) {
+    // Build the shader before we pop open a window, since it might take a while.
+    let shader_binary = shader_module(options.shader);
+
     let event_loop = EventLoop::new();
     let window = winit::window::WindowBuilder::new()
         .with_title("Rust GPU - wgpu")
@@ -303,7 +306,6 @@ pub fn start(options: &Options) {
         } else {
             wgpu_subscriber::initialize_default_subscriber(None);
             futures::executor::block_on(run(
-                options,
                 event_loop,
                 window,
                 if cfg!(target_os = "android") {
@@ -311,6 +313,7 @@ pub fn start(options: &Options) {
                 } else {
                     wgpu::TextureFormat::Bgra8UnormSrgb
                 },
+                shader_binary,
             ));
         }
     }

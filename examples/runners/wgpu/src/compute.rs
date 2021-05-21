@@ -34,10 +34,12 @@ fn create_device_queue() -> (wgpu::Device, wgpu::Queue) {
 }
 
 pub fn start(options: &Options) {
+    let shader_binary = shader_module(options.shader);
+
     let (device, queue) = create_device_queue();
 
     // Load the shaders from disk
-    let module = device.create_shader_module(&shader_module(options.shader));
+    let module = device.create_shader_module(&shader_binary);
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
