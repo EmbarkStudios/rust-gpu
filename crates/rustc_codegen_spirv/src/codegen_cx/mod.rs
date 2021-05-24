@@ -96,12 +96,22 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         let sym = Symbols::get();
 
-        let features = tcx
+        let mut feature_names = tcx
             .sess
             .target_features
             .iter()
             .filter(|s| *s != &sym.bindless)
-            .map(|s| s.as_str().parse())
+            .map(|s| s.as_str())
+            .collect::<Vec<_>>();
+
+        // target_features is a HashSet, not a Vec, so we need to sort to have deterministic
+        // compilation - otherwise, the order of capabilities in binaries depends on the iteration
+        // order of the hashset. Sort by the string, since that's easy.
+        feature_names.sort();
+
+        let features = feature_names
+            .into_iter()
+            .map(|s| s.parse())
             .collect::<Result<_, String>>()
             .unwrap_or_else(|error| {
                 tcx.sess.err(&error);
