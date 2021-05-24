@@ -340,6 +340,28 @@
 <span id="337">337</span>
 <span id="338">338</span>
 <span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
 </pre><pre class="rust">
 <span class="comment">// BEGIN - Embark standard lints v0.3</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -409,8 +431,11 @@
 <span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 <span class="kw">use</span> <span class="ident">std::process</span>::{<span class="ident">Command</span>, <span class="ident">Stdio</span>};
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">rustc_codegen_spirv</span>::{<span class="ident">CompileResult</span>, <span class="ident">ModuleResult</span>};
+
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpirvBuilderError</span> {
+    <span class="ident">CratePathDoesntExist</span>(<span class="ident">PathBuf</span>),
     <span class="ident">BuildFailed</span>,
     <span class="ident">MultiModuleWithPrintMetadata</span>,
     <span class="ident">MetadataFileMissing</span>(<span class="ident">std::io::Error</span>),
@@ -420,6 +445,9 @@
 <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">SpirvBuilderError</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">SpirvBuilderError::CratePathDoesntExist</span>(<span class="ident">path</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Crate path {} does not exist&quot;</span>, <span class="ident">path</span>.<span class="ident">display</span>())
+            }
             <span class="ident">SpirvBuilderError::BuildFailed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Build failed&quot;</span>),
             <span class="ident">SpirvBuilderError::MultiModuleWithPrintMetadata</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Multi-module build cannot be used with print_metadata = true&quot;</span>)
@@ -448,6 +476,7 @@
     <span class="ident">release</span>: <span class="ident">bool</span>,
     <span class="ident">target</span>: <span class="ident">String</span>,
     <span class="ident">bindless</span>: <span class="ident">bool</span>,
+    <span class="ident">multimodule</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">SpirvBuilder</span> {
@@ -456,8 +485,9 @@
             <span class="ident">path_to_crate</span>: <span class="ident">path_to_crate</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>(),
             <span class="ident">print_metadata</span>: <span class="bool-val">true</span>,
             <span class="ident">release</span>: <span class="bool-val">true</span>,
-            <span class="ident">bindless</span>: <span class="bool-val">false</span>,
             <span class="ident">target</span>: <span class="ident">target</span>.<span class="ident">into</span>(),
+            <span class="ident">bindless</span>: <span class="bool-val">false</span>,
+            <span class="ident">multimodule</span>: <span class="bool-val">false</span>,
         }
     }
 
@@ -480,27 +510,40 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Builds the module. Returns the path to the built spir-v file. If `print_metadata` is true,</span>
-    <span class="doccomment">/// you usually don&#39;t have to inspect the path, as the environment variable will already be</span>
-    <span class="doccomment">/// set.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">spirv_module</span> <span class="op">=</span> <span class="ident">invoke_rustc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">env_var</span> <span class="op">=</span> <span class="ident">spirv_module</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>().<span class="ident">to_str</span>().<span class="ident">unwrap</span>();
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print_metadata</span> {
-            <span class="macro">println!</span>(<span class="string">&quot;cargo:rustc-env={}={}&quot;</span>, <span class="ident">env_var</span>, <span class="ident">spirv_module</span>.<span class="ident">display</span>());
-        }
-        <span class="prelude-val">Ok</span>(<span class="ident">spirv_module</span>)
+    <span class="doccomment">/// Splits the resulting SPIR-V file into one module per entry point. This is useful in cases</span>
+    <span class="doccomment">/// where ecosystem tooling has bugs around multiple entry points per module - having all entry</span>
+    <span class="doccomment">/// points bundled into a single file is the preferred system.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">multimodule</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">multimodule</span> <span class="op">=</span> <span class="ident">v</span>;
+        <span class="self">self</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_multimodule</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">PathBuf</span><span class="op">&gt;</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print_metadata</span> {
+    <span class="doccomment">/// Builds the module. If `print_metadata` is true, you usually don&#39;t have to inspect the path</span>
+    <span class="doccomment">/// in the result, as the environment variable for the path to the module will already be set.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CompileResult</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print_metadata</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">multimodule</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SpirvBuilderError::MultiModuleWithPrintMetadata</span>);
         }
-        <span class="kw">let</span> <span class="ident">metadata_file</span> <span class="op">=</span> <span class="ident">invoke_rustc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">path_to_crate</span>.<span class="ident">is_dir</span>() {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SpirvBuilderError::CratePathDoesntExist</span>(<span class="self">self</span>.<span class="ident">path_to_crate</span>));
+        }
+        <span class="kw">let</span> <span class="ident">metadata_file</span> <span class="op">=</span> <span class="ident">invoke_rustc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">metadata_contents</span> <span class="op">=</span>
-            <span class="ident">File::open</span>(<span class="ident">metadata_file</span>).<span class="ident">map_err</span>(<span class="ident">SpirvBuilderError::MetadataFileMissing</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">serde_json::from_reader</span>(<span class="ident">BufReader::new</span>(<span class="ident">metadata_contents</span>))
+            <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">metadata_file</span>).<span class="ident">map_err</span>(<span class="ident">SpirvBuilderError::MetadataFileMissing</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">metadata</span>: <span class="ident">CompileResult</span> <span class="op">=</span> <span class="ident">serde_json::from_reader</span>(<span class="ident">BufReader::new</span>(<span class="ident">metadata_contents</span>))
             .<span class="ident">map_err</span>(<span class="ident">SpirvBuilderError::MetadataFileMalformed</span>)<span class="question-mark">?</span>;
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">metadata</span>.<span class="ident">module</span> {
+            <span class="ident">ModuleResult::SingleModule</span>(<span class="ident">spirv_module</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">multimodule</span>);
+                <span class="kw">let</span> <span class="ident">env_var</span> <span class="op">=</span> <span class="ident">metadata_file</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>().<span class="ident">to_str</span>().<span class="ident">unwrap</span>();
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print_metadata</span> {
+                    <span class="macro">println!</span>(<span class="string">&quot;cargo:rustc-env={}={}&quot;</span>, <span class="ident">env_var</span>, <span class="ident">spirv_module</span>.<span class="ident">display</span>());
+                }
+            }
+            <span class="ident">ModuleResult::MultiModule</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">assert!</span>(<span class="self">self</span>.<span class="ident">multimodule</span>);
+            }
+        }
         <span class="prelude-val">Ok</span>(<span class="ident">metadata</span>)
     }
 }
@@ -537,8 +580,8 @@
     <span class="macro">panic!</span>(<span class="string">&quot;Could not find {} in library path&quot;</span>, <span class="ident">filename</span>);
 }
 
-<span class="comment">// Note: in case of multimodule, returns path to the metadata json</span>
-<span class="kw">fn</span> <span class="ident">invoke_rustc</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">SpirvBuilder</span>, <span class="ident">multimodule</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
+<span class="comment">// Returns path to the metadata json.</span>
+<span class="kw">fn</span> <span class="ident">invoke_rustc</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">SpirvBuilder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
     <span class="comment">// Okay, this is a little bonkers: in a normal world, we&#39;d have the user clone</span>
     <span class="comment">// rustc_codegen_spirv and pass in the path to it, and then we&#39;d invoke cargo to build it, grab</span>
     <span class="comment">// the resulting .so, and pass it into -Z codegen-backend. But that&#39;s really gross: the user</span>
@@ -548,7 +591,8 @@
     <span class="comment">// rustc expects a full path, instead of a filename looked up via LD_LIBRARY_PATH, so we need</span>
     <span class="comment">// to copy cargo&#39;s understanding of library lookup and find the library and its full path.</span>
     <span class="kw">let</span> <span class="ident">rustc_codegen_spirv</span> <span class="op">=</span> <span class="ident">find_rustc_codegen_spirv</span>();
-    <span class="kw">let</span> <span class="ident">llvm_args</span> <span class="op">=</span> <span class="ident">multimodule</span>
+    <span class="kw">let</span> <span class="ident">llvm_args</span> <span class="op">=</span> <span class="ident">builder</span>
+        .<span class="ident">multimodule</span>
         .<span class="ident">then</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot; -C llvm-args=--module-output=multiple&quot;</span>)
         .<span class="ident">unwrap_or_default</span>();
 

@@ -551,8 +551,36 @@
 <span id="548">548</span>
 <span id="549">549</span>
 <span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
 </pre><pre class="rust">
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">linker</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">linker</span>, <span class="ident">CompileResult</span>, <span class="ident">ModuleResult</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>,
+};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::back::lto</span>::{<span class="ident">LtoModuleCodegen</span>, <span class="ident">SerializedModule</span>, <span class="ident">ThinModule</span>, <span class="ident">ThinShared</span>};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::back::write::CodegenContext</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::{<span class="ident">CodegenResults</span>, <span class="ident">NativeLib</span>};
@@ -693,30 +721,54 @@
 
     <span class="kw">let</span> <span class="ident">cg_args</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::codegen_cx::CodegenArgs::from_session</span>(<span class="ident">sess</span>);
 
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">root_file_name</span> <span class="op">=</span> <span class="ident">out_filename</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>().<span class="ident">to_owned</span>();
+    <span class="ident">root_file_name</span>.<span class="ident">push</span>(<span class="string">&quot;.dir&quot;</span>);
+    <span class="kw">let</span> <span class="ident">out_dir</span> <span class="op">=</span> <span class="ident">out_filename</span>.<span class="ident">with_file_name</span>(<span class="ident">root_file_name</span>);
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">out_dir</span>.<span class="ident">is_dir</span>() {
+        <span class="ident">std::fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">out_dir</span>).<span class="ident">unwrap</span>();
+    }
+
     <span class="kw">use</span> <span class="ident">rspirv::binary::Assemble</span>;
-    <span class="kw">match</span> <span class="ident">spv_binary</span> {
+    <span class="kw">let</span> <span class="ident">compile_result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">spv_binary</span> {
         <span class="ident">linker::LinkResult::SingleModule</span>(<span class="ident">spv_binary</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">post_link_single_module</span>(<span class="ident">sess</span>, <span class="ident">spv_binary</span>.<span class="ident">assemble</span>(), <span class="ident">out_filename</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module_filename</span> <span class="op">=</span> <span class="ident">out_dir</span>;
+            <span class="ident">module_filename</span>.<span class="ident">push</span>(<span class="string">&quot;module&quot;</span>);
+            <span class="ident">post_link_single_module</span>(<span class="ident">sess</span>, <span class="ident">spv_binary</span>.<span class="ident">assemble</span>(), <span class="kw-2">&amp;</span><span class="ident">module_filename</span>);
             <span class="ident">cg_args</span>.<span class="ident">do_disassemble</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>);
+            <span class="kw">let</span> <span class="ident">module_result</span> <span class="op">=</span> <span class="ident">ModuleResult::SingleModule</span>(<span class="ident">module_filename</span>);
+            <span class="ident">CompileResult</span> {
+                <span class="ident">module</span>: <span class="ident">module_result</span>,
+                <span class="ident">entry_points</span>: <span class="ident">entry_points</span>(<span class="kw-2">&amp;</span><span class="ident">spv_binary</span>),
+            }
         }
         <span class="ident">linker::LinkResult::MultipleModules</span>(<span class="ident">map</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">root_file_name</span> <span class="op">=</span> <span class="ident">out_filename</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>().<span class="ident">to_owned</span>();
-            <span class="ident">root_file_name</span>.<span class="ident">push</span>(<span class="string">&quot;.dir&quot;</span>);
-            <span class="kw">let</span> <span class="ident">out_dir</span> <span class="op">=</span> <span class="ident">out_filename</span>.<span class="ident">with_file_name</span>(<span class="ident">root_file_name</span>);
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">out_dir</span>.<span class="ident">is_dir</span>() {
-                <span class="ident">std::fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">out_dir</span>).<span class="ident">unwrap</span>();
-            }
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashmap</span> <span class="op">=</span> <span class="ident">FxHashMap::default</span>();
+            <span class="kw">let</span> <span class="ident">entry_points</span> <span class="op">=</span> <span class="ident">map</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
             <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">spv_binary</span>) <span class="kw">in</span> <span class="ident">map</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">module_filename</span> <span class="op">=</span> <span class="ident">out_dir</span>.<span class="ident">clone</span>();
                 <span class="ident">module_filename</span>.<span class="ident">push</span>(<span class="ident">sanitize_filename::sanitize</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>));
                 <span class="ident">post_link_single_module</span>(<span class="ident">sess</span>, <span class="ident">spv_binary</span>.<span class="ident">assemble</span>(), <span class="kw-2">&amp;</span><span class="ident">module_filename</span>);
                 <span class="ident">hashmap</span>.<span class="ident">insert</span>(<span class="ident">name</span>, <span class="ident">module_filename</span>);
             }
-            <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="ident">out_filename</span>).<span class="ident">unwrap</span>();
-            <span class="ident">serde_json::to_writer</span>(<span class="ident">BufWriter::new</span>(<span class="ident">file</span>), <span class="kw-2">&amp;</span><span class="ident">hashmap</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">module_result</span> <span class="op">=</span> <span class="ident">ModuleResult::MultiModule</span>(<span class="ident">hashmap</span>);
+            <span class="ident">CompileResult</span> {
+                <span class="ident">module</span>: <span class="ident">module_result</span>,
+                <span class="ident">entry_points</span>,
+            }
         }
-    }
+    };
+
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="ident">out_filename</span>).<span class="ident">unwrap</span>();
+    <span class="ident">serde_json::to_writer</span>(<span class="ident">BufWriter::new</span>(<span class="ident">file</span>), <span class="kw-2">&amp;</span><span class="ident">compile_result</span>).<span class="ident">unwrap</span>();
+}
+
+<span class="kw">fn</span> <span class="ident">entry_points</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">rspirv::dr::Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="ident">module</span>
+        .<span class="ident">entry_points</span>
+        .<span class="ident">iter</span>()
+        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rspirv::spirv::Op::EntryPoint</span>)
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">2</span>].<span class="ident">unwrap_literal_string</span>().<span class="ident">to_string</span>())
+        .<span class="ident">collect</span>()
 }
 
 <span class="kw">fn</span> <span class="ident">post_link_single_module</span>(<span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>, <span class="ident">spv_binary</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">out_filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) {

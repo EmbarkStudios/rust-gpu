@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["MemoryModel",""],["SpirvBuilderError",""]],"struct":[["SpirvBuilder",""]]});
+initSidebarItems({"enum":[["MemoryModel",""],["ModuleResult",""],["SpirvBuilderError",""]],"struct":[["CompileResult",""],["SpirvBuilder",""]]});
