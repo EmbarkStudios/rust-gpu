@@ -87,11 +87,12 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static>
         .iter()
         .copied()
         .collect::<PathBuf>();
-        let result = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.0")
+        let compile_result = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.0")
             .print_metadata(false)
             .build()
             .unwrap();
-        let data = std::fs::read(result).unwrap();
+        let module_path = compile_result.module.unwrap_single();
+        let data = std::fs::read(module_path).unwrap();
         let spirv = wgpu::util::make_spirv(&data);
         let spirv = match spirv {
             wgpu::ShaderSource::Wgsl(cow) => wgpu::ShaderSource::Wgsl(Cow::Owned(cow.into_owned())),

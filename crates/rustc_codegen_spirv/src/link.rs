@@ -1,4 +1,6 @@
-use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
+use crate::{
+    linker, CompileResult, ModuleResult, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer,
+};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::{CodegenResults, NativeLib};
@@ -139,30 +141,54 @@ fn link_exe(
 
     let cg_args = crate::codegen_cx::CodegenArgs::from_session(sess);
 
+    let mut root_file_name = out_filename.file_name().unwrap().to_owned();
+    root_file_name.push(".dir");
+    let out_dir = out_filename.with_file_name(root_file_name);
+    if !out_dir.is_dir() {
+        std::fs::create_dir_all(&out_dir).unwrap();
+    }
+
     use rspirv::binary::Assemble;
-    match spv_binary {
+    let compile_result = match spv_binary {
         linker::LinkResult::SingleModule(spv_binary) => {
-            post_link_single_module(sess, spv_binary.assemble(), out_filename);
+            let mut module_filename = out_dir;
+            module_filename.push("module");
+            post_link_single_module(sess, spv_binary.assemble(), &module_filename);
             cg_args.do_disassemble(&spv_binary);
+            let module_result = ModuleResult::SingleModule(module_filename);
+            CompileResult {
+                module: module_result,
+                entry_points: entry_points(&spv_binary),
+            }
         }
         linker::LinkResult::MultipleModules(map) => {
-            let mut root_file_name = out_filename.file_name().unwrap().to_owned();
-            root_file_name.push(".dir");
-            let out_dir = out_filename.with_file_name(root_file_name);
-            if !out_dir.is_dir() {
-                std::fs::create_dir_all(&out_dir).unwrap();
-            }
             let mut hashmap = FxHashMap::default();
+            let entry_points = map.keys().cloned().collect();
             for (name, spv_binary) in map {
                 let mut module_filename = out_dir.clone();
                 module_filename.push(sanitize_filename::sanitize(&name));
                 post_link_single_module(sess, spv_binary.assemble(), &module_filename);
                 hashmap.insert(name, module_filename);
             }
-            let file = File::create(out_filename).unwrap();
-            serde_json::to_writer(BufWriter::new(file), &hashmap).unwrap();
+            let module_result = ModuleResult::MultiModule(hashmap);
+            CompileResult {
+                module: module_result,
+                entry_points,
+            }
         }
-    }
+    };
+
+    let file = File::create(out_filename).unwrap();
+    serde_json::to_writer(BufWriter::new(file), &compile_result).unwrap();
+}
+
+fn entry_points(module: &rspirv::dr::Module) -> Vec<String> {
+    module
+        .entry_points
+        .iter()
+        .filter(|inst| inst.class.opcode == rspirv::spirv::Op::EntryPoint)
+        .map(|inst| inst.operands[2].unwrap_literal_string().to_string())
+        .collect()
 }
 
 fn post_link_single_module(sess: &Session, spv_binary: Vec<u32>, out_filename: &Path) {
