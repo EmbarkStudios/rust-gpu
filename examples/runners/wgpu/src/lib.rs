@@ -59,7 +59,7 @@ pub enum RustGPUShader {
 fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
-        use spirv_builder::SpirvBuilder;
+        use spirv_builder::{Capability, SpirvBuilder};
         use std::borrow::Cow;
         use std::path::{Path, PathBuf};
         // Hack: spirv_builder builds into a custom directory if running under cargo, to not
@@ -70,11 +70,14 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static>
         // under cargo by setting these environment variables.
         std::env::set_var("OUT_DIR", env!("OUT_DIR"));
         std::env::set_var("PROFILE", env!("PROFILE"));
-        let crate_name = match shader {
-            RustGPUShader::Simplest => "sky-shader",
-            RustGPUShader::Sky => "simplest-shader",
-            RustGPUShader::Compute => "compute-shader",
-            RustGPUShader::Mouse => "mouse-shader",
+        let (crate_name, capabilities): (_, &[Capability]) = match shader {
+            RustGPUShader::Simplest => ("sky-shader", &[]),
+            RustGPUShader::Sky => ("simplest-shader", &[]),
+            RustGPUShader::Compute => ("compute-shader", &[]),
+            RustGPUShader::Mouse => (
+                "mouse-shader",
+                &[Capability::Int8, Capability::Int16, Capability::Int64],
+            ),
         };
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
         let crate_path = [
@@ -87,10 +90,12 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static>
         .iter()
         .copied()
         .collect::<PathBuf>();
-        let compile_result = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.0")
-            .print_metadata(false)
-            .build()
-            .unwrap();
+        let mut builder =
+            SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.0").print_metadata(false);
+        for &cap in capabilities {
+            builder = builder.capability(cap);
+        }
+        let compile_result = builder.build().unwrap();
         let module_path = compile_result.module.unwrap_single();
         let data = std::fs::read(module_path).unwrap();
         let spirv = wgpu::util::make_spirv(&data);
