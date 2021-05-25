@@ -538,9 +538,6 @@
 <span id="535">535</span>
 <span id="536">536</span>
 <span id="537">537</span>
-<span id="538">538</span>
-<span id="539">539</span>
-<span id="540">540</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::abi::ConvSpirvType</span>;
@@ -550,7 +547,7 @@
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::mir::place::PlaceRef</span>;
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">ConstMethods</span>, <span class="ident">MiscMethods</span>, <span class="ident">StaticMethods</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle::mir::interpret</span>::{<span class="ident">AllocId</span>, <span class="ident">Allocation</span>, <span class="ident">GlobalAlloc</span>, <span class="ident">Pointer</span>, <span class="ident">ScalarMaybeUninit</span>};
+<span class="kw">use</span> <span class="ident">rustc_middle::mir::interpret</span>::{<span class="ident">alloc_range</span>, <span class="ident">Allocation</span>, <span class="ident">GlobalAlloc</span>, <span class="ident">ScalarMaybeUninit</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle::ty::layout::TyAndLayout</span>;
 <span class="kw">use</span> <span class="ident">rustc_mir::interpret::Scalar</span>;
 <span class="kw">use</span> <span class="ident">rustc_span::symbol::Symbol</span>;
@@ -959,10 +956,7 @@
                 <span class="comment">// only uses the input alloc_id in the case that the scalar is uninitilized</span>
                 <span class="comment">// as part of the error output</span>
                 <span class="comment">// tldr, the pointer here is only needed for the offset</span>
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">alloc</span>
-                    .<span class="ident">read_scalar</span>(<span class="self">self</span>, <span class="ident">Pointer::new</span>(<span class="ident">AllocId</span>(<span class="number">0</span>), <span class="kw-2">*</span><span class="ident">offset</span>), <span class="ident">size</span>)
-                    .<span class="ident">unwrap</span>()
-                {
+                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">alloc</span>.<span class="ident">read_scalar</span>(<span class="self">self</span>, <span class="ident">alloc_range</span>(<span class="kw-2">*</span><span class="ident">offset</span>, <span class="ident">size</span>)).<span class="ident">unwrap</span>() {
                     <span class="ident">ScalarMaybeUninit::Scalar</span>(<span class="ident">scalar</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="self">self</span>.<span class="ident">scalar_to_backend</span>(<span class="ident">scalar</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">primitive_to_scalar</span>(<span class="ident">primitive</span>), <span class="ident">ty</span>)
                     }
