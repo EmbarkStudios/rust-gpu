@@ -292,7 +292,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let mut op_entry_point_interface_operands = vec![];
 
-        let mut bx = Builder::new_block(self, stub_fn, "");
+        let mut bx = Builder::build(self, Builder::append_block(self, stub_fn, ""));
         let mut call_args = vec![];
         let mut decoration_locations = FxHashMap::default();
         for (entry_arg_abi, hir_param) in arg_abis.iter().zip(hir_params) {

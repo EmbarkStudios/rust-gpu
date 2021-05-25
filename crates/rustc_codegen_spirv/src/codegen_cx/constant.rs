@@ -6,7 +6,7 @@ use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
-use rustc_middle::mir::interpret::{AllocId, Allocation, GlobalAlloc, Pointer, ScalarMaybeUninit};
+use rustc_middle::mir::interpret::{alloc_range, Allocation, GlobalAlloc, ScalarMaybeUninit};
 use rustc_middle::ty::layout::TyAndLayout;
 use rustc_mir::interpret::Scalar;
 use rustc_span::symbol::Symbol;
@@ -415,10 +415,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 // only uses the input alloc_id in the case that the scalar is uninitilized
                 // as part of the error output
                 // tldr, the pointer here is only needed for the offset
-                let value = match alloc
-                    .read_scalar(self, Pointer::new(AllocId(0), *offset), size)
-                    .unwrap()
-                {
+                let value = match alloc.read_scalar(self, alloc_range(*offset, size)).unwrap() {
                     ScalarMaybeUninit::Scalar(scalar) => {
                         self.scalar_to_backend(scalar, &self.primitive_to_scalar(primitive), ty)
                     }

@@ -464,45 +464,23 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 }
 
 impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
-    fn new_block<'b>(cx: &'a Self::CodegenCx, llfn: Self::Function, _name: &'b str) -> Self {
-        let cursor_fn = cx.builder.select_function_by_id(llfn.def_cx(cx));
-        let label = cx.emit_with_cursor(cursor_fn).begin_block(None).unwrap();
-        let cursor = cx.builder.select_block_by_id(label);
+    fn build(cx: &'a Self::CodegenCx, llbb: Self::BasicBlock) -> Self {
+        let cursor = cx.builder.select_block_by_id(llbb);
+        // FIXME(eddyb) change `Self::Function` to be more like a function index.
+        let current_fn = {
+            let emit = cx.emit_with_cursor(cursor);
+            let selected_function = emit.selected_function().unwrap();
+            let selected_function = &emit.module_ref().functions[selected_function];
+            let def_inst = selected_function.def.as_ref().unwrap();
+            let def = def_inst.result_id.unwrap();
+            let ty = def_inst.operands[1].unwrap_id_ref();
+            def.with_type(ty)
+        };
         Self {
             cx,
             cursor,
-            current_fn: llfn,
-            basic_block: label,
-            current_span: Default::default(),
-        }
-    }
-
-    fn with_cx(cx: &'a Self::CodegenCx) -> Self {
-        // Note: all defaults here *must* be filled out by position_at_end
-        Self {
-            cx,
-            cursor: Default::default(),
-            current_fn: 0.with_type(0),
-            basic_block: Default::default(),
-            current_span: Default::default(),
-        }
-    }
-
-    fn build_sibling_block(&self, _name: &str) -> Self {
-        let mut builder = self.emit_with_cursor(BuilderCursor {
-            function: self.cursor.function,
-            block: None,
-        });
-        let new_bb = builder.begin_block(None).unwrap();
-        let new_cursor = BuilderCursor {
-            function: self.cursor.function,
-            block: builder.selected_block(),
-        };
-        Self {
-            cx: self.cx,
-            cursor: new_cursor,
-            current_fn: self.current_fn,
-            basic_block: new_bb,
+            current_fn,
+            basic_block: llbb,
             current_span: Default::default(),
         }
     }
@@ -525,20 +503,42 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .line(file, loc.line as u32, loc.col_display as u32);
     }
 
-    fn position_at_end(&mut self, llbb: Self::BasicBlock) {
-        let cursor = self.cx.builder.select_block_by_id(llbb);
-        let current_fn = {
-            let emit = self.emit_with_cursor(cursor);
-            let selected_function = emit.selected_function().unwrap();
-            let selected_function = &emit.module_ref().functions[selected_function];
-            let def_inst = selected_function.def.as_ref().unwrap();
-            let def = def_inst.result_id.unwrap();
-            let ty = def_inst.operands[1].unwrap_id_ref();
-            def.with_type(ty)
+    // FIXME(eddyb) change `Self::Function` to be more like a function index.
+    fn append_block(
+        cx: &'a Self::CodegenCx,
+        llfn: Self::Function,
+        _name: &str,
+    ) -> Self::BasicBlock {
+        let cursor_fn = cx.builder.select_function_by_id(llfn.def_cx(cx));
+        cx.emit_with_cursor(cursor_fn).begin_block(None).unwrap()
+    }
+
+    fn append_sibling_block(&mut self, _name: &str) -> Self::BasicBlock {
+        self.emit_with_cursor(BuilderCursor {
+            function: self.cursor.function,
+            block: None,
+        })
+        .begin_block(None)
+        .unwrap()
+    }
+
+    fn build_sibling_block(&mut self, _name: &str) -> Self {
+        let mut builder = self.emit_with_cursor(BuilderCursor {
+            function: self.cursor.function,
+            block: None,
+        });
+        let new_bb = builder.begin_block(None).unwrap();
+        let new_cursor = BuilderCursor {
+            function: self.cursor.function,
+            block: builder.selected_block(),
         };
-        self.cursor = cursor;
-        self.current_fn = current_fn;
-        self.basic_block = llbb;
+        Self {
+            cx: self.cx,
+            cursor: new_cursor,
+            current_fn: self.current_fn,
+            basic_block: new_bb,
+            current_span: Default::default(),
+        }
     }
 
     fn ret_void(&mut self) {
@@ -2205,11 +2205,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn zext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         self.intcast(val, dest_ty, false)
-    }
-
-    unsafe fn delete_basic_block(&mut self, _bb: Self::BasicBlock) {
-        // Ignore: If we were to delete the block, then other builder's selected_block index would become invalid, due
-        // to shifting blocks.
     }
 
     fn do_not_inline(&mut self, _llret: Self::Value) {
