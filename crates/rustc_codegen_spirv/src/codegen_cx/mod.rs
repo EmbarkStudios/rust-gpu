@@ -277,6 +277,14 @@ pub struct CodegenArgs {
     pub disassemble_fn: Option<String>,
     pub disassemble_entry: Option<String>,
     pub disassemble_globals: bool,
+
+    // spirv-val flags
+    pub relax_struct_store: bool,
+    pub relax_logical_pointer: bool,
+    pub relax_block_layout: Option<bool>,
+    pub uniform_buffer_standard_layout: bool,
+    pub scalar_block_layout: bool,
+    pub skip_block_layout: bool,
 }
 
 impl CodegenArgs {
@@ -305,6 +313,14 @@ impl CodegenArgs {
             "NAME",
         );
         opts.optflagopt("", "disassemble-globals", "print globals to stderr", "");
+
+        opts.optflagopt("", "relax-struct-store", "Allow store from one struct type to a different type with compatible layout and members.", "");
+        opts.optflagopt("", "relax-logical-pointer", "Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode", "");
+        opts.optflagopt("", "relax-block-layout", "Enable VK_KHR_relaxed_block_layout when checking standard uniform, storage buffer, and push constant layouts. This is the default when targeting Vulkan 1.1 or later.", "");
+        opts.optflagopt("", "uniform-buffer-standard-layout", "Enable VK_KHR_uniform_buffer_standard_layout when checking standard uniform buffer layouts.", "");
+        opts.optflagopt("", "scalar-block-layout", "Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.", "");
+        opts.optflagopt("", "skip-block-layout", "Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.", "");
+
         let matches = opts.parse(args)?;
         let module_output_type =
             matches.opt_get_default("module-output", ModuleOutputType::Single)?;
@@ -312,12 +328,29 @@ impl CodegenArgs {
         let disassemble_fn = matches.opt_str("disassemble-fn");
         let disassemble_entry = matches.opt_str("disassemble-entry");
         let disassemble_globals = matches.opt_present("disassemble-globals");
+
+        let relax_struct_store = matches.opt_present("relax-struct-store");
+        let relax_logical_pointer = matches.opt_present("relax-logical-pointer");
+        let relax_block_layout = matches.opt_present("relax-block-layout");
+        let uniform_buffer_standard_layout = matches.opt_present("uniform-buffer-standard-layout");
+        let scalar_block_layout = matches.opt_present("scalar-block-layout");
+        let skip_block_layout = matches.opt_present("skip-block-layout");
+
+        let relax_block_layout = if relax_block_layout { Some(true) } else { None };
+
         Ok(Self {
             module_output_type,
             disassemble,
             disassemble_fn,
             disassemble_entry,
             disassemble_globals,
+
+            relax_struct_store,
+            relax_logical_pointer,
+            relax_block_layout,
+            uniform_buffer_standard_layout,
+            scalar_block_layout,
+            skip_block_layout,
         })
     }
 

@@ -61,6 +61,7 @@ use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::fmt;
+use std::fmt::Write;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
@@ -115,6 +116,14 @@ pub struct SpirvBuilder {
     multimodule: bool,
     capabilities: Vec<Capability>,
     extensions: Vec<String>,
+
+    // spirv-val flags
+    pub relax_struct_store: bool,
+    pub relax_logical_pointer: bool,
+    pub relax_block_layout: bool,
+    pub uniform_buffer_standard_layout: bool,
+    pub scalar_block_layout: bool,
+    pub skip_block_layout: bool,
 }
 
 impl SpirvBuilder {
@@ -128,6 +137,13 @@ impl SpirvBuilder {
             multimodule: false,
             capabilities: Vec::new(),
             extensions: Vec::new(),
+
+            relax_struct_store: false,
+            relax_logical_pointer: false,
+            relax_block_layout: false,
+            uniform_buffer_standard_layout: false,
+            scalar_block_layout: false,
+            skip_block_layout: false,
         }
     }
 
@@ -169,6 +185,48 @@ impl SpirvBuilder {
     /// done via `#[cfg(target_feature = "ext:the_extension")]`.
     pub fn extension(mut self, extension: impl Into<String>) -> Self {
         self.extensions.push(extension.into());
+        self
+    }
+
+    /// Allow store from one struct type to a different type with compatible layout and members.
+    pub fn relax_struct_store(mut self, v: bool) -> Self {
+        self.relax_struct_store = v;
+        self
+    }
+
+    /// Allow allocating an object of a pointer type and returning a pointer value from a function
+    /// in logical addressing mode
+    pub fn relax_logical_pointer(mut self, v: bool) -> Self {
+        self.relax_logical_pointer = v;
+        self
+    }
+
+    /// Enable `VK_KHR_relaxed_block_layout` when checking standard uniform, storage buffer, and
+    /// push constant layouts. This is the default when targeting Vulkan 1.1 or later.
+    pub fn relax_block_layout(mut self, v: bool) -> Self {
+        self.relax_block_layout = v;
+        self
+    }
+
+    /// Enable `VK_KHR_uniform_buffer_standard_layout` when checking standard uniform buffer
+    /// layouts.
+    pub fn uniform_buffer_standard_layout(mut self, v: bool) -> Self {
+        self.uniform_buffer_standard_layout = v;
+        self
+    }
+
+    /// Enable `VK_EXT_scalar_block_layout` when checking standard uniform, storage buffer, and
+    /// push constant layouts. Scalar layout rules are more permissive than relaxed block layout so
+    /// in effect this will override the --relax-block-layout option.
+    pub fn scalar_block_layout(mut self, v: bool) -> Self {
+        self.scalar_block_layout = v;
+        self
+    }
+
+    /// Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or
+    /// --scalar-block-layout option.
+    pub fn skip_block_layout(mut self, v: bool) -> Self {
+        self.skip_block_layout = v;
         self
     }
 
@@ -245,10 +303,44 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // rustc expects a full path, instead of a filename looked up via LD_LIBRARY_PATH, so we need
     // to copy cargo's understanding of library lookup and find the library and its full path.
     let rustc_codegen_spirv = find_rustc_codegen_spirv();
-    let llvm_args = builder
-        .multimodule
-        .then(|| " -C llvm-args=--module-output=multiple")
-        .unwrap_or_default();
+
+    let mut llvm_args = Vec::new();
+    if builder.multimodule {
+        llvm_args.push("--module-output=multiple");
+    }
+    if builder.relax_struct_store {
+        llvm_args.push("--relax-struct-store");
+    }
+    if builder.relax_logical_pointer {
+        llvm_args.push("--relax-logical-pointer");
+    }
+    if builder.relax_block_layout {
+        llvm_args.push("--relax-block-layout");
+    }
+    if builder.uniform_buffer_standard_layout {
+        llvm_args.push("--uniform-buffer-standard-layout");
+    }
+    if builder.scalar_block_layout {
+        llvm_args.push("--scalar-block-layout");
+    }
+    if builder.skip_block_layout {
+        llvm_args.push("--skip-block-layout");
+    }
+
+    let llvm_args = if llvm_args.is_empty() {
+        String::new()
+    } else {
+        // Cargo's handling of RUSTFLAGS is a little cursed. -Cllvm-args is documented as "The list
+        // must be separated by spaces", but if we set RUSTFLAGS='-C llvm-args="--foo --bar"', then
+        // cargo will pass -C 'llvm-args="--foo' '--bar"' to rustc. Like, really? c'mon.
+        // Thankfully, passing -C llvm-args multiple times appends to a list, instead of
+        // overwriting.
+        let mut result = String::new();
+        for arg in llvm_args {
+            write!(result, " -C llvm-args={}", arg).unwrap();
+        }
+        result
+    };
 
     let mut target_features = Vec::new();
 
