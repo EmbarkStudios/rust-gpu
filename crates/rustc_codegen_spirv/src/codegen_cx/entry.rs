@@ -478,8 +478,15 @@ impl<'tcx> CodegenCx<'tcx> {
         // This "interface block" construct is also required for "runtime arrays".
         let is_unsized = self.lookup_type(value_spirv_type).sizeof(self).is_none();
         let is_pair = matches!(entry_arg_abi.mode, PassMode::Pair(..));
-        // is_pair implies is_unsized (but is_unsized doesn't imply is_pair, for RuntimeArray<T>)
-        assert!(!is_pair || is_unsized);
+        let is_unsized_with_len = is_pair && is_unsized;
+        if is_pair && !is_unsized {
+            // If PassMode is Pair, then we need to fill in the second part of the pair with a
+            // value. We currently only do that with unsized types, so if a type is a pair for some
+            // other reason (e.g. a tuple), we bail.
+            self.tcx
+                .sess
+                .span_fatal(hir_param.ty_span, "pair type not supported yet")
+        }
         let var_ptr_spirv_type;
         let (value_ptr, value_len) = match storage_class {
             StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer => {
@@ -492,7 +499,7 @@ impl<'tcx> CodegenCx<'tcx> {
 
                 let value_ptr = bx.struct_gep(var.with_type(var_ptr_spirv_type), 0);
 
-                let value_len = if is_pair {
+                let value_len = if is_unsized_with_len {
                     match self.lookup_type(value_spirv_type) {
                         SpirvType::RuntimeArray { .. } => {}
                         _ => self.tcx.sess.span_err(
@@ -527,10 +534,10 @@ impl<'tcx> CodegenCx<'tcx> {
 
                 match self.lookup_type(value_spirv_type) {
                     SpirvType::RuntimeArray { .. } => {
-                        if is_pair {
+                        if is_unsized_with_len {
                             self.tcx.sess.span_err(
                                 hir_param.ty_span,
-                                "uniform_constant buffers must use &RuntimeArray<T>, not &[T]",
+                                "uniform_constant must use &RuntimeArray<T>, not &[T]",
                             )
                         }
                     }

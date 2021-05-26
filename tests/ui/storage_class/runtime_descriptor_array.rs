@@ -1,11 +1,11 @@
 // build-pass
-use spirv_std::{Image2d, RuntimeArray, Sampler};
+use spirv_std::{Image, RuntimeArray, Sampler};
 
 #[spirv(fragment)]
 pub fn main(
     #[spirv(descriptor_set = 0, binding = 0)] sampler: &Sampler,
-    #[spirv(descriptor_set = 0, binding = 1)] slice: &RuntimeArray<Image2d>,
-    #[spirv(descriptor_set = 0, binding = 2)] sized_slice: &[Image2d; 5],
+    #[spirv(descriptor_set = 0, binding = 1)] slice: &RuntimeArray<Image!(2D, type=f32, sampled)>,
+    #[spirv(descriptor_set = 0, binding = 2)] sized_slice: &[Image!(2D, type=f32, sampled); 5],
     output: &mut glam::Vec4,
 ) {
     unsafe {
