@@ -119,7 +119,9 @@ struct Rectangle {
 
 impl Shape for Rectangle {
     fn distance(self, p: Vec2) -> f32 {
-        ((p - self.center).abs() - self.size / 2.0).max_element()
+        let diff = p - self.center;
+        let diff = vec2(diff.x.abs(), diff.y.abs());
+        (diff - self.size / 2.0).max_element()
     }
 }
 
@@ -158,15 +160,10 @@ pub fn main_fs(
         let from_coord = move |coord: Vec2| (coord / resolution) * 2.0 - Vec2::splat(1.0);
         let v = from_coord(frag_coord);
         let mut distance = v.length();
-        if drag_start != drag_end {
-            distance /= 1.0
-                + (v - from_coord(drag_start))
-                    .extend(0.0)
-                    .cross((from_coord(drag_end) - from_coord(drag_start)).extend(0.0))
-                    .length()
-                    .min(1.0)
-                    .powf(2.0);
-        }
+        let to_frag = v - from_coord(drag_start);
+        let start_to_end = from_coord(drag_end) - from_coord(drag_start);
+        let det = to_frag.perp_dot(start_to_end).abs();
+        distance /= 1.0 + det.min(1.0).powf(2.0);
         let t = constants.time;
         let rot = move |factor: f32| {
             (Mat2::from_angle((t / 3.0 + distance * factor).sin() * 3.0) * v).normalize()
@@ -175,7 +172,11 @@ pub fn main_fs(
         let rg = rot(2.0 + seed); // yellow
         let rb = rot(3.0 + seed + rg.y); // magenta
         let gb = rot(5.0 + seed + rb.x); // cyan
-        let color = (vec3(rg.x - rb.x, rg.y - gb.x, rb.y - gb.y).abs() / 2.0)
+        let color = (vec3(
+            (rg.x - rb.x).abs(),
+            (rg.y - gb.x).abs(),
+            (rb.y - gb.y).abs(),
+        ) / 2.0)
             .min(Vec3::splat(1.0))
             .powf(1.2);
         let vignette = smoothstep(1.0, 0.0, (v.x * v.y).abs());
@@ -191,7 +192,7 @@ pub fn main_fs(
     const WHITE: Vec4 = const_vec4!([1.0, 1.0, 1.0, 1.0]);
     const RED: Vec4 = const_vec4!([1.0, 0.0, 0.0, 1.0]);
 
-    if drag_start != drag_end {
+    if drag_start.distance_squared(drag_end) > f32::EPSILON {
         let drag_dir = (drag_end - drag_start).normalize();
         let arrow_head = |p: Vec2| {
             Line(p - Mat2::from_angle(-PI / 4.0) * drag_dir * 16.0, p)
@@ -199,7 +200,7 @@ pub fn main_fs(
         };
         let arrow = arrow_head(drag_start - drag_dir).union(Line(drag_start, drag_end));
 
-        if drag_end != cursor {
+        if drag_end.distance_squared(cursor) > f32::EPSILON {
             painter.fill_with_contrast_border(
                 arrow.union(arrow_head(drag_end + drag_dir)).stroke(4.0),
                 WHITE,

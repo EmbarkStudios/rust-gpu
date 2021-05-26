@@ -74,10 +74,7 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static>
             RustGPUShader::Simplest => ("sky-shader", &[]),
             RustGPUShader::Sky => ("simplest-shader", &[]),
             RustGPUShader::Compute => ("compute-shader", &[]),
-            RustGPUShader::Mouse => (
-                "mouse-shader",
-                &[Capability::Int8, Capability::Int16, Capability::Int64],
-            ),
+            RustGPUShader::Mouse => ("mouse-shader", &[]),
         };
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
         let crate_path = [
