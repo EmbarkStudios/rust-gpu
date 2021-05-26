@@ -350,10 +350,6 @@ impl BuilderSpirv {
 
         // The linker will always be ran on this module
         builder.capability(Capability::Linkage);
-        builder.capability(Capability::Int8);
-        builder.capability(Capability::Int16);
-        builder.capability(Capability::Int64);
-        builder.capability(Capability::Float64);
 
         let addressing_model = if target.is_kernel() {
             builder.capability(Capability::Addresses);
@@ -422,6 +418,18 @@ impl BuilderSpirv {
             .any(|inst| {
                 inst.class.opcode == Op::Capability
                     && inst.operands[0].unwrap_capability() == capability
+            })
+    }
+
+    pub fn has_extension(&self, extension: &str) -> bool {
+        self.builder
+            .borrow()
+            .module_ref()
+            .extensions
+            .iter()
+            .any(|inst| {
+                inst.class.opcode == Op::Extension
+                    && inst.operands[0].unwrap_literal_string() == extension
             })
     }
 

@@ -1,6 +1,5 @@
 use super::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
-use crate::codegen_cx::CodegenCx;
 use rspirv::spirv::{CLOp, GLOp, Word};
 use rspirv::{dr::Operand, spirv::Capability};
 
@@ -40,14 +39,26 @@ impl ExtInst {
         }
     }
 
-    pub fn import_integer_functions_2_intel<'tcx>(&mut self, cx: &CodegenCx<'tcx>) {
+    pub fn require_integer_functions_2_intel<'a, 'tcx>(
+        &mut self,
+        bx: &Builder<'a, 'tcx>,
+        to_zombie: Word,
+    ) {
         if !self.integer_functions_2_intel {
-            assert!(!cx.target.is_kernel());
+            assert!(!bx.target.is_kernel());
             self.integer_functions_2_intel = true;
-            cx.emit_global()
-                .extension("SPV_INTEL_shader_integer_functions2");
-            cx.emit_global()
-                .capability(Capability::IntegerFunctions2INTEL);
+            if !bx
+                .builder
+                .has_capability(Capability::IntegerFunctions2INTEL)
+            {
+                bx.zombie(to_zombie, "capability IntegerFunctions2INTEL is required");
+            }
+            if !bx
+                .builder
+                .has_extension("SPV_INTEL_shader_integer_functions2")
+            {
+                bx.zombie(to_zombie, "extension IntegerFunctions2INTEL is required");
+            }
         }
     }
 }

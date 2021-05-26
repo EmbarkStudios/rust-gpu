@@ -1,5 +1,4 @@
 // build-pass
-//
 // compile-flags: -C target-feature=+StorageImageWriteWithoutFormat
 
 use glam::*;

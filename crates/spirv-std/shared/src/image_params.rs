@@ -1,3 +1,7 @@
+// Hack: u8 requires the Int8 capability, so instead of compiling this to a u8, compile it to a
+// u32. It's a little less efficient, but doesn't require the Int8 cap (and Arrayed values
+// shouldn't be stored in memory anyway, so it's no less memory used)
+#[repr(u32)]
 /// The access permissions for the image.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum AccessQualifier {
@@ -10,6 +14,7 @@ pub enum AccessQualifier {
 }
 
 /// Whether the image uses arrayed content.
+#[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Arrayed {
     /// The image uses not arrayed content.
@@ -18,6 +23,7 @@ pub enum Arrayed {
     True = 1,
 }
 
+#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<bool> for Arrayed {
     fn from(val: bool) -> Self {
         if val {
@@ -29,6 +35,7 @@ impl From<bool> for Arrayed {
 }
 
 /// The dimension of the image.
+#[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Dimensionality {
     /// 1D
@@ -52,6 +59,7 @@ pub enum Dimensionality {
 /// type.
 ///
 /// [depth]: https://en.wikipedia.org/wiki/Depth_map
+#[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ImageDepth {
     /// Indicates that the image does not contain depth information.
@@ -63,6 +71,7 @@ pub enum ImageDepth {
     Unknown = 2,
 }
 
+#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<Option<bool>> for ImageDepth {
     fn from(val: Option<bool>) -> Self {
         match val {
@@ -73,6 +82,7 @@ impl From<Option<bool>> for ImageDepth {
     }
 }
 
+#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<bool> for ImageDepth {
     fn from(val: bool) -> Self {
         match val {
@@ -83,6 +93,7 @@ impl From<bool> for ImageDepth {
 }
 
 /// Whether the image uses arrayed content.
+#[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Multisampled {
     /// The image contains single-sampled content.
@@ -91,6 +102,7 @@ pub enum Multisampled {
     True = 1,
 }
 
+#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<bool> for Multisampled {
     fn from(val: bool) -> Self {
         if val {
@@ -102,6 +114,7 @@ impl From<bool> for Multisampled {
 }
 
 /// Whether or not the image will be accessed in combination with a sampler.
+#[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Sampled {
     /// Indicates that it is not known ahead of time whether the image will use
@@ -113,6 +126,7 @@ pub enum Sampled {
     No = 2,
 }
 
+#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<Option<bool>> for Sampled {
     fn from(val: Option<bool>) -> Self {
         match val {
@@ -123,6 +137,7 @@ impl From<Option<bool>> for Sampled {
     }
 }
 
+#[cfg(any(not(target_arch = "spirv"), target_feature = "Int8"))]
 impl From<bool> for Sampled {
     fn from(val: bool) -> Self {
         match val {
@@ -133,6 +148,7 @@ impl From<bool> for Sampled {
 }
 
 /// The underlying internal representation of the image.
+#[repr(u32)]
 #[derive(PartialEq, Eq)]
 pub enum ImageFormat {
     /// Representation not known at compile time.

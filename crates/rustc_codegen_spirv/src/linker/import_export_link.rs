@@ -56,7 +56,7 @@ fn find_import_export_pairs_and_killed_params(
         };
         let import_type = *type_map.get(&import_id).expect("Unexpected op");
         // Make sure the import/export pair has the same type.
-        check_tys_equal(sess, name, import_type, export_type)?;
+        check_tys_equal(sess, module, name, import_type, export_type)?;
         rewrite_rules.insert(import_id, export_id);
         if let Some(params) = fn_parameters.get(&import_id) {
             for &param in params {
@@ -108,11 +108,56 @@ fn fn_parameters(module: &Module) -> FxHashMap<Word, Vec<Word>> {
         .collect()
 }
 
-fn check_tys_equal(sess: &Session, name: &str, import_type: Word, export_type: Word) -> Result<()> {
+fn check_tys_equal(
+    sess: &Session,
+    module: &Module,
+    name: &str,
+    import_type: Word,
+    export_type: Word,
+) -> Result<()> {
     if import_type == export_type {
         Ok(())
     } else {
-        sess.err(&format!("Types mismatch for {:?}", name));
+        // We have an error. It's okay to do something really slow now to report the error.
+        use std::fmt::Write;
+        let ty_defs = module
+            .types_global_values
+            .iter()
+            .filter_map(|inst| Some((inst.result_id?, inst)))
+            .collect();
+        fn format_ty(ty_defs: &FxHashMap<Word, &Instruction>, ty: Word, buf: &mut String) {
+            match ty_defs.get(&ty) {
+                Some(def) => {
+                    write!(buf, "({}", def.class.opname).unwrap();
+                    if let Some(result_type) = def.result_type {
+                        write!(buf, " {}", result_type).unwrap();
+                    }
+                    for op in &def.operands {
+                        if let Some(id) = op.id_ref_any() {
+                            write!(buf, " ").unwrap();
+                            format_ty(ty_defs, id, buf);
+                        }
+                    }
+                    write!(buf, ")").unwrap();
+                }
+                None => write!(buf, "{}", ty).unwrap(),
+            }
+        }
+        fn format_ty_(ty_defs: &FxHashMap<Word, &Instruction>, ty: Word) -> String {
+            let mut result = String::new();
+            format_ty(ty_defs, ty, &mut result);
+            result
+        }
+        sess.struct_err(&format!("Types mismatch for {:?}", name))
+            .note(&format!(
+                "import type: {}",
+                format_ty_(&ty_defs, import_type)
+            ))
+            .note(&format!(
+                "export type: {}",
+                format_ty_(&ty_defs, export_type)
+            ))
+            .emit();
         Err(ErrorReported)
     }
 }
