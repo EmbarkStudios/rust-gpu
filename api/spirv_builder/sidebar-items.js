@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["MemoryModel",""],["ModuleResult",""],["SpirvBuilderError",""]],"struct":[["CompileResult",""],["SpirvBuilder",""]]});
+initSidebarItems({"enum":[["Capability","/// SPIR-V operand kind: Capability"],["MemoryModel",""],["ModuleResult",""],["SpirvBuilderError",""]],"struct":[["CompileResult",""],["SpirvBuilder",""]]});

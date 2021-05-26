@@ -229,7 +229,27 @@
 <span id="226">226</span>
 <span id="227">227</span>
 <span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
 </pre><pre class="rust">
+<span class="comment">// Hack: u8 requires the Int8 capability, so instead of compiling this to a u8, compile it to a</span>
+<span class="comment">// u32. It&#39;s a little less efficient, but doesn&#39;t require the Int8 cap (and Arrayed values</span>
+<span class="comment">// shouldn&#39;t be stored in memory anyway, so it&#39;s no less memory used)</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="doccomment">/// The access permissions for the image.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AccessQualifier</span> {
@@ -242,6 +262,7 @@
 }
 
 <span class="doccomment">/// Whether the image uses arrayed content.</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Arrayed</span> {
     <span class="doccomment">/// The image uses not arrayed content.</span>
@@ -250,6 +271,7 @@
     <span class="ident">True</span> <span class="op">=</span> <span class="number">1</span>,
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;Int8&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Arrayed</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">val</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">if</span> <span class="ident">val</span> {
@@ -261,6 +283,7 @@
 }
 
 <span class="doccomment">/// The dimension of the image.</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Dimensionality</span> {
     <span class="doccomment">/// 1D</span>
@@ -284,6 +307,7 @@
 <span class="doccomment">/// type.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [depth]: https://en.wikipedia.org/wiki/Depth_map</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ImageDepth</span> {
     <span class="doccomment">/// Indicates that the image does not contain depth information.</span>
@@ -295,6 +319,7 @@
     <span class="ident">Unknown</span> <span class="op">=</span> <span class="number">2</span>,
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;Int8&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ImageDepth</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">val</span> {
@@ -305,6 +330,7 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;Int8&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ImageDepth</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">val</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">val</span> {
@@ -315,6 +341,7 @@
 }
 
 <span class="doccomment">/// Whether the image uses arrayed content.</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Multisampled</span> {
     <span class="doccomment">/// The image contains single-sampled content.</span>
@@ -323,6 +350,7 @@
     <span class="ident">True</span> <span class="op">=</span> <span class="number">1</span>,
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;Int8&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Multisampled</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">val</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">if</span> <span class="ident">val</span> {
@@ -334,6 +362,7 @@
 }
 
 <span class="doccomment">/// Whether or not the image will be accessed in combination with a sampler.</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Sampled</span> {
     <span class="doccomment">/// Indicates that it is not known ahead of time whether the image will use</span>
@@ -345,6 +374,7 @@
     <span class="ident">No</span> <span class="op">=</span> <span class="number">2</span>,
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;Int8&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Sampled</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">val</span> {
@@ -355,6 +385,7 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;Int8&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Sampled</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">val</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">val</span> {
@@ -365,6 +396,7 @@
 }
 
 <span class="doccomment">/// The underlying internal representation of the image.</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ImageFormat</span> {
     <span class="doccomment">/// Representation not known at compile time.</span>

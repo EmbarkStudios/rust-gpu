@@ -520,6 +520,8 @@
 <span id="517">517</span>
 <span id="518">518</span>
 <span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::abi::ConvSpirvType</span>;
@@ -885,34 +887,36 @@
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::clz</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">ext_inst</span>
-                        .<span class="ident">borrow_mut</span>()
-                        .<span class="ident">import_integer_functions_2_intel</span>(<span class="self">self</span>);
-                    <span class="self">self</span>.<span class="ident">emit</span>()
+                    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
+                        .<span class="ident">emit</span>()
                         .<span class="ident">u_count_leading_zeros_intel</span>(
                             <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>,
                             <span class="prelude-val">None</span>,
                             <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">def</span>(<span class="self">self</span>),
                         )
-                        .<span class="ident">unwrap</span>()
-                        .<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>)
+                        .<span class="ident">unwrap</span>();
+                    <span class="self">self</span>.<span class="ident">ext_inst</span>
+                        .<span class="ident">borrow_mut</span>()
+                        .<span class="ident">require_integer_functions_2_intel</span>(<span class="self">self</span>, <span class="ident">result</span>);
+                    <span class="ident">result</span>.<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>)
                 }
             }
             <span class="ident">sym::cttz</span> <span class="op">|</span> <span class="ident">sym::cttz_nonzero</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="self">self</span>.<span class="ident">cl_op</span>(<span class="ident">CLOp::ctz</span>, <span class="ident">ret_ty</span>, [<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>()])
                 } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">ext_inst</span>
-                        .<span class="ident">borrow_mut</span>()
-                        .<span class="ident">import_integer_functions_2_intel</span>(<span class="self">self</span>);
-                    <span class="self">self</span>.<span class="ident">emit</span>()
+                    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
+                        .<span class="ident">emit</span>()
                         .<span class="ident">u_count_trailing_zeros_intel</span>(
                             <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>,
                             <span class="prelude-val">None</span>,
                             <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">def</span>(<span class="self">self</span>),
                         )
-                        .<span class="ident">unwrap</span>()
-                        .<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>)
+                        .<span class="ident">unwrap</span>();
+                    <span class="self">self</span>.<span class="ident">ext_inst</span>
+                        .<span class="ident">borrow_mut</span>()
+                        .<span class="ident">require_integer_functions_2_intel</span>(<span class="self">self</span>, <span class="ident">result</span>);
+                    <span class="ident">result</span>.<span class="ident">with_type</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">immediate</span>().<span class="ident">ty</span>)
                 }
             }
 
