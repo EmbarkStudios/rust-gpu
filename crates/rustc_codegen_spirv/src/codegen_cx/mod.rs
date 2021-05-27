@@ -231,7 +231,6 @@ impl<'tcx> CodegenCx<'tcx> {
             || self.tcx.crate_name(LOCAL_CRATE) == self.sym.spirv_std
             || self.tcx.crate_name(LOCAL_CRATE) == self.sym.libm
             || self.tcx.crate_name(LOCAL_CRATE) == self.sym.num_traits
-            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.glam
     }
 
     // FIXME(eddyb) should this just be looking at `kernel_mode`?
