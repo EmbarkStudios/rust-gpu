@@ -7,48 +7,63 @@ else
     FEAT="use-installed-tools"
 fi
 
-os=$1
-
-function cargo_test() {
-    echo ::group::"$1 build"
-    cargo test \
-        --manifest-path "$1/Cargo.toml" \
+# Core crates
+# Compiled in --release because cargo compiletest would otherwise compile in release again.
+time {
+    echo ::group::rustc_codegen_spirv build
+    cargo -v test \
+        -p rustc_codegen_spirv \
+        --release \
         --no-default-features \
         --features "$FEAT" \
         --no-run
     echo ::endgroup::
+}
 
-    echo ::group::"$1 test"
-    cargo test \
-        --manifest-path "$1/Cargo.toml" \
+time {
+    echo ::group::rustc_codegen_spirv test
+    cargo -v test \
+        -p rustc_codegen_spirv \
+        --release \
         --no-default-features \
         --features "$FEAT"
     echo ::endgroup::
 }
 
-function cargo_test_no_features() {
-    echo ::group::"$1 build"
-    cargo test --manifest-path "$1/Cargo.toml" --no-run
-    echo ::endgroup::
-
-    echo ::group::"$1 test"
-    cargo test --manifest-path "$1/Cargo.toml"
+time {
+    echo ::group::compiletest
+    cargo -v run \
+        -p compiletests \
+        --release \
+        --no-default-features \
+        --features "$FEAT" \
+        -- \
+        --target-env vulkan1.1,spv1.3
     echo ::endgroup::
 }
 
-# Core crates
-cargo_test crates/rustc_codegen_spirv
-
 # Examples
-# See: https://github.com/EmbarkStudios/rust-gpu/issues/84
-if [[ "$os" != "macOS" ]]; then
-    cargo_test examples/runners/ash
-fi
+time {
+    echo ::group::cargo check examples
+    cargo -v check \
+        -p example-runner-ash \
+        -p example-runner-wgpu \
+        -p example-runner-cpu \
+        -p compute-shader \
+        -p mouse-shader \
+        -p simplest-shader \
+        -p sky-shader \
+        --no-default-features \
+        --features "$FEAT"
+    echo ::endgroup::
+}
 
-cargo_test examples/runners/wgpu
-
-cargo_test_no_features examples/runners/cpu
-cargo_test_no_features examples/shaders/sky-shader
-cargo_test_no_features examples/shaders/simplest-shader
-
-cargo compiletest --target-env vulkan1.1,spv1.3
+time {
+    echo ::group::build example shaders
+    OUT_DIR=target/tmp cargo -v run \
+        -p example-runner-wgpu-builder \
+        --release \
+        --no-default-features \
+        --features "$FEAT"
+    echo ::endgroup::
+}

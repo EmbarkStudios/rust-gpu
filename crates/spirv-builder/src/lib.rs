@@ -274,6 +274,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     let mut cargo = Command::new("cargo");
     cargo.args(&[
         "build",
+        "-v",
         "--message-format=json-render-diagnostics",
         "-Zbuild-std=core",
         "-Zbuild-std-features=compiler-builtins-mem",

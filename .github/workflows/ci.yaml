@@ -51,6 +51,9 @@ jobs:
       - if: ${{ runner.os == 'Windows' }}
         # Runs separately to add spir-v tools to Powershell's Path.
         run: echo "$HOME/spirv-tools/install/bin" >> $env:GITHUB_PATH
+      # cargo version is a random command that forces the installation of rust-toolchain
+      - name: install rust-toolchain
+        run: cargo version
       # Fetch dependencies in a separate step to clearly show how long each part
       # of the testing takes
       - name: cargo fetch --locked
@@ -95,6 +98,9 @@ jobs:
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - name: Install rustup components
         run: rustup component add rustfmt clippy
+      # cargo version is a random command that forces the installation of rust-toolchain
+      - name: install rust-toolchain
+        run: cargo version
       - name: cargo fetch --locked
         run: cargo fetch --locked
       - name: Rustfmt
