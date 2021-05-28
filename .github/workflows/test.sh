@@ -11,7 +11,7 @@ fi
 # Compiled in --release because cargo compiletest would otherwise compile in release again.
 time {
     echo ::group::rustc_codegen_spirv build
-    cargo -v test \
+    cargo test \
         -p rustc_codegen_spirv \
         --release \
         --no-default-features \
@@ -22,7 +22,7 @@ time {
 
 time {
     echo ::group::rustc_codegen_spirv test
-    cargo -v test \
+    cargo test \
         -p rustc_codegen_spirv \
         --release \
         --no-default-features \
@@ -32,7 +32,7 @@ time {
 
 time {
     echo ::group::compiletest
-    cargo -v run \
+    cargo run \
         -p compiletests \
         --release \
         --no-default-features \
@@ -45,7 +45,7 @@ time {
 # Examples
 time {
     echo ::group::cargo check examples
-    cargo -v check \
+    cargo check \
         -p example-runner-ash \
         -p example-runner-wgpu \
         -p example-runner-cpu \
@@ -60,7 +60,7 @@ time {
 
 time {
     echo ::group::build example shaders
-    OUT_DIR=target/tmp cargo -v run \
+    OUT_DIR=target/tmp cargo run \
         -p example-runner-wgpu-builder \
         --release \
         --no-default-features \
