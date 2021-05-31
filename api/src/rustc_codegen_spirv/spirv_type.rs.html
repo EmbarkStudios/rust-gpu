@@ -741,6 +741,14 @@
 <span id="738">738</span>
 <span id="739">739</span>
 <span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::abi</span>::{<span class="ident">RecursivePointeeCache</span>, <span class="ident">TyLayoutNameKey</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder_spirv::SpirvValue</span>;
@@ -849,15 +857,20 @@
                     .<span class="ident">emit_global</span>()
                     .<span class="ident">type_int</span>(<span class="ident">width</span>, <span class="kw">if</span> <span class="ident">signedness</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> });
                 <span class="kw">match</span> <span class="ident">width</span> {
-                    <span class="number">8</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int8</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u8 without OpCapability Int8&quot;</span>)
-                    }
-                    <span class="number">16</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int16</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u16 without OpCapability Int16&quot;</span>)
-                    }
-                    <span class="number">64</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int64</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u64 without OpCapability Int64&quot;</span>)
-                    }
+                    <span class="number">8</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int8</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
+                        .<span class="ident">zombie_even_in_user_code</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u8 without OpCapability Int8&quot;</span>),
+                    <span class="number">16</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int16</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
+                        .<span class="ident">zombie_even_in_user_code</span>(
+                            <span class="ident">result</span>,
+                            <span class="ident">def_span</span>,
+                            <span class="string">&quot;u16 without OpCapability Int16&quot;</span>,
+                        ),
+                    <span class="number">64</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int64</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
+                        .<span class="ident">zombie_even_in_user_code</span>(
+                            <span class="ident">result</span>,
+                            <span class="ident">def_span</span>,
+                            <span class="string">&quot;u64 without OpCapability Int64&quot;</span>,
+                        ),
                     <span class="number">8</span> <span class="op">|</span> <span class="number">16</span> <span class="op">|</span> <span class="number">32</span> <span class="op">|</span> <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> (),
                     <span class="number">128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u128&quot;</span>),
                     <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(
@@ -871,9 +884,12 @@
             <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_float</span>(<span class="ident">width</span>);
                 <span class="kw">match</span> <span class="ident">width</span> {
-                    <span class="number">64</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Float64</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;f64 without OpCapability Float64&quot;</span>)
-                    }
+                    <span class="number">64</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Float64</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
+                        .<span class="ident">zombie_even_in_user_code</span>(
+                            <span class="ident">result</span>,
+                            <span class="ident">def_span</span>,
+                            <span class="string">&quot;f64 without OpCapability Float64&quot;</span>,
+                        ),
                     <span class="number">32</span> <span class="op">|</span> <span class="number">64</span> <span class="op">=</span><span class="op">&gt;</span> (),
                     <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">zombie_with_span</span>(
                         <span class="ident">result</span>,
