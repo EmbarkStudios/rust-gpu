@@ -153,7 +153,7 @@ fn link_exe(
         linker::LinkResult::SingleModule(spv_binary) => {
             let mut module_filename = out_dir;
             module_filename.push("module");
-            post_link_single_module(sess, spv_binary.assemble(), &module_filename);
+            post_link_single_module(sess, &cg_args, spv_binary.assemble(), &module_filename);
             cg_args.do_disassemble(&spv_binary);
             let module_result = ModuleResult::SingleModule(module_filename);
             CompileResult {
@@ -167,7 +167,7 @@ fn link_exe(
             for (name, spv_binary) in map {
                 let mut module_filename = out_dir.clone();
                 module_filename.push(sanitize_filename::sanitize(&name));
-                post_link_single_module(sess, spv_binary.assemble(), &module_filename);
+                post_link_single_module(sess, &cg_args, spv_binary.assemble(), &module_filename);
                 hashmap.insert(name, module_filename);
             }
             let module_result = ModuleResult::MultiModule(hashmap);
@@ -191,7 +191,12 @@ fn entry_points(module: &rspirv::dr::Module) -> Vec<String> {
         .collect()
 }
 
-fn post_link_single_module(sess: &Session, spv_binary: Vec<u32>, out_filename: &Path) {
+fn post_link_single_module(
+    sess: &Session,
+    cg_args: &crate::codegen_cx::CodegenArgs,
+    spv_binary: Vec<u32>,
+    out_filename: &Path,
+) {
     if let Ok(ref path) = std::env::var("DUMP_POST_LINK") {
         File::create(path)
             .unwrap()
@@ -199,16 +204,33 @@ fn post_link_single_module(sess: &Session, spv_binary: Vec<u32>, out_filename: &
             .unwrap();
     }
 
+    let val_options = spirv_tools::val::ValidatorOptions {
+        relax_struct_store: cg_args.relax_struct_store,
+        relax_logical_pointer: cg_args.relax_logical_pointer,
+        before_legalization: false,
+        relax_block_layout: cg_args.relax_block_layout,
+        uniform_buffer_standard_layout: cg_args.uniform_buffer_standard_layout,
+        scalar_block_layout: cg_args.scalar_block_layout,
+        skip_block_layout: cg_args.skip_block_layout,
+        max_limits: vec![],
+    };
+    let opt_options = spirv_tools::opt::Options {
+        validator_options: Some(val_options.clone()),
+        max_id_bound: None,
+        preserve_bindings: false,
+        preserve_spec_constants: false,
+    };
+
     let spv_binary = if sess.opts.optimize != OptLevel::No || sess.opts.debuginfo == DebugInfo::None
     {
         let _timer = sess.timer("link_spirv_opt");
-        do_spirv_opt(sess, spv_binary, out_filename)
+        do_spirv_opt(sess, spv_binary, out_filename, opt_options)
     } else {
         spv_binary
     };
 
     if env::var("NO_SPIRV_VAL").is_err() {
-        do_spirv_val(sess, &spv_binary, out_filename);
+        do_spirv_val(sess, &spv_binary, out_filename, val_options);
     }
 
     {
@@ -225,13 +247,18 @@ fn post_link_single_module(sess: &Session, spv_binary: Vec<u32>, out_filename: &
     }
 }
 
-fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u32> {
+fn do_spirv_opt(
+    sess: &Session,
+    spv_binary: Vec<u32>,
+    filename: &Path,
+    options: spirv_tools::opt::Options,
+) -> Vec<u32> {
     use spirv_tools::{
         error,
         opt::{self, Optimizer},
     };
 
-    let mut optimizer = opt::create(None);
+    let mut optimizer = opt::create(sess.target.options.env.parse().ok());
 
     match sess.opts.optimize {
         OptLevel::No => {}
@@ -266,9 +293,7 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
             err.note(&format!("module `{}`", filename.display()));
             err.emit();
         },
-        // We currently run the validator separately after optimization or even
-        // if we don't run optimization, the default options don't run the validator
-        None,
+        Some(options),
     );
 
     match result {
@@ -283,12 +308,17 @@ fn do_spirv_opt(sess: &Session, spv_binary: Vec<u32>, filename: &Path) -> Vec<u3
     }
 }
 
-fn do_spirv_val(sess: &Session, spv_binary: &[u32], filename: &Path) {
+fn do_spirv_val(
+    sess: &Session,
+    spv_binary: &[u32],
+    filename: &Path,
+    options: spirv_tools::val::ValidatorOptions,
+) {
     use spirv_tools::val::{self, Validator};
 
     let validator = val::create(sess.target.options.env.parse().ok());
 
-    if let Err(e) = validator.validate(spv_binary, None) {
+    if let Err(e) = validator.validate(spv_binary, Some(options)) {
         let mut err = sess.struct_err(&e.to_string());
         err.note("spirv-val failed");
         err.note(&format!("module `{}`", filename.display()));
