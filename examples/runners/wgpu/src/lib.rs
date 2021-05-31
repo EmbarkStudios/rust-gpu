@@ -71,8 +71,8 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static>
         std::env::set_var("OUT_DIR", env!("OUT_DIR"));
         std::env::set_var("PROFILE", env!("PROFILE"));
         let (crate_name, capabilities): (_, &[Capability]) = match shader {
-            RustGPUShader::Simplest => ("sky-shader", &[]),
-            RustGPUShader::Sky => ("simplest-shader", &[]),
+            RustGPUShader::Simplest => ("simplest-shader", &[]),
+            RustGPUShader::Sky => ("sky-shader", &[]),
             RustGPUShader::Compute => ("compute-shader", &[]),
             RustGPUShader::Mouse => (
                 "mouse-shader",
