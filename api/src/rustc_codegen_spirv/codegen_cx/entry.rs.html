@@ -696,6 +696,60 @@
 <span id="693">693</span>
 <span id="694">694</span>
 <span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::abi::ConvSpirvType</span>;
@@ -1055,11 +1109,17 @@
         };
         <span class="kw">let</span> <span class="ident">spirv_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">layout_of</span>(<span class="ident">value_ty</span>).<span class="ident">spirv_type</span>(<span class="ident">hir_param</span>.<span class="ident">ty_span</span>, <span class="self">self</span>);
         <span class="comment">// Some types automatically specify a storage class. Compute that here.</span>
-        <span class="kw">let</span> <span class="ident">inferred_storage_class_from_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">spirv_ty</span>) {
+        <span class="kw">let</span> <span class="ident">element_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">spirv_ty</span>) {
+            <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. } <span class="op">|</span> <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>)
+            }
+            <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty</span>,
+        };
+        <span class="kw">let</span> <span class="ident">inferred_storage_class_from_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">element_ty</span> {
             <span class="ident">SpirvType::Image</span> { .. }
             <span class="op">|</span> <span class="ident">SpirvType::Sampler</span>
             <span class="op">|</span> <span class="ident">SpirvType::SampledImage</span> { .. }
-            <span class="op">|</span> <span class="ident">SpirvType::AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="op">|</span> <span class="ident">SpirvType::AccelerationStructureKhr</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">is_ref</span> {
                     <span class="prelude-val">Some</span>(<span class="ident">StorageClass::UniformConstant</span>)
                 } <span class="kw">else</span> {
@@ -1170,6 +1230,16 @@
         <span class="comment">// which we represent with `SpirvType::InterfaceBlock` (see its doc comment).</span>
         <span class="comment">// This &quot;interface block&quot; construct is also required for &quot;runtime arrays&quot;.</span>
         <span class="kw">let</span> <span class="ident">is_unsized</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">value_spirv_type</span>).<span class="ident">sizeof</span>(<span class="self">self</span>).<span class="ident">is_none</span>();
+        <span class="kw">let</span> <span class="ident">is_pair</span> <span class="op">=</span> <span class="macro">matches!</span>(<span class="ident">entry_arg_abi</span>.<span class="ident">mode</span>, <span class="ident">PassMode::Pair</span>(..));
+        <span class="kw">let</span> <span class="ident">is_unsized_with_len</span> <span class="op">=</span> <span class="ident">is_pair</span> <span class="op">&amp;&amp;</span> <span class="ident">is_unsized</span>;
+        <span class="kw">if</span> <span class="ident">is_pair</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">is_unsized</span> {
+            <span class="comment">// If PassMode is Pair, then we need to fill in the second part of the pair with a</span>
+            <span class="comment">// value. We currently only do that with unsized types, so if a type is a pair for some</span>
+            <span class="comment">// other reason (e.g. a tuple), we bail.</span>
+            <span class="self">self</span>.<span class="ident">tcx</span>
+                .<span class="ident">sess</span>
+                .<span class="ident">span_fatal</span>(<span class="ident">hir_param</span>.<span class="ident">ty_span</span>, <span class="string">&quot;pair type not supported yet&quot;</span>)
+        }
         <span class="kw">let</span> <span class="ident">var_ptr_spirv_type</span>;
         <span class="kw">let</span> (<span class="ident">value_ptr</span>, <span class="ident">value_len</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">storage_class</span> {
             <span class="ident">StorageClass::PushConstant</span> <span class="op">|</span> <span class="ident">StorageClass::Uniform</span> <span class="op">|</span> <span class="ident">StorageClass::StorageBuffer</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -1182,7 +1252,7 @@
 
                 <span class="kw">let</span> <span class="ident">value_ptr</span> <span class="op">=</span> <span class="ident">bx</span>.<span class="ident">struct_gep</span>(<span class="ident">var</span>.<span class="ident">with_type</span>(<span class="ident">var_ptr_spirv_type</span>), <span class="number">0</span>);
 
-                <span class="kw">let</span> <span class="ident">value_len</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_unsized</span> {
+                <span class="kw">let</span> <span class="ident">value_len</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_unsized_with_len</span> {
                     <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">value_spirv_type</span>) {
                         <span class="ident">SpirvType::RuntimeArray</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
@@ -1200,10 +1270,48 @@
 
                     <span class="prelude-val">Some</span>(<span class="ident">len</span>.<span class="ident">with_type</span>(<span class="ident">len_spirv_type</span>))
                 } <span class="kw">else</span> {
+                    <span class="kw">if</span> <span class="ident">is_unsized</span> {
+                        <span class="comment">// It&#39;s OK to use a RuntimeArray&lt;u32&gt; and not have a length parameter, but</span>
+                        <span class="comment">// it&#39;s just nicer ergonomics to use a slice.</span>
+                        <span class="self">self</span>.<span class="ident">tcx</span>
+                            .<span class="ident">sess</span>
+                            .<span class="ident">span_warn</span>(<span class="ident">hir_param</span>.<span class="ident">ty_span</span>, <span class="string">&quot;use &amp;[T] instead of &amp;RuntimeArray&lt;T&gt;&quot;</span>);
+                    }
                     <span class="prelude-val">None</span>
                 };
 
                 (<span class="ident">value_ptr</span>, <span class="ident">value_len</span>)
+            }
+            <span class="ident">StorageClass::UniformConstant</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">var_ptr_spirv_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">value_spirv_type</span>);
+
+                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">value_spirv_type</span>) {
+                    <span class="ident">SpirvType::RuntimeArray</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="ident">is_unsized_with_len</span> {
+                            <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                                <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
+                                <span class="string">&quot;uniform_constant must use &amp;RuntimeArray&lt;T&gt;, not &amp;[T]&quot;</span>,
+                            )
+                        }
+                    }
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="ident">is_unsized</span> {
+                            <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                                <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
+                                <span class="string">&quot;only plain slices are supported as unsized types&quot;</span>,
+                            )
+                        }
+                    }
+                }
+
+                <span class="kw">let</span> <span class="ident">value_len</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_pair</span> {
+                    <span class="comment">// We&#39;ve already emitted an error, fill in a placeholder value</span>
+                    <span class="prelude-val">Some</span>(<span class="ident">bx</span>.<span class="ident">undef</span>(<span class="self">self</span>.<span class="ident">type_isize</span>()))
+                } <span class="kw">else</span> {
+                    <span class="prelude-val">None</span>
+                };
+
+                (<span class="ident">var</span>.<span class="ident">with_type</span>(<span class="ident">var_ptr_spirv_type</span>), <span class="ident">value_len</span>)
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">var_ptr_spirv_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_ptr_to</span>(<span class="ident">value_spirv_type</span>);
