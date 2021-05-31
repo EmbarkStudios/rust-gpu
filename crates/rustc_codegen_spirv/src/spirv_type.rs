@@ -105,15 +105,20 @@ impl SpirvType {
                     .emit_global()
                     .type_int(width, if signedness { 1 } else { 0 });
                 match width {
-                    8 if !cx.builder.has_capability(Capability::Int8) => {
-                        cx.zombie_with_span(result, def_span, "u8 without OpCapability Int8")
-                    }
-                    16 if !cx.builder.has_capability(Capability::Int16) => {
-                        cx.zombie_with_span(result, def_span, "u16 without OpCapability Int16")
-                    }
-                    64 if !cx.builder.has_capability(Capability::Int64) => {
-                        cx.zombie_with_span(result, def_span, "u64 without OpCapability Int64")
-                    }
+                    8 if !cx.builder.has_capability(Capability::Int8) => cx
+                        .zombie_even_in_user_code(result, def_span, "u8 without OpCapability Int8"),
+                    16 if !cx.builder.has_capability(Capability::Int16) => cx
+                        .zombie_even_in_user_code(
+                            result,
+                            def_span,
+                            "u16 without OpCapability Int16",
+                        ),
+                    64 if !cx.builder.has_capability(Capability::Int64) => cx
+                        .zombie_even_in_user_code(
+                            result,
+                            def_span,
+                            "u64 without OpCapability Int64",
+                        ),
                     8 | 16 | 32 | 64 => (),
                     128 => cx.zombie_with_span(result, def_span, "u128"),
                     other => cx.zombie_with_span(
@@ -127,9 +132,12 @@ impl SpirvType {
             Self::Float(width) => {
                 let result = cx.emit_global().type_float(width);
                 match width {
-                    64 if !cx.builder.has_capability(Capability::Float64) => {
-                        cx.zombie_with_span(result, def_span, "f64 without OpCapability Float64")
-                    }
+                    64 if !cx.builder.has_capability(Capability::Float64) => cx
+                        .zombie_even_in_user_code(
+                            result,
+                            def_span,
+                            "f64 without OpCapability Float64",
+                        ),
                     32 | 64 => (),
                     other => cx.zombie_with_span(
                         result,
