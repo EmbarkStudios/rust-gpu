@@ -59,10 +59,31 @@ jobs:
       # of the testing takes
       - name: cargo fetch --locked
         run: cargo fetch --locked --target ${{ matrix.target }}
-      - name: Run tests
+
+      # Core crates
+      # Compiled in --release because cargo compiletest would otherwise compile in release again.
+      - name: rustc_codegen_spirv build
         if: ${{ matrix.target != 'aarch64-linux-android' }}
-        shell: bash
-        run: .github/workflows/test.sh ${{ runner.os }}
+        run: cargo test -p rustc_codegen_spirv --release --no-default-features --features "use-installed-tools" --no-run
+
+      - name: rustc_codegen_spirv test
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
+        run: cargo test -p rustc_codegen_spirv --release --no-default-features --features "use-installed-tools"
+
+      - name: compiletest
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
+        run: cargo run -p compiletests --release --no-default-features --features "use-installed-tools" -- --target-env vulkan1.1,spv1.3
+
+      # Examples
+      - name: cargo check examples
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
+        run: cargo check -p example-runner-ash -p example-runner-wgpu -p example-runner-cpu -p compute-shader -p mouse-shader -p simplest-shader -p sky-shader --no-default-features --features "use-installed-tools"
+
+      - name: build example shaders
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
+        env:
+          OUT_DIR: "target/tmp"
+        run: cargo run -p example-runner-wgpu-builder --release --no-default-features --features "use-installed-tools"
 
       - name: Build WGPU Example for Android
         if: ${{ matrix.target == 'aarch64-linux-android' }}
