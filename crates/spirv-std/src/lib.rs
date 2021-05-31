@@ -90,6 +90,7 @@ pub mod image;
 pub mod integer;
 pub mod memory;
 pub mod ray_tracing;
+mod runtime_array;
 mod sampler;
 pub mod scalar;
 pub(crate) mod sealed;
@@ -99,6 +100,7 @@ pub mod vector;
 pub use self::sampler::Sampler;
 pub use crate::macros::Image;
 pub use num_traits;
+pub use runtime_array::*;
 pub use textures::*;
 
 #[cfg(all(not(test), target_arch = "spirv"))]

@@ -338,6 +338,10 @@ impl Symbols {
                 "sampled_image",
                 SpirvAttribute::IntrinsicType(IntrinsicType::SampledImage),
             ),
+            (
+                "runtime_array",
+                SpirvAttribute::IntrinsicType(IntrinsicType::RuntimeArray),
+            ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
             ("internal_buffer_load", SpirvAttribute::InternalBufferLoad),
             ("internal_buffer_store", SpirvAttribute::InternalBufferStore),
