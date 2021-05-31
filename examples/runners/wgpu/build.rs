@@ -5,17 +5,14 @@ use std::path::PathBuf;
 fn main() -> Result<(), Box<dyn Error>> {
     let target_os = std::env::var("CARGO_CFG_TARGET_OS")?;
     let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH")?;
-    // Always build on CI to make sure the shaders can still build
-    let is_on_ci = std::env::var("CI");
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-env-changed=CARGO_CFG_TARGET_OS");
     println!("cargo:rerun-if-env-changed=CARGO_CFG_TARGET_ARCH");
-    println!("cargo:rerun-if-env-changed=CI");
     // While OUT_DIR is set for both build.rs and compiling the crate, PROFILE is only set in
     // build.rs. So, export it to crate compilation as well.
     let profile = env::var("PROFILE").unwrap();
     println!("cargo:rustc-env=PROFILE={}", profile);
-    if target_os != "android" && target_arch != "wasm32" && is_on_ci.is_err() {
+    if target_os != "android" && target_arch != "wasm32" {
         return Ok(());
     }
     let mut dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());

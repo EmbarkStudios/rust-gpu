@@ -23,7 +23,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       spirv_tools_version: "20200928"
-      RUSTUP_UNPACK_RAM: "104857600"
+      RUSTUP_UNPACK_RAM: "26214400"
+      RUSTUP_IO_THREADS: "1"
     steps:
       - uses: actions/checkout@v2
       # Ubuntu does have `brew install spirv-tools`, but it installs from
@@ -51,14 +52,38 @@ jobs:
       - if: ${{ runner.os == 'Windows' }}
         # Runs separately to add spir-v tools to Powershell's Path.
         run: echo "$HOME/spirv-tools/install/bin" >> $env:GITHUB_PATH
+      # cargo version is a random command that forces the installation of rust-toolchain
+      - name: install rust-toolchain
+        run: cargo version
       # Fetch dependencies in a separate step to clearly show how long each part
       # of the testing takes
       - name: cargo fetch --locked
         run: cargo fetch --locked --target ${{ matrix.target }}
-      - name: Run tests
+
+      # Core crates
+      # Compiled in --release because cargo compiletest would otherwise compile in release again.
+      - name: rustc_codegen_spirv build
         if: ${{ matrix.target != 'aarch64-linux-android' }}
-        shell: bash
-        run: .github/workflows/test.sh ${{ runner.os }}
+        run: cargo test -p rustc_codegen_spirv --release --no-default-features --features "use-installed-tools" --no-run
+
+      - name: rustc_codegen_spirv test
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
+        run: cargo test -p rustc_codegen_spirv --release --no-default-features --features "use-installed-tools"
+
+      - name: compiletest
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
+        run: cargo run -p compiletests --release --no-default-features --features "use-installed-tools" -- --target-env vulkan1.1,spv1.3
+
+      # Examples
+      - name: cargo check examples
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
+        run: cargo check -p example-runner-ash -p example-runner-wgpu -p example-runner-cpu -p compute-shader -p mouse-shader -p simplest-shader -p sky-shader --no-default-features --features "use-installed-tools"
+
+      - name: build example shaders
+        if: ${{ matrix.target != 'aarch64-linux-android' }}
+        env:
+          OUT_DIR: "target/tmp"
+        run: cargo run -p example-runner-wgpu-builder --release --no-default-features --features "use-installed-tools"
 
       - name: Build WGPU Example for Android
         if: ${{ matrix.target == 'aarch64-linux-android' }}
@@ -95,6 +120,9 @@ jobs:
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - name: Install rustup components
         run: rustup component add rustfmt clippy
+      # cargo version is a random command that forces the installation of rust-toolchain
+      - name: install rust-toolchain
+        run: cargo version
       - name: cargo fetch --locked
         run: cargo fetch --locked
       - name: Rustfmt
