@@ -27,14 +27,14 @@ pub fn mem2reg(
     let preds = compute_preds(&func.blocks, &reachable);
     let idom = compute_idom(&preds, &reachable);
     let dominance_frontier = compute_dominance_frontier(&preds, &idom);
-    insert_phis_all(
+    while insert_phis_all(
         header,
         types_global_values,
         pointer_to_pointee,
         constants,
         &mut func.blocks,
-        dominance_frontier,
-    );
+        &dominance_frontier,
+    ) {}
 }
 
 fn label_to_index(blocks: &[Block], id: Word) -> usize {
@@ -146,15 +146,16 @@ fn compute_dominance_frontier(
     dominance_frontier
 }
 
+// Returns true if variables were rewritten
 fn insert_phis_all(
     header: &mut ModuleHeader,
     types_global_values: &mut Vec<Instruction>,
     pointer_to_pointee: &FxHashMap<Word, Word>,
     constants: &FxHashMap<Word, u32>,
     blocks: &mut [Block],
-    dominance_frontier: Vec<FxHashSet<usize>>,
-) {
-    let thing = blocks[0]
+    dominance_frontier: &[FxHashSet<usize>],
+) -> bool {
+    let var_maps_and_types = blocks[0]
         .instructions
         .iter()
         .filter(|inst| inst.class.opcode == Op::Variable)
@@ -167,8 +168,11 @@ fn insert_phis_all(
             ))
         })
         .collect::<Vec<_>>();
-    for &(ref var_map, base_var_type) in &thing {
-        let blocks_with_phi = insert_phis(blocks, &dominance_frontier, var_map);
+    if var_maps_and_types.is_empty() {
+        return false;
+    }
+    for &(ref var_map, base_var_type) in &var_maps_and_types {
+        let blocks_with_phi = insert_phis(blocks, dominance_frontier, var_map);
         let mut renamer = Renamer {
             header,
             types_global_values,
@@ -185,7 +189,8 @@ fn insert_phis_all(
         apply_rewrite_rules(&renamer.rewrite_rules, blocks);
         remove_nops(blocks);
     }
-    remove_old_variables(blocks, &thing);
+    remove_old_variables(blocks, &var_maps_and_types);
+    true
 }
 
 #[derive(Debug)]
@@ -488,11 +493,14 @@ fn remove_nops(blocks: &mut [Block]) {
     }
 }
 
-fn remove_old_variables(blocks: &mut [Block], thing: &[(FxHashMap<u32, VarInfo>, u32)]) {
+fn remove_old_variables(
+    blocks: &mut [Block],
+    var_maps_and_types: &[(FxHashMap<u32, VarInfo>, u32)],
+) {
     blocks[0].instructions.retain(|inst| {
         inst.class.opcode != Op::Variable || {
             let result_id = inst.result_id.unwrap();
-            thing
+            var_maps_and_types
                 .iter()
                 .all(|(var_map, _)| !var_map.contains_key(&result_id))
         }
@@ -502,7 +510,9 @@ fn remove_old_variables(blocks: &mut [Block], thing: &[(FxHashMap<u32, VarInfo>,
             !matches!(inst.class.opcode, Op::AccessChain | Op::InBoundsAccessChain)
                 || inst.operands.iter().all(|op| {
                     op.id_ref_any().map_or(true, |id| {
-                        thing.iter().all(|(var_map, _)| !var_map.contains_key(&id))
+                        var_maps_and_types
+                            .iter()
+                            .all(|(var_map, _)| !var_map.contains_key(&id))
                     })
                 })
         })
