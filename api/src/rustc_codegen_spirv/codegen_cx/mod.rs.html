@@ -641,6 +641,39 @@
 <span id="638">638</span>
 <span id="639">639</span>
 <span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
@@ -921,6 +954,14 @@
     <span class="kw">pub</span> <span class="ident">disassemble_fn</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">disassemble_entry</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">disassemble_globals</span>: <span class="ident">bool</span>,
+
+    <span class="comment">// spirv-val flags</span>
+    <span class="kw">pub</span> <span class="ident">relax_struct_store</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">relax_logical_pointer</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">relax_block_layout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">uniform_buffer_standard_layout</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">scalar_block_layout</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">skip_block_layout</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">CodegenArgs</span> {
@@ -949,6 +990,14 @@
             <span class="string">&quot;NAME&quot;</span>,
         );
         <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;disassemble-globals&quot;</span>, <span class="string">&quot;print globals to stderr&quot;</span>, <span class="string">&quot;&quot;</span>);
+
+        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;relax-struct-store&quot;</span>, <span class="string">&quot;Allow store from one struct type to a different type with compatible layout and members.&quot;</span>, <span class="string">&quot;&quot;</span>);
+        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;relax-logical-pointer&quot;</span>, <span class="string">&quot;Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode&quot;</span>, <span class="string">&quot;&quot;</span>);
+        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;relax-block-layout&quot;</span>, <span class="string">&quot;Enable VK_KHR_relaxed_block_layout when checking standard uniform, storage buffer, and push constant layouts. This is the default when targeting Vulkan 1.1 or later.&quot;</span>, <span class="string">&quot;&quot;</span>);
+        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;uniform-buffer-standard-layout&quot;</span>, <span class="string">&quot;Enable VK_KHR_uniform_buffer_standard_layout when checking standard uniform buffer layouts.&quot;</span>, <span class="string">&quot;&quot;</span>);
+        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;scalar-block-layout&quot;</span>, <span class="string">&quot;Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.&quot;</span>, <span class="string">&quot;&quot;</span>);
+        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;skip-block-layout&quot;</span>, <span class="string">&quot;Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.&quot;</span>, <span class="string">&quot;&quot;</span>);
+
         <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span> <span class="ident">opts</span>.<span class="ident">parse</span>(<span class="ident">args</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">module_output_type</span> <span class="op">=</span>
             <span class="ident">matches</span>.<span class="ident">opt_get_default</span>(<span class="string">&quot;module-output&quot;</span>, <span class="ident">ModuleOutputType::Single</span>)<span class="question-mark">?</span>;
@@ -956,12 +1005,29 @@
         <span class="kw">let</span> <span class="ident">disassemble_fn</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_str</span>(<span class="string">&quot;disassemble-fn&quot;</span>);
         <span class="kw">let</span> <span class="ident">disassemble_entry</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_str</span>(<span class="string">&quot;disassemble-entry&quot;</span>);
         <span class="kw">let</span> <span class="ident">disassemble_globals</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;disassemble-globals&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">relax_struct_store</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;relax-struct-store&quot;</span>);
+        <span class="kw">let</span> <span class="ident">relax_logical_pointer</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;relax-logical-pointer&quot;</span>);
+        <span class="kw">let</span> <span class="ident">relax_block_layout</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;relax-block-layout&quot;</span>);
+        <span class="kw">let</span> <span class="ident">uniform_buffer_standard_layout</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;uniform-buffer-standard-layout&quot;</span>);
+        <span class="kw">let</span> <span class="ident">scalar_block_layout</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;scalar-block-layout&quot;</span>);
+        <span class="kw">let</span> <span class="ident">skip_block_layout</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;skip-block-layout&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">relax_block_layout</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">relax_block_layout</span> { <span class="prelude-val">Some</span>(<span class="bool-val">true</span>) } <span class="kw">else</span> { <span class="prelude-val">None</span> };
+
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">module_output_type</span>,
             <span class="ident">disassemble</span>,
             <span class="ident">disassemble_fn</span>,
             <span class="ident">disassemble_entry</span>,
             <span class="ident">disassemble_globals</span>,
+
+            <span class="ident">relax_struct_store</span>,
+            <span class="ident">relax_logical_pointer</span>,
+            <span class="ident">relax_block_layout</span>,
+            <span class="ident">uniform_buffer_standard_layout</span>,
+            <span class="ident">scalar_block_layout</span>,
+            <span class="ident">skip_block_layout</span>,
         })
     }
 
