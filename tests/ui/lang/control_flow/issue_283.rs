@@ -1,4 +1,5 @@
 // build-pass
+#![feature(lang_items)]
 
 use glam::*;
 
@@ -46,3 +47,13 @@ pub fn main() {
     let v = Vec3::new(1.0, 1.0, 1.0);
     render(v, v, 1.0, 2.0);
 }
+
+// TODO: Figure out why these are needed and remove them (it should pick up the ones in spirv_std)
+// https://github.com/EmbarkStudios/rust-gpu/issues/640
+#[panic_handler]
+fn panic(_: &core::panic::PanicInfo<'_>) -> ! {
+    loop {}
+}
+
+#[lang = "eh_personality"]
+extern "C" fn rust_eh_personality() {}

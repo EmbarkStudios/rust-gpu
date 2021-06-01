@@ -103,6 +103,9 @@ pub use num_traits;
 pub use runtime_array::*;
 pub use textures::*;
 
+#[cfg(feature = "glam")]
+pub use glam;
+
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo<'_>) -> ! {
