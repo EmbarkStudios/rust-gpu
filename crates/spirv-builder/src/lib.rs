@@ -264,6 +264,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         format!(" -C target-feature={}", target_features.join(","))
     };
 
+    //FIXME: reintroduce v0 mangling, see issue #642
     let rustflags = format!(
         "-Z codegen-backend={} -Zsymbol-mangling-version=legacy{}{}",
         rustc_codegen_spirv.display(),
