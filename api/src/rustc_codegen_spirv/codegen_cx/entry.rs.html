@@ -750,6 +750,48 @@
 <span id="747">747</span>
 <span id="748">748</span>
 <span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::abi::ConvSpirvType</span>;
@@ -759,7 +801,9 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::codegen_cx::BindlessDescriptorSets</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::spirv_type::SpirvType</span>;
 <span class="kw">use</span> <span class="ident">rspirv::dr::Operand</span>;
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">Capability</span>, <span class="ident">Decoration</span>, <span class="ident">ExecutionModel</span>, <span class="ident">FunctionControl</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{
+    <span class="ident">Capability</span>, <span class="ident">Decoration</span>, <span class="ident">Dim</span>, <span class="ident">ExecutionModel</span>, <span class="ident">FunctionControl</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>,
+};
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa::traits</span>::{<span class="ident">BaseTypeMethods</span>, <span class="ident">BuilderMethods</span>};
 <span class="kw">use</span> <span class="ident">rustc_data_structures::fx::FxHashMap</span>;
 <span class="kw">use</span> <span class="ident">rustc_hir</span> <span class="kw">as</span> <span class="ident">hir</span>;
@@ -1414,6 +1458,46 @@
                     <span class="string">&quot;#[spirv(invariant)] is only valid on Output variables&quot;</span>,
                 );
             }
+        }
+
+        <span class="kw">let</span> <span class="ident">is_subpass_input</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">value_spirv_type</span>) {
+            <span class="ident">SpirvType::Image</span> {
+                <span class="ident">dim</span>: <span class="ident">Dim::DimSubpassData</span>,
+                ..
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span>: <span class="ident">elt</span>, .. }
+            <span class="op">|</span> <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>: <span class="ident">elt</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">matches!</span>(
+                <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">elt</span>),
+                <span class="ident">SpirvType::Image</span> {
+                    <span class="ident">dim</span>: <span class="ident">Dim::DimSubpassData</span>,
+                    ..
+                }
+            ),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        };
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">attachment_index</span>) <span class="op">=</span> <span class="ident">attrs</span>.<span class="ident">input_attachment_index</span> {
+            <span class="kw">if</span> <span class="ident">is_subpass_input</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::InputAttachment</span>) {
+                <span class="self">self</span>.<span class="ident">emit_global</span>().<span class="ident">decorate</span>(
+                    <span class="ident">var</span>,
+                    <span class="ident">Decoration::InputAttachmentIndex</span>,
+                    <span class="ident">std::iter::once</span>(<span class="ident">Operand::LiteralInt32</span>(<span class="ident">attachment_index</span>.<span class="ident">value</span>)),
+                )
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">is_subpass_input</span> {
+                <span class="self">self</span>.<span class="ident">tcx</span>
+                    .<span class="ident">sess</span>
+                    .<span class="ident">span_err</span>(<span class="ident">hir_param</span>.<span class="ident">ty_span</span>, <span class="string">&quot;Missing capability InputAttachment&quot;</span>)
+            } <span class="kw">else</span> {
+                <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                    <span class="ident">attachment_index</span>.<span class="ident">span</span>,
+                    <span class="string">&quot;#[spirv(input_attachment_index)] is only valid on Image types with dim = SubpassData&quot;</span>
+                );
+            }
+            <span class="ident">decoration_supersedes_location</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">is_subpass_input</span> {
+            <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
+                <span class="ident">hir_param</span>.<span class="ident">ty_span</span>,
+                <span class="string">&quot;Image types with dim = SubpassData require #[spirv(input_attachment_index)] decoration&quot;</span>,
+            )
         }
 
         <span class="comment">// Assign locations from left to right, incrementing each storage class</span>
