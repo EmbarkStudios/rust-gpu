@@ -96,6 +96,7 @@ pub enum SpirvAttribute {
     Binding(u32),
     Flat,
     Invariant,
+    InputAttachmentIndex(u32),
 
     // `fn`/closure attributes:
     UnrollLoops,
@@ -130,6 +131,7 @@ pub struct AggregatedSpirvAttributes {
     pub binding: Option<Spanned<u32>>,
     pub flat: Option<Spanned<()>>,
     pub invariant: Option<Spanned<()>>,
+    pub input_attachment_index: Option<Spanned<u32>>,
 
     // `fn`/closure attributes:
     pub unroll_loops: Option<Spanned<()>>,
@@ -215,6 +217,12 @@ impl AggregatedSpirvAttributes {
             Binding(value) => try_insert(&mut self.binding, value, span, "#[spirv(binding)]"),
             Flat => try_insert(&mut self.flat, (), span, "#[spirv(flat)]"),
             Invariant => try_insert(&mut self.invariant, (), span, "#[spirv(invariant)]"),
+            InputAttachmentIndex(value) => try_insert(
+                &mut self.input_attachment_index,
+                value,
+                span,
+                "#[spirv(attachment_index)]",
+            ),
             UnrollLoops => try_insert(&mut self.unroll_loops, (), span, "#[spirv(unroll_loops)]"),
             InternalBufferLoad => try_insert(
                 &mut self.internal_buffer_load,
@@ -308,7 +316,8 @@ impl CheckSpirvAttrVisitor<'_> {
                 | SpirvAttribute::DescriptorSet(_)
                 | SpirvAttribute::Binding(_)
                 | SpirvAttribute::Flat
-                | SpirvAttribute::Invariant => match target {
+                | SpirvAttribute::Invariant
+                | SpirvAttribute::InputAttachmentIndex(_) => match target {
                     Target::Param => {
                         let parent_hir_id = self.tcx.hir().get_parent_node(hir_id);
                         let parent_is_entry_point =

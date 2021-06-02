@@ -6,7 +6,9 @@ use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::codegen_cx::BindlessDescriptorSets;
 use crate::spirv_type::SpirvType;
 use rspirv::dr::Operand;
-use rspirv::spirv::{Capability, Decoration, ExecutionModel, FunctionControl, StorageClass, Word};
+use rspirv::spirv::{
+    Capability, Decoration, Dim, ExecutionModel, FunctionControl, StorageClass, Word,
+};
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir as hir;
@@ -661,6 +663,46 @@ impl<'tcx> CodegenCx<'tcx> {
                     "#[spirv(invariant)] is only valid on Output variables",
                 );
             }
+        }
+
+        let is_subpass_input = match self.lookup_type(value_spirv_type) {
+            SpirvType::Image {
+                dim: Dim::DimSubpassData,
+                ..
+            } => true,
+            SpirvType::RuntimeArray { element: elt, .. }
+            | SpirvType::Array { element: elt, .. } => matches!(
+                self.lookup_type(elt),
+                SpirvType::Image {
+                    dim: Dim::DimSubpassData,
+                    ..
+                }
+            ),
+            _ => false,
+        };
+        if let Some(attachment_index) = attrs.input_attachment_index {
+            if is_subpass_input && self.builder.has_capability(Capability::InputAttachment) {
+                self.emit_global().decorate(
+                    var,
+                    Decoration::InputAttachmentIndex,
+                    std::iter::once(Operand::LiteralInt32(attachment_index.value)),
+                )
+            } else if is_subpass_input {
+                self.tcx
+                    .sess
+                    .span_err(hir_param.ty_span, "Missing capability InputAttachment")
+            } else {
+                self.tcx.sess.span_err(
+                    attachment_index.span,
+                    "#[spirv(input_attachment_index)] is only valid on Image types with dim = SubpassData"
+                );
+            }
+            decoration_supersedes_location = true;
+        } else if is_subpass_input {
+            self.tcx.sess.span_err(
+                hir_param.ty_span,
+                "Image types with dim = SubpassData require #[spirv(input_attachment_index)] decoration",
+            )
         }
 
         // Assign locations from left to right, incrementing each storage class

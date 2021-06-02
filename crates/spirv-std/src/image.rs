@@ -5,7 +5,7 @@
 #[rustfmt::skip]
 mod params;
 
-pub use self::params::{ImageCoordinate, SampleType};
+pub use self::params::{ImageCoordinate, ImageCoordinateSubpassData, SampleType};
 pub use crate::macros::Image;
 pub use spirv_types::image_params::{
     AccessQualifier, Arrayed, Dimensionality, ImageDepth, ImageFormat, Multisampled, Sampled,
@@ -656,6 +656,55 @@ impl<
             coordinate = in(reg) &coordinate,
             texels = in(reg) &texels,
         }
+    }
+}
+
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const ARRAYED: Arrayed,
+        const MULTISAMPLED: Multisampled,
+        const FORMAT: ImageFormat,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    >
+    Image<
+        SampledType,
+        { Dimensionality::SubpassData },
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        { Sampled::No },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+    /// Read a texel from subpass input attachment.
+    /// Note: Vulkan only allows the read if the first two components of the coordinate are zero.
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageRead")]
+    pub fn read_subpass<I, V, const N: usize>(
+        &self,
+        coordinate: impl ImageCoordinateSubpassData<I, ARRAYED>,
+    ) -> V
+    where
+        I: Integer,
+        V: Vector<SampledType, N>,
+    {
+        let mut result = V::default();
+
+        unsafe {
+            asm! {
+            "%image = OpLoad _ {this}",
+            "%coordinate = OpLoad _ {coordinate}",
+            "%result = OpImageRead typeof*{result} %image %coordinate",
+            "OpStore {result} %result",
+            this = in(reg) self,
+            coordinate = in(reg) &coordinate,
+            result = in(reg) &mut result,
+            }
+        }
+
+        result
     }
 }
 

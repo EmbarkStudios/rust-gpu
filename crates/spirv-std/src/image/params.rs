@@ -1,5 +1,5 @@
 use super::{Arrayed, Dimensionality, ImageFormat};
-use crate::{scalar::Scalar, vector::Vector};
+use crate::{scalar::Scalar, vector::Vector, integer::Integer};
 
 /// Marker trait for arguments that accept single scalar values or vectors
 /// of scalars.
@@ -72,3 +72,8 @@ impl<V: Vector<S, 3>, S: Scalar> ImageCoordinate<S, { Dimensionality::TwoD }, { 
 impl<V: Vector<S, 3>, S: Scalar> ImageCoordinate<S, { Dimensionality::Rect }, { Arrayed::True }> for V {}
 impl<V: Vector<S, 4>, S: Scalar> ImageCoordinate<S, { Dimensionality::Cube }, { Arrayed::True }> for V {}
 impl<V: Vector<S, 4>, S: Scalar> ImageCoordinate<S, { Dimensionality::ThreeD }, { Arrayed::True }> for V {}
+
+/// Marker trait for arguments that are valid for a [`crate::image::Dimensionality::SubpassData`] image query.
+pub trait ImageCoordinateSubpassData<T, const ARRAYED: Arrayed> {}
+impl<V: Vector<I, 2>, I: Integer> ImageCoordinateSubpassData<I, { Arrayed::False }> for V {}
+impl<V: Vector<I, 3>, I: Integer> ImageCoordinateSubpassData<I, { Arrayed::True }> for V {}
