@@ -671,13 +671,13 @@ impl<'tcx> CodegenCx<'tcx> {
                 ..
             } => true,
             SpirvType::RuntimeArray { element: elt, .. }
-            | SpirvType::Array { element: elt, .. } => match self.lookup_type(elt) {
+            | SpirvType::Array { element: elt, .. } => matches!(
+                self.lookup_type(elt),
                 SpirvType::Image {
                     dim: Dim::DimSubpassData,
                     ..
-                } => true,
-                _ => false,
-            },
+                }
+            ),
             _ => false,
         };
         if let Some(attachment_index) = attrs.input_attachment_index.map(|attr| attr.value) {
