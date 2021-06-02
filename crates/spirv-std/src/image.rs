@@ -660,23 +660,23 @@ impl<
 }
 
 impl<
-    SampledType: SampleType<FORMAT>,
-    const DEPTH: ImageDepth,
-    const ARRAYED: Arrayed,
-    const MULTISAMPLED: Multisampled,
-    const FORMAT: ImageFormat,
-    const ACCESS_QUALIFIER: Option<AccessQualifier>,
->
-Image<
-    SampledType,
-    { Dimensionality::SubpassData },
-    DEPTH,
-    ARRAYED,
-    MULTISAMPLED,
-    { Sampled::No },
-    FORMAT,
-    ACCESS_QUALIFIER,
->
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const ARRAYED: Arrayed,
+        const MULTISAMPLED: Multisampled,
+        const FORMAT: ImageFormat,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    >
+    Image<
+        SampledType,
+        { Dimensionality::SubpassData },
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        { Sampled::No },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
 {
     /// Read a texel from subpass input attachment.
     /// Note: Vulkan only allows the read if the first two components of the coordinate are zero.
@@ -686,9 +686,9 @@ Image<
         &self,
         coordinate: impl ImageCoordinateSubpassData<I, ARRAYED>,
     ) -> V
-        where
-            I: Integer,
-            V: Vector<SampledType, N>,
+    where
+        I: Integer,
+        V: Vector<SampledType, N>,
     {
         let mut result = V::default();
 
@@ -709,8 +709,8 @@ Image<
 }
 
 impl<
-    SampledType: SampleType<FORMAT>,
-    const DIM: Dimensionality,
+        SampledType: SampleType<FORMAT>,
+        const DIM: Dimensionality,
         const DEPTH: ImageDepth,
         const ARRAYED: Arrayed,
         const MULTISAMPLED: Multisampled,

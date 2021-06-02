@@ -217,7 +217,12 @@ impl AggregatedSpirvAttributes {
             Binding(value) => try_insert(&mut self.binding, value, span, "#[spirv(binding)]"),
             Flat => try_insert(&mut self.flat, (), span, "#[spirv(flat)]"),
             Invariant => try_insert(&mut self.invariant, (), span, "#[spirv(invariant)]"),
-            AttachmentIndex(value) => try_insert(&mut self.attachment_index, value, span, "#[spirv(attachment_index)]"),
+            AttachmentIndex(value) => try_insert(
+                &mut self.attachment_index,
+                value,
+                span,
+                "#[spirv(attachment_index)]",
+            ),
             UnrollLoops => try_insert(&mut self.unroll_loops, (), span, "#[spirv(unroll_loops)]"),
             InternalBufferLoad => try_insert(
                 &mut self.internal_buffer_load,
