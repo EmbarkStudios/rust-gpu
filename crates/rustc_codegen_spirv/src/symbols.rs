@@ -23,7 +23,7 @@ pub struct Symbols {
     pub entry_point_name: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
-    attachment_index: Symbol,
+    input_attachment_index: Symbol,
     image_type: Symbol,
     dim: Symbol,
     depth: Symbol,
@@ -381,7 +381,7 @@ impl Symbols {
             num_traits: Symbol::intern("num_traits"),
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
-            attachment_index: Symbol::intern("attachment_index"),
+            input_attachment_index: Symbol::intern("input_attachment_index"),
             image_type: Symbol::intern("image_type"),
             dim: Symbol::intern("dim"),
             depth: Symbol::intern("depth"),
@@ -454,8 +454,8 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                     SpirvAttribute::DescriptorSet(parse_attr_int_value(arg)?)
                 } else if arg.has_name(sym.binding) {
                     SpirvAttribute::Binding(parse_attr_int_value(arg)?)
-                } else if arg.has_name(sym.attachment_index) {
-                    SpirvAttribute::AttachmentIndex(parse_attr_int_value(arg)?)
+                } else if arg.has_name(sym.input_attachment_index) {
+                    SpirvAttribute::InputAttachmentIndex(parse_attr_int_value(arg)?)
                 } else {
                     let name = match arg.ident() {
                         Some(i) => i,

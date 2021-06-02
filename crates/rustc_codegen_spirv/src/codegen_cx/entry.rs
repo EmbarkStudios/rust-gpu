@@ -680,7 +680,7 @@ impl<'tcx> CodegenCx<'tcx> {
             },
             _ => false,
         };
-        if let Some(attachment_index) = attrs.attachment_index.map(|attr| attr.value) {
+        if let Some(attachment_index) = attrs.input_attachment_index.map(|attr| attr.value) {
             if is_subpass_input {
                 self.emit_global().capability(Capability::InputAttachment);
                 self.emit_global().decorate(
@@ -690,7 +690,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 )
             } else {
                 self.tcx.sess.span_err(
-                    attrs.attachment_index.unwrap().span,
+                    attrs.input_attachment_index.unwrap().span,
                     "#[spirv(attachment_index)] is only valid on Image types with dim = SubpassData"
                 );
             }
