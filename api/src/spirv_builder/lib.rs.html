@@ -477,6 +477,19 @@
 <span id="474">474</span>
 <span id="475">475</span>
 <span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
 </pre><pre class="rust">
 <span class="comment">// BEGIN - Embark standard lints v0.3</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -566,9 +579,9 @@
                 <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Crate path {} does not exist&quot;</span>, <span class="ident">path</span>.<span class="ident">display</span>())
             }
             <span class="ident">SpirvBuilderError::BuildFailed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Build failed&quot;</span>),
-            <span class="ident">SpirvBuilderError::MultiModuleWithPrintMetadata</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Multi-module build cannot be used with print_metadata = true&quot;</span>)
-            }
+            <span class="ident">SpirvBuilderError::MultiModuleWithPrintMetadata</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(
+                <span class="string">&quot;Multi-module build cannot be used with print_metadata = MetadataPrintout::Full&quot;</span>,
+            ),
             <span class="ident">SpirvBuilderError::MetadataFileMissing</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Multi-module metadata file missing&quot;</span>)
             }
@@ -587,9 +600,21 @@
     <span class="ident">GLSL450</span>,
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MetadataPrintout</span> {
+    <span class="doccomment">/// Print no cargo metadata.</span>
+    <span class="prelude-val">None</span>,
+    <span class="doccomment">/// Print only dependency information (eg for multiple modules).</span>
+    <span class="ident">DependencyOnly</span>,
+    <span class="doccomment">/// Print all cargo metadata.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Includes dependency information and spirv environment variable.</span>
+    <span class="ident">Full</span>,
+}
+
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpirvBuilder</span> {
     <span class="ident">path_to_crate</span>: <span class="ident">PathBuf</span>,
-    <span class="ident">print_metadata</span>: <span class="ident">bool</span>,
+    <span class="ident">print_metadata</span>: <span class="ident">MetadataPrintout</span>,
     <span class="ident">release</span>: <span class="ident">bool</span>,
     <span class="ident">target</span>: <span class="ident">String</span>,
     <span class="ident">bindless</span>: <span class="ident">bool</span>,
@@ -610,7 +635,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">path_to_crate</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">target</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">path_to_crate</span>: <span class="ident">path_to_crate</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>(),
-            <span class="ident">print_metadata</span>: <span class="bool-val">true</span>,
+            <span class="ident">print_metadata</span>: <span class="ident">MetadataPrintout::Full</span>,
             <span class="ident">release</span>: <span class="bool-val">true</span>,
             <span class="ident">target</span>: <span class="ident">target</span>.<span class="ident">into</span>(),
             <span class="ident">bindless</span>: <span class="bool-val">false</span>,
@@ -627,8 +652,8 @@
         }
     }
 
-    <span class="doccomment">/// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to true.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print_metadata</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="doccomment">/// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to [`MetadataPrintout::Full`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print_metadata</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">MetadataPrintout</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">print_metadata</span> <span class="op">=</span> <span class="ident">v</span>;
         <span class="self">self</span>
     }
@@ -710,10 +735,10 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Builds the module. If `print_metadata` is true, you usually don&#39;t have to inspect the path</span>
+    <span class="doccomment">/// Builds the module. If `print_metadata` is [`MetadataPrintout::Full`], you usually don&#39;t have to inspect the path</span>
     <span class="doccomment">/// in the result, as the environment variable for the path to the module will already be set.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CompileResult</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print_metadata</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">multimodule</span> {
+        <span class="kw">if</span> (<span class="self">self</span>.<span class="ident">print_metadata</span> <span class="op">=</span><span class="op">=</span> <span class="ident">MetadataPrintout::Full</span>) <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">multimodule</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SpirvBuilderError::MultiModuleWithPrintMetadata</span>);
         }
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">path_to_crate</span>.<span class="ident">is_dir</span>() {
@@ -728,7 +753,7 @@
             <span class="ident">ModuleResult::SingleModule</span>(<span class="ident">spirv_module</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">multimodule</span>);
                 <span class="kw">let</span> <span class="ident">env_var</span> <span class="op">=</span> <span class="ident">metadata_file</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>().<span class="ident">to_str</span>().<span class="ident">unwrap</span>();
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print_metadata</span> {
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">print_metadata</span> <span class="op">=</span><span class="op">=</span> <span class="ident">MetadataPrintout::Full</span> {
                     <span class="macro">println!</span>(<span class="string">&quot;cargo:rustc-env={}={}&quot;</span>, <span class="ident">env_var</span>, <span class="ident">spirv_module</span>.<span class="ident">display</span>());
                 }
             }
@@ -894,8 +919,9 @@
     <span class="kw">let</span> <span class="ident">artifact</span> <span class="op">=</span> <span class="ident">get_last_artifact</span>(<span class="kw-2">&amp;</span><span class="ident">stdout</span>);
 
     <span class="kw">if</span> <span class="ident">build</span>.<span class="ident">status</span>.<span class="ident">success</span>() {
-        <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">print_metadata</span> {
-            <span class="ident">print_deps_of</span>(<span class="kw-2">&amp;</span><span class="ident">artifact</span>);
+        <span class="kw">match</span> <span class="ident">builder</span>.<span class="ident">print_metadata</span> {
+            <span class="ident">MetadataPrintout::Full</span> <span class="op">|</span> <span class="ident">MetadataPrintout::DependencyOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">print_deps_of</span>(<span class="kw-2">&amp;</span><span class="ident">artifact</span>),
+            <span class="ident">MetadataPrintout::None</span> <span class="op">=</span><span class="op">&gt;</span> (),
         }
         <span class="prelude-val">Ok</span>(<span class="ident">artifact</span>)
     } <span class="kw">else</span> {
