@@ -448,6 +448,8 @@
 <span id="445">445</span>
 <span id="446">446</span>
 <span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">ModuleHeader</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">Op</span>, <span class="ident">Word</span>};
@@ -523,7 +525,9 @@
                     <span class="comment">// of bounds, but just stop optimizing instead of panicing here.</span>
                     <span class="kw">break</span>;
                 }
-                <span class="ident">components</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
+                <span class="kw">if</span> <span class="ident">components</span>[<span class="ident">index</span>].<span class="ident">is_none</span>() {
+                    <span class="ident">components</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
+                }
                 <span class="comment">// Follow back one in the chain of OpCompositeInsert</span>
                 <span class="ident">cur_inst</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">defs</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">cur_inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_id_ref</span>()) {
                     <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>,
