@@ -72,7 +72,9 @@ pub fn composite_construct(types: &FxHashMap<Word, Instruction>, function: &mut 
                     // of bounds, but just stop optimizing instead of panicing here.
                     break;
                 }
-                components[index] = Some(value);
+                if components[index].is_none() {
+                    components[index] = Some(value);
+                }
                 // Follow back one in the chain of OpCompositeInsert
                 cur_inst = match defs.get(&cur_inst.operands[1].unwrap_id_ref()) {
                     Some(i) => i,
