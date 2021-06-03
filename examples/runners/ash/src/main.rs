@@ -68,7 +68,7 @@ use std::{
 
 use structopt::StructOpt;
 
-use spirv_builder::SpirvBuilder;
+use spirv_builder::{MetadataPrintout, SpirvBuilder};
 
 use shared::ShaderConstants;
 
@@ -174,7 +174,7 @@ pub fn compile_shaders() -> Vec<SpvFile> {
     let spv_paths: Vec<PathBuf> =
         vec![
             SpirvBuilder::new("examples/shaders/sky-shader", "spirv-unknown-vulkan1.1")
-                .print_metadata(false)
+                .print_metadata(MetadataPrintout::None)
                 .build()
                 .unwrap()
                 .module

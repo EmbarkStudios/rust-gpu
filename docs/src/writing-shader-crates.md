@@ -44,7 +44,7 @@ Paste the following into the `main` for your build script.
 ```rust,no_run
 SpirvBuilder::new(path_to_shader)
         .spirv_version(1, 0)
-        .print_metadata()
+        .print_metadata(MetadataPrintout::Full)
         .build()?;
 ```
 
