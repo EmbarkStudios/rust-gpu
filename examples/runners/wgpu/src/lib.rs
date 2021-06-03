@@ -78,9 +78,9 @@ fn shader_module(shader: RustGPUShader) -> wgpu::ShaderModuleDescriptor<'static>
         };
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
         let crate_path = [manifest_dir, "..", "..", "shaders", crate_name]
-        .iter()
-        .copied()
-        .collect::<PathBuf>();
+            .iter()
+            .copied()
+            .collect::<PathBuf>();
         let mut builder = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.1")
             .print_metadata(MetadataPrintout::None);
         for &cap in capabilities {
