@@ -52,7 +52,10 @@ See [source](examples/shaders/sky-shader/src/lib.rs) for full details.
 
 Check out [The `rust-gpu` Dev Guide][gpu-guide] for information on how to get started with using it in your projects.
 
+Experiment with rust-gpu shaders in-bowser at [SHADERed][shadered].
+
 [gpu-guide]: https://embarkstudios.github.io/rust-gpu/book/
+[shadered]: https://shadered.org/shaders?language=rust&sort=hot
 
 
 ## Background
