@@ -244,14 +244,17 @@ impl SpirvBuilder {
 
     /// Builds the module. If `print_metadata` is [`MetadataPrintout::Full`], you usually don't have to inspect the path
     /// in the result, as the environment variable for the path to the module will already be set.
-    pub fn build(self) -> Result<CompileResult, SpirvBuilderError> {
-        if (self.print_metadata == MetadataPrintout::Full) && self.multimodule {
-            return Err(SpirvBuilderError::MultiModuleWithPrintMetadata);
-        }
-        if !self.path_to_crate.is_dir() {
-            return Err(SpirvBuilderError::CratePathDoesntExist(self.path_to_crate));
-        }
+    pub fn build(mut self) -> Result<CompileResult, SpirvBuilderError> {
+        self.validate_running_conditions()?;
         let metadata_file = invoke_rustc(&self)?;
+        match self.print_metadata {
+            MetadataPrintout::Full | MetadataPrintout::DependencyOnly => {
+                leaf_deps(&metadata_file, |artifact| {
+                    println!("cargo:rerun-if-changed={}", artifact)
+                });
+            }
+            MetadataPrintout::None => (),
+        }
         let metadata_contents =
             File::open(&metadata_file).map_err(SpirvBuilderError::MetadataFileMissing)?;
         let metadata: CompileResult = serde_json::from_reader(BufReader::new(metadata_contents))
@@ -269,6 +272,18 @@ impl SpirvBuilder {
             }
         }
         Ok(metadata)
+    }
+
+    pub(crate) fn validate_running_conditions(&mut self) -> Result<(), SpirvBuilderError> {
+        if (self.print_metadata == MetadataPrintout::Full) && self.multimodule {
+            return Err(SpirvBuilderError::MultiModuleWithPrintMetadata);
+        }
+        if !self.path_to_crate.is_dir() {
+            return Err(SpirvBuilderError::CratePathDoesntExist(std::mem::take(
+                &mut self.path_to_crate,
+            )));
+        }
+        Ok(())
     }
 }
 
@@ -426,10 +441,6 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     let artifact = get_last_artifact(&stdout);
 
     if build.status.success() {
-        match builder.print_metadata {
-            MetadataPrintout::Full | MetadataPrintout::DependencyOnly => print_deps_of(&artifact),
-            MetadataPrintout::None => (),
-        }
         Ok(artifact)
     } else {
         Err(SpirvBuilderError::BuildFailed)
@@ -467,7 +478,8 @@ fn get_last_artifact(out: &str) -> PathBuf {
     filename.into()
 }
 
-fn print_deps_of(artifact: &Path) {
+/// Internally iterate through the leaf dependencies of the artifact at `artifact`
+fn leaf_deps(artifact: &Path, handle: impl FnMut(&RawStr)) {
     let deps_file = artifact.with_extension("d");
     let mut deps_map = HashMap::new();
     depfile::read_deps_file(&deps_file, |item, deps| {
@@ -475,15 +487,19 @@ fn print_deps_of(artifact: &Path) {
         Ok(())
     })
     .expect("Could not read dep file");
-    fn recurse(map: &HashMap<RawString, Vec<RawString>>, artifact: &RawStr) {
+    fn recurse(
+        map: &HashMap<RawString, Vec<RawString>>,
+        artifact: &RawStr,
+        handle: &mut impl FnMut(&RawStr),
+    ) {
         match map.get(artifact) {
             Some(entries) => {
                 for entry in entries {
-                    recurse(map, entry)
+                    recurse(map, entry, handle)
                 }
             }
-            None => println!("cargo:rerun-if-changed={}", artifact),
+            None => handle(artifact),
         }
     }
-    recurse(&deps_map, artifact.to_str().unwrap().into());
+    recurse(&deps_map, artifact.to_str().unwrap().into(), &mut handle);
 }
