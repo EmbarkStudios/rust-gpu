@@ -1,6 +1,5 @@
 use super::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
-use crate::codegen_cx::BindlessDescriptorSets;
 use crate::rustc_codegen_ssa::traits::BuilderMethods;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
@@ -216,20 +215,12 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     pub(crate) fn codegen_internal_buffer_store(&mut self, args: &[SpirvValue]) {
-        if !self.bindless() {
-            self.fatal("Need to run the compiler with -Ctarget-feature=+bindless to be able to use the bindless features");
-        }
-
         let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
 
         let uniform_uint_ptr =
             SpirvType::Pointer { pointee: uint_ty }.def(rustc_span::DUMMY_SP, self);
 
-        let zero = self.constant_int(uint_ty, 0).def(self);
-
-        let sets = self.bindless_descriptor_sets.borrow().unwrap();
-
-        let bindless_idx = args[0].def(self);
+        let buffer = args[0].def(self);
         let offset_arg = args[1].def(self);
 
         let two = self.constant_int(uint_ty, 2).def(self);
@@ -253,11 +244,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 dword_offset
             };
 
-            let indices = vec![bindless_idx, zero, offset];
+            let indices = vec![offset];
 
             let access_chain = self
                 .emit()
-                .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+                .access_chain(uniform_uint_ptr, None, buffer, indices)
                 .unwrap()
                 .with_type(uniform_uint_ptr);
 
@@ -270,10 +261,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         result_type: Word,
         args: &[SpirvValue],
     ) -> SpirvValue {
-        if !self.bindless() {
-            self.fatal("Need to run the compiler with -Ctarget-feature=+bindless to be able to use the bindless features");
-        }
-
         let uint_ty = SpirvType::Integer(32, false).def(rustc_span::DUMMY_SP, self);
 
         let uniform_uint_ptr =
@@ -288,18 +275,15 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             .shift_right_arithmetic(uint_ty, None, offset_arg, two)
             .unwrap();
 
-        let bindless_idx = args[0].def(self);
-
-        let sets = self.bindless_descriptor_sets.borrow().unwrap();
+        let buffer = args[0].def(self);
 
         self.recurse_adt_for_loads(
             uint_ty,
             uniform_uint_ptr,
-            bindless_idx,
+            buffer,
             base_offset_var,
             0,
             result_type,
-            &sets,
         )
     }
 
@@ -311,13 +295,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         target_ty: Word,
         uint_ty: u32,
         uniform_uint_ptr: u32,
-        bindless_idx: u32,
+        buffer: u32,
         base_offset_var: Word,
         element_offset_literal: u32,
-        sets: &BindlessDescriptorSets,
     ) -> SpirvValue {
-        let zero = self.constant_int(uint_ty, 0).def(self);
-
         let offset = if element_offset_literal > 0 {
             let element_offset = self
                 .constant_int(uint_ty, element_offset_literal as u64)
@@ -330,11 +311,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             base_offset_var
         };
 
-        let indices = vec![bindless_idx, zero, offset];
+        let indices = vec![offset];
 
         let result = self
             .emit()
-            .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+            .access_chain(uniform_uint_ptr, None, buffer, indices)
             .unwrap();
 
         match (bits, signed) {
@@ -372,11 +353,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
                 let upper_offset = self.emit().i_add(uint_ty, None, offset, const_one).unwrap();
 
-                let indices = vec![bindless_idx, zero, upper_offset];
+                let indices = vec![upper_offset];
 
                 let upper_chain = self
                     .emit()
-                    .access_chain(uniform_uint_ptr, None, sets.buffers, indices)
+                    .access_chain(uniform_uint_ptr, None, buffer, indices)
                     .unwrap();
 
                 let upper = self
@@ -420,11 +401,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         &mut self,
         uint_ty: u32,
         uniform_uint_ptr: u32,
-        bindless_idx: u32,
+        buffer: u32,
         base_offset_var: Word,
         element_offset_literal: u32,
         result_type: u32,
-        sets: &BindlessDescriptorSets,
     ) -> SpirvValue {
         let data = self.lookup_type(result_type);
 
@@ -461,11 +441,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         self.recurse_adt_for_loads(
                             uint_ty,
                             uniform_uint_ptr,
-                            bindless_idx,
+                            buffer,
                             base_offset_var,
                             element_offset_literal + offset,
                             *ty,
-                            sets,
                         )
                         .def(self),
                     );
@@ -486,11 +465,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         self.recurse_adt_for_loads(
                             uint_ty,
                             uniform_uint_ptr,
-                            bindless_idx,
+                            buffer,
                             base_offset_var,
                             element_offset_literal + offset,
                             element,
-                            sets,
                         )
                         .def(self),
                     );
@@ -511,10 +489,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         uint_ty,
                         uint_ty,
                         uniform_uint_ptr,
-                        bindless_idx,
+                        buffer,
                         base_offset_var,
                         element_offset_literal,
-                        sets,
                     )
                     .def(self);
 
@@ -529,10 +506,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 result_type,
                 uint_ty,
                 uniform_uint_ptr,
-                bindless_idx,
+                buffer,
                 base_offset_var,
                 element_offset_literal,
-                sets,
             ),
             SpirvType::Array { element, count } => {
                 let count = self
@@ -550,11 +526,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         self.recurse_adt_for_loads(
                             uint_ty,
                             uniform_uint_ptr,
-                            bindless_idx,
+                            buffer,
                             base_offset_var,
                             element_offset_literal + offset,
                             element,
-                            sets,
                         )
                         .def(self),
                     );

@@ -1,4 +1,4 @@
-use crate::{RuntimeArray, ray_tracing::{RayFlags, RayQuery}, vector::Vector};
+use crate::{ray_tracing::{RayFlags, RayQuery}, vector::Vector};
 
 /// A handle that points to a rendering related resource (TLAS, Sampler, Buffer, Texture etc)
 /// this handle can be uploaded directly to the GPU to refer to our resources in a bindless
@@ -107,27 +107,16 @@ impl RenderResourceHandle {
     }
 }
 
+#[spirv(resource_access)]
+#[spirv_std_macros::gpu_only]
+pub extern "unadjusted" fn resource_access<T>(index: u32) -> T {
+    unimplemented!()
+}
+
+
 #[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct Buffer(RenderResourceHandle);
-
-mod internal {
-    #[spirv(internal_buffer_load)]
-    #[spirv_std_macros::gpu_only]
-    pub extern "unadjusted" fn internal_buffer_load<T>(_buffer: u32, _offset: u32) -> T {
-        unimplemented!()
-    } // actually implemented in the compiler
-
-    #[spirv(internal_buffer_store)]
-    #[spirv_std_macros::gpu_only]
-    pub unsafe extern "unadjusted" fn internal_buffer_store<T>(
-        _buffer: u32,
-        _offset: u32,
-        _value: T,
-    ) {
-        unimplemented!()
-    } // actually implemented in the compiler
-}
 
 impl Buffer {
     #[spirv_std_macros::gpu_only]
@@ -138,7 +127,8 @@ impl Buffer {
         // assert!(std::mem::sizeof::<T>() % 4 == 0);
         // assert!(dword_aligned_byte_offset % 4 == 0);
 
-        unsafe { internal::internal_buffer_load(self.0.index(), dword_aligned_byte_offset) }
+        let buffer: &mut crate::RuntimeArray<u32> = resource_access(unsafe { self.0.index() });
+        buffer.load(dword_aligned_byte_offset)
     }
 
     #[spirv_std_macros::gpu_only]
@@ -146,7 +136,8 @@ impl Buffer {
         // jb-todo: figure out why this assert breaks with complaints about pointers
         // assert!(self.0.tag() == RenderResourceTag::Buffer);
 
-        internal::internal_buffer_store(self.0.index(), dword_aligned_byte_offset, value)
+        let buffer: &mut crate::RuntimeArray<u32> = resource_access(self.0.index());
+        buffer.store(dword_aligned_byte_offset, value)
     }
 }
 
@@ -158,12 +149,14 @@ impl<T> SimpleBuffer<T> {
     #[spirv_std_macros::gpu_only]
     #[inline]
     pub extern "unadjusted" fn load(self) -> T {
-        unsafe { internal::internal_buffer_load(self.0.index(), 0) }
+        let buffer: &mut crate::RuntimeArray<u32> = resource_access(unsafe { self.0.index() });
+        buffer.load(0)
     }
 
     #[spirv_std_macros::gpu_only]
     pub unsafe extern "unadjusted" fn store(self, value: T) {
-        internal::internal_buffer_store(self.0.index(), 0, value)
+        let buffer: &mut crate::RuntimeArray<u32> = resource_access(self.0.index());
+        buffer.store(0, value)
     }
 }
 
@@ -175,201 +168,29 @@ impl<T> ArrayBuffer<T> {
     #[spirv_std_macros::gpu_only]
     #[inline]
     pub extern "unadjusted" fn load(self, index: u32) -> T {
-        unsafe {
-            internal::internal_buffer_load(self.0.index(), index * core::mem::size_of::<T>() as u32)
-        }
+        let buffer: &mut crate::RuntimeArray<u32> = resource_access(unsafe { self.0.index() });
+        buffer.load(index * core::mem::size_of::<T>() as u32)
     }
 
     #[spirv_std_macros::gpu_only]
     pub unsafe extern "unadjusted" fn store(self, index: u32, value: T) {
-        internal::internal_buffer_store(
-            self.0.index(),
+        let buffer: &mut crate::RuntimeArray<u32> = resource_access(self.0.index());
+        buffer.store(
             index * core::mem::size_of::<T>() as u32,
             value,
         )
     }
 }
 
-#[spirv(resource_access)]
-#[spirv_std_macros::gpu_only]
-pub extern "unadjusted" fn resource_access<T>(index: u32) -> T {
-    unimplemented!()
-}
 
 #[derive(Copy, Clone)]
 #[repr(transparent)]
-pub struct Texture2d(pub RenderResourceHandle);
-
-// use core::ops::Deref;
-
-// impl Deref for Texture2d {
-//     type Target = super::Image2d;
-//     fn deref(&self) -> &Self::Target {
-//         &resource_access::<Self::Target>(unsafe { self.0.index() })
-//     }
-// }
+pub struct Texture2d(RenderResourceHandle);
 
 #[derive(Copy, Clone)]
 #[repr(transparent)]
-pub struct Sampler(pub RenderResourceHandle);
+pub struct Sampler(RenderResourceHandle);
 
-// impl Deref for Sampler {
-//     type Target = super::Sampler;
-//     fn deref(&self) -> &Self::Target {
-//         &resource_access::<Self::Target>(unsafe { self.0.index() })
-//     }
-// }
-
-/*
-impl Texture2d {
-    #[spirv_std_macros::gpu_only]
-    pub fn sample<V: Vector<f32, 4>>(self, sampler: Sampler, coord: impl Vector<f32, 2>) -> V {
-        // jb-todo: also do a bindless fetch of the sampler
-        unsafe {
-            let mut result = Default::default();
-            asm!(
-                "OpExtension \"SPV_EXT_descriptor_indexing\"",
-                "OpCapability RuntimeDescriptorArray",
-                "OpDecorate %image_2d_var DescriptorSet 1",
-                "OpDecorate %image_2d_var Binding 0",
-                "OpDecorate %sampler_var DescriptorSet 2",
-                "OpDecorate %sampler_var Binding 0",
-                "%uint                  = OpTypeInt 32 0",
-                "%float                 = OpTypeFloat 32",
-                "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
-                "%sampler               = OpTypeSampler",
-                "%image_array           = OpTypeRuntimeArray %image_2d",
-                "%sampler_array         = OpTypeRuntimeArray %sampler",
-                "%ptr_image_array       = OpTypePointer Generic %image_array",
-                "%ptr_sampler_array     = OpTypePointer Generic %sampler_array",
-                "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
-                "%sampler_var           = OpVariable %ptr_sampler_array UniformConstant",
-                "%ptr_image_2d          = OpTypePointer Generic %image_2d",
-                "%ptr_sampler           = OpTypePointer Generic %sampler",
-                "", // ^^ type preamble
-                "%offset_image          = OpLoad _ {1}",
-                "%image_ptr             = OpAccessChain %ptr_image_2d %image_2d_var %offset_image",
-                "%25                    = OpLoad %image_2d %image_ptr",
-                "%offset_sampler        = OpLoad _ {2}",
-                "%sampler_ptr           = OpAccessChain %ptr_sampler %sampler_var %offset_sampler",
-                "%26                    = OpLoad %sampler %sampler_ptr",
-                "%combined              = OpSampledImage _ %25 %26",
-                "%coord                 = OpLoad _ {0}",
-                "%result                = OpImageSampleImplicitLod _ %combined %coord",
-                "OpStore {3} %result",
-                in(reg) &coord,
-                in(reg) &self.0.index(),
-                in(reg) &sampler.0.index(),
-                in(reg) &mut result,
-            );
-            result
-        }
-    }
-
-    #[spirv_std_macros::gpu_only]
-    pub fn sample_proj_lod<V: Vector<f32, 4>>(
-        self,
-        coord: impl Vector<f32, 4>,
-        ddx: impl Vector<f32, 2>,
-        ddy: impl Vector<f32, 2>,
-        offset_x: i32,
-        offset_y: i32,
-    ) -> V {
-        // jb-todo: also do a bindless fetch of the sampler
-        unsafe {
-            let mut result = Default::default();
-            asm!(
-                "OpExtension \"SPV_EXT_descriptor_indexing\"",
-                "OpCapability RuntimeDescriptorArray",
-                "OpDecorate %image_2d_var DescriptorSet 1",
-                "OpDecorate %image_2d_var Binding 0",
-                "%uint                  = OpTypeInt 32 0",
-                "%int                   = OpTypeInt 32 1",
-                "%float                 = OpTypeFloat 32",
-                "%v2int                 = OpTypeVector %int 2",
-                "%int_0                 = OpConstant %int 0",
-                "%image_2d              = OpTypeImage %float Dim2D 0 0 0 1 Unknown",
-                "%sampled_image_2d      = OpTypeSampledImage %image_2d",
-                "%image_array           = OpTypeRuntimeArray %sampled_image_2d",
-                "%ptr_image_array       = OpTypePointer Generic %image_array",
-                "%image_2d_var          = OpVariable %ptr_image_array UniformConstant",
-                "%ptr_sampled_image_2d  = OpTypePointer Generic %sampled_image_2d",
-                "", // ^^ type preamble
-                "%offset                = OpLoad _ {1}",
-                "%24                    = OpAccessChain %ptr_sampled_image_2d %image_2d_var %offset",
-                "%25                    = OpLoad %sampled_image_2d %24",
-                "%coord                 = OpLoad _ {0}",
-                "%ddx                   = OpLoad _ {3}",
-                "%ddy                   = OpLoad _ {4}",
-                "%offset_x              = OpLoad _ {5}",
-                "%offset_y              = OpLoad _ {6}",
-                "%const_offset          = OpConstantComposite %v2int %int_0 %int_0",
-                "%result                = OpImageSampleProjExplicitLod _ %25 %coord Grad|ConstOffset %ddx %ddy %const_offset",
-                "OpStore {2} %result",
-                in(reg) &coord,
-                in(reg) &self.0.index(),
-                in(reg) &mut result,
-                in(reg) &ddx,
-                in(reg) &ddy,
-                in(reg) &offset_x,
-                in(reg) &offset_y,
-            );
-            result
-        }
-    }
-}
-*/
 #[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct AccelerationStructure(RenderResourceHandle);
-
-impl AccelerationStructure {
-    #[spirv_std_macros::gpu_only]
-    #[doc(alias = "OpRayQueryInitializeKHR")]
-    #[inline]
-    #[allow(clippy::too_many_arguments)]
-    pub unsafe fn ray_query_init(
-        &self,
-        ray_query: &mut RayQuery,
-        ray_flags: RayFlags,
-        cull_mask: u32,
-        ray_origin: impl Vector<f32, 3>,
-        ray_tmin: f32,
-        ray_direction: impl Vector<f32, 3>,
-        ray_tmax: f32,
-    ) {
-        asm! {
-            "OpExtension \"SPV_EXT_descriptor_indexing\"",
-            "OpCapability RuntimeDescriptorArray",
-            "OpDecorate %accel_var DescriptorSet 3",
-            "OpDecorate %accel_var Binding 0",
-            "%accel_struct           = OpTypeAccelerationStructureKHR",
-            "%accel_struct_array     = OpTypeRuntimeArray %accel_struct",
-            "%ptr_accel_struct_array = OpTypePointer Generic %accel_struct_array",
-            "%accel_var              = OpVariable %ptr_accel_struct_array UniformConstant",
-            "%ptr_accel_Struct       = OpTypePointer Generic %accel_struct",
-            "%offset                 = OpLoad _ {idx}",
-            "%ptr_accel              = OpAccessChain %ptr_accel_Struct %accel_var %offset",
-            "%acceleration_structure = OpLoad %accel_struct %ptr_accel",
-            "%origin = OpLoad _ {ray_origin}",
-            "%direction = OpLoad _ {ray_direction}",
-            "OpRayQueryInitializeKHR \
-                {ray_query} \
-                %acceleration_structure \
-                {ray_flags} \
-                {cull_mask} \
-                %origin \
-                {ray_tmin} \
-                %direction \
-                {ray_tmax}",
-            ray_query = in(reg) ray_query,
-            idx = in(reg) self.0.index(),
-            ray_flags = in(reg) ray_flags.bits(),
-            cull_mask = in(reg) cull_mask,
-            ray_origin = in(reg) &ray_origin,
-            ray_tmin = in(reg) ray_tmin,
-            ray_direction = in(reg) &ray_direction,
-            ray_tmax = in(reg) ray_tmax,
-        }
-    }
-}
