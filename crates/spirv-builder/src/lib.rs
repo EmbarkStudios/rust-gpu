@@ -71,10 +71,12 @@ pub use rustc_codegen_spirv::rspirv::spirv::Capability;
 pub use rustc_codegen_spirv::{CompileResult, ModuleResult};
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum SpirvBuilderError {
     CratePathDoesntExist(PathBuf),
     BuildFailed,
     MultiModuleWithPrintMetadata,
+    WatchWithPrintMetadata,
     MetadataFileMissing(std::io::Error),
     MetadataFileMalformed(serde_json::Error),
 }
@@ -89,6 +91,9 @@ impl fmt::Display for SpirvBuilderError {
             SpirvBuilderError::MultiModuleWithPrintMetadata => f.write_str(
                 "Multi-module build cannot be used with print_metadata = MetadataPrintout::Full",
             ),
+            SpirvBuilderError::WatchWithPrintMetadata => {
+                f.write_str("Watching within build scripts will prevent build completion")
+            }
             SpirvBuilderError::MetadataFileMissing(_) => {
                 f.write_str("Multi-module metadata file missing")
             }
