@@ -37,16 +37,27 @@ If you're writing a bigger application and you want to integrate SPIR-V shader
 crates to display, it's recommended to use `spirv-builder` in a build script.
 
 1. Copy the [`rust-toolchain`] file to your project. (You must use the same version of Rust as `rust-gpu`.)
-2. Create a `build.rs` in your project root.
+2. Reference `spirv-builder` in your Cargo.toml:
+    ```toml
+    [build-dependencies]
+    spirv-builder = { git = "https://github.com/EmbarkStudios/rust-gpu" }
+    ```
+    (we currently do not publish spirv-builder on crates.io)
+3. Create a `build.rs` in your project root.
 
 #### `build.rs`
 Paste the following into the `main` for your build script.
+
 ```rust,no_run
-SpirvBuilder::new(path_to_shader)
-        .spirv_version(1, 0)
+SpirvBuilder::new(path_to_shader, target)
         .print_metadata(MetadataPrintout::Full)
         .build()?;
 ```
+
+The values available for the `target` parameter are available [here](./platform-support.md).
+For example, if building for vulkan 1.1, use `"spirv-unknown-vulkan1.1"`.
+
+The `SpirvBuilder` struct has numerous configuration options available, see rustdoc for documentation.
 
 #### `main.rs`
 ```rust,no_run
