@@ -10,5 +10,6 @@
 - [Features]()
     - [Attribute syntax](./attributes.md)
     - [Inline Assembly](./inline-asm.md)
+    - [Image type syntax](./image.md)
 - [RFCs]()
     - [001. Resource Binding Syntax](./rfcs/001-resource-binding-syntax.md)
