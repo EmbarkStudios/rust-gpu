@@ -102,6 +102,7 @@ pub enum SpirvAttribute {
     UnrollLoops,
     InternalBufferLoad,
     InternalBufferStore,
+    ResourceAccess,
 }
 
 // HACK(eddyb) this is similar to `rustc_span::Spanned` but with `value` as the
@@ -137,6 +138,7 @@ pub struct AggregatedSpirvAttributes {
     pub unroll_loops: Option<Spanned<()>>,
     pub internal_buffer_load: Option<Spanned<()>>,
     pub internal_buffer_store: Option<Spanned<()>>,
+    pub resource_access: Option<Spanned<()>>,
 }
 
 struct MultipleAttrs {
@@ -235,6 +237,12 @@ impl AggregatedSpirvAttributes {
                 (),
                 span,
                 "#[spirv(internal_buffer_store)]",
+            ),
+            ResourceAccess => try_insert(
+                &mut self.resource_access,
+                (),
+                span,
+                "#[spirv(resource_access)]",
             ),
         }
     }
@@ -362,6 +370,7 @@ impl CheckSpirvAttrVisitor<'_> {
                 },
                 SpirvAttribute::InternalBufferLoad
                 | SpirvAttribute::InternalBufferStore
+                | SpirvAttribute::ResourceAccess
                 | SpirvAttribute::UnrollLoops => match target {
                     Target::Fn
                     | Target::Closure

@@ -130,6 +130,9 @@ impl<'tcx> CodegenCx<'tcx> {
         if attrs.internal_buffer_store.is_some() {
             self.internal_buffer_store_id.borrow_mut().insert(fn_id);
         }
+        if attrs.resource_access.is_some() {
+            self.resource_access_id.borrow_mut().insert(fn_id);
+        }
 
         let instance_def_id = instance.def_id();
 

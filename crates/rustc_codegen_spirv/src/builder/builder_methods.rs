@@ -2194,6 +2194,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 kind: SpirvValueKind::IllegalTypeUsed(void_ty),
                 ty: void_ty,
             }
+        } else if self.resource_access_id.borrow().contains(&callee_val) {
+            self.codegen_resource_access(result_type, args)
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()

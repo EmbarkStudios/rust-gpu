@@ -345,6 +345,7 @@ impl Symbols {
             ("unroll_loops", SpirvAttribute::UnrollLoops),
             ("internal_buffer_load", SpirvAttribute::InternalBufferLoad),
             ("internal_buffer_store", SpirvAttribute::InternalBufferStore),
+            ("resource_access", SpirvAttribute::ResourceAccess),
         ]
         .iter()
         .cloned();

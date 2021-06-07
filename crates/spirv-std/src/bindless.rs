@@ -1,4 +1,4 @@
-use crate::{ray_tracing::{RayFlags, RayQuery}, vector::Vector};
+use crate::{RuntimeArray, ray_tracing::{RayFlags, RayQuery}, vector::Vector};
 
 /// A handle that points to a rendering related resource (TLAS, Sampler, Buffer, Texture etc)
 /// this handle can be uploaded directly to the GPU to refer to our resources in a bindless
@@ -79,6 +79,11 @@ impl RenderResourceHandle {
                 invalid_tag
             ),
         }
+    }
+
+    #[inline]
+    pub unsafe fn access<T>(self) -> T {
+        resource_access(self.index())
     }
 
     /// # Safety
@@ -185,14 +190,37 @@ impl<T> ArrayBuffer<T> {
     }
 }
 
-#[derive(Copy, Clone)]
-#[repr(transparent)]
-pub struct Texture2d(RenderResourceHandle);
+#[spirv(resource_access)]
+#[spirv_std_macros::gpu_only]
+pub extern "unadjusted" fn resource_access<T>(index: u32) -> T {
+    unimplemented!()
+}
 
 #[derive(Copy, Clone)]
 #[repr(transparent)]
-pub struct Sampler(RenderResourceHandle);
+pub struct Texture2d(pub RenderResourceHandle);
 
+// use core::ops::Deref;
+
+// impl Deref for Texture2d {
+//     type Target = super::Image2d;
+//     fn deref(&self) -> &Self::Target {
+//         &resource_access::<Self::Target>(unsafe { self.0.index() })
+//     }
+// }
+
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct Sampler(pub RenderResourceHandle);
+
+// impl Deref for Sampler {
+//     type Target = super::Sampler;
+//     fn deref(&self) -> &Self::Target {
+//         &resource_access::<Self::Target>(unsafe { self.0.index() })
+//     }
+// }
+
+/*
 impl Texture2d {
     #[spirv_std_macros::gpu_only]
     pub fn sample<V: Vector<f32, 4>>(self, sampler: Sampler, coord: impl Vector<f32, 2>) -> V {
@@ -290,7 +318,7 @@ impl Texture2d {
         }
     }
 }
-
+*/
 #[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct AccelerationStructure(RenderResourceHandle);

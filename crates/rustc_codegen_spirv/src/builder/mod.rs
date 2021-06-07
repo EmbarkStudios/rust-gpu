@@ -3,6 +3,7 @@ mod ext_inst;
 mod intrinsics;
 pub mod libm_intrinsics;
 mod load_store;
+mod resource_access;
 mod spirv_asm;
 
 pub use ext_inst::ExtInst;
