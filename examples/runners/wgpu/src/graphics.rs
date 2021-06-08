@@ -199,7 +199,7 @@ async fn run(
                             mouse_button_press_time,
                         };
 
-                        rpass.set_pipeline(&render_pipeline);
+                        rpass.set_pipeline(render_pipeline);
                         rpass.set_push_constants(wgpu::ShaderStage::all(), 0, unsafe {
                             any_as_u8_slice(&push_constants)
                         });
@@ -274,7 +274,7 @@ fn create_pipeline(
     shader_binary: wgpu::ShaderModuleDescriptor<'_>,
 ) -> wgpu::RenderPipeline {
     let module = device.create_shader_module(&shader_binary);
-    let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+    device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(pipeline_layout),
         vertex: wgpu::VertexState {
@@ -305,8 +305,7 @@ fn create_pipeline(
                 write_mask: wgpu::ColorWrite::ALL,
             }],
         }),
-    });
-    render_pipeline
+    })
 }
 
 pub fn start(options: &Options) {
@@ -317,14 +316,12 @@ pub fn start(options: &Options) {
     let event_loop = EventLoop::with_user_event();
     let proxy = event_loop.create_proxy();
     let thread = spawn(move || loop {
-        match rx.recv() {
-            Ok(result) => match proxy.send_event(result) {
+        while let Ok(result) = rx.recv() {
+            match proxy.send_event(result) {
                 Ok(()) => {}
                 // If something goes wrong, close this thread
                 Err(_) => break,
-            },
-            // This will occur if we can't watch (e.g. on android)
-            Err(_) => break,
+            }
         }
     });
     std::mem::forget(thread);

@@ -42,10 +42,9 @@
     rust_2018_idioms
 )]
 
-use std::sync::mpsc::{self, Receiver, SyncSender};
+use std::sync::mpsc::{self, Receiver};
 
 use clap::Clap;
-use spirv_builder::CompileResult;
 use strum::{Display, EnumString};
 
 mod compute;
@@ -67,7 +66,7 @@ fn maybe_watch(
     let (tx, rx) = mpsc::sync_channel(1);
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
-        use spirv_builder::{Capability, MetadataPrintout, SpirvBuilder};
+        use spirv_builder::{Capability, CompileResult, MetadataPrintout, SpirvBuilder};
         use std::borrow::Cow;
         use std::path::PathBuf;
         // Hack: spirv_builder builds into a custom directory if running under cargo, to not
@@ -109,7 +108,7 @@ fn maybe_watch(
         }
         fn handle_builder_result(
             compile_result: CompileResult,
-            tx: &SyncSender<wgpu::ShaderModuleDescriptor<'static>>,
+            tx: &mpsc::SyncSender<wgpu::ShaderModuleDescriptor<'static>>,
         ) {
             let module_path = compile_result.module.unwrap_single();
             let data = std::fs::read(module_path).unwrap();

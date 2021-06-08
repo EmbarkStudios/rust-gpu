@@ -46,9 +46,8 @@ impl SpirvBuilder {
                 loop {
                     rx.recv().expect("Watcher still alive");
                     let metadata_file = crate::invoke_rustc(&self);
-                    match metadata_file {
-                        Ok(f) => break f,
-                        Err(_) => (), // Continue the loop until compilation succeeds
+                    if let Ok(f) = metadata_file {
+                        break f;
                     }
                 }
             }
@@ -84,24 +83,21 @@ impl SpirvBuilder {
         loop {
             rx.recv().expect("Watcher still alive");
             let metadata_result = crate::invoke_rustc(&self);
-            match metadata_result {
-                Ok(file) => {
-                    // We can bubble this error up because it's an internal error  (e.g. rustc_codegen_spirv's version of CompileResult is somehow out of sync)
-                    let metadata = self.parse_metadata_file(&file)?;
+            if let Ok(file) = metadata_result {
+                // We can bubble this error up because it's an internal error  (e.g. rustc_codegen_spirv's version of CompileResult is somehow out of sync)
+                let metadata = self.parse_metadata_file(&file)?;
 
-                    leaf_deps(&file, |it| {
-                        let path = it.to_path().unwrap();
-                        if watched_paths.insert(path.to_owned()) {
-                            watcher
-                                .watch(it.to_path().unwrap(), RecursiveMode::NonRecursive)
-                                .expect("Cargo dependencies are valid files");
-                        }
-                    })
-                    .expect("Could read dependencies file");
+                leaf_deps(&file, |it| {
+                    let path = it.to_path().unwrap();
+                    if watched_paths.insert(path.to_owned()) {
+                        watcher
+                            .watch(it.to_path().unwrap(), RecursiveMode::NonRecursive)
+                            .expect("Cargo dependencies are valid files");
+                    }
+                })
+                .expect("Could read dependencies file");
 
-                    on_compilation_finishes(metadata);
-                }
-                Err(_) => (), // Continue until compilation succeeds
+                on_compilation_finishes(metadata);
             }
         }
     }
