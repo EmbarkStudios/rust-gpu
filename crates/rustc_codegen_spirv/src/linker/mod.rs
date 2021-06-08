@@ -5,6 +5,7 @@ mod dce;
 mod duplicates;
 mod import_export_link;
 mod inline;
+mod interface;
 mod mem2reg;
 mod new_structurizer;
 mod peephole_opts;
@@ -301,6 +302,8 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             let _timer = sess.timer("link_dce_2");
             dce::dce(output);
         }
+
+        interface::legalize_entrypoint(output);
 
         if opts.compact_ids {
             let _timer = sess.timer("link_compact_ids");
