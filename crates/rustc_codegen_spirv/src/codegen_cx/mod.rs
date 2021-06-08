@@ -131,7 +131,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let codegen_args = CodegenArgs::from_session(tcx.sess);
         let target = tcx.sess.target.llvm_target.parse().unwrap();
 
-        let result = Self {
+        Self {
             tcx,
             codegen_unit,
             builder: BuilderSpirv::new(&target, &target_features),
@@ -155,9 +155,7 @@ impl<'tcx> CodegenCx<'tcx> {
             codegen_args,
             bindless_descriptor_sets: Default::default(),
             features,
-        };
-
-        result
+        }
     }
 
     /// Temporary toggle to see if bindless has been enabled in the compiler, should

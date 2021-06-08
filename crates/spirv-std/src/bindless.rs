@@ -80,6 +80,7 @@ impl RenderResourceHandle {
     }
 
     #[inline]
+    #[spirv_std_macros::gpu_only]
     pub unsafe fn access<T>(self) -> T {
         resource_access(self.index())
     }
@@ -110,7 +111,6 @@ impl RenderResourceHandle {
 pub extern "unadjusted" fn resource_access<T>(index: u32) -> T {
     unimplemented!()
 }
-
 
 #[derive(Copy, Clone)]
 #[repr(transparent)]
@@ -173,13 +173,9 @@ impl<T> ArrayBuffer<T> {
     #[spirv_std_macros::gpu_only]
     pub unsafe extern "unadjusted" fn store(self, index: u32, value: T) {
         let buffer: &mut crate::RuntimeArray<u32> = resource_access(self.0.index());
-        buffer.store(
-            index * core::mem::size_of::<T>() as u32,
-            value,
-        )
+        buffer.store(index * core::mem::size_of::<T>() as u32, value)
     }
 }
-
 
 #[derive(Copy, Clone)]
 #[repr(transparent)]

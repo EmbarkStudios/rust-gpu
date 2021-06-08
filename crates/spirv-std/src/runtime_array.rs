@@ -47,11 +47,7 @@ impl RuntimeArray<u32> {
 
     #[spirv(internal_buffer_store)]
     #[spirv_std_macros::gpu_only]
-    pub unsafe extern "unadjusted" fn store<T>(
-        &mut self,
-        _offset: u32,
-        _value: T,
-    ) {
+    pub unsafe extern "unadjusted" fn store<T>(&mut self, _offset: u32, _value: T) {
         unimplemented!()
     } // actually implemented in the compiler
 }

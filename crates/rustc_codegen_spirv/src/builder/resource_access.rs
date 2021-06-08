@@ -1,6 +1,6 @@
 use super::Builder;
-use crate::spirv_type::SpirvType;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
+use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
 
 impl<'a, 'tcx> Builder<'a, 'tcx> {
@@ -17,11 +17,14 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
         match self.lookup_type(result_type) {
             SpirvType::Sampler => {
-                let result_ptr =
-                    SpirvType::Pointer { pointee: result_type }.def(rustc_span::DUMMY_SP, self);
+                let result_ptr = SpirvType::Pointer {
+                    pointee: result_type,
+                }
+                .def(rustc_span::DUMMY_SP, self);
 
                 let set = self.cx.sampler_bindless_descriptor_set();
-                let access = self.emit()
+                let access = self
+                    .emit()
                     .access_chain(result_ptr, None, set, vec![bindless_idx])
                     .unwrap();
                 self.emit()
@@ -30,11 +33,14 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .with_type(result_type)
             }
             SpirvType::Image { .. } => {
-                let result_ptr =
-                    SpirvType::Pointer { pointee: result_type }.def(rustc_span::DUMMY_SP, self);
+                let result_ptr = SpirvType::Pointer {
+                    pointee: result_type,
+                }
+                .def(rustc_span::DUMMY_SP, self);
 
                 let set = self.cx.texture_bindless_descriptor_set(result_type);
-                let access = self.emit()
+                let access = self
+                    .emit()
                     .access_chain(result_ptr, None, set, vec![bindless_idx])
                     .unwrap();
                 self.emit()
@@ -43,11 +49,14 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .with_type(result_type)
             }
             SpirvType::AccelerationStructureKhr => {
-                let result_ptr =
-                    SpirvType::Pointer { pointee: result_type }.def(rustc_span::DUMMY_SP, self);
+                let result_ptr = SpirvType::Pointer {
+                    pointee: result_type,
+                }
+                .def(rustc_span::DUMMY_SP, self);
 
                 let set = self.cx.acceleration_structure_bindless_descriptor_set();
-                let access = self.emit()
+                let access = self
+                    .emit()
                     .access_chain(result_ptr, None, set, vec![bindless_idx])
                     .unwrap();
                 self.emit()
@@ -66,8 +75,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         .unwrap()
                         .with_type(result_type)
                 }
-                ty => self.fatal(&format!("Pointer({:?}) unsupported for resource access", ty)),
-            }
+                ty => self.fatal(&format!(
+                    "Pointer({:?}) unsupported for resource access",
+                    ty
+                )),
+            },
             ty => self.fatal(&format!("{:?} unsupported for resource access", ty)),
         }
     }

@@ -8,7 +8,7 @@
 
 use rspirv::dr::{Module, Operand};
 use rspirv::spirv::{Op, StorageClass};
-use rustc_data_structures::fx::{FxHashSet, FxHashMap};
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 
 pub fn legalize_entrypoint(module: &mut Module) {
     let version = module.header.as_ref().unwrap().version();
@@ -31,7 +31,7 @@ pub fn legalize_entrypoint(module: &mut Module) {
         let storage_class = if let Operand::StorageClass(storage_class) = inst.operands[0] {
             storage_class
         } else {
-            continue
+            continue;
         };
 
         let is_interface = if version >= (1, 4) {
