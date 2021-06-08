@@ -54,6 +54,8 @@
 #![allow()]
 
 mod depfile;
+#[cfg(feature = "watch")]
+mod watch;
 
 use raw_string::{RawStr, RawString};
 use serde::Deserialize;
@@ -256,26 +258,14 @@ impl SpirvBuilder {
             MetadataPrintout::Full | MetadataPrintout::DependencyOnly => {
                 leaf_deps(&metadata_file, |artifact| {
                     println!("cargo:rerun-if-changed={}", artifact)
-                });
+                })
+                // Close enough
+                .map_err(SpirvBuilderError::MetadataFileMissing)?;
             }
             MetadataPrintout::None => (),
         }
-        let metadata_contents =
-            File::open(&metadata_file).map_err(SpirvBuilderError::MetadataFileMissing)?;
-        let metadata: CompileResult = serde_json::from_reader(BufReader::new(metadata_contents))
-            .map_err(SpirvBuilderError::MetadataFileMalformed)?;
-        match &metadata.module {
-            ModuleResult::SingleModule(spirv_module) => {
-                assert!(!self.multimodule);
-                let env_var = metadata_file.file_name().unwrap().to_str().unwrap();
-                if self.print_metadata == MetadataPrintout::Full {
-                    println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
-                }
-            }
-            ModuleResult::MultiModule(_) => {
-                assert!(self.multimodule);
-            }
-        }
+        let metadata = self.parse_metadata_file(&metadata_file)?;
+
         Ok(metadata)
     }
 
@@ -289,6 +279,28 @@ impl SpirvBuilder {
             )));
         }
         Ok(())
+    }
+
+    pub(crate) fn parse_metadata_file(
+        &self,
+        at: &Path,
+    ) -> Result<CompileResult, SpirvBuilderError> {
+        let metadata_contents = File::open(&at).map_err(SpirvBuilderError::MetadataFileMissing)?;
+        let metadata: CompileResult = serde_json::from_reader(BufReader::new(metadata_contents))
+            .map_err(SpirvBuilderError::MetadataFileMalformed)?;
+        match &metadata.module {
+            ModuleResult::SingleModule(spirv_module) => {
+                assert!(!self.multimodule);
+                let env_var = at.file_name().unwrap().to_str().unwrap();
+                if self.print_metadata == MetadataPrintout::Full {
+                    println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
+                }
+            }
+            ModuleResult::MultiModule(_) => {
+                assert!(self.multimodule);
+            }
+        }
+        Ok(metadata)
     }
 }
 
@@ -484,14 +496,13 @@ fn get_last_artifact(out: &str) -> PathBuf {
 }
 
 /// Internally iterate through the leaf dependencies of the artifact at `artifact`
-fn leaf_deps(artifact: &Path, handle: impl FnMut(&RawStr)) {
+fn leaf_deps(artifact: &Path, mut handle: impl FnMut(&RawStr)) -> std::io::Result<()> {
     let deps_file = artifact.with_extension("d");
     let mut deps_map = HashMap::new();
     depfile::read_deps_file(&deps_file, |item, deps| {
         deps_map.insert(item, deps);
         Ok(())
-    })
-    .expect("Could not read dep file");
+    })?;
     fn recurse(
         map: &HashMap<RawString, Vec<RawString>>,
         artifact: &RawStr,
@@ -507,4 +518,5 @@ fn leaf_deps(artifact: &Path, handle: impl FnMut(&RawStr)) {
         }
     }
     recurse(&deps_map, artifact.to_str().unwrap().into(), &mut handle);
+    Ok(())
 }
