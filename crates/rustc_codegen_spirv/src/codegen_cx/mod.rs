@@ -38,14 +38,8 @@ use std::path::Path;
 use std::rc::Rc;
 use std::str::FromStr;
 
-#[derive(Copy, Clone, Debug)]
-pub struct BindlessDescriptorSets {
-    pub buffers: Word,
-    pub sampled_image_1d: Word,
-    pub sampled_image_2d: Word,
-    pub sampled_image_3d: Word,
-    pub samplers: Word,
-    pub acceleration_structures: Word,
+struct Features {
+    bindless: bool,
 }
 
 pub struct CodegenCx<'tcx> {
@@ -86,9 +80,14 @@ pub struct CodegenCx<'tcx> {
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
 
+    features: Features,
+
     /// If bindless is enable, this contains the information about the global
     /// descriptor sets that are always bound.
-    pub bindless_descriptor_sets: RefCell<Option<BindlessDescriptorSets>>,
+    ///
+    /// - Keys: spirv type
+    /// - Values: descriptor set id
+    pub bindless_descriptor_sets: RefCell<FxHashMap<Word, Word>>,
     pub codegen_args: CodegenArgs,
 
     /// Information about the SPIR-V target.
@@ -99,7 +98,7 @@ impl<'tcx> CodegenCx<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>, codegen_unit: &'tcx CodegenUnit<'tcx>) -> Self {
         let sym = Symbols::get();
 
-        let mut feature_names = tcx
+        let mut target_feature_names = tcx
             .sess
             .target_features
             .iter()
@@ -110,9 +109,9 @@ impl<'tcx> CodegenCx<'tcx> {
         // target_features is a HashSet, not a Vec, so we need to sort to have deterministic
         // compilation - otherwise, the order of capabilities in binaries depends on the iteration
         // order of the hashset. Sort by the string, since that's easy.
-        feature_names.sort();
+        target_feature_names.sort();
 
-        let features = feature_names
+        let target_features = target_feature_names
             .into_iter()
             .map(|s| s.parse())
             .collect::<Result<_, String>>()
@@ -121,10 +120,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 Vec::new()
             });
 
-        let mut bindless = false;
+        let mut features = Features { bindless: false };
         for &feature in &tcx.sess.target_features {
             if feature == sym.bindless {
-                bindless = true;
+                features.bindless = true;
                 break;
             }
         }
@@ -135,7 +134,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let result = Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(&target, &features),
+            builder: BuilderSpirv::new(&target, &target_features),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
@@ -155,11 +154,8 @@ impl<'tcx> CodegenCx<'tcx> {
             i8_i16_atomics_allowed: false,
             codegen_args,
             bindless_descriptor_sets: Default::default(),
+            features,
         };
-
-        if bindless {
-            result.lazy_add_bindless_descriptor_sets();
-        }
 
         result
     }
@@ -167,7 +163,7 @@ impl<'tcx> CodegenCx<'tcx> {
     /// Temporary toggle to see if bindless has been enabled in the compiler, should
     /// be removed longer term when we use bindless as the default model
     pub fn bindless(&self) -> bool {
-        self.bindless_descriptor_sets.borrow().is_some()
+        self.features.bindless
     }
 
     /// See comment on `BuilderCursor`

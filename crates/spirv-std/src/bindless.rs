@@ -1,5 +1,3 @@
-use crate::{ray_tracing::{RayFlags, RayQuery}, vector::Vector};
-
 /// A handle that points to a rendering related resource (TLAS, Sampler, Buffer, Texture etc)
 /// this handle can be uploaded directly to the GPU to refer to our resources in a bindless
 /// fashion and can be plainly stored in buffers directly - even without the help of a `DescriptorSet`
