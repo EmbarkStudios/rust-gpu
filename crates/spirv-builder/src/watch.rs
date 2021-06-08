@@ -88,6 +88,7 @@ impl SpirvBuilder {
                 Ok(file) => {
                     // We can bubble this error up because it's an internal error  (e.g. rustc_codegen_spirv's version of CompileResult is somehow out of sync)
                     let metadata = self.parse_metadata_file(&file)?;
+
                     leaf_deps(&file, |it| {
                         let path = it.to_path().unwrap();
                         if watched_paths.insert(path.to_owned()) {
@@ -97,6 +98,7 @@ impl SpirvBuilder {
                         }
                     })
                     .expect("Could read dependencies file");
+
                     on_compilation_finishes(metadata);
                 }
                 Err(_) => (), // Continue until compilation succeeds

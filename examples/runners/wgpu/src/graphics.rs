@@ -1,4 +1,8 @@
-use super::{shader_module, Options};
+use std::thread::spawn;
+
+use crate::maybe_watch;
+
+use super::Options;
 use shared::ShaderConstants;
 use winit::{
     event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
@@ -35,10 +39,10 @@ fn mouse_button_index(button: MouseButton) -> usize {
 }
 
 async fn run(
-    event_loop: EventLoop<()>,
+    event_loop: EventLoop<wgpu::ShaderModuleDescriptor<'static>>,
     window: Window,
     swapchain_format: wgpu::TextureFormat,
-    shader_binary: wgpu::ShaderModuleDescriptor<'_>,
+    shader_binary: wgpu::ShaderModuleDescriptor<'static>,
 ) {
     let size = window.inner_size();
     let instance = wgpu::Instance::new(wgpu::BackendBit::VULKAN | wgpu::BackendBit::METAL);
@@ -80,7 +84,6 @@ async fn run(
         .expect("Failed to create device");
 
     // Load the shaders from disk
-    let module = device.create_shader_module(&shader_binary);
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
@@ -91,38 +94,8 @@ async fn run(
         }],
     });
 
-    let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-        label: None,
-        layout: Some(&pipeline_layout),
-        vertex: wgpu::VertexState {
-            module: &module,
-            entry_point: shaders::main_vs,
-            buffers: &[],
-        },
-        primitive: wgpu::PrimitiveState {
-            topology: wgpu::PrimitiveTopology::TriangleList,
-            strip_index_format: None,
-            front_face: wgpu::FrontFace::Ccw,
-            cull_mode: wgpu::CullMode::None,
-            polygon_mode: wgpu::PolygonMode::Fill,
-        },
-        depth_stencil: None,
-        multisample: wgpu::MultisampleState {
-            count: 1,
-            mask: !0,
-            alpha_to_coverage_enabled: false,
-        },
-        fragment: Some(wgpu::FragmentState {
-            module: &module,
-            entry_point: shaders::main_fs,
-            targets: &[wgpu::ColorTargetState {
-                format: swapchain_format,
-                alpha_blend: wgpu::BlendState::REPLACE,
-                color_blend: wgpu::BlendState::REPLACE,
-                write_mask: wgpu::ColorWrite::ALL,
-            }],
-        }),
-    });
+    let mut render_pipeline =
+        create_pipeline(&device, &pipeline_layout, swapchain_format, shader_binary);
 
     let mut sc_desc = wgpu::SwapChainDescriptor {
         usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
@@ -149,7 +122,8 @@ async fn run(
         // Have the closure take ownership of the resources.
         // `event_loop.run` never returns, therefore we must do this to ensure
         // the resources are properly cleaned up.
-        let _ = (&instance, &adapter, &module, &pipeline_layout);
+        let _ = (&instance, &adapter, &pipeline_layout);
+        let render_pipeline = &mut render_pipeline;
 
         *control_flow = ControlFlow::Wait;
         match event {
@@ -282,16 +256,78 @@ async fn run(
                     drag_end_y = cursor_y;
                 }
             }
+            Event::UserEvent(new_module) => {
+                *render_pipeline =
+                    create_pipeline(&device, &pipeline_layout, swapchain_format, new_module);
+                window.request_redraw();
+                *control_flow = ControlFlow::Poll;
+            }
             _ => {}
         }
     });
 }
 
+fn create_pipeline(
+    device: &wgpu::Device,
+    pipeline_layout: &wgpu::PipelineLayout,
+    swapchain_format: wgpu::TextureFormat,
+    shader_binary: wgpu::ShaderModuleDescriptor<'_>,
+) -> wgpu::RenderPipeline {
+    let module = device.create_shader_module(&shader_binary);
+    let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        label: None,
+        layout: Some(pipeline_layout),
+        vertex: wgpu::VertexState {
+            module: &module,
+            entry_point: shaders::main_vs,
+            buffers: &[],
+        },
+        primitive: wgpu::PrimitiveState {
+            topology: wgpu::PrimitiveTopology::TriangleList,
+            strip_index_format: None,
+            front_face: wgpu::FrontFace::Ccw,
+            cull_mode: wgpu::CullMode::None,
+            polygon_mode: wgpu::PolygonMode::Fill,
+        },
+        depth_stencil: None,
+        multisample: wgpu::MultisampleState {
+            count: 1,
+            mask: !0,
+            alpha_to_coverage_enabled: false,
+        },
+        fragment: Some(wgpu::FragmentState {
+            module: &module,
+            entry_point: shaders::main_fs,
+            targets: &[wgpu::ColorTargetState {
+                format: swapchain_format,
+                alpha_blend: wgpu::BlendState::REPLACE,
+                color_blend: wgpu::BlendState::REPLACE,
+                write_mask: wgpu::ColorWrite::ALL,
+            }],
+        }),
+    });
+    render_pipeline
+}
+
 pub fn start(options: &Options) {
     // Build the shader before we pop open a window, since it might take a while.
-    let shader_binary = shader_module(options.shader);
+    let rx = maybe_watch(options.shader, false);
+    let initial_shader = rx.recv().expect("Initial shader is required");
 
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::with_user_event();
+    let proxy = event_loop.create_proxy();
+    let thread = spawn(move || loop {
+        match rx.recv() {
+            Ok(result) => match proxy.send_event(result) {
+                Ok(()) => {}
+                // If something goes wrong, close this thread
+                Err(_) => break,
+            },
+            // This will occur if we can't watch (e.g. on android)
+            Err(_) => break,
+        }
+    });
+    std::mem::forget(thread);
     let window = winit::window::WindowBuilder::new()
         .with_title("Rust GPU - wgpu")
         .with_inner_size(winit::dpi::LogicalSize::new(1280.0, 720.0))
@@ -317,6 +353,7 @@ pub fn start(options: &Options) {
                 event_loop,
                 window,
                 wgpu::TextureFormat::Bgra8Unorm,
+                initial_shader,
             ));
         } else {
             wgpu_subscriber::initialize_default_subscriber(None);
@@ -328,7 +365,8 @@ pub fn start(options: &Options) {
                 } else {
                     wgpu::TextureFormat::Bgra8UnormSrgb
                 },
-                shader_binary,
+                initial_shader,
+
             ));
         }
     }
