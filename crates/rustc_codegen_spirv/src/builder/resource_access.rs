@@ -1,3 +1,9 @@
+//! Bindless dynamic resource access.
+//!
+//! Indexed descriptor lookup from bindless runtime arrays. It will infer the
+//! requested descriptor type from the result type.
+//! Global bindless descriptor sets will be lazily constructed for the descriptor type.
+
 use super::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;

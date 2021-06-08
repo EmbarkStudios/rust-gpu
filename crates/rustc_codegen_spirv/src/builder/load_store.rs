@@ -1,3 +1,8 @@
+//! Templated raw buffer load/store.
+//!
+//! Generate load/store from a u32 runtime array converting to/from
+//! a requested input struct.
+
 use super::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::rustc_codegen_ssa::traits::BuilderMethods;
