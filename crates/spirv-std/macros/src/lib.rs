@@ -81,7 +81,7 @@ use quote::ToTokens;
 /// A basic example looks like this:
 /// ```no_compile
 /// #[spirv(vertex)]
-/// fn main(#[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32)) {}
+/// fn main(#[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled)) {}
 /// ```
 ///
 /// ## Arguments
