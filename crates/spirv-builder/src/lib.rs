@@ -54,6 +54,8 @@
 #![allow()]
 
 mod depfile;
+#[cfg(feature = "watch")]
+mod watch;
 
 use raw_string::{RawStr, RawString};
 use serde::Deserialize;
@@ -71,10 +73,12 @@ pub use rustc_codegen_spirv::rspirv::spirv::Capability;
 pub use rustc_codegen_spirv::{CompileResult, ModuleResult};
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum SpirvBuilderError {
     CratePathDoesntExist(PathBuf),
     BuildFailed,
     MultiModuleWithPrintMetadata,
+    WatchWithPrintMetadata,
     MetadataFileMissing(std::io::Error),
     MetadataFileMalformed(serde_json::Error),
 }
@@ -89,6 +93,9 @@ impl fmt::Display for SpirvBuilderError {
             SpirvBuilderError::MultiModuleWithPrintMetadata => f.write_str(
                 "Multi-module build cannot be used with print_metadata = MetadataPrintout::Full",
             ),
+            SpirvBuilderError::WatchWithPrintMetadata => {
+                f.write_str("Watching within build scripts will prevent build completion")
+            }
             SpirvBuilderError::MetadataFileMissing(_) => {
                 f.write_str("Multi-module metadata file missing")
             }
@@ -244,22 +251,47 @@ impl SpirvBuilder {
 
     /// Builds the module. If `print_metadata` is [`MetadataPrintout::Full`], you usually don't have to inspect the path
     /// in the result, as the environment variable for the path to the module will already be set.
-    pub fn build(self) -> Result<CompileResult, SpirvBuilderError> {
+    pub fn build(mut self) -> Result<CompileResult, SpirvBuilderError> {
+        self.validate_running_conditions()?;
+        let metadata_file = invoke_rustc(&self)?;
+        match self.print_metadata {
+            MetadataPrintout::Full | MetadataPrintout::DependencyOnly => {
+                leaf_deps(&metadata_file, |artifact| {
+                    println!("cargo:rerun-if-changed={}", artifact)
+                })
+                // Close enough
+                .map_err(SpirvBuilderError::MetadataFileMissing)?;
+            }
+            MetadataPrintout::None => (),
+        }
+        let metadata = self.parse_metadata_file(&metadata_file)?;
+
+        Ok(metadata)
+    }
+
+    pub(crate) fn validate_running_conditions(&mut self) -> Result<(), SpirvBuilderError> {
         if (self.print_metadata == MetadataPrintout::Full) && self.multimodule {
             return Err(SpirvBuilderError::MultiModuleWithPrintMetadata);
         }
         if !self.path_to_crate.is_dir() {
-            return Err(SpirvBuilderError::CratePathDoesntExist(self.path_to_crate));
+            return Err(SpirvBuilderError::CratePathDoesntExist(std::mem::take(
+                &mut self.path_to_crate,
+            )));
         }
-        let metadata_file = invoke_rustc(&self)?;
-        let metadata_contents =
-            File::open(&metadata_file).map_err(SpirvBuilderError::MetadataFileMissing)?;
+        Ok(())
+    }
+
+    pub(crate) fn parse_metadata_file(
+        &self,
+        at: &Path,
+    ) -> Result<CompileResult, SpirvBuilderError> {
+        let metadata_contents = File::open(&at).map_err(SpirvBuilderError::MetadataFileMissing)?;
         let metadata: CompileResult = serde_json::from_reader(BufReader::new(metadata_contents))
             .map_err(SpirvBuilderError::MetadataFileMalformed)?;
         match &metadata.module {
             ModuleResult::SingleModule(spirv_module) => {
                 assert!(!self.multimodule);
-                let env_var = metadata_file.file_name().unwrap().to_str().unwrap();
+                let env_var = at.file_name().unwrap().to_str().unwrap();
                 if self.print_metadata == MetadataPrintout::Full {
                     println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
                 }
@@ -424,13 +456,8 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // that ended up on stdout instead of stderr.
     let stdout = String::from_utf8(build.stdout).unwrap();
     let artifact = get_last_artifact(&stdout);
-
     if build.status.success() {
-        match builder.print_metadata {
-            MetadataPrintout::Full | MetadataPrintout::DependencyOnly => print_deps_of(&artifact),
-            MetadataPrintout::None => (),
-        }
-        Ok(artifact)
+        Ok(artifact.expect("Artifact created when compilation succeeded"))
     } else {
         Err(SpirvBuilderError::BuildFailed)
     }
@@ -442,7 +469,7 @@ struct RustcOutput {
     filenames: Option<Vec<String>>,
 }
 
-fn get_last_artifact(out: &str) -> PathBuf {
+fn get_last_artifact(out: &str) -> Option<PathBuf> {
     let last = out
         .lines()
         .filter_map(|line| match serde_json::from_str::<RustcOutput>(line) {
@@ -462,28 +489,33 @@ fn get_last_artifact(out: &str) -> PathBuf {
         .unwrap()
         .into_iter()
         .filter(|v| v.ends_with(".spv"));
-    let filename = filenames.next().expect("Crate had no .spv artifacts");
+    let filename = filenames.next()?;
     assert_eq!(filenames.next(), None, "Crate had multiple .spv artifacts");
-    filename.into()
+    Some(filename.into())
 }
 
-fn print_deps_of(artifact: &Path) {
+/// Internally iterate through the leaf dependencies of the artifact at `artifact`
+fn leaf_deps(artifact: &Path, mut handle: impl FnMut(&RawStr)) -> std::io::Result<()> {
     let deps_file = artifact.with_extension("d");
     let mut deps_map = HashMap::new();
     depfile::read_deps_file(&deps_file, |item, deps| {
         deps_map.insert(item, deps);
         Ok(())
-    })
-    .expect("Could not read dep file");
-    fn recurse(map: &HashMap<RawString, Vec<RawString>>, artifact: &RawStr) {
+    })?;
+    fn recurse(
+        map: &HashMap<RawString, Vec<RawString>>,
+        artifact: &RawStr,
+        handle: &mut impl FnMut(&RawStr),
+    ) {
         match map.get(artifact) {
             Some(entries) => {
                 for entry in entries {
-                    recurse(map, entry)
+                    recurse(map, entry, handle)
                 }
             }
-            None => println!("cargo:rerun-if-changed={}", artifact),
+            None => handle(artifact),
         }
     }
-    recurse(&deps_map, artifact.to_str().unwrap().into());
+    recurse(&deps_map, artifact.to_str().unwrap().into(), &mut handle);
+    Ok(())
 }

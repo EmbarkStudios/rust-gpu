@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use super::{shader_module, Options};
+use super::Options;
 use futures::future::join;
 use std::{convert::TryInto, future::Future, num::NonZeroU64, time::Duration};
 
@@ -15,7 +15,8 @@ fn block_on<T>(future: impl Future<Output = T>) -> T {
 }
 
 pub fn start(options: &Options) {
-    let shader_binary = shader_module(options.shader);
+    let rx = crate::maybe_watch(options.shader, true);
+    let shader_binary = rx.recv().expect("Should send one binary");
 
     block_on(start_internal(options, shader_binary))
 }
