@@ -308,12 +308,6 @@
 <span id="305">305</span>
 <span id="306">306</span>
 <span id="307">307</span>
-<span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
 </pre><pre class="rust">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span>;
@@ -323,7 +317,6 @@
 <span class="kw">mod</span> <span class="ident">import_export_link</span>;
 <span class="kw">mod</span> <span class="ident">inline</span>;
 <span class="kw">mod</span> <span class="ident">mem2reg</span>;
-<span class="kw">mod</span> <span class="ident">new_structurizer</span>;
 <span class="kw">mod</span> <span class="ident">peephole_opts</span>;
 <span class="kw">mod</span> <span class="ident">simple_passes</span>;
 <span class="kw">mod</span> <span class="ident">specializer</span>;
@@ -346,7 +339,6 @@
     <span class="kw">pub</span> <span class="ident">inline</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">mem2reg</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">structurize</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">use_new_structurizer</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">emit_multiple_modules</span>: <span class="ident">bool</span>,
 }
 
@@ -507,11 +499,7 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">structurize</span> {
         <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_structurize&quot;</span>);
-        <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">use_new_structurizer</span> {
-            <span class="ident">new_structurizer::structurize</span>(<span class="ident">output</span>, <span class="ident">unroll_loops_decorations</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">structurizer::structurize</span>(<span class="ident">sess</span>, <span class="ident">output</span>, <span class="ident">unroll_loops_decorations</span>)
-        }
+        <span class="ident">structurizer::structurize</span>(<span class="ident">output</span>, <span class="ident">unroll_loops_decorations</span>)
     } <span class="kw">else</span> {
         <span class="ident">output</span>
     };

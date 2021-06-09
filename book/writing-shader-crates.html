@@ -196,6 +196,11 @@ shader crate.</li>
 crates to display, it's recommended to use <code>spirv-builder</code> in a build script.</p>
 <ol>
 <li>Copy the <a href="https://github.com/EmbarkStudios/rust-gpu/blob/main/rust-toolchain"><code>rust-toolchain</code></a> file to your project. (You must use the same version of Rust as <code>rust-gpu</code>.)</li>
+<li>Reference <code>spirv-builder</code> in your Cargo.toml:
+<pre><code class="language-toml">[build-dependencies]
+spirv-builder = { git = &quot;https://github.com/EmbarkStudios/rust-gpu&quot; }
+</code></pre>
+(we currently do not publish spirv-builder on crates.io)</li>
 <li>Create a <code>build.rs</code> in your project root.</li>
 </ol>
 <h4 id="buildrs"><a class="header" href="#buildrs"><code>build.rs</code></a></h4>
@@ -203,12 +208,14 @@ crates to display, it's recommended to use <code>spirv-builder</code> in a build
 <pre><pre class="playground"><code class="language-rust no_run">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>SpirvBuilder::new(path_to_shader)
-        .spirv_version(1, 0)
+</span>SpirvBuilder::new(path_to_shader, target)
         .print_metadata(MetadataPrintout::Full)
         .build()?;
 <span class="boring">}
 </span></code></pre></pre>
+<p>The values available for the <code>target</code> parameter are available <a href="./platform-support.html">here</a>.
+For example, if building for vulkan 1.1, use <code>&quot;spirv-unknown-vulkan1.1&quot;</code>.</p>
+<p>The <code>SpirvBuilder</code> struct has numerous configuration options available, see rustdoc for documentation.</p>
 <h4 id="mainrs"><a class="header" href="#mainrs"><code>main.rs</code></a></h4>
 <pre><pre class="playground"><code class="language-rust no_run">
 <span class="boring">#![allow(unused)]
