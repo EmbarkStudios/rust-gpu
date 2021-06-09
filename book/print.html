@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.3.</strong> Minimizing bugs in SPIR-V</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.3.</strong> Minimizing bugs in SPIR-V</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="image.html"><strong aria-hidden="true">5.3.</strong> Image type syntax</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -570,6 +570,28 @@ pub unsafe fn vector_extract_dynamic&lt;T: Scalar, V: Vector&lt;T&gt;&gt;(vector
 <tr><td><code>typeof{&lt;variable&gt;}</code></td><td>Returns the type of <code>variable</code></td></tr>
 <tr><td><code>_</code> (underscore)</td><td>Equivalent to <code>typeof{&lt;variable&gt;}</code>, but uses inference to determine the variable</td></tr>
 </tbody></table>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="image-type-syntax"><a class="header" href="#image-type-syntax">Image type syntax</a></h1>
+<p>There are a huge number of combinations of image types in SPIR-V. They are represented by a const
+generic type called <code>spirv_std::image::Image</code>, however, specifying the generic parameters of this
+type is incredibly tedious, so a wrapper macro, <code>spirv_std::Image!</code> can be used to write the type
+instead.</p>
+<p>The specific syntax and meaning of the arguments to the <code>Image!</code> macro can be found in
+<a href="https://embarkstudios.github.io/rust-gpu/api/spirv_std/macro.Image.html">rustdoc</a>.</p>
+<p>Some type aliases for common image formats can be found in the
+<a href="https://embarkstudios.github.io/rust-gpu/api/spirv_std/image/index.html"><code>spirv_std::image</code></a>
+module. For example, <code>Image2d</code> is a very commonly used type, corresponding to <code>texture2D</code> in GLSL,
+and is likely what you want if you want a regular old sampled texture.</p>
+<pre><pre class="playground"><code class="language-rust no_run">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>type Image2d = Image!(2D, type=f32, sampled);
+<span class="boring">}
+</span></code></pre></pre>
+<p>Note that the <code>const-generics</code> cargo feature in spirv-std must be enabled to use the <code>Image!</code> macro
+at the moment.  This will likely change in the near future.</p>
+<pre><code class="language-toml">[dependencies]
+spirv-std = { ..., features = [&quot;const-generics&quot;] }
+</code></pre>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="summary"><a class="header" href="#summary">Summary</a></h1>
 <p>We aught to discuss how we want resource binding to work on a language syntax level.</p>
 <h1 id="explanation"><a class="header" href="#explanation">Explanation</a></h1>
