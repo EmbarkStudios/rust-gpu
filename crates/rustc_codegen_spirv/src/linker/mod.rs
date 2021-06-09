@@ -6,7 +6,6 @@ mod duplicates;
 mod import_export_link;
 mod inline;
 mod mem2reg;
-mod new_structurizer;
 mod peephole_opts;
 mod simple_passes;
 mod specializer;
@@ -29,7 +28,6 @@ pub struct Options {
     pub inline: bool,
     pub mem2reg: bool,
     pub structurize: bool,
-    pub use_new_structurizer: bool,
     pub emit_multiple_modules: bool,
 }
 
@@ -190,11 +188,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
 
     let mut output = if opts.structurize {
         let _timer = sess.timer("link_structurize");
-        if opts.use_new_structurizer {
-            new_structurizer::structurize(output, unroll_loops_decorations)
-        } else {
-            structurizer::structurize(sess, output, unroll_loops_decorations)
-        }
+        structurizer::structurize(output, unroll_loops_decorations)
     } else {
         output
     };
