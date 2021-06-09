@@ -16,11 +16,3 @@ and is likely what you want if you want a regular old sampled texture.
 ```rust,no_run
 type Image2d = Image!(2D, type=f32, sampled);
 ```
-
-Note that the `const-generics` cargo feature in spirv-std must be enabled to use the `Image!` macro
-at the moment.  This will likely change in the near future.
-
-```toml
-[dependencies]
-spirv-std = { ..., features = ["const-generics"] }
-```

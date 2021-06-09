@@ -11,11 +11,7 @@
     ),
     register_attr(spirv)
 )]
-#![cfg_attr(
-    feature = "const-generics",
-    feature(const_generics),
-    allow(incomplete_features)
-)]
+#![feature(const_generics)]
 // BEGIN - Embark standard lints v0.3
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
@@ -85,7 +81,6 @@ pub extern crate spirv_std_macros as macros;
 pub mod arch;
 pub mod bindless;
 pub mod float;
-#[cfg(feature = "const-generics")]
 pub mod image;
 pub mod integer;
 pub mod memory;
@@ -94,14 +89,12 @@ mod runtime_array;
 mod sampler;
 pub mod scalar;
 pub(crate) mod sealed;
-mod textures;
 pub mod vector;
 
 pub use self::sampler::Sampler;
 pub use crate::macros::Image;
 pub use num_traits;
 pub use runtime_array::*;
-pub use textures::*;
 
 #[cfg(feature = "glam")]
 pub use glam;
