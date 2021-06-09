@@ -133,6 +133,7 @@ pub struct SpirvBuilder {
     target: String,
     bindless: bool,
     multimodule: bool,
+    name_variables: bool,
     capabilities: Vec<Capability>,
     extensions: Vec<String>,
 
@@ -154,6 +155,7 @@ impl SpirvBuilder {
             target: target.into(),
             bindless: false,
             multimodule: false,
+            name_variables: false,
             capabilities: Vec::new(),
             extensions: Vec::new(),
 
@@ -190,6 +192,15 @@ impl SpirvBuilder {
     /// points bundled into a single file is the preferred system.
     pub fn multimodule(mut self, v: bool) -> Self {
         self.multimodule = v;
+        self
+    }
+
+    /// Keep `OpName` reflection information for global `OpVariable`s (which means things like
+    /// uniforms and shader input/outputs) but strip `OpName`s for everything else (functions,
+    /// types, and so on). This is useful if you want a small binary size without debugging
+    /// information, but need variable name reflection to work.
+    pub fn name_variables(mut self, v: bool) -> Self {
+        self.name_variables = v;
         self
     }
 
@@ -351,6 +362,9 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     let mut llvm_args = Vec::new();
     if builder.multimodule {
         llvm_args.push("--module-output=multiple");
+    }
+    if builder.name_variables {
+        llvm_args.push("--name-variables");
     }
     if builder.relax_struct_store {
         llvm_args.push("--relax-struct-store");

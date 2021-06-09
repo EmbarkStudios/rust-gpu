@@ -137,9 +137,16 @@ fn link_exe(
         codegen_results,
     );
 
-    let spv_binary = do_link(sess, &objects, &rlibs, legalize, emit_multiple_modules);
-
     let cg_args = crate::codegen_cx::CodegenArgs::from_session(sess);
+
+    let spv_binary = do_link(
+        sess,
+        &cg_args,
+        &objects,
+        &rlibs,
+        legalize,
+        emit_multiple_modules,
+    );
 
     let mut root_file_name = out_filename.file_name().unwrap().to_owned();
     root_file_name.push(".dir");
@@ -221,10 +228,11 @@ fn post_link_single_module(
         preserve_spec_constants: false,
     };
 
-    let spv_binary = if sess.opts.optimize != OptLevel::No || sess.opts.debuginfo == DebugInfo::None
+    let spv_binary = if sess.opts.optimize != OptLevel::No
+        || (sess.opts.debuginfo == DebugInfo::None && !cg_args.name_variables)
     {
         let _timer = sess.timer("link_spirv_opt");
-        do_spirv_opt(sess, spv_binary, out_filename, opt_options)
+        do_spirv_opt(sess, cg_args, spv_binary, out_filename, opt_options)
     } else {
         spv_binary
     };
@@ -249,6 +257,7 @@ fn post_link_single_module(
 
 fn do_spirv_opt(
     sess: &Session,
+    cg_args: &crate::codegen_cx::CodegenArgs,
     spv_binary: Vec<u32>,
     filename: &Path,
     options: spirv_tools::opt::Options,
@@ -270,7 +279,7 @@ fn do_spirv_opt(
         }
     }
 
-    if sess.opts.debuginfo == DebugInfo::None {
+    if sess.opts.debuginfo == DebugInfo::None && !cg_args.name_variables {
         optimizer
             .register_pass(opt::Passes::EliminateDeadConstant)
             .register_pass(opt::Passes::StripDebugInfo);
@@ -484,6 +493,7 @@ pub fn read_metadata(rlib: &Path) -> Result<MetadataRef, String> {
 /// shenanigans to collect all the object files we need to link.
 fn do_link(
     sess: &Session,
+    cg_args: &crate::codegen_cx::CodegenArgs,
     objects: &[PathBuf],
     rlibs: &[PathBuf],
     legalize: bool,
@@ -540,6 +550,7 @@ fn do_link(
         mem2reg: legalize,
         structurize: env::var("NO_STRUCTURIZE").is_err(),
         emit_multiple_modules,
+        name_variables: cg_args.name_variables,
     };
 
     let link_result = linker::link(sess, modules, &options);

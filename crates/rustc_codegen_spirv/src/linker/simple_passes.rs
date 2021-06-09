@@ -129,3 +129,25 @@ pub fn sort_globals(module: &mut Module) {
     // have a function declaration without a body in a fully linked module?
     module.functions.sort_by_key(|f| !f.blocks.is_empty());
 }
+
+pub fn name_variables_pass(module: &mut Module) {
+    let variables = module
+        .types_global_values
+        .iter()
+        .filter(|inst| inst.class.opcode == Op::Variable)
+        .map(|inst| inst.result_id.unwrap())
+        .collect::<FxHashSet<Word>>();
+    module
+        .debug_names
+        .retain(|inst| variables.contains(&inst.operands[0].unwrap_id_ref()));
+    module
+        .types_global_values
+        .retain(|inst| inst.class.opcode != Op::Line);
+    for func in &mut module.functions {
+        for block in &mut func.blocks {
+            block
+                .instructions
+                .retain(|inst| inst.class.opcode != Op::Line);
+        }
+    }
+}
