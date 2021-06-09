@@ -29,6 +29,7 @@ pub struct Options {
     pub mem2reg: bool,
     pub structurize: bool,
     pub emit_multiple_modules: bool,
+    pub name_variables: bool,
 }
 
 pub enum LinkResult {
@@ -249,6 +250,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     {
         let _timer = sess.timer("link_remove_duplicate_lines");
         duplicates::remove_duplicate_lines(&mut output);
+    }
+
+    if opts.name_variables {
+        let _timer = sess.timer("link_name_variables");
+        simple_passes::name_variables_pass(&mut output);
     }
 
     {

@@ -277,6 +277,8 @@ pub struct CodegenArgs {
     pub disassemble_entry: Option<String>,
     pub disassemble_globals: bool,
 
+    pub name_variables: bool,
+
     // spirv-val flags
     pub relax_struct_store: bool,
     pub relax_logical_pointer: bool,
@@ -313,6 +315,13 @@ impl CodegenArgs {
         );
         opts.optflagopt("", "disassemble-globals", "print globals to stderr", "");
 
+        opts.optflagopt(
+            "",
+            "name-variables",
+            "Keep OpName for OpVariables, strip all others.",
+            "",
+        );
+
         opts.optflagopt("", "relax-struct-store", "Allow store from one struct type to a different type with compatible layout and members.", "");
         opts.optflagopt("", "relax-logical-pointer", "Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode", "");
         opts.optflagopt("", "relax-block-layout", "Enable VK_KHR_relaxed_block_layout when checking standard uniform, storage buffer, and push constant layouts. This is the default when targeting Vulkan 1.1 or later.", "");
@@ -327,6 +336,8 @@ impl CodegenArgs {
         let disassemble_fn = matches.opt_str("disassemble-fn");
         let disassemble_entry = matches.opt_str("disassemble-entry");
         let disassemble_globals = matches.opt_present("disassemble-globals");
+
+        let name_variables = matches.opt_present("name-variables");
 
         let relax_struct_store = matches.opt_present("relax-struct-store");
         let relax_logical_pointer = matches.opt_present("relax-logical-pointer");
@@ -343,6 +354,8 @@ impl CodegenArgs {
             disassemble_fn,
             disassemble_entry,
             disassemble_globals,
+
+            name_variables,
 
             relax_struct_store,
             relax_logical_pointer,
