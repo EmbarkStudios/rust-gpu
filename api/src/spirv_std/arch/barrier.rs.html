@@ -1,0 +1,167 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-std/src/arch/barrier.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>barrier.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../spirv_std/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1"> 1</span>
+<span id="2"> 2</span>
+<span id="3"> 3</span>
+<span id="4"> 4</span>
+<span id="5"> 5</span>
+<span id="6"> 6</span>
+<span id="7"> 7</span>
+<span id="8"> 8</span>
+<span id="9"> 9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+</pre><pre class="rust">
+<span class="doccomment">/// Wait for other invocations of this module to reach the current point</span>
+<span class="doccomment">/// of execution.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// All invocations of this module within Execution scope reach this point of</span>
+<span class="doccomment">/// execution before any invocation proceeds beyond it.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// When Execution is [`crate::memory::Scope::Workgroup`] or larger, behavior is</span>
+<span class="doccomment">/// undefined unless all invocations within Execution execute the same dynamic</span>
+<span class="doccomment">/// instance of this instruction. When Execution is Subgroup or Invocation, the</span>
+<span class="doccomment">/// behavior of this instruction in non-uniform control flow is defined by the</span>
+<span class="doccomment">/// client API.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// If [`crate::memory::Semantics`] is not [`crate::memory::Semantics::NONE`],</span>
+<span class="doccomment">/// this instruction also serves as an [`memory_barrier`] function call, and</span>
+<span class="doccomment">/// also performs and adheres to the description and semantics of an</span>
+<span class="doccomment">/// [`memory_barrier`] function with the same `MEMORY` and `SEMANTICS` operands.</span>
+<span class="doccomment">/// This allows atomically specifying both a control barrier and a memory</span>
+<span class="doccomment">/// barrier (that is, without needing two instructions). If</span>
+<span class="doccomment">/// [`crate::memory::Semantics`] is [`crate::memory::Semantics::NONE`], `MEMORY`</span>
+<span class="doccomment">/// is ignored.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Before SPIRV-V version 1.3, it is only valid to use this instruction with</span>
+<span class="doccomment">/// `TessellationControl`, `GLCompute`, or `Kernel` execution models. There is</span>
+<span class="doccomment">/// no such restriction starting with version 1.3.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// If used with the `TessellationControl` execution model, it also implicitly</span>
+<span class="doccomment">/// synchronizes the `output` storage class: Writes to `output` variables</span>
+<span class="doccomment">/// performed by any invocation executed prior to a [`control_barrier`] are</span>
+<span class="doccomment">/// visible to any other invocation proceeding beyond that [`control_barrier`].</span>
+<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpControlBarrier&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">inline</span>]</span>
+<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">control_barrier</span><span class="op">&lt;</span>
+    <span class="kw">const</span> <span class="ident">EXECUTION</span>: <span class="ident">u32</span>, <span class="comment">// Scope</span>
+    <span class="kw">const</span> <span class="ident">MEMORY</span>: <span class="ident">u32</span>,    <span class="comment">// Scope</span>
+    <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span>, <span class="comment">// Semantics</span>
+<span class="op">&gt;</span>() {
+    <span class="macro">asm!</span> {
+        <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
+        <span class="string">&quot;%execution = OpConstant %u32 {execution}&quot;</span>,
+        <span class="string">&quot;%memory = OpConstant %u32 {memory}&quot;</span>,
+        <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
+        <span class="string">&quot;OpControlBarrier %execution %memory %semantics&quot;</span>,
+        <span class="ident">execution</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">EXECUTION</span>,
+        <span class="ident">memory</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">MEMORY</span>,
+        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
+    }
+}
+
+<span class="doccomment">/// Control the order that memory accesses are observed.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Ensures that memory accesses issued before this instruction are observed</span>
+<span class="doccomment">/// before memory accesses issued after this instruction. This control is</span>
+<span class="doccomment">/// ensured only for memory accesses issued by this invocation and observed by</span>
+<span class="doccomment">/// another invocation executing within `MEMORY` scope. If the `vulkan` memory</span>
+<span class="doccomment">/// model is declared, this ordering only applies to memory accesses that</span>
+<span class="doccomment">/// use the `NonPrivatePointer` memory operand or `NonPrivateTexel`</span>
+<span class="doccomment">/// image operand.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// `SEMANTICS` declares what kind of memory is being controlled and what kind</span>
+<span class="doccomment">/// of control to apply.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// To execute both a memory barrier and a control barrier,</span>
+<span class="doccomment">/// see [`control_barrier`].</span>
+<span class="attribute">#[<span class="ident">spirv_std_macros::gpu_only</span>]</span>
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;OpMemoryBarrier&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">inline</span>]</span>
+<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">memory_barrier</span><span class="op">&lt;</span>
+    <span class="kw">const</span> <span class="ident">MEMORY</span>: <span class="ident">u32</span>,    <span class="comment">// Scope</span>
+    <span class="kw">const</span> <span class="ident">SEMANTICS</span>: <span class="ident">u32</span>, <span class="comment">// Semantics</span>
+<span class="op">&gt;</span>() {
+    <span class="macro">asm!</span> {
+        <span class="string">&quot;%u32 = OpTypeInt 32 0&quot;</span>,
+        <span class="string">&quot;%memory = OpConstant %u32 {memory}&quot;</span>,
+        <span class="string">&quot;%semantics = OpConstant %u32 {semantics}&quot;</span>,
+        <span class="string">&quot;OpMemoryBarrier %memory %semantics&quot;</span>,
+        <span class="ident">memory</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">MEMORY</span>,
+        <span class="ident">semantics</span> <span class="op">=</span> <span class="kw">const</span> <span class="ident">SEMANTICS</span>,
+    }
+}
+</pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spirv_std" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

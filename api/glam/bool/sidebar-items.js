@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["BVec2","A 2-dimensional boolean vector."],["BVec3","A 3-dimensional boolean vector."],["BVec3A","A 3-dimensional SIMD vector mask."],["BVec4","A 4-dimensional boolean vector."],["BVec4A","A 4-dimensional SIMD vector mask."]]});

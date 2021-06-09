@@ -1,0 +1,287 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/glam-0.15.2/src/core/traits/quaternion.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>quaternion.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../glam/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
+                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+</pre><pre class="rust">
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::core</span>::{
+    <span class="ident">storage::XYZ</span>,
+    <span class="ident">traits</span>::{
+        <span class="ident">scalar</span>::{<span class="ident">FloatEx</span>, <span class="ident">NumEx</span>},
+        <span class="ident">vector</span>::<span class="kw-2">*</span>,
+    },
+};
+
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Quaternion</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">FloatEx</span><span class="op">&gt;</span>: <span class="ident">FloatVector4</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">type</span> <span class="ident">SIMDVector3</span>;
+
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">from_axis_angle</span>(<span class="ident">axis</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">angle</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="macro">glam_assert!</span>(<span class="ident">FloatVector3::is_normalized</span>(<span class="ident">axis</span>));
+        <span class="kw">let</span> (<span class="ident">s</span>, <span class="ident">c</span>) <span class="op">=</span> (<span class="ident">angle</span> <span class="op">*</span> <span class="ident">T::HALF</span>).<span class="ident">sin_cos</span>();
+        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">axis</span>.<span class="ident">mul_scalar</span>(<span class="ident">s</span>);
+        <span class="self">Self</span><span class="ident">::new</span>(<span class="ident">v</span>.<span class="ident">x</span>, <span class="ident">v</span>.<span class="ident">y</span>, <span class="ident">v</span>.<span class="ident">z</span>, <span class="ident">c</span>)
+    }
+
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">from_rotation_x</span>(<span class="ident">angle</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> (<span class="ident">s</span>, <span class="ident">c</span>) <span class="op">=</span> (<span class="ident">angle</span> <span class="op">*</span> <span class="ident">T::HALF</span>).<span class="ident">sin_cos</span>();
+        <span class="self">Self</span><span class="ident">::new</span>(<span class="ident">s</span>, <span class="ident">T::ZERO</span>, <span class="ident">T::ZERO</span>, <span class="ident">c</span>)
+    }
+
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">from_rotation_y</span>(<span class="ident">angle</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> (<span class="ident">s</span>, <span class="ident">c</span>) <span class="op">=</span> (<span class="ident">angle</span> <span class="op">*</span> <span class="ident">T::HALF</span>).<span class="ident">sin_cos</span>();
+        <span class="self">Self</span><span class="ident">::new</span>(<span class="ident">T::ZERO</span>, <span class="ident">s</span>, <span class="ident">T::ZERO</span>, <span class="ident">c</span>)
+    }
+
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">from_rotation_z</span>(<span class="ident">angle</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> (<span class="ident">s</span>, <span class="ident">c</span>) <span class="op">=</span> (<span class="ident">angle</span> <span class="op">*</span> <span class="ident">T::HALF</span>).<span class="ident">sin_cos</span>();
+        <span class="self">Self</span><span class="ident">::new</span>(<span class="ident">T::ZERO</span>, <span class="ident">T::ZERO</span>, <span class="ident">s</span>, <span class="ident">c</span>)
+    }
+
+    <span class="doccomment">/// From the columns of a 3x3 rotation matrix.</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">from_rotation_axes</span>(<span class="ident">x_axis</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">y_axis</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">z_axis</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="comment">// Based on https://github.com/microsoft/DirectXMath `XM$quaternionRotationMatrix`</span>
+        <span class="comment">// TODO: sse2 version</span>
+        <span class="kw">let</span> (<span class="ident">m00</span>, <span class="ident">m01</span>, <span class="ident">m02</span>) <span class="op">=</span> <span class="ident">x_axis</span>.<span class="ident">into_tuple</span>();
+        <span class="kw">let</span> (<span class="ident">m10</span>, <span class="ident">m11</span>, <span class="ident">m12</span>) <span class="op">=</span> <span class="ident">y_axis</span>.<span class="ident">into_tuple</span>();
+        <span class="kw">let</span> (<span class="ident">m20</span>, <span class="ident">m21</span>, <span class="ident">m22</span>) <span class="op">=</span> <span class="ident">z_axis</span>.<span class="ident">into_tuple</span>();
+        <span class="kw">if</span> <span class="ident">m22</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">T::ZERO</span> {
+            <span class="comment">// x^2 + y^2 &gt;= z^2 + w^2</span>
+            <span class="kw">let</span> <span class="ident">dif10</span> <span class="op">=</span> <span class="ident">m11</span> <span class="op">-</span> <span class="ident">m00</span>;
+            <span class="kw">let</span> <span class="ident">omm22</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">-</span> <span class="ident">m22</span>;
+            <span class="kw">if</span> <span class="ident">dif10</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">T::ZERO</span> {
+                <span class="comment">// x^2 &gt;= y^2</span>
+                <span class="kw">let</span> <span class="ident">four_xsq</span> <span class="op">=</span> <span class="ident">omm22</span> <span class="op">-</span> <span class="ident">dif10</span>;
+                <span class="kw">let</span> <span class="ident">inv4x</span> <span class="op">=</span> <span class="ident">T::HALF</span> <span class="op">/</span> <span class="ident">four_xsq</span>.<span class="ident">sqrt</span>();
+                <span class="self">Self</span><span class="ident">::new</span>(
+                    <span class="ident">four_xsq</span> <span class="op">*</span> <span class="ident">inv4x</span>,
+                    (<span class="ident">m01</span> <span class="op">+</span> <span class="ident">m10</span>) <span class="op">*</span> <span class="ident">inv4x</span>,
+                    (<span class="ident">m02</span> <span class="op">+</span> <span class="ident">m20</span>) <span class="op">*</span> <span class="ident">inv4x</span>,
+                    (<span class="ident">m12</span> <span class="op">-</span> <span class="ident">m21</span>) <span class="op">*</span> <span class="ident">inv4x</span>,
+                )
+            } <span class="kw">else</span> {
+                <span class="comment">// y^2 &gt;= x^2</span>
+                <span class="kw">let</span> <span class="ident">four_ysq</span> <span class="op">=</span> <span class="ident">omm22</span> <span class="op">+</span> <span class="ident">dif10</span>;
+                <span class="kw">let</span> <span class="ident">inv4y</span> <span class="op">=</span> <span class="ident">T::HALF</span> <span class="op">/</span> <span class="ident">four_ysq</span>.<span class="ident">sqrt</span>();
+                <span class="self">Self</span><span class="ident">::new</span>(
+                    (<span class="ident">m01</span> <span class="op">+</span> <span class="ident">m10</span>) <span class="op">*</span> <span class="ident">inv4y</span>,
+                    <span class="ident">four_ysq</span> <span class="op">*</span> <span class="ident">inv4y</span>,
+                    (<span class="ident">m12</span> <span class="op">+</span> <span class="ident">m21</span>) <span class="op">*</span> <span class="ident">inv4y</span>,
+                    (<span class="ident">m20</span> <span class="op">-</span> <span class="ident">m02</span>) <span class="op">*</span> <span class="ident">inv4y</span>,
+                )
+            }
+        } <span class="kw">else</span> {
+            <span class="comment">// z^2 + w^2 &gt;= x^2 + y^2</span>
+            <span class="kw">let</span> <span class="ident">sum10</span> <span class="op">=</span> <span class="ident">m11</span> <span class="op">+</span> <span class="ident">m00</span>;
+            <span class="kw">let</span> <span class="ident">opm22</span> <span class="op">=</span> <span class="ident">T::ONE</span> <span class="op">+</span> <span class="ident">m22</span>;
+            <span class="kw">if</span> <span class="ident">sum10</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">T::ZERO</span> {
+                <span class="comment">// z^2 &gt;= w^2</span>
+                <span class="kw">let</span> <span class="ident">four_zsq</span> <span class="op">=</span> <span class="ident">opm22</span> <span class="op">-</span> <span class="ident">sum10</span>;
+                <span class="kw">let</span> <span class="ident">inv4z</span> <span class="op">=</span> <span class="ident">T::HALF</span> <span class="op">/</span> <span class="ident">four_zsq</span>.<span class="ident">sqrt</span>();
+                <span class="self">Self</span><span class="ident">::new</span>(
+                    (<span class="ident">m02</span> <span class="op">+</span> <span class="ident">m20</span>) <span class="op">*</span> <span class="ident">inv4z</span>,
+                    (<span class="ident">m12</span> <span class="op">+</span> <span class="ident">m21</span>) <span class="op">*</span> <span class="ident">inv4z</span>,
+                    <span class="ident">four_zsq</span> <span class="op">*</span> <span class="ident">inv4z</span>,
+                    (<span class="ident">m01</span> <span class="op">-</span> <span class="ident">m10</span>) <span class="op">*</span> <span class="ident">inv4z</span>,
+                )
+            } <span class="kw">else</span> {
+                <span class="comment">// w^2 &gt;= z^2</span>
+                <span class="kw">let</span> <span class="ident">four_wsq</span> <span class="op">=</span> <span class="ident">opm22</span> <span class="op">+</span> <span class="ident">sum10</span>;
+                <span class="kw">let</span> <span class="ident">inv4w</span> <span class="op">=</span> <span class="ident">T::HALF</span> <span class="op">/</span> <span class="ident">four_wsq</span>.<span class="ident">sqrt</span>();
+                <span class="self">Self</span><span class="ident">::new</span>(
+                    (<span class="ident">m12</span> <span class="op">-</span> <span class="ident">m21</span>) <span class="op">*</span> <span class="ident">inv4w</span>,
+                    (<span class="ident">m20</span> <span class="op">-</span> <span class="ident">m02</span>) <span class="op">*</span> <span class="ident">inv4w</span>,
+                    (<span class="ident">m01</span> <span class="op">-</span> <span class="ident">m10</span>) <span class="op">*</span> <span class="ident">inv4w</span>,
+                    <span class="ident">four_wsq</span> <span class="op">*</span> <span class="ident">inv4w</span>,
+                )
+            }
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">to_axis_angle</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T</span>) {
+        <span class="comment">// const EPSILON: f32 = 1.0e-8;</span>
+        <span class="comment">// const EPSILON_SQUARED: f32 = EPSILON * EPSILON;</span>
+        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>, <span class="ident">w</span>) <span class="op">=</span> <span class="ident">Vector4::into_tuple</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">angle</span> <span class="op">=</span> <span class="ident">w</span>.<span class="ident">acos_approx</span>() <span class="op">*</span> <span class="ident">T::TWO</span>;
+        <span class="kw">let</span> <span class="ident">scale_sq</span> <span class="op">=</span> <span class="ident">NumEx::max</span>(<span class="ident">T::ONE</span> <span class="op">-</span> <span class="ident">w</span> <span class="op">*</span> <span class="ident">w</span>, <span class="ident">T::ZERO</span>);
+        <span class="comment">// TODO: constants for epslions?</span>
+        <span class="kw">if</span> <span class="ident">scale_sq</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">T::from_f32</span>(<span class="number">1.0e-8</span> <span class="op">*</span> <span class="number">1.0e-8</span>) {
+            (<span class="ident">XYZ</span> { <span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span> }.<span class="ident">mul_scalar</span>(<span class="ident">scale_sq</span>.<span class="ident">sqrt</span>().<span class="ident">recip</span>()), <span class="ident">angle</span>)
+        } <span class="kw">else</span> {
+            (<span class="ident">Vector3Const::X</span>, <span class="ident">angle</span>)
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">is_near_identity</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="comment">// Based on https://github.com/nfrechette/rtm `rtm::quat_near_identity`</span>
+        <span class="kw">let</span> <span class="ident">threshold_angle</span> <span class="op">=</span> <span class="ident">T::from_f64</span>(<span class="number">0.002_847_144_6</span>);
+        <span class="comment">// Because of floating point precision, we cannot represent very small rotations.</span>
+        <span class="comment">// The closest f32 to 1.0 that is not 1.0 itself yields:</span>
+        <span class="comment">// 0.99999994.acos() * 2.0  = 0.000690533954 rad</span>
+        <span class="comment">//</span>
+        <span class="comment">// An error threshold of 1.e-6 is used by default.</span>
+        <span class="comment">// (1.0 - 1.e-6).acos() * 2.0 = 0.00284714461 rad</span>
+        <span class="comment">// (1.0 - 1.e-7).acos() * 2.0 = 0.00097656250 rad</span>
+        <span class="comment">//</span>
+        <span class="comment">// We don&#39;t really care about the angle value itself, only if it&#39;s close to 0.</span>
+        <span class="comment">// This will happen whenever quat.w is close to 1.0.</span>
+        <span class="comment">// If the quat.w is close to -1.0, the angle will be near 2*PI which is close to</span>
+        <span class="comment">// a negative 0 rotation. By forcing quat.w to be positive, we&#39;ll end up with</span>
+        <span class="comment">// the shortest path.</span>
+        <span class="kw">let</span> <span class="ident">positive_w_angle</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_ref_xyzw</span>().<span class="ident">w</span>.<span class="ident">abs</span>().<span class="ident">acos_approx</span>() <span class="op">*</span> <span class="ident">T::TWO</span>;
+        <span class="ident">positive_w_angle</span> <span class="op">&lt;</span> <span class="ident">threshold_angle</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">conjugate</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
+    <span class="kw">fn</span> <span class="ident">lerp</span>(<span class="self">self</span>, <span class="ident">end</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
+    <span class="kw">fn</span> <span class="ident">slerp</span>(<span class="self">self</span>, <span class="ident">end</span>: <span class="self">Self</span>, <span class="ident">s</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
+    <span class="kw">fn</span> <span class="ident">mul_quaternion</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
+    <span class="kw">fn</span> <span class="ident">mul_vector3</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">XYZ</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">mul_float4_as_vector3</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span><span class="ident">::SIMDVector3</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::SIMDVector3</span>;
+}
+</pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="glam" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
+    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>
