@@ -98,10 +98,11 @@ impl AccelerationStructure {
         payload: &mut T,
     ) {
         asm! {
+            "%acceleration_structure = OpLoad _ {acceleration_structure}",
             "%ray_origin = OpLoad _ {ray_origin}",
             "%ray_direction = OpLoad _ {ray_direction}",
             "OpTraceRayKHR \
-            {acceleration_structure} \
+            %acceleration_structure \
             {ray_flags} \
             {cull_mask} \
             {sbt_offset} \
