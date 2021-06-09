@@ -94,7 +94,6 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
                 inline: false,
                 mem2reg: false,
                 structurize: false,
-                use_new_structurizer: false,
                 emit_multiple_modules: false,
             },
         );
