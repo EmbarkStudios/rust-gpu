@@ -8,13 +8,19 @@ instead.
 The specific syntax and meaning of the arguments to the `Image!` macro can be found in
 [rustdoc](https://embarkstudios.github.io/rust-gpu/api/spirv_std/macro.Image.html).
 
-Some type aliases for common image formats can be found in the `spirv_std::image` module. For
-example, `Image2d` is a very commonly used type, corresponding to `texture2D` in GLSL, and is likely
-what you want if you want a regular old sampled texture.
+Some type aliases for common image formats can be found in the
+[`spirv_std::image`](https://embarkstudios.github.io/rust-gpu/api/spirv_std/image/index.html)
+module. For example, `Image2d` is a very commonly used type, corresponding to `texture2D` in GLSL,
+and is likely what you want if you want a regular old sampled texture.
 
 ```rust,no_run
 type Image2d = Image!(2D, type=f32, sampled);
 ```
 
-Note that the `const-generics` feature must be enabled to use the `Image!` macro at the moment.
-This will likely change in the near future.
+Note that the `const-generics` cargo feature in spirv-std must be enabled to use the `Image!` macro
+at the moment.  This will likely change in the near future.
+
+```toml
+[dependencies]
+spirv-std = { ..., features = ["const-generics"] }
+```
