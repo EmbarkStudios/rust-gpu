@@ -606,6 +606,17 @@
 <span id="603">603</span>
 <span id="604">604</span>
 <span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">linker</span>, <span class="ident">CompileResult</span>, <span class="ident">ModuleResult</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>,
@@ -746,9 +757,16 @@
         <span class="ident">codegen_results</span>,
     );
 
-    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="ident">do_link</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">objects</span>, <span class="kw-2">&amp;</span><span class="ident">rlibs</span>, <span class="ident">legalize</span>, <span class="ident">emit_multiple_modules</span>);
-
     <span class="kw">let</span> <span class="ident">cg_args</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::codegen_cx::CodegenArgs::from_session</span>(<span class="ident">sess</span>);
+
+    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="ident">do_link</span>(
+        <span class="ident">sess</span>,
+        <span class="kw-2">&amp;</span><span class="ident">cg_args</span>,
+        <span class="kw-2">&amp;</span><span class="ident">objects</span>,
+        <span class="kw-2">&amp;</span><span class="ident">rlibs</span>,
+        <span class="ident">legalize</span>,
+        <span class="ident">emit_multiple_modules</span>,
+    );
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">root_file_name</span> <span class="op">=</span> <span class="ident">out_filename</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>().<span class="ident">to_owned</span>();
     <span class="ident">root_file_name</span>.<span class="ident">push</span>(<span class="string">&quot;.dir&quot;</span>);
@@ -830,10 +848,11 @@
         <span class="ident">preserve_spec_constants</span>: <span class="bool-val">false</span>,
     };
 
-    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">OptLevel::No</span> <span class="op">|</span><span class="op">|</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span>
+    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">OptLevel::No</span>
+        <span class="op">|</span><span class="op">|</span> (<span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">cg_args</span>.<span class="ident">name_variables</span>)
     {
         <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_spirv_opt&quot;</span>);
-        <span class="ident">do_spirv_opt</span>(<span class="ident">sess</span>, <span class="ident">spv_binary</span>, <span class="ident">out_filename</span>, <span class="ident">opt_options</span>)
+        <span class="ident">do_spirv_opt</span>(<span class="ident">sess</span>, <span class="ident">cg_args</span>, <span class="ident">spv_binary</span>, <span class="ident">out_filename</span>, <span class="ident">opt_options</span>)
     } <span class="kw">else</span> {
         <span class="ident">spv_binary</span>
     };
@@ -858,6 +877,7 @@
 
 <span class="kw">fn</span> <span class="ident">do_spirv_opt</span>(
     <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
+    <span class="ident">cg_args</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::codegen_cx::CodegenArgs</span>,
     <span class="ident">spv_binary</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">options</span>: <span class="ident">spirv_tools::opt::Options</span>,
@@ -879,7 +899,7 @@
         }
     }
 
-    <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> {
+    <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">cg_args</span>.<span class="ident">name_variables</span> {
         <span class="ident">optimizer</span>
             .<span class="ident">register_pass</span>(<span class="ident">opt::Passes::EliminateDeadConstant</span>)
             .<span class="ident">register_pass</span>(<span class="ident">opt::Passes::StripDebugInfo</span>);
@@ -1093,6 +1113,7 @@
 <span class="doccomment">/// shenanigans to collect all the object files we need to link.</span>
 <span class="kw">fn</span> <span class="ident">do_link</span>(
     <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
+    <span class="ident">cg_args</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::codegen_cx::CodegenArgs</span>,
     <span class="ident">objects</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>],
     <span class="ident">rlibs</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>],
     <span class="ident">legalize</span>: <span class="ident">bool</span>,
@@ -1149,6 +1170,7 @@
         <span class="ident">mem2reg</span>: <span class="ident">legalize</span>,
         <span class="ident">structurize</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_STRUCTURIZE&quot;</span>).<span class="ident">is_err</span>(),
         <span class="ident">emit_multiple_modules</span>,
+        <span class="ident">name_variables</span>: <span class="ident">cg_args</span>.<span class="ident">name_variables</span>,
     };
 
     <span class="kw">let</span> <span class="ident">link_result</span> <span class="op">=</span> <span class="ident">linker::link</span>(<span class="ident">sess</span>, <span class="ident">modules</span>, <span class="kw-2">&amp;</span><span class="ident">options</span>);

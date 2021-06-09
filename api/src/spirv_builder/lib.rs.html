@@ -522,6 +522,20 @@
 <span id="519">519</span>
 <span id="520">520</span>
 <span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
 </pre><pre class="rust">
 <span class="comment">// BEGIN - Embark standard lints v0.3</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -658,6 +672,7 @@
     <span class="ident">target</span>: <span class="ident">String</span>,
     <span class="ident">bindless</span>: <span class="ident">bool</span>,
     <span class="ident">multimodule</span>: <span class="ident">bool</span>,
+    <span class="ident">name_variables</span>: <span class="ident">bool</span>,
     <span class="ident">capabilities</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Capability</span><span class="op">&gt;</span>,
     <span class="ident">extensions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
 
@@ -679,6 +694,7 @@
             <span class="ident">target</span>: <span class="ident">target</span>.<span class="ident">into</span>(),
             <span class="ident">bindless</span>: <span class="bool-val">false</span>,
             <span class="ident">multimodule</span>: <span class="bool-val">false</span>,
+            <span class="ident">name_variables</span>: <span class="bool-val">false</span>,
             <span class="ident">capabilities</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">extensions</span>: <span class="ident">Vec::new</span>(),
 
@@ -715,6 +731,15 @@
     <span class="doccomment">/// points bundled into a single file is the preferred system.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">multimodule</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">multimodule</span> <span class="op">=</span> <span class="ident">v</span>;
+        <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// Keep `OpName` reflection information for global `OpVariable`s (which means things like</span>
+    <span class="doccomment">/// uniforms and shader input/outputs) but strip `OpName`s for everything else (functions,</span>
+    <span class="doccomment">/// types, and so on). This is useful if you want a small binary size without debugging</span>
+    <span class="doccomment">/// information, but need variable name reflection to work.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">name_variables</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">name_variables</span> <span class="op">=</span> <span class="ident">v</span>;
         <span class="self">self</span>
     }
 
@@ -876,6 +901,9 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">llvm_args</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">multimodule</span> {
         <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--module-output=multiple&quot;</span>);
+    }
+    <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">name_variables</span> {
+        <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--name-variables&quot;</span>);
     }
     <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">relax_struct_store</span> {
         <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--relax-struct-store&quot;</span>);
