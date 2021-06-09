@@ -62,7 +62,8 @@ fn maybe_watch(
     shader: RustGPUShader,
     force_no_watch: bool,
 ) -> Receiver<wgpu::ShaderModuleDescriptor<'static>> {
-    // This bound needs to be 1, because when we don't watch, we
+    // This bound needs to be 1, because in cases where this function is used for direct building (e.g. for the compute example or on android)
+    // we send the value directly in the same thread. This avoids deadlocking in those cases.
     let (tx, rx) = mpsc::sync_channel(1);
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {

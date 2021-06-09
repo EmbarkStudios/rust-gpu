@@ -455,9 +455,9 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // we do that even in case of an error, to let through any useful messages
     // that ended up on stdout instead of stderr.
     let stdout = String::from_utf8(build.stdout).unwrap();
+    let artifact = get_last_artifact(&stdout);
     if build.status.success() {
-        let artifact = get_last_artifact(&stdout);
-        Ok(artifact)
+        Ok(artifact.expect("Artifact created when compilation succeeded"))
     } else {
         Err(SpirvBuilderError::BuildFailed)
     }
@@ -469,7 +469,7 @@ struct RustcOutput {
     filenames: Option<Vec<String>>,
 }
 
-fn get_last_artifact(out: &str) -> PathBuf {
+fn get_last_artifact(out: &str) -> Option<PathBuf> {
     let last = out
         .lines()
         .filter_map(|line| match serde_json::from_str::<RustcOutput>(line) {
@@ -489,9 +489,9 @@ fn get_last_artifact(out: &str) -> PathBuf {
         .unwrap()
         .into_iter()
         .filter(|v| v.ends_with(".spv"));
-    let filename = filenames.next().expect("Crate had no .spv artifacts");
+    let filename = filenames.next()?;
     assert_eq!(filenames.next(), None, "Crate had multiple .spv artifacts");
-    filename.into()
+    Some(filename.into())
 }
 
 /// Internally iterate through the leaf dependencies of the artifact at `artifact`
