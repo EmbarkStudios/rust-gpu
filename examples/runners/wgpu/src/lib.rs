@@ -43,7 +43,6 @@
 )]
 
 use clap::Clap;
-use spirv_builder::CompileResult;
 use strum::{Display, EnumString};
 
 mod compute;
@@ -65,7 +64,7 @@ fn maybe_watch(
     // we send the value directly in the same thread. This avoids deadlocking in those cases.
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
-        use spirv_builder::{Capability, MetadataPrintout, SpirvBuilder};
+        use spirv_builder::{Capability, MetadataPrintout, SpirvBuilder, CompileResult};
         use std::borrow::Cow;
         use std::path::PathBuf;
         // Hack: spirv_builder builds into a custom directory if running under cargo, to not
