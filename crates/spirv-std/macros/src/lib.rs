@@ -94,7 +94,7 @@ use quote::ToTokens;
 ///    when set the image format is unknown.
 ///    Accepted values: `f32`, `f64`, `u8`, `u16`, `u32`, `u64`, `i8`, `i16`, `i32`, `i64`.
 /// - `format` — The image format of the image, mutually exclusive with `type`.
-///    Accepted values: Camel case versions of [`ImageFormat`].
+///    Accepted values: Snake case versions of [`ImageFormat`].
 /// - `sampled` — Whether it is known that the image will be used with a sampler.
 ///    Accepted values: `true` or `false`. Default: `unknown`.
 /// - `multisampled` — Whether the image contains multisampled content.
