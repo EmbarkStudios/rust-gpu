@@ -6,13 +6,15 @@ use rustc_codegen_spirv::CompileResult;
 use crate::{leaf_deps, SpirvBuilder, SpirvBuilderError};
 
 impl SpirvBuilder {
-    /// Watches the module for changes using [`notify`](https://crates.io/crates/notify).
+    /// Watches the module for changes using [`notify`](https://crates.io/crates/notify),
+    /// and rebuild it upon changes
     ///
-    /// This is a blocking operation, wand should never return in the happy path
+    /// Returns the result of the first successful compilation, then calls
+    /// `on_compilation_finishes` for each subsequent compilation.
     pub fn watch(
         mut self,
-        on_compilation_finishes: impl Fn(CompileResult),
-    ) -> Result<(), SpirvBuilderError> {
+        mut on_compilation_finishes: impl FnMut(CompileResult) + Send + 'static,
+    ) -> Result<CompileResult, SpirvBuilderError> {
         self.validate_running_conditions()?;
         if !matches!(self.print_metadata, crate::MetadataPrintout::None) {
             return Err(SpirvBuilderError::WatchWithPrintMetadata);
@@ -53,52 +55,58 @@ impl SpirvBuilder {
             }
         };
         let metadata = self.parse_metadata_file(&metadata_file)?;
-        on_compilation_finishes(metadata);
-        let mut watched_paths = HashSet::new();
-        let (tx, rx) = sync_channel(0);
-        let mut watcher =
-            notify::immediate_watcher(move |event: notify::Result<Event>| match event {
-                Ok(e) => match e.kind {
-                    notify::EventKind::Access(_) => (),
-                    notify::EventKind::Any
-                    | notify::EventKind::Create(_)
-                    | notify::EventKind::Modify(_)
-                    | notify::EventKind::Remove(_)
-                    | notify::EventKind::Other => {
-                        let _ = tx.try_send(());
-                    }
-                },
-                Err(e) => println!("notify error: {:?}", e),
-            })
-            .expect("Could create watcher");
-        leaf_deps(&metadata_file, |it| {
-            let path = it.to_path().unwrap();
-            if watched_paths.insert(path.to_owned()) {
-                watcher
-                    .watch(it.to_path().unwrap(), RecursiveMode::NonRecursive)
-                    .expect("Cargo dependencies are valid files");
-            }
-        })
-        .expect("Could read dependencies file");
-        loop {
-            rx.recv().expect("Watcher still alive");
-            let metadata_result = crate::invoke_rustc(&self);
-            if let Ok(file) = metadata_result {
-                // We can bubble this error up because it's an internal error  (e.g. rustc_codegen_spirv's version of CompileResult is somehow out of sync)
-                let metadata = self.parse_metadata_file(&file)?;
+        let first_result = metadata;
 
-                leaf_deps(&file, |it| {
-                    let path = it.to_path().unwrap();
-                    if watched_paths.insert(path.to_owned()) {
-                        watcher
-                            .watch(it.to_path().unwrap(), RecursiveMode::NonRecursive)
-                            .expect("Cargo dependencies are valid files");
-                    }
+        let thread = std::thread::spawn(move || {
+            let mut watched_paths = HashSet::new();
+            let (tx, rx) = sync_channel(0);
+            let mut watcher =
+                notify::immediate_watcher(move |event: notify::Result<Event>| match event {
+                    Ok(e) => match e.kind {
+                        notify::EventKind::Access(_) => (),
+                        notify::EventKind::Any
+                        | notify::EventKind::Create(_)
+                        | notify::EventKind::Modify(_)
+                        | notify::EventKind::Remove(_)
+                        | notify::EventKind::Other => {
+                            let _ = tx.try_send(());
+                        }
+                    },
+                    Err(e) => println!("notify error: {:?}", e),
                 })
-                .expect("Could read dependencies file");
+                .expect("Could create watcher");
+            leaf_deps(&metadata_file, |it| {
+                let path = it.to_path().unwrap();
+                if watched_paths.insert(path.to_owned()) {
+                    watcher
+                        .watch(it.to_path().unwrap(), RecursiveMode::NonRecursive)
+                        .expect("Cargo dependencies are valid files");
+                }
+            })
+            .expect("Could read dependencies file");
+            loop {
+                rx.recv().expect("Watcher still alive");
+                let metadata_result = crate::invoke_rustc(&self);
+                if let Ok(file) = metadata_result {
+                    let metadata = self
+                        .parse_metadata_file(&file)
+                        .expect("Metadata file is correct");
 
-                on_compilation_finishes(metadata);
+                    leaf_deps(&file, |it| {
+                        let path = it.to_path().unwrap();
+                        if watched_paths.insert(path.to_owned()) {
+                            watcher
+                                .watch(it.to_path().unwrap(), RecursiveMode::NonRecursive)
+                                .expect("Cargo dependencies are valid files");
+                        }
+                    })
+                    .expect("Could read dependencies file");
+
+                    on_compilation_finishes(metadata);
+                }
             }
-        }
+        });
+        std::mem::forget(thread);
+        return Ok(first_result);
     }
 }

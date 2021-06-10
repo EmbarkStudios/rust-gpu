@@ -1,5 +1,3 @@
-use std::thread::spawn;
-
 use crate::maybe_watch;
 
 use super::Options;
@@ -310,21 +308,17 @@ fn create_pipeline(
 
 pub fn start(options: &Options) {
     // Build the shader before we pop open a window, since it might take a while.
-    let rx = maybe_watch(options.shader, false);
-    let initial_shader = rx.recv().expect("Initial shader is required");
-
     let event_loop = EventLoop::with_user_event();
     let proxy = event_loop.create_proxy();
-    let thread = spawn(move || loop {
-        while let Ok(result) = rx.recv() {
-            match proxy.send_event(result) {
-                Ok(()) => {}
-                // If something goes wrong, close this thread
-                Err(_) => break,
-            }
-        }
-    });
-    std::mem::forget(thread);
+    let initial_shader = maybe_watch(
+        options.shader,
+        Some(Box::new(move |res| match proxy.send_event(res) {
+            Ok(it) => it,
+            // ShaderModuleDescriptor is not `Debug`, so can't use unwrap/expect
+            Err(_) => panic!("Event loop dead"),
+        })),
+    );
+
     let window = winit::window::WindowBuilder::new()
         .with_title("Rust GPU - wgpu")
         .with_inner_size(winit::dpi::LogicalSize::new(1280.0, 720.0))
