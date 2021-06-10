@@ -4,9 +4,7 @@
 
 use crate::codegen_cx::CodegenCx;
 use crate::symbols::Symbols;
-use rspirv::spirv::{
-    AccessQualifier, BuiltIn, Dim, ExecutionMode, ExecutionModel, ImageFormat, StorageClass,
-};
+use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::Attribute;
 use rustc_hir as hir;
 use rustc_hir::def_id::LocalDefId;
@@ -62,15 +60,6 @@ impl From<ExecutionModel> for Entry {
 #[derive(Debug, Clone)]
 pub enum IntrinsicType {
     GenericImageType,
-    ImageType {
-        dim: Dim,
-        depth: u32,
-        arrayed: u32,
-        multisampled: u32,
-        sampled: u32,
-        image_format: ImageFormat,
-        access_qualifier: Option<AccessQualifier>,
-    },
     Sampler,
     AccelerationStructureKhr,
     SampledImage,

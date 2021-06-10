@@ -760,38 +760,6 @@ fn trans_intrinsic_type<'tcx>(
     intrinsic_type_attr: IntrinsicType,
 ) -> Result<Word, ErrorReported> {
     match intrinsic_type_attr {
-        IntrinsicType::ImageType {
-            dim,
-            depth,
-            arrayed,
-            multisampled,
-            sampled,
-            image_format,
-            access_qualifier,
-        } => {
-            // see SpirvType::sizeof
-            if ty.size != Size::from_bytes(4) {
-                cx.tcx
-                    .sess
-                    .err("#[spirv(image_type)] type must have size 4");
-                return Err(ErrorReported);
-            }
-            // Hardcode to float for now
-            let sampled_type = SpirvType::Float(32).def(span, cx);
-
-            let ty = SpirvType::Image {
-                sampled_type,
-                dim,
-                depth,
-                arrayed,
-                multisampled,
-                sampled,
-                image_format,
-                access_qualifier,
-            };
-
-            Ok(ty.def(span, cx))
-        }
         IntrinsicType::GenericImageType => {
             // see SpirvType::sizeof
             if ty.size != Size::from_bytes(4) {
