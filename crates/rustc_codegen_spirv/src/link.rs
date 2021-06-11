@@ -1,3 +1,4 @@
+use crate::codegen_cx::{CodegenArgs, ModuleOutputType};
 use crate::{
     linker, CompileResult, ModuleResult, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer,
 };
@@ -16,6 +17,7 @@ use rustc_session::config::{CrateType, DebugInfo, Lto, OptLevel, OutputFilenames
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
+use rustc_span::symbol::Symbol;
 use std::env;
 use std::ffi::{CString, OsStr};
 use std::fs::File;
@@ -29,8 +31,6 @@ pub fn link<'a>(
     codegen_results: &CodegenResults,
     outputs: &OutputFilenames,
     crate_name: &str,
-    legalize: bool,
-    emit_multiple_modules: bool,
 ) {
     let output_metadata = sess.opts.output_types.contains_key(&OutputType::Metadata);
     for &crate_type in sess.crate_types().iter() {
@@ -63,14 +63,9 @@ pub fn link<'a>(
                 CrateType::Rlib => {
                     link_rlib(sess, codegen_results, &out_filename);
                 }
-                CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => link_exe(
-                    sess,
-                    crate_type,
-                    &out_filename,
-                    codegen_results,
-                    legalize,
-                    emit_multiple_modules,
-                ),
+                CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => {
+                    link_exe(sess, crate_type, &out_filename, codegen_results)
+                }
                 other => sess.err(&format!("CrateType {:?} not supported yet", other)),
             }
         }
@@ -117,8 +112,6 @@ fn link_exe(
     crate_type: CrateType,
     out_filename: &Path,
     codegen_results: &CodegenResults,
-    legalize: bool,
-    emit_multiple_modules: bool,
 ) {
     let mut objects = Vec::new();
     let mut rlibs = Vec::new();
@@ -137,16 +130,9 @@ fn link_exe(
         codegen_results,
     );
 
-    let cg_args = crate::codegen_cx::CodegenArgs::from_session(sess);
+    let cg_args = CodegenArgs::from_session(sess);
 
-    let spv_binary = do_link(
-        sess,
-        &cg_args,
-        &objects,
-        &rlibs,
-        legalize,
-        emit_multiple_modules,
-    );
+    let spv_binary = do_link(sess, &cg_args, &objects, &rlibs);
 
     let mut root_file_name = out_filename.file_name().unwrap().to_owned();
     root_file_name.push(".dir");
@@ -200,7 +186,7 @@ fn entry_points(module: &rspirv::dr::Module) -> Vec<String> {
 
 fn post_link_single_module(
     sess: &Session,
-    cg_args: &crate::codegen_cx::CodegenArgs,
+    cg_args: &CodegenArgs,
     spv_binary: Vec<u32>,
     out_filename: &Path,
 ) {
@@ -257,7 +243,7 @@ fn post_link_single_module(
 
 fn do_spirv_opt(
     sess: &Session,
-    cg_args: &crate::codegen_cx::CodegenArgs,
+    cg_args: &CodegenArgs,
     spv_binary: Vec<u32>,
     filename: &Path,
     options: spirv_tools::opt::Options,
@@ -493,11 +479,9 @@ pub fn read_metadata(rlib: &Path) -> Result<MetadataRef, String> {
 /// shenanigans to collect all the object files we need to link.
 fn do_link(
     sess: &Session,
-    cg_args: &crate::codegen_cx::CodegenArgs,
+    cg_args: &CodegenArgs,
     objects: &[PathBuf],
     rlibs: &[PathBuf],
-    legalize: bool,
-    emit_multiple_modules: bool,
 ) -> linker::LinkResult {
     fn load(bytes: &[u8]) -> rspirv::dr::Module {
         let mut loader = rspirv::dr::Loader::new();
@@ -509,8 +493,7 @@ fn do_link(
     let mut modules = Vec::new();
     // `objects` are the plain obj files we need to link - usually produced by the final crate.
     for obj in objects {
-        let mut bytes = Vec::new();
-        File::open(obj).unwrap().read_to_end(&mut bytes).unwrap();
+        let bytes = std::fs::read(obj).unwrap();
         modules.push(load(&bytes));
     }
     // `rlibs` are archive files we've created in `create_archive`, usually produced by crates that are being
@@ -519,7 +502,9 @@ fn do_link(
         for entry in Archive::new(File::open(rlib).unwrap()).entries().unwrap() {
             let mut entry = entry.unwrap();
             if entry.path().unwrap() != Path::new(".metadata") {
-                let mut bytes = Vec::new();
+                // std::fs::read adds 1 to the size, so do the same here - see comment:
+                // https://github.com/rust-lang/rust/blob/72868e017bdade60603a25889e253f556305f996/library/std/src/fs.rs#L200-L202
+                let mut bytes = Vec::with_capacity(entry.size() as usize + 1);
                 entry.read_to_end(&mut bytes).unwrap();
                 modules.push(load(&bytes));
             }
@@ -542,6 +527,9 @@ fn do_link(
     }
     drop(load_modules_timer);
 
+    // TODO: Can we merge this sym with the one in symbols.rs?
+    let legalize = !sess.target_features.contains(&Symbol::intern("kernel"));
+
     // Do the link...
     let options = linker::Options {
         dce: env::var("NO_DCE").is_err(),
@@ -549,7 +537,7 @@ fn do_link(
         inline: legalize,
         mem2reg: legalize,
         structurize: env::var("NO_STRUCTURIZE").is_err(),
-        emit_multiple_modules,
+        emit_multiple_modules: cg_args.module_output_type == ModuleOutputType::Multiple,
         name_variables: cg_args.name_variables,
     };
 

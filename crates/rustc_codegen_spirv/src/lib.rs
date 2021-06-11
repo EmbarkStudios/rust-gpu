@@ -132,7 +132,7 @@ mod target;
 mod target_feature;
 
 use builder::Builder;
-use codegen_cx::{CodegenArgs, CodegenCx, ModuleOutputType};
+use codegen_cx::CodegenCx;
 pub use compile_result::*;
 pub use rspirv;
 use rspirv::binary::Assemble;
@@ -373,19 +373,12 @@ impl CodegenBackend for SpirvCodegenBackend {
         codegen_results: CodegenResults,
         outputs: &OutputFilenames,
     ) -> Result<(), ErrorReported> {
-        // TODO: Can we merge this sym with the one in symbols.rs?
-        let legalize = !sess.target_features.contains(&Symbol::intern("kernel"));
-        let codegen_args = CodegenArgs::from_session(sess);
-        let emit_multiple_modules = codegen_args.module_output_type == ModuleOutputType::Multiple;
-
         let timer = sess.timer("link_crate");
         link::link(
             sess,
             &codegen_results,
             outputs,
             &codegen_results.crate_name.as_str(),
-            legalize,
-            emit_multiple_modules,
         );
         drop(timer);
 
