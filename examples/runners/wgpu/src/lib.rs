@@ -60,8 +60,6 @@ fn maybe_watch(
     shader: RustGPUShader,
     on_watch: Option<Box<dyn FnMut(wgpu::ShaderModuleDescriptor<'static>) + Send + 'static>>,
 ) -> wgpu::ShaderModuleDescriptor<'static> {
-    // This bound needs to be 1, because in cases where this function is used for direct building (e.g. for the compute example or on android)
-    // we send the value directly in the same thread. This avoids deadlocking in those cases.
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
         use spirv_builder::{Capability, CompileResult, MetadataPrintout, SpirvBuilder};
