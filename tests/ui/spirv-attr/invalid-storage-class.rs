@@ -2,6 +2,8 @@
 
 // build-fail
 
+use spirv_std as _;
+
 #[spirv(vertex)]
 fn _entry(
     #[spirv(input)] _: (),
