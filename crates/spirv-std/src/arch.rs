@@ -5,14 +5,12 @@
 //! no additional safety checks beyond type-checking.
 use crate::{scalar::Scalar, vector::Vector};
 
-mod arithmetic;
 mod barrier;
 mod demote_to_helper_invocation_ext;
 mod derivative;
 mod primitive;
 mod ray_tracing;
 
-pub use arithmetic::*;
 pub use barrier::*;
 pub use demote_to_helper_invocation_ext::*;
 pub use derivative::*;
