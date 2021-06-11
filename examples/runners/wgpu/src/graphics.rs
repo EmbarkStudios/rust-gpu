@@ -25,10 +25,6 @@ mod shaders {
     include!(concat!(env!("OUT_DIR"), "/entry_points.rs"));
 }
 
-unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
-    ::std::slice::from_raw_parts((p as *const T) as *const u8, ::std::mem::size_of::<T>())
-}
-
 fn mouse_button_index(button: MouseButton) -> usize {
     match button {
         MouseButton::Left => 0,
@@ -200,9 +196,11 @@ async fn run(
                         };
 
                         rpass.set_pipeline(render_pipeline);
-                        rpass.set_push_constants(wgpu::ShaderStage::all(), 0, unsafe {
-                            any_as_u8_slice(&push_constants)
-                        });
+                        rpass.set_push_constants(
+                            wgpu::ShaderStage::all(),
+                            0,
+                            bytemuck::bytes_of(&push_constants),
+                        );
                         rpass.draw(0..3, 0..1);
                     }
 
