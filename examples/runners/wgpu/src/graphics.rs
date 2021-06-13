@@ -43,6 +43,7 @@ async fn run(
     window: Window,
     swapchain_format: wgpu::TextureFormat,
     shader_binary: wgpu::ShaderModuleDescriptor<'static>,
+    shader_target_flow: ControlFlow,
 ) {
     let size = window.inner_size();
     let instance = wgpu::Instance::new(wgpu::BackendBit::VULKAN | wgpu::BackendBit::METAL);
@@ -125,7 +126,7 @@ async fn run(
         let _ = (&instance, &adapter, &pipeline_layout);
         let render_pipeline = &mut render_pipeline;
 
-        *control_flow = ControlFlow::Wait;
+        *control_flow = shader_target_flow;
         match event {
             Event::MainEventsCleared => {
                 window.request_redraw();
@@ -309,6 +310,10 @@ fn create_pipeline(
 }
 
 pub fn start(options: &Options) {
+    let control_flow = options
+        .shader
+        .expected_control_flow()
+        .expect("Graphics runner should be used for graphics shaders only");
     // Build the shader before we pop open a window, since it might take a while.
     let rx = maybe_watch(options.shader, false);
     let initial_shader = rx.recv().expect("Initial shader is required");
@@ -351,6 +356,7 @@ pub fn start(options: &Options) {
                 window,
                 wgpu::TextureFormat::Bgra8Unorm,
                 initial_shader,
+                control_flow
             ));
         } else {
             wgpu_subscriber::initialize_default_subscriber(None);
@@ -363,7 +369,7 @@ pub fn start(options: &Options) {
                     wgpu::TextureFormat::Bgra8UnormSrgb
                 },
                 initial_shader,
-
+                control_flow
             ));
         }
     }

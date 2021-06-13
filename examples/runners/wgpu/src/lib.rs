@@ -46,6 +46,7 @@ use std::sync::mpsc::{self, Receiver};
 
 use clap::Clap;
 use strum::{Display, EnumString};
+use winit::event_loop::ControlFlow;
 
 mod compute;
 mod graphics;
@@ -56,6 +57,20 @@ pub enum RustGPUShader {
     Sky,
     Compute,
     Mouse,
+}
+
+impl RustGPUShader {
+    /// Returns the [`ControlFlow`] this shader should use
+    ///
+    /// Returns [`None`] if this shader should not be used for graphics
+    fn expected_control_flow(self) -> Option<ControlFlow> {
+        match self {
+            RustGPUShader::Compute => None,
+            // The mouse shader updates based on how long the shader has been running for
+            RustGPUShader::Mouse => Some(ControlFlow::Poll),
+            RustGPUShader::Simplest | RustGPUShader::Sky => Some(ControlFlow::Wait),
+        }
+    }
 }
 
 fn maybe_watch(
