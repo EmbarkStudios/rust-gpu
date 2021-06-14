@@ -12,7 +12,9 @@ pub use spirv_std::glam;
 #[cfg(target_arch = "spirv")]
 use spirv_std::num_traits::Float;
 
-#[derive(Copy, Clone)]
+use bytemuck::{Pod, Zeroable};
+
+#[derive(Copy, Clone, Pod, Zeroable)]
 #[repr(C)]
 pub struct ShaderConstants {
     pub width: u32,
