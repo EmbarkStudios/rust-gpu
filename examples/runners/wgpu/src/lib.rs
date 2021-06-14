@@ -42,8 +42,6 @@
     rust_2018_idioms
 )]
 
-use std::sync::mpsc::{self, Receiver};
-
 use clap::Clap;
 use strum::{Display, EnumString};
 
@@ -60,11 +58,8 @@ pub enum RustGPUShader {
 
 fn maybe_watch(
     shader: RustGPUShader,
-    force_no_watch: bool,
-) -> Receiver<wgpu::ShaderModuleDescriptor<'static>> {
-    // This bound needs to be 1, because in cases where this function is used for direct building (e.g. for the compute example or on android)
-    // we send the value directly in the same thread. This avoids deadlocking in those cases.
-    let (tx, rx) = mpsc::sync_channel(1);
+    on_watch: Option<Box<dyn FnMut(wgpu::ShaderModuleDescriptor<'static>) + Send + 'static>>,
+) -> wgpu::ShaderModuleDescriptor<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
         use spirv_builder::{Capability, CompileResult, MetadataPrintout, SpirvBuilder};
@@ -94,23 +89,16 @@ fn maybe_watch(
         for &cap in capabilities {
             builder = builder.capability(cap);
         }
-        if force_no_watch {
-            let compile_result = builder.build().unwrap();
-            handle_builder_result(compile_result, &tx);
+        let initial_result = if let Some(mut f) = on_watch {
+            builder
+                .watch(move |compile_result| f(handle_compile_result(compile_result)))
+                .expect("Configuration is correct for watching")
         } else {
-            let thread = std::thread::spawn(move || {
-                builder
-                    .watch(|compile_result| {
-                        handle_builder_result(compile_result, &tx);
-                    })
-                    .expect("Configuration is correct for watching")
-            });
-            std::mem::forget(thread);
-        }
-        fn handle_builder_result(
+            builder.build().unwrap()
+        };
+        fn handle_compile_result(
             compile_result: CompileResult,
-            tx: &mpsc::SyncSender<wgpu::ShaderModuleDescriptor<'static>>,
-        ) {
+        ) -> wgpu::ShaderModuleDescriptor<'static> {
             let module_path = compile_result.module.unwrap_single();
             let data = std::fs::read(module_path).unwrap();
             let spirv = wgpu::util::make_spirv(&data);
@@ -122,25 +110,23 @@ fn maybe_watch(
                     wgpu::ShaderSource::SpirV(Cow::Owned(cow.into_owned()))
                 }
             };
-            tx.send(wgpu::ShaderModuleDescriptor {
+            wgpu::ShaderModuleDescriptor {
                 label: None,
                 source: spirv,
                 flags: wgpu::ShaderFlags::default(),
-            })
-            .expect("Rx is still alive");
+            }
         }
+        handle_compile_result(initial_result)
     }
     #[cfg(any(target_os = "android", target_arch = "wasm32"))]
     {
-        tx.send(match shader {
+        match shader {
             RustGPUShader::Simplest => wgpu::include_spirv!(env!("simplest_shader.spv")),
             RustGPUShader::Sky => wgpu::include_spirv!(env!("sky_shader.spv")),
             RustGPUShader::Compute => wgpu::include_spirv!(env!("compute_shader.spv")),
             RustGPUShader::Mouse => wgpu::include_spirv!(env!("mouse_shader.spv")),
-        })
-        .expect("rx to be alive")
+        }
     }
-    rx
 }
 
 fn is_compute_shader(shader: RustGPUShader) -> bool {

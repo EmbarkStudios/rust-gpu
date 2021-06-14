@@ -15,8 +15,7 @@ fn block_on<T>(future: impl Future<Output = T>) -> T {
 }
 
 pub fn start(options: &Options) {
-    let rx = crate::maybe_watch(options.shader, true);
-    let shader_binary = rx.recv().expect("Should send one binary");
+    let shader_binary = crate::maybe_watch(options.shader, None);
 
     block_on(start_internal(options, shader_binary))
 }
