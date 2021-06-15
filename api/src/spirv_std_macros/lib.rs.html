@@ -328,6 +328,8 @@
 <span id="325">325</span>
 <span id="326">326</span>
 <span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
 </pre><pre class="rust">
 <span class="comment">// BEGIN - Embark standard lints v0.3</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -398,10 +400,10 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// The grammar for the macro is as follows:</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// ```no_compile</span>
+<span class="doccomment">/// ```rust,no_compile</span>
 <span class="doccomment">/// Image!(</span>
 <span class="doccomment">///     &lt;dimensionality&gt;,</span>
-<span class="doccomment">///     &lt;type|format&gt;,</span>
+<span class="doccomment">///     &lt;type=...|format=...&gt;,</span>
 <span class="doccomment">///     [sampled[=&lt;true|false&gt;],]</span>
 <span class="doccomment">///     [multisampled[=&lt;true|false&gt;],]</span>
 <span class="doccomment">///     [arrayed[=&lt;true|false&gt;],]</span>
@@ -409,27 +411,29 @@
 <span class="doccomment">/// )</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">///</span>
+<span class="doccomment">/// `=true` can be omitted as shorthand - e.g. `sampled` is short for `sampled=true`.</span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// A basic example looks like this:</span>
-<span class="doccomment">/// ```no_compile</span>
+<span class="doccomment">/// ```rust,no_compile</span>
 <span class="doccomment">/// #[spirv(vertex)]</span>
 <span class="doccomment">/// fn main(#[spirv(descriptor_set = 0, binding = 0)] image: &amp;Image!(2D, type=f32, sampled)) {}</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ## Arguments</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// - `dimensionality` — Dimensionality of an image. Accepted values: `1D`,</span>
-<span class="doccomment">///   `2D`, `3D`, `rect`, `cube`, `subpass`.</span>
+<span class="doccomment">/// - `dimensionality` — Dimensionality of an image.</span>
+<span class="doccomment">///    Accepted values: `1D`, `2D`, `3D`, `rect`, `cube`, `subpass`.</span>
 <span class="doccomment">/// - `type` — The sampled type of an image, mutually exclusive with `format`,</span>
-<span class="doccomment">///   when set the image format is unknown. Accepted values: `f32`, `f64`,</span>
-<span class="doccomment">///   `u8`, `u16`, `u32`, `u64`, `i8`, `i16`, `i32`, `i64`.</span>
+<span class="doccomment">///    when set the image format is unknown.</span>
+<span class="doccomment">///    Accepted values: `f32`, `f64`, `u8`, `u16`, `u32`, `u64`, `i8`, `i16`, `i32`, `i64`.</span>
 <span class="doccomment">/// - `format` — The image format of the image, mutually exclusive with `type`.</span>
-<span class="doccomment">///   Accepted values: Camel case versions of [`ImageFormat`].</span>
-<span class="doccomment">/// - `sampled` — Whether it is known that the image will be used with a sampler</span>
-<span class="doccomment">///   at compile time. Accepted values: `true` or `false`. Default: `unknown`.</span>
-<span class="doccomment">/// - `multisampled` — Whether the image contains multisampled content. Accepted</span>
-<span class="doccomment">///    values: `true` or `false`. Default: `false`.</span>
-<span class="doccomment">/// - `arrayed` — Whether the image contains arrayed content. Accepted</span>
-<span class="doccomment">///    values: `true` or `false`. Default: `false`.</span>
+<span class="doccomment">///    Accepted values: Snake case versions of [`ImageFormat`].</span>
+<span class="doccomment">/// - `sampled` — Whether it is known that the image will be used with a sampler.</span>
+<span class="doccomment">///    Accepted values: `true` or `false`. Default: `unknown`.</span>
+<span class="doccomment">/// - `multisampled` — Whether the image contains multisampled content.</span>
+<span class="doccomment">///    Accepted values: `true` or `false`. Default: `false`.</span>
+<span class="doccomment">/// - `arrayed` — Whether the image contains arrayed content.</span>
+<span class="doccomment">///    Accepted values: `true` or `false`. Default: `false`.</span>
 <span class="doccomment">/// - `depth` — Whether it is known that the image is a depth image.</span>
 <span class="doccomment">///    Accepted values: `true` or `false`. Default: `unknown`.</span>
 <span class="doccomment">///</span>

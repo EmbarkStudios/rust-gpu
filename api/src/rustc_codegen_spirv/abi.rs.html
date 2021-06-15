@@ -905,38 +905,6 @@
 <span id="902">902</span>
 <span id="903">903</span>
 <span id="904">904</span>
-<span id="905">905</span>
-<span id="906">906</span>
-<span id="907">907</span>
-<span id="908">908</span>
-<span id="909">909</span>
-<span id="910">910</span>
-<span id="911">911</span>
-<span id="912">912</span>
-<span id="913">913</span>
-<span id="914">914</span>
-<span id="915">915</span>
-<span id="916">916</span>
-<span id="917">917</span>
-<span id="918">918</span>
-<span id="919">919</span>
-<span id="920">920</span>
-<span id="921">921</span>
-<span id="922">922</span>
-<span id="923">923</span>
-<span id="924">924</span>
-<span id="925">925</span>
-<span id="926">926</span>
-<span id="927">927</span>
-<span id="928">928</span>
-<span id="929">929</span>
-<span id="930">930</span>
-<span id="931">931</span>
-<span id="932">932</span>
-<span id="933">933</span>
-<span id="934">934</span>
-<span id="935">935</span>
-<span id="936">936</span>
 </pre><pre class="rust">
 <span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s</span>
 <span class="doccomment">//! surprisingly difficult.</span>
@@ -1700,38 +1668,6 @@
     <span class="ident">intrinsic_type_attr</span>: <span class="ident">IntrinsicType</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">ErrorReported</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">intrinsic_type_attr</span> {
-        <span class="ident">IntrinsicType::ImageType</span> {
-            <span class="ident">dim</span>,
-            <span class="ident">depth</span>,
-            <span class="ident">arrayed</span>,
-            <span class="ident">multisampled</span>,
-            <span class="ident">sampled</span>,
-            <span class="ident">image_format</span>,
-            <span class="ident">access_qualifier</span>,
-        } <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="comment">// see SpirvType::sizeof</span>
-            <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">size</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Size::from_bytes</span>(<span class="number">4</span>) {
-                <span class="ident">cx</span>.<span class="ident">tcx</span>
-                    .<span class="ident">sess</span>
-                    .<span class="ident">err</span>(<span class="string">&quot;#[spirv(image_type)] type must have size 4&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorReported</span>);
-            }
-            <span class="comment">// Hardcode to float for now</span>
-            <span class="kw">let</span> <span class="ident">sampled_type</span> <span class="op">=</span> <span class="ident">SpirvType::Float</span>(<span class="number">32</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
-
-            <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">SpirvType::Image</span> {
-                <span class="ident">sampled_type</span>,
-                <span class="ident">dim</span>,
-                <span class="ident">depth</span>,
-                <span class="ident">arrayed</span>,
-                <span class="ident">multisampled</span>,
-                <span class="ident">sampled</span>,
-                <span class="ident">image_format</span>,
-                <span class="ident">access_qualifier</span>,
-            };
-
-            <span class="prelude-val">Ok</span>(<span class="ident">ty</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>))
-        }
         <span class="ident">IntrinsicType::GenericImageType</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// see SpirvType::sizeof</span>
             <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">size</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Size::from_bytes</span>(<span class="number">4</span>) {
