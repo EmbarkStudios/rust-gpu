@@ -605,19 +605,8 @@
 <span id="602">602</span>
 <span id="603">603</span>
 <span id="604">604</span>
-<span id="605">605</span>
-<span id="606">606</span>
-<span id="607">607</span>
-<span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
-<span id="612">612</span>
-<span id="613">613</span>
-<span id="614">614</span>
-<span id="615">615</span>
-<span id="616">616</span>
 </pre><pre class="rust">
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::codegen_cx</span>::{<span class="ident">CodegenArgs</span>, <span class="ident">ModuleOutputType</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">linker</span>, <span class="ident">CompileResult</span>, <span class="ident">ModuleResult</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>,
 };
@@ -636,6 +625,7 @@
 <span class="kw">use</span> <span class="ident">rustc_session::output</span>::{<span class="ident">check_file_is_writeable</span>, <span class="ident">invalid_output_for_target</span>, <span class="ident">out_filename</span>};
 <span class="kw">use</span> <span class="ident">rustc_session::utils::NativeLibKind</span>;
 <span class="kw">use</span> <span class="ident">rustc_session::Session</span>;
+<span class="kw">use</span> <span class="ident">rustc_span::symbol::Symbol</span>;
 <span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::ffi</span>::{<span class="ident">CString</span>, <span class="ident">OsStr</span>};
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
@@ -649,8 +639,6 @@
     <span class="ident">codegen_results</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenResults</span>,
     <span class="ident">outputs</span>: <span class="kw-2">&amp;</span><span class="ident">OutputFilenames</span>,
     <span class="ident">crate_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">legalize</span>: <span class="ident">bool</span>,
-    <span class="ident">emit_multiple_modules</span>: <span class="ident">bool</span>,
 ) {
     <span class="kw">let</span> <span class="ident">output_metadata</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">output_types</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">OutputType::Metadata</span>);
     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">crate_type</span> <span class="kw">in</span> <span class="ident">sess</span>.<span class="ident">crate_types</span>().<span class="ident">iter</span>() {
@@ -683,14 +671,9 @@
                 <span class="ident">CrateType::Rlib</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">link_rlib</span>(<span class="ident">sess</span>, <span class="ident">codegen_results</span>, <span class="kw-2">&amp;</span><span class="ident">out_filename</span>);
                 }
-                <span class="ident">CrateType::Executable</span> <span class="op">|</span> <span class="ident">CrateType::Cdylib</span> <span class="op">|</span> <span class="ident">CrateType::Dylib</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">link_exe</span>(
-                    <span class="ident">sess</span>,
-                    <span class="ident">crate_type</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">out_filename</span>,
-                    <span class="ident">codegen_results</span>,
-                    <span class="ident">legalize</span>,
-                    <span class="ident">emit_multiple_modules</span>,
-                ),
+                <span class="ident">CrateType::Executable</span> <span class="op">|</span> <span class="ident">CrateType::Cdylib</span> <span class="op">|</span> <span class="ident">CrateType::Dylib</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">link_exe</span>(<span class="ident">sess</span>, <span class="ident">crate_type</span>, <span class="kw-2">&amp;</span><span class="ident">out_filename</span>, <span class="ident">codegen_results</span>)
+                }
                 <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sess</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;CrateType {:?} not supported yet&quot;</span>, <span class="ident">other</span>)),
             }
         }
@@ -737,8 +720,6 @@
     <span class="ident">crate_type</span>: <span class="ident">CrateType</span>,
     <span class="ident">out_filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">codegen_results</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenResults</span>,
-    <span class="ident">legalize</span>: <span class="ident">bool</span>,
-    <span class="ident">emit_multiple_modules</span>: <span class="ident">bool</span>,
 ) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">objects</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rlibs</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -757,16 +738,9 @@
         <span class="ident">codegen_results</span>,
     );
 
-    <span class="kw">let</span> <span class="ident">cg_args</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::codegen_cx::CodegenArgs::from_session</span>(<span class="ident">sess</span>);
+    <span class="kw">let</span> <span class="ident">cg_args</span> <span class="op">=</span> <span class="ident">CodegenArgs::from_session</span>(<span class="ident">sess</span>);
 
-    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="ident">do_link</span>(
-        <span class="ident">sess</span>,
-        <span class="kw-2">&amp;</span><span class="ident">cg_args</span>,
-        <span class="kw-2">&amp;</span><span class="ident">objects</span>,
-        <span class="kw-2">&amp;</span><span class="ident">rlibs</span>,
-        <span class="ident">legalize</span>,
-        <span class="ident">emit_multiple_modules</span>,
-    );
+    <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="ident">do_link</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="ident">cg_args</span>, <span class="kw-2">&amp;</span><span class="ident">objects</span>, <span class="kw-2">&amp;</span><span class="ident">rlibs</span>);
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">root_file_name</span> <span class="op">=</span> <span class="ident">out_filename</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>().<span class="ident">to_owned</span>();
     <span class="ident">root_file_name</span>.<span class="ident">push</span>(<span class="string">&quot;.dir&quot;</span>);
@@ -820,7 +794,7 @@
 
 <span class="kw">fn</span> <span class="ident">post_link_single_module</span>(
     <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
-    <span class="ident">cg_args</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::codegen_cx::CodegenArgs</span>,
+    <span class="ident">cg_args</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenArgs</span>,
     <span class="ident">spv_binary</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">out_filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
 ) {
@@ -877,7 +851,7 @@
 
 <span class="kw">fn</span> <span class="ident">do_spirv_opt</span>(
     <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
-    <span class="ident">cg_args</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::codegen_cx::CodegenArgs</span>,
+    <span class="ident">cg_args</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenArgs</span>,
     <span class="ident">spv_binary</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">filename</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">options</span>: <span class="ident">spirv_tools::opt::Options</span>,
@@ -1113,11 +1087,9 @@
 <span class="doccomment">/// shenanigans to collect all the object files we need to link.</span>
 <span class="kw">fn</span> <span class="ident">do_link</span>(
     <span class="ident">sess</span>: <span class="kw-2">&amp;</span><span class="ident">Session</span>,
-    <span class="ident">cg_args</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::codegen_cx::CodegenArgs</span>,
+    <span class="ident">cg_args</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenArgs</span>,
     <span class="ident">objects</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>],
     <span class="ident">rlibs</span>: <span class="kw-2">&amp;</span>[<span class="ident">PathBuf</span>],
-    <span class="ident">legalize</span>: <span class="ident">bool</span>,
-    <span class="ident">emit_multiple_modules</span>: <span class="ident">bool</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">linker::LinkResult</span> {
     <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rspirv::dr::Module</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loader</span> <span class="op">=</span> <span class="ident">rspirv::dr::Loader::new</span>();
@@ -1129,8 +1101,7 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modules</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="comment">// `objects` are the plain obj files we need to link - usually produced by the final crate.</span>
     <span class="kw">for</span> <span class="ident">obj</span> <span class="kw">in</span> <span class="ident">objects</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">File::open</span>(<span class="ident">obj</span>).<span class="ident">unwrap</span>().<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">obj</span>).<span class="ident">unwrap</span>();
         <span class="ident">modules</span>.<span class="ident">push</span>(<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>));
     }
     <span class="comment">// `rlibs` are archive files we&#39;ve created in `create_archive`, usually produced by crates that are being</span>
@@ -1139,7 +1110,9 @@
         <span class="kw">for</span> <span class="ident">entry</span> <span class="kw">in</span> <span class="ident">Archive::new</span>(<span class="ident">File::open</span>(<span class="ident">rlib</span>).<span class="ident">unwrap</span>()).<span class="ident">entries</span>().<span class="ident">unwrap</span>() {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">unwrap</span>();
             <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">path</span>().<span class="ident">unwrap</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">Path::new</span>(<span class="string">&quot;.metadata&quot;</span>) {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+                <span class="comment">// std::fs::read adds 1 to the size, so do the same here - see comment:</span>
+                <span class="comment">// https://github.com/rust-lang/rust/blob/72868e017bdade60603a25889e253f556305f996/library/std/src/fs.rs#L200-L202</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">entry</span>.<span class="ident">size</span>() <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="number">1</span>);
                 <span class="ident">entry</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>).<span class="ident">unwrap</span>();
                 <span class="ident">modules</span>.<span class="ident">push</span>(<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>));
             }
@@ -1162,6 +1135,9 @@
     }
     <span class="ident">drop</span>(<span class="ident">load_modules_timer</span>);
 
+    <span class="comment">// TODO: Can we merge this sym with the one in symbols.rs?</span>
+    <span class="kw">let</span> <span class="ident">legalize</span> <span class="op">=</span> <span class="op">!</span><span class="ident">sess</span>.<span class="ident">target_features</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Symbol::intern</span>(<span class="string">&quot;kernel&quot;</span>));
+
     <span class="comment">// Do the link...</span>
     <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">linker::Options</span> {
         <span class="ident">dce</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_DCE&quot;</span>).<span class="ident">is_err</span>(),
@@ -1169,7 +1145,7 @@
         <span class="ident">inline</span>: <span class="ident">legalize</span>,
         <span class="ident">mem2reg</span>: <span class="ident">legalize</span>,
         <span class="ident">structurize</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_STRUCTURIZE&quot;</span>).<span class="ident">is_err</span>(),
-        <span class="ident">emit_multiple_modules</span>,
+        <span class="ident">emit_multiple_modules</span>: <span class="ident">cg_args</span>.<span class="ident">module_output_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ModuleOutputType::Multiple</span>,
         <span class="ident">name_variables</span>: <span class="ident">cg_args</span>.<span class="ident">name_variables</span>,
     };
 
