@@ -427,7 +427,8 @@ impl CodegenArgs {
             let id = module
                 .entry_points
                 .iter()
-                .find(|inst| inst.operands.last().unwrap().unwrap_literal_string() == entry)
+                .filter(|inst| inst.class.opcode == rspirv::spirv::Op::EntryPoint)
+                .find(|inst| inst.operands[2].unwrap_literal_string() == entry)
                 .unwrap_or_else(|| {
                     panic!(
                         "no entry point with the name `{}` found in:\n{}\n",
