@@ -378,7 +378,7 @@ impl CodegenBackend for SpirvCodegenBackend {
             sess,
             &codegen_results,
             outputs,
-            &codegen_results.crate_name.as_str(),
+            &codegen_results.crate_info.local_crate_name.as_str(),
         );
         drop(timer);
 
