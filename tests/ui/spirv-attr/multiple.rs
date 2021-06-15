@@ -8,17 +8,7 @@ use spirv_std as _;
 #[spirv(sampler, sampler)]
 struct _SameIntrinsicType {}
 
-#[spirv(
-    sampler,
-    image_type(
-        dim = "Dim2D",
-        depth = 0,
-        arrayed = 0,
-        multisampled = 0,
-        sampled = 1,
-        image_format = "Unknown"
-    )
-)]
+#[spirv(sampler, generic_image_type)]
 struct _DiffIntrinsicType {}
 
 #[spirv(block, block)]

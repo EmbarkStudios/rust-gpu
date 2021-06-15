@@ -31,8 +31,7 @@
 //   * 1 on `_closure`
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
@@ -42,8 +41,7 @@ macro_rules! _macro {
 }
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
@@ -51,8 +49,7 @@ macro_rules! _macro {
 extern crate spirv_std as _;
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
@@ -60,8 +57,7 @@ extern crate spirv_std as _;
 use spirv_std as _;
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
@@ -69,16 +65,14 @@ use spirv_std as _;
 mod _mod {}
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
 )]
 extern "C" {
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -86,8 +80,7 @@ extern "C" {
     type _ForeignTy;
 
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -95,8 +88,7 @@ extern "C" {
     static _FOREIGN_STATIC: ();
 
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -105,8 +97,7 @@ extern "C" {
 }
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
@@ -114,8 +105,7 @@ extern "C" {
 static _STATIC: () = ();
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
@@ -123,8 +113,7 @@ static _STATIC: () = ();
 const _CONST: () = ();
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
@@ -132,8 +121,7 @@ const _CONST: () = ();
 type _TyAlias = ();
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
@@ -145,24 +133,21 @@ fn _opaque_ty_definer() -> _OpaqueTy {
 }
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
 )]
 enum _Enum {
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
     )]
     _Variant {
         #[spirv(
-            sampler, block, sampled_image, // struct-only (incl. `image_type`)
-            image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+            sampler, block, sampled_image, generic_image_type, // struct-only
             vertex, // fn-only
             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
             unroll_loops, // fn/closure-only
@@ -172,16 +157,14 @@ enum _Enum {
 }
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
 )]
 union _Union {
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -196,8 +179,7 @@ union _Union {
 )]
 struct _Struct {
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -206,16 +188,14 @@ struct _Struct {
 }
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
 )]
 impl _Struct {
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -223,16 +203,14 @@ impl _Struct {
     const _INHERENT_ASSOC_CONST: () = ();
 
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     )]
     fn _inherent_method() {}
 }
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
@@ -240,16 +218,14 @@ impl _Struct {
 trait _TraitAlias = Copy;
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
 )]
 trait _Trait {
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -257,8 +233,7 @@ trait _Trait {
     type _AssocTy;
 
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -266,8 +241,7 @@ trait _Trait {
     const _TRAIT_ASSOC_CONST: ();
 
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -275,24 +249,21 @@ trait _Trait {
     fn _trait_method();
 
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     )]
     fn _trait_method_with_default() {}
 }
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     vertex, // fn-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     unroll_loops, // fn/closure-only
 )]
 impl _Trait for () {
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -300,8 +271,7 @@ impl _Trait for () {
     type _AssocTy = ();
 
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -309,30 +279,26 @@ impl _Trait for () {
     const _TRAIT_ASSOC_CONST: () = ();
 
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     )]
     fn _trait_method() {}
 }
 
 #[spirv(
-    sampler, block, sampled_image, // struct-only (incl. `image_type`)
-    image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+    sampler, block, sampled_image, generic_image_type, // struct-only
     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
 )]
 fn _fn(
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         unroll_loops, // fn/closure-only
     )]
     _entry_param: (),
 ) {
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
@@ -340,8 +306,7 @@ fn _fn(
     let _statement = ();
 
     let _closure = #[spirv(
-            sampler, block, sampled_image, // struct-only (incl. `image_type`)
-            image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+            sampler, block, sampled_image, generic_image_type, // struct-only
             vertex, // fn-only
             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         )]
@@ -349,8 +314,7 @@ fn _fn(
 
     (
         #[spirv(
-            sampler, block, sampled_image, // struct-only (incl. `image_type`)
-            image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+            sampler, block, sampled_image, generic_image_type, // struct-only
             vertex, // fn-only
             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
             unroll_loops, // fn/closure-only
@@ -360,8 +324,7 @@ fn _fn(
 
     match () {
         #[spirv(
-            sampler, block, sampled_image, // struct-only (incl. `image_type`)
-            image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+            sampler, block, sampled_image, generic_image_type, // struct-only
             vertex, // fn-only
             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
             unroll_loops, // fn/closure-only
@@ -372,22 +335,19 @@ fn _fn(
 
 fn _fn_with_generics<
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
     )] '_lifetime_param,
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
     )] _TyParam,
     #[spirv(
-        sampler, block, sampled_image, // struct-only (incl. `image_type`)
-        image_type(dim = "Dim2D", depth = 0, arrayed = 0, multisampled = 0, sampled = 1, image_format = "Unknown"),
+        sampler, block, sampled_image, generic_image_type, // struct-only
         vertex, // fn-only
         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
         unroll_loops, // fn/closure-only
