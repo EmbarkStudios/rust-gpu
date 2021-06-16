@@ -1,46 +1,74 @@
-// standard Embark lints
+// BEGIN - Embark standard lints v0.4
+// do not change or add/remove here, but one can add exceptions after this section
+// for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
 //#![deny(unsafe_code)] // impractical in this crate dealing with unsafe `ash`
 #![warn(
     clippy::all,
     clippy::await_holding_lock,
+    clippy::char_lit_as_u8,
+    clippy::checked_conversions,
     clippy::dbg_macro,
     clippy::debug_assert_with_mut_call,
     clippy::doc_markdown,
     clippy::empty_enum,
     clippy::enum_glob_use,
     clippy::exit,
+    clippy::expl_impl_clone_on_copy,
+    clippy::explicit_deref_methods,
     clippy::explicit_into_iter_loop,
+    clippy::fallible_impl_from,
     clippy::filter_map_next,
+    clippy::float_cmp_const,
     clippy::fn_params_excessive_bools,
     clippy::if_let_mutex,
+    clippy::implicit_clone,
     clippy::imprecise_flops,
     clippy::inefficient_to_string,
+    clippy::invalid_upcast_comparisons,
+    clippy::large_types_passed_by_value,
     clippy::let_unit_value,
     clippy::linkedlist,
     clippy::lossy_float_literal,
     clippy::macro_use_imports,
+    clippy::manual_ok_or,
+    clippy::map_err_ignore,
     clippy::map_flatten,
     clippy::map_unwrap_or,
     clippy::match_on_vec_items,
+    clippy::match_same_arms,
     clippy::match_wildcard_for_single_variants,
     clippy::mem_forget,
     clippy::mismatched_target_os,
+    clippy::mut_mut,
+    clippy::mutex_integer,
     clippy::needless_borrow,
     clippy::needless_continue,
     clippy::option_option,
-    clippy::pub_enum_variant_names,
+    clippy::path_buf_push_overwrite,
+    clippy::ptr_as_ptr,
     clippy::ref_option_ref,
     clippy::rest_pat_in_fully_bound_structs,
+    clippy::same_functions_in_if_condition,
+    clippy::semicolon_if_nothing_returned,
+    clippy::string_add_assign,
+    clippy::string_add,
+    clippy::string_lit_as_bytes,
     clippy::string_to_string,
-    clippy::suboptimal_flops,
     clippy::todo,
+    clippy::trait_duplication_in_bounds,
+    clippy::unimplemented,
     clippy::unnested_or_patterns,
     clippy::unused_self,
+    clippy::useless_transmute,
     clippy::verbose_file_reads,
+    clippy::zero_sized_map_values,
     future_incompatible,
     nonstandard_style,
     rust_2018_idioms
 )]
+// END - Embark standard lints v0.4
+// crate-specific exceptions:
+#![allow()]
 
 use ash::{
     extensions::{ext, khr},
@@ -127,7 +155,7 @@ pub fn main() {
                             ctx.render();
                         }
                     } else {
-                        ctx.render()
+                        ctx.render();
                     }
                 }
                 Ok(new_shaders) => {
@@ -138,7 +166,7 @@ pub fn main() {
                     ctx.rebuild_pipelines(vk::PipelineCache::null());
                 }
                 Err(TryRecvError::Disconnected) => {
-                    panic!("compiler reciever disconnected unexpectedly")
+                    panic!("compiler reciever disconnected unexpectedly");
                 }
             };
         }
@@ -186,7 +214,7 @@ pub fn compile_shaders() -> Vec<SpvFile> {
         spv_files.push(SpvFile {
             name: path.file_stem().unwrap().to_str().unwrap().to_owned(),
             data: read_spv(&mut File::open(path).unwrap()).unwrap(),
-        })
+        });
     }
     spv_files
 }
@@ -770,7 +798,9 @@ impl RenderCtx {
                 .expect("Shader module error")
         };
         if let Some(old_module) = self.shader_modules.insert(name, shader_module) {
-            unsafe { self.base.device.destroy_shader_module(old_module, None) }
+            unsafe {
+                self.base.device.destroy_shader_module(old_module, None);
+            }
         };
     }
 
@@ -780,7 +810,7 @@ impl RenderCtx {
             self.base.device.device_wait_idle().unwrap();
             // framebuffers
             for framebuffer in self.framebuffers.drain(..) {
-                self.base.device.destroy_framebuffer(framebuffer, None)
+                self.base.device.destroy_framebuffer(framebuffer, None);
             }
             // image views
             for image_view in self.image_views.drain(..) {
@@ -801,7 +831,7 @@ impl RenderCtx {
             self.rendering_paused = true;
             return;
         } else if self.rendering_paused {
-            self.rendering_paused = false
+            self.rendering_paused = false;
         };
 
         self.cleanup_swapchain();
@@ -1026,7 +1056,7 @@ impl Drop for RenderCtx {
                 .device
                 .destroy_command_pool(self.commands.pool, None);
             for (_, shader_module) in self.shader_modules.drain() {
-                self.base.device.destroy_shader_module(shader_module, None)
+                self.base.device.destroy_shader_module(shader_module, None);
             }
         }
     }
@@ -1210,7 +1240,7 @@ pub struct FragmentShaderEntryPoint {
 }
 
 unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
-    ::std::slice::from_raw_parts((p as *const T) as *const u8, ::std::mem::size_of::<T>())
+    ::std::slice::from_raw_parts((p as *const T).cast::<u8>(), ::std::mem::size_of::<T>())
 }
 
 unsafe extern "system" fn vulkan_debug_callback(

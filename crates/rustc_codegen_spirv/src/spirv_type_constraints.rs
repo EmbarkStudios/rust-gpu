@@ -766,7 +766,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::CooperativeMatrixLengthNV => reserved!(SPV_NV_cooperative_matrix),
         // SPV_EXT_fragment_shader_interlock
         Op::BeginInvocationInterlockEXT | Op::EndInvocationInterlockEXT => {
-            reserved!(SPV_EXT_fragment_shader_interlock)
+            reserved!(SPV_EXT_fragment_shader_interlock);
         }
         // SPV_EXT_demote_to_helper_invocation
         Op::DemoteToHelperInvocationEXT | Op::IsHelperInvocationEXT => {
@@ -819,7 +819,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         // Instructions not present in current SPIR-V specification
         // SPV_INTEL_function_pointers
         Op::FunctionPointerINTEL | Op::FunctionPointerCallINTEL => {
-            reserved!(SPV_INTEL_function_pointers)
+            reserved!(SPV_INTEL_function_pointers);
         }
         // SPV_INTEL_device_side_avc_motion_estimation
         Op::VmeImageINTEL
@@ -940,7 +940,7 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::SubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL
         | Op::SubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL
         | Op::SubgroupAvcSicGetInterRawSadsINTEL => {
-            reserved!(SPV_INTEL_device_side_avc_motion_estimation)
+            reserved!(SPV_INTEL_device_side_avc_motion_estimation);
         }
     }
 

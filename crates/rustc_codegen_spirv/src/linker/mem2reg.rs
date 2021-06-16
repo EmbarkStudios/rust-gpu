@@ -219,7 +219,7 @@ fn collect_access_chains(
             indices: {
                 let mut base_indicies = base.indices.clone();
                 for op in inst.operands.iter().skip(1) {
-                    base_indicies.push(*constants.get(&op.id_ref_any().unwrap())?)
+                    base_indicies.push(*constants.get(&op.id_ref_any().unwrap())?);
                 }
                 base_indicies
             },
@@ -302,7 +302,7 @@ fn insert_phis(
     while let Some(x) = work_list.pop() {
         for &y in &dominance_frontier[x] {
             if blocks_with_phi.insert(y) && ever_on_work_list.insert(y) {
-                work_list.push(y)
+                work_list.push(y);
             }
         }
     }
@@ -515,6 +515,6 @@ fn remove_old_variables(
                             .all(|(var_map, _)| !var_map.contains_key(&id))
                     })
                 })
-        })
+        });
     }
 }

@@ -206,12 +206,9 @@ async fn run(
                 }
             }
             Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                ..
-            } => *control_flow = ControlFlow::Exit,
-            Event::WindowEvent {
                 event:
-                    WindowEvent::KeyboardInput {
+                    WindowEvent::CloseRequested
+                    | WindowEvent::KeyboardInput {
                         input:
                             KeyboardInput {
                                 virtual_keycode: Some(VirtualKeyCode::Escape),

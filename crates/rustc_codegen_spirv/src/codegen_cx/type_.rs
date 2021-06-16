@@ -71,7 +71,7 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn backend_field_index(&self, layout: TyAndLayout<'tcx>, index: usize) -> u64 {
         match layout.abi {
             Abi::Scalar(_) | Abi::ScalarPair(..) => {
-                bug!("backend_field_index({:?}): not applicable", layout)
+                bug!("backend_field_index({:?}): not applicable", layout);
             }
             _ => {}
         }

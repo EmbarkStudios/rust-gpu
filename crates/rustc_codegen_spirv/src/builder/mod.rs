@@ -76,9 +76,9 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
     pub fn err(&self, msg: &str) {
         if let Some(current_span) = self.current_span {
-            self.tcx.sess.span_err(current_span, msg)
+            self.tcx.sess.span_err(current_span, msg);
         } else {
-            self.tcx.sess.err(msg)
+            self.tcx.sess.err(msg);
         }
     }
 
@@ -286,7 +286,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
         match arg_abi.mode {
             PassMode::Ignore => (),
             PassMode::Pair(..) => {
-                OperandValue::Pair(next(self, idx), next(self, idx)).store(self, dst)
+                OperandValue::Pair(next(self, idx), next(self, idx)).store(self, dst);
             }
             PassMode::Indirect {
                 extra_attrs: Some(_),
@@ -303,7 +303,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
             }
             | PassMode::Cast(_) => {
                 let next_arg = next(self, idx);
-                self.store_arg(arg_abi, next_arg, dst)
+                self.store_arg(arg_abi, next_arg, dst);
             }
         }
     }

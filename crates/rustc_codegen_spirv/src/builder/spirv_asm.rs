@@ -121,7 +121,7 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                     match typeof_kind {
                         Some(kind) => {
                             *line.last_mut().unwrap() =
-                                Token::Typeof(&operands[operand_idx], span, kind)
+                                Token::Typeof(&operands[operand_idx], span, kind);
                         }
                         None => match &operands[operand_idx] {
                             InlineAsmOperandRef::Const { string } => line.push(Token::Word(string)),
@@ -992,21 +992,21 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         };
         match (kind, word) {
             (OperandKind::IdResultType | OperandKind::IdResult, _) => {
-                bug!("should be handled by parse_operands")
+                bug!("should be handled by parse_operands");
             }
             (OperandKind::IdMemorySemantics, _) => {
                 if let Some(id) = self.parse_id_in(id_map, token) {
-                    inst.operands.push(dr::Operand::IdMemorySemantics(id))
+                    inst.operands.push(dr::Operand::IdMemorySemantics(id));
                 }
             }
             (OperandKind::IdScope, _) => {
                 if let Some(id) = self.parse_id_in(id_map, token) {
-                    inst.operands.push(dr::Operand::IdScope(id))
+                    inst.operands.push(dr::Operand::IdScope(id));
                 }
             }
             (OperandKind::IdRef, _) => {
                 if let Some(id) = self.parse_id_in(id_map, token) {
-                    inst.operands.push(dr::Operand::IdRef(id))
+                    inst.operands.push(dr::Operand::IdRef(id));
                 }
             }
 
@@ -1079,7 +1079,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 }
             }
             (OperandKind::PairLiteralIntegerIdRef, _) => {
-                self.err("PairLiteralIntegerIdRef not supported yet")
+                self.err("PairLiteralIntegerIdRef not supported yet");
             }
             (OperandKind::PairIdRefLiteralInteger, _) => {
                 if let Some(id) = self.parse_id_in(id_map, token) {

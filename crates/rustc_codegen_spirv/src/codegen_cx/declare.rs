@@ -2,7 +2,6 @@ use super::CodegenCx;
 use crate::abi::ConvSpirvType;
 use crate::attr::AggregatedSpirvAttributes;
 use crate::builder_spirv::{SpirvConst, SpirvValue, SpirvValueExt};
-use crate::decorations::UnrollLoopsDecoration;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{FunctionControl, LinkageType, StorageClass, Word};
 use rustc_attr::InlineAttr;
@@ -25,10 +24,10 @@ fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
         InlineAttr::Never => control.insert(FunctionControl::DONT_INLINE),
     }
     if attrs.flags.contains(CodegenFnAttrFlags::FFI_PURE) {
-        control.insert(FunctionControl::PURE)
+        control.insert(FunctionControl::PURE);
     }
     if attrs.flags.contains(CodegenFnAttrFlags::FFI_CONST) {
-        control.insert(FunctionControl::CONST)
+        control.insert(FunctionControl::CONST);
     }
     control
 }
@@ -117,12 +116,10 @@ impl<'tcx> CodegenCx<'tcx> {
                 .as_ref()
                 .map(ToString::to_string)
                 .unwrap_or_else(|| instance.to_string());
-            self.entry_stub(&instance, &fn_abi, declared, entry_name, entry)
+            self.entry_stub(&instance, &fn_abi, declared, entry_name, entry);
         }
         if attrs.unroll_loops.is_some() {
-            self.unroll_loops_decorations
-                .borrow_mut()
-                .insert(fn_id, UnrollLoopsDecoration {});
+            self.unroll_loops_decorations.borrow_mut().insert(fn_id);
         }
         if attrs.internal_buffer_load.is_some() {
             self.internal_buffer_load_id.borrow_mut().insert(fn_id);

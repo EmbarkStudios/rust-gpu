@@ -136,7 +136,7 @@ fn without_header_eq(mut result: Module, expected: &str) {
             \n{}\
             \n",
             pretty_assertions::Comparison::new(&PrettyString(&result), &PrettyString(&expected))
-        )
+        );
     }
 }
 

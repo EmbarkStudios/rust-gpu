@@ -344,9 +344,9 @@ fn get_inlined_blocks(
                             Operand::IdRef(return_value),
                         ],
                     ),
-                )
+                );
             } else {
-                assert!(return_variable.is_none())
+                assert!(return_variable.is_none());
             }
             *block.instructions.last_mut().unwrap() =
                 Instruction::new(Op::Branch, None, None, vec![Operand::IdRef(return_jump)]);

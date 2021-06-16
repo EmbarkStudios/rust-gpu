@@ -186,7 +186,7 @@ pub fn remove_zombies(sess: &Session, module: &mut Module) {
                     }
                     _ => format!("{}", name_id),
                 };
-                println!("Function removed {:?} because {:?}", name, reason.reason)
+                println!("Function removed {:?} because {:?}", name, reason.reason);
             }
         }
     }

@@ -1,8 +1,7 @@
-use crate::decorations::UnrollLoopsDecoration;
 use indexmap::{indexmap, IndexMap};
 use rspirv::dr::{Block, Builder, Function, InsertPoint, Module, Operand};
 use rspirv::spirv::{LoopControl, Op, SelectionControl, Word};
-use rustc_data_structures::fx::FxHashMap;
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use std::{iter, mem};
 
 /// Cached IDs of `OpTypeBool`, `OpConstantFalse`, and `OpConstantTrue`.
@@ -38,10 +37,7 @@ impl FuncBuilder<'_> {
     }
 }
 
-pub fn structurize(
-    module: Module,
-    unroll_loops_decorations: FxHashMap<Word, UnrollLoopsDecoration>,
-) -> Module {
+pub fn structurize(module: Module, unroll_loops_decorations: FxHashSet<Word>) -> Module {
     let mut builder = Builder::new_from_module(module);
 
     // Get the `OpTypeBool` type (it will only be created if it's missing).
@@ -78,9 +74,10 @@ pub fn structurize(
 
         let func_id = func.function().def_id().unwrap();
 
-        let loop_control = match unroll_loops_decorations.get(&func_id) {
-            Some(UnrollLoopsDecoration {}) => LoopControl::UNROLL,
-            None => LoopControl::NONE,
+        let loop_control = if unroll_loops_decorations.contains(&func_id) {
+            LoopControl::UNROLL
+        } else {
+            LoopControl::NONE
         };
 
         let block_id_to_idx = func
@@ -570,7 +567,7 @@ impl Structurizer<'_> {
         for target in
             super::simple_passes::outgoing_edges(&self.func.blocks()[block]).collect::<Vec<_>>()
         {
-            self.post_order_step(self.block_id_to_idx[&target], visited, post_order)
+            self.post_order_step(self.block_id_to_idx[&target], visited, post_order);
         }
 
         post_order.push(block);

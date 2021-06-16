@@ -177,14 +177,14 @@ impl SpirvValue {
                         zombie_target_undef,
                         span,
                         "OpBitcast on ptr without AddressingModel != Logical",
-                    )
+                    );
                 } else {
                     cx.tcx
                         .sess
                         .struct_span_err(span, "Cannot cast between pointer types")
                         .note(&format!("from: *{}", cx.debug_type(original_pointee_ty)))
                         .note(&format!("to: {}", cx.debug_type(self.ty)))
-                        .emit()
+                        .emit();
                 }
 
                 zombie_target_undef

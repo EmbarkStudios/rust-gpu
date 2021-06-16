@@ -17,7 +17,7 @@ fn block_on<T>(future: impl Future<Output = T>) -> T {
 pub fn start(options: &Options) {
     let shader_binary = crate::maybe_watch(options.shader, None);
 
-    block_on(start_internal(options, shader_binary))
+    block_on(start_internal(options, shader_binary));
 }
 
 pub async fn start_internal(

@@ -350,7 +350,7 @@ impl quote::ToTokens for ImageType {
                 { #crate_root::image::#format },
                 { #access_qualifier },
             >
-        })
+        });
     }
 }
 

@@ -261,7 +261,7 @@ impl CallGraph {
         visited[func] = true;
 
         for &callee in &self.callees[func] {
-            self.post_order_step(callee, visited, post_order)
+            self.post_order_step(callee, visited, post_order);
         }
 
         post_order.push(func);
