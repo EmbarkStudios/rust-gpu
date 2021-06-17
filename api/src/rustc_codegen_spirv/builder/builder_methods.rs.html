@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/builder/builder_methods.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>builder_methods.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
-                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -2767,7 +2766,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">br</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dest</span>: <span class="self">Self</span><span class="ident">::BasicBlock</span>) {
-        <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">branch</span>(<span class="ident">dest</span>).<span class="ident">unwrap</span>()
+        <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">branch</span>(<span class="ident">dest</span>).<span class="ident">unwrap</span>();
     }
 
     <span class="kw">fn</span> <span class="ident">cond_br</span>(
@@ -2778,7 +2777,7 @@
     ) {
         <span class="self">self</span>.<span class="ident">emit</span>()
             .<span class="ident">branch_conditional</span>(<span class="ident">cond</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">then_llbb</span>, <span class="ident">else_llbb</span>, <span class="ident">empty</span>())
-            .<span class="ident">unwrap</span>()
+            .<span class="ident">unwrap</span>();
     }
 
     <span class="kw">fn</span> <span class="ident">switch</span>(
@@ -2855,7 +2854,7 @@
         <span class="kw">let</span> <span class="ident">cases</span> <span class="op">=</span> <span class="ident">cases</span>
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">b</span>)<span class="op">|</span> (<span class="ident">construct_case</span>(<span class="self">self</span>, <span class="ident">signed</span>, <span class="ident">i</span>), <span class="ident">b</span>))
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">switch</span>(<span class="ident">v</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">else_llbb</span>, <span class="ident">cases</span>).<span class="ident">unwrap</span>()
+        <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">switch</span>(<span class="ident">v</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">else_llbb</span>, <span class="ident">cases</span>).<span class="ident">unwrap</span>();
     }
 
     <span class="kw">fn</span> <span class="ident">invoke</span>(
@@ -2873,7 +2872,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">unreachable</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">unreachable</span>().<span class="ident">unwrap</span>()
+        <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">unreachable</span>().<span class="ident">unwrap</span>();
     }
 
     <span class="macro">simple_op!</span> {<span class="ident">add</span>, <span class="ident">i_add</span>}
@@ -3498,12 +3497,12 @@
                     <span class="self">self</span>.<span class="ident">zombie</span>(
                         <span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>),
                         <span class="string">&quot;OpBitcast between ptr and non-ptr without AddressingModel != Logical&quot;</span>,
-                    )
+                    );
                 } <span class="kw">else</span> {
                     <span class="self">self</span>.<span class="ident">struct_err</span>(<span class="string">&quot;Cannot cast between pointer and non-pointer types&quot;</span>)
                         .<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;from: {}&quot;</span>, <span class="self">self</span>.<span class="ident">debug_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>)))
                         .<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;to: {}&quot;</span>, <span class="self">self</span>.<span class="ident">debug_type</span>(<span class="ident">dest_ty</span>)))
-                        .<span class="ident">emit</span>()
+                        .<span class="ident">emit</span>();
                 }
             }
 
@@ -3934,7 +3933,7 @@
                 <span class="self">self</span>.<span class="ident">zombie</span>(
                     <span class="ident">dst</span>.<span class="ident">def</span>(<span class="self">self</span>),
                     <span class="string">&quot;OpCopyMemorySized without OpCapability Addresses&quot;</span>,
-                )
+                );
             }
         }
     }
@@ -3948,7 +3947,7 @@
         <span class="ident">size</span>: <span class="self">Self</span><span class="ident">::Value</span>,
         <span class="ident">flags</span>: <span class="ident">MemFlags</span>,
     ) {
-        <span class="self">self</span>.<span class="ident">memcpy</span>(<span class="ident">dst</span>, <span class="ident">dst_align</span>, <span class="ident">src</span>, <span class="ident">src_align</span>, <span class="ident">size</span>, <span class="ident">flags</span>)
+        <span class="self">self</span>.<span class="ident">memcpy</span>(<span class="ident">dst</span>, <span class="ident">dst_align</span>, <span class="ident">src</span>, <span class="ident">src_align</span>, <span class="ident">size</span>, <span class="ident">flags</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">memset</span>(
@@ -4075,7 +4074,7 @@
     <span class="kw">fn</span> <span class="ident">insert_value</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">agg_val</span>: <span class="self">Self</span><span class="ident">::Value</span>, <span class="ident">elt</span>: <span class="self">Self</span><span class="ident">::Value</span>, <span class="ident">idx</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Value</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">agg_val</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Adt</span> { <span class="ident">field_types</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">field_types</span>[<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">elt</span>.<span class="ident">ty</span>)
+                <span class="macro">assert_ty_eq!</span>(<span class="self">self</span>, <span class="ident">field_types</span>[<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">elt</span>.<span class="ident">ty</span>);
             }
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;insert_value not implemented on type {:?}&quot;</span>, <span class="ident">other</span>)),
         };
@@ -4429,5 +4428,4 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
