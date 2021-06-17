@@ -647,6 +647,18 @@
 <span id="645">645</span>
 <span id="646">646</span>
 <span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is</span>
 <span class="doccomment">//! unstable and mainly intended for developing on the project itself. This is</span>
@@ -1196,8 +1208,7 @@
         <span class="kw">let</span> <span class="ident">do_codegen</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">mono_items</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">codegen_unit</span>.<span class="ident">items_in_deterministic_order</span>(<span class="ident">cx</span>.<span class="ident">tcx</span>);
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">path</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="string">&quot;DUMP_MIR&quot;</span>) {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf::from</span>(<span class="ident">path</span>);
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">path</span>) <span class="op">=</span> <span class="ident">get_env_dump_dir</span>(<span class="string">&quot;DUMP_MIR&quot;</span>) {
                 <span class="ident">path</span>.<span class="ident">push</span>(<span class="ident">cgu_name</span>.<span class="ident">to_string</span>());
                 <span class="ident">dump_mir</span>(<span class="ident">tcx</span>, <span class="kw-2">&amp;</span><span class="ident">mono_items</span>, <span class="kw-2">&amp;</span><span class="ident">path</span>);
             }
@@ -1277,6 +1288,19 @@
                 <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">dump_module_str</span>());
             }
         }
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">get_env_dump_dir</span>(<span class="ident">env_var</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">path</span>) <span class="op">=</span> <span class="ident">std::env::var_os</span>(<span class="ident">env_var</span>) {
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf::from</span>(<span class="ident">path</span>);
+        <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">is_file</span>() {
+            <span class="ident">std::fs::remove_file</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>).<span class="ident">unwrap</span>();
+        }
+        <span class="ident">std::fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>).<span class="ident">unwrap</span>();
+        <span class="prelude-val">Some</span>(<span class="ident">path</span>)
+    } <span class="kw">else</span> {
+        <span class="prelude-val">None</span>
     }
 }
 

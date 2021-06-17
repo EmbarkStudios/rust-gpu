@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ahash-0.4.7/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/Users/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ahash-0.7.4/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../ahash/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
@@ -203,10 +203,58 @@
 <span id="201">201</span>
 <span id="202">202</span>
 <span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
 </pre><pre class="rust">
-<span class="doccomment">//! # aHash</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This hashing algorithm is intended to be a high performance, (hardware specific), keyed hash function.</span>
+<span class="doccomment">//! AHash is a hashing algorithm is intended to be a high performance, (hardware specific), keyed hash function.</span>
 <span class="doccomment">//! This can be seen as a DOS resistant alternative to `FxHash`, or a fast equivalent to `SipHash`.</span>
 <span class="doccomment">//! It provides a high speed hash algorithm, but where the result is not predictable without knowing a Key.</span>
 <span class="doccomment">//! This allows it to be used in a `HashMap` without allowing for the possibility that an malicious user can</span>
@@ -216,10 +264,28 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! aHash uses the hardware AES instruction on x86 processors to provide a keyed hash function.</span>
 <span class="doccomment">//! aHash is not a cryptographically secure hash.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Example</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use ahash::{AHasher, RandomState};</span>
+<span class="doccomment">//! use std::collections::HashMap;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! let mut map: HashMap&lt;i32, i32, RandomState&gt; = HashMap::default();</span>
+<span class="doccomment">//! map.insert(12, 34);</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! For convinence wrappers called `AHashMap` and `AHashSet` are also provided.</span>
+<span class="doccomment">//! These to the same thing with slightly less typing.</span>
+<span class="doccomment">//! ```ignore</span>
+<span class="doccomment">//! use ahash::AHashMap;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! let mut map: AHashMap&lt;i32, i32&gt; = AHashMap::with_capacity(4);</span>
+<span class="doccomment">//! map.insert(12, 34);</span>
+<span class="doccomment">//! map.insert(56, 78);</span>
+<span class="doccomment">//! ```</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy::correctness</span>, <span class="ident">clippy::complexity</span>, <span class="ident">clippy::perf</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::pedantic</span>, <span class="ident">clippy::cast_lossless</span>, <span class="ident">clippy::unreadable_literal</span>)]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">test</span>), <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)), <span class="ident">no_std</span>)]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>, <span class="ident">feature</span>(<span class="ident">specialization</span>))]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>, <span class="ident">feature</span>(<span class="ident">min_specialization</span>))]</span>
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">mod</span> <span class="ident">convert</span>;
@@ -230,16 +296,13 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">hash_quality_test</span>;
 
-<span class="kw">mod</span> <span class="ident">operations</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
 <span class="kw">mod</span> <span class="ident">hash_map</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
 <span class="kw">mod</span> <span class="ident">hash_set</span>;
+<span class="kw">mod</span> <span class="ident">operations</span>;
 <span class="kw">mod</span> <span class="ident">random_state</span>;
 <span class="kw">mod</span> <span class="ident">specialize</span>;
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">const_random::const_random</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>), <span class="ident">target_feature</span> <span class="op">=</span> <span class="string">&quot;aes&quot;</span>, <span class="ident">not</span>(<span class="ident">miri</span>)))]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::aes_hash::AHasher</span>;
@@ -254,14 +317,16 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::hash_map::AHashMap</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::hash_set::AHashSet</span>;
+<span class="kw">use</span> <span class="ident">core::hash::BuildHasher</span>;
+<span class="kw">use</span> <span class="ident">core::hash::Hash</span>;
 <span class="kw">use</span> <span class="ident">core::hash::Hasher</span>;
 
-<span class="doccomment">/// Provides a default [Hasher] compile time generated constants for keys.</span>
+<span class="doccomment">/// Provides a default [Hasher] with fixed keys.</span>
 <span class="doccomment">/// This is typically used in conjunction with [BuildHasherDefault] to create</span>
 <span class="doccomment">/// [AHasher]s in order to hash the keys of the map.</span>
-<span class="doccomment">/// </span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// Generally it is preferable to use [RandomState] instead, so that different</span>
-<span class="doccomment">/// hashmaps will have different keys. However if fixed keys are desireable this </span>
+<span class="doccomment">/// hashmaps will have different keys. However if fixed keys are desireable this</span>
 <span class="doccomment">/// may be used instead.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Example</span>
@@ -278,13 +343,14 @@
 <span class="doccomment">/// [Hasher]: std::hash::Hasher</span>
 <span class="doccomment">/// [HashMap]: std::collections::HashMap</span>
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">AHasher</span> {
-
-    <span class="doccomment">/// Constructs a new [AHasher] with compile time generated constants for keys if the </span>
-    <span class="doccomment">/// `compile-time-rng`feature is enabled. Otherwise the keys will be fixed constants.</span>
-    <span class="doccomment">/// This means the keys will be the same from one instance to another,</span>
-    <span class="doccomment">/// but different from build to the next. So if it is possible for a potential</span>
-    <span class="doccomment">/// attacker to have access to the compiled binary it would be better</span>
-    <span class="doccomment">/// to specify keys generated at runtime.</span>
+    <span class="doccomment">/// Constructs a new [AHasher] with fixed keys.</span>
+    <span class="doccomment">/// If `std` is enabled these will be generated upon first invocation.</span>
+    <span class="doccomment">/// Otherwise if the `compile-time-rng`feature is enabled these will be generated at compile time.</span>
+    <span class="doccomment">/// If neither of these features are available, hardcoded constants will be used.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Because the values are fixed, different hashers will all hash elements the same way.</span>
+    <span class="doccomment">/// This could make hash values predictable, if DOS attacks are a concern. If this behaviour is</span>
+    <span class="doccomment">/// not required, it may be preferable to use [RandomState] instead.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
@@ -301,87 +367,83 @@
     <span class="doccomment">/// assert_eq!(hasher_1.finish(), hasher_2.finish());</span>
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>)]</span>
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AHasher</span> {
-        <span class="ident">AHasher::new_with_keys</span>(<span class="macro">const_random!</span>(<span class="ident">u128</span>), <span class="macro">const_random!</span>(<span class="ident">u128</span>))
-    }
-    
-    <span class="doccomment">/// Constructs a new [AHasher] with compile time generated constants for keys if the </span>
-    <span class="doccomment">/// `compile-time-rng`feature is enabled. Otherwise the keys will be fixed constants.</span>
-    <span class="doccomment">/// This means the keys will be the same from one instance to another,</span>
-    <span class="doccomment">/// but different from build to the next. So if it is possible for a potential</span>
-    <span class="doccomment">/// attacker to have access to the compiled binary it would be better</span>
-    <span class="doccomment">/// to specify keys generated at runtime.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use ahash::AHasher;</span>
-    <span class="doccomment">/// use std::hash::Hasher;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut hasher_1 = AHasher::default();</span>
-    <span class="doccomment">/// let mut hasher_2 = AHasher::default();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// hasher_1.write_u32(1234);</span>
-    <span class="doccomment">/// hasher_2.write_u32(1234);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(hasher_1.finish(), hasher_2.finish());</span>
-    <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;compile-time-rng&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AHasher</span> {
-        <span class="kw">const</span> <span class="ident">K1</span>: <span class="ident">u128</span> <span class="op">=</span> (<span class="ident">random_state::INIT_SEED</span>[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">u128</span>).<span class="ident">wrapping_mul</span>(<span class="ident">random_state::MULTIPLE</span> <span class="kw">as</span> <span class="ident">u128</span>);
-        <span class="kw">const</span> <span class="ident">K2</span>: <span class="ident">u128</span> <span class="op">=</span> (<span class="ident">random_state::INIT_SEED</span>[<span class="number">1</span>] <span class="kw">as</span> <span class="ident">u128</span>).<span class="ident">wrapping_mul</span>(<span class="ident">random_state::MULTIPLE</span> <span class="kw">as</span> <span class="ident">u128</span>);
-        <span class="ident">AHasher::new_with_keys</span>(<span class="ident">K1</span>, <span class="ident">K2</span>)
+        <span class="ident">RandomState::with_fixed_keys</span>().<span class="ident">build_hasher</span>()
     }
 }
 
 <span class="doccomment">/// Used for specialization. (Sealed)</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait</span> <span class="ident">HasherExt</span>: <span class="ident">Hasher</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait</span> <span class="ident">BuildHasherExt</span>: <span class="ident">BuildHasher</span> {
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">hash_u64</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
+    <span class="kw">fn</span> <span class="ident">hash_as_u64</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
 
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">short_finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
+    <span class="kw">fn</span> <span class="ident">hash_as_fixed_length</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
+
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">hash_as_str</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hasher</span><span class="op">&gt;</span> <span class="ident">HasherExt</span> <span class="kw">for</span> <span class="ident">T</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">BuildHasher</span><span class="op">&gt;</span> <span class="ident">BuildHasherExt</span> <span class="kw">for</span> <span class="ident">B</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-    <span class="ident">default</span> <span class="kw">fn</span> <span class="ident">hash_u64</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
-        <span class="ident">value</span>.<span class="ident">get_hash</span>(<span class="self">self</span>)
+    <span class="ident">default</span> <span class="kw">fn</span> <span class="ident">hash_as_u64</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_hasher</span>();
+        <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
+        <span class="ident">hasher</span>.<span class="ident">finish</span>()
     }
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">hash_u64</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
-        <span class="ident">value</span>.<span class="ident">get_hash</span>(<span class="self">self</span>)
+    <span class="kw">fn</span> <span class="ident">hash_as_u64</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_hasher</span>();
+        <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
+        <span class="ident">hasher</span>.<span class="ident">finish</span>()
     }
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
-    <span class="ident">default</span> <span class="kw">fn</span> <span class="ident">short_finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">finish</span>()
+    <span class="ident">default</span> <span class="kw">fn</span> <span class="ident">hash_as_fixed_length</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_hasher</span>();
+        <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
+        <span class="ident">hasher</span>.<span class="ident">finish</span>()
     }
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">short_finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">finish</span>()
+    <span class="kw">fn</span> <span class="ident">hash_as_fixed_length</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_hasher</span>();
+        <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
+        <span class="ident">hasher</span>.<span class="ident">finish</span>()
+    }
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>)]</span>
+    <span class="ident">default</span> <span class="kw">fn</span> <span class="ident">hash_as_str</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_hasher</span>();
+        <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
+        <span class="ident">hasher</span>.<span class="ident">finish</span>()
+    }
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;specialize&quot;</span>))]</span>
+    <span class="kw">fn</span> <span class="ident">hash_as_str</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build_hasher</span>();
+        <span class="ident">value</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
+        <span class="ident">hasher</span>.<span class="ident">finish</span>()
     }
 }
 
 <span class="comment">// #[inline(never)]</span>
 <span class="comment">// #[doc(hidden)]</span>
 <span class="comment">// pub fn hash_test(input: &amp;[u8]) -&gt; u64 {</span>
-<span class="comment">//     let a = AHasher::new_with_keys(11111111111_u128, 2222222222_u128);</span>
-<span class="comment">//     input.get_hash(a)</span>
+<span class="comment">//     let a = RandomState::with_seeds(11, 22, 33, 44);</span>
+<span class="comment">//     &lt;[u8]&gt;::get_hash(input, &amp;a)</span>
 <span class="comment">// }</span>
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::convert::Convert</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+    <span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_default_builder</span>() {
         <span class="kw">use</span> <span class="ident">core::hash::BuildHasherDefault</span>;
@@ -389,6 +451,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">u64</span>, <span class="ident">BuildHasherDefault</span><span class="op">&lt;</span><span class="ident">AHasher</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="ident">map</span>.<span class="ident">insert</span>(<span class="number">1</span>, <span class="number">3</span>);
     }
+
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_builder</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">u64</span>, <span class="ident">RandomState</span><span class="op">&gt;</span><span class="ident">::default</span>();
@@ -400,6 +463,43 @@
         <span class="kw">let</span> <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;dddddddd&quot;</span>;
         <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="macro">as_array!</span>(<span class="ident">input</span>, <span class="number">8</span>).<span class="ident">convert</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>, <span class="number">0x6464646464646464</span>);
+    }
+
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_non_zero</span>() {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher1</span> <span class="op">=</span> <span class="ident">AHasher::new_with_keys</span>(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher2</span> <span class="op">=</span> <span class="ident">AHasher::new_with_keys</span>(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="string">&quot;foo&quot;</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher1</span>);
+        <span class="string">&quot;bar&quot;</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher2</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">hasher1</span>.<span class="ident">finish</span>(), <span class="number">0</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">hasher2</span>.<span class="ident">finish</span>(), <span class="number">0</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">hasher1</span>.<span class="ident">finish</span>(), <span class="ident">hasher2</span>.<span class="ident">finish</span>());
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher1</span> <span class="op">=</span> <span class="ident">AHasher::new_with_keys</span>(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher2</span> <span class="op">=</span> <span class="ident">AHasher::new_with_keys</span>(<span class="number">0</span>, <span class="number">0</span>);
+        <span class="number">3_u64</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher1</span>);
+        <span class="number">4_u64</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher2</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">hasher1</span>.<span class="ident">finish</span>(), <span class="number">0</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">hasher2</span>.<span class="ident">finish</span>(), <span class="number">0</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">hasher1</span>.<span class="ident">finish</span>(), <span class="ident">hasher2</span>.<span class="ident">finish</span>());
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_non_zero_specialized</span>() {
+        <span class="kw">let</span> <span class="ident">hasher_build</span> <span class="op">=</span> <span class="ident">RandomState::with_seeds</span>(<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);
+
+        <span class="kw">let</span> <span class="ident">h1</span> <span class="op">=</span> <span class="ident">str::get_hash</span>(<span class="string">&quot;foo&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">hasher_build</span>);
+        <span class="kw">let</span> <span class="ident">h2</span> <span class="op">=</span> <span class="ident">str::get_hash</span>(<span class="string">&quot;bar&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">hasher_build</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">h1</span>, <span class="number">0</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">h2</span>, <span class="number">0</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">h1</span>, <span class="ident">h2</span>);
+
+        <span class="kw">let</span> <span class="ident">h1</span> <span class="op">=</span> <span class="ident">u64::get_hash</span>(<span class="kw-2">&amp;</span><span class="number">3_u64</span>, <span class="kw-2">&amp;</span><span class="ident">hasher_build</span>);
+        <span class="kw">let</span> <span class="ident">h2</span> <span class="op">=</span> <span class="ident">u64::get_hash</span>(<span class="kw-2">&amp;</span><span class="number">4_u64</span>, <span class="kw-2">&amp;</span><span class="ident">hasher_build</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">h1</span>, <span class="number">0</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">h2</span>, <span class="number">0</span>);
+        <span class="macro">assert_ne!</span>(<span class="ident">h1</span>, <span class="ident">h2</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
