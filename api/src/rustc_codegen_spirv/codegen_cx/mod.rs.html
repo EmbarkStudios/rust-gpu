@@ -685,6 +685,7 @@
 <span id="683">683</span>
 <span id="684">684</span>
 <span id="685">685</span>
+<span id="686">686</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
@@ -1115,7 +1116,8 @@
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">module</span>
                 .<span class="ident">entry_points</span>
                 .<span class="ident">iter</span>()
-                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>().<span class="ident">unwrap_literal_string</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">entry</span>)
+                .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rspirv::spirv::Op::EntryPoint</span>)
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">2</span>].<span class="ident">unwrap_literal_string</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">entry</span>)
                 .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
                     <span class="macro">panic!</span>(
                         <span class="string">&quot;no entry point with the name `{}` found in:\n{}\n&quot;</span>,
