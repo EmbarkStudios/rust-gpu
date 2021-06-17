@@ -33,7 +33,6 @@ pub async fn start_internal(
         .await
         .expect("Failed to find an appropriate adapter");
 
-    let timestamp_period = adapter.get_timestamp_period();
     let (device, queue) = adapter
         .request_device(
             &wgpu::DeviceDescriptor {
@@ -47,6 +46,9 @@ pub async fn start_internal(
         .expect("Failed to create device");
     drop(instance);
     drop(adapter);
+
+    let timestamp_period = queue.get_timestamp_period();
+
     // Load the shaders from disk
     let module = device.create_shader_module(&shader_binary);
 

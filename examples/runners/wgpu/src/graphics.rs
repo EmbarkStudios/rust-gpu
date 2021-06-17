@@ -160,8 +160,8 @@ async fn run(
                     {
                         let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                             label: None,
-                            color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                                attachment: &frame.view,
+                            color_attachments: &[wgpu::RenderPassColorAttachment {
+                                view: &frame.view,
                                 resolve_target: None,
                                 ops: wgpu::Operations {
                                     load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
@@ -279,8 +279,10 @@ fn create_pipeline(
             topology: wgpu::PrimitiveTopology::TriangleList,
             strip_index_format: None,
             front_face: wgpu::FrontFace::Ccw,
-            cull_mode: wgpu::CullMode::None,
+            cull_mode: None,
+            clamp_depth: false,
             polygon_mode: wgpu::PolygonMode::Fill,
+            conservative: false,
         },
         depth_stencil: None,
         multisample: wgpu::MultisampleState {
@@ -293,8 +295,7 @@ fn create_pipeline(
             entry_point: shaders::main_fs,
             targets: &[wgpu::ColorTargetState {
                 format: swapchain_format,
-                alpha_blend: wgpu::BlendState::REPLACE,
-                color_blend: wgpu::BlendState::REPLACE,
+                blend: None,
                 write_mask: wgpu::ColorWrite::ALL,
             }],
         }),
