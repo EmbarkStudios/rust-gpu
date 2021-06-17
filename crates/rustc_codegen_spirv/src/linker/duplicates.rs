@@ -146,7 +146,7 @@ fn make_dedupe_key(
             0
         });
         if let Some(annos) = annotations.get(&id) {
-            data.extend_from_slice(annos)
+            data.extend_from_slice(annos);
         }
         if inst.class.opcode == Op::Variable {
             // Names only matter for OpVariable.

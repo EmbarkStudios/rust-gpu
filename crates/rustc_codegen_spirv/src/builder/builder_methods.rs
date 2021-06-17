@@ -550,7 +550,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn br(&mut self, dest: Self::BasicBlock) {
-        self.emit().branch(dest).unwrap()
+        self.emit().branch(dest).unwrap();
     }
 
     fn cond_br(
@@ -561,7 +561,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     ) {
         self.emit()
             .branch_conditional(cond.def(self), then_llbb, else_llbb, empty())
-            .unwrap()
+            .unwrap();
     }
 
     fn switch(
@@ -638,7 +638,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let cases = cases
             .map(|(i, b)| (construct_case(self, signed, i), b))
             .collect::<Vec<_>>();
-        self.emit().switch(v.def(self), else_llbb, cases).unwrap()
+        self.emit().switch(v.def(self), else_llbb, cases).unwrap();
     }
 
     fn invoke(
@@ -656,7 +656,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn unreachable(&mut self) {
-        self.emit().unreachable().unwrap()
+        self.emit().unreachable().unwrap();
     }
 
     simple_op! {add, i_add}
@@ -1281,12 +1281,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     self.zombie(
                         result.def(self),
                         "OpBitcast between ptr and non-ptr without AddressingModel != Logical",
-                    )
+                    );
                 } else {
                     self.struct_err("Cannot cast between pointer and non-pointer types")
                         .note(&format!("from: {}", self.debug_type(val.ty)))
                         .note(&format!("to: {}", self.debug_type(dest_ty)))
-                        .emit()
+                        .emit();
                 }
             }
 
@@ -1717,7 +1717,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 self.zombie(
                     dst.def(self),
                     "OpCopyMemorySized without OpCapability Addresses",
-                )
+                );
             }
         }
     }
@@ -1731,7 +1731,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         size: Self::Value,
         flags: MemFlags,
     ) {
-        self.memcpy(dst, dst_align, src, src_align, size, flags)
+        self.memcpy(dst, dst_align, src, src_align, size, flags);
     }
 
     fn memset(
@@ -1858,7 +1858,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn insert_value(&mut self, agg_val: Self::Value, elt: Self::Value, idx: u64) -> Self::Value {
         match self.lookup_type(agg_val.ty) {
             SpirvType::Adt { field_types, .. } => {
-                assert_ty_eq!(self, field_types[idx as usize], elt.ty)
+                assert_ty_eq!(self, field_types[idx as usize], elt.ty);
             }
             other => self.fatal(&format!("insert_value not implemented on type {:?}", other)),
         };

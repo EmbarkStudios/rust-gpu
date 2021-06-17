@@ -16,7 +16,7 @@ use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
 use rspirv::binary::Consumer;
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
-use rustc_data_structures::fx::FxHashMap;
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_errors::ErrorReported;
 use rustc_session::Session;
 
@@ -63,7 +63,7 @@ fn apply_rewrite_rules(rewrite_rules: &FxHashMap<Word, Word>, blocks: &mut [Bloc
                     *id = rewrite;
                 }
             }
-        })
+        });
     };
     for block in blocks {
         for inst in &mut block.label {
@@ -183,8 +183,8 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     }
 
     let unroll_loops_decorations = UnrollLoopsDecoration::decode_all(&output)
-        .map(|(id, unroll_loops)| (id, unroll_loops.deserialize()))
-        .collect::<FxHashMap<_, _>>();
+        .map(|(id, _)| id)
+        .collect::<FxHashSet<_>>();
     UnrollLoopsDecoration::remove_all(&mut output);
 
     let mut output = if opts.structurize {

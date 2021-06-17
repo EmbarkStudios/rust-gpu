@@ -64,7 +64,7 @@ pub fn link<'a>(
                     link_rlib(sess, codegen_results, &out_filename);
                 }
                 CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => {
-                    link_exe(sess, crate_type, &out_filename, codegen_results)
+                    link_exe(sess, crate_type, &out_filename, codegen_results);
                 }
                 other => sess.err(&format!("CrateType {:?} not supported yet", other)),
             }

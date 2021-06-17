@@ -112,6 +112,6 @@ pub fn dce_phi(func: &mut Function) {
     for block in &mut func.blocks {
         block
             .instructions
-            .retain(|inst| inst.class.opcode != Op::Phi || used.contains(&inst.result_id.unwrap()))
+            .retain(|inst| inst.class.opcode != Op::Phi || used.contains(&inst.result_id.unwrap()));
     }
 }

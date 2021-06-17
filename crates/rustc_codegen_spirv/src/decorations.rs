@@ -75,7 +75,7 @@ pub trait CustomDecoration: for<'de> Deserialize<'de> + Serialize {
     fn remove_all(module: &mut Module) {
         module
             .annotations
-            .retain(|inst| Self::try_decode(inst).is_none())
+            .retain(|inst| Self::try_decode(inst).is_none());
     }
 }
 

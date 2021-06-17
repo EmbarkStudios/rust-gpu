@@ -83,7 +83,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     "PassMode {:?} invalid for entry point return type",
                     fn_abi.ret.mode
                 ),
-            )
+            );
         }
         let execution_model = entry.execution_model;
         let fn_id = if execution_model == ExecutionModel::Kernel {
@@ -306,7 +306,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 &mut bx,
                 &mut call_args,
                 &mut decoration_locations,
-            )
+            );
         }
         bx.set_span(span);
         bx.call(entry_func, &call_args, None);
@@ -540,7 +540,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             self.tcx.sess.span_err(
                                 hir_param.ty_span,
                                 "uniform_constant must use &RuntimeArray<T>, not &[T]",
-                            )
+                            );
                         }
                     }
                     _ => {
@@ -548,7 +548,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             self.tcx.sess.span_err(
                                 hir_param.ty_span,
                                 "only plain slices are supported as unsized types",
-                            )
+                            );
                         }
                     }
                 }
@@ -686,11 +686,11 @@ impl<'tcx> CodegenCx<'tcx> {
                     var,
                     Decoration::InputAttachmentIndex,
                     std::iter::once(Operand::LiteralInt32(attachment_index.value)),
-                )
+                );
             } else if is_subpass_input {
                 self.tcx
                     .sess
-                    .span_err(hir_param.ty_span, "Missing capability InputAttachment")
+                    .span_err(hir_param.ty_span, "Missing capability InputAttachment");
             } else {
                 self.tcx.sess.span_err(
                     attachment_index.span,
@@ -702,7 +702,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.tcx.sess.span_err(
                 hir_param.ty_span,
                 "Image types with dim = SubpassData require #[spirv(input_attachment_index)] decoration",
-            )
+            );
         }
 
         // Assign locations from left to right, incrementing each storage class

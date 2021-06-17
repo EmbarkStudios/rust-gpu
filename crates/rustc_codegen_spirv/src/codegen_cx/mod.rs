@@ -66,7 +66,7 @@ pub struct CodegenCx<'tcx> {
     /// Functions that have `#[spirv(unroll_loops)]`, and therefore should
     /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
     /// instructions, during structuralization.
-    unroll_loops_decorations: RefCell<FxHashMap<Word, UnrollLoopsDecoration>>,
+    unroll_loops_decorations: RefCell<FxHashSet<Word>>,
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
@@ -211,7 +211,7 @@ impl<'tcx> CodegenCx<'tcx> {
         }
     }
     pub fn zombie_no_span(&self, word: Word, reason: &str) {
-        self.zombie_with_span(word, DUMMY_SP, reason)
+        self.zombie_with_span(word, DUMMY_SP, reason);
     }
     pub fn zombie_even_in_user_code(&self, word: Word, span: Span, reason: &str) {
         self.zombie_decorations.borrow_mut().insert(
@@ -255,7 +255,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     self.unroll_loops_decorations
                         .into_inner()
                         .into_iter()
-                        .map(|(id, unroll_loops)| unroll_loops.encode(id)),
+                        .map(|id| UnrollLoopsDecoration {}.encode(id)),
                 ),
         );
         result
@@ -266,7 +266,7 @@ impl<'tcx> CodegenCx<'tcx> {
             target,
             Decoration::LinkageAttributes,
             once(Operand::LiteralString(name)).chain(once(Operand::LinkageType(linkage))),
-        )
+        );
     }
 }
 
@@ -371,20 +371,20 @@ impl CodegenArgs {
             let mut remap = std::collections::HashMap::new();
             let mut insert = |current_id: &mut u32| {
                 let len = remap.len();
-                *current_id = *remap.entry(*current_id).or_insert_with(|| len as u32 + 1)
+                *current_id = *remap.entry(*current_id).or_insert_with(|| len as u32 + 1);
             };
             module.all_inst_iter_mut().for_each(|inst| {
                 if let Some(ref mut result_id) = &mut inst.result_id {
-                    insert(result_id)
+                    insert(result_id);
                 }
                 if let Some(ref mut result_type) = &mut inst.result_type {
-                    insert(result_type)
+                    insert(result_type);
                 }
                 inst.operands.iter_mut().for_each(|op| {
                     if let Some(w) = op.id_ref_any_mut() {
-                        insert(w)
+                        insert(w);
                     }
-                })
+                });
             });
             remap.len() as u32 + 1
         }

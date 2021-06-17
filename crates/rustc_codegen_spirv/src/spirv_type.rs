@@ -304,7 +304,7 @@ impl SpirvType {
                         result,
                         def_span,
                         "function pointer types are not allowed",
-                    )
+                    );
                 }
                 result
             }

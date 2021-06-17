@@ -15,9 +15,9 @@ pub fn shift_ids(module: &mut Module, add: u32) {
 
         inst.operands.iter_mut().for_each(|op| {
             if let Some(w) = op.id_ref_any_mut() {
-                *w += add
+                *w += add;
             }
-        })
+        });
     });
 }
 
@@ -118,7 +118,7 @@ pub fn compact_ids(module: &mut Module) -> u32 {
             if let Some(w) = op.id_ref_any_mut() {
                 *w = insert(*w);
             }
-        })
+        });
     });
 
     remap.len() as u32 + 1

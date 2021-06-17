@@ -410,19 +410,19 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
     fn visit_item(&mut self, item: &'tcx hir::Item<'tcx>) {
         let target = Target::from_item(item);
         self.check_spirv_attributes(item.hir_id(), target);
-        intravisit::walk_item(self, item)
+        intravisit::walk_item(self, item);
     }
 
     fn visit_generic_param(&mut self, generic_param: &'tcx hir::GenericParam<'tcx>) {
         let target = Target::from_generic_param(generic_param);
         self.check_spirv_attributes(generic_param.hir_id, target);
-        intravisit::walk_generic_param(self, generic_param)
+        intravisit::walk_generic_param(self, generic_param);
     }
 
     fn visit_trait_item(&mut self, trait_item: &'tcx hir::TraitItem<'tcx>) {
         let target = Target::from_trait_item(trait_item);
         self.check_spirv_attributes(trait_item.hir_id(), target);
-        intravisit::walk_trait_item(self, trait_item)
+        intravisit::walk_trait_item(self, trait_item);
     }
 
     fn visit_field_def(&mut self, field: &'tcx hir::FieldDef<'tcx>) {
@@ -438,13 +438,13 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
     fn visit_foreign_item(&mut self, f_item: &'tcx hir::ForeignItem<'tcx>) {
         let target = Target::from_foreign_item(f_item);
         self.check_spirv_attributes(f_item.hir_id(), target);
-        intravisit::walk_foreign_item(self, f_item)
+        intravisit::walk_foreign_item(self, f_item);
     }
 
     fn visit_impl_item(&mut self, impl_item: &'tcx hir::ImplItem<'tcx>) {
         let target = target_from_impl_item(self.tcx, impl_item);
         self.check_spirv_attributes(impl_item.hir_id(), target);
-        intravisit::walk_impl_item(self, impl_item)
+        intravisit::walk_impl_item(self, impl_item);
     }
 
     fn visit_stmt(&mut self, stmt: &'tcx hir::Stmt<'tcx>) {
@@ -452,7 +452,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
         if let hir::StmtKind::Local(l) = stmt.kind {
             self.check_spirv_attributes(l.hir_id, Target::Statement);
         }
-        intravisit::walk_stmt(self, stmt)
+        intravisit::walk_stmt(self, stmt);
     }
 
     fn visit_expr(&mut self, expr: &'tcx hir::Expr<'tcx>) {
@@ -462,7 +462,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
         };
 
         self.check_spirv_attributes(expr.hir_id, target);
-        intravisit::walk_expr(self, expr)
+        intravisit::walk_expr(self, expr);
     }
 
     fn visit_variant(
@@ -472,7 +472,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
         item_id: HirId,
     ) {
         self.check_spirv_attributes(variant.id, Target::Variant);
-        intravisit::walk_variant(self, variant, generics, item_id)
+        intravisit::walk_variant(self, variant, generics, item_id);
     }
 
     fn visit_macro_def(&mut self, macro_def: &'tcx hir::MacroDef<'tcx>) {
@@ -528,7 +528,7 @@ pub(crate) fn provide(providers: &mut Providers) {
         check_mod_attrs: |tcx, def_id| {
             // Run both the default checks, and our `#[spirv(...)]` ones.
             (rustc_interface::DEFAULT_QUERY_PROVIDERS.check_mod_attrs)(tcx, def_id);
-            check_mod_attrs(tcx, def_id)
+            check_mod_attrs(tcx, def_id);
         },
         ..*providers
     };

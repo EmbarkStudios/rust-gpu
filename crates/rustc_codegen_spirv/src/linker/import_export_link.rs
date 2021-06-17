@@ -176,7 +176,7 @@ fn replace_all_uses_with(module: &mut Module, rules: &FxHashMap<u32, u32>) {
                     *w = rewrite;
                 }
             }
-        })
+        });
     });
 }
 
@@ -201,7 +201,7 @@ fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &FxHashMap<u32,
     module.capabilities.retain(|inst| {
         inst.class.opcode != Op::Capability
             || inst.operands[0].unwrap_capability() != Capability::Linkage
-    })
+    });
 }
 
 fn import_kill_annotations_and_debug(
@@ -228,7 +228,7 @@ fn import_kill_annotations_and_debug(
                 op.id_ref_any().map_or(true, |id| {
                     !rewrite_rules.contains_key(&id) && !killed_parameters.contains(&id)
                 })
-            })
+            });
         }
     }
 }
