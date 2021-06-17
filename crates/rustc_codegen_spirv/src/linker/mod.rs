@@ -13,7 +13,7 @@ mod structurizer;
 mod zombies;
 
 use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
-use rspirv::binary::Consumer;
+use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
@@ -111,14 +111,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     };
 
     if let Ok(ref path) = std::env::var("DUMP_POST_MERGE") {
-        use rspirv::binary::Assemble;
-        use std::fs::File;
-        use std::io::Write;
-
-        File::create(path)
-            .unwrap()
-            .write_all(spirv_tools::binary::from_binary(&output.assemble()))
-            .unwrap();
+        std::fs::write(path, spirv_tools::binary::from_binary(&output.assemble())).unwrap();
     }
 
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
@@ -283,16 +276,10 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         LinkResult::SingleModule(ref mut m) => Box::new(std::iter::once(m)),
         LinkResult::MultipleModules(ref mut m) => Box::new(m.values_mut()),
     };
-    for output in output_module_iter {
-        if let Ok(ref path) = std::env::var("DUMP_POST_SPLIT") {
-            use rspirv::binary::Assemble;
-            use std::fs::File;
-            use std::io::Write;
-
-            File::create(path)
-                .unwrap()
-                .write_all(spirv_tools::binary::from_binary(&output.assemble()))
-                .unwrap();
+    for (i, output) in output_module_iter.enumerate() {
+        if let Some(mut path) = crate::get_env_dump_dir("DUMP_POST_SPLIT") {
+            path.push(format!("mod_{}.spv", i));
+            std::fs::write(path, spirv_tools::binary::from_binary(&output.assemble())).unwrap();
         }
         // Run DCE again, even if emit_multiple_modules==false - the first DCE ran before
         // structurization and mem2reg (for perf reasons), and mem2reg may remove references to

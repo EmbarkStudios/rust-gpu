@@ -2,6 +2,7 @@ use crate::codegen_cx::{CodegenArgs, ModuleOutputType};
 use crate::{
     linker, CompileResult, ModuleResult, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer,
 };
+use rspirv::binary::Assemble;
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::{CodegenResults, NativeLib};
@@ -21,7 +22,7 @@ use rustc_span::symbol::Symbol;
 use std::env;
 use std::ffi::{CString, OsStr};
 use std::fs::File;
-use std::io::{BufWriter, Read, Write};
+use std::io::{BufWriter, Read};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tar::{Archive, Builder, Header};
@@ -141,7 +142,6 @@ fn link_exe(
         std::fs::create_dir_all(&out_dir).unwrap();
     }
 
-    use rspirv::binary::Assemble;
     let compile_result = match spv_binary {
         linker::LinkResult::SingleModule(spv_binary) => {
             let mut module_filename = out_dir;
@@ -190,11 +190,9 @@ fn post_link_single_module(
     spv_binary: Vec<u32>,
     out_filename: &Path,
 ) {
-    if let Ok(ref path) = std::env::var("DUMP_POST_LINK") {
-        File::create(path)
-            .unwrap()
-            .write_all(spirv_tools::binary::from_binary(&spv_binary))
-            .unwrap();
+    if let Some(mut path) = crate::get_env_dump_dir("DUMP_POST_LINK") {
+        path.push(out_filename.file_name().unwrap());
+        std::fs::write(path, spirv_tools::binary::from_binary(&spv_binary)).unwrap();
     }
 
     let val_options = spirv_tools::val::ValidatorOptions {
@@ -217,8 +215,21 @@ fn post_link_single_module(
     let spv_binary = if sess.opts.optimize != OptLevel::No
         || (sess.opts.debuginfo == DebugInfo::None && !cg_args.name_variables)
     {
-        let _timer = sess.timer("link_spirv_opt");
-        do_spirv_opt(sess, cg_args, spv_binary, out_filename, opt_options)
+        if env::var("NO_SPIRV_OPT").is_ok() {
+            let _timer = sess.timer("link_spirv_opt");
+            do_spirv_opt(sess, cg_args, spv_binary, out_filename, opt_options)
+        } else {
+            let reason = match (sess.opts.optimize, sess.opts.debuginfo == DebugInfo::None) {
+                (OptLevel::No, true) => "debuginfo=None".to_string(),
+                (optlevel, false) => format!("optlevel={:?}", optlevel),
+                (optlevel, true) => format!("optlevel={:?}, debuginfo=None", optlevel),
+            };
+            sess.warn(&format!(
+                "spirv-opt should have ran ({}) but was disabled by NO_SPIRV_OPT",
+                reason
+            ));
+            spv_binary
+        }
     } else {
         spv_binary
     };
@@ -511,18 +522,13 @@ fn do_link(
         }
     }
 
-    if let Ok(ref path) = env::var("DUMP_PRE_LINK") {
-        use rspirv::binary::Assemble;
-        let path = Path::new(path);
-        if path.is_file() {
-            std::fs::remove_file(path).unwrap();
-        }
-        std::fs::create_dir_all(path).unwrap();
+    if let Some(dir) = crate::get_env_dump_dir("DUMP_PRE_LINK") {
         for (num, module) in modules.iter().enumerate() {
-            File::create(path.join(format!("mod_{}.spv", num)))
-                .unwrap()
-                .write_all(spirv_tools::binary::from_binary(&module.assemble()))
-                .unwrap();
+            std::fs::write(
+                dir.join(format!("mod_{}.spv", num)),
+                spirv_tools::binary::from_binary(&module.assemble()),
+            )
+            .unwrap();
         }
     }
     drop(load_modules_timer);

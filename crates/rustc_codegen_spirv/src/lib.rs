@@ -546,8 +546,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         let do_codegen = || {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
-            if let Ok(path) = env::var("DUMP_MIR") {
-                let mut path = PathBuf::from(path);
+            if let Some(mut path) = get_env_dump_dir("DUMP_MIR") {
                 path.push(cgu_name.to_string());
                 dump_mir(tcx, &mono_items, &path);
             }
@@ -627,6 +626,19 @@ impl Drop for DumpModuleOnPanic<'_, '_, '_> {
                 println!("{}", self.cx.builder.dump_module_str());
             }
         }
+    }
+}
+
+fn get_env_dump_dir(env_var: &str) -> Option<PathBuf> {
+    if let Some(path) = std::env::var_os(env_var) {
+        let path = PathBuf::from(path);
+        if path.is_file() {
+            std::fs::remove_file(&path).unwrap();
+        }
+        std::fs::create_dir_all(&path).unwrap();
+        Some(path)
+    } else {
+        None
     }
 }
 
