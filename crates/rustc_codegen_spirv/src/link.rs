@@ -215,7 +215,7 @@ fn post_link_single_module(
     let spv_binary = if sess.opts.optimize != OptLevel::No
         || (sess.opts.debuginfo == DebugInfo::None && !cg_args.name_variables)
     {
-        if env::var("NO_SPIRV_OPT").is_ok() {
+        if env::var("NO_SPIRV_OPT").is_err() {
             let _timer = sess.timer("link_spirv_opt");
             do_spirv_opt(sess, cg_args, spv_binary, out_filename, opt_options)
         } else {
