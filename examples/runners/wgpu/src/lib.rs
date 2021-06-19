@@ -169,6 +169,7 @@ pub struct Options {
 
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
 pub fn main() {
+    env_logger::init();
     let options: Options = Options::parse();
 
     if is_compute_shader(options.shader) {
