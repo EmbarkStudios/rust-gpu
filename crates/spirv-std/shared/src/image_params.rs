@@ -153,92 +153,89 @@ impl From<bool> for Sampled {
 pub enum ImageFormat {
     /// Representation not known at compile time.
     Unknown,
-    /// RGBA channels, 32 bit floating point integer.
+    /// RGBA channels, 32 bit floating point per channel.
     Rgba32f,
-    /// RGBA channels, 16 bit floating point integer.
+    /// RGBA channels, 16 bit floating point per channel.
     Rgba16f,
-    /// RGBA channels, 16 bit floating point integer.
+    /// Single red channel, 32 bit floating point.
     R32f,
-    /// RGBA channels, 8 bit floating point integer.
+    /// RGBA channels, 8 bit unsigned normalized integer per channel.
     Rgba8,
-    /// RGBA channels, 8 bit signed normalized integer.
+    /// RGBA channels, 8 bit signed normalized integer per channel.
     Rgba8Snorm,
-    /// Red+Green channels, 32 bit floating point integer.
+    /// Red+Green channels, 32 bit floating point per channel.
     Rg32f,
-    /// Red+Green channels, 16 bit floating point integer.
+    /// Red+Green channels, 16 bit floating point per channel.
     Rg16f,
-    /// 32 bit unsigned integer containing two 11 bit floating point integers
-    /// for the Red and Green channels, and a 10 bit floating point integer for
-    /// the Blue channel.
+    /// 32 bits containing two 11 bit floating point numbers for the Red and Green
+    /// channels, and a 10 bit floating point number for the Blue channel.
     R11fG11fB10f,
-    /// Red channel, 16 bit floating point.
+    /// Single red channel, 16 bit floating point.
     R16f,
-    /// RGBA channel, 16 bit floating point.
+    /// RGBA channels, 16 bit unsigned normalized integer per channel.
     Rgba16,
-    /// 32 bit unsigned integer containing three 10 bit unsigned normalized
-    /// integers for the Red, Green, and Blue channels; with a 2 unsigned
-    /// normalized integer for the Alpha channel.
+    /// 32 bits containing three 10 bit unsigned normalized integers for the Red, Green, and Blue
+    /// channels, and a 2 bit unsigned normalized integer for the Alpha channel.
     Rgb10A2,
-    /// Red+Green channels, 16 bit floating point integer.
+    /// Red+Green channels, 16 bit unsigned normalized integer per channel.
     Rg16,
-    /// Red+Green channels, 8 bit floating point integer.
+    /// Red+Green channels, 8 bit unsigned normalized integer per channel.
     Rg8,
-    /// Red+Green channels, 16 bit floating point integer.
+    /// Single red channel, 16 bit unsigned normalized integer.
     R16,
-    /// Red channel, 8 bit floating point integer.
+    /// Single red channel, 8 bit unsigned normalized integer.
     R8,
-    /// RGBA channels, 16 bit signed normalized integer.
+    /// RGBA channels, 16 bit signed normalized integer per channel.
     Rgba16Snorm,
-    /// RGB channels, 16 bit signed normalized integer.
+    /// Red+Green channels, 16 bit signed normalized integer per channel.
     Rg16Snorm,
-    /// Red+Green channels, 8 bit signed normalized integer.
+    /// Red+Green channels, 8 bit signed normalized integer per channel.
     Rg8Snorm,
-    /// Red channel, 16 bit signed normalized integer.
+    /// Single red channel, 16 bit signed normalized integer.
     R16Snorm,
-    /// Red channel, 16 bit signed normalized integer.
+    /// Single red channel, 8 bit signed normalized integer.
     R8Snorm,
-    /// RGBA channels, 32 bit signed integer.
+    /// RGBA channels, 32 bit signed integer per channel (not normalized).
     Rgba32i,
-    /// RGBA channels, 16 bit signed integer.
+    /// RGBA channels, 16 bit signed integer per channel (not normalized).
     Rgba16i,
-    /// RGBA channels, 8 bit signed integer.
+    /// RGBA channels, 8 bit signed integer per channel (not normalized).
     Rgba8i,
-    /// Red channel, 32 bit signed integer.
+    /// Single red channel, 32 bit signed integer (not normalized).
     R32i,
-    /// Red+Green channels, 32 bit signed integer.
+    /// Red+Green channels, 32 bit signed integer per channel (not normalized).
     Rg32i,
-    /// Red+Green channels, 16 bit signed integer.
+    /// Red+Green channels, 16 bit signed integer per channel (not normalized).
     Rg16i,
-    /// Red+Green channels, 8 bit signed integer.
+    /// Red+Green channels, 8 bit signed integer per channel (not normalized).
     Rg8i,
-    /// Red channel, 16 bit signed integer.
+    /// Single red channel, 16 bit signed integer (not normalized).
     R16i,
-    /// Red channel, 8 bit signed integer.
+    /// Single red channel, 8 bit signed integer (not normalized).
     R8i,
-    /// RGBA channels, 32 bit unsigned integer.
+    /// RGBA channels, 32 bit unsigned integer per channel (not normalized).
     Rgba32ui,
-    /// RGBA channels, 16 bit unsigned integer.
+    /// RGBA channels, 16 bit unsigned integer per channel (not normalized).
     Rgba16ui,
-    /// RGBA channels, 8 bit unsigned integer.
+    /// RGBA channels, 8 bit unsigned integer per channel (not normalized).
     Rgba8ui,
-    /// Red channel, 32 bit unsigned integer.
+    /// Single red channel, 32 bit unsigned integer (not normalized).
     R32ui,
-    /// 32 bit unsigned integer containing three 10 bit unsigned integers for
-    /// the Red, Green, and Blue channels, and a 2 bit unsigned integer for the
-    /// Alpha channel.
+    /// 32 bits containing three 10 bit unsigned integers for the Red, Green, and Blue channels,
+    /// and a 2 bit unsigned integer for the Alpha channel.
     Rgb10A2ui,
-    /// Red+Green channels, 32 bit unsigned integer.
+    /// Red+Green channels, 32 bit unsigned integer per channel (not normalized).
     Rg32ui,
-    /// Red+Green channels, 16 bit unsigned integer.
+    /// Red+Green channels, 16 bit unsigned integer per channel (not normalized).
     Rg16ui,
-    /// Red+Green channels, 8 bit unsigned integer.
+    /// Red+Green channels, 8 bit unsigned integer per channel (not normalized).
     Rg8ui,
-    /// Red channel, 16 bit unsigned integer.
+    /// Single red channel, 16 bit unsigned integer (not normalized).
     R16ui,
-    /// Red channel, 8 bit unsigned integer.
+    /// Single red channel, 8 bit unsigned integer (not normalized).
     R8ui,
-    /// Red channel, 64 bit unsigned integer.
+    /// Single red channel, 64 bit unsigned integer (not normalized).
     R64ui,
-    /// Red channel, 64 bit signed integer.
+    /// Single red channel, 64 bit signed integer (not normalized).
     R64i,
 }

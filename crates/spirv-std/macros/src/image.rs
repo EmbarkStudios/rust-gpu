@@ -263,6 +263,7 @@ impl Parse for ImageType {
                 | ImageFormat::Rg8Snorm
                 | ImageFormat::R16Snorm
                 | ImageFormat::R8Snorm => SampledType::F32,
+
                 ImageFormat::Rgba32i
                 | ImageFormat::Rgba16i
                 | ImageFormat::Rgba8i
@@ -285,6 +286,7 @@ impl Parse for ImageType {
                 | ImageFormat::R8ui => SampledType::U32,
 
                 ImageFormat::R64ui => SampledType::U64,
+
                 ImageFormat::R64i => SampledType::I64,
 
                 ImageFormat::Unknown => unreachable!(),

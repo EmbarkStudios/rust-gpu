@@ -80,7 +80,8 @@ use syn::{punctuated::Punctuated, spanned::Spanned, ItemFn, Token};
 
 use quote::ToTokens;
 
-/// A macro for creating SPIR-V `OpTypeImage` types.
+/// A macro for creating SPIR-V `OpTypeImage` types. Always produces a
+/// `spirv_std::image::Image<...>` type.
 ///
 /// The grammar for the macro is as follows:
 ///
@@ -122,6 +123,11 @@ use quote::ToTokens;
 ///    Accepted values: `true` or `false`. Default: `unknown`.
 ///
 /// [`ImageFormat`]: spirv_types::image_params::ImageFormat
+///
+/// Keep in mind that `sampled` here is a different concept than the `SampledImage` type:
+/// `sampled=true` means that this image requires a sampler to be able to access, while the
+/// `SampledImage` type bundles that sampler together with the image into a single type (e.g.
+/// `sampler2D` in GLSL, vs. `texture2D`).
 #[proc_macro]
 // The `Image` is supposed to be used in the type position, which
 // uses `PascalCase`.
