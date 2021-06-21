@@ -804,8 +804,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         if self.lookup_type(val.ty) == SpirvType::Bool
             && self.builder.has_capability(Capability::Int8)
         {
-            let i8 = SpirvType::Integer(8, false).def(self.span(), self);
-            self.zext(val, i8)
+            let u8 = SpirvType::Integer(8, false).def(self.span(), self);
+            self.zext(val, u8)
         } else {
             val
         }
