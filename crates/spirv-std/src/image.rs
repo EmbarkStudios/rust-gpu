@@ -53,6 +53,9 @@ pub type StorageImage3dI = crate::Image!(3D, type=i32, sampled=false, __crate_ro
 pub type Cubemap = crate::Image!(cube, type=f32, sampled, __crate_root=crate);
 
 /// An opaque image type. Corresponds to `OpTypeImage`.
+///
+/// You likely want to write this type using the [`crate::Image!`] macro helper, as the generic
+/// arguments here can get extremely verbose.
 #[spirv(generic_image_type)]
 #[derive(Copy, Clone)]
 pub struct Image<
@@ -914,8 +917,11 @@ impl<
     }
 }
 
-/// An image combined with a sampler, enabling filtered accesses of the
-/// image’s contents.
+/// An image combined with a sampler in a single value, enabling filtered accesses of the image's
+/// contents. Corresponds to `OpTypeSampledImage`.
+///
+/// The generic type parameter is the underlying image type, written like
+/// `SampledImage<Image!(...)>`.
 #[spirv(sampled_image)]
 #[derive(Copy, Clone)]
 pub struct SampledImage<I> {
