@@ -104,7 +104,7 @@ fn maybe_watch(
         let (crate_name, capabilities): (_, &[Capability]) = match shader {
             RustGPUShader::Simplest => ("simplest-shader", &[]),
             RustGPUShader::Sky => ("sky-shader", &[]),
-            RustGPUShader::Compute => ("compute-shader", &[Capability::Int8]),
+            RustGPUShader::Compute => ("compute-shader", &[]),
             RustGPUShader::Mouse => ("mouse-shader", &[]),
         };
         let manifest_dir = env!("CARGO_MANIFEST_DIR");

@@ -801,7 +801,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     }
 
     fn from_immediate(&mut self, val: Self::Value) -> Self::Value {
-        if self.lookup_type(val.ty) == SpirvType::Bool {
+        if self.lookup_type(val.ty) == SpirvType::Bool
+            && self.builder.has_capability(Capability::Int8)
+        {
             let i8 = SpirvType::Integer(8, false).def(self.span(), self);
             self.zext(val, i8)
         } else {

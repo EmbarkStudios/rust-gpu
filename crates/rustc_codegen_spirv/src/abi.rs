@@ -419,7 +419,7 @@ fn trans_scalar<'tcx>(
     index: Option<usize>,
     is_immediate: bool,
 ) -> Word {
-    if is_immediate && scalar.is_bool() {
+    if (!cx.builder.has_capability(Capability::Int8) || is_immediate) && scalar.is_bool() {
         return SpirvType::Bool.def(span, cx);
     }
 
