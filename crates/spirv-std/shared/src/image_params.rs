@@ -159,7 +159,7 @@ pub enum ImageFormat {
     Rgba16f,
     /// Single red channel, 32 bit floating point.
     R32f,
-    /// RGBA channels, 8 bit integer per channel.
+    /// RGBA channels, 8 bit unsigned normalized integer per channel.
     Rgba8,
     /// RGBA channels, 8 bit signed normalized integer per channel.
     Rgba8Snorm,
