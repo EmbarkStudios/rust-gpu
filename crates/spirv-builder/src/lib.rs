@@ -148,6 +148,7 @@ pub struct SpirvBuilder {
     print_metadata: MetadataPrintout,
     release: bool,
     target: String,
+    deny_warnings: bool,
     bindless: bool,
     multimodule: bool,
     name_variables: bool,
@@ -170,6 +171,7 @@ impl SpirvBuilder {
             print_metadata: MetadataPrintout::Full,
             release: true,
             target: target.into(),
+            deny_warnings: false,
             bindless: false,
             multimodule: false,
             name_variables: false,
@@ -188,6 +190,11 @@ impl SpirvBuilder {
     /// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to [`MetadataPrintout::Full`].
     pub fn print_metadata(mut self, v: MetadataPrintout) -> Self {
         self.print_metadata = v;
+        self
+    }
+
+    pub fn deny_warnings(mut self, v: bool) -> Self {
+        self.deny_warnings = v;
         self
     }
 
@@ -431,12 +438,19 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         format!(" -C target-feature={}", target_features.join(","))
     };
 
+    let deny_warnings = if builder.deny_warnings {
+        " -D warnings"
+    } else {
+        ""
+    };
+
     //FIXME: reintroduce v0 mangling, see issue #642
     let rustflags = format!(
-        "-Z codegen-backend={} -Zsymbol-mangling-version=legacy{}{}",
+        "-Z codegen-backend={} -Zsymbol-mangling-version=legacy{}{}{}",
         rustc_codegen_spirv.display(),
         feature_flag,
         llvm_args,
+        deny_warnings,
     );
 
     let mut cargo = Command::new("cargo");
