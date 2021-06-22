@@ -552,6 +552,20 @@
 <span id="550">550</span>
 <span id="551">551</span>
 <span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
 </pre><pre class="rust">
 <span class="comment">// BEGIN - Embark standard lints v0.4</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -703,6 +717,7 @@
     <span class="ident">print_metadata</span>: <span class="ident">MetadataPrintout</span>,
     <span class="ident">release</span>: <span class="ident">bool</span>,
     <span class="ident">target</span>: <span class="ident">String</span>,
+    <span class="ident">deny_warnings</span>: <span class="ident">bool</span>,
     <span class="ident">bindless</span>: <span class="ident">bool</span>,
     <span class="ident">multimodule</span>: <span class="ident">bool</span>,
     <span class="ident">name_variables</span>: <span class="ident">bool</span>,
@@ -725,6 +740,7 @@
             <span class="ident">print_metadata</span>: <span class="ident">MetadataPrintout::Full</span>,
             <span class="ident">release</span>: <span class="bool-val">true</span>,
             <span class="ident">target</span>: <span class="ident">target</span>.<span class="ident">into</span>(),
+            <span class="ident">deny_warnings</span>: <span class="bool-val">false</span>,
             <span class="ident">bindless</span>: <span class="bool-val">false</span>,
             <span class="ident">multimodule</span>: <span class="bool-val">false</span>,
             <span class="ident">name_variables</span>: <span class="bool-val">false</span>,
@@ -743,6 +759,11 @@
     <span class="doccomment">/// Whether to print build.rs cargo metadata (e.g. cargo:rustc-env=var=val). Defaults to [`MetadataPrintout::Full`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print_metadata</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">MetadataPrintout</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">print_metadata</span> <span class="op">=</span> <span class="ident">v</span>;
+        <span class="self">self</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deny_warnings</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">deny_warnings</span> <span class="op">=</span> <span class="ident">v</span>;
         <span class="self">self</span>
     }
 
@@ -986,12 +1007,19 @@
         <span class="macro">format!</span>(<span class="string">&quot; -C target-feature={}&quot;</span>, <span class="ident">target_features</span>.<span class="ident">join</span>(<span class="string">&quot;,&quot;</span>))
     };
 
+    <span class="kw">let</span> <span class="ident">deny_warnings</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">deny_warnings</span> {
+        <span class="string">&quot; -D warnings&quot;</span>
+    } <span class="kw">else</span> {
+        <span class="string">&quot;&quot;</span>
+    };
+
     <span class="comment">//FIXME: reintroduce v0 mangling, see issue #642</span>
     <span class="kw">let</span> <span class="ident">rustflags</span> <span class="op">=</span> <span class="macro">format!</span>(
-        <span class="string">&quot;-Z codegen-backend={} -Zsymbol-mangling-version=legacy{}{}&quot;</span>,
+        <span class="string">&quot;-Z codegen-backend={} -Zsymbol-mangling-version=legacy{}{}{}&quot;</span>,
         <span class="ident">rustc_codegen_spirv</span>.<span class="ident">display</span>(),
         <span class="ident">feature_flag</span>,
         <span class="ident">llvm_args</span>,
+        <span class="ident">deny_warnings</span>,
     );
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cargo</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="string">&quot;cargo&quot;</span>);
