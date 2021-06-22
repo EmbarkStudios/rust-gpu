@@ -97,13 +97,14 @@ impl SpirvType {
         if let Some(cached) = cx.type_cache.get(&self) {
             return cached;
         }
+        let id = Some(cx.emit_global().id());
         let result = match self {
-            Self::Void => cx.emit_global().type_void(),
-            Self::Bool => cx.emit_global().type_bool(),
+            Self::Void => cx.emit_global().type_void_id(id),
+            Self::Bool => cx.emit_global().type_bool_id(id),
             Self::Integer(width, signedness) => {
-                let result = cx
-                    .emit_global()
-                    .type_int(width, if signedness { 1 } else { 0 });
+                let result =
+                    cx.emit_global()
+                        .type_int_id(id, width, if signedness { 1 } else { 0 });
                 match width {
                     8 if !cx.builder.has_capability(Capability::Int8) => cx
                         .zombie_even_in_user_code(result, def_span, "u8 without OpCapability Int8"),
@@ -130,7 +131,7 @@ impl SpirvType {
                 result
             }
             Self::Float(width) => {
-                let result = cx.emit_global().type_float(width);
+                let result = cx.emit_global().type_float_id(id, width);
                 match width {
                     64 if !cx.builder.has_capability(Capability::Float64) => cx
                         .zombie_even_in_user_code(
@@ -156,9 +157,7 @@ impl SpirvType {
                 ref field_names,
             } => {
                 let mut emit = cx.emit_global();
-                // Ensure a unique struct is emitted each time, due to possibly having different OpMemberDecorates
-                let id = emit.id();
-                let result = emit.type_struct_id(Some(id), field_types.iter().cloned());
+                let result = emit.type_struct_id(id, field_types.iter().cloned());
                 // The struct size is only used in our own sizeof_in_bits() (used in e.g. ArrayStride decoration)
                 if !cx.target.is_kernel() {
                     // TODO: kernel mode can't do this??
@@ -181,7 +180,7 @@ impl SpirvType {
                 result
             }
             Self::Opaque { ref name } => cx.emit_global().type_opaque(name),
-            Self::Vector { element, count } => cx.emit_global().type_vector(element, count),
+            Self::Vector { element, count } => cx.emit_global().type_vector_id(id, element, count),
             Self::Array { element, count } => {
                 // ArrayStride decoration wants in *bytes*
                 let element_size = cx
@@ -189,10 +188,11 @@ impl SpirvType {
                     .sizeof(cx)
                     .expect("Element of sized array must be sized")
                     .bytes();
-                let result = cx.emit_global().type_array(element, count.def_cx(cx));
+                let mut emit = cx.emit_global();
+                let result = emit.type_array_id(id, element, count.def_cx(cx));
                 if !cx.target.is_kernel() {
                     // TODO: kernel mode can't do this??
-                    cx.emit_global().decorate(
+                    emit.decorate(
                         result,
                         Decoration::ArrayStride,
                         iter::once(Operand::LiteralInt32(element_size as u32)),
@@ -201,14 +201,15 @@ impl SpirvType {
                 result
             }
             Self::RuntimeArray { element } => {
-                let result = cx.emit_global().type_runtime_array(element);
+                let mut emit = cx.emit_global();
+                let result = emit.type_runtime_array_id(id, element);
                 // ArrayStride decoration wants in *bytes*
                 let element_size = cx
                     .lookup_type(element)
                     .sizeof(cx)
                     .expect("Element of sized array must be sized")
                     .bytes();
-                cx.emit_global().decorate(
+                emit.decorate(
                     result,
                     Decoration::ArrayStride,
                     iter::once(Operand::LiteralInt32(element_size as u32)),
@@ -224,7 +225,7 @@ impl SpirvType {
                 // storage classes inferred from `OpVariable`s.
                 let result = cx
                     .emit_global()
-                    .type_pointer(None, StorageClass::Generic, pointee);
+                    .type_pointer(id, StorageClass::Generic, pointee);
                 // no pointers to functions
                 if let Self::Function { .. } = cx.lookup_type(pointee) {
                     cx.zombie_even_in_user_code(
@@ -240,7 +241,7 @@ impl SpirvType {
                 ref arguments,
             } => cx
                 .emit_global()
-                .type_function(return_type, arguments.iter().cloned()),
+                .type_function_id(id, return_type, arguments.iter().cloned()),
             Self::Image {
                 sampled_type,
                 dim,
@@ -250,7 +251,8 @@ impl SpirvType {
                 sampled,
                 image_format,
                 access_qualifier,
-            } => cx.emit_global().type_image(
+            } => cx.emit_global().type_image_id(
+                id,
                 sampled_type,
                 dim,
                 depth,
@@ -260,15 +262,18 @@ impl SpirvType {
                 image_format,
                 access_qualifier,
             ),
-            Self::Sampler => cx.emit_global().type_sampler(),
-            Self::AccelerationStructureKhr => cx.emit_global().type_acceleration_structure_khr(),
-            Self::RayQueryKhr => cx.emit_global().type_ray_query_khr(),
-            Self::SampledImage { image_type } => cx.emit_global().type_sampled_image(image_type),
+            Self::Sampler => cx.emit_global().type_sampler_id(id),
+            Self::AccelerationStructureKhr => {
+                cx.emit_global().type_acceleration_structure_khr_id(id)
+            }
+            Self::RayQueryKhr => cx.emit_global().type_ray_query_khr_id(id),
+            Self::SampledImage { image_type } => {
+                cx.emit_global().type_sampled_image_id(id, image_type)
+            }
 
             Self::InterfaceBlock { inner_type } => {
                 let mut emit = cx.emit_global();
-                let id = emit.id();
-                let result = emit.type_struct_id(Some(id), iter::once(inner_type));
+                let result = emit.type_struct_id(id, iter::once(inner_type));
                 emit.decorate(result, Decoration::Block, iter::empty());
                 emit.member_decorate(
                     result,
