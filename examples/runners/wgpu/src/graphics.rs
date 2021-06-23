@@ -343,7 +343,6 @@ pub fn start(options: &Options) {
                 initial_shader,
             ));
         } else {
-            wgpu_subscriber::initialize_default_subscriber(None);
             futures::executor::block_on(run(
                 event_loop,
                 window,

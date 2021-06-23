@@ -113,8 +113,9 @@ pub async fn start_internal(
         label: Some("Timestamps buffer"),
         size: 16,
         usage: wgpu::BufferUsage::MAP_READ | wgpu::BufferUsage::COPY_DST,
-        mapped_at_creation: false,
+        mapped_at_creation: true,
     });
+    timestamp_buffer.unmap();
 
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
         label: None,
