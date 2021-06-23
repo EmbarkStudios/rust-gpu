@@ -112,7 +112,7 @@ fn maybe_watch(
             .iter()
             .copied()
             .collect::<PathBuf>();
-        let mut builder = SpirvBuilder::new(crate_path, "spirv-unknown-vulkan1.1")
+        let mut builder = SpirvBuilder::new(crate_path, "spirv-unknown-webgpu0")
             .print_metadata(MetadataPrintout::None);
         for &cap in capabilities {
             builder = builder.capability(cap);
