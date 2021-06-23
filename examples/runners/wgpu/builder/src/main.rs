@@ -11,7 +11,7 @@ fn build_shader(
 ) -> Result<(), Box<dyn Error>> {
     let builder_dir = &Path::new(env!("CARGO_MANIFEST_DIR"));
     let path_to_crate = builder_dir.join(path_to_crate);
-    let mut builder = SpirvBuilder::new(path_to_crate, "spirv-unknown-vulkan1.1");
+    let mut builder = SpirvBuilder::new(path_to_crate, "spirv-unknown-webgpu0");
     for &cap in caps {
         builder = builder.capability(cap);
     }
