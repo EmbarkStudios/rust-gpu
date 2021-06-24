@@ -748,6 +748,11 @@
 <span id="746">746</span>
 <span id="747">747</span>
 <span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::abi</span>::{<span class="ident">RecursivePointeeCache</span>, <span class="ident">TyLayoutNameKey</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder_spirv::SpirvValue</span>;
@@ -848,13 +853,14 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cached</span>) <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">type_cache</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
             <span class="kw">return</span> <span class="ident">cached</span>;
         }
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">id</span>());
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_void</span>(),
-            <span class="self">Self</span><span class="ident">::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_bool</span>(),
+            <span class="self">Self</span><span class="ident">::Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_void_id</span>(<span class="ident">id</span>),
+            <span class="self">Self</span><span class="ident">::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_bool_id</span>(<span class="ident">id</span>),
             <span class="self">Self</span><span class="ident">::Integer</span>(<span class="ident">width</span>, <span class="ident">signedness</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>
-                    .<span class="ident">emit_global</span>()
-                    .<span class="ident">type_int</span>(<span class="ident">width</span>, <span class="kw">if</span> <span class="ident">signedness</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> });
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
+                    <span class="ident">cx</span>.<span class="ident">emit_global</span>()
+                        .<span class="ident">type_int_id</span>(<span class="ident">id</span>, <span class="ident">width</span>, <span class="kw">if</span> <span class="ident">signedness</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> });
                 <span class="kw">match</span> <span class="ident">width</span> {
                     <span class="number">8</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Int8</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
                         .<span class="ident">zombie_even_in_user_code</span>(<span class="ident">result</span>, <span class="ident">def_span</span>, <span class="string">&quot;u8 without OpCapability Int8&quot;</span>),
@@ -881,7 +887,7 @@
                 <span class="ident">result</span>
             }
             <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_float</span>(<span class="ident">width</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_float_id</span>(<span class="ident">id</span>, <span class="ident">width</span>);
                 <span class="kw">match</span> <span class="ident">width</span> {
                     <span class="number">64</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Float64</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
                         .<span class="ident">zombie_even_in_user_code</span>(
@@ -907,9 +913,7 @@
                 <span class="kw-2">ref</span> <span class="ident">field_names</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>();
-                <span class="comment">// Ensure a unique struct is emitted each time, due to possibly having different OpMemberDecorates</span>
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">id</span>();
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">type_struct_id</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">field_types</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>());
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">type_struct_id</span>(<span class="ident">id</span>, <span class="ident">field_types</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>());
                 <span class="comment">// The struct size is only used in our own sizeof_in_bits() (used in e.g. ArrayStride decoration)</span>
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="comment">// TODO: kernel mode can&#39;t do this??</span>
@@ -932,7 +936,7 @@
                 <span class="ident">result</span>
             }
             <span class="self">Self</span><span class="ident">::Opaque</span> { <span class="kw-2">ref</span> <span class="ident">name</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_opaque</span>(<span class="ident">name</span>),
-            <span class="self">Self</span><span class="ident">::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_vector</span>(<span class="ident">element</span>, <span class="ident">count</span>),
+            <span class="self">Self</span><span class="ident">::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_vector_id</span>(<span class="ident">id</span>, <span class="ident">element</span>, <span class="ident">count</span>),
             <span class="self">Self</span><span class="ident">::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// ArrayStride decoration wants in *bytes*</span>
                 <span class="kw">let</span> <span class="ident">element_size</span> <span class="op">=</span> <span class="ident">cx</span>
@@ -940,10 +944,11 @@
                     .<span class="ident">sizeof</span>(<span class="ident">cx</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;Element of sized array must be sized&quot;</span>)
                     .<span class="ident">bytes</span>();
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_array</span>(<span class="ident">element</span>, <span class="ident">count</span>.<span class="ident">def_cx</span>(<span class="ident">cx</span>));
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>();
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">type_array_id</span>(<span class="ident">id</span>, <span class="ident">element</span>, <span class="ident">count</span>.<span class="ident">def_cx</span>(<span class="ident">cx</span>));
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">cx</span>.<span class="ident">target</span>.<span class="ident">is_kernel</span>() {
                     <span class="comment">// TODO: kernel mode can&#39;t do this??</span>
-                    <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">decorate</span>(
+                    <span class="ident">emit</span>.<span class="ident">decorate</span>(
                         <span class="ident">result</span>,
                         <span class="ident">Decoration::ArrayStride</span>,
                         <span class="ident">iter::once</span>(<span class="ident">Operand::LiteralInt32</span>(<span class="ident">element_size</span> <span class="kw">as</span> <span class="ident">u32</span>)),
@@ -952,14 +957,15 @@
                 <span class="ident">result</span>
             }
             <span class="self">Self</span><span class="ident">::RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_runtime_array</span>(<span class="ident">element</span>);
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>();
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">type_runtime_array_id</span>(<span class="ident">id</span>, <span class="ident">element</span>);
                 <span class="comment">// ArrayStride decoration wants in *bytes*</span>
                 <span class="kw">let</span> <span class="ident">element_size</span> <span class="op">=</span> <span class="ident">cx</span>
                     .<span class="ident">lookup_type</span>(<span class="ident">element</span>)
                     .<span class="ident">sizeof</span>(<span class="ident">cx</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;Element of sized array must be sized&quot;</span>)
                     .<span class="ident">bytes</span>();
-                <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">decorate</span>(
+                <span class="ident">emit</span>.<span class="ident">decorate</span>(
                     <span class="ident">result</span>,
                     <span class="ident">Decoration::ArrayStride</span>,
                     <span class="ident">iter::once</span>(<span class="ident">Operand::LiteralInt32</span>(<span class="ident">element_size</span> <span class="kw">as</span> <span class="ident">u32</span>)),
@@ -975,7 +981,7 @@
                 <span class="comment">// storage classes inferred from `OpVariable`s.</span>
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">cx</span>
                     .<span class="ident">emit_global</span>()
-                    .<span class="ident">type_pointer</span>(<span class="prelude-val">None</span>, <span class="ident">StorageClass::Generic</span>, <span class="ident">pointee</span>);
+                    .<span class="ident">type_pointer</span>(<span class="ident">id</span>, <span class="ident">StorageClass::Generic</span>, <span class="ident">pointee</span>);
                 <span class="comment">// no pointers to functions</span>
                 <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span><span class="ident">::Function</span> { .. } <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">lookup_type</span>(<span class="ident">pointee</span>) {
                     <span class="ident">cx</span>.<span class="ident">zombie_even_in_user_code</span>(
@@ -991,7 +997,7 @@
                 <span class="kw-2">ref</span> <span class="ident">arguments</span>,
             } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
                 .<span class="ident">emit_global</span>()
-                .<span class="ident">type_function</span>(<span class="ident">return_type</span>, <span class="ident">arguments</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>()),
+                .<span class="ident">type_function_id</span>(<span class="ident">id</span>, <span class="ident">return_type</span>, <span class="ident">arguments</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>()),
             <span class="self">Self</span><span class="ident">::Image</span> {
                 <span class="ident">sampled_type</span>,
                 <span class="ident">dim</span>,
@@ -1001,7 +1007,8 @@
                 <span class="ident">sampled</span>,
                 <span class="ident">image_format</span>,
                 <span class="ident">access_qualifier</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_image</span>(
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_image_id</span>(
+                <span class="ident">id</span>,
                 <span class="ident">sampled_type</span>,
                 <span class="ident">dim</span>,
                 <span class="ident">depth</span>,
@@ -1011,15 +1018,18 @@
                 <span class="ident">image_format</span>,
                 <span class="ident">access_qualifier</span>,
             ),
-            <span class="self">Self</span><span class="ident">::Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampler</span>(),
-            <span class="self">Self</span><span class="ident">::AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_acceleration_structure_khr</span>(),
-            <span class="self">Self</span><span class="ident">::RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_ray_query_khr</span>(),
-            <span class="self">Self</span><span class="ident">::SampledImage</span> { <span class="ident">image_type</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampled_image</span>(<span class="ident">image_type</span>),
+            <span class="self">Self</span><span class="ident">::Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampler_id</span>(<span class="ident">id</span>),
+            <span class="self">Self</span><span class="ident">::AccelerationStructureKhr</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_acceleration_structure_khr_id</span>(<span class="ident">id</span>)
+            }
+            <span class="self">Self</span><span class="ident">::RayQueryKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_ray_query_khr_id</span>(<span class="ident">id</span>),
+            <span class="self">Self</span><span class="ident">::SampledImage</span> { <span class="ident">image_type</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">cx</span>.<span class="ident">emit_global</span>().<span class="ident">type_sampled_image_id</span>(<span class="ident">id</span>, <span class="ident">image_type</span>)
+            }
 
             <span class="self">Self</span><span class="ident">::InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emit</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">emit_global</span>();
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">id</span>();
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">type_struct_id</span>(<span class="prelude-val">Some</span>(<span class="ident">id</span>), <span class="ident">iter::once</span>(<span class="ident">inner_type</span>));
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">emit</span>.<span class="ident">type_struct_id</span>(<span class="ident">id</span>, <span class="ident">iter::once</span>(<span class="ident">inner_type</span>));
                 <span class="ident">emit</span>.<span class="ident">decorate</span>(<span class="ident">result</span>, <span class="ident">Decoration::Block</span>, <span class="ident">iter::empty</span>());
                 <span class="ident">emit</span>.<span class="ident">member_decorate</span>(
                     <span class="ident">result</span>,
