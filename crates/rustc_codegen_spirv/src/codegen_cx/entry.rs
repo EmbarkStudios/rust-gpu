@@ -312,19 +312,17 @@ impl<'tcx> CodegenCx<'tcx> {
         bx.call(entry_func, &call_args, None);
         bx.ret_void();
 
-        if self.bindless() {
-            if self.target.spirv_version() > (1, 3) {
-                let sets = self.bindless_descriptor_sets.borrow().unwrap();
+        if self.bindless() && self.target.spirv_version() > (1, 3) {
+            let sets = self.bindless_descriptor_sets.borrow().unwrap();
 
-                op_entry_point_interface_operands.push(sets.buffers);
+            op_entry_point_interface_operands.push(sets.buffers);
 
-                //op_entry_point_interface_operands
-                //  .push(sets.sampled_image_1d);
-                // op_entry_point_interface_operands
-                //   .push(sets.sampled_image_2d);
-                //op_entry_point_interface_operands
-                //.push(sets.sampled_image_3d);
-            }
+            //op_entry_point_interface_operands
+            //  .push(sets.sampled_image_1d);
+            // op_entry_point_interface_operands
+            //   .push(sets.sampled_image_2d);
+            //op_entry_point_interface_operands
+            //.push(sets.sampled_image_3d);
         }
 
         let stub_fn_id = stub_fn.def_cx(self);
