@@ -313,10 +313,6 @@ impl<'tcx> CodegenCx<'tcx> {
         bx.ret_void();
 
         if self.bindless() {
-            self.emit_global().extension("SPV_EXT_descriptor_indexing");
-            self.emit_global()
-                .capability(Capability::RuntimeDescriptorArray);
-
             if self.target.spirv_version() > (1, 3) {
                 let sets = self.bindless_descriptor_sets.borrow().unwrap();
 
