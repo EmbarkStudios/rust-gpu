@@ -11,6 +11,7 @@ mod simple_passes;
 mod specializer;
 mod structurizer;
 mod zombies;
+mod destructure_composites;
 
 use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
 use rspirv::binary::{Assemble, Consumer};
@@ -27,6 +28,7 @@ pub struct Options {
     pub dce: bool,
     pub inline: bool,
     pub mem2reg: bool,
+    pub destructure: bool,
     pub structurize: bool,
     pub emit_multiple_modules: bool,
     pub name_variables: bool,
@@ -229,6 +231,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
                 dce::dce_phi(func);
             }
         }
+    }
+
+    if opts.destructure {
+        let _timer = sess.timer("link_destructure");
+        destructure_composites::destructure_composites(&mut output);
     }
 
     {
