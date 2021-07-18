@@ -1,8 +1,8 @@
-//! Simplify OpCompositeExtract pointing to OpCompositeConstructs / OpCompositeInserts.
+//! Simplify `OpCompositeExtract` pointing to `OpCompositeConstruct`s / `OpCompositeInsert`s.
 //! Such constructions arise after inlining, when using multi-argument closures
-//! (and other Fn* trait implementations). These composites can frequently be invalid,
-//! containing pointers, OpFunctionArguments, etc. After simplification, components
-//! will become valid targets for OpLoad/OpStore.
+//! (and other `Fn*` trait implementations). These composites can frequently be invalid,
+//! containing pointers, `OpFunctionArgument`s, etc. After simplification, components
+//! will become valid targets for `OpLoad`/`OpStore`.
 use super::apply_rewrite_rules;
 use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::Op;
@@ -21,7 +21,7 @@ pub fn destructure_composites(module: &mut Module) {
                 _ => None,
             })
             .collect();
-        let mut unused: FxHashSet<_> = reference.keys().map(|x| *x).collect();
+        let mut unused: FxHashSet<_> = reference.keys().copied().collect();
         for inst in function.all_inst_iter_mut() {
             if inst.class.opcode == Op::CompositeExtract && inst.operands.len() == 2 {
                 let mut composite = inst.operands[0].unwrap_id_ref();
@@ -61,7 +61,7 @@ pub fn destructure_composites(module: &mut Module) {
             if inst.result_id.is_none() || !reference.contains_key(&inst.result_id.unwrap()) {
                 for op in inst.operands.iter() {
                     if let Operand::IdRef(id_ref) = op {
-                        unused.remove(&id_ref);
+                        unused.remove(id_ref);
                     }
                 }
             }
@@ -75,7 +75,7 @@ pub fn destructure_composites(module: &mut Module) {
                 if !unused.contains(id) {
                     for op in inst.operands.iter() {
                         if let Operand::IdRef(id_ref) = op {
-                            changed |= unused.remove(&id_ref);
+                            changed |= unused.remove(id_ref);
                         }
                     }
                 }
