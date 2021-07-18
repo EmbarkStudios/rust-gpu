@@ -55,7 +55,7 @@ pub fn destructure_composites(module: &mut Module) {
             }
 
             // If the instruction wasn't replaced, modify the unused set
-            if inst.class.opcode != Op::CompositeInsert {
+            if inst.result_id.is_none() || !reference.contains_key(&inst.result_id.unwrap()) {
                 for op in inst.operands.iter() {
                     if let Operand::IdRef(id_ref) = op {
                         unused.remove(&id_ref);
@@ -69,8 +69,12 @@ pub fn destructure_composites(module: &mut Module) {
         while changed {
             changed = false;
             for (id, inst) in reference.iter() {
-                if inst.class.opcode == Op::CompositeInsert && !unused.contains(id) {
-                    changed |= unused.remove(&inst.operands[1].unwrap_id_ref());
+                if !unused.contains(id) {
+                    for op in inst.operands.iter() {
+                        if let Operand::IdRef(id_ref) = op {
+                            changed |= unused.remove(&id_ref);
+                        }
+                    }
                 }
             }
         }
