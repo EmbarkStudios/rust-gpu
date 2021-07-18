@@ -2,6 +2,7 @@
 mod test;
 
 mod dce;
+mod destructure_composites;
 mod duplicates;
 mod import_export_link;
 mod inline;
@@ -11,7 +12,6 @@ mod simple_passes;
 mod specializer;
 mod structurizer;
 mod zombies;
-mod destructure_composites;
 
 use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
 use rspirv::binary::{Assemble, Consumer};

@@ -4,21 +4,23 @@
 //! containing pointers, OpFunctionArguments, etc. After simplification, components
 //! will become valid targets for OpLoad/OpStore.
 use super::apply_rewrite_rules;
-use rspirv::dr::{Module, Instruction, Operand};
+use rspirv::dr::{Instruction, Module, Operand};
 use rspirv::spirv::Op;
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 
 pub fn destructure_composites(module: &mut Module) {
     for function in module.functions.iter_mut() {
         let mut rewrite_rules = FxHashMap::default();
-        let reference: FxHashMap<_, _> = function.all_inst_iter()
-            .filter_map(|inst| {
-                match inst.class.opcode {
-                    Op::CompositeConstruct => Some((inst.result_id.unwrap(), inst.clone())),
-                    Op::CompositeInsert if inst.operands.len() == 3 => Some((inst.result_id.unwrap(), inst.clone())),
-                    _ => None
+        let reference: FxHashMap<_, _> = function
+            .all_inst_iter()
+            .filter_map(|inst| match inst.class.opcode {
+                Op::CompositeConstruct => Some((inst.result_id.unwrap(), inst.clone())),
+                Op::CompositeInsert if inst.operands.len() == 3 => {
+                    Some((inst.result_id.unwrap(), inst.clone()))
                 }
-            }).collect();
+                _ => None,
+            })
+            .collect();
         let mut unused: FxHashSet<_> = reference.keys().map(|x| *x).collect();
         for inst in function.all_inst_iter_mut() {
             if inst.class.opcode == Op::CompositeExtract && inst.operands.len() == 2 {
@@ -38,17 +40,18 @@ pub fn destructure_composites(module: &mut Module) {
                             Op::CompositeConstruct => {
                                 break inst.operands.get(index as usize).map(|o| o.unwrap_id_ref());
                             }
-                            _ => unreachable!()
+                            _ => unreachable!(),
                         }
-                    }
-                    else {
+                    } else {
                         break None;
                     }
                 };
 
                 if let Some(origin_id) = origin {
-                    rewrite_rules.insert(inst.result_id.unwrap(),
-                                         rewrite_rules.get(&origin_id).map_or(origin_id, |id| *id));
+                    rewrite_rules.insert(
+                        inst.result_id.unwrap(),
+                        rewrite_rules.get(&origin_id).map_or(origin_id, |id| *id),
+                    );
                     *inst = Instruction::new(Op::Nop, None, None, vec![]);
                     continue;
                 }
@@ -81,9 +84,12 @@ pub fn destructure_composites(module: &mut Module) {
 
         // Remove instructions replaced by NOPs, as well as unused composite values.
         for block in function.blocks.iter_mut() {
-            block.instructions.retain(|inst|
-                inst.class.opcode != Op::Nop && inst.result_id.map_or(true,
-                                                                      |res_id| !unused.contains(&res_id)));
+            block.instructions.retain(|inst| {
+                inst.class.opcode != Op::Nop
+                    && inst
+                        .result_id
+                        .map_or(true, |res_id| !unused.contains(&res_id))
+            });
         }
         apply_rewrite_rules(&rewrite_rules, &mut function.blocks);
     }
