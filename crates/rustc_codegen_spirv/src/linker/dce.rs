@@ -7,8 +7,8 @@
 //! *references* a rooted thing is also rooted, not the other way around - but that's the basic
 //! concept.
 
-use rspirv::dr::{Function, Instruction, Module};
-use rspirv::spirv::{Op, Word};
+use rspirv::dr::{Function, Instruction, Module, Operand};
+use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::fx::FxHashSet;
 
 pub fn dce(module: &mut Module) {
@@ -37,7 +37,13 @@ fn spread_roots(module: &Module, rooted: &mut FxHashSet<Word>) -> bool {
     for func in &module.functions {
         if rooted.contains(&func.def_id().unwrap()) {
             for inst in func.all_inst_iter() {
-                any |= root(inst, rooted);
+                if !instruction_is_pure(inst) {
+                    any |= root(inst, rooted);
+                } else if let Some(id) = inst.result_id {
+                    if rooted.contains(&id) {
+                        any |= root(inst, rooted);
+                    }
+                }
             }
         }
     }
@@ -90,6 +96,13 @@ fn kill_unrooted(module: &mut Module, rooted: &FxHashSet<Word>) {
     module
         .functions
         .retain(|f| is_rooted(f.def.as_ref().unwrap(), rooted));
+    module.functions.iter_mut().for_each(|fun| {
+        fun.blocks.iter_mut().for_each(|block| {
+            block
+                .instructions
+                .retain(|inst| !instruction_is_pure(inst) || is_rooted(inst, rooted));
+        });
+    });
 }
 
 pub fn dce_phi(func: &mut Function) {
@@ -113,5 +126,129 @@ pub fn dce_phi(func: &mut Function) {
         block
             .instructions
             .retain(|inst| inst.class.opcode != Op::Phi || used.contains(&inst.result_id.unwrap()));
+    }
+}
+
+fn instruction_is_pure(inst: &Instruction) -> bool {
+    use Op::*;
+    match inst.class.opcode {
+        Nop
+        | Undef
+        | ConstantTrue
+        | ConstantFalse
+        | Constant
+        | ConstantComposite
+        | ConstantSampler
+        | ConstantNull
+        | AccessChain
+        | InBoundsAccessChain
+        | PtrAccessChain
+        | ArrayLength
+        | InBoundsPtrAccessChain
+        | CompositeConstruct
+        | CompositeExtract
+        | CopyObject
+        | Transpose
+        | ConvertFToU
+        | ConvertFToS
+        | ConvertSToF
+        | ConvertUToF
+        | UConvert
+        | SConvert
+        | FConvert
+        | QuantizeToF16
+        | ConvertPtrToU
+        | SatConvertSToU
+        | SatConvertUToS
+        | ConvertUToPtr
+        | PtrCastToGeneric
+        | GenericCastToPtr
+        | GenericCastToPtrExplicit
+        | Bitcast
+        | SNegate
+        | FNegate
+        | IAdd
+        | FAdd
+        | ISub
+        | FSub
+        | IMul
+        | FMul
+        | UDiv
+        | SDiv
+        | FDiv
+        | UMod
+        | SRem
+        | SMod
+        | FRem
+        | FMod
+        | VectorTimesScalar
+        | MatrixTimesScalar
+        | VectorTimesMatrix
+        | MatrixTimesVector
+        | MatrixTimesMatrix
+        | OuterProduct
+        | Dot
+        | IAddCarry
+        | ISubBorrow
+        | UMulExtended
+        | SMulExtended
+        | Any
+        | All
+        | IsNan
+        | IsInf
+        | IsFinite
+        | IsNormal
+        | SignBitSet
+        | LessOrGreater
+        | Ordered
+        | Unordered
+        | LogicalEqual
+        | LogicalNotEqual
+        | LogicalOr
+        | LogicalAnd
+        | LogicalNot
+        | Select
+        | IEqual
+        | INotEqual
+        | UGreaterThan
+        | SGreaterThan
+        | UGreaterThanEqual
+        | SGreaterThanEqual
+        | ULessThan
+        | SLessThan
+        | ULessThanEqual
+        | SLessThanEqual
+        | FOrdEqual
+        | FUnordEqual
+        | FOrdNotEqual
+        | FUnordNotEqual
+        | FOrdLessThan
+        | FUnordLessThan
+        | FOrdGreaterThan
+        | FUnordGreaterThan
+        | FOrdLessThanEqual
+        | FUnordLessThanEqual
+        | FOrdGreaterThanEqual
+        | FUnordGreaterThanEqual
+        | ShiftRightLogical
+        | ShiftRightArithmetic
+        | ShiftLeftLogical
+        | BitwiseOr
+        | BitwiseXor
+        | BitwiseAnd
+        | Not
+        | BitFieldInsert
+        | BitFieldSExtract
+        | BitFieldUExtract
+        | BitReverse
+        | BitCount
+        | Phi
+        | SizeOf
+        | CopyLogical
+        | PtrEqual
+        | PtrNotEqual
+        | PtrDiff => true,
+        Variable => inst.operands.get(0) == Some(&Operand::StorageClass(StorageClass::Function)),
+        _ => false,
     }
 }
