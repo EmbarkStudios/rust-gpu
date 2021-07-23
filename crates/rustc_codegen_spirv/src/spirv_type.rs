@@ -84,6 +84,8 @@ pub enum SpirvType {
     /// for `PushConstant`, `Uniform` and `StorageBuffer` interface variables.
     InterfaceBlock {
         inner_type: Word,
+        non_writable: bool,
+        non_readable: bool,
     },
 
     AccelerationStructureKhr,
@@ -271,7 +273,11 @@ impl SpirvType {
                 cx.emit_global().type_sampled_image_id(id, image_type)
             }
 
-            Self::InterfaceBlock { inner_type } => {
+            Self::InterfaceBlock {
+                inner_type,
+                non_writable,
+                non_readable,
+            } => {
                 let mut emit = cx.emit_global();
                 let result = emit.type_struct_id(id, iter::once(inner_type));
                 emit.decorate(result, Decoration::Block, iter::empty());
@@ -281,6 +287,12 @@ impl SpirvType {
                     Decoration::Offset,
                     [Operand::LiteralInt32(0)].iter().cloned(),
                 );
+                if non_writable {
+                    emit.member_decorate(result, 0, Decoration::NonWritable, iter::empty());
+                }
+                if non_readable {
+                    emit.member_decorate(result, 0, Decoration::NonReadable, iter::empty());
+                }
                 result
             }
         };
@@ -373,7 +385,7 @@ impl SpirvType {
             | Self::Sampler
             | Self::SampledImage { .. } => Size::from_bytes(4),
 
-            Self::InterfaceBlock { inner_type } => cx.lookup_type(inner_type).sizeof(cx)?,
+            Self::InterfaceBlock { inner_type, .. } => cx.lookup_type(inner_type).sizeof(cx)?,
         };
         Some(result)
     }
@@ -405,7 +417,7 @@ impl SpirvType {
             | Self::Sampler
             | Self::SampledImage { .. } => Align::from_bytes(4).unwrap(),
 
-            Self::InterfaceBlock { inner_type } => cx.lookup_type(inner_type).alignof(cx),
+            Self::InterfaceBlock { inner_type, .. } => cx.lookup_type(inner_type).alignof(cx),
         }
     }
 }
@@ -542,10 +554,16 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("id", &self.id)
                 .field("image_type", &self.cx.debug_type(image_type))
                 .finish(),
-            SpirvType::InterfaceBlock { inner_type } => f
+            SpirvType::InterfaceBlock {
+                inner_type,
+                non_writable,
+                non_readable,
+            } => f
                 .debug_struct("InterfaceBlock")
                 .field("id", &self.id)
                 .field("inner_type", &self.cx.debug_type(inner_type))
+                .field("non_writable", &non_writable)
+                .field("non_readable", &non_readable)
                 .finish(),
             SpirvType::AccelerationStructureKhr => f.debug_struct("AccelerationStructure").finish(),
             SpirvType::RayQueryKhr => f.debug_struct("RayQuery").finish(),
@@ -698,7 +716,7 @@ impl SpirvTypePrinter<'_, '_> {
                 .debug_struct("SampledImage")
                 .field("image_type", &self.cx.debug_type(image_type))
                 .finish(),
-            SpirvType::InterfaceBlock { inner_type } => {
+            SpirvType::InterfaceBlock { inner_type, .. } => {
                 f.write_str("interface block { ")?;
                 ty(self.cx, stack, f, inner_type)?;
                 f.write_str(" }")

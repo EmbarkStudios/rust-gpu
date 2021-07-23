@@ -1070,7 +1070,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Array { element, .. }
             | SpirvType::RuntimeArray { element, .. }
             | SpirvType::Vector { element, .. } => element,
-            SpirvType::InterfaceBlock { inner_type } => {
+            SpirvType::InterfaceBlock { inner_type, .. } => {
                 assert_eq!(idx, 0);
                 inner_type
             }
