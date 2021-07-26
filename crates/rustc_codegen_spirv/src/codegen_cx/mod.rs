@@ -87,6 +87,7 @@ pub struct CodegenCx<'tcx> {
     /// descriptor sets that are always bound.
     pub bindless_descriptor_sets: RefCell<Option<BindlessDescriptorSets>>,
     pub codegen_args: CodegenArgs,
+    pub exclusive_bindless: bool,
 
     /// Information about the SPIR-V target.
     pub target: SpirvTarget,
@@ -100,7 +101,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .sess
             .target_features
             .iter()
-            .filter(|s| *s != &sym.bindless)
+            .filter(|s| *s != &sym.bindless && *s != &sym.exclusive_bindless)
             .map(|s| s.as_str())
             .collect::<Vec<_>>();
 
@@ -122,6 +123,14 @@ impl<'tcx> CodegenCx<'tcx> {
         for &feature in &tcx.sess.target_features {
             if feature == sym.bindless {
                 bindless = true;
+                break;
+            }
+        }
+
+        let mut exclusive_bindless = false;
+        for &feature in &tcx.sess.target_features {
+            if feature == sym.exclusive_bindless {
+                exclusive_bindless = true;
                 break;
             }
         }
@@ -151,6 +160,7 @@ impl<'tcx> CodegenCx<'tcx> {
             i8_i16_atomics_allowed: false,
             codegen_args,
             bindless_descriptor_sets: Default::default(),
+            exclusive_bindless,
         };
 
         if bindless {
@@ -164,6 +174,11 @@ impl<'tcx> CodegenCx<'tcx> {
     /// be removed longer term when we use bindless as the default model
     pub fn bindless(&self) -> bool {
         self.bindless_descriptor_sets.borrow().is_some()
+    }
+
+    // Check whether bindless is the only "binding mode" that should be used.
+    pub fn exclusive_bindless(&self) -> bool {
+        self.bindless() && self.exclusive_bindless
     }
 
     /// See comment on `BuilderCursor`

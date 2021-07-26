@@ -622,7 +622,7 @@ impl<'tcx> CodegenCx<'tcx> {
             decoration_supersedes_location = true;
         }
         if let Some(index) = attrs.descriptor_set.map(|attr| attr.value) {
-            if self.bindless() {
+            if self.exclusive_bindless() {
                 self.tcx.sess.span_fatal(
                     attrs.descriptor_set.unwrap().span,
                     "Can't use #[spirv(descriptor_set)] attribute in bindless mode",
@@ -637,7 +637,7 @@ impl<'tcx> CodegenCx<'tcx> {
             decoration_supersedes_location = true;
         }
         if let Some(index) = attrs.binding.map(|attr| attr.value) {
-            if self.bindless() {
+            if self.exclusive_bindless() {
                 self.tcx.sess.span_fatal(
                     attrs.binding.unwrap().span,
                     "Can't use #[spirv(binding)] attribute in bindless mode",

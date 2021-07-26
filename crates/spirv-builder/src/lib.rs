@@ -100,6 +100,15 @@ pub enum SpirvBuilderError {
     MetadataFileMalformed(serde_json::Error),
 }
 
+pub enum BindlessSupport {
+    // Don't support bindless
+    Disabled,
+    // Support both bindless and bound objects
+    Enabled,
+    // Only support bindless
+    Exclusive,
+}
+
 impl fmt::Display for SpirvBuilderError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -149,7 +158,7 @@ pub struct SpirvBuilder {
     release: bool,
     target: String,
     deny_warnings: bool,
-    bindless: bool,
+    bindless: BindlessSupport,
     multimodule: bool,
     name_variables: bool,
     capabilities: Vec<Capability>,
@@ -172,7 +181,7 @@ impl SpirvBuilder {
             release: true,
             target: target.into(),
             deny_warnings: false,
-            bindless: false,
+            bindless: BindlessSupport::Disabled,
             multimodule: false,
             name_variables: false,
             capabilities: Vec::new(),
@@ -200,7 +209,7 @@ impl SpirvBuilder {
 
     /// Run the compiler in bindless mode, this flag is in preparation for the full feature
     /// and it's expected to be the default mode going forward
-    pub fn bindless(mut self, v: bool) -> Self {
+    pub fn bindless(mut self, v: BindlessSupport) -> Self {
         self.bindless = v;
         self
     }
@@ -426,8 +435,10 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     let mut target_features = Vec::new();
 
-    if builder.bindless {
-        target_features.push("+bindless".into());
+    match builder.bindless {
+        BindlessSupport::Disabled => (), // Do nothing
+        BindlessSupport::Enabled => target_features.push("+bindless".into()),
+        BindlessSupport::Exclusive => target_features.push("+exclusive_bindless".into()),
     }
     target_features.extend(builder.capabilities.iter().map(|cap| format!("+{:?}", cap)));
     target_features.extend(builder.extensions.iter().map(|ext| format!("+ext:{}", ext)));
