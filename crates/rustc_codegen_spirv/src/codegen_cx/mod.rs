@@ -177,6 +177,7 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     // Check whether bindless is the only "binding mode" that should be used.
+    // Just like `bindless` this is temporary and should be removed in the future.
     pub fn exclusive_bindless(&self) -> bool {
         self.bindless() && self.exclusive_bindless
     }
