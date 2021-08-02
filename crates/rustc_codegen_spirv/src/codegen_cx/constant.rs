@@ -262,8 +262,9 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     }
                 }
             }
-            Scalar::Ptr(ptr) => {
-                let (base_addr, _base_addr_space) = match self.tcx.global_alloc(ptr.alloc_id) {
+            Scalar::Ptr(ptr, _) => {
+                let (alloc_id, offset) = ptr.into_parts();
+                let (base_addr, _base_addr_space) = match self.tcx.global_alloc(alloc_id) {
                     GlobalAlloc::Memory(alloc) => {
                         let pointee = match self.lookup_type(ty) {
                             SpirvType::Pointer { pointee } => pointee,
@@ -286,12 +287,12 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         (self.get_static(def_id), AddressSpace::DATA)
                     }
                 };
-                let value = if ptr.offset.bytes() == 0 {
+                let value = if offset.bytes() == 0 {
                     base_addr
                 } else {
                     self.tcx
                         .sess
-                        .fatal("Non-constant scalar_to_backend ptr.offset not supported")
+                        .fatal("Non-zero scalar_to_backend ptr.offset not supported")
                     // let offset = self.constant_u64(ptr.offset.bytes());
                     // self.gep(base_addr, once(offset))
                 };
@@ -306,6 +307,13 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                 }
             }
         }
+    }
+    // FIXME(eddyb) this shouldn't exist, and is only used by vtable creation,
+    // see https://github.com/rust-lang/rust/pull/86475#discussion_r680792727.
+    fn const_data_from_alloc(&self, _alloc: &Allocation) -> Self::Value {
+        let undef = self.undef(SpirvType::Void.def(DUMMY_SP, self));
+        self.zombie_no_span(undef.def_cx(self), "const_data_from_alloc");
+        undef
     }
     fn from_const_alloc(
         &self,

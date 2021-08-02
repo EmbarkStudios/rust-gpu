@@ -99,15 +99,17 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
             }
 
             sym::volatile_load | sym::unaligned_volatile_load => {
-                let tp_ty = substs.type_at(0);
-                let mut ptr = args[0].immediate();
+                let ptr = args[0].immediate();
                 if let PassMode::Cast(ty) = fn_abi.ret.mode {
                     let pointee = ty.spirv_type(self.span(), self);
                     let pointer = SpirvType::Pointer { pointee }.def(self.span(), self);
-                    ptr = self.pointercast(ptr, pointer);
+                    let ptr = self.pointercast(ptr, pointer);
+                    self.volatile_load(pointee, ptr)
+                } else {
+                    let layout = self.layout_of(substs.type_at(0));
+                    let load = self.volatile_load(layout.spirv_type(self.span(), self), ptr);
+                    self.to_immediate(load, layout)
                 }
-                let load = self.volatile_load(ptr);
-                self.to_immediate(load, self.layout_of(tp_ty))
             }
 
             sym::prefetch_read_data

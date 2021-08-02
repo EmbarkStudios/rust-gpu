@@ -543,7 +543,7 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         todo!()
     }
 
-    fn set_frame_pointer_elimination(&self, _llfn: Self::Function) {
+    fn set_frame_pointer_type(&self, _llfn: Self::Function) {
         todo!()
     }
 

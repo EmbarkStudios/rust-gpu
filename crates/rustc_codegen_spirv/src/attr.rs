@@ -488,13 +488,8 @@ fn check_mod_attrs(tcx: TyCtxt<'_>, module_def_id: LocalDefId) {
         module_def_id,
         &mut check_spirv_attr_visitor.as_deep_visitor(),
     );
-    // FIXME(eddyb) use `tcx.hir().visit_exported_macros_in_krate(...)` after rustup.
-    for id in tcx.hir().krate().exported_macros {
-        check_spirv_attr_visitor.visit_macro_def(match tcx.hir().find(id.hir_id()) {
-            Some(hir::Node::MacroDef(macro_def)) => macro_def,
-            _ => unreachable!(),
-        });
-    }
+    tcx.hir()
+        .visit_exported_macros_in_krate(check_spirv_attr_visitor);
     check_invalid_macro_level_spirv_attr(
         tcx,
         &check_spirv_attr_visitor.sym,

@@ -367,8 +367,7 @@ fn add_upstream_rust_crates(
         .iter()
         .find(|(ty, _)| *ty == crate_type)
         .expect("failed to find crate type in dependency format list");
-    let deps = &codegen_results.crate_info.used_crates_dynamic;
-    for &(cnum, _) in deps.iter() {
+    for &cnum in &codegen_results.crate_info.used_crates {
         let src = &codegen_results.crate_info.used_crate_source[&cnum];
         match data[cnum.as_usize() - 1] {
             Linkage::NotLinked | Linkage::IncludedFromDylib => {}
@@ -391,8 +390,7 @@ fn add_upstream_native_libraries(
         .find(|(ty, _)| *ty == crate_type)
         .expect("failed to find crate type in dependency format list");
 
-    let crates = &codegen_results.crate_info.used_crates_static;
-    for &(cnum, _) in crates {
+    for &cnum in &codegen_results.crate_info.used_crates {
         for lib in codegen_results.crate_info.native_libraries[&cnum].iter() {
             let name = match lib.name {
                 Some(l) => l,

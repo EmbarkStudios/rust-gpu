@@ -41,8 +41,12 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
         ty.spirv_type(DUMMY_SP, self)
     }
 
-    fn fn_ptr_backend_type(&self, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Type {
+    fn fn_decl_backend_type(&self, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Type {
         fn_abi.spirv_type(DUMMY_SP, self)
+    }
+
+    fn fn_ptr_backend_type(&self, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Type {
+        self.type_ptr_to(self.fn_decl_backend_type(fn_abi))
     }
 
     fn reg_backend_type(&self, ty: &Reg) -> Self::Type {

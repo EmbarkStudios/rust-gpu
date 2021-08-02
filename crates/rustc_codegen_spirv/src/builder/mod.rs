@@ -95,6 +95,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
     pub fn gep_help(
         &self,
+        ty: Word,
         ptr: SpirvValue,
         indices: &[SpirvValue],
         is_inbounds: bool,
@@ -105,7 +106,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         // https://github.com/gpuweb/gpuweb/issues/33
         let mut result_indices = Vec::with_capacity(indices.len() - 1);
         let mut result_pointee_type = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
+            SpirvType::Pointer { pointee } => {
+                assert_ty_eq!(self, ty, pointee);
+                pointee
+            }
             other_type => self.fatal(&format!(
                 "GEP first deref not implemented for type {:?}",
                 other_type
