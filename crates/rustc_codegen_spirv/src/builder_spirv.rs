@@ -11,6 +11,7 @@ use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::bug;
 use rustc_span::symbol::Symbol;
 use rustc_span::{Span, DUMMY_SP};
+use std::assert_matches::assert_matches;
 use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 use std::{fs::File, io::Write, path::Path};

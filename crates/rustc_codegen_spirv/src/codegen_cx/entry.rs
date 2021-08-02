@@ -143,7 +143,7 @@ impl<'tcx> CodegenCx<'tcx> {
             );
         }
         bx.set_span(span);
-        bx.call(entry_func, &call_args, None);
+        bx.call(entry_func.ty, entry_func, &call_args, None);
         bx.ret_void();
 
         let stub_fn_id = stub_fn.def_cx(self);
@@ -307,14 +307,13 @@ impl<'tcx> CodegenCx<'tcx> {
         let var_ptr_spirv_type;
         let (value_ptr, value_len) = match storage_class {
             StorageClass::PushConstant | StorageClass::Uniform | StorageClass::StorageBuffer => {
-                var_ptr_spirv_type = self.type_ptr_to(
-                    SpirvType::InterfaceBlock {
-                        inner_type: value_spirv_type,
-                    }
-                    .def(hir_param.span, self),
-                );
+                let var_spirv_type = SpirvType::InterfaceBlock {
+                    inner_type: value_spirv_type,
+                }
+                .def(hir_param.span, self);
+                var_ptr_spirv_type = self.type_ptr_to(var_spirv_type);
 
-                let value_ptr = bx.struct_gep(var.with_type(var_ptr_spirv_type), 0);
+                let value_ptr = bx.struct_gep(var_spirv_type, var.with_type(var_ptr_spirv_type), 0);
 
                 let value_len = if is_unsized_with_len {
                     match self.lookup_type(value_spirv_type) {
@@ -409,7 +408,11 @@ impl<'tcx> CodegenCx<'tcx> {
 
             call_args.push(match entry_arg_abi.mode {
                 PassMode::Indirect { .. } => value_ptr,
-                PassMode::Direct(_) => bx.load(value_ptr, entry_arg_abi.layout.align.abi),
+                PassMode::Direct(_) => bx.load(
+                    entry_arg_abi.layout.spirv_type(hir_param.ty_span, bx),
+                    value_ptr,
+                    entry_arg_abi.layout.align.abi,
+                ),
                 _ => unreachable!(),
             });
             assert_eq!(value_len, None);

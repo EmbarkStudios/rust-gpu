@@ -1,4 +1,5 @@
 use super::Builder;
+use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
@@ -313,7 +314,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         } else {
             for index in 0..count {
                 let const_index = self.constant_u32(self.span(), index as u32);
-                let gep_ptr = self.gep(ptr, &[const_index]);
+                let gep_ptr = self.gep(pat.ty, ptr, &[const_index]);
                 self.store(pat, gep_ptr, Align::from_bytes(0).unwrap());
             }
         }
@@ -339,11 +340,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         self.store(zero, index, zero_align);
         self.br(header.llbb());
 
-        let current_index = header.load(index, zero_align);
+        let current_index = header.load(count.ty, index, zero_align);
         let cond = header.icmp(IntPredicate::IntULT, current_index, count);
         header.cond_br(cond, body.llbb(), exit.llbb());
 
-        let gep_ptr = body.gep(ptr, &[current_index]);
+        let gep_ptr = body.gep(pat.ty, ptr, &[current_index]);
         body.store(pat, gep_ptr, zero_align);
         let current_index_plus_1 = body.add(current_index, one);
         body.store(current_index_plus_1, index, zero_align);
@@ -623,6 +624,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn invoke(
         &mut self,
+        llty: Self::Type,
         llfn: Self::Value,
         args: &[Self::Value],
         then: Self::BasicBlock,
@@ -630,7 +632,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         funclet: Option<&Self::Funclet>,
     ) -> Self::Value {
         // Exceptions don't exist, jump directly to then block
-        let result = self.call(llfn, args, funclet);
+        let result = self.call(llty, llfn, args, funclet);
         self.emit().branch(then).unwrap();
         result
     }
@@ -842,12 +844,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self.fatal("array alloca not supported yet")
     }
 
-    fn load(&mut self, ptr: Self::Value, _align: Align) -> Self::Value {
+    fn load(&mut self, ty: Self::Type, ptr: Self::Value, _align: Align) -> Self::Value {
         if let Some(value) = ptr.const_fold_load(self) {
             return value;
         }
         let ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
+            SpirvType::Pointer { pointee } => {
+                assert_ty_eq!(self, ty, pointee);
+                pointee
+            }
             ty => self.fatal(&format!(
                 "load called on variable that wasn't a pointer: {:?}",
                 ty
@@ -859,16 +864,25 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .with_type(ty)
     }
 
-    fn volatile_load(&mut self, ptr: Self::Value) -> Self::Value {
+    fn volatile_load(&mut self, ty: Self::Type, ptr: Self::Value) -> Self::Value {
         // TODO: Implement this
-        let result = self.load(ptr, Align::from_bytes(0).unwrap());
+        let result = self.load(ty, ptr, Align::from_bytes(0).unwrap());
         self.zombie(result.def(self), "volatile load is not supported yet");
         result
     }
 
-    fn atomic_load(&mut self, ptr: Self::Value, order: AtomicOrdering, _size: Size) -> Self::Value {
+    fn atomic_load(
+        &mut self,
+        ty: Self::Type,
+        ptr: Self::Value,
+        order: AtomicOrdering,
+        _size: Size,
+    ) -> Self::Value {
         let ty = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
+            SpirvType::Pointer { pointee } => {
+                assert_ty_eq!(self, ty, pointee);
+                pointee
+            }
             ty => self.fatal(&format!(
                 "atomic_load called on variable that wasn't a pointer: {:?}",
                 ty
@@ -903,14 +917,23 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let val = if let Some(llextra) = place.llextra {
             OperandValue::Ref(place.llval, Some(llextra), place.align)
         } else if self.cx.is_backend_immediate(place.layout) {
-            let llval = self.load(place.llval, place.align);
+            let llval = self.load(
+                place.layout.spirv_type(self.span(), self),
+                place.llval,
+                place.align,
+            );
             OperandValue::Immediate(self.to_immediate(llval, place.layout))
         } else if let Abi::ScalarPair(ref a, ref b) = place.layout.abi {
             let b_offset = a.value.size(self).align_to(b.value.align(self).abi);
 
+            let pair_ty = place.layout.spirv_type(self.span(), self);
             let mut load = |i, scalar: &Scalar, align| {
-                let llptr = self.struct_gep(place.llval, i as u64);
-                let load = self.load(llptr, align);
+                let llptr = self.struct_gep(pair_ty, place.llval, i as u64);
+                let load = self.load(
+                    self.scalar_pair_element_backend_type(place.layout, i, false),
+                    llptr,
+                    align,
+                );
                 // WARN! This does not go through to_immediate due to only having a Scalar, not a Ty, but it still does
                 // whatever to_immediate does!
                 if scalar.is_bool() {
@@ -943,12 +966,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         let zero = self.const_usize(0);
         let start = dest.project_index(&mut self, zero).llval;
 
-        let align = dest
-            .align
-            .restrict_for_offset(dest.layout.field(self.cx(), 0).size);
+        let elem_layout = dest.layout.field(self.cx(), 0);
+        let elem_ty = elem_layout.spirv_type(self.span(), &self);
+        let align = dest.align.restrict_for_offset(elem_layout.size);
 
         for i in 0..count {
-            let current = self.inbounds_gep(start, &[self.const_usize(i)]);
+            let current = self.inbounds_gep(elem_ty, start, &[self.const_usize(i)]);
             cg_elem.val.store(
                 &mut self,
                 PlaceRef::new_sized_aligned(current, cg_elem.layout, align),
@@ -1026,17 +1049,25 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             .unwrap();
     }
 
-    fn gep(&mut self, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
-        self.gep_help(ptr, indices, false)
+    fn gep(&mut self, ty: Self::Type, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
+        self.gep_help(ty, ptr, indices, false)
     }
 
-    fn inbounds_gep(&mut self, ptr: Self::Value, indices: &[Self::Value]) -> Self::Value {
-        self.gep_help(ptr, indices, true)
+    fn inbounds_gep(
+        &mut self,
+        ty: Self::Type,
+        ptr: Self::Value,
+        indices: &[Self::Value],
+    ) -> Self::Value {
+        self.gep_help(ty, ptr, indices, true)
     }
 
-    fn struct_gep(&mut self, ptr: Self::Value, idx: u64) -> Self::Value {
+    fn struct_gep(&mut self, ty: Self::Type, ptr: Self::Value, idx: u64) -> Self::Value {
         let pointee = match self.lookup_type(ptr.ty) {
-            SpirvType::Pointer { pointee } => pointee,
+            SpirvType::Pointer { pointee } => {
+                assert_ty_eq!(self, ty, pointee);
+                pointee
+            }
             other => self.fatal(&format!(
                 "struct_gep not on pointer type: {:?}, index {}",
                 other, idx
@@ -2087,6 +2118,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn call(
         &mut self,
+        callee_ty: Self::Type,
         callee: Self::Value,
         args: &[Self::Value],
         funclet: Option<&Self::Funclet>,
@@ -2104,7 +2136,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             SpirvType::Function {
                 return_type,
                 arguments,
-            } => (callee.def(self), return_type, arguments),
+            } => {
+                assert_ty_eq!(self, callee_ty, callee.ty);
+                (callee.def(self), return_type, arguments)
+            }
 
             SpirvType::Pointer { pointee } => match self.lookup_type(pointee) {
                 SpirvType::Function {
@@ -2112,7 +2147,10 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     arguments,
                 } => (
                     match callee.kind {
-                        SpirvValueKind::FnAddr { function } => function,
+                        SpirvValueKind::FnAddr { function } => {
+                            assert_ty_eq!(self, callee_ty, pointee);
+                            function
+                        }
 
                         // Truly indirect call.
                         _ => {

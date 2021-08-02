@@ -5,7 +5,7 @@
 
 #![feature(
     extern_types,
-    min_type_alias_impl_trait,
+    type_alias_impl_trait, // HACK(eddyb) this comment prevents rustfmt
     stmt_expr_attributes,
     trait_alias
 )]
