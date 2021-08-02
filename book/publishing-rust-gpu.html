@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Rust GPU Dev Guide</title>
+        <title>Publishing rust-gpu on crates.io - Rust GPU Dev Guide</title>
                 
 
         <!-- Custom HTML head -->
@@ -82,7 +82,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="compiler-env-vars.html"><strong aria-hidden="true">2.3.</strong> Environment variables Rust-GPU reads</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.4.</strong> Minimizing bugs in SPIR-V</a></li><li class="chapter-item expanded "><a href="publishing-rust-gpu.html"><strong aria-hidden="true">2.5.</strong> Publishing rust-gpu on crates.io</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="image.html"><strong aria-hidden="true">5.3.</strong> Image type syntax</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>            </div>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Contributing to Rust-GPU</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="building-rust-gpu.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">2.2.</strong> Testing</a></li><li class="chapter-item expanded "><a href="compiler-env-vars.html"><strong aria-hidden="true">2.3.</strong> Environment variables Rust-GPU reads</a></li><li class="chapter-item expanded "><a href="spirv-minimization.html"><strong aria-hidden="true">2.4.</strong> Minimizing bugs in SPIR-V</a></li><li class="chapter-item expanded "><a href="publishing-rust-gpu.html" class="active"><strong aria-hidden="true">2.5.</strong> Publishing rust-gpu on crates.io</a></li></ol></li><li class="chapter-item expanded "><a href="platform-support.html"><strong aria-hidden="true">3.</strong> Platform Support</a></li><li class="chapter-item expanded "><a href="writing-shader-crates.html"><strong aria-hidden="true">4.</strong> Writing Shader Crates</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Features</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="attributes.html"><strong aria-hidden="true">5.1.</strong> Attribute syntax</a></li><li class="chapter-item expanded "><a href="inline-asm.html"><strong aria-hidden="true">5.2.</strong> Inline Assembly</a></li><li class="chapter-item expanded "><a href="image.html"><strong aria-hidden="true">5.3.</strong> Image type syntax</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> RFCs</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="rfcs/001-resource-binding-syntax.html"><strong aria-hidden="true">6.1.</strong> Resource Binding Syntax</a></li></ol></li></ol>            </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
@@ -143,21 +143,36 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Welcome to the Rust-GPU dev guide! This documentation is meant for documenting
-how to use and develop on Rust-GPU.</p>
-<p>If you're looking to get started with writing your own shaders in Rust, 
-check out the <a href="./writing-shader-crates.html"><em>&quot;Writing Shader Crates&quot;</em></a> section for
-more information on how to get started.</p>
-<p>Alternatively if you're looking to contribute to the <code>rust-gpu</code> project, have
-a look at <a href="./building-rust-gpu.html"><em>&quot;Building Rust-GPU&quot;</em></a> section.</p>
+                        <h1 id="publishing-rust-gpu-on-cratesio"><a class="header" href="#publishing-rust-gpu-on-cratesio">Publishing rust-gpu on crates.io</a></h1>
+<p>This is a task list for the maintainers of rust-gpu to remember to do when publishing a new version
+of rust-gpu (probably not useful for contributors without access to embark's crates.io account :P)</p>
+<ol>
+<li>Bump all the versions in rust-gpu to the next one. I've found this command to be useful:
+<code>rg --files-with-matches alpha | xargs sed -i 's/0.4.0-alpha.10/0.4.0-alpha.11/g'</code> (replacing with
+whatever versions are relevant)</li>
+<li>Create a PR with that change. Wait for CI and a review, and merge it.</li>
+<li>Pull the merged <code>main</code> branch.</li>
+<li>Tag <code>main</code> with the version: <code>git tag v0.4.0-alpha.11</code></li>
+<li>Push the tag: <code>git push origin v0.4.0-alpha.11</code></li>
+<li>Publish the crates: <code>cd [crate] &amp;&amp; cargo publish</code> (make sure <code>.cargo/credentials</code> is set to
+embark's token) - crates to be published, in order:
+<ol>
+<li>crates/spirv-std/shared</li>
+<li>crates/spirv-std/macros</li>
+<li>crates/spirv-std</li>
+</ol>
+</li>
+</ol>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                                                    <a rel="prev" href="spirv-minimization.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
                         
-                                                    <a rel="next" href="building-rust-gpu.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                                    <a rel="next" href="platform-support.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -167,8 +182,11 @@ a look at <a href="./building-rust-gpu.html"><em>&quot;Building Rust-GPU&quot;</
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                                    <a rel="prev" href="spirv-minimization.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
                 
-                                    <a rel="next" href="building-rust-gpu.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                    <a rel="next" href="platform-support.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                             </nav>
