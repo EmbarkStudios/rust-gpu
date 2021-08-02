@@ -1,13 +1,15 @@
 use crate::builder;
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
+use crate::symbols::Symbols;
 use crate::target::SpirvTarget;
 use crate::target_feature::TargetFeature;
 use rspirv::dr::{Block, Builder, Module, Operand};
 use rspirv::spirv::{AddressingModel, Capability, MemoryModel, Op, StorageClass, Word};
 use rspirv::{binary::Assemble, binary::Disassemble};
-use rustc_data_structures::fx::FxHashMap;
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::bug;
+use rustc_span::symbol::Symbol;
 use rustc_span::{Span, DUMMY_SP};
 use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
@@ -319,40 +321,84 @@ pub struct BuilderSpirv {
     const_to_id: RefCell<FxHashMap<WithType<SpirvConst>, WithConstLegality<Word>>>,
     id_to_const: RefCell<FxHashMap<Word, WithConstLegality<SpirvConst>>>,
     string_cache: RefCell<FxHashMap<String, Word>>,
+
+    enabled_capabilities: FxHashSet<Capability>,
+    enabled_extensions: FxHashSet<Symbol>,
 }
 
 impl BuilderSpirv {
-    pub fn new(target: &SpirvTarget, features: &[TargetFeature]) -> Self {
+    pub fn new(
+        sym: &Symbols,
+        target: &SpirvTarget,
+        features: &[TargetFeature],
+        bindless: bool,
+    ) -> Self {
         let version = target.spirv_version();
         let memory_model = target.memory_model();
 
         let mut builder = Builder::new();
         builder.set_version(version.0, version.1);
 
+        let mut enabled_capabilities = FxHashSet::default();
+        let mut enabled_extensions = FxHashSet::default();
+
+        fn add_cap(
+            builder: &mut Builder,
+            enabled_capabilities: &mut FxHashSet<Capability>,
+            cap: Capability,
+        ) {
+            // This should be the only callsite of Builder::capability (aside from tests), to make
+            // sure the hashset stays in sync.
+            builder.capability(cap);
+            enabled_capabilities.insert(cap);
+        }
+        fn add_ext(builder: &mut Builder, enabled_extensions: &mut FxHashSet<Symbol>, ext: Symbol) {
+            // This should be the only callsite of Builder::extension (aside from tests), to make
+            // sure the hashset stays in sync.
+            builder.extension(&*ext.as_str());
+            enabled_extensions.insert(ext);
+        }
+
         for feature in features {
-            match feature {
-                TargetFeature::Capability(cap) => builder.capability(*cap),
-                TargetFeature::Extension(ext) => builder.extension(&*ext.as_str()),
+            match *feature {
+                TargetFeature::Capability(cap) => {
+                    add_cap(&mut builder, &mut enabled_capabilities, cap);
+                }
+                TargetFeature::Extension(ext) => {
+                    add_ext(&mut builder, &mut enabled_extensions, ext);
+                }
             }
         }
 
         if target.is_kernel() {
-            builder.capability(Capability::Kernel);
+            add_cap(&mut builder, &mut enabled_capabilities, Capability::Kernel);
         } else {
-            builder.capability(Capability::Shader);
+            add_cap(&mut builder, &mut enabled_capabilities, Capability::Shader);
             if memory_model == MemoryModel::Vulkan {
                 if version < (1, 5) {
-                    builder.extension("SPV_KHR_vulkan_memory_model");
+                    add_ext(
+                        &mut builder,
+                        &mut enabled_extensions,
+                        sym.spv_khr_vulkan_memory_model,
+                    );
                 }
-                builder.capability(Capability::VulkanMemoryModel);
+                add_cap(
+                    &mut builder,
+                    &mut enabled_capabilities,
+                    Capability::VulkanMemoryModel,
+                );
             }
         }
 
         // The linker will always be ran on this module
-        builder.capability(Capability::Linkage);
+        add_cap(&mut builder, &mut enabled_capabilities, Capability::Linkage);
 
         let addressing_model = if target.is_kernel() {
-            builder.capability(Capability::Addresses);
+            add_cap(
+                &mut builder,
+                &mut enabled_capabilities,
+                Capability::Addresses,
+            );
             AddressingModel::Physical32
         } else {
             AddressingModel::Logical
@@ -360,11 +406,26 @@ impl BuilderSpirv {
 
         builder.memory_model(addressing_model, memory_model);
 
+        if bindless {
+            add_ext(
+                &mut builder,
+                &mut enabled_extensions,
+                sym.spv_ext_descriptor_indexing,
+            );
+            add_cap(
+                &mut builder,
+                &mut enabled_capabilities,
+                Capability::RuntimeDescriptorArray,
+            );
+        }
+
         Self {
             builder: RefCell::new(builder),
             const_to_id: Default::default(),
             id_to_const: Default::default(),
             string_cache: Default::default(),
+            enabled_capabilities,
+            enabled_extensions,
         }
     }
 
@@ -410,27 +471,11 @@ impl BuilderSpirv {
     }
 
     pub fn has_capability(&self, capability: Capability) -> bool {
-        self.builder
-            .borrow()
-            .module_ref()
-            .capabilities
-            .iter()
-            .any(|inst| {
-                inst.class.opcode == Op::Capability
-                    && inst.operands[0].unwrap_capability() == capability
-            })
+        self.enabled_capabilities.contains(&capability)
     }
 
-    pub fn has_extension(&self, extension: &str) -> bool {
-        self.builder
-            .borrow()
-            .module_ref()
-            .extensions
-            .iter()
-            .any(|inst| {
-                inst.class.opcode == Op::Extension
-                    && inst.operands[0].unwrap_literal_string() == extension
-            })
+    pub fn has_extension(&self, extension: Symbol) -> bool {
+        self.enabled_extensions.contains(&extension)
     }
 
     pub fn select_function_by_id(&self, id: Word) -> BuilderCursor {

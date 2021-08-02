@@ -21,6 +21,9 @@ pub struct Symbols {
     pub libm: Symbol,
     pub num_traits: Symbol,
     pub entry_point_name: Symbol,
+    pub spv_intel_shader_integer_functions2: Symbol,
+    pub spv_khr_vulkan_memory_model: Symbol,
+    pub spv_ext_descriptor_indexing: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
     input_attachment_index: Symbol,
@@ -366,11 +369,16 @@ impl Symbols {
         Self {
             fmt_decimal: Symbol::intern("fmt_decimal"),
 
-            entry_point_name: Symbol::intern("entry_point_name"),
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
             libm: Symbol::intern("libm"),
             num_traits: Symbol::intern("num_traits"),
+            entry_point_name: Symbol::intern("entry_point_name"),
+            spv_intel_shader_integer_functions2: Symbol::intern(
+                "SPV_INTEL_shader_integer_functions2",
+            ),
+            spv_khr_vulkan_memory_model: Symbol::intern("SPV_KHR_vulkan_memory_model"),
+            spv_ext_descriptor_indexing: Symbol::intern("SPV_EXT_descriptor_indexing"),
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             input_attachment_index: Symbol::intern("input_attachment_index"),

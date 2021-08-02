@@ -132,7 +132,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let result = Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(&target, &features),
+            builder: BuilderSpirv::new(&sym, &target, &features, bindless),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),

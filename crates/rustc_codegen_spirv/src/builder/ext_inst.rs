@@ -55,9 +55,12 @@ impl ExtInst {
             }
             if !bx
                 .builder
-                .has_extension("SPV_INTEL_shader_integer_functions2")
+                .has_extension(bx.sym.spv_intel_shader_integer_functions2)
             {
-                bx.zombie(to_zombie, "extension IntegerFunctions2INTEL is required");
+                bx.zombie(
+                    to_zombie,
+                    "extension SPV_INTEL_shader_integer_functions2 is required",
+                );
             }
         }
     }
