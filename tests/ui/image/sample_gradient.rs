@@ -13,7 +13,8 @@ pub fn main(
 ) {
     let v2 = glam::Vec2::new(0.0, 1.0);
     let v3 = glam::Vec3::new(0.0, 1.0, 0.5);
-    *output = image2d.sample_by_gradient(*sampler, v2, v2, v2);
-    *output += image2d_array.sample_by_gradient(*sampler, v3, v2, v2);
-    *output += cubemap.sample_by_gradient(*sampler, v3, v3, v3);
+    let r1: glam::Vec4 = image2d.sample_by_gradient(*sampler, v2, v2, v2);
+    let r2: glam::Vec4 = image2d_array.sample_by_gradient(*sampler, v3, v2, v2);
+    let r3: glam::Vec4 = cubemap.sample_by_gradient(*sampler, v3, v3, v3);
+    *output = r1 + r2 + r3;
 }

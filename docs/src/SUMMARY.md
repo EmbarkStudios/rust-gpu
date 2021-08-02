@@ -6,6 +6,7 @@
     - [Testing](./testing.md)
     - [Environment variables Rust-GPU reads](./compiler-env-vars.md)
     - [Minimizing bugs in SPIR-V](./spirv-minimization.md)
+    - [Publishing rust-gpu on crates.io](./publishing-rust-gpu.md)
 - [Platform Support](./platform-support.md)
 - [Writing Shader Crates](./writing-shader-crates.md)
 - [Features]()
