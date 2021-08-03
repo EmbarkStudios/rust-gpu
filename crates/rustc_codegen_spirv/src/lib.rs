@@ -269,15 +269,7 @@ impl MetadataLoader for SpirvMetadataLoader {
     }
 
     fn get_dylib_metadata(&self, target: &Target, path: &Path) -> Result<MetadataRef, String> {
-        // HACK(eddyb) this is needed to allow metadata loading for proc macros
-        // (compiled as host dylibs); perhaps it'd be better to use the `object`
-        // crate, like `rustc_codegen_cranelift` does.
-        // NOTE(eddyb) while both `::new()` and `.metadata_loader()` call `Box::new`,
-        // they only do so with ZST values, and so we don't pointlessly allocate.
-        extern crate rustc_codegen_llvm;
-        rustc_codegen_llvm::LlvmCodegenBackend::new()
-            .metadata_loader()
-            .get_dylib_metadata(target, path)
+        rustc_codegen_ssa::back::metadata::DefaultMetadataLoader.get_dylib_metadata(target, path)
     }
 }
 
