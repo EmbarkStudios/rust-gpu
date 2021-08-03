@@ -286,7 +286,7 @@ impl RenderBase {
                 .application_version(0)
                 .engine_name(&app_name)
                 .engine_version(0)
-                .api_version(vk::make_version(1, 1, 0));
+                .api_version(vk::make_version(1, 2, 0));
 
             let instance_create_info = vk::InstanceCreateInfo::builder()
                 .application_info(&appinfo)
@@ -369,7 +369,14 @@ impl RenderBase {
                 .queue_family_index(queue_family_index)
                 .queue_priorities(&priorities)
                 .build()];
+
+            let mut vulkan_memory_model_features =
+                vk::PhysicalDeviceVulkanMemoryModelFeatures::builder()
+                    .vulkan_memory_model(true)
+                    .build();
+
             let device_create_info = vk::DeviceCreateInfo::builder()
+                .push_next(&mut vulkan_memory_model_features)
                 .queue_create_infos(&queue_info)
                 .enabled_extension_names(&device_extension_names_raw)
                 .enabled_features(&features);
