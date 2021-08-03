@@ -89,7 +89,6 @@ use std::{
     ffi::{CStr, CString},
     fs::File,
     ops::Drop,
-    path::PathBuf,
     sync::mpsc::{sync_channel, TryRecvError, TrySendError},
     thread,
 };
@@ -199,24 +198,19 @@ pub fn main() {
 }
 
 pub fn compile_shaders() -> Vec<SpvFile> {
-    let spv_paths: Vec<PathBuf> =
-        vec![
-            SpirvBuilder::new("examples/shaders/sky-shader", "spirv-unknown-vulkan1.1")
-                .print_metadata(MetadataPrintout::None)
-                .build()
-                .unwrap()
-                .module
-                .unwrap_single()
-                .to_path_buf(),
-        ];
-    let mut spv_files = Vec::<SpvFile>::with_capacity(spv_paths.len());
-    for path in spv_paths.iter() {
-        spv_files.push(SpvFile {
-            name: path.file_stem().unwrap().to_str().unwrap().to_owned(),
-            data: read_spv(&mut File::open(path).unwrap()).unwrap(),
-        });
-    }
-    spv_files
+    let sky_shader_path =
+        SpirvBuilder::new("examples/shaders/sky-shader", "spirv-unknown-vulkan1.1")
+            .print_metadata(MetadataPrintout::None)
+            .build()
+            .unwrap()
+            .module
+            .unwrap_single()
+            .to_path_buf();
+    let sky_shader = SpvFile {
+        name: "sky_shader".to_string(),
+        data: read_spv(&mut File::open(sky_shader_path).unwrap()).unwrap(),
+    };
+    vec![sky_shader]
 }
 
 #[derive(Debug)]
