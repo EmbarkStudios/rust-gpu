@@ -295,6 +295,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             dce::dce(output);
         }
 
+        {
+            let _timer = sess.timer("link_remove_duplicate_lines_2");
+            duplicates::remove_duplicate_lines(output);
+        }
+
         if opts.compact_ids {
             let _timer = sess.timer("link_compact_ids");
             // compact the ids https://github.com/KhronosGroup/SPIRV-Tools/blob/e02f178a716b0c3c803ce31b9df4088596537872/source/opt/compact_ids_pass.cpp#L43
