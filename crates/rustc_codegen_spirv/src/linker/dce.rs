@@ -36,11 +36,22 @@ fn spread_roots(module: &Module, rooted: &mut FxHashSet<Word>) -> bool {
     }
     for func in &module.functions {
         if rooted.contains(&func.def_id().unwrap()) {
-            /// NB (Mobius 2021) - since later insts are much more likely to reference
-            /// earlier insts, by reversing the iteration order, we're more likely to root the
-            /// entire relevant function at once.
-            /// See https://github.com/EmbarkStudios/rust-gpu/pull/691#discussion_r681477091
-            for inst in func.all_inst_iter().rev() {
+            // NB (Mobius 2021) - since later insts are much more likely to reference
+            // earlier insts, by reversing the iteration order, we're more likely to root the
+            // entire relevant function at once.
+            // See https://github.com/EmbarkStudios/rust-gpu/pull/691#discussion_r681477091
+            for inst in func
+                .end
+                .iter()
+                .chain(
+                    func.blocks
+                        .iter()
+                        .rev()
+                        .flat_map(|b| b.instructions.iter().rev().chain(b.label.iter())),
+                )
+                .chain(func.parameters.iter().rev())
+                .chain(func.def.iter())
+            {
                 if !instruction_is_pure(inst) {
                     any |= root(inst, rooted);
                 } else if let Some(id) = inst.result_id {
