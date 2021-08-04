@@ -230,12 +230,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
                 // mem2reg produces minimal SSA form, not pruned, so DCE the dead ones
                 dce::dce_phi(func);
             }
+            if opts.destructure {
+                let _timer = sess.timer("link_destructure");
+                destructure_composites::destructure_composites(func);
+            }
         }
-    }
-
-    if opts.destructure {
-        let _timer = sess.timer("link_destructure");
-        destructure_composites::destructure_composites(&mut output);
     }
 
     {
