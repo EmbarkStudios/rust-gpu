@@ -4,7 +4,7 @@
 //! containing pointers, `OpFunctionArgument`s, etc. After simplification, components
 //! will become valid targets for `OpLoad`/`OpStore`.
 use super::apply_rewrite_rules;
-use rspirv::dr::{Instruction, Function};
+use rspirv::dr::{Function, Instruction};
 use rspirv::spirv::Op;
 use rustc_data_structures::fx::FxHashMap;
 
@@ -66,9 +66,9 @@ pub fn destructure_composites(function: &mut Function) {
 
     // Remove instructions replaced by NOPs, as well as unused composite values.
     for block in function.blocks.iter_mut() {
-        block.instructions.retain(|inst| {
-            inst.class.opcode != Op::Nop
-        });
+        block
+            .instructions
+            .retain(|inst| inst.class.opcode != Op::Nop);
     }
     apply_rewrite_rules(&closed_rewrite_rules, &mut function.blocks);
 }
