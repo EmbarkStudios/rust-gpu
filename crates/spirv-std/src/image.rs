@@ -162,6 +162,39 @@ impl<
         }
     }
 
+    /// Sample texels at `coord` from the image using `sampler`, after adding the input bias to the
+    /// implicit level of detail.
+    #[crate::macros::gpu_only]
+    pub fn sample_bias<F, V>(
+        &self,
+        sampler: Sampler,
+        coord: impl ImageCoordinate<F, DIM, ARRAYED>,
+        bias: f32,
+    ) -> V
+    where
+        F: Float,
+        V: Vector<SampledType, 4>,
+    {
+        unsafe {
+            let mut result = Default::default();
+            asm!(
+                "%typeSampledImage = OpTypeSampledImage typeof*{1}",
+                "%image = OpLoad typeof*{1} {1}",
+                "%sampler = OpLoad typeof*{2} {2}",
+                "%coord = OpLoad typeof*{3} {3}",
+                "%sampledImage = OpSampledImage %typeSampledImage %image %sampler",
+                "%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord Bias {4}",
+                "OpStore {0} %result",
+                in(reg) &mut result,
+                in(reg) self,
+                in(reg) &sampler,
+                in(reg) &coord,
+                in(reg) bias,
+            );
+            result
+        }
+    }
+
     /// Fetch a single texel with a sampler set at compile time
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageSampleExplicitLod")]
