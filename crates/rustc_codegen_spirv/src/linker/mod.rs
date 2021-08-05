@@ -6,6 +6,7 @@ mod destructure_composites;
 mod duplicates;
 mod import_export_link;
 mod inline;
+mod ipo;
 mod mem2reg;
 mod peephole_opts;
 mod simple_passes;

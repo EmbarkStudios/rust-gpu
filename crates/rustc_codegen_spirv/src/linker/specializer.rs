@@ -49,8 +49,9 @@
 //!     expand_params: Option<Vec<usize>>,
 //!     ```
 
+use crate::linker::ipo::CallGraph;
 use crate::spirv_type_constraints::{self, InstSig, StorageClassPat, TyListPat, TyPat};
-use indexmap::{IndexMap, IndexSet};
+use indexmap::IndexMap;
 use rspirv::dr::{Builder, Function, Instruction, Module, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::captures::Captures;
@@ -184,88 +185,6 @@ pub fn specialize(module: Module, specialization: impl Specialization) -> Module
     }
 
     expander.expand_module()
-}
-
-// FIXME(eddyb) use newtyped indices and `IndexVec`.
-type FuncIdx = usize;
-
-struct CallGraph {
-    entry_points: IndexSet<FuncIdx>,
-
-    /// `callees[i].contains(j)` implies `functions[i]` calls `functions[j]`.
-    callees: Vec<IndexSet<FuncIdx>>,
-}
-
-impl CallGraph {
-    fn collect(module: &Module) -> Self {
-        let func_id_to_idx: FxHashMap<_, _> = module
-            .functions
-            .iter()
-            .enumerate()
-            .map(|(i, func)| (func.def_id().unwrap(), i))
-            .collect();
-        let entry_points = module
-            .entry_points
-            .iter()
-            .map(|entry| {
-                assert_eq!(entry.class.opcode, Op::EntryPoint);
-                func_id_to_idx[&entry.operands[1].unwrap_id_ref()]
-            })
-            .collect();
-        let callees = module
-            .functions
-            .iter()
-            .map(|func| {
-                func.all_inst_iter()
-                    .filter(|inst| inst.class.opcode == Op::FunctionCall)
-                    .map(|inst| func_id_to_idx[&inst.operands[0].unwrap_id_ref()])
-                    .collect()
-            })
-            .collect();
-        Self {
-            entry_points,
-            callees,
-        }
-    }
-
-    /// Order functions using a post-order traversal, i.e. callees before callers.
-    // FIXME(eddyb) replace this with `rustc_data_structures::graph::iterate`
-    // (or similar).
-    fn post_order(&self) -> Vec<FuncIdx> {
-        let num_funcs = self.callees.len();
-
-        // FIXME(eddyb) use a proper bitset.
-        let mut visited = vec![false; num_funcs];
-        let mut post_order = Vec::with_capacity(num_funcs);
-
-        // Visit the call graph with entry points as roots.
-        for &entry in &self.entry_points {
-            self.post_order_step(entry, &mut visited, &mut post_order);
-        }
-
-        // Also visit any functions that were not reached from entry points
-        // (they might be dead but they should be processed nonetheless).
-        for func in 0..num_funcs {
-            if !visited[func] {
-                self.post_order_step(func, &mut visited, &mut post_order);
-            }
-        }
-
-        post_order
-    }
-
-    fn post_order_step(&self, func: FuncIdx, visited: &mut [bool], post_order: &mut Vec<FuncIdx>) {
-        if visited[func] {
-            return;
-        }
-        visited[func] = true;
-
-        for &callee in &self.callees[func] {
-            self.post_order_step(callee, visited, post_order);
-        }
-
-        post_order.push(func);
-    }
 }
 
 // HACK(eddyb) `Copy` version of `Operand` that only includes the cases that
