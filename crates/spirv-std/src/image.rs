@@ -136,9 +136,11 @@ impl<
         ACCESS_QUALIFIER,
     >
 {
+    // Note: #[inline] is needed because in vulkan, the component must be a constant expression.
     /// Gathers the requested component from four texels.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageGather")]
+    #[inline]
     pub fn gather<F, V>(
         &self,
         sampler: Sampler,
