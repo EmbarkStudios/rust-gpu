@@ -1379,6 +1379,24 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         }
 
         match inst.class.opcode {
+            Op::ImageGather => {
+                let image_ty = match find_image_ty(self, inst) {
+                    Some(ty) => ty,
+                    None => return,
+                };
+                if let SpirvType::Image { dim, .. } = image_ty {
+                    match dim {
+                        Dim::Dim2D | Dim::DimCube | Dim::DimRect => {}
+                        bad => self
+                            .struct_err(&format!(
+                                "Op{}'s image has a dimension of {:?}",
+                                inst.class.opname, bad
+                            ))
+                            .note("Allowed dimensions are 2D, Cube, and Rect")
+                            .emit(),
+                    }
+                }
+            }
             Op::ImageQueryLevels | Op::ImageQueryLod => {
                 let image_ty = match find_image_ty(self, inst) {
                     Some(ty) => ty,

@@ -136,6 +136,39 @@ impl<
         ACCESS_QUALIFIER,
     >
 {
+    /// Gathers the requested component from four texels.
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageGather")]
+    pub fn gather<F, V>(
+        &self,
+        sampler: Sampler,
+        coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
+        component: u32,
+    ) -> V
+    where
+        F: Float,
+        V: Vector<SampledType, 4>,
+    {
+        let mut result = V::default();
+        unsafe {
+            asm! {
+                "%typeSampledImage = OpTypeSampledImage typeof*{this}",
+                "%image = OpLoad _ {this}",
+                "%sampler = OpLoad _ {sampler}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%sampledImage = OpSampledImage %typeSampledImage %image %sampler",
+                "%result = OpImageGather typeof*{result} %sampledImage %coordinate {component}",
+                "OpStore {result} %result",
+                result = in(reg) &mut result,
+                this = in(reg) self,
+                sampler = in(reg) &sampler,
+                coordinate = in(reg) &coordinate,
+                component = in(reg) component,
+            }
+        }
+        result
+    }
+
     /// Sample texels at `coord` from the image using `sampler`.
     #[crate::macros::gpu_only]
     pub fn sample<F, V>(&self, sampler: Sampler, coord: impl ImageCoordinate<F, DIM, ARRAYED>) -> V
@@ -391,9 +424,9 @@ impl<
         ACCESS_QUALIFIER,
     >
 {
-    /// Fetch a single texel with a sampler set at compile time
+    /// Sample the image with a project coordinate
     #[crate::macros::gpu_only]
-    #[doc(alias = "OpImageFetch")]
+    #[doc(alias = "OpImageSampleProjImplicitLod")]
     pub fn sample_with_project_coordinate<F, V>(
         &self,
         sampler: Sampler,
