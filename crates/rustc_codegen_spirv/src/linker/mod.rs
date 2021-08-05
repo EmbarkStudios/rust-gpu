@@ -8,6 +8,7 @@ mod import_export_link;
 mod inline;
 mod ipo;
 mod mem2reg;
+mod param_weakening;
 mod peephole_opts;
 mod simple_passes;
 mod specializer;
@@ -128,6 +129,14 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     {
         let _timer = sess.timer("link_find_pairs");
         import_export_link::run(sess, &mut output)?;
+    }
+
+    // HACK(eddyb) this has to run before the `remove_zombies` pass, so that any
+    // zombies that are passed as call arguments, but eventually unused, won't
+    // be (incorrectly) considered used.
+    {
+        let _timer = sess.timer("link_remove_unused_params");
+        output = param_weakening::remove_unused_params(output);
     }
 
     {

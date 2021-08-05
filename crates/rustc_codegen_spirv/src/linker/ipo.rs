@@ -11,7 +11,7 @@ use rustc_data_structures::fx::FxHashMap;
 type FuncIdx = usize;
 
 pub struct CallGraph {
-    entry_points: IndexSet<FuncIdx>,
+    pub entry_points: IndexSet<FuncIdx>,
 
     /// `callees[i].contains(j)` implies `functions[i]` calls `functions[j]`.
     callees: Vec<IndexSet<FuncIdx>>,
@@ -39,7 +39,15 @@ impl CallGraph {
             .map(|func| {
                 func.all_inst_iter()
                     .filter(|inst| inst.class.opcode == Op::FunctionCall)
-                    .map(|inst| func_id_to_idx[&inst.operands[0].unwrap_id_ref()])
+                    .filter_map(|inst| {
+                        // FIXME(eddyb) `func_id_to_idx` should always have an
+                        // entry for a callee ID, but when ran early enough
+                        // (before zombie removal), the callee ID might not
+                        // point to an `OpFunction` (unsure what, `OpUndef`?).
+                        func_id_to_idx
+                            .get(&inst.operands[0].unwrap_id_ref())
+                            .copied()
+                    })
                     .collect()
             })
             .collect();
