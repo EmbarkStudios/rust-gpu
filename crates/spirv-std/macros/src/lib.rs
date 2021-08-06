@@ -85,7 +85,7 @@ use quote::ToTokens;
 ///
 /// The grammar for the macro is as follows:
 ///
-/// ```rust,no_compile
+/// ```rust,ignore
 /// Image!(
 ///     <dimensionality>,
 ///     <type=...|format=...>,
@@ -99,7 +99,7 @@ use quote::ToTokens;
 /// `=true` can be omitted as shorthand - e.g. `sampled` is short for `sampled=true`.
 ///
 /// A basic example looks like this:
-/// ```rust,no_compile
+/// ```rust,ignore
 /// #[spirv(vertex)]
 /// fn main(#[spirv(descriptor_set = 0, binding = 0)] image: &Image!(2D, type=f32, sampled)) {}
 /// ```
