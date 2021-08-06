@@ -541,6 +541,7 @@ fn do_link(
         dce: env::var("NO_DCE").is_err(),
         compact_ids: env::var("NO_COMPACT_IDS").is_err(),
         inline: legalize,
+        destructure: legalize,
         mem2reg: legalize,
         structurize: env::var("NO_STRUCTURIZE").is_err(),
         emit_multiple_modules: cg_args.module_output_type == ModuleOutputType::Multiple,

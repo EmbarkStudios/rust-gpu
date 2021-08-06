@@ -162,6 +162,7 @@ fn instruction_is_pure(inst: &Instruction) -> bool {
         | InBoundsPtrAccessChain
         | CompositeConstruct
         | CompositeExtract
+        | CompositeInsert
         | CopyObject
         | Transpose
         | ConvertFToU

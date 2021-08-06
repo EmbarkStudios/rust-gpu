@@ -92,6 +92,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
                 compact_ids: true,
                 dce: false,
                 inline: false,
+                destructure: false,
                 mem2reg: false,
                 structurize: false,
                 emit_multiple_modules: false,

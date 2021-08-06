@@ -2,6 +2,7 @@
 mod test;
 
 mod dce;
+mod destructure_composites;
 mod duplicates;
 mod import_export_link;
 mod inline;
@@ -27,6 +28,7 @@ pub struct Options {
     pub dce: bool,
     pub inline: bool,
     pub mem2reg: bool,
+    pub destructure: bool,
     pub structurize: bool,
     pub emit_multiple_modules: bool,
     pub name_variables: bool,
@@ -228,6 +230,10 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
                 // mem2reg produces minimal SSA form, not pruned, so DCE the dead ones
                 dce::dce_phi(func);
             }
+            if opts.destructure {
+                let _timer = sess.timer("link_destructure");
+                destructure_composites::destructure_composites(func);
+            }
         }
     }
 
@@ -238,11 +244,6 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             peephole_opts::composite_construct(&types, func);
             peephole_opts::vector_ops(output.header.as_mut().unwrap(), &types, func);
         }
-    }
-
-    {
-        let _timer = sess.timer("link_remove_duplicate_lines");
-        duplicates::remove_duplicate_lines(&mut output);
     }
 
     if opts.name_variables {
@@ -287,6 +288,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         if opts.dce {
             let _timer = sess.timer("link_dce_2");
             dce::dce(output);
+        }
+
+        {
+            let _timer = sess.timer("link_remove_duplicate_lines");
+            duplicates::remove_duplicate_lines(output);
         }
 
         if opts.compact_ids {
