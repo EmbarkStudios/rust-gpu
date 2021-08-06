@@ -1,15 +1,15 @@
-error: OpImageQueryLevels's image has a dimension of DimRect
-   --> $SPIRV_STD_SRC/image.rs:831:13
-    |
-831 | /             asm! {
-832 | |                 "%image = OpLoad _ {this}",
-833 | |                 "{result} = OpImageQueryLevels typeof{result} %image",
-834 | |                 this = in(reg) self,
-835 | |                 result = out(reg) result,
-836 | |             }
-    | |_____________^
-    |
-    = note: Allowed dimensions are 1D, 2D, 3D, and Cube
+error[E0277]: the trait bound `Image<f32, Rect, spirv_std::image::ImageDepth::Unknown, spirv_std::image::Arrayed::False, spirv_std::image::Multisampled::False, Yes, spirv_std::image::ImageFormat::Unknown, Option::<AccessQualifier>::None>: HasQueryLevels` is not satisfied
+  --> $DIR/query_levels_err.rs:12:21
+   |
+12 |     *output = image.query_levels();
+   |                     ^^^^^^^^^^^^ the trait `HasQueryLevels` is not implemented for `Image<f32, Rect, spirv_std::image::ImageDepth::Unknown, spirv_std::image::Arrayed::False, spirv_std::image::Multisampled::False, Yes, spirv_std::image::ImageFormat::Unknown, Option::<AccessQualifier>::None>`
+   |
+   = help: the following implementations were found:
+             <Image<SampledType, Cube, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, ACCESS_QUALIFIER> as HasQueryLevels>
+             <Image<SampledType, OneD, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, ACCESS_QUALIFIER> as HasQueryLevels>
+             <Image<SampledType, ThreeD, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, ACCESS_QUALIFIER> as HasQueryLevels>
+             <Image<SampledType, TwoD, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, ACCESS_QUALIFIER> as HasQueryLevels>
 
 error: aborting due to previous error
 
+For more information about this error, try `rustc --explain E0277`.

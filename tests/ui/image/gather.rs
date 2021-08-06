@@ -29,7 +29,7 @@ pub fn main_rect(
     output: &mut glam::Vec4,
 ) {
     // Must be asm! and not -Ctarget-feature=+SampledRect due to being in cfg
-    unsafe{asm!("OpCapability SampledRect")};
+    unsafe { asm!("OpCapability SampledRect") };
     let v2 = glam::Vec2::new(0.0, 1.0);
     *output = rect.gather(*sampler, v2, 0);
 }

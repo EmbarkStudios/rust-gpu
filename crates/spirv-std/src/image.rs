@@ -148,6 +148,7 @@ impl<
         component: u32,
     ) -> V
     where
+        Self: HasGather,
         F: Float,
         V: Vector<SampledType, 4>,
     {
@@ -818,14 +819,12 @@ impl<
     > Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, ACCESS_QUALIFIER>
 {
     /// Query the number of mipmap levels.
-    ///
-    /// Note: Const generics aren't able to reason about the constraints on this function (yet),
-    /// and so are enforced by the compiler. The constraints are:
-    ///
-    /// The image's dimension must be 1D, 2D, 3D, or Cube.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageQueryLevels")]
-    pub fn query_levels(&self) -> u32 {
+    pub fn query_levels(&self) -> u32
+    where
+        Self: HasQueryLevels,
+    {
         let result: u32;
         unsafe {
             asm! {
@@ -842,18 +841,16 @@ impl<
     /// Coordinate using an implicit level of detail. The first component of the result contains
     /// the mipmap array layer. The second component of the result contains the implicit level of
     /// detail relative to the base level.
-    ///
-    /// Note: Const generics aren't able to reason about the constraints on this function (yet),
-    /// and so are enforced by the compiler. The constraints are:
-    ///
-    /// The image's dimension must be 1D, 2D, 3D, or Cube.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageQueryLod")]
     pub fn query_lod<V: Vector<f32, 2>>(
         &self,
         sampler: Sampler,
         coord: impl ImageCoordinate<f32, DIM, { Arrayed::False }>,
-    ) -> V {
+    ) -> V
+    where
+        Self: HasQueryLevels,
+    {
         // Note: Arrayed::False isn't a typo in the ImageCoordinate, the spec states:
         // Coordinate must be a scalar or vector of floating-point type or integer type. It
         // contains (u[, v] ... ) as needed by the definition of Sampled Image, **not including any
@@ -879,15 +876,12 @@ impl<
     }
 
     /// Query the dimensions of Image, with no level of detail.
-    ///
-    /// Note: Const generics aren't able to reason about the constraints on this function (yet),
-    /// and so are enforced by the compiler. The constraints are:
-    ///
-    /// The image's dimension must be 1D, 2D, 3D, Buffer, Rect, or Cube. If dimension is 1D, 2D,
-    /// 3D, or Cube, it must have *either* multisampled be true, *or* sampled of Unknown or No.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageQuerySize")]
-    pub fn query_size<Size: ImageCoordinate<u32, DIM, ARRAYED> + Default>(&self) -> Size {
+    pub fn query_size<Size: ImageCoordinate<u32, DIM, ARRAYED> + Default>(&self) -> Size
+    where
+        Self: HasQuerySize,
+    {
         let mut result: Size = Default::default();
         unsafe {
             asm! {
@@ -923,17 +917,15 @@ impl<
     >
 {
     /// Query the dimensions of Image, with no level of detail.
-    ///
-    /// Note: Const generics aren't able to reason about the constraints on this function (yet),
-    /// and so are enforced by the compiler. The constraints are:
-    ///
-    /// The image's dimension must be 1D, 2D, 3D, or Cube. Multisampled must be false.
     #[crate::macros::gpu_only]
     #[doc(alias = "OpImageQuerySizeLod")]
     pub fn query_size_lod<Size: ImageCoordinate<u32, DIM, ARRAYED> + Default>(
         &self,
         lod: u32,
-    ) -> Size {
+    ) -> Size
+    where
+        Self: HasQuerySizeLod,
+    {
         let mut result: Size = Default::default();
         unsafe {
             asm! {
@@ -1041,4 +1033,528 @@ impl<
         );
         result
     }
+}
+
+/// This is a marker trait to represent the constraints on `OpImageGather` too complex to be
+/// represented by const generics. Specifically:
+///
+/// "Its `OpTypeImage` must have a Dim of 2D, Cube, or Rect. The MS operand of the underlying
+/// `OpTypeImage` must be 0."
+pub trait HasGather {}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasGather
+    for Image<
+        SampledType,
+        { Dimensionality::TwoD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasGather
+    for Image<
+        SampledType,
+        { Dimensionality::Rect },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasGather
+    for Image<
+        SampledType,
+        { Dimensionality::Cube },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+
+/// This is a marker trait to represent the constraints on `OpImageQueryLevels` and
+/// `OpImageQueryLod` too complex to be represented by const generics. Specifically:
+///
+/// "Its Dim operand must be one of 1D, 2D, 3D, or Cube."
+pub trait HasQueryLevels {}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const MULTISAMPLED: Multisampled,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQueryLevels
+    for Image<
+        SampledType,
+        { Dimensionality::OneD },
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const MULTISAMPLED: Multisampled,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQueryLevels
+    for Image<
+        SampledType,
+        { Dimensionality::TwoD },
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const MULTISAMPLED: Multisampled,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQueryLevels
+    for Image<
+        SampledType,
+        { Dimensionality::ThreeD },
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const MULTISAMPLED: Multisampled,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQueryLevels
+    for Image<
+        SampledType,
+        { Dimensionality::Cube },
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+
+/// This is a marker trait to represent the constraints on `OpImageQuerySize` too complex to be
+/// represented by const generics. Specifically:
+///
+/// "Its Dim operand must be 1D, 2D, 3D, Cube, Rect, or Buffer. Additionally, if its Dim is 1D, 2D,
+/// 3D, or Cube, it must also have either an MS of 1 or a Sampled of 0 or 2."
+pub trait HasQuerySize {}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::OneD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::True },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::OneD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        { Sampled::Unknown },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::OneD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        { Sampled::No },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::TwoD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::True },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::TwoD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        { Sampled::Unknown },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::TwoD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        { Sampled::No },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::ThreeD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::True },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::ThreeD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        { Sampled::Unknown },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::ThreeD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        { Sampled::No },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::Cube },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::True },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::Cube },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        { Sampled::Unknown },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::Cube },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        { Sampled::No },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const MULTISAMPLED: Multisampled,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::Rect },
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const MULTISAMPLED: Multisampled,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySize
+    for Image<
+        SampledType,
+        { Dimensionality::Buffer },
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+
+/// This is a marker trait to represent the constraints on `OpImageQuerySizeLod` too complex to be
+/// represented by const generics. Specifically:
+///
+/// "Its Dim operand must be one of 1D, 2D, 3D, or Cube, and its MS must be 0."
+pub trait HasQuerySizeLod {}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySizeLod
+    for Image<
+        SampledType,
+        { Dimensionality::OneD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySizeLod
+    for Image<
+        SampledType,
+        { Dimensionality::TwoD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySizeLod
+    for Image<
+        SampledType,
+        { Dimensionality::ThreeD },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+}
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: ImageDepth,
+        const FORMAT: ImageFormat,
+        const ARRAYED: Arrayed,
+        const SAMPLED: Sampled,
+        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    > HasQuerySizeLod
+    for Image<
+        SampledType,
+        { Dimensionality::Cube },
+        DEPTH,
+        ARRAYED,
+        { Multisampled::False },
+        SAMPLED,
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
 }
