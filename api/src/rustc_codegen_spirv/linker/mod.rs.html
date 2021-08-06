@@ -300,11 +300,18 @@
 <span id="298">298</span>
 <span id="299">299</span>
 <span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
 </pre><pre class="rust">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span>;
 
 <span class="kw">mod</span> <span class="ident">dce</span>;
+<span class="kw">mod</span> <span class="ident">destructure_composites</span>;
 <span class="kw">mod</span> <span class="ident">duplicates</span>;
 <span class="kw">mod</span> <span class="ident">import_export_link</span>;
 <span class="kw">mod</span> <span class="ident">inline</span>;
@@ -330,6 +337,7 @@
     <span class="kw">pub</span> <span class="ident">dce</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">inline</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">mem2reg</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">destructure</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">structurize</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">emit_multiple_modules</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">name_variables</span>: <span class="ident">bool</span>,
@@ -531,6 +539,10 @@
                 <span class="comment">// mem2reg produces minimal SSA form, not pruned, so DCE the dead ones</span>
                 <span class="ident">dce::dce_phi</span>(<span class="ident">func</span>);
             }
+            <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">destructure</span> {
+                <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_destructure&quot;</span>);
+                <span class="ident">destructure_composites::destructure_composites</span>(<span class="ident">func</span>);
+            }
         }
     }
 
@@ -541,11 +553,6 @@
             <span class="ident">peephole_opts::composite_construct</span>(<span class="kw-2">&amp;</span><span class="ident">types</span>, <span class="ident">func</span>);
             <span class="ident">peephole_opts::vector_ops</span>(<span class="ident">output</span>.<span class="ident">header</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="ident">types</span>, <span class="ident">func</span>);
         }
-    }
-
-    {
-        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_remove_duplicate_lines&quot;</span>);
-        <span class="ident">duplicates::remove_duplicate_lines</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>);
     }
 
     <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">name_variables</span> {
@@ -590,6 +597,11 @@
         <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">dce</span> {
             <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_dce_2&quot;</span>);
             <span class="ident">dce::dce</span>(<span class="ident">output</span>);
+        }
+
+        {
+            <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_remove_duplicate_lines&quot;</span>);
+            <span class="ident">duplicates::remove_duplicate_lines</span>(<span class="ident">output</span>);
         }
 
         <span class="kw">if</span> <span class="ident">opts</span>.<span class="ident">compact_ids</span> {
