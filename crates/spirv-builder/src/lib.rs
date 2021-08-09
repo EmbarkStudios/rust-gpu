@@ -149,7 +149,6 @@ pub struct SpirvBuilder {
     release: bool,
     target: String,
     deny_warnings: bool,
-    bindless: bool,
     multimodule: bool,
     name_variables: bool,
     capabilities: Vec<Capability>,
@@ -172,7 +171,6 @@ impl SpirvBuilder {
             release: true,
             target: target.into(),
             deny_warnings: false,
-            bindless: false,
             multimodule: false,
             name_variables: false,
             capabilities: Vec::new(),
@@ -195,13 +193,6 @@ impl SpirvBuilder {
 
     pub fn deny_warnings(mut self, v: bool) -> Self {
         self.deny_warnings = v;
-        self
-    }
-
-    /// Run the compiler in bindless mode, this flag is in preparation for the full feature
-    /// and it's expected to be the default mode going forward
-    pub fn bindless(mut self, v: bool) -> Self {
-        self.bindless = v;
         self
     }
 
@@ -426,9 +417,6 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     let mut target_features = Vec::new();
 
-    if builder.bindless {
-        target_features.push("+bindless".into());
-    }
     target_features.extend(builder.capabilities.iter().map(|cap| format!("+{:?}", cap)));
     target_features.extend(builder.extensions.iter().map(|ext| format!("+ext:{}", ext)));
 

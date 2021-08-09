@@ -24,13 +24,6 @@ pub enum SpirvValueKind {
     /// of such constants, instead of where they're generated (and cached).
     IllegalConst(Word),
 
-    /// This can only happen in one specific case - which is as a result of
-    /// `codegen_internal_buffer_store`, that function is supposed to return
-    /// OpTypeVoid, however because it gets inline by the compiler it can't.
-    /// Instead we return this, and trigger an error if we ever end up using
-    /// the result of this function call (which we can't).
-    IllegalTypeUsed(Word),
-
     // FIXME(eddyb) this shouldn't be needed, but `rustc_codegen_ssa` still relies
     // on converting `Function`s to `Value`s even for direct calls, the `Builder`
     // should just have direct and indirect `call` variants (or a `Callee` enum).
@@ -134,16 +127,6 @@ impl SpirvValue {
                 // HACK(eddyb) we don't know whether this constant originated
                 // in a system crate, so it's better to always zombie.
                 cx.zombie_even_in_user_code(id, span, msg);
-
-                id
-            }
-
-            SpirvValueKind::IllegalTypeUsed(id) => {
-                cx.tcx
-                    .sess
-                    .struct_span_err(span, "Can't use type as a value")
-                    .note(&format!("Type: *{}", cx.debug_type(id)))
-                    .emit();
 
                 id
             }
@@ -327,12 +310,7 @@ pub struct BuilderSpirv {
 }
 
 impl BuilderSpirv {
-    pub fn new(
-        sym: &Symbols,
-        target: &SpirvTarget,
-        features: &[TargetFeature],
-        bindless: bool,
-    ) -> Self {
+    pub fn new(sym: &Symbols, target: &SpirvTarget, features: &[TargetFeature]) -> Self {
         let version = target.spirv_version();
         let memory_model = target.memory_model();
 
@@ -405,19 +383,6 @@ impl BuilderSpirv {
         };
 
         builder.memory_model(addressing_model, memory_model);
-
-        if bindless {
-            add_ext(
-                &mut builder,
-                &mut enabled_extensions,
-                sym.spv_ext_descriptor_indexing,
-            );
-            add_cap(
-                &mut builder,
-                &mut enabled_capabilities,
-                Capability::RuntimeDescriptorArray,
-            );
-        }
 
         Self {
             builder: RefCell::new(builder),

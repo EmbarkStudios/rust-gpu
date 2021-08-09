@@ -2,7 +2,6 @@ mod builder_methods;
 mod ext_inst;
 mod intrinsics;
 pub mod libm_intrinsics;
-mod load_store;
 mod spirv_asm;
 
 pub use ext_inst::ExtInst;

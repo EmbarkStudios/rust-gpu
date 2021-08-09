@@ -38,14 +38,6 @@ use std::path::Path;
 use std::rc::Rc;
 use std::str::FromStr;
 
-#[derive(Copy, Clone, Debug)]
-pub struct BindlessDescriptorSets {
-    pub buffers: Word,
-    pub sampled_image_1d: Word,
-    pub sampled_image_2d: Word,
-    pub sampled_image_3d: Word,
-}
-
 pub struct CodegenCx<'tcx> {
     pub tcx: TyCtxt<'tcx>,
     pub codegen_unit: &'tcx CodegenUnit<'tcx>,
@@ -74,8 +66,6 @@ pub struct CodegenCx<'tcx> {
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
     pub panic_fn_id: Cell<Option<Word>>,
-    pub internal_buffer_load_id: RefCell<FxHashSet<Word>>,
-    pub internal_buffer_store_id: RefCell<FxHashSet<Word>>,
     /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
     pub panic_bounds_check_fn_id: Cell<Option<Word>>,
 
@@ -83,9 +73,6 @@ pub struct CodegenCx<'tcx> {
     /// This enables/disables them.
     pub i8_i16_atomics_allowed: bool,
 
-    /// If bindless is enable, this contains the information about the global
-    /// descriptor sets that are always bound.
-    pub bindless_descriptor_sets: RefCell<Option<BindlessDescriptorSets>>,
     pub codegen_args: CodegenArgs,
 
     /// Information about the SPIR-V target.
@@ -100,7 +87,6 @@ impl<'tcx> CodegenCx<'tcx> {
             .sess
             .target_features
             .iter()
-            .filter(|s| *s != &sym.bindless)
             .map(|s| s.as_str())
             .collect::<Vec<_>>();
 
@@ -118,21 +104,13 @@ impl<'tcx> CodegenCx<'tcx> {
                 Vec::new()
             });
 
-        let mut bindless = false;
-        for &feature in &tcx.sess.target_features {
-            if feature == sym.bindless {
-                bindless = true;
-                break;
-            }
-        }
-
         let codegen_args = CodegenArgs::from_session(tcx.sess);
         let target = tcx.sess.target.llvm_target.parse().unwrap();
 
-        let result = Self {
+        Self {
             tcx,
             codegen_unit,
-            builder: BuilderSpirv::new(&sym, &target, &features, bindless),
+            builder: BuilderSpirv::new(&sym, &target, &features),
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
@@ -145,25 +123,10 @@ impl<'tcx> CodegenCx<'tcx> {
             instruction_table: InstructionTable::new(),
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
-            internal_buffer_load_id: Default::default(),
-            internal_buffer_store_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
             codegen_args,
-            bindless_descriptor_sets: Default::default(),
-        };
-
-        if bindless {
-            result.lazy_add_bindless_descriptor_sets();
         }
-
-        result
-    }
-
-    /// Temporary toggle to see if bindless has been enabled in the compiler, should
-    /// be removed longer term when we use bindless as the default model
-    pub fn bindless(&self) -> bool {
-        self.bindless_descriptor_sets.borrow().is_some()
     }
 
     /// See comment on `BuilderCursor`
