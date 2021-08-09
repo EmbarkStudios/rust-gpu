@@ -4,7 +4,7 @@
 use crate::attr::{AggregatedSpirvAttributes, IntrinsicType};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::{Capability, StorageClass, Word};
+use rspirv::spirv::{StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
 use rustc_middle::bug;
@@ -58,18 +58,11 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                     cx.emit_global()
                         .type_forward_pointer(new_id, StorageClass::Generic);
                     entry.insert(PointeeDefState::DefiningWithForward(new_id));
-                    if !cx.builder.has_capability(Capability::Addresses)
-                        && !cx
-                            .builder
-                            .has_capability(Capability::PhysicalStorageBufferAddresses)
-                    {
-                        cx.zombie_with_span(
-                            new_id,
-                            span,
-                            "OpTypeForwardPointer without OpCapability \
-                            Addresses or PhysicalStorageBufferAddresses",
-                        );
-                    }
+                    cx.zombie_with_span(
+                        new_id,
+                        span,
+                        "Cannot create self-referential types, even through pointers",
+                    );
                     Some(new_id)
                 }
                 // State: This is the third or more time we've seen this type, and we've already emitted an
@@ -424,10 +417,7 @@ fn trans_scalar<'tcx>(
     }
 
     match scalar.value {
-        Primitive::Int(width, mut signedness) => {
-            if cx.target.is_kernel() {
-                signedness = false;
-            }
+        Primitive::Int(width, signedness) => {
             SpirvType::Integer(width.size().bits() as u32, signedness).def(span, cx)
         }
         Primitive::F32 => SpirvType::Float(32).def(span, cx),
@@ -652,18 +642,6 @@ pub fn auto_struct_layout<'tcx>(
 
 // see struct_llfields in librustc_codegen_llvm for implementation hints
 fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
-    if let TyKind::Foreign(_) = ty.ty.kind() {
-        // "An unsized FFI type that is opaque to Rust", `extern type A;` (currently unstable)
-        if cx.target.is_kernel() {
-            // TODO: This should use the name of the struct as the name. However, names are not stable across crates,
-            // e.g. core::fmt::Opaque in one crate and fmt::Opaque in core.
-            return SpirvType::Opaque {
-                name: "".to_string(),
-            }
-            .def(span, cx);
-        }
-        // otherwise fall back
-    };
     let size = if ty.is_unsized() { None } else { Some(ty.size) };
     let align = ty.align.abi;
     let mut field_types = Vec::new();

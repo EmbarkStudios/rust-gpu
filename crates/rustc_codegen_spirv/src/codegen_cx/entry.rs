@@ -84,19 +84,15 @@ impl<'tcx> CodegenCx<'tcx> {
                 ),
             );
         }
-        let execution_model = entry.execution_model;
-        let fn_id = if execution_model == ExecutionModel::Kernel {
-            self.kernel_entry_stub(entry_func, name, execution_model)
-        } else {
-            self.shader_entry_stub(
-                span,
-                entry_func,
-                &fn_abi.args,
-                hir_params,
-                name,
-                execution_model,
-            )
-        };
+        // let execution_model = entry.execution_model;
+        let fn_id = self.shader_entry_stub(
+            span,
+            entry_func,
+            &fn_abi.args,
+            hir_params,
+            name,
+            entry.execution_model,
+        );
         let mut emit = self.emit_global();
         entry
             .execution_modes
@@ -547,51 +543,5 @@ impl<'tcx> CodegenCx<'tcx> {
                 op_entry_point_interface_operands.push(var);
             }
         }
-    }
-
-    // Kernel mode takes its interface as function parameters(??)
-    // OpEntryPoints cannot be OpLinkage, so write out a stub to call through.
-    fn kernel_entry_stub(
-        &self,
-        entry_func: SpirvValue,
-        name: String,
-        execution_model: ExecutionModel,
-    ) -> Word {
-        let (entry_func_return, entry_func_args) = match self.lookup_type(entry_func.ty) {
-            SpirvType::Function {
-                return_type,
-                arguments,
-            } => (return_type, arguments),
-            other => self.tcx.sess.fatal(&format!(
-                "Invalid kernel_entry_stub type: {}",
-                other.debug(entry_func.ty, self)
-            )),
-        };
-        let mut emit = self.emit_global();
-        let fn_id = emit
-            .begin_function(
-                entry_func_return,
-                None,
-                FunctionControl::NONE,
-                entry_func.ty,
-            )
-            .unwrap();
-        let arguments = entry_func_args
-            .iter()
-            .map(|&ty| emit.function_parameter(ty).unwrap())
-            .collect::<Vec<_>>();
-        emit.begin_block(None).unwrap();
-        let call_result = emit
-            .function_call(entry_func_return, None, entry_func.def_cx(self), arguments)
-            .unwrap();
-        if self.lookup_type(entry_func_return) == SpirvType::Void {
-            emit.ret().unwrap();
-        } else {
-            emit.ret_value(call_result).unwrap();
-        }
-        emit.end_function().unwrap();
-
-        emit.entry_point(execution_model, fn_id, name, &[]);
-        fn_id
     }
 }

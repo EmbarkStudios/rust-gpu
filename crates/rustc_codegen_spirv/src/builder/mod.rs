@@ -161,15 +161,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     .unwrap()
                     .with_type(result_type)
             };
-            let has_addresses = self
-                .builder
-                .has_capability(rspirv::spirv::Capability::Addresses);
-            if !has_addresses {
-                self.zombie(
-                    result.def(self),
-                    "OpPtrAccessChain without OpCapability Addresses",
-                );
-            }
+            self.zombie(
+                result.def(self),
+                "Cannot offset a pointer to an arbitrary element",
+            );
             result
         }
     }

@@ -26,9 +26,6 @@ pub type Result<T> = std::result::Result<T, ErrorReported>;
 pub struct Options {
     pub compact_ids: bool,
     pub dce: bool,
-    pub inline: bool,
-    pub mem2reg: bool,
-    pub destructure: bool,
     pub structurize: bool,
     pub emit_multiple_modules: bool,
     pub name_variables: bool,
@@ -167,7 +164,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         );
     }
 
-    if opts.inline {
+    {
         let _timer = sess.timer("link_inline");
         inline::inline(&mut output);
     }
@@ -193,47 +190,40 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         let _timer = sess.timer("link_block_ordering_pass_and_mem2reg");
         let mut pointer_to_pointee = FxHashMap::default();
         let mut constants = FxHashMap::default();
-        if opts.mem2reg {
-            let mut u32 = None;
-            for inst in &output.types_global_values {
-                match inst.class.opcode {
-                    Op::TypePointer => {
-                        pointer_to_pointee
-                            .insert(inst.result_id.unwrap(), inst.operands[1].unwrap_id_ref());
-                    }
-                    Op::TypeInt
-                        if inst.operands[0].unwrap_literal_int32() == 32
-                            && inst.operands[1].unwrap_literal_int32() == 0 =>
-                    {
-                        assert!(u32.is_none());
-                        u32 = Some(inst.result_id.unwrap());
-                    }
-                    Op::Constant if u32.is_some() && inst.result_type == u32 => {
-                        let value = inst.operands[0].unwrap_literal_int32();
-                        constants.insert(inst.result_id.unwrap(), value);
-                    }
-                    _ => {}
+        let mut u32 = None;
+        for inst in &output.types_global_values {
+            match inst.class.opcode {
+                Op::TypePointer => {
+                    pointer_to_pointee
+                        .insert(inst.result_id.unwrap(), inst.operands[1].unwrap_id_ref());
                 }
+                Op::TypeInt
+                    if inst.operands[0].unwrap_literal_int32() == 32
+                        && inst.operands[1].unwrap_literal_int32() == 0 =>
+                {
+                    assert!(u32.is_none());
+                    u32 = Some(inst.result_id.unwrap());
+                }
+                Op::Constant if u32.is_some() && inst.result_type == u32 => {
+                    let value = inst.operands[0].unwrap_literal_int32();
+                    constants.insert(inst.result_id.unwrap(), value);
+                }
+                _ => {}
             }
         }
         for func in &mut output.functions {
             simple_passes::block_ordering_pass(func);
-            if opts.mem2reg {
-                // Note: mem2reg requires functions to be in RPO order (i.e. block_ordering_pass)
-                mem2reg::mem2reg(
-                    output.header.as_mut().unwrap(),
-                    &mut output.types_global_values,
-                    &pointer_to_pointee,
-                    &constants,
-                    func,
-                );
-                // mem2reg produces minimal SSA form, not pruned, so DCE the dead ones
-                dce::dce_phi(func);
-            }
-            if opts.destructure {
-                let _timer = sess.timer("link_destructure");
-                destructure_composites::destructure_composites(func);
-            }
+            // Note: mem2reg requires functions to be in RPO order (i.e. block_ordering_pass)
+            mem2reg::mem2reg(
+                output.header.as_mut().unwrap(),
+                &mut output.types_global_values,
+                &pointer_to_pointee,
+                &constants,
+                func,
+            );
+            // mem2reg produces minimal SSA form, not pruned, so DCE the dead ones
+            dce::dce_phi(func);
+            destructure_composites::destructure_composites(func);
         }
     }
 

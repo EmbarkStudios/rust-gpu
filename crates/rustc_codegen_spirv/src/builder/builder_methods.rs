@@ -209,7 +209,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 )),
             },
             SpirvType::Adt { .. } => self.fatal("memset on structs not implemented yet"),
-            SpirvType::Opaque { .. } => self.fatal("memset on opaque type is invalid"),
             SpirvType::Vector { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 self.constant_composite(
@@ -266,7 +265,6 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 )),
             },
             SpirvType::Adt { .. } => self.fatal("memset on structs not implemented yet"),
-            SpirvType::Opaque { .. } => self.fatal("memset on opaque type is invalid"),
             SpirvType::Array { element, count } => {
                 let elem_pat = self.memset_dynamic_pattern(&self.lookup_type(element), fill_var);
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
@@ -355,29 +353,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     fn zombie_convert_ptr_to_u(&self, def: Word) {
-        if !self.builder.has_capability(Capability::Addresses)
-            && !self
-                .builder
-                .has_capability(Capability::PhysicalStorageBufferAddresses)
-        {
-            self.zombie(
-                def,
-                "OpConvertPtrToU without OpCapability Addresses or PhysicalStorageBufferAddresses",
-            );
-        }
+        self.zombie(def, "Cannot convert pointers to integers");
     }
 
     fn zombie_convert_u_to_ptr(&self, def: Word) {
-        if !self.builder.has_capability(Capability::Addresses)
-            && !self
-                .builder
-                .has_capability(Capability::PhysicalStorageBufferAddresses)
-        {
-            self.zombie(
-                def,
-                "OpConvertUToPtr OpCapability Addresses or PhysicalStorageBufferAddresses",
-            );
-        }
+        self.zombie(def, "Cannot convert integers to pointers");
     }
 
     fn zombie_ptr_equal(&self, def: Word, inst: &str) {
@@ -1276,11 +1256,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .unwrap()
                 .with_type(dest_ty);
 
-            if (val_is_ptr || dest_is_ptr) && self.logical_addressing_model() {
+            if val_is_ptr || dest_is_ptr {
                 if self.is_system_crate() {
                     self.zombie(
                         result.def(self),
-                        "OpBitcast between ptr and non-ptr without AddressingModel != Logical",
+                        &format!(
+                            "Cannot cast between pointer and non-pointer types. From: {}. To: {}.",
+                            self.debug_type(val.ty),
+                            self.debug_type(dest_ty)
+                        ),
                     );
                 } else {
                     self.struct_err("Cannot cast between pointer and non-pointer types")
@@ -1397,7 +1381,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .access_chain(dest_ty, None, val.def(self), indices)
                 .unwrap()
                 .with_type(dest_ty)
-        } else if self.logical_addressing_model() {
+        } else {
             // Defer the cast so that it has a chance to be avoided.
             SpirvValue {
                 kind: SpirvValueKind::LogicalPtrCast {
@@ -1407,11 +1391,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 },
                 ty: dest_ty,
             }
-        } else {
-            self.emit()
-                .bitcast(dest_ty, None, val.def(self))
-                .unwrap()
-                .with_type(dest_ty)
         }
     }
 
@@ -1713,12 +1692,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                     empty(),
                 )
                 .unwrap();
-            if !self.builder.has_capability(Capability::Addresses) {
-                self.zombie(
-                    dst.def(self),
-                    "OpCopyMemorySized without OpCapability Addresses",
-                );
-            }
+            self.zombie(dst.def(self), "Cannot memcpy dynamically sized data");
         }
     }
 

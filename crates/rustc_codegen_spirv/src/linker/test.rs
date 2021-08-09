@@ -91,9 +91,6 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
             &Options {
                 compact_ids: true,
                 dce: false,
-                inline: false,
-                destructure: false,
-                mem2reg: false,
                 structurize: false,
                 emit_multiple_modules: false,
                 name_variables: false,
@@ -343,7 +340,7 @@ fn func_ctrl() {
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeVoid
             %3 = OpTypeFunction %2
-            %1 = OpFunction %2 Inline %3
+            %1 = OpFunction %2 DontInline %3
             %4 = OpLabel
             OpReturn
             OpFunctionEnd"#,
@@ -355,7 +352,7 @@ fn func_ctrl() {
             %2 = OpTypeFunction %1
             %3 = OpTypeFloat 32
             %4 = OpVariable %3 Uniform
-            %5 = OpFunction %1 Inline %2
+            %5 = OpFunction %1 DontInline %2
             %6 = OpLabel
             OpReturn
             OpFunctionEnd"#;
@@ -380,6 +377,8 @@ fn use_exported_func_param_attr() {
             OpFunctionEnd
             %8 = OpFunction %5 None %7
             %4 = OpFunctionParameter %6
+            %9 = OpLabel
+            OpReturn
             OpFunctionEnd
             "#,
     );
@@ -412,10 +411,12 @@ fn use_exported_func_param_attr() {
         %6 = OpTypeFunction %4 %5
         %7 = OpFunction %4 None %6
         %2 = OpFunctionParameter %5
+        %8 = OpLabel
+        OpReturn
         OpFunctionEnd
-        %8 = OpFunction %4 None %6
+        %9 = OpFunction %4 None %6
         %3 = OpFunctionParameter %5
-        %9 = OpLabel
+        %10 = OpLabel
         OpReturn
         OpFunctionEnd"#;
 
@@ -443,6 +444,8 @@ fn names_and_decorations() {
             OpFunctionEnd
             %8 = OpFunction %5 None %7
             %4 = OpFunctionParameter %9
+            %10 = OpLabel
+            OpReturn
             OpFunctionEnd
             "#,
     );
@@ -482,10 +485,12 @@ fn names_and_decorations() {
         %8 = OpTypeFunction %5 %7
         %9 = OpFunction %5 None %8
         %4 = OpFunctionParameter %7
+        %10 = OpLabel
+        OpReturn
         OpFunctionEnd
         %1 = OpFunction %5 None %8
         %2 = OpFunctionParameter %7
-        %10 = OpLabel
+        %11 = OpLabel
         OpReturn
         OpFunctionEnd"#;
 

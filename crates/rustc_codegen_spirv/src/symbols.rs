@@ -173,7 +173,6 @@ const EXECUTION_MODELS: &[(&str, ExecutionModel)] = {
         ("geometry", Geometry),
         ("fragment", Fragment),
         ("compute", GLCompute),
-        ("kernel", Kernel),
         ("task_nv", TaskNV),
         ("mesh_nv", MeshNV),
         ("ray_generation", ExecutionModel::RayGenerationKHR),
@@ -672,22 +671,6 @@ fn parse_entry_attrs(
                     ),
                 ));
             }
-        }
-        Kernel => {
-            if let Some(local_size) = local_size {
-                entry
-                    .execution_modes
-                    .push((LocalSize, ExecutionModeExtra::new(local_size)));
-            }
-            if let Some(local_size_hint) = local_size_hint {
-                entry
-                    .execution_modes
-                    .push((LocalSizeHint, ExecutionModeExtra::new(local_size_hint)));
-            }
-            // Reserved
-            /*if let Some(max_workgroup_size_intel) = max_workgroup_size_intel {
-                entry.execution_modes.push((MaxWorkgroupSizeINTEL, ExecutionModeExtra::new(max_workgroup_size_intel)));
-            }*/
         }
         //TODO: Cover more defaults
         _ => {}

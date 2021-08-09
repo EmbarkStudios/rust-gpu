@@ -161,7 +161,11 @@ impl SpirvValue {
                     cx.zombie_with_span(
                         zombie_target_undef,
                         span,
-                        "OpBitcast on ptr without AddressingModel != Logical",
+                        &format!(
+                            "Cannot cast between pointer types. From: {}. To: {}.",
+                            cx.debug_type(original_pointee_ty),
+                            cx.debug_type(self.ty)
+                        ),
                     );
                 } else {
                     cx.tcx
@@ -348,41 +352,26 @@ impl BuilderSpirv {
             }
         }
 
-        if target.is_kernel() {
-            add_cap(&mut builder, &mut enabled_capabilities, Capability::Kernel);
-        } else {
-            add_cap(&mut builder, &mut enabled_capabilities, Capability::Shader);
-            if memory_model == MemoryModel::Vulkan {
-                if version < (1, 5) {
-                    add_ext(
-                        &mut builder,
-                        &mut enabled_extensions,
-                        sym.spv_khr_vulkan_memory_model,
-                    );
-                }
-                add_cap(
+        add_cap(&mut builder, &mut enabled_capabilities, Capability::Shader);
+        if memory_model == MemoryModel::Vulkan {
+            if version < (1, 5) {
+                add_ext(
                     &mut builder,
-                    &mut enabled_capabilities,
-                    Capability::VulkanMemoryModel,
+                    &mut enabled_extensions,
+                    sym.spv_khr_vulkan_memory_model,
                 );
             }
+            add_cap(
+                &mut builder,
+                &mut enabled_capabilities,
+                Capability::VulkanMemoryModel,
+            );
         }
 
         // The linker will always be ran on this module
         add_cap(&mut builder, &mut enabled_capabilities, Capability::Linkage);
 
-        let addressing_model = if target.is_kernel() {
-            add_cap(
-                &mut builder,
-                &mut enabled_capabilities,
-                Capability::Addresses,
-            );
-            AddressingModel::Physical32
-        } else {
-            AddressingModel::Logical
-        };
-
-        builder.memory_model(addressing_model, memory_model);
+        builder.memory_model(AddressingModel::Logical, memory_model);
 
         Self {
             builder: RefCell::new(builder),
