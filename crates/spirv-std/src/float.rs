@@ -16,7 +16,7 @@ unsafe impl Float for f64 {
 /// Converts two f32 values (floats) into two f16 values (halfs). The result is a u32, with the low
 /// 16 bits being the first f16, and the high 16 bits being the second f16.
 #[spirv_std_macros::gpu_only]
-pub fn f32x2_to_f16x2(vec: impl Vector<f32, 2>) -> u32 {
+pub fn vec2_to_f16x2(vec: impl Vector<f32, 2>) -> u32 {
     let result;
     unsafe {
         asm!(
@@ -35,7 +35,7 @@ pub fn f32x2_to_f16x2(vec: impl Vector<f32, 2>) -> u32 {
 /// Converts two f16 values (halfs) into two f32 values (floats). The parameter is a u32, with the
 /// low 16 bits being the first f16, and the high 16 bits being the second f16.
 #[spirv_std_macros::gpu_only]
-pub fn f16x2_to_f32x2<V: Vector<f32, 2>>(int: u32) -> V {
+pub fn f16x2_to_vec2<V: Vector<f32, 2>>(int: u32) -> V {
     let mut result = Default::default();
     unsafe {
         asm!(
@@ -68,7 +68,7 @@ unsafe impl Vector<f32, 2> for F32x2 {}
 /// for u16 not being universal - the upper 16 bits will always be zero.
 #[spirv_std_macros::gpu_only]
 pub fn f32_to_f16(float: f32) -> u32 {
-    f32x2_to_f16x2(F32x2 { x: float, y: 0.0 })
+    vec2_to_f16x2(F32x2 { x: float, y: 0.0 })
 }
 
 /// Converts an f16 (half) into an f32 (float). The parameter is a u32, due to GPU support for u16
@@ -76,14 +76,14 @@ pub fn f32_to_f16(float: f32) -> u32 {
 #[cfg(feature = "glam")]
 #[spirv_std_macros::gpu_only]
 pub fn f16_to_f32(packed: u32) -> f32 {
-    f16x2_to_f32x2::<F32x2>(packed).x
+    f16x2_to_vec2::<F32x2>(packed).x
 }
 
 /// Packs a vec4 into 4 8-bit signed integers. See
 /// [PackSnorm4x8](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact
 /// semantics.
 #[spirv_std_macros::gpu_only]
-pub fn f32x4_to_u8x4_snorm(vec: impl Vector<f32, 4>) -> u32 {
+pub fn vec4_to_u8x4_snorm(vec: impl Vector<f32, 4>) -> u32 {
     let result;
     unsafe {
         asm!(
@@ -103,7 +103,7 @@ pub fn f32x4_to_u8x4_snorm(vec: impl Vector<f32, 4>) -> u32 {
 /// [PackUnorm4x8](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact
 /// semantics.
 #[spirv_std_macros::gpu_only]
-pub fn f32x4_to_u8x4_unorm(vec: impl Vector<f32, 4>) -> u32 {
+pub fn vec4_to_u8x4_unorm(vec: impl Vector<f32, 4>) -> u32 {
     let result;
     unsafe {
         asm!(
@@ -123,7 +123,7 @@ pub fn f32x4_to_u8x4_unorm(vec: impl Vector<f32, 4>) -> u32 {
 /// [PackSnorm2x16](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact
 /// semantics.
 #[spirv_std_macros::gpu_only]
-pub fn f32x2_to_u16x2_snorm(vec: impl Vector<f32, 2>) -> u32 {
+pub fn vec2_to_u16x2_snorm(vec: impl Vector<f32, 2>) -> u32 {
     let result;
     unsafe {
         asm!(
@@ -143,7 +143,7 @@ pub fn f32x2_to_u16x2_snorm(vec: impl Vector<f32, 2>) -> u32 {
 /// [PackUnorm2x16](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact
 /// semantics.
 #[spirv_std_macros::gpu_only]
-pub fn f32x2_to_u16x2_unorm(vec: impl Vector<f32, 2>) -> u32 {
+pub fn vec2_to_u16x2_unorm(vec: impl Vector<f32, 2>) -> u32 {
     let result;
     unsafe {
         asm!(
@@ -163,7 +163,7 @@ pub fn f32x2_to_u16x2_unorm(vec: impl Vector<f32, 2>) -> u32 {
 /// [UnpackSnorm4x8](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact
 /// semantics.
 #[spirv_std_macros::gpu_only]
-pub fn u8x4_to_f32x4_snorm<V: Vector<f32, 4>>(int: u32) -> V {
+pub fn u8x4_to_vec4_snorm<V: Vector<f32, 4>>(int: u32) -> V {
     let mut result = Default::default();
     unsafe {
         asm!(
@@ -184,7 +184,7 @@ pub fn u8x4_to_f32x4_snorm<V: Vector<f32, 4>>(int: u32) -> V {
 /// [UnpackSnorm4x8](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for exact
 /// semantics.
 #[spirv_std_macros::gpu_only]
-pub fn u8x4_to_f32x4_unorm<V: Vector<f32, 4>>(int: u32) -> V {
+pub fn u8x4_to_vec4_unorm<V: Vector<f32, 4>>(int: u32) -> V {
     let mut result = Default::default();
     unsafe {
         asm!(
@@ -205,7 +205,7 @@ pub fn u8x4_to_f32x4_unorm<V: Vector<f32, 4>>(int: u32) -> V {
 /// [UnpackSnorm2x16](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for
 /// exact semantics.
 #[spirv_std_macros::gpu_only]
-pub fn u16x2_to_f32x2_snorm<V: Vector<f32, 2>>(int: u32) -> V {
+pub fn u16x2_to_vec2_snorm<V: Vector<f32, 2>>(int: u32) -> V {
     let mut result = Default::default();
     unsafe {
         asm!(
@@ -226,7 +226,7 @@ pub fn u16x2_to_f32x2_snorm<V: Vector<f32, 2>>(int: u32) -> V {
 /// [UnpackUnorm2x16](https://www.khronos.org/registry/SPIR-V/specs/1.0/GLSL.std.450.html) for
 /// exact semantics.
 #[spirv_std_macros::gpu_only]
-pub fn u16x2_to_f32x2_unorm<V: Vector<f32, 2>>(int: u32) -> V {
+pub fn u16x2_to_vec2_unorm<V: Vector<f32, 2>>(int: u32) -> V {
     let mut result = Default::default();
     unsafe {
         asm!(
