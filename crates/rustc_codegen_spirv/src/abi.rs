@@ -7,6 +7,7 @@ use crate::spirv_type::SpirvType;
 use rspirv::spirv::{StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
+use rustc_index::vec::Idx;
 use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::subst::SubstsRef;
@@ -18,7 +19,7 @@ use rustc_span::Span;
 use rustc_span::DUMMY_SP;
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{
-    Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, TagEncoding, VariantIdx, Variants,
+    Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, VariantIdx, Variants,
 };
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
@@ -349,15 +350,15 @@ fn trans_type_impl<'tcx>(
             field_names: None,
         }
         .def_with_name(cx, span, TyLayoutNameKey::from(ty)),
-        Abi::Scalar(ref scalar) => trans_scalar(cx, span, ty, scalar, None, is_immediate),
+        Abi::Scalar(ref scalar) => trans_scalar(cx, span, ty, scalar, Size::ZERO, is_immediate),
         Abi::ScalarPair(ref a, ref b) => {
             // Note: We can't use auto_struct_layout here because the spirv types here might be undefined due to
             // recursive pointer types.
             let a_offset = Size::ZERO;
             let b_offset = a.value.size(cx).align_to(b.value.align(cx).abi);
             // Note! Do not pass through is_immediate here - they're wrapped in a struct, hence, not immediate.
-            let a = trans_scalar(cx, span, ty, a, Some(a_offset), false);
-            let b = trans_scalar(cx, span, ty, b, Some(b_offset), false);
+            let a = trans_scalar(cx, span, ty, a, a_offset, false);
+            let b = trans_scalar(cx, span, ty, b, b_offset, false);
             let size = if ty.is_unsized() { None } else { Some(ty.size) };
             SpirvType::Adt {
                 def_id: def_id_for_spirv_type_adt(ty),
@@ -370,7 +371,7 @@ fn trans_type_impl<'tcx>(
             .def_with_name(cx, span, TyLayoutNameKey::from(ty))
         }
         Abi::Vector { ref element, count } => {
-            let elem_spirv = trans_scalar(cx, span, ty, element, None, false);
+            let elem_spirv = trans_scalar(cx, span, ty, element, Size::ZERO, false);
             SpirvType::Vector {
                 element: elem_spirv,
                 count: count as u32,
@@ -399,7 +400,7 @@ pub fn scalar_pair_element_backend_type<'tcx>(
         1 => a.value.size(cx).align_to(b.value.align(cx).abi),
         _ => unreachable!(),
     };
-    trans_scalar(cx, span, ty, [a, b][index], Some(offset), is_immediate)
+    trans_scalar(cx, span, ty, [a, b][index], offset, is_immediate)
 }
 
 /// A "scalar" is a basic building block: bools, ints, floats, pointers. (i.e. not something complex like a struct)
@@ -414,7 +415,7 @@ fn trans_scalar<'tcx>(
     span: Span,
     ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
-    scalar_pair_field_offset: Option<Size>,
+    offset: Size,
     is_immediate: bool,
 ) -> Word {
     if is_immediate && scalar.is_bool() {
@@ -428,7 +429,7 @@ fn trans_scalar<'tcx>(
         Primitive::F32 => SpirvType::Float(32).def(span, cx),
         Primitive::F64 => SpirvType::Float(64).def(span, cx),
         Primitive::Pointer => {
-            let pointee_ty = dig_scalar_pointee(cx, ty, scalar_pair_field_offset);
+            let pointee_ty = dig_scalar_pointee(cx, ty, offset);
             // Pointers can be recursive. So, record what we're currently translating, and if we're already translating
             // the same type, emit an OpTypeForwardPointer and use that ID.
             if let Some(predefined_result) = cx
@@ -459,125 +460,72 @@ fn trans_scalar<'tcx>(
 // If the above didn't make sense, please poke Ashley, it's probably easier to explain via conversation.
 fn dig_scalar_pointee<'tcx>(
     cx: &CodegenCx<'tcx>,
-    ty: TyAndLayout<'tcx>,
-    scalar_pair_field_offset: Option<Size>,
+    layout: TyAndLayout<'tcx>,
+    offset: Size,
 ) -> PointeeTy<'tcx> {
-    match *ty.ty.kind() {
-        TyKind::Ref(_, elem_ty, _) | TyKind::RawPtr(TypeAndMut { ty: elem_ty, .. }) => {
-            let elem = cx.layout_of(elem_ty);
-            match scalar_pair_field_offset {
-                None => PointeeTy::Ty(elem),
-                Some(scalar_pair_field_offset) => {
-                    if elem.is_unsized() {
-                        let field_idx = if scalar_pair_field_offset == Size::ZERO {
-                            0
-                        } else {
-                            1
-                        };
-                        dig_scalar_pointee(cx, ty.field(cx, field_idx), None)
-                    } else {
-                        // This can sometimes happen in weird cases when going through the Adt case below - an ABI
-                        // of ScalarPair could be deduced, but it's actually e.g. a sized pointer followed by some other
-                        // completely unrelated type, not a wide pointer. So, translate this as a single scalar, one
-                        // component of that ScalarPair.
-                        PointeeTy::Ty(elem)
-                    }
-                }
+    if let FieldsShape::Primitive = layout.fields {
+        assert_eq!(offset, Size::ZERO);
+        let pointee = match *layout.ty.kind() {
+            TyKind::Ref(_, pointee_ty, _) | TyKind::RawPtr(TypeAndMut { ty: pointee_ty, .. }) => {
+                PointeeTy::Ty(cx.layout_of(pointee_ty))
             }
-        }
-        TyKind::FnPtr(sig) if scalar_pair_field_offset.is_none() => PointeeTy::Fn(sig),
-        TyKind::Adt(def, _) if def.is_box() => {
-            let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-            dig_scalar_pointee(cx, ptr_ty, scalar_pair_field_offset)
-        }
-        TyKind::Tuple(_) | TyKind::Adt(..) | TyKind::Closure(..) => {
-            dig_scalar_pointee_adt(cx, ty, scalar_pair_field_offset)
-        }
-        ref kind => cx.tcx.sess.fatal(&format!(
-            "TODO: Unimplemented Primitive::Pointer TyKind scalar_pair_field_offset={:?} ({:#?}):\n{:#?}",
-            scalar_pair_field_offset, kind, ty
-        )),
+            TyKind::FnPtr(sig) => PointeeTy::Fn(sig),
+            _ => bug!("Pointer is not `&T`, `*T` or `fn` pointer: {:#?}", layout),
+        };
+        return pointee;
     }
-}
 
-fn dig_scalar_pointee_adt<'tcx>(
-    cx: &CodegenCx<'tcx>,
-    ty: TyAndLayout<'tcx>,
-    scalar_pair_field_offset: Option<Size>,
-) -> PointeeTy<'tcx> {
-    match &ty.variants {
-        // If it's a Variants::Multiple, then we want to emit the type of the dataful variant, not the type of the
-        // discriminant. This is because the discriminant can e.g. have type *mut(), whereas we want the full underlying
-        // type, only available in the dataful variant.
-        Variants::Multiple {
-            tag_encoding,
-            tag_field,
-            variants,
-            ..
-        } => {
-            match *tag_encoding {
-                TagEncoding::Direct => cx.tcx.sess.fatal(&format!(
-                    "dig_scalar_pointee_adt Variants::Multiple TagEncoding::Direct makes no sense: {:#?}",
-                    ty
-                )),
-                TagEncoding::Niche { dataful_variant, .. } => {
-                    // This *should* be something like Option<&T>: a very simple enum.
-                    // TODO: This might not be, if it's a scalar pair?
-                    assert_eq!(1, ty.fields.count());
-                    assert_eq!(1, variants[dataful_variant].fields.count());
-                    if let TyKind::Adt(adt, substs) = ty.ty.kind() {
-                        assert_eq!(1, adt.variants[dataful_variant].fields.len());
-                        assert_eq!(0, *tag_field);
-                        let field_ty = adt.variants[dataful_variant].fields[0].ty(cx.tcx, substs);
-                        dig_scalar_pointee(cx, cx.layout_of(field_ty), scalar_pair_field_offset)
-                    } else {
-                        bug!("Variants::Multiple not TyKind::Adt: {:#?}", ty)
-                    }
-                },
-            }
+    let all_fields = (match &layout.variants {
+        Variants::Multiple { variants, .. } => 0..variants.len(),
+        Variants::Single { index } => {
+            let i = index.as_usize();
+            i..i + 1
         }
-        Variants::Single { .. } => {
-            let fields = ty
-                .fields
-                .index_by_increasing_offset()
-                .map(|f| ty.field(cx, f))
-                .filter(|f| !f.is_zst())
-                .collect::<Vec<_>>();
-            match scalar_pair_field_offset {
-                Some(scalar_pair_field_offset) => match fields.len() {
-                    1 => dig_scalar_pointee(cx, fields[0], Some(scalar_pair_field_offset)),
-                    // This case right here is the cause of the comment handling TyKind::Ref.
-                    2 => {
-                        let field_idx = if scalar_pair_field_offset == Size::ZERO {
-                            0
-                        } else {
-                            1
-                        };
-                        dig_scalar_pointee(cx, fields[field_idx], None)
-                    }
-                    other => cx.tcx.sess.fatal(&format!(
-                        "Unable to dig scalar pair pointer type: fields length {}",
-                        other
-                    )),
-                },
-                None => match fields.len() {
-                    1 => dig_scalar_pointee(cx, fields[0], None),
-                    other => cx.tcx.sess.fatal(&format!(
-                        "Unable to dig scalar pointer type: fields length {}",
-                        other
-                    )),
-                },
+    })
+    .flat_map(|variant_idx| {
+        let variant = layout.for_variant(cx, VariantIdx::new(variant_idx));
+        (0..variant.fields.count()).map(move |field_idx| {
+            (
+                variant.field(cx, field_idx),
+                variant.fields.offset(field_idx),
+            )
+        })
+    });
+
+    let mut pointee = None;
+    for (field, field_offset) in all_fields {
+        if field.is_zst() {
+            continue;
+        }
+        if (field_offset..field_offset + field.size).contains(&offset) {
+            let new_pointee = dig_scalar_pointee(cx, field, offset - field_offset);
+            match pointee {
+                Some(old_pointee) if old_pointee != new_pointee => {
+                    cx.tcx.sess.fatal(&format!(
+                        "dig_scalar_pointee: unsupported Pointer with different \
+                         pointee types ({:?} vs {:?}) at offset {:?} in {:#?}",
+                        old_pointee, new_pointee, offset, layout
+                    ));
+                }
+                _ => pointee = Some(new_pointee),
             }
         }
     }
+    pointee.unwrap_or_else(|| {
+        bug!(
+            "field containing Pointer scalar at offset {:?} not found in {:#?}",
+            offset,
+            layout
+        )
+    })
 }
 
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
     match ty.fields {
-        FieldsShape::Primitive => cx.tcx.sess.fatal(&format!(
-            "FieldsShape::Primitive not supported yet in trans_type: {:?}",
+        FieldsShape::Primitive => bug!(
+            "trans_aggregate called for FieldsShape::Primitive layout {:#?}",
             ty
-        )),
+        ),
         FieldsShape::Union(_) => {
             assert_ne!(ty.size.bytes(), 0, "{:#?}", ty);
             assert!(!ty.is_unsized(), "{:#?}", ty);
