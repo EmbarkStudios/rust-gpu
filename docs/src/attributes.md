@@ -89,3 +89,14 @@ Example:
 #[spirv(vertex)]
 fn main(#[spirv(invariant)] var: &mut f32) { }
 ```
+
+## Workgroup shared memory
+
+The `workgroup` attribute defines shared memory, which can be accessed by all invocations within the same workgroup. This corresponds to `groupshared` memory in hlsl or `shared` memory in glsl.
+
+Example:
+
+```rust
+#[spirv(compute(threads(32)))]
+fn main(#[spirv(workgroup)] var: &mut [Vec4; 4]) { }
+```

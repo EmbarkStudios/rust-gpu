@@ -1,4 +1,4 @@
-// Tests muiltplying a `Mat3` by a `Vec3`.
+// Tests multiplying a `Mat3` by a `Vec3`.
 // build-pass
 
 use spirv_std as _;
