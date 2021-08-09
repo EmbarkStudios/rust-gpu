@@ -416,7 +416,7 @@ fn trans_scalar<'tcx>(
     span: Span,
     ty: TyAndLayout<'tcx>,
     scalar: &Scalar,
-    index: Option<usize>,
+    scalar_pair_field_index: Option<usize>,
     is_immediate: bool,
 ) -> Word {
     if is_immediate && scalar.is_bool() {
@@ -433,7 +433,7 @@ fn trans_scalar<'tcx>(
         Primitive::F32 => SpirvType::Float(32).def(span, cx),
         Primitive::F64 => SpirvType::Float(64).def(span, cx),
         Primitive::Pointer => {
-            let pointee_ty = dig_scalar_pointee(cx, ty, index);
+            let pointee_ty = dig_scalar_pointee(cx, ty, scalar_pair_field_index);
             // Pointers can be recursive. So, record what we're currently translating, and if we're already translating
             // the same type, emit an OpTypeForwardPointer and use that ID.
             if let Some(predefined_result) = cx
@@ -465,16 +465,16 @@ fn trans_scalar<'tcx>(
 fn dig_scalar_pointee<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
-    index: Option<usize>,
+    scalar_pair_field_index: Option<usize>,
 ) -> PointeeTy<'tcx> {
     match *ty.ty.kind() {
         TyKind::Ref(_, elem_ty, _) | TyKind::RawPtr(TypeAndMut { ty: elem_ty, .. }) => {
             let elem = cx.layout_of(elem_ty);
-            match index {
+            match scalar_pair_field_index {
                 None => PointeeTy::Ty(elem),
-                Some(index) => {
+                Some(scalar_pair_field_index) => {
                     if elem.is_unsized() {
-                        dig_scalar_pointee(cx, ty.field(cx, index), None)
+                        dig_scalar_pointee(cx, ty.field(cx, scalar_pair_field_index), None)
                     } else {
                         // This can sometimes happen in weird cases when going through the Adt case below - an ABI
                         // of ScalarPair could be deduced, but it's actually e.g. a sized pointer followed by some other
@@ -485,17 +485,17 @@ fn dig_scalar_pointee<'tcx>(
                 }
             }
         }
-        TyKind::FnPtr(sig) if index.is_none() => PointeeTy::Fn(sig),
+        TyKind::FnPtr(sig) if scalar_pair_field_index.is_none() => PointeeTy::Fn(sig),
         TyKind::Adt(def, _) if def.is_box() => {
             let ptr_ty = cx.layout_of(cx.tcx.mk_mut_ptr(ty.ty.boxed_ty()));
-            dig_scalar_pointee(cx, ptr_ty, index)
+            dig_scalar_pointee(cx, ptr_ty, scalar_pair_field_index)
         }
         TyKind::Tuple(_) | TyKind::Adt(..) | TyKind::Closure(..) => {
-            dig_scalar_pointee_adt(cx, ty, index)
+            dig_scalar_pointee_adt(cx, ty, scalar_pair_field_index)
         }
         ref kind => cx.tcx.sess.fatal(&format!(
-            "TODO: Unimplemented Primitive::Pointer TyKind index={:?} ({:#?}):\n{:#?}",
-            index, kind, ty
+            "TODO: Unimplemented Primitive::Pointer TyKind scalar_pair_field_index={:?} ({:#?}):\n{:#?}",
+            scalar_pair_field_index, kind, ty
         )),
     }
 }
@@ -503,7 +503,7 @@ fn dig_scalar_pointee<'tcx>(
 fn dig_scalar_pointee_adt<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
-    index: Option<usize>,
+    scalar_pair_field_index: Option<usize>,
 ) -> PointeeTy<'tcx> {
     match &ty.variants {
         // If it's a Variants::Multiple, then we want to emit the type of the dataful variant, not the type of the
@@ -529,7 +529,7 @@ fn dig_scalar_pointee_adt<'tcx>(
                         assert_eq!(1, adt.variants[dataful_variant].fields.len());
                         assert_eq!(0, *tag_field);
                         let field_ty = adt.variants[dataful_variant].fields[0].ty(cx.tcx, substs);
-                        dig_scalar_pointee(cx, cx.layout_of(field_ty), index)
+                        dig_scalar_pointee(cx, cx.layout_of(field_ty), scalar_pair_field_index)
                     } else {
                         bug!("Variants::Multiple not TyKind::Adt: {:#?}", ty)
                     }
@@ -543,11 +543,11 @@ fn dig_scalar_pointee_adt<'tcx>(
                 .map(|f| ty.field(cx, f))
                 .filter(|f| !f.is_zst())
                 .collect::<Vec<_>>();
-            match index {
-                Some(index) => match fields.len() {
-                    1 => dig_scalar_pointee(cx, fields[0], Some(index)),
+            match scalar_pair_field_index {
+                Some(scalar_pair_field_index) => match fields.len() {
+                    1 => dig_scalar_pointee(cx, fields[0], Some(scalar_pair_field_index)),
                     // This case right here is the cause of the comment handling TyKind::Ref.
-                    2 => dig_scalar_pointee(cx, fields[index], None),
+                    2 => dig_scalar_pointee(cx, fields[scalar_pair_field_index], None),
                     other => cx.tcx.sess.fatal(&format!(
                         "Unable to dig scalar pair pointer type: fields length {}",
                         other
