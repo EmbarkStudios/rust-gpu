@@ -149,6 +149,8 @@
 <span id="147">147</span>
 <span id="148">148</span>
 <span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">rspirv::spirv::MemoryModel</span>;
 <span class="kw">use</span> <span class="ident">rustc_target::spec</span>::{<span class="ident">LinkerFlavor</span>, <span class="ident">PanicStrategy</span>, <span class="ident">Target</span>, <span class="ident">TargetOptions</span>};
@@ -162,10 +164,6 @@
 }
 
 <span class="kw">impl</span> <span class="ident">SpirvTarget</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_kernel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">memory_model</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">MemoryModel::OpenCL</span>
-    }
-
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">memory_model</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MemoryModel</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">env</span> {
             <span class="ident">TargetEnv::Universal_1_0</span>
@@ -280,7 +278,13 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>());
         }
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">env</span>, <span class="ident">vendor</span> })
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">Self</span> { <span class="ident">env</span>, <span class="ident">vendor</span> };
+
+        <span class="kw">if</span> <span class="ident">result</span>.<span class="ident">memory_model</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">MemoryModel::OpenCL</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>());
+        }
+
+        <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
     }
 }
 

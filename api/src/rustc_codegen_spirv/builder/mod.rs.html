@@ -394,18 +394,11 @@
 <span id="392">392</span>
 <span id="393">393</span>
 <span id="394">394</span>
-<span id="395">395</span>
-<span id="396">396</span>
-<span id="397">397</span>
-<span id="398">398</span>
-<span id="399">399</span>
-<span id="400">400</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">builder_methods</span>;
 <span class="kw">mod</span> <span class="ident">ext_inst</span>;
 <span class="kw">mod</span> <span class="ident">intrinsics</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">libm_intrinsics</span>;
-<span class="kw">mod</span> <span class="ident">load_store</span>;
 <span class="kw">mod</span> <span class="ident">spirv_asm</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ext_inst::ExtInst</span>;
@@ -565,15 +558,10 @@
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">with_type</span>(<span class="ident">result_type</span>)
             };
-            <span class="kw">let</span> <span class="ident">has_addresses</span> <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">builder</span>
-                .<span class="ident">has_capability</span>(<span class="ident">rspirv::spirv::Capability::Addresses</span>);
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">has_addresses</span> {
-                <span class="self">self</span>.<span class="ident">zombie</span>(
-                    <span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>),
-                    <span class="string">&quot;OpPtrAccessChain without OpCapability Addresses&quot;</span>,
-                );
-            }
+            <span class="self">self</span>.<span class="ident">zombie</span>(
+                <span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>),
+                <span class="string">&quot;Cannot offset a pointer to an arbitrary element&quot;</span>,
+            );
             <span class="ident">result</span>
         }
     }

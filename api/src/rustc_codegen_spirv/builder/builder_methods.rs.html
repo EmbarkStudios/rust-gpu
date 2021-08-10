@@ -2177,42 +2177,6 @@
 <span id="2175">2175</span>
 <span id="2176">2176</span>
 <span id="2177">2177</span>
-<span id="2178">2178</span>
-<span id="2179">2179</span>
-<span id="2180">2180</span>
-<span id="2181">2181</span>
-<span id="2182">2182</span>
-<span id="2183">2183</span>
-<span id="2184">2184</span>
-<span id="2185">2185</span>
-<span id="2186">2186</span>
-<span id="2187">2187</span>
-<span id="2188">2188</span>
-<span id="2189">2189</span>
-<span id="2190">2190</span>
-<span id="2191">2191</span>
-<span id="2192">2192</span>
-<span id="2193">2193</span>
-<span id="2194">2194</span>
-<span id="2195">2195</span>
-<span id="2196">2196</span>
-<span id="2197">2197</span>
-<span id="2198">2198</span>
-<span id="2199">2199</span>
-<span id="2200">2200</span>
-<span id="2201">2201</span>
-<span id="2202">2202</span>
-<span id="2203">2203</span>
-<span id="2204">2204</span>
-<span id="2205">2205</span>
-<span id="2206">2206</span>
-<span id="2207">2207</span>
-<span id="2208">2208</span>
-<span id="2209">2209</span>
-<span id="2210">2210</span>
-<span id="2211">2211</span>
-<span id="2212">2212</span>
-<span id="2213">2213</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::Builder</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
@@ -2425,7 +2389,6 @@
                 )),
             },
             <span class="ident">SpirvType::Adt</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;memset on structs not implemented yet&quot;</span>),
-            <span class="ident">SpirvType::Opaque</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;memset on opaque type is invalid&quot;</span>),
             <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">elem_pat</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">memset_const_pattern</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>), <span class="ident">fill_byte</span>);
                 <span class="self">self</span>.<span class="ident">constant_composite</span>(
@@ -2482,7 +2445,6 @@
                 )),
             },
             <span class="ident">SpirvType::Adt</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;memset on structs not implemented yet&quot;</span>),
-            <span class="ident">SpirvType::Opaque</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;memset on opaque type is invalid&quot;</span>),
             <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">elem_pat</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">memset_dynamic_pattern</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>), <span class="ident">fill_var</span>);
                 <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>).<span class="ident">unwrap</span>() <span class="kw">as</span> <span class="ident">usize</span>;
@@ -2571,29 +2533,11 @@
     }
 
     <span class="kw">fn</span> <span class="ident">zombie_convert_ptr_to_u</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">Word</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Addresses</span>)
-            <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>
-                .<span class="ident">builder</span>
-                .<span class="ident">has_capability</span>(<span class="ident">Capability::PhysicalStorageBufferAddresses</span>)
-        {
-            <span class="self">self</span>.<span class="ident">zombie</span>(
-                <span class="ident">def</span>,
-                <span class="string">&quot;OpConvertPtrToU without OpCapability Addresses or PhysicalStorageBufferAddresses&quot;</span>,
-            );
-        }
+        <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">def</span>, <span class="string">&quot;Cannot convert pointers to integers&quot;</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">zombie_convert_u_to_ptr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">Word</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Addresses</span>)
-            <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>
-                .<span class="ident">builder</span>
-                .<span class="ident">has_capability</span>(<span class="ident">Capability::PhysicalStorageBufferAddresses</span>)
-        {
-            <span class="self">self</span>.<span class="ident">zombie</span>(
-                <span class="ident">def</span>,
-                <span class="string">&quot;OpConvertUToPtr OpCapability Addresses or PhysicalStorageBufferAddresses&quot;</span>,
-            );
-        }
+        <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">def</span>, <span class="string">&quot;Cannot convert integers to pointers&quot;</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">zombie_ptr_equal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def</span>: <span class="ident">Word</span>, <span class="ident">inst</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
@@ -3492,11 +3436,15 @@
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">with_type</span>(<span class="ident">dest_ty</span>);
 
-            <span class="kw">if</span> (<span class="ident">val_is_ptr</span> <span class="op">|</span><span class="op">|</span> <span class="ident">dest_is_ptr</span>) <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">logical_addressing_model</span>() {
+            <span class="kw">if</span> <span class="ident">val_is_ptr</span> <span class="op">|</span><span class="op">|</span> <span class="ident">dest_is_ptr</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_system_crate</span>() {
                     <span class="self">self</span>.<span class="ident">zombie</span>(
                         <span class="ident">result</span>.<span class="ident">def</span>(<span class="self">self</span>),
-                        <span class="string">&quot;OpBitcast between ptr and non-ptr without AddressingModel != Logical&quot;</span>,
+                        <span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                            <span class="string">&quot;Cannot cast between pointer and non-pointer types. From: {}. To: {}.&quot;</span>,
+                            <span class="self">self</span>.<span class="ident">debug_type</span>(<span class="ident">val</span>.<span class="ident">ty</span>),
+                            <span class="self">self</span>.<span class="ident">debug_type</span>(<span class="ident">dest_ty</span>)
+                        ),
                     );
                 } <span class="kw">else</span> {
                     <span class="self">self</span>.<span class="ident">struct_err</span>(<span class="string">&quot;Cannot cast between pointer and non-pointer types&quot;</span>)
@@ -3613,7 +3561,7 @@
                 .<span class="ident">access_chain</span>(<span class="ident">dest_ty</span>, <span class="prelude-val">None</span>, <span class="ident">val</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">indices</span>)
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">with_type</span>(<span class="ident">dest_ty</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">logical_addressing_model</span>() {
+        } <span class="kw">else</span> {
             <span class="comment">// Defer the cast so that it has a chance to be avoided.</span>
             <span class="ident">SpirvValue</span> {
                 <span class="ident">kind</span>: <span class="ident">SpirvValueKind::LogicalPtrCast</span> {
@@ -3623,11 +3571,6 @@
                 },
                 <span class="ident">ty</span>: <span class="ident">dest_ty</span>,
             }
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">emit</span>()
-                .<span class="ident">bitcast</span>(<span class="ident">dest_ty</span>, <span class="prelude-val">None</span>, <span class="ident">val</span>.<span class="ident">def</span>(<span class="self">self</span>))
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">with_type</span>(<span class="ident">dest_ty</span>)
         }
     }
 
@@ -3929,12 +3872,7 @@
                     <span class="ident">empty</span>(),
                 )
                 .<span class="ident">unwrap</span>();
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">has_capability</span>(<span class="ident">Capability::Addresses</span>) {
-                <span class="self">self</span>.<span class="ident">zombie</span>(
-                    <span class="ident">dst</span>.<span class="ident">def</span>(<span class="self">self</span>),
-                    <span class="string">&quot;OpCopyMemorySized without OpCapability Addresses&quot;</span>,
-                );
-            }
+            <span class="self">self</span>.<span class="ident">zombie</span>(<span class="ident">dst</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="string">&quot;Cannot memcpy dynamically sized data&quot;</span>);
         }
     }
 
@@ -4400,16 +4338,6 @@
             <span class="comment">// needing to materialize `&amp;core::panic::Location` or `format_args!`.</span>
             <span class="self">self</span>.<span class="ident">abort</span>();
             <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">internal_buffer_load_id</span>.<span class="ident">borrow</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">callee_val</span>) {
-            <span class="self">self</span>.<span class="ident">codegen_internal_buffer_load</span>(<span class="ident">result_type</span>, <span class="ident">args</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">internal_buffer_store_id</span>.<span class="ident">borrow</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">callee_val</span>) {
-            <span class="self">self</span>.<span class="ident">codegen_internal_buffer_store</span>(<span class="ident">args</span>);
-
-            <span class="kw">let</span> <span class="ident">void_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Void</span>.<span class="ident">def</span>(<span class="ident">rustc_span::DUMMY_SP</span>, <span class="self">self</span>);
-            <span class="ident">SpirvValue</span> {
-                <span class="ident">kind</span>: <span class="ident">SpirvValueKind::IllegalTypeUsed</span>(<span class="ident">void_ty</span>),
-                <span class="ident">ty</span>: <span class="ident">void_ty</span>,
-            }
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">arg</span><span class="op">|</span> <span class="ident">arg</span>.<span class="ident">def</span>(<span class="self">self</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
             <span class="self">self</span>.<span class="ident">emit</span>()

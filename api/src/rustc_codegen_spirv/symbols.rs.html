@@ -679,29 +679,6 @@
 <span id="677">677</span>
 <span id="678">678</span>
 <span id="679">679</span>
-<span id="680">680</span>
-<span id="681">681</span>
-<span id="682">682</span>
-<span id="683">683</span>
-<span id="684">684</span>
-<span id="685">685</span>
-<span id="686">686</span>
-<span id="687">687</span>
-<span id="688">688</span>
-<span id="689">689</span>
-<span id="690">690</span>
-<span id="691">691</span>
-<span id="692">692</span>
-<span id="693">693</span>
-<span id="694">694</span>
-<span id="695">695</span>
-<span id="696">696</span>
-<span id="697">697</span>
-<span id="698">698</span>
-<span id="699">699</span>
-<span id="700">700</span>
-<span id="701">701</span>
-<span id="702">702</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::attr</span>::{<span class="ident">Entry</span>, <span class="ident">ExecutionModeExtra</span>, <span class="ident">IntrinsicType</span>, <span class="ident">SpirvAttribute</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::builder::libm_intrinsics</span>;
@@ -728,11 +705,9 @@
     <span class="kw">pub</span> <span class="ident">entry_point_name</span>: <span class="ident">Symbol</span>,
     <span class="kw">pub</span> <span class="ident">spv_intel_shader_integer_functions2</span>: <span class="ident">Symbol</span>,
     <span class="kw">pub</span> <span class="ident">spv_khr_vulkan_memory_model</span>: <span class="ident">Symbol</span>,
-    <span class="kw">pub</span> <span class="ident">spv_ext_descriptor_indexing</span>: <span class="ident">Symbol</span>,
     <span class="ident">descriptor_set</span>: <span class="ident">Symbol</span>,
     <span class="ident">binding</span>: <span class="ident">Symbol</span>,
     <span class="ident">input_attachment_index</span>: <span class="ident">Symbol</span>,
-    <span class="kw">pub</span> <span class="ident">bindless</span>: <span class="ident">Symbol</span>,
     <span class="ident">attributes</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Symbol</span>, <span class="ident">SpirvAttribute</span><span class="op">&gt;</span>,
     <span class="ident">execution_modes</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Symbol</span>, (<span class="ident">ExecutionMode</span>, <span class="ident">ExecutionModeExtraDim</span>)<span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">libm_intrinsics</span>: <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Symbol</span>, <span class="ident">libm_intrinsics::LibmIntrinsic</span><span class="op">&gt;</span>,
@@ -880,7 +855,6 @@
         (<span class="string">&quot;geometry&quot;</span>, <span class="ident">Geometry</span>),
         (<span class="string">&quot;fragment&quot;</span>, <span class="ident">Fragment</span>),
         (<span class="string">&quot;compute&quot;</span>, <span class="ident">GLCompute</span>),
-        (<span class="string">&quot;kernel&quot;</span>, <span class="ident">Kernel</span>),
         (<span class="string">&quot;task_nv&quot;</span>, <span class="ident">TaskNV</span>),
         (<span class="string">&quot;mesh_nv&quot;</span>, <span class="ident">MeshNV</span>),
         (<span class="string">&quot;ray_generation&quot;</span>, <span class="ident">ExecutionModel::RayGenerationKHR</span>),
@@ -1043,8 +1017,6 @@
                 <span class="ident">SpirvAttribute::IntrinsicType</span>(<span class="ident">IntrinsicType::RuntimeArray</span>),
             ),
             (<span class="string">&quot;unroll_loops&quot;</span>, <span class="ident">SpirvAttribute::UnrollLoops</span>),
-            (<span class="string">&quot;internal_buffer_load&quot;</span>, <span class="ident">SpirvAttribute::InternalBufferLoad</span>),
-            (<span class="string">&quot;internal_buffer_store&quot;</span>, <span class="ident">SpirvAttribute::InternalBufferStore</span>),
         ]
         .<span class="ident">iter</span>()
         .<span class="ident">cloned</span>();
@@ -1083,11 +1055,9 @@
                 <span class="string">&quot;SPV_INTEL_shader_integer_functions2&quot;</span>,
             ),
             <span class="ident">spv_khr_vulkan_memory_model</span>: <span class="ident">Symbol::intern</span>(<span class="string">&quot;SPV_KHR_vulkan_memory_model&quot;</span>),
-            <span class="ident">spv_ext_descriptor_indexing</span>: <span class="ident">Symbol::intern</span>(<span class="string">&quot;SPV_EXT_descriptor_indexing&quot;</span>),
             <span class="ident">descriptor_set</span>: <span class="ident">Symbol::intern</span>(<span class="string">&quot;descriptor_set&quot;</span>),
             <span class="ident">binding</span>: <span class="ident">Symbol::intern</span>(<span class="string">&quot;binding&quot;</span>),
             <span class="ident">input_attachment_index</span>: <span class="ident">Symbol::intern</span>(<span class="string">&quot;input_attachment_index&quot;</span>),
-            <span class="ident">bindless</span>: <span class="ident">Symbol::intern</span>(<span class="string">&quot;bindless&quot;</span>),
             <span class="ident">attributes</span>,
             <span class="ident">execution_modes</span>,
             <span class="ident">libm_intrinsics</span>,
@@ -1383,22 +1353,6 @@
                     ),
                 ));
             }
-        }
-        <span class="ident">Kernel</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">local_size</span>) <span class="op">=</span> <span class="ident">local_size</span> {
-                <span class="ident">entry</span>
-                    .<span class="ident">execution_modes</span>
-                    .<span class="ident">push</span>((<span class="ident">LocalSize</span>, <span class="ident">ExecutionModeExtra::new</span>(<span class="ident">local_size</span>)));
-            }
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">local_size_hint</span>) <span class="op">=</span> <span class="ident">local_size_hint</span> {
-                <span class="ident">entry</span>
-                    .<span class="ident">execution_modes</span>
-                    .<span class="ident">push</span>((<span class="ident">LocalSizeHint</span>, <span class="ident">ExecutionModeExtra::new</span>(<span class="ident">local_size_hint</span>)));
-            }
-            <span class="comment">// Reserved</span>
-            <span class="comment">/*if let Some(max_workgroup_size_intel) = max_workgroup_size_intel {
-                entry.execution_modes.push((MaxWorkgroupSizeINTEL, ExecutionModeExtra::new(max_workgroup_size_intel)));
-            }*/</span>
         }
         <span class="comment">//TODO: Cover more defaults</span>
         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}

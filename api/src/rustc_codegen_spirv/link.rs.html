@@ -604,13 +604,6 @@
 <span id="602">602</span>
 <span id="603">603</span>
 <span id="604">604</span>
-<span id="605">605</span>
-<span id="606">606</span>
-<span id="607">607</span>
-<span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::codegen_cx</span>::{<span class="ident">CodegenArgs</span>, <span class="ident">ModuleOutputType</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -632,7 +625,6 @@
 <span class="kw">use</span> <span class="ident">rustc_session::output</span>::{<span class="ident">check_file_is_writeable</span>, <span class="ident">invalid_output_for_target</span>, <span class="ident">out_filename</span>};
 <span class="kw">use</span> <span class="ident">rustc_session::utils::NativeLibKind</span>;
 <span class="kw">use</span> <span class="ident">rustc_session::Session</span>;
-<span class="kw">use</span> <span class="ident">rustc_span::symbol::Symbol</span>;
 <span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::ffi</span>::{<span class="ident">CString</span>, <span class="ident">OsStr</span>};
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
@@ -1147,16 +1139,10 @@
     }
     <span class="ident">drop</span>(<span class="ident">load_modules_timer</span>);
 
-    <span class="comment">// TODO: Can we merge this sym with the one in symbols.rs?</span>
-    <span class="kw">let</span> <span class="ident">legalize</span> <span class="op">=</span> <span class="op">!</span><span class="ident">sess</span>.<span class="ident">target_features</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Symbol::intern</span>(<span class="string">&quot;kernel&quot;</span>));
-
     <span class="comment">// Do the link...</span>
     <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">linker::Options</span> {
         <span class="ident">dce</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_DCE&quot;</span>).<span class="ident">is_err</span>(),
         <span class="ident">compact_ids</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_COMPACT_IDS&quot;</span>).<span class="ident">is_err</span>(),
-        <span class="ident">inline</span>: <span class="ident">legalize</span>,
-        <span class="ident">destructure</span>: <span class="ident">legalize</span>,
-        <span class="ident">mem2reg</span>: <span class="ident">legalize</span>,
         <span class="ident">structurize</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_STRUCTURIZE&quot;</span>).<span class="ident">is_err</span>(),
         <span class="ident">emit_multiple_modules</span>: <span class="ident">cg_args</span>.<span class="ident">module_output_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ModuleOutputType::Multiple</span>,
         <span class="ident">name_variables</span>: <span class="ident">cg_args</span>.<span class="ident">name_variables</span>,
