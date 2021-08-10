@@ -129,11 +129,11 @@ fn without_header_eq(mut result: Module, expected: &str) {
     if result != expected {
         println!("{}", &result);
         panic!(
-            "assertion failed: `(left.contains(right))`\
+            "assertion failed: `left == right`\
             \n\
             \n{}\
             \n",
-            pretty_assertions::Comparison::new(&PrettyString(&result), &PrettyString(&expected))
+            pretty_assertions::Comparison::new(&PrettyString(&expected), &PrettyString(&result))
         );
     }
 }
@@ -378,6 +378,7 @@ fn use_exported_func_param_attr() {
             %8 = OpFunction %5 None %7
             %4 = OpFunctionParameter %6
             %9 = OpLabel
+            %10 = OpLoad %6 %4
             OpReturn
             OpFunctionEnd
             "#,
@@ -394,6 +395,7 @@ fn use_exported_func_param_attr() {
             %1 = OpFunction %3 None %5
             %2 = OpFunctionParameter %4
             %6 = OpLabel
+            %7 = OpLoad %4 %2
             OpReturn
             OpFunctionEnd
             "#,
@@ -412,11 +414,13 @@ fn use_exported_func_param_attr() {
         %7 = OpFunction %4 None %6
         %2 = OpFunctionParameter %5
         %8 = OpLabel
+        %9 = OpLoad %5 %2
         OpReturn
         OpFunctionEnd
-        %9 = OpFunction %4 None %6
+        %10 = OpFunction %4 None %6
         %3 = OpFunctionParameter %5
-        %10 = OpLabel
+        %11 = OpLabel
+        %12 = OpLoad %5 %3
         OpReturn
         OpFunctionEnd"#;
 
@@ -445,6 +449,7 @@ fn names_and_decorations() {
             %8 = OpFunction %5 None %7
             %4 = OpFunctionParameter %9
             %10 = OpLabel
+            %11 = OpLoad %6 %4
             OpReturn
             OpFunctionEnd
             "#,
@@ -464,6 +469,7 @@ fn names_and_decorations() {
             %1 = OpFunction %3 None %5
             %2 = OpFunctionParameter %7
             %6 = OpLabel
+            %8 = OpLoad %4 %2
             OpReturn
             OpFunctionEnd
             "#,
@@ -486,11 +492,13 @@ fn names_and_decorations() {
         %9 = OpFunction %5 None %8
         %4 = OpFunctionParameter %7
         %10 = OpLabel
+        %11 = OpLoad %6 %4
         OpReturn
         OpFunctionEnd
         %1 = OpFunction %5 None %8
         %2 = OpFunctionParameter %7
-        %11 = OpLabel
+        %12 = OpLabel
+        %13 = OpLoad %6 %2
         OpReturn
         OpFunctionEnd"#;
 
