@@ -118,7 +118,7 @@ pub use glam;
 #[cfg(all(not(test), target_arch = "spirv"))]
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo<'_>) -> ! {
-    loop {}
+    unsafe { asm!("", options(noreturn)) }
 }
 
 #[cfg(all(not(test), target_arch = "spirv"))]

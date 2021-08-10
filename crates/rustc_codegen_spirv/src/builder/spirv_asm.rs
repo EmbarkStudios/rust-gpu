@@ -70,8 +70,13 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         options: InlineAsmOptions,
         _line_spans: &[Span],
     ) {
-        if !options.is_empty() {
-            self.err(&format!("asm flags not supported: {:?}", options));
+        const SUPPORTED_OPTIONS: InlineAsmOptions = InlineAsmOptions::NORETURN;
+        let unsupported_options = options & !SUPPORTED_OPTIONS;
+        if !unsupported_options.is_empty() {
+            self.err(&format!(
+                "asm flags not supported: {:?}",
+                unsupported_options
+            ));
         }
         // vec of lines, and each line is vec of tokens
         let mut tokens = vec![vec![]];

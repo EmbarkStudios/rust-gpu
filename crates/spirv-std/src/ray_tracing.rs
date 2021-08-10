@@ -27,8 +27,8 @@ impl AccelerationStructure {
             "OpReturnValue %result",
             "%blah = OpLabel",
             id = in(reg) id,
+            options(noreturn)
         }
-        loop {}
     }
 
     /// Converts a vector of two 32 bit integers into an [`AccelerationStructure`].
@@ -49,8 +49,8 @@ impl AccelerationStructure {
             "OpReturnValue %result",
             "%blah = OpLabel",
             id = in(reg) &id,
+            options(noreturn),
         }
-        loop {}
     }
 
     #[spirv_std_macros::gpu_only]

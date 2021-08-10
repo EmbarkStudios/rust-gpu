@@ -148,8 +148,5 @@ pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T, N>, const N: usize>(
 #[doc(alias = "OpKill", alias = "discard")]
 #[allow(clippy::empty_loop)]
 pub fn kill() -> ! {
-    unsafe {
-        asm!("OpKill", "%unused = OpLabel");
-    }
-    loop {}
+    unsafe { asm!("OpKill", "%unused = OpLabel", options(noreturn)) }
 }
