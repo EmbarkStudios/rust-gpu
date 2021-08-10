@@ -100,3 +100,7 @@ Example:
 #[spirv(compute(threads(32)))]
 fn main(#[spirv(workgroup)] var: &mut [Vec4; 4]) { }
 ```
+
+## Generic storage classes
+
+The SPIR-V storage class of types is inferred for function signatures. The inference logic can be guided by attributes on the interface specification in the entry points. This also means it needs to be clear from the documentation if an API requires a certain storage class (e.g `workgroup`) for a variable. Storage class attributes are only permitted on entry points.
