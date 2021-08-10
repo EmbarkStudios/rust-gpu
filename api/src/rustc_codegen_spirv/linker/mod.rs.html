@@ -296,6 +296,16 @@
 <span id="294">294</span>
 <span id="295">295</span>
 <span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
 </pre><pre class="rust">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span>;
@@ -305,7 +315,9 @@
 <span class="kw">mod</span> <span class="ident">duplicates</span>;
 <span class="kw">mod</span> <span class="ident">import_export_link</span>;
 <span class="kw">mod</span> <span class="ident">inline</span>;
+<span class="kw">mod</span> <span class="ident">ipo</span>;
 <span class="kw">mod</span> <span class="ident">mem2reg</span>;
+<span class="kw">mod</span> <span class="ident">param_weakening</span>;
 <span class="kw">mod</span> <span class="ident">peephole_opts</span>;
 <span class="kw">mod</span> <span class="ident">simple_passes</span>;
 <span class="kw">mod</span> <span class="ident">specializer</span>;
@@ -426,6 +438,14 @@
     {
         <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_find_pairs&quot;</span>);
         <span class="ident">import_export_link::run</span>(<span class="ident">sess</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>)<span class="question-mark">?</span>;
+    }
+
+    <span class="comment">// HACK(eddyb) this has to run before the `remove_zombies` pass, so that any</span>
+    <span class="comment">// zombies that are passed as call arguments, but eventually unused, won&#39;t</span>
+    <span class="comment">// be (incorrectly) considered used.</span>
+    {
+        <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_remove_unused_params&quot;</span>);
+        <span class="ident">output</span> <span class="op">=</span> <span class="ident">param_weakening::remove_unused_params</span>(<span class="ident">output</span>);
     }
 
     {
