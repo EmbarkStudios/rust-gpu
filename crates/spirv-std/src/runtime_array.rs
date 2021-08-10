@@ -17,7 +17,6 @@ impl<T> RuntimeArray<T> {
         asm! {
             "%result = OpAccessChain _ {arr} {index}",
             "OpReturnValue %result",
-            "%unused = OpLabel",
             arr = in(reg) self,
             index = in(reg) index,
             options(noreturn),
@@ -30,7 +29,6 @@ impl<T> RuntimeArray<T> {
         asm! {
             "%result = OpAccessChain _ {arr} {index}",
             "OpReturnValue %result",
-            "%unused = OpLabel",
             arr = in(reg) self,
             index = in(reg) index,
             options(noreturn),

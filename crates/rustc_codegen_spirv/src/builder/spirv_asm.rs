@@ -3,7 +3,7 @@ use crate::builder_spirv::{BuilderCursor, SpirvValue};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::dr;
-use rspirv::grammar::{LogicalOperand, OperandKind, OperandQuantifier};
+use rspirv::grammar::{reflect, LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{
     FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
     LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, StorageClass, Word,
@@ -333,10 +333,24 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 }
                 return;
             }
-            _ => {
+
+            op => {
                 self.emit()
                     .insert_into_block(dr::InsertPoint::End, inst)
                     .unwrap();
+
+                // Return or abort terminators will also end the current block and start a new one.
+                // The new block is transparent to the actual builder cursor.
+                if reflect::is_return_or_abort(op) {
+                    let label = self.emit().id();
+                    self.emit()
+                        .insert_into_block(
+                            dr::InsertPoint::End,
+                            dr::Instruction::new(Op::Label, None, Some(label), vec![]),
+                        )
+                        .unwrap();
+                }
+
                 return;
             }
         };

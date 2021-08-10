@@ -25,7 +25,6 @@ impl AccelerationStructure {
             "%ret = OpTypeAccelerationStructureKHR",
             "%result = OpConvertUToAccelerationStructureKHR %ret {id}",
             "OpReturnValue %result",
-            "%blah = OpLabel",
             id = in(reg) id,
             options(noreturn)
         }
@@ -47,7 +46,6 @@ impl AccelerationStructure {
             "%id = OpLoad _ {id}",
             "%result = OpConvertUToAccelerationStructureKHR %ret %id",
             "OpReturnValue %result",
-            "%blah = OpLabel",
             id = in(reg) &id,
             options(noreturn),
         }

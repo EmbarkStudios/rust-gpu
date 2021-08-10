@@ -44,11 +44,7 @@ pub unsafe fn report_intersection(hit: f32, hit_kind: u32) -> bool {
 #[inline]
 #[allow(clippy::empty_loop)]
 pub unsafe fn ignore_intersection() -> ! {
-    asm!(
-        "OpIgnoreIntersectionKHR",
-        "%unused = OpLabel",
-        options(noreturn)
-    );
+    asm!("OpIgnoreIntersectionKHR", options(noreturn));
 }
 
 /// Terminates the invocation that executes it, stops the ray traversal, accepts
@@ -60,7 +56,7 @@ pub unsafe fn ignore_intersection() -> ! {
 #[inline]
 #[allow(clippy::empty_loop)]
 pub unsafe fn terminate_ray() -> ! {
-    asm!("OpTerminateRayKHR", "%unused = OpLabel", options(noreturn));
+    asm!("OpTerminateRayKHR", options(noreturn));
 }
 
 /// Invoke a callable shader.
