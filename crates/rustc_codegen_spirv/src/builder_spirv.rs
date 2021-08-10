@@ -24,13 +24,6 @@ pub enum SpirvValueKind {
     /// of such constants, instead of where they're generated (and cached).
     IllegalConst(Word),
 
-    /// This can only happen in one specific case - which is as a result of
-    /// `codegen_internal_buffer_store`, that function is supposed to return
-    /// OpTypeVoid, however because it gets inline by the compiler it can't.
-    /// Instead we return this, and trigger an error if we ever end up using
-    /// the result of this function call (which we can't).
-    IllegalTypeUsed(Word),
-
     // FIXME(eddyb) this shouldn't be needed, but `rustc_codegen_ssa` still relies
     // on converting `Function`s to `Value`s even for direct calls, the `Builder`
     // should just have direct and indirect `call` variants (or a `Callee` enum).
@@ -138,16 +131,6 @@ impl SpirvValue {
                 id
             }
 
-            SpirvValueKind::IllegalTypeUsed(id) => {
-                cx.tcx
-                    .sess
-                    .struct_span_err(span, "Can't use type as a value")
-                    .note(&format!("Type: *{}", cx.debug_type(id)))
-                    .emit();
-
-                id
-            }
-
             SpirvValueKind::FnAddr { .. } => {
                 if cx.is_system_crate() {
                     cx.builder
@@ -178,7 +161,11 @@ impl SpirvValue {
                     cx.zombie_with_span(
                         zombie_target_undef,
                         span,
-                        "OpBitcast on ptr without AddressingModel != Logical",
+                        &format!(
+                            "Cannot cast between pointer types. From: {}. To: {}.",
+                            cx.debug_type(original_pointee_ty),
+                            cx.debug_type(self.ty)
+                        ),
                     );
                 } else {
                     cx.tcx
@@ -327,12 +314,7 @@ pub struct BuilderSpirv {
 }
 
 impl BuilderSpirv {
-    pub fn new(
-        sym: &Symbols,
-        target: &SpirvTarget,
-        features: &[TargetFeature],
-        bindless: bool,
-    ) -> Self {
+    pub fn new(sym: &Symbols, target: &SpirvTarget, features: &[TargetFeature]) -> Self {
         let version = target.spirv_version();
         let memory_model = target.memory_model();
 
@@ -370,54 +352,26 @@ impl BuilderSpirv {
             }
         }
 
-        if target.is_kernel() {
-            add_cap(&mut builder, &mut enabled_capabilities, Capability::Kernel);
-        } else {
-            add_cap(&mut builder, &mut enabled_capabilities, Capability::Shader);
-            if memory_model == MemoryModel::Vulkan {
-                if version < (1, 5) {
-                    add_ext(
-                        &mut builder,
-                        &mut enabled_extensions,
-                        sym.spv_khr_vulkan_memory_model,
-                    );
-                }
-                add_cap(
+        add_cap(&mut builder, &mut enabled_capabilities, Capability::Shader);
+        if memory_model == MemoryModel::Vulkan {
+            if version < (1, 5) {
+                add_ext(
                     &mut builder,
-                    &mut enabled_capabilities,
-                    Capability::VulkanMemoryModel,
+                    &mut enabled_extensions,
+                    sym.spv_khr_vulkan_memory_model,
                 );
             }
+            add_cap(
+                &mut builder,
+                &mut enabled_capabilities,
+                Capability::VulkanMemoryModel,
+            );
         }
 
         // The linker will always be ran on this module
         add_cap(&mut builder, &mut enabled_capabilities, Capability::Linkage);
 
-        let addressing_model = if target.is_kernel() {
-            add_cap(
-                &mut builder,
-                &mut enabled_capabilities,
-                Capability::Addresses,
-            );
-            AddressingModel::Physical32
-        } else {
-            AddressingModel::Logical
-        };
-
-        builder.memory_model(addressing_model, memory_model);
-
-        if bindless {
-            add_ext(
-                &mut builder,
-                &mut enabled_extensions,
-                sym.spv_ext_descriptor_indexing,
-            );
-            add_cap(
-                &mut builder,
-                &mut enabled_capabilities,
-                Capability::RuntimeDescriptorArray,
-            );
-        }
+        builder.memory_model(AddressingModel::Logical, memory_model);
 
         Self {
             builder: RefCell::new(builder),

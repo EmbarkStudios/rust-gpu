@@ -18,7 +18,6 @@ use rustc_session::config::{CrateType, DebugInfo, Lto, OptLevel, OutputFilenames
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
-use rustc_span::symbol::Symbol;
 use std::env;
 use std::ffi::{CString, OsStr};
 use std::fs::File;
@@ -533,16 +532,10 @@ fn do_link(
     }
     drop(load_modules_timer);
 
-    // TODO: Can we merge this sym with the one in symbols.rs?
-    let legalize = !sess.target_features.contains(&Symbol::intern("kernel"));
-
     // Do the link...
     let options = linker::Options {
         dce: env::var("NO_DCE").is_err(),
         compact_ids: env::var("NO_COMPACT_IDS").is_err(),
-        inline: legalize,
-        destructure: legalize,
-        mem2reg: legalize,
         structurize: env::var("NO_STRUCTURIZE").is_err(),
         emit_multiple_modules: cg_args.module_output_type == ModuleOutputType::Multiple,
         name_variables: cg_args.name_variables,
