@@ -76,11 +76,11 @@ mod watch;
 
 use raw_string::{RawStr, RawString};
 use serde::Deserialize;
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::fmt;
-use std::fmt::Write;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
@@ -362,6 +362,21 @@ fn find_rustc_codegen_spirv() -> PathBuf {
     panic!("Could not find {} in library path", filename);
 }
 
+/// Joins strings together while ensuring none of the strings contain the separator.
+// NOTE(eddyb) this intentionally consumes the `Vec` to limit accidental misuse.
+fn join_checking_for_separators(strings: Vec<impl Borrow<str>>, sep: &str) -> String {
+    for s in &strings {
+        let s = s.borrow();
+        assert!(
+            !s.contains(sep),
+            "{:?} may not contain separator {:?}",
+            s,
+            sep
+        );
+    }
+    strings.join(sep)
+}
+
 // Returns path to the metadata json.
 fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // Okay, this is a little bonkers: in a normal world, we'd have the user clone
@@ -374,7 +389,13 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // to copy cargo's understanding of library lookup and find the library and its full path.
     let rustc_codegen_spirv = find_rustc_codegen_spirv();
 
-    let mut llvm_args = Vec::new();
+    let mut rustflags = vec![
+        format!("-Zcodegen-backend={}", rustc_codegen_spirv.display()),
+        //FIXME: reintroduce v0 mangling, see issue #642
+        "-Zsymbol-mangling-version=legacy".to_string(),
+    ];
+
+    let mut llvm_args = vec![];
     if builder.multimodule {
         llvm_args.push("--module-output=multiple");
     }
@@ -399,47 +420,22 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     if builder.skip_block_layout {
         llvm_args.push("--skip-block-layout");
     }
+    let llvm_args = join_checking_for_separators(llvm_args, " ");
+    if !llvm_args.is_empty() {
+        rustflags.push(["-Cllvm-args=", &llvm_args].concat());
+    }
 
-    let llvm_args = if llvm_args.is_empty() {
-        String::new()
-    } else {
-        // Cargo's handling of RUSTFLAGS is a little cursed. -Cllvm-args is documented as "The list
-        // must be separated by spaces", but if we set RUSTFLAGS='-C llvm-args="--foo --bar"', then
-        // cargo will pass -C 'llvm-args="--foo' '--bar"' to rustc. Like, really? c'mon.
-        // Thankfully, passing -C llvm-args multiple times appends to a list, instead of
-        // overwriting.
-        let mut result = String::new();
-        for arg in llvm_args {
-            write!(result, " -C llvm-args={}", arg).unwrap();
-        }
-        result
-    };
-
-    let mut target_features = Vec::new();
-
+    let mut target_features = vec![];
     target_features.extend(builder.capabilities.iter().map(|cap| format!("+{:?}", cap)));
     target_features.extend(builder.extensions.iter().map(|ext| format!("+ext:{}", ext)));
+    let target_features = join_checking_for_separators(target_features, ",");
+    if !target_features.is_empty() {
+        rustflags.push(["-Ctarget-feature=", &target_features].concat());
+    }
 
-    let feature_flag = if target_features.is_empty() {
-        String::new()
-    } else {
-        format!(" -C target-feature={}", target_features.join(","))
-    };
-
-    let deny_warnings = if builder.deny_warnings {
-        " -D warnings"
-    } else {
-        ""
-    };
-
-    //FIXME: reintroduce v0 mangling, see issue #642
-    let rustflags = format!(
-        "-Z codegen-backend={} -Zsymbol-mangling-version=legacy{}{}{}",
-        rustc_codegen_spirv.display(),
-        feature_flag,
-        llvm_args,
-        deny_warnings,
-    );
+    if builder.deny_warnings {
+        rustflags.push("-Dwarnings".to_string());
+    }
 
     let mut cargo = Command::new("cargo");
     cargo.args(&[
@@ -477,10 +473,12 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         }
     }
 
+    let cargo_encoded_rustflags = join_checking_for_separators(rustflags, "\x1f");
+
     let build = cargo
         .stderr(Stdio::inherit())
         .current_dir(&builder.path_to_crate)
-        .env("RUSTFLAGS", rustflags)
+        .env("CARGO_ENCODED_RUSTFLAGS", cargo_encoded_rustflags)
         .output()
         .expect("failed to execute cargo build");
 
