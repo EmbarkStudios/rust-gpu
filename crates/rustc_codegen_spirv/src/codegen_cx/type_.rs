@@ -166,7 +166,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                     .sess
                     .fatal(&format!("Invalid float width in type_kind: {}", other)),
             },
-            SpirvType::Adt { .. } | SpirvType::Opaque { .. } | SpirvType::InterfaceBlock { .. } => {
+            SpirvType::Adt { .. } | SpirvType::InterfaceBlock { .. } => {
                 TypeKind::Struct
             }
             SpirvType::Vector { .. } => TypeKind::Vector,

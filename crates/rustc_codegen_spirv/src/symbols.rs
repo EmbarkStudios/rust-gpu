@@ -23,11 +23,9 @@ pub struct Symbols {
     pub entry_point_name: Symbol,
     pub spv_intel_shader_integer_functions2: Symbol,
     pub spv_khr_vulkan_memory_model: Symbol,
-    pub spv_ext_descriptor_indexing: Symbol,
     descriptor_set: Symbol,
     binding: Symbol,
     input_attachment_index: Symbol,
-    pub bindless: Symbol,
     attributes: FxHashMap<Symbol, SpirvAttribute>,
     execution_modes: FxHashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
     pub libm_intrinsics: FxHashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
@@ -175,7 +173,6 @@ const EXECUTION_MODELS: &[(&str, ExecutionModel)] = {
         ("geometry", Geometry),
         ("fragment", Fragment),
         ("compute", GLCompute),
-        ("kernel", Kernel),
         ("task_nv", TaskNV),
         ("mesh_nv", MeshNV),
         ("ray_generation", ExecutionModel::RayGenerationKHR),
@@ -338,8 +335,6 @@ impl Symbols {
                 SpirvAttribute::IntrinsicType(IntrinsicType::RuntimeArray),
             ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
-            ("internal_buffer_load", SpirvAttribute::InternalBufferLoad),
-            ("internal_buffer_store", SpirvAttribute::InternalBufferStore),
         ]
         .iter()
         .cloned();
@@ -378,11 +373,9 @@ impl Symbols {
                 "SPV_INTEL_shader_integer_functions2",
             ),
             spv_khr_vulkan_memory_model: Symbol::intern("SPV_KHR_vulkan_memory_model"),
-            spv_ext_descriptor_indexing: Symbol::intern("SPV_EXT_descriptor_indexing"),
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             input_attachment_index: Symbol::intern("input_attachment_index"),
-            bindless: Symbol::intern("bindless"),
             attributes,
             execution_modes,
             libm_intrinsics,
@@ -678,22 +671,6 @@ fn parse_entry_attrs(
                     ),
                 ));
             }
-        }
-        Kernel => {
-            if let Some(local_size) = local_size {
-                entry
-                    .execution_modes
-                    .push((LocalSize, ExecutionModeExtra::new(local_size)));
-            }
-            if let Some(local_size_hint) = local_size_hint {
-                entry
-                    .execution_modes
-                    .push((LocalSizeHint, ExecutionModeExtra::new(local_size_hint)));
-            }
-            // Reserved
-            /*if let Some(max_workgroup_size_intel) = max_workgroup_size_intel {
-                entry.execution_modes.push((MaxWorkgroupSizeINTEL, ExecutionModeExtra::new(max_workgroup_size_intel)));
-            }*/
         }
         //TODO: Cover more defaults
         _ => {}

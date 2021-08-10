@@ -96,7 +96,6 @@
 pub extern crate spirv_std_macros as macros;
 
 pub mod arch;
-pub mod bindless;
 pub mod float;
 pub mod image;
 pub mod integer;

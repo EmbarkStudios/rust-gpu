@@ -42,9 +42,6 @@ pub enum SpirvType {
         field_offsets: Vec<Size>,
         field_names: Option<Vec<String>>,
     },
-    Opaque {
-        name: String,
-    },
     Vector {
         element: Word,
         /// Note: vector count is literal.
@@ -159,18 +156,15 @@ impl SpirvType {
                 let mut emit = cx.emit_global();
                 let result = emit.type_struct_id(id, field_types.iter().cloned());
                 // The struct size is only used in our own sizeof_in_bits() (used in e.g. ArrayStride decoration)
-                if !cx.target.is_kernel() {
-                    // TODO: kernel mode can't do this??
-                    for (index, offset) in field_offsets.iter().copied().enumerate() {
-                        emit.member_decorate(
-                            result,
-                            index as u32,
-                            Decoration::Offset,
-                            [Operand::LiteralInt32(offset.bytes() as u32)]
-                                .iter()
-                                .cloned(),
-                        );
-                    }
+                for (index, offset) in field_offsets.iter().copied().enumerate() {
+                    emit.member_decorate(
+                        result,
+                        index as u32,
+                        Decoration::Offset,
+                        [Operand::LiteralInt32(offset.bytes() as u32)]
+                            .iter()
+                            .cloned(),
+                    );
                 }
                 if let Some(field_names) = field_names {
                     for (index, field_name) in field_names.iter().enumerate() {
@@ -179,7 +173,6 @@ impl SpirvType {
                 }
                 result
             }
-            Self::Opaque { ref name } => cx.emit_global().type_opaque(name),
             Self::Vector { element, count } => cx.emit_global().type_vector_id(id, element, count),
             Self::Array { element, count } => {
                 // ArrayStride decoration wants in *bytes*
@@ -190,14 +183,11 @@ impl SpirvType {
                     .bytes();
                 let mut emit = cx.emit_global();
                 let result = emit.type_array_id(id, element, count.def_cx(cx));
-                if !cx.target.is_kernel() {
-                    // TODO: kernel mode can't do this??
-                    emit.decorate(
-                        result,
-                        Decoration::ArrayStride,
-                        iter::once(Operand::LiteralInt32(element_size as u32)),
-                    );
-                }
+                emit.decorate(
+                    result,
+                    Decoration::ArrayStride,
+                    iter::once(Operand::LiteralInt32(element_size as u32)),
+                );
                 result
             }
             Self::RuntimeArray { element } => {
@@ -214,9 +204,6 @@ impl SpirvType {
                     Decoration::ArrayStride,
                     iter::once(Operand::LiteralInt32(element_size as u32)),
                 );
-                if cx.target.is_kernel() {
-                    cx.zombie_with_span(result, def_span, "RuntimeArray in kernel mode");
-                }
                 result
             }
             Self::Pointer { pointee } => {
@@ -352,10 +339,7 @@ impl SpirvType {
     pub fn sizeof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Option<Size> {
         let result = match *self {
             // Types that have a dynamic size, or no concept of size at all.
-            Self::Void
-            | Self::Opaque { .. }
-            | Self::RuntimeArray { .. }
-            | Self::Function { .. } => return None,
+            Self::Void | Self::RuntimeArray { .. } | Self::Function { .. } => return None,
 
             Self::Bool => Size::from_bytes(1),
             Self::Integer(width, _) | Self::Float(width) => Size::from_bits(width),
@@ -381,9 +365,7 @@ impl SpirvType {
     pub fn alignof<'tcx>(&self, cx: &CodegenCx<'tcx>) -> Align {
         match *self {
             // Types that have no concept of size or alignment.
-            Self::Void | Self::Opaque { .. } | Self::Function { .. } => {
-                Align::from_bytes(0).unwrap()
-            }
+            Self::Void | Self::Function { .. } => Align::from_bytes(0).unwrap(),
 
             Self::Bool => Align::from_bytes(1).unwrap(),
             Self::Integer(width, _) | Self::Float(width) => Align::from_bits(width as u64).unwrap(),
@@ -467,11 +449,6 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                     .field("field_names", field_names)
                     .finish()
             }
-            SpirvType::Opaque { ref name } => f
-                .debug_struct("Opaque")
-                .field("id", &self.id)
-                .field("name", &name)
-                .finish(),
             SpirvType::Vector { element, count } => f
                 .debug_struct("Vector")
                 .field("id", &self.id)
@@ -635,7 +612,6 @@ impl SpirvTypePrinter<'_, '_> {
                 }
                 f.write_str(" }")
             }
-            SpirvType::Opaque { ref name } => write!(f, "struct {}", name),
             SpirvType::Vector { element, count } => {
                 ty(self.cx, stack, f, element)?;
                 write!(f, "x{}", count)
@@ -740,14 +716,5 @@ impl TypeCache<'_> {
             .borrow_mut()
             .insert_no_overwrite(word, ty)
             .unwrap();
-    }
-
-    pub fn lookup_name(&self, word: Word) -> String {
-        let type_names = self.type_names.borrow();
-        type_names
-            .get(&word)
-            .and_then(|names| names.iter().next().copied())
-            .map(|v| v.to_string())
-            .unwrap_or_else(|| "<unknown>".to_string())
     }
 }

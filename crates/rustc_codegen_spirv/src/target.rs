@@ -10,10 +10,6 @@ pub struct SpirvTarget {
 }
 
 impl SpirvTarget {
-    pub fn is_kernel(&self) -> bool {
-        self.memory_model() == MemoryModel::OpenCL
-    }
-
     pub fn memory_model(&self) -> MemoryModel {
         match self.env {
             TargetEnv::Universal_1_0
@@ -128,7 +124,13 @@ impl std::str::FromStr for SpirvTarget {
             return Err(error());
         }
 
-        Ok(Self { env, vendor })
+        let result = Self { env, vendor };
+
+        if result.memory_model() == MemoryModel::OpenCL {
+            return Err(error());
+        }
+
+        Ok(result)
     }
 }
 

@@ -260,10 +260,6 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 self.err("OpTypeStruct in asm! is not supported yet");
                 return;
             }
-            Op::TypeOpaque => SpirvType::Opaque {
-                name: inst.operands[0].unwrap_literal_string().to_string(),
-            }
-            .def(self.span(), self),
             Op::TypeVector => SpirvType::Vector {
                 element: inst.operands[0].unwrap_id_ref(),
                 count: inst.operands[1].unwrap_literal_int32(),
