@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/spirv-builder/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../spirv_builder/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;spirv-builder&#x2F;src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../spirv_builder/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -552,8 +550,6 @@
 <span id="550">550</span>
 <span id="551">551</span>
 <span id="552">552</span>
-<span id="553">553</span>
-<span id="554">554</span>
 </pre><pre class="rust">
 <span class="comment">// BEGIN - Embark standard lints v0.4</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -633,11 +629,11 @@
 
 <span class="kw">use</span> <span class="ident">raw_string</span>::{<span class="ident">RawStr</span>, <span class="ident">RawString</span>};
 <span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
+<span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::error::Error</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std::fmt::Write</span>;
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
 <span class="kw">use</span> <span class="ident">std::io::BufReader</span>;
 <span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
@@ -919,6 +915,21 @@
     <span class="macro">panic!</span>(<span class="string">&quot;Could not find {} in library path&quot;</span>, <span class="ident">filename</span>);
 }
 
+<span class="doccomment">/// Joins strings together while ensuring none of the strings contain the separator.</span>
+<span class="comment">// NOTE(eddyb) this intentionally consumes the `Vec` to limit accidental misuse.</span>
+<span class="kw">fn</span> <span class="ident">join_checking_for_separators</span>(<span class="ident">strings</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">sep</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">for</span> <span class="ident">s</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">strings</span> {
+        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">borrow</span>();
+        <span class="macro">assert!</span>(
+            <span class="op">!</span><span class="ident">s</span>.<span class="ident">contains</span>(<span class="ident">sep</span>),
+            <span class="string">&quot;{:?} may not contain separator {:?}&quot;</span>,
+            <span class="ident">s</span>,
+            <span class="ident">sep</span>
+        );
+    }
+    <span class="ident">strings</span>.<span class="ident">join</span>(<span class="ident">sep</span>)
+}
+
 <span class="comment">// Returns path to the metadata json.</span>
 <span class="kw">fn</span> <span class="ident">invoke_rustc</span>(<span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="ident">SpirvBuilder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">SpirvBuilderError</span><span class="op">&gt;</span> {
     <span class="comment">// Okay, this is a little bonkers: in a normal world, we&#39;d have the user clone</span>
@@ -931,7 +942,13 @@
     <span class="comment">// to copy cargo&#39;s understanding of library lookup and find the library and its full path.</span>
     <span class="kw">let</span> <span class="ident">rustc_codegen_spirv</span> <span class="op">=</span> <span class="ident">find_rustc_codegen_spirv</span>();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">llvm_args</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rustflags</span> <span class="op">=</span> <span class="macro">vec!</span>[
+        <span class="macro">format!</span>(<span class="string">&quot;-Zcodegen-backend={}&quot;</span>, <span class="ident">rustc_codegen_spirv</span>.<span class="ident">display</span>()),
+        <span class="comment">//FIXME: reintroduce v0 mangling, see issue #642</span>
+        <span class="string">&quot;-Zsymbol-mangling-version=legacy&quot;</span>.<span class="ident">to_string</span>(),
+    ];
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">llvm_args</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">multimodule</span> {
         <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--module-output=multiple&quot;</span>);
     }
@@ -956,47 +973,22 @@
     <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">skip_block_layout</span> {
         <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--skip-block-layout&quot;</span>);
     }
+    <span class="kw">let</span> <span class="ident">llvm_args</span> <span class="op">=</span> <span class="ident">join_checking_for_separators</span>(<span class="ident">llvm_args</span>, <span class="string">&quot; &quot;</span>);
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">llvm_args</span>.<span class="ident">is_empty</span>() {
+        <span class="ident">rustflags</span>.<span class="ident">push</span>([<span class="string">&quot;-Cllvm-args=&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">llvm_args</span>].<span class="ident">concat</span>());
+    }
 
-    <span class="kw">let</span> <span class="ident">llvm_args</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">llvm_args</span>.<span class="ident">is_empty</span>() {
-        <span class="ident">String::new</span>()
-    } <span class="kw">else</span> {
-        <span class="comment">// Cargo&#39;s handling of RUSTFLAGS is a little cursed. -Cllvm-args is documented as &quot;The list</span>
-        <span class="comment">// must be separated by spaces&quot;, but if we set RUSTFLAGS=&#39;-C llvm-args=&quot;--foo --bar&quot;&#39;, then</span>
-        <span class="comment">// cargo will pass -C &#39;llvm-args=&quot;--foo&#39; &#39;--bar&quot;&#39; to rustc. Like, really? c&#39;mon.</span>
-        <span class="comment">// Thankfully, passing -C llvm-args multiple times appends to a list, instead of</span>
-        <span class="comment">// overwriting.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">String::new</span>();
-        <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="ident">llvm_args</span> {
-            <span class="macro">write!</span>(<span class="ident">result</span>, <span class="string">&quot; -C llvm-args={}&quot;</span>, <span class="ident">arg</span>).<span class="ident">unwrap</span>();
-        }
-        <span class="ident">result</span>
-    };
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">target_features</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">target_features</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="ident">target_features</span>.<span class="ident">extend</span>(<span class="ident">builder</span>.<span class="ident">capabilities</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">cap</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;+{:?}&quot;</span>, <span class="ident">cap</span>)));
     <span class="ident">target_features</span>.<span class="ident">extend</span>(<span class="ident">builder</span>.<span class="ident">extensions</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">ext</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;+ext:{}&quot;</span>, <span class="ident">ext</span>)));
+    <span class="kw">let</span> <span class="ident">target_features</span> <span class="op">=</span> <span class="ident">join_checking_for_separators</span>(<span class="ident">target_features</span>, <span class="string">&quot;,&quot;</span>);
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">target_features</span>.<span class="ident">is_empty</span>() {
+        <span class="ident">rustflags</span>.<span class="ident">push</span>([<span class="string">&quot;-Ctarget-feature=&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">target_features</span>].<span class="ident">concat</span>());
+    }
 
-    <span class="kw">let</span> <span class="ident">feature_flag</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">target_features</span>.<span class="ident">is_empty</span>() {
-        <span class="ident">String::new</span>()
-    } <span class="kw">else</span> {
-        <span class="macro">format!</span>(<span class="string">&quot; -C target-feature={}&quot;</span>, <span class="ident">target_features</span>.<span class="ident">join</span>(<span class="string">&quot;,&quot;</span>))
-    };
-
-    <span class="kw">let</span> <span class="ident">deny_warnings</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">deny_warnings</span> {
-        <span class="string">&quot; -D warnings&quot;</span>
-    } <span class="kw">else</span> {
-        <span class="string">&quot;&quot;</span>
-    };
-
-    <span class="comment">//FIXME: reintroduce v0 mangling, see issue #642</span>
-    <span class="kw">let</span> <span class="ident">rustflags</span> <span class="op">=</span> <span class="macro">format!</span>(
-        <span class="string">&quot;-Z codegen-backend={} -Zsymbol-mangling-version=legacy{}{}{}&quot;</span>,
-        <span class="ident">rustc_codegen_spirv</span>.<span class="ident">display</span>(),
-        <span class="ident">feature_flag</span>,
-        <span class="ident">llvm_args</span>,
-        <span class="ident">deny_warnings</span>,
-    );
+    <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">deny_warnings</span> {
+        <span class="ident">rustflags</span>.<span class="ident">push</span>(<span class="string">&quot;-Dwarnings&quot;</span>.<span class="ident">to_string</span>());
+    }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cargo</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="string">&quot;cargo&quot;</span>);
     <span class="ident">cargo</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
@@ -1034,10 +1026,12 @@
         }
     }
 
+    <span class="kw">let</span> <span class="ident">cargo_encoded_rustflags</span> <span class="op">=</span> <span class="ident">join_checking_for_separators</span>(<span class="ident">rustflags</span>, <span class="string">&quot;\x1f&quot;</span>);
+
     <span class="kw">let</span> <span class="ident">build</span> <span class="op">=</span> <span class="ident">cargo</span>
         .<span class="ident">stderr</span>(<span class="ident">Stdio::inherit</span>())
         .<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">builder</span>.<span class="ident">path_to_crate</span>)
-        .<span class="ident">env</span>(<span class="string">&quot;RUSTFLAGS&quot;</span>, <span class="ident">rustflags</span>)
+        .<span class="ident">env</span>(<span class="string">&quot;CARGO_ENCODED_RUSTFLAGS&quot;</span>, <span class="ident">cargo_encoded_rustflags</span>)
         .<span class="ident">output</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;failed to execute cargo build&quot;</span>);
 
@@ -1110,4 +1104,6 @@
     <span class="prelude-val">Ok</span>(())
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_builder" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_builder" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
+</body></html>
