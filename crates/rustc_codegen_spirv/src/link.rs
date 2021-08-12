@@ -5,7 +5,7 @@ use crate::{
 use rspirv::binary::Assemble;
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
-use rustc_codegen_ssa::{CodegenResults, NativeLib};
+use rustc_codegen_ssa::{CodegenResults, NativeLib, METADATA_FILENAME};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_data_structures::owning_ref::OwningRef;
 use rustc_data_structures::rustc_erase_owner;
@@ -443,13 +443,13 @@ fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
     let mut builder = Builder::new(file);
     {
         let mut header = Header::new_gnu();
-        header.set_path(".metadata").unwrap();
+        header.set_path(METADATA_FILENAME).unwrap();
         header.set_size(metadata.len() as u64);
         header.set_cksum();
         builder.append(&header, metadata).unwrap();
     }
     let mut filenames = FxHashSet::default();
-    filenames.insert(OsStr::new(".metadata"));
+    filenames.insert(OsStr::new(METADATA_FILENAME));
     for file in files {
         assert!(
             filenames.insert(file.file_name().unwrap()),
@@ -467,7 +467,7 @@ pub fn read_metadata(rlib: &Path) -> Result<MetadataRef, String> {
     fn read_metadata_internal(rlib: &Path) -> Result<Option<MetadataRef>, std::io::Error> {
         for entry in Archive::new(File::open(rlib)?).entries()? {
             let mut entry = entry?;
-            if entry.path()? == Path::new(".metadata") {
+            if entry.path()? == Path::new(METADATA_FILENAME) {
                 let mut bytes = Vec::new();
                 entry.read_to_end(&mut bytes)?;
                 let buf: OwningRef<Vec<u8>, [u8]> = OwningRef::new(bytes);
@@ -509,7 +509,7 @@ fn do_link(
     for rlib in rlibs {
         for entry in Archive::new(File::open(rlib).unwrap()).entries().unwrap() {
             let mut entry = entry.unwrap();
-            if entry.path().unwrap() != Path::new(".metadata") {
+            if entry.path().unwrap() != Path::new(METADATA_FILENAME) {
                 // std::fs::read adds 1 to the size, so do the same here - see comment:
                 // https://github.com/rust-lang/rust/blob/72868e017bdade60603a25889e253f556305f996/library/std/src/fs.rs#L200-L202
                 let mut bytes = Vec::with_capacity(entry.size() as usize + 1);
