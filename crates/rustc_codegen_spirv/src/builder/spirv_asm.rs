@@ -163,6 +163,8 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                 self.err("`noreturn` requires a terminator at the end");
             }
             (true, AsmBlock::End(_)) => {
+                // `noreturn` appends an `OpUnreachable` after the asm block.
+                // This requires starting a new block for this.
                 let label = self.emit().id();
                 self.emit()
                     .insert_into_block(
@@ -173,7 +175,10 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
             }
             (false, AsmBlock::Open) => (),
             (false, AsmBlock::End(terminator)) => {
-                self.err(&format!("trailing terminator {:?} requires `options(noreturn)`", terminator));
+                self.err(&format!(
+                    "trailing terminator {:?} requires `options(noreturn)`",
+                    terminator
+                ));
             }
         }
         for (id, num) in id_map {
@@ -377,7 +382,10 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                     }
                     AsmBlock::End(terminator) => {
                         if op != Op::Label {
-                            self.err(&format!("expected OpLabel after terminator {:?}", terminator));
+                            self.err(&format!(
+                                "expected OpLabel after terminator {:?}",
+                                terminator
+                            ));
                         }
 
                         AsmBlock::Open
