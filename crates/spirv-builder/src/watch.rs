@@ -27,7 +27,7 @@ impl SpirvBuilder {
                 let (tx, rx) = sync_channel(0);
                 // Fall back to watching from the crate root if the inital compilation fails
                 let mut watcher =
-                    notify::immediate_watcher(move |event: notify::Result<Event>| match event {
+                    notify::recommended_watcher(move |event: notify::Result<Event>| match event {
                         Ok(e) => match e.kind {
                             notify::EventKind::Access(_) => (),
                             notify::EventKind::Any
@@ -61,7 +61,7 @@ impl SpirvBuilder {
             let mut watched_paths = HashSet::new();
             let (tx, rx) = sync_channel(0);
             let mut watcher =
-                notify::immediate_watcher(move |event: notify::Result<Event>| match event {
+                notify::recommended_watcher(move |event: notify::Result<Event>| match event {
                     Ok(e) => match e.kind {
                         notify::EventKind::Access(_) => (),
                         notify::EventKind::Any
