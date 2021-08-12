@@ -7,9 +7,7 @@ use spirv_std as _;
 // Active basic block with `noreturn`.
 fn asm_noreturn_open() {
     unsafe {
-        asm!(
-            options(noreturn)
-        );
+        asm!("", options(noreturn));
     }
 }
 

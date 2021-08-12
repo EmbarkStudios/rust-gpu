@@ -1,28 +1,25 @@
 error: `noreturn` requires a terminator at the end
   --> $DIR/block_tracking_fail.rs:10:9
    |
-10 | /         asm!(
-11 | |             "%unused = OpLabel",
-12 | |             options(noreturn),
-13 | |         );
-   | |__________^
+10 |         asm!("", options(noreturn));
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error: trailing terminator Unreachable requires `options(noreturn)`
-  --> $DIR/block_tracking_fail.rs:20:9
+  --> $DIR/block_tracking_fail.rs:17:9
    |
-20 | /         asm!(
-21 | |             "OpUnreachable",
-22 | |         );
+17 | /         asm!(
+18 | |             "OpUnreachable",
+19 | |         );
    | |__________^
 
 error: expected OpLabel after terminator Kill
-  --> $DIR/block_tracking_fail.rs:29:9
+  --> $DIR/block_tracking_fail.rs:26:9
    |
-29 | /         asm!(
-30 | |             "OpKill",
-31 | |             "%sum = OpFAdd _ {x} {x}",
-32 | |             x = in(reg) x,
-33 | |         );
+26 | /         asm!(
+27 | |             "OpKill",
+28 | |             "%sum = OpFAdd _ {x} {x}",
+29 | |             x = in(reg) x,
+30 | |         );
    | |__________^
 
 error: aborting due to 3 previous errors
