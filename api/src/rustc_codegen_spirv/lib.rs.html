@@ -633,23 +633,6 @@
 <span id="633">633</span>
 <span id="634">634</span>
 <span id="635">635</span>
-<span id="636">636</span>
-<span id="637">637</span>
-<span id="638">638</span>
-<span id="639">639</span>
-<span id="640">640</span>
-<span id="641">641</span>
-<span id="642">642</span>
-<span id="643">643</span>
-<span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is</span>
 <span class="doccomment">//! unstable and mainly intended for developing on the project itself. This is</span>
@@ -820,10 +803,9 @@
 };
 <span class="kw">use</span> <span class="ident">rustc_codegen_ssa</span>::{<span class="ident">CodegenResults</span>, <span class="ident">CompiledModule</span>, <span class="ident">ModuleCodegen</span>, <span class="ident">ModuleKind</span>};
 <span class="kw">use</span> <span class="ident">rustc_data_structures::fx::FxHashMap</span>;
-<span class="kw">use</span> <span class="ident">rustc_data_structures::sync::MetadataRef</span>;
 <span class="kw">use</span> <span class="ident">rustc_errors</span>::{<span class="ident">ErrorReported</span>, <span class="ident">FatalError</span>, <span class="ident">Handler</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle::dep_graph</span>::{<span class="ident">WorkProduct</span>, <span class="ident">WorkProductId</span>};
-<span class="kw">use</span> <span class="ident">rustc_middle::middle::cstore</span>::{<span class="ident">EncodedMetadata</span>, <span class="ident">MetadataLoader</span>, <span class="ident">MetadataLoaderDyn</span>};
+<span class="kw">use</span> <span class="ident">rustc_middle::middle::cstore::EncodedMetadata</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::mir::mono</span>::{<span class="ident">Linkage</span>, <span class="ident">MonoItem</span>, <span class="ident">Visibility</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle::ty::print::with_no_trimmed_paths</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::ty</span>::{<span class="self">self</span>, <span class="ident">query</span>, <span class="ident">DefIdTree</span>, <span class="ident">Instance</span>, <span class="ident">InstanceDef</span>, <span class="ident">TyCtxt</span>};
@@ -915,18 +897,6 @@
     }
 }
 
-<span class="kw">struct</span> <span class="ident">SpirvMetadataLoader</span>;
-
-<span class="kw">impl</span> <span class="ident">MetadataLoader</span> <span class="kw">for</span> <span class="ident">SpirvMetadataLoader</span> {
-    <span class="kw">fn</span> <span class="ident">get_rlib_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MetadataRef</span>, <span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="ident">link::read_metadata</span>(<span class="ident">path</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_dylib_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MetadataRef</span>, <span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="ident">rustc_codegen_ssa::back::metadata::DefaultMetadataLoader</span>.<span class="ident">get_dylib_metadata</span>(<span class="ident">target</span>, <span class="ident">path</span>)
-    }
-}
-
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">struct</span> <span class="ident">SpirvCodegenBackend</span>;
 
@@ -950,10 +920,6 @@
                 .<span class="ident">ok</span>(),
             <span class="ident">TargetTriple::TargetPath</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
-    }
-
-    <span class="kw">fn</span> <span class="ident">metadata_loader</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">MetadataLoaderDyn</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="ident">SpirvMetadataLoader</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">provide</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">providers</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">query::Providers</span>) {
