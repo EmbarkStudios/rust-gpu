@@ -167,10 +167,9 @@ use rustc_codegen_ssa::traits::{
 };
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_data_structures::fx::FxHashMap;
-use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::{ErrorReported, FatalError, Handler};
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
-use rustc_middle::middle::cstore::{EncodedMetadata, MetadataLoader, MetadataLoaderDyn};
+use rustc_middle::middle::cstore::EncodedMetadata;
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::{self, query, DefIdTree, Instance, InstanceDef, TyCtxt};
@@ -262,18 +261,6 @@ impl ThinBufferMethods for SpirvThinBuffer {
     }
 }
 
-struct SpirvMetadataLoader;
-
-impl MetadataLoader for SpirvMetadataLoader {
-    fn get_rlib_metadata(&self, _: &Target, path: &Path) -> Result<MetadataRef, String> {
-        link::read_metadata(path)
-    }
-
-    fn get_dylib_metadata(&self, target: &Target, path: &Path) -> Result<MetadataRef, String> {
-        rustc_codegen_ssa::back::metadata::DefaultMetadataLoader.get_dylib_metadata(target, path)
-    }
-}
-
 #[derive(Clone)]
 struct SpirvCodegenBackend;
 
@@ -297,10 +284,6 @@ impl CodegenBackend for SpirvCodegenBackend {
                 .ok(),
             TargetTriple::TargetPath(_) => None,
         }
-    }
-
-    fn metadata_loader(&self) -> Box<MetadataLoaderDyn> {
-        Box::new(SpirvMetadataLoader)
     }
 
     fn provide(&self, providers: &mut query::Providers) {

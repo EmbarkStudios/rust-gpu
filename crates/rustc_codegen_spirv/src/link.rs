@@ -8,9 +8,6 @@ use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModul
 use rustc_codegen_ssa::back::write::CodegenContext;
 use rustc_codegen_ssa::{CodegenResults, NativeLib, METADATA_FILENAME};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_data_structures::owning_ref::OwningRef;
-use rustc_data_structures::rustc_erase_owner;
-use rustc_data_structures::sync::MetadataRef;
 use rustc_errors::FatalError;
 use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
@@ -479,27 +476,6 @@ fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
             .unwrap();
     }
     builder.into_inner().unwrap();
-}
-
-pub fn read_metadata(rlib: &Path) -> Result<MetadataRef, String> {
-    fn read_metadata_internal(rlib: &Path) -> Result<Option<MetadataRef>, std::io::Error> {
-        let mut archive = Archive::new(File::open(rlib).unwrap());
-        while let Some(entry) = archive.next_entry() {
-            let mut entry = entry?;
-            if entry.header().identifier() == METADATA_FILENAME.as_bytes() {
-                let mut bytes = Vec::new();
-                entry.read_to_end(&mut bytes)?;
-                let buf: OwningRef<Vec<u8>, [u8]> = OwningRef::new(bytes);
-                return Ok(Some(rustc_erase_owner!(buf.map_owner_box())));
-            }
-        }
-        Ok(None)
-    }
-    match read_metadata_internal(rlib) {
-        Ok(Some(m)) => Ok(m),
-        Ok(None) => Err(format!("No .metadata file in rlib: {:?}", rlib)),
-        Err(io) => Err(format!("Failed to read rlib at {:?}: {}", rlib, io)),
-    }
 }
 
 /// This is the actual guts of linking: the rest of the link-related functions are just digging through rustc's
