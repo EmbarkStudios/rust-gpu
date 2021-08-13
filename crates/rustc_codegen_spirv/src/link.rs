@@ -2,6 +2,7 @@ use crate::codegen_cx::{CodegenArgs, ModuleOutputType};
 use crate::{
     linker, CompileResult, ModuleResult, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer,
 };
+use ar::{Archive, GnuBuilder, Header};
 use rspirv::binary::Assemble;
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
@@ -19,12 +20,12 @@ use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, 
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
 use std::env;
-use std::ffi::{CString, OsStr};
+use std::ffi::CString;
 use std::fs::File;
 use std::io::{BufWriter, Read};
+use std::iter;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tar::{Archive, Builder, Header};
 
 pub fn link<'a>(
     sess: &'a Session,
@@ -439,25 +440,42 @@ fn relevant_lib(sess: &Session, lib: &NativeLib) -> bool {
 }
 
 fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
-    let file = File::create(out_filename).unwrap();
-    let mut builder = Builder::new(file);
-    {
-        let mut header = Header::new_gnu();
-        header.set_path(METADATA_FILENAME).unwrap();
-        header.set_size(metadata.len() as u64);
-        header.set_cksum();
-        builder.append(&header, metadata).unwrap();
-    }
+    let files_with_names = files.iter().map(|file| {
+        (
+            file,
+            file.file_name()
+                .unwrap()
+                .to_str()
+                .expect("archive file names should be valid ASCII/UTF-8"),
+        )
+    });
+    let out_file = File::create(out_filename).unwrap();
+    let mut builder = GnuBuilder::new(
+        out_file,
+        iter::once(METADATA_FILENAME)
+            .chain(files_with_names.clone().map(|(_, name)| name))
+            .map(|name| name.as_bytes().to_vec())
+            .collect(),
+    );
+    builder
+        .append(
+            &Header::new(METADATA_FILENAME.as_bytes().to_vec(), metadata.len() as u64),
+            metadata,
+        )
+        .unwrap();
+
     let mut filenames = FxHashSet::default();
-    filenames.insert(OsStr::new(METADATA_FILENAME));
-    for file in files {
+    filenames.insert(METADATA_FILENAME);
+    for (file, name) in files_with_names {
         assert!(
-            filenames.insert(file.file_name().unwrap()),
+            filenames.insert(name),
             "Duplicate filename in archive: {:?}",
             file.file_name().unwrap()
         );
+        // NOTE(eddyb) this could just be `builder.append_path(file)`, but we
+        // have to work around https://github.com/mdsteele/rust-ar/issues/19.
         builder
-            .append_path_with_name(file, file.file_name().unwrap())
+            .append_file(name.as_bytes(), &mut File::open(file).unwrap())
             .unwrap();
     }
     builder.into_inner().unwrap();
@@ -465,9 +483,10 @@ fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
 
 pub fn read_metadata(rlib: &Path) -> Result<MetadataRef, String> {
     fn read_metadata_internal(rlib: &Path) -> Result<Option<MetadataRef>, std::io::Error> {
-        for entry in Archive::new(File::open(rlib)?).entries()? {
+        let mut archive = Archive::new(File::open(rlib).unwrap());
+        while let Some(entry) = archive.next_entry() {
             let mut entry = entry?;
-            if entry.path()? == Path::new(METADATA_FILENAME) {
+            if entry.header().identifier() == METADATA_FILENAME.as_bytes() {
                 let mut bytes = Vec::new();
                 entry.read_to_end(&mut bytes)?;
                 let buf: OwningRef<Vec<u8>, [u8]> = OwningRef::new(bytes);
@@ -507,12 +526,13 @@ fn do_link(
     // `rlibs` are archive files we've created in `create_archive`, usually produced by crates that are being
     // referenced. We need to unpack them and add the modules inside.
     for rlib in rlibs {
-        for entry in Archive::new(File::open(rlib).unwrap()).entries().unwrap() {
+        let mut archive = Archive::new(File::open(rlib).unwrap());
+        while let Some(entry) = archive.next_entry() {
             let mut entry = entry.unwrap();
-            if entry.path().unwrap() != Path::new(METADATA_FILENAME) {
+            if entry.header().identifier() != METADATA_FILENAME.as_bytes() {
                 // std::fs::read adds 1 to the size, so do the same here - see comment:
                 // https://github.com/rust-lang/rust/blob/72868e017bdade60603a25889e253f556305f996/library/std/src/fs.rs#L200-L202
-                let mut bytes = Vec::with_capacity(entry.size() as usize + 1);
+                let mut bytes = Vec::with_capacity(entry.header().size() as usize + 1);
                 entry.read_to_end(&mut bytes).unwrap();
                 modules.push(load(&bytes));
             }
