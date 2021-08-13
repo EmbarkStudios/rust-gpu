@@ -1476,13 +1476,74 @@
 <span id="1476">1476</span>
 <span id="1477">1477</span>
 <span id="1478">1478</span>
+<span id="1479">1479</span>
+<span id="1480">1480</span>
+<span id="1481">1481</span>
+<span id="1482">1482</span>
+<span id="1483">1483</span>
+<span id="1484">1484</span>
+<span id="1485">1485</span>
+<span id="1486">1486</span>
+<span id="1487">1487</span>
+<span id="1488">1488</span>
+<span id="1489">1489</span>
+<span id="1490">1490</span>
+<span id="1491">1491</span>
+<span id="1492">1492</span>
+<span id="1493">1493</span>
+<span id="1494">1494</span>
+<span id="1495">1495</span>
+<span id="1496">1496</span>
+<span id="1497">1497</span>
+<span id="1498">1498</span>
+<span id="1499">1499</span>
+<span id="1500">1500</span>
+<span id="1501">1501</span>
+<span id="1502">1502</span>
+<span id="1503">1503</span>
+<span id="1504">1504</span>
+<span id="1505">1505</span>
+<span id="1506">1506</span>
+<span id="1507">1507</span>
+<span id="1508">1508</span>
+<span id="1509">1509</span>
+<span id="1510">1510</span>
+<span id="1511">1511</span>
+<span id="1512">1512</span>
+<span id="1513">1513</span>
+<span id="1514">1514</span>
+<span id="1515">1515</span>
+<span id="1516">1516</span>
+<span id="1517">1517</span>
+<span id="1518">1518</span>
+<span id="1519">1519</span>
+<span id="1520">1520</span>
+<span id="1521">1521</span>
+<span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
+<span id="1532">1532</span>
+<span id="1533">1533</span>
+<span id="1534">1534</span>
+<span id="1535">1535</span>
+<span id="1536">1536</span>
+<span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvValue</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx::CodegenCx</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv_type::SpirvType</span>;
 <span class="kw">use</span> <span class="ident">rspirv::dr</span>;
-<span class="kw">use</span> <span class="ident">rspirv::grammar</span>::{<span class="ident">LogicalOperand</span>, <span class="ident">OperandKind</span>, <span class="ident">OperandQuantifier</span>};
+<span class="kw">use</span> <span class="ident">rspirv::grammar</span>::{<span class="ident">reflect</span>, <span class="ident">LogicalOperand</span>, <span class="ident">OperandKind</span>, <span class="ident">OperandQuantifier</span>};
 <span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{
     <span class="ident">FPFastMathMode</span>, <span class="ident">FragmentShadingRate</span>, <span class="ident">FunctionControl</span>, <span class="ident">ImageOperands</span>, <span class="ident">KernelProfilingInfo</span>,
     <span class="ident">LoopControl</span>, <span class="ident">MemoryAccess</span>, <span class="ident">MemorySemantics</span>, <span class="ident">Op</span>, <span class="ident">RayFlags</span>, <span class="ident">SelectionControl</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>,
@@ -1549,8 +1610,13 @@
         <span class="ident">options</span>: <span class="ident">InlineAsmOptions</span>,
         <span class="ident">_line_spans</span>: <span class="kw-2">&amp;</span>[<span class="ident">Span</span>],
     ) {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">options</span>.<span class="ident">is_empty</span>() {
-            <span class="self">self</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;asm flags not supported: {:?}&quot;</span>, <span class="ident">options</span>));
+        <span class="kw">const</span> <span class="ident">SUPPORTED_OPTIONS</span>: <span class="ident">InlineAsmOptions</span> <span class="op">=</span> <span class="ident">InlineAsmOptions::NORETURN</span>;
+        <span class="kw">let</span> <span class="ident">unsupported_options</span> <span class="op">=</span> <span class="ident">options</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">SUPPORTED_OPTIONS</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">unsupported_options</span>.<span class="ident">is_empty</span>() {
+            <span class="self">self</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                <span class="string">&quot;asm flags not supported: {:?}&quot;</span>,
+                <span class="ident">unsupported_options</span>
+            ));
         }
         <span class="comment">// vec of lines, and each line is vec of tokens</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="macro">vec!</span>[]];
@@ -1620,13 +1686,40 @@
                 <span class="ident">id_to_type_map</span>.<span class="ident">insert</span>(<span class="ident">value</span>.<span class="ident">def</span>(<span class="self">self</span>), <span class="ident">value</span>.<span class="ident">ty</span>);
             }
         }
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">asm_block</span> <span class="op">=</span> <span class="ident">AsmBlock::Open</span>;
         <span class="kw">for</span> <span class="ident">line</span> <span class="kw">in</span> <span class="ident">tokens</span> {
             <span class="self">self</span>.<span class="ident">codegen_asm</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">id_map</span>,
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">defined_ids</span>,
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">id_to_type_map</span>,
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">asm_block</span>,
                 <span class="ident">line</span>.<span class="ident">into_iter</span>(),
             );
+        }
+
+        <span class="kw">match</span> (<span class="ident">options</span>.<span class="ident">contains</span>(<span class="ident">InlineAsmOptions::NORETURN</span>), <span class="ident">asm_block</span>) {
+            (<span class="bool-val">true</span>, <span class="ident">AsmBlock::Open</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">err</span>(<span class="string">&quot;`noreturn` requires a terminator at the end&quot;</span>);
+            }
+            (<span class="bool-val">true</span>, <span class="ident">AsmBlock::End</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// `noreturn` appends an `OpUnreachable` after the asm block.</span>
+                <span class="comment">// This requires starting a new block for this.</span>
+                <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">emit</span>().<span class="ident">id</span>();
+                <span class="self">self</span>.<span class="ident">emit</span>()
+                    .<span class="ident">insert_into_block</span>(
+                        <span class="ident">dr::InsertPoint::End</span>,
+                        <span class="ident">dr::Instruction::new</span>(<span class="ident">Op::Label</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">label</span>), <span class="macro">vec!</span>[]),
+                    )
+                    .<span class="ident">unwrap</span>();
+            }
+            (<span class="bool-val">false</span>, <span class="ident">AsmBlock::Open</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+            (<span class="bool-val">false</span>, <span class="ident">AsmBlock::End</span>(<span class="ident">terminator</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="string">&quot;trailing terminator {:?} requires `options(noreturn)`&quot;</span>,
+                    <span class="ident">terminator</span>
+                ));
+            }
         }
         <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">num</span>) <span class="kw">in</span> <span class="ident">id_map</span> {
             <span class="kw">if</span> <span class="op">!</span><span class="ident">defined_ids</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">num</span>) {
@@ -1655,6 +1748,11 @@
 <span class="kw">enum</span> <span class="ident">OutRegister</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">Regular</span>(<span class="ident">Word</span>),
     <span class="ident">Place</span>(<span class="ident">PlaceRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">SpirvValue</span><span class="op">&gt;</span>),
+}
+
+<span class="kw">enum</span> <span class="ident">AsmBlock</span> {
+    <span class="ident">Open</span>,
+    <span class="ident">End</span>(<span class="ident">Op</span>),
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
@@ -1721,6 +1819,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">id_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">defined_ids</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
+        <span class="ident">asm_block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AsmBlock</span>,
         <span class="ident">inst</span>: <span class="ident">dr::Instruction</span>,
     ) {
         <span class="comment">// Types declared must be registered in our type system.</span>
@@ -1807,10 +1906,32 @@
                 }
                 <span class="kw">return</span>;
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+
+            <span class="ident">op</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">emit</span>()
                     .<span class="ident">insert_into_block</span>(<span class="ident">dr::InsertPoint::End</span>, <span class="ident">inst</span>)
                     .<span class="ident">unwrap</span>();
+
+                <span class="kw-2">*</span><span class="ident">asm_block</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">asm_block</span> {
+                    <span class="ident">AsmBlock::Open</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="ident">reflect::is_block_terminator</span>(<span class="ident">op</span>) {
+                            <span class="ident">AsmBlock::End</span>(<span class="ident">op</span>)
+                        } <span class="kw">else</span> {
+                            <span class="ident">AsmBlock::Open</span>
+                        }
+                    }
+                    <span class="ident">AsmBlock::End</span>(<span class="ident">terminator</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="ident">op</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Op::Label</span> {
+                            <span class="self">self</span>.<span class="ident">err</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                                <span class="string">&quot;expected OpLabel after terminator {:?}&quot;</span>,
+                                <span class="ident">terminator</span>
+                            ));
+                        }
+
+                        <span class="ident">AsmBlock::Open</span>
+                    }
+                };
+
                 <span class="kw">return</span>;
             }
         };
@@ -1830,6 +1951,7 @@
         <span class="ident">id_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">defined_ids</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashSet</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">id_to_type_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Word</span><span class="op">&gt;</span>,
+        <span class="ident">asm_block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AsmBlock</span>,
         <span class="kw-2">mut</span> <span class="ident">tokens</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;cx</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="kw">where</span>
         <span class="lifetime">&#39;cx</span>: <span class="lifetime">&#39;a</span>,
@@ -1906,7 +2028,7 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">result_type</span>) <span class="op">=</span> <span class="ident">instruction</span>.<span class="ident">result_type</span> {
             <span class="ident">id_to_type_map</span>.<span class="ident">insert</span>(<span class="ident">instruction</span>.<span class="ident">result_id</span>.<span class="ident">unwrap</span>(), <span class="ident">result_type</span>);
         }
-        <span class="self">self</span>.<span class="ident">insert_inst</span>(<span class="ident">id_map</span>, <span class="ident">defined_ids</span>, <span class="ident">instruction</span>);
+        <span class="self">self</span>.<span class="ident">insert_inst</span>(<span class="ident">id_map</span>, <span class="ident">defined_ids</span>, <span class="ident">asm_block</span>, <span class="ident">instruction</span>);
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">OutRegister::Place</span>(<span class="ident">place</span>)) <span class="op">=</span> <span class="ident">out_register</span> {
             <span class="self">self</span>.<span class="ident">emit</span>()
                 .<span class="ident">store</span>(
