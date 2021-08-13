@@ -17,11 +17,10 @@ impl<T> RuntimeArray<T> {
         asm! {
             "%result = OpAccessChain _ {arr} {index}",
             "OpReturnValue %result",
-            "%unused = OpLabel",
             arr = in(reg) self,
             index = in(reg) index,
+            options(noreturn),
         }
-        loop {}
     }
 
     #[spirv_std_macros::gpu_only]
@@ -30,10 +29,9 @@ impl<T> RuntimeArray<T> {
         asm! {
             "%result = OpAccessChain _ {arr} {index}",
             "OpReturnValue %result",
-            "%unused = OpLabel",
             arr = in(reg) self,
             index = in(reg) index,
+            options(noreturn),
         }
-        loop {}
     }
 }

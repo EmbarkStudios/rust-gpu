@@ -3,7 +3,7 @@ use crate::builder_spirv::{BuilderCursor, SpirvValue};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::dr;
-use rspirv::grammar::{LogicalOperand, OperandKind, OperandQuantifier};
+use rspirv::grammar::{reflect, LogicalOperand, OperandKind, OperandQuantifier};
 use rspirv::spirv::{
     FPFastMathMode, FragmentShadingRate, FunctionControl, ImageOperands, KernelProfilingInfo,
     LoopControl, MemoryAccess, MemorySemantics, Op, RayFlags, SelectionControl, StorageClass, Word,
@@ -70,8 +70,13 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
         options: InlineAsmOptions,
         _line_spans: &[Span],
     ) {
-        if !options.is_empty() {
-            self.err(&format!("asm flags not supported: {:?}", options));
+        const SUPPORTED_OPTIONS: InlineAsmOptions = InlineAsmOptions::NORETURN;
+        let unsupported_options = options & !SUPPORTED_OPTIONS;
+        if !unsupported_options.is_empty() {
+            self.err(&format!(
+                "asm flags not supported: {:?}",
+                unsupported_options
+            ));
         }
         // vec of lines, and each line is vec of tokens
         let mut tokens = vec![vec![]];
@@ -141,13 +146,40 @@ impl<'a, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'tcx> {
                 id_to_type_map.insert(value.def(self), value.ty);
             }
         }
+
+        let mut asm_block = AsmBlock::Open;
         for line in tokens {
             self.codegen_asm(
                 &mut id_map,
                 &mut defined_ids,
                 &mut id_to_type_map,
+                &mut asm_block,
                 line.into_iter(),
             );
+        }
+
+        match (options.contains(InlineAsmOptions::NORETURN), asm_block) {
+            (true, AsmBlock::Open) => {
+                self.err("`noreturn` requires a terminator at the end");
+            }
+            (true, AsmBlock::End(_)) => {
+                // `noreturn` appends an `OpUnreachable` after the asm block.
+                // This requires starting a new block for this.
+                let label = self.emit().id();
+                self.emit()
+                    .insert_into_block(
+                        dr::InsertPoint::End,
+                        dr::Instruction::new(Op::Label, None, Some(label), vec![]),
+                    )
+                    .unwrap();
+            }
+            (false, AsmBlock::Open) => (),
+            (false, AsmBlock::End(terminator)) => {
+                self.err(&format!(
+                    "trailing terminator {:?} requires `options(noreturn)`",
+                    terminator
+                ));
+            }
         }
         for (id, num) in id_map {
             if !defined_ids.contains(&num) {
@@ -176,6 +208,11 @@ enum Token<'a, 'cx, 'tcx> {
 enum OutRegister<'a> {
     Regular(Word),
     Place(PlaceRef<'a, SpirvValue>),
+}
+
+enum AsmBlock {
+    Open,
+    End(Op),
 }
 
 impl<'cx, 'tcx> Builder<'cx, 'tcx> {
@@ -242,6 +279,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         &mut self,
         id_map: &mut FxHashMap<&str, Word>,
         defined_ids: &mut FxHashSet<Word>,
+        asm_block: &mut AsmBlock,
         inst: dr::Instruction,
     ) {
         // Types declared must be registered in our type system.
@@ -328,10 +366,32 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 }
                 return;
             }
-            _ => {
+
+            op => {
                 self.emit()
                     .insert_into_block(dr::InsertPoint::End, inst)
                     .unwrap();
+
+                *asm_block = match *asm_block {
+                    AsmBlock::Open => {
+                        if reflect::is_block_terminator(op) {
+                            AsmBlock::End(op)
+                        } else {
+                            AsmBlock::Open
+                        }
+                    }
+                    AsmBlock::End(terminator) => {
+                        if op != Op::Label {
+                            self.err(&format!(
+                                "expected OpLabel after terminator {:?}",
+                                terminator
+                            ));
+                        }
+
+                        AsmBlock::Open
+                    }
+                };
+
                 return;
             }
         };
@@ -351,6 +411,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         id_map: &mut FxHashMap<&'a str, Word>,
         defined_ids: &mut FxHashSet<Word>,
         id_to_type_map: &mut FxHashMap<Word, Word>,
+        asm_block: &mut AsmBlock,
         mut tokens: impl Iterator<Item = Token<'a, 'cx, 'tcx>>,
     ) where
         'cx: 'a,
@@ -427,7 +488,7 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
         if let Some(result_type) = instruction.result_type {
             id_to_type_map.insert(instruction.result_id.unwrap(), result_type);
         }
-        self.insert_inst(id_map, defined_ids, instruction);
+        self.insert_inst(id_map, defined_ids, asm_block, instruction);
         if let Some(OutRegister::Place(place)) = out_register {
             self.emit()
                 .store(
