@@ -628,7 +628,6 @@ impl RayQuery {
         asm! {
             "%u32 = OpTypeInt 32 0",
             "%f32 = OpTypeFloat 32",
-            "%four = OpConstant %u32 4",
             "%f32x3 = OpTypeVector %f32 3",
             "%f32x3x4 = OpTypeMatrix %f32x3 4",
             "%intersection = OpConstant %u32 {intersection}",
