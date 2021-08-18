@@ -51,7 +51,7 @@
 
 use crate::linker::ipo::CallGraph;
 use crate::spirv_type_constraints::{self, InstSig, StorageClassPat, TyListPat, TyPat};
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use rspirv::dr::{Builder, Function, Instruction, Module, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
 use rustc_data_structures::captures::Captures;
@@ -138,6 +138,35 @@ pub fn specialize(module: Module, specialization: impl Specialization) -> Module
 
     specializer.collect_generics(&module);
 
+    // "Generic" module-scoped variables can be fully constrained to the point
+    // where we could theoretically always add an instance for them, in order
+    // to preserve them, even if they would appear to otherwise be unused.
+    // We do this here for fully-constrained variables used by `OpEntryPoint`s,
+    // in order to avoid a failure in `Expander::expand_module` (see #723).
+    let mut interface_concrete_instances = IndexSet::new();
+    for inst in &module.entry_points {
+        for interface_operand in &inst.operands[3..] {
+            let interface_id = interface_operand.unwrap_id_ref();
+            if let Some(generic) = specializer.generics.get(&interface_id) {
+                if let Some(param_values) = &generic.param_values {
+                    if param_values.iter().all(|v| matches!(v, Value::Known(_))) {
+                        interface_concrete_instances.insert(Instance {
+                            generic_id: interface_id,
+                            generic_args: param_values
+                                .iter()
+                                .copied()
+                                .map(|v| match v {
+                                    Value::Known(v) => v,
+                                    _ => unreachable!(),
+                                })
+                                .collect(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
     let call_graph = CallGraph::collect(&module);
     let mut non_generic_replacements = vec![];
     for func_idx in call_graph.post_order() {
@@ -147,6 +176,11 @@ pub fn specialize(module: Module, specialization: impl Specialization) -> Module
     }
 
     let mut expander = Expander::new(&specializer, module);
+
+    // See comment above on the loop collecting `interface_concrete_instances`.
+    for interface_instance in interface_concrete_instances {
+        expander.alloc_instance_id(interface_instance);
+    }
 
     // For non-"generic" functions, we can apply `replacements` right away,
     // though not before finishing inference for all functions first
