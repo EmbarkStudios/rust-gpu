@@ -579,18 +579,16 @@ impl RayQuery {
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetWorldRayDirectionKHR")]
     #[inline]
-    pub unsafe fn get_world_ray_direction<V: Vector<f32, 3>, const INTERSECTION: u32>(&self) -> V {
+    pub unsafe fn get_world_ray_direction<V: Vector<f32, 3>>(&self) -> V {
         let mut result = Default::default();
 
         asm! {
             "%u32 = OpTypeInt 32 0",
             "%f32 = OpTypeFloat 32",
             "%f32x3 = OpTypeVector %f32 3",
-            "%intersection = OpConstant %u32 {intersection}",
-            "%result = OpRayQueryGetWorldRayDirectionKHR %f32x3 {ray_query} %intersection",
+            "%result = OpRayQueryGetWorldRayDirectionKHR %f32x3 {ray_query}",
             "OpStore {result} %result",
             ray_query = in(reg) self,
-            intersection = const INTERSECTION,
             result = in(reg) &mut result,
         }
 
@@ -601,18 +599,16 @@ impl RayQuery {
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetWorldRayOriginKHR")]
     #[inline]
-    pub unsafe fn get_world_ray_origin<V: Vector<f32, 3>, const INTERSECTION: u32>(&self) -> V {
+    pub unsafe fn get_world_ray_origin<V: Vector<f32, 3>>(&self) -> V {
         let mut result = Default::default();
 
         asm! {
             "%u32 = OpTypeInt 32 0",
             "%f32 = OpTypeFloat 32",
             "%f32x3 = OpTypeVector %f32 3",
-            "%intersection = OpConstant %u32 {intersection}",
-            "%result = OpRayQueryGetWorldRayOriginKHR %f32x3 {ray_query} %intersection",
+            "%result = OpRayQueryGetWorldRayOriginKHR %f32x3 {ray_query}",
             "OpStore {result} %result",
             ray_query = in(reg) self,
-            intersection = const INTERSECTION,
             result = in(reg) &mut result,
         }
 
@@ -626,15 +622,22 @@ impl RayQuery {
     #[inline]
     pub unsafe fn get_intersection_object_to_world<V: Vector<f32, 3>, const INTERSECTION: u32>(
         &self,
-    ) -> V {
+    ) -> [V; 4] {
         let mut result = Default::default();
 
         asm! {
             "%u32 = OpTypeInt 32 0",
             "%f32 = OpTypeFloat 32",
+            "%four = OpConstant %u32 4",
             "%f32x3 = OpTypeVector %f32 3",
+            "%f32x3x4 = OpTypeMatrix %f32x3 4",
             "%intersection = OpConstant %u32 {intersection}",
-            "%result = OpRayQueryGetWorldRayOriginKHR %f32x3 {ray_query} %intersection",
+            "%matrix = OpRayQueryGetIntersectionObjectToWorldKHR %f32x3x4 {ray_query} %intersection",
+            "%col0 = OpCompositeExtract %f32x3 %matrix 0",
+            "%col1 = OpCompositeExtract %f32x3 %matrix 1",
+            "%col2 = OpCompositeExtract %f32x3 %matrix 2",
+            "%col3 = OpCompositeExtract %f32x3 %matrix 3",
+            "%result = OpCompositeConstruct typeof*{result} %col0 %col1 %col2 %col3",
             "OpStore {result} %result",
             ray_query = in(reg) self,
             intersection = const INTERSECTION,
