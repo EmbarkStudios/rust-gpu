@@ -469,11 +469,7 @@ fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
             "Duplicate filename in archive: {:?}",
             file.file_name().unwrap()
         );
-        // NOTE(eddyb) this could just be `builder.append_path(file)`, but we
-        // have to work around https://github.com/mdsteele/rust-ar/issues/19.
-        builder
-            .append_file(name.as_bytes(), &mut File::open(file).unwrap())
-            .unwrap();
+        builder.append_path(file).unwrap();
     }
     builder.into_inner().unwrap();
 }
