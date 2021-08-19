@@ -623,7 +623,39 @@ fn get_env_dump_dir(env_var: &str) -> Option<PathBuf> {
 pub fn __rustc_codegen_backend() -> Box<dyn CodegenBackend> {
     // Override rustc's panic hook with our own to override the ICE error
     // message, and direct people to `rust-gpu`.
-    std::panic::set_hook(Box::new(|panic_info| {
+    let _rustc_hook = std::panic::take_hook();
+    let default_hook = std::panic::take_hook();
+    {
+        // NOTE(eddyb) the reason we can get access to the default panic hook,
+        // is that `std::panic::take_hook` has this phrase in its documentation:
+        //
+        // > If no custom hook is registered, the default hook will be returned.
+        //
+        // But just in case (races with other threads?), we can do it a few more
+        // times, and require that we get the same "boxed" ZST every time.
+        let more_hooks = [
+            std::panic::take_hook(),
+            std::panic::take_hook(),
+            std::panic::take_hook(),
+            std::panic::take_hook(),
+        ];
+        assert_eq!(
+            std::mem::size_of_val(&*default_hook),
+            0,
+            "failed to acquire default panic hook using `std::panic::take_hook`, \
+             or default panic hook not a ZST anymore"
+        );
+        #[allow(clippy::vtable_address_comparisons)]
+        for other_hook in more_hooks {
+            assert!(
+                std::ptr::eq(&*default_hook, &*other_hook),
+                "failed to acquire default panic hook using `std::panic::take_hook`, \
+                 or `std::panic::set_hook` was used on another thread"
+            );
+        }
+    }
+    std::panic::set_hook(Box::new(move |panic_info| {
+        default_hook(panic_info);
         rustc_driver::report_ice(
             panic_info,
             "https://github.com/EmbarkStudios/rust-gpu/issues/new",
