@@ -2526,6 +2526,40 @@
 <span id="2526">2526</span>
 <span id="2527">2527</span>
 <span id="2528">2528</span>
+<span id="2529">2529</span>
+<span id="2530">2530</span>
+<span id="2531">2531</span>
+<span id="2532">2532</span>
+<span id="2533">2533</span>
+<span id="2534">2534</span>
+<span id="2535">2535</span>
+<span id="2536">2536</span>
+<span id="2537">2537</span>
+<span id="2538">2538</span>
+<span id="2539">2539</span>
+<span id="2540">2540</span>
+<span id="2541">2541</span>
+<span id="2542">2542</span>
+<span id="2543">2543</span>
+<span id="2544">2544</span>
+<span id="2545">2545</span>
+<span id="2546">2546</span>
+<span id="2547">2547</span>
+<span id="2548">2548</span>
+<span id="2549">2549</span>
+<span id="2550">2550</span>
+<span id="2551">2551</span>
+<span id="2552">2552</span>
+<span id="2553">2553</span>
+<span id="2554">2554</span>
+<span id="2555">2555</span>
+<span id="2556">2556</span>
+<span id="2557">2557</span>
+<span id="2558">2558</span>
+<span id="2559">2559</span>
+<span id="2560">2560</span>
+<span id="2561">2561</span>
+<span id="2562">2562</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Specialize globals (types, constants and module-scoped variables) and functions,</span>
 <span class="doccomment">//! to legalize a SPIR-V module representing a &quot;family&quot; of types with a single type,</span>
@@ -2580,7 +2614,7 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::linker::ipo::CallGraph</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::spirv_type_constraints</span>::{<span class="self">self</span>, <span class="ident">InstSig</span>, <span class="ident">StorageClassPat</span>, <span class="ident">TyListPat</span>, <span class="ident">TyPat</span>};
-<span class="kw">use</span> <span class="ident">indexmap::IndexMap</span>;
+<span class="kw">use</span> <span class="ident">indexmap</span>::{<span class="ident">IndexMap</span>, <span class="ident">IndexSet</span>};
 <span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Builder</span>, <span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">Module</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">Op</span>, <span class="ident">StorageClass</span>, <span class="ident">Word</span>};
 <span class="kw">use</span> <span class="ident">rustc_data_structures::captures::Captures</span>;
@@ -2667,6 +2701,35 @@
 
     <span class="ident">specializer</span>.<span class="ident">collect_generics</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>);
 
+    <span class="comment">// &quot;Generic&quot; module-scoped variables can be fully constrained to the point</span>
+    <span class="comment">// where we could theoretically always add an instance for them, in order</span>
+    <span class="comment">// to preserve them, even if they would appear to otherwise be unused.</span>
+    <span class="comment">// We do this here for fully-constrained variables used by `OpEntryPoint`s,</span>
+    <span class="comment">// in order to avoid a failure in `Expander::expand_module` (see #723).</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">interface_concrete_instances</span> <span class="op">=</span> <span class="ident">IndexSet::new</span>();
+    <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">entry_points</span> {
+        <span class="kw">for</span> <span class="ident">interface_operand</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">3</span>..] {
+            <span class="kw">let</span> <span class="ident">interface_id</span> <span class="op">=</span> <span class="ident">interface_operand</span>.<span class="ident">unwrap_id_ref</span>();
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">generic</span>) <span class="op">=</span> <span class="ident">specializer</span>.<span class="ident">generics</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">interface_id</span>) {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">param_values</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">generic</span>.<span class="ident">param_values</span> {
+                    <span class="kw">if</span> <span class="ident">param_values</span>.<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="macro">matches!</span>(<span class="ident">v</span>, <span class="ident">Value::Known</span>(<span class="kw">_</span>))) {
+                        <span class="ident">interface_concrete_instances</span>.<span class="ident">insert</span>(<span class="ident">Instance</span> {
+                            <span class="ident">generic_id</span>: <span class="ident">interface_id</span>,
+                            <span class="ident">generic_args</span>: <span class="ident">param_values</span>
+                                .<span class="ident">iter</span>()
+                                .<span class="ident">copied</span>()
+                                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">v</span> {
+                                    <span class="ident">Value::Known</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
+                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                                })
+                                .<span class="ident">collect</span>(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
     <span class="kw">let</span> <span class="ident">call_graph</span> <span class="op">=</span> <span class="ident">CallGraph::collect</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">non_generic_replacements</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">for</span> <span class="ident">func_idx</span> <span class="kw">in</span> <span class="ident">call_graph</span>.<span class="ident">post_order</span>() {
@@ -2676,6 +2739,11 @@
     }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">expander</span> <span class="op">=</span> <span class="ident">Expander::new</span>(<span class="kw-2">&amp;</span><span class="ident">specializer</span>, <span class="ident">module</span>);
+
+    <span class="comment">// See comment above on the loop collecting `interface_concrete_instances`.</span>
+    <span class="kw">for</span> <span class="ident">interface_instance</span> <span class="kw">in</span> <span class="ident">interface_concrete_instances</span> {
+        <span class="ident">expander</span>.<span class="ident">alloc_instance_id</span>(<span class="ident">interface_instance</span>);
+    }
 
     <span class="comment">// For non-&quot;generic&quot; functions, we can apply `replacements` right away,</span>
     <span class="comment">// though not before finishing inference for all functions first</span>
