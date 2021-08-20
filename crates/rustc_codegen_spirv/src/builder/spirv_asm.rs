@@ -1,5 +1,5 @@
 use super::Builder;
-use crate::builder_spirv::{BuilderCursor, SpirvValue, SpirvValueExt};
+use crate::builder_spirv::{BuilderCursor, SpirvValue};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::dr;
@@ -304,26 +304,8 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
             }
             .def(self.span(), self),
             Op::TypeArray => {
-                let count = inst.operands[1].unwrap_id_ref();
-                let get_count_ty = || -> Option<Word> {
-                    let emit = self.emit();
-                    let func = &emit.module_ref().functions[emit.selected_function()?];
-                    let insts = &func.blocks[emit.selected_block()?].instructions;
-                    let inst = insts.iter().find(|i| i.result_id == Some(count))?;
-                    inst.result_type
-                };
-                let count_ty = match get_count_ty() {
-                    Some(ty) => ty,
-                    None => {
-                        self.err("Unable to find constant for OpTypeArray count");
-                        return;
-                    }
-                };
-                SpirvType::Array {
-                    element: inst.operands[0].unwrap_id_ref(),
-                    count: count.with_type(count_ty),
-                }
-                .def(self.span(), self)
+                self.err("OpTypeArray in asm! is not supported yet");
+                return;
             }
             Op::TypeRuntimeArray => SpirvType::RuntimeArray {
                 element: inst.operands[0].unwrap_id_ref(),
