@@ -633,6 +633,38 @@
 <span id="633">633</span>
 <span id="634">634</span>
 <span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is</span>
 <span class="doccomment">//! unstable and mainly intended for developing on the project itself. This is</span>
@@ -1259,7 +1291,39 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">__rustc_codegen_backend</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">CodegenBackend</span><span class="op">&gt;</span> {
     <span class="comment">// Override rustc&#39;s panic hook with our own to override the ICE error</span>
     <span class="comment">// message, and direct people to `rust-gpu`.</span>
-    <span class="ident">std::panic::set_hook</span>(<span class="ident">Box::new</span>(<span class="op">|</span><span class="ident">panic_info</span><span class="op">|</span> {
+    <span class="kw">let</span> <span class="ident">_rustc_hook</span> <span class="op">=</span> <span class="ident">std::panic::take_hook</span>();
+    <span class="kw">let</span> <span class="ident">default_hook</span> <span class="op">=</span> <span class="ident">std::panic::take_hook</span>();
+    {
+        <span class="comment">// NOTE(eddyb) the reason we can get access to the default panic hook,</span>
+        <span class="comment">// is that `std::panic::take_hook` has this phrase in its documentation:</span>
+        <span class="comment">//</span>
+        <span class="comment">// &gt; If no custom hook is registered, the default hook will be returned.</span>
+        <span class="comment">//</span>
+        <span class="comment">// But just in case (races with other threads?), we can do it a few more</span>
+        <span class="comment">// times, and require that we get the same &quot;boxed&quot; ZST every time.</span>
+        <span class="kw">let</span> <span class="ident">more_hooks</span> <span class="op">=</span> [
+            <span class="ident">std::panic::take_hook</span>(),
+            <span class="ident">std::panic::take_hook</span>(),
+            <span class="ident">std::panic::take_hook</span>(),
+            <span class="ident">std::panic::take_hook</span>(),
+        ];
+        <span class="macro">assert_eq!</span>(
+            <span class="ident">std::mem::size_of_val</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">default_hook</span>),
+            <span class="number">0</span>,
+            <span class="string">&quot;failed to acquire default panic hook using `std::panic::take_hook`, \
+             or default panic hook not a ZST anymore&quot;</span>
+        );
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::vtable_address_comparisons</span>)]</span>
+        <span class="kw">for</span> <span class="ident">other_hook</span> <span class="kw">in</span> <span class="ident">more_hooks</span> {
+            <span class="macro">assert!</span>(
+                <span class="ident">std::ptr::eq</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">default_hook</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">other_hook</span>),
+                <span class="string">&quot;failed to acquire default panic hook using `std::panic::take_hook`, \
+                 or `std::panic::set_hook` was used on another thread&quot;</span>
+            );
+        }
+    }
+    <span class="ident">std::panic::set_hook</span>(<span class="ident">Box::new</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">panic_info</span><span class="op">|</span> {
+        <span class="ident">default_hook</span>(<span class="ident">panic_info</span>);
         <span class="ident">rustc_driver::report_ice</span>(
             <span class="ident">panic_info</span>,
             <span class="string">&quot;https://github.com/EmbarkStudios/rust-gpu/issues/new&quot;</span>,
