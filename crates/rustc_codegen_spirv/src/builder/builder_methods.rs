@@ -218,6 +218,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 )
                 .def(self)
             }
+            SpirvType::Matrix { .. } => todo!(),
             SpirvType::Array { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
@@ -287,6 +288,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     )
                     .unwrap()
             }
+            SpirvType::Matrix { .. } => todo!(),
             SpirvType::RuntimeArray { .. } => {
                 self.fatal("memset on runtime arrays not implemented yet")
             }
