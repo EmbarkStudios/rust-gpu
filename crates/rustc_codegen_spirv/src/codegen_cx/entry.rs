@@ -8,7 +8,7 @@ use rspirv::dr::Operand;
 use rspirv::spirv::{
     Capability, Decoration, Dim, ExecutionModel, FunctionControl, StorageClass, Word,
 };
-use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
+use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods, DerivedTypeMethods};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir as hir;
 use rustc_middle::ty::layout::TyAndLayout;
@@ -273,6 +273,86 @@ impl<'tcx> CodegenCx<'tcx> {
         (spirv_ty, storage_class)
     }
 
+    fn declare_shader_interface_for_param_matrix(
+        &self,
+        attrs: &AggregatedSpirvAttributes,
+        entry_arg_abi: &ArgAbi<'tcx, Ty<'tcx>>,
+        hir_param: &hir::Param<'tcx>,
+        op_entry_point_interface_operands: &mut Vec<Word>,
+        bx: &mut Builder<'_, 'tcx>,
+        call_args: &mut Vec<SpirvValue>,
+    ) -> bool {
+        if let Some(builtin) = attrs.builtin.map(|attr| attr.value) {
+            if matches!(
+                builtin,
+                rspirv::spirv::BuiltIn::ObjectToWorldKHR | rspirv::spirv::BuiltIn::WorldToObjectKHR
+            ) {
+                let (value_spirv_type, storage_class) =
+                    self.infer_param_ty_and_storage_class(entry_arg_abi.layout, hir_param, attrs);
+                let var_ptr_spirv_type = self.type_ptr_to(value_spirv_type);
+
+                let builtin_var = self.emit_global().id();
+
+                self.emit_global()
+                    .name(builtin_var, format!("{:?}", builtin));
+                self.emit_global().decorate(
+                    builtin_var,
+                    Decoration::BuiltIn,
+                    std::iter::once(Operand::BuiltIn(builtin)),
+                );
+
+                let v3float = SpirvType::Vector {
+                    element: self.type_f32(),
+                    count: 3,
+                }
+                .def(hir_param.ty_span, self);
+                let ptr_v3float = self.type_ptr_to(v3float);
+                let mat4v3float = SpirvType::Matrix {
+                    element: v3float,
+                    count: 4,
+                }
+                .def(hir_param.ty_span, self);
+                let ptr_mat4v3float = self.type_ptr_to(mat4v3float);
+
+                self.emit_global().variable(
+                    ptr_mat4v3float,
+                    Some(builtin_var),
+                    storage_class,
+                    None,
+                );
+
+                let cols: Vec<u32> = (0..4)
+                    .map(|col| {
+                        let col = bx.constant_int(bx.type_int(), col).def(bx);
+                        let ptr = bx
+                            .emit()
+                            .access_chain(ptr_v3float, None, builtin_var, std::iter::once(col))
+                            .unwrap();
+
+                        bx.emit().load(v3float, None, ptr, None, None).unwrap()
+                    })
+                    .collect();
+
+                let value = bx
+                    .emit()
+                    .composite_construct(value_spirv_type, None, cols)
+                    .unwrap();
+
+                let var =
+                    bx.emit()
+                        .variable(var_ptr_spirv_type, None, StorageClass::Function, None);
+
+                bx.emit().store(var, value, None, None).unwrap();
+
+                op_entry_point_interface_operands.push(builtin_var);
+                call_args.push(var.with_type(var_ptr_spirv_type));
+
+                return true;
+            }
+        }
+        false
+    }
+
     fn declare_shader_interface_for_param(
         &self,
         entry_arg_abi: &ArgAbi<'tcx, Ty<'tcx>>,
@@ -283,6 +363,20 @@ impl<'tcx> CodegenCx<'tcx> {
         decoration_locations: &mut FxHashMap<StorageClass, u32>,
     ) {
         let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.hir().attrs(hir_param.hir_id));
+
+        // For #[spirv(object_to_world)] and #[spirv(world_to_object)] which requires OpMatrix.
+        // Since OpMatrix isn't supported yet, we declare builtin variable temporary
+        // and unpack to the target variable.
+        if self.declare_shader_interface_for_param_matrix(
+            &attrs,
+            entry_arg_abi,
+            hir_param,
+            op_entry_point_interface_operands,
+            bx,
+            call_args,
+        ) {
+            return;
+        }
 
         // Pre-allocate the module-scoped `OpVariable`'s *Result* ID.
         let var = self.emit_global().id();

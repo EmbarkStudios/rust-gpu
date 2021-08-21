@@ -174,6 +174,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                 TypeKind::Struct
             }
             SpirvType::Vector { .. } => TypeKind::Vector,
+            SpirvType::Matrix { .. } => todo!(),
             SpirvType::Array { .. } | SpirvType::RuntimeArray { .. } => TypeKind::Array,
             SpirvType::Pointer { .. } => TypeKind::Pointer,
             SpirvType::Function { .. } => TypeKind::Function,

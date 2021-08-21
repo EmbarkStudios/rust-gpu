@@ -482,6 +482,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 *offset = final_offset;
                 result
             }
+            SpirvType::Matrix { .. } => todo!(),
             SpirvType::RuntimeArray { element } => {
                 let mut values = Vec::new();
                 while offset.bytes_usize() != alloc.len() {
