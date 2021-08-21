@@ -25,6 +25,20 @@ pub fn collect_roots(module: &Module) -> FxHashSet<Word> {
     rooted
 }
 
+// Exactly the same as Function::all_inst_iter, except return type is `impl DoubleEndedIterator`
+// instead of `impl Iterator`
+fn all_inst_iter(func: &Function) -> impl DoubleEndedIterator<Item = &Instruction> {
+    func.def
+        .iter()
+        .chain(func.parameters.iter())
+        .chain(
+            func.blocks
+                .iter()
+                .flat_map(|b| b.label.iter().chain(b.instructions.iter())),
+        )
+        .chain(func.end.iter())
+}
+
 fn spread_roots(module: &Module, rooted: &mut FxHashSet<Word>) -> bool {
     let mut any = false;
     for inst in module.global_inst_iter() {
@@ -40,18 +54,7 @@ fn spread_roots(module: &Module, rooted: &mut FxHashSet<Word>) -> bool {
             // earlier insts, by reversing the iteration order, we're more likely to root the
             // entire relevant function at once.
             // See https://github.com/EmbarkStudios/rust-gpu/pull/691#discussion_r681477091
-            for inst in func
-                .end
-                .iter()
-                .chain(
-                    func.blocks
-                        .iter()
-                        .rev()
-                        .flat_map(|b| b.instructions.iter().rev().chain(b.label.iter())),
-                )
-                .chain(func.parameters.iter().rev())
-                .chain(func.def.iter())
-            {
+            for inst in all_inst_iter(func).rev() {
                 if !instruction_is_pure(inst) {
                     any |= root(inst, rooted);
                 } else if let Some(id) = inst.result_id {
@@ -111,13 +114,13 @@ fn kill_unrooted(module: &mut Module, rooted: &FxHashSet<Word>) {
     module
         .functions
         .retain(|f| is_rooted(f.def.as_ref().unwrap(), rooted));
-    module.functions.iter_mut().for_each(|fun| {
-        fun.blocks.iter_mut().for_each(|block| {
+    for fun in &mut module.functions {
+        for block in &mut fun.blocks {
             block
                 .instructions
                 .retain(|inst| !instruction_is_pure(inst) || is_rooted(inst, rooted));
-        });
-    });
+        }
+    }
 }
 
 pub fn dce_phi(func: &mut Function) {

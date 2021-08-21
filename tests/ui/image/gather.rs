@@ -20,6 +20,7 @@ pub fn main(
 #[cfg(not(any(
     target_env = "vulkan1.0",
     target_env = "vulkan1.1",
+    target_env = "vulkan1.1spv1.4",
     target_env = "vulkan1.2"
 )))]
 #[spirv(fragment)]
