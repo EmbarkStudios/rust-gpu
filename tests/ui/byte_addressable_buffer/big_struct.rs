@@ -12,13 +12,23 @@ pub struct BigStruct {
 }
 
 #[spirv(fragment)]
-pub fn load(#[spirv(storage_buffer)] buf: &mut [u32], out: &mut BigStruct) {
-    let buf = ByteAddressableBuffer::new(buf);
-    *out = buf.load(5);
+pub fn load(
+    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    out: &mut BigStruct,
+) {
+    unsafe {
+        let buf = ByteAddressableBuffer::new(buf);
+        *out = buf.load(5);
+    }
 }
 
 #[spirv(fragment)]
-pub fn store(#[spirv(storage_buffer)] buf: &mut [u32], val: BigStruct) {
-    let buf = ByteAddressableBuffer::new(buf);
-    buf.store(5, val);
+pub fn store(
+    #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
+    val: BigStruct,
+) {
+    unsafe {
+        let buf = ByteAddressableBuffer::new(buf);
+        buf.store(5, val);
+    }
 }

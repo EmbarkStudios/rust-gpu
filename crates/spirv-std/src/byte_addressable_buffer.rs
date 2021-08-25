@@ -38,19 +38,29 @@ impl<'a> ByteAddressableBuffer<'a> {
 
     /// Loads an arbitrary type from the buffer. `byte_index` must be a multiple of 4, otherwise,
     /// it will get silently rounded down to the nearest multiple of 4.
-    pub fn load<T>(self, byte_index: u32) -> T {
+    ///
+    /// # Safety
+    /// This function allows writing a type to an untyped buffer, then reading a different type
+    /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+    /// transmute)
+    pub unsafe fn load<T>(self, byte_index: u32) -> T {
         if byte_index + mem::size_of::<T>() as u32 > self.data.len() as u32 {
             panic!("Index out of range")
         }
-        unsafe { buffer_load_intrinsic(self.data, byte_index) }
+        buffer_load_intrinsic(self.data, byte_index)
     }
 
     /// Stores an arbitrary type int the buffer. `byte_index` must be a multiple of 4, otherwise,
     /// it will get silently rounded down to the nearest multiple of 4.
-    pub fn store<T>(self, byte_index: u32, value: T) {
+    ///
+    /// # Safety
+    /// This function allows writing a type to an untyped buffer, then reading a different type
+    /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+    /// transmute)
+    pub unsafe fn store<T>(self, byte_index: u32, value: T) {
         if byte_index + mem::size_of::<T>() as u32 > self.data.len() as u32 {
             panic!("Index out of range")
         }
-        unsafe { buffer_store_intrinsic(self.data, byte_index, value) }
+        buffer_store_intrinsic(self.data, byte_index, value);
     }
 }
