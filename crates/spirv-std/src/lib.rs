@@ -96,6 +96,7 @@
 pub extern crate spirv_std_macros as macros;
 
 pub mod arch;
+pub mod byte_addressable_buffer;
 pub mod float;
 pub mod image;
 pub mod integer;
@@ -109,6 +110,7 @@ pub mod vector;
 
 pub use self::sampler::Sampler;
 pub use crate::macros::Image;
+pub use byte_addressable_buffer::ByteAddressableBuffer;
 pub use num_traits;
 pub use runtime_array::*;
 

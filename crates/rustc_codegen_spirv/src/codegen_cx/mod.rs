@@ -66,6 +66,10 @@ pub struct CodegenCx<'tcx> {
 
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
     pub panic_fn_id: Cell<Option<Word>>,
+    /// Intrinsic for loading a <T> from a &[u32]
+    pub buffer_load_intrinsic_fn_id: RefCell<FxHashSet<Word>>,
+    /// Intrinsic for storing a <T> into a &[u32]
+    pub buffer_store_intrinsic_fn_id: RefCell<FxHashSet<Word>>,
     /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
     pub panic_bounds_check_fn_id: Cell<Option<Word>>,
 
@@ -123,6 +127,8 @@ impl<'tcx> CodegenCx<'tcx> {
             instruction_table: InstructionTable::new(),
             libm_intrinsics: Default::default(),
             panic_fn_id: Default::default(),
+            buffer_load_intrinsic_fn_id: Default::default(),
+            buffer_store_intrinsic_fn_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
             codegen_args,
