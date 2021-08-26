@@ -332,7 +332,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         // Signature: fn store<T>(array: &[u32], index: u32, value: T);
         if args.len() != 4 {
             self.fatal(&format!(
-                "buffer_load_intrinsic should have 4 args, it has {}",
+                "buffer_store_intrinsic should have 4 args, it has {}",
                 args.len()
             ));
         }
