@@ -562,6 +562,10 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         todo!()
     }
 
+    fn compiler_used_statics(&self) -> &RefCell<Vec<Self::Value>> {
+        todo!()
+    }
+
     fn set_frame_pointer_type(&self, _llfn: Self::Function) {
         todo!()
     }
@@ -571,6 +575,10 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn create_used_variable(&self) {
+        todo!()
+    }
+
+    fn create_compiler_used_variable(&self) {
         todo!()
     }
 

@@ -294,12 +294,17 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
             .set_global_initializer(g.def_cx(self), v.def_cx(self));
     }
 
-    /// Mark the given global value as "used", to prevent a backend from potentially removing a
-    /// static variable that may otherwise appear unused.
-    ///
-    /// Static variables in Rust can be annotated with the `#[used]` attribute to direct the `rustc`
-    /// compiler to mark the variable as a "used global".
+    /// Mark the given global value as "used", to prevent the compiler and linker from potentially
+    /// removing a static variable that may otherwise appear unused.
     fn add_used_global(&self, _global: Self::Value) {
+        // TODO: Ignore for now.
+    }
+
+    /// Same as `add_used_global`, but only prevent the compiler from potentially removing an
+    /// otherwise unused symbol. The linker is still permitted to drop it.
+    ///
+    /// This corresponds to the semantics of the `#[used]` attribute.
+    fn add_compiler_used_global(&self, _global: Self::Value) {
         // TODO: Ignore for now.
     }
 }
