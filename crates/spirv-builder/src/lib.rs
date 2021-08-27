@@ -394,8 +394,7 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     let mut rustflags = vec![
         format!("-Zcodegen-backend={}", rustc_codegen_spirv.display()),
-        //FIXME: reintroduce v0 mangling, see issue #642
-        "-Zsymbol-mangling-version=legacy".to_string(),
+        "-Zsymbol-mangling-version=v0".to_string(),
     ];
 
     let mut llvm_args = vec![];
