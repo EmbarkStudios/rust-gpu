@@ -292,6 +292,7 @@ struct TestDeps {
 }
 
 /// The RUSTFLAGS passed to all SPIR-V builds.
+// FIXME(eddyb) expose most of these from `spirv-builder`.
 fn rust_flags(codegen_backend_path: &Path) -> String {
     [
         &*format!("-Zcodegen-backend={}", codegen_backend_path.display()),
@@ -300,6 +301,7 @@ fn rust_flags(codegen_backend_path: &Path) -> String {
         "-Cdebuginfo=2",
         "-Cembed-bitcode=no",
         "-Ctarget-feature=+Int8,+Int16,+Int64,+Float64",
+        "-Zsymbol-mangling-version=v0",
     ]
     .join(" ")
 }
