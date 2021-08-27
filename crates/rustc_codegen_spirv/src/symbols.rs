@@ -1,7 +1,7 @@
 use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
-use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
+use rustc_ast::ast::{Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
@@ -409,22 +409,9 @@ type ParseAttrError = (Span, String);
 pub(crate) fn parse_attrs_for_checking<'a>(
     sym: &'a Symbols,
     attrs: &'a [Attribute],
-) -> impl Iterator<
-    Item = (
-        &'a Attribute,
-        Result<(Span, SpirvAttribute), ParseAttrError>,
-    ),
-> + 'a {
+) -> impl Iterator<Item = Result<(Span, SpirvAttribute), ParseAttrError>> + 'a {
     attrs.iter().flat_map(move |attr| {
-        let is_spirv = match attr.kind {
-            AttrKind::Normal(ref item, _) => {
-                // TODO: We ignore the rest of the path. Is this right?
-                let last = item.path.segments.last();
-                last.map_or(false, |seg| seg.ident.name == sym.spirv)
-            }
-            AttrKind::DocComment(..) => false,
-        };
-        let (whole_attr_error, args) = if !is_spirv {
+        let (whole_attr_error, args) = if !attr.has_name(sym.spirv) {
             // Use an empty vec here to return empty
             (None, Vec::new())
         } else if let Some(args) = attr.meta_item_list() {
@@ -475,7 +462,6 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                 };
                 Ok((span, parsed_attr))
             }))
-            .map(move |parse_attr_result| (attr, parse_attr_result))
     })
 }
 

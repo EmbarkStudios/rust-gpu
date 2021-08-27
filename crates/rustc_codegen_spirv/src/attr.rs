@@ -144,7 +144,7 @@ impl AggregatedSpirvAttributes {
 
         // NOTE(eddyb) `delay_span_bug` ensures that if attribute checking fails
         // to see an attribute error, it will cause an ICE instead.
-        for (_, parse_attr_result) in crate::symbols::parse_attrs_for_checking(&cx.sym, attrs) {
+        for parse_attr_result in crate::symbols::parse_attrs_for_checking(&cx.sym, attrs) {
             let (span, parsed_attr) = match parse_attr_result {
                 Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
@@ -263,11 +263,7 @@ impl CheckSpirvAttrVisitor<'_> {
         let parse_attrs = |attrs| crate::symbols::parse_attrs_for_checking(&self.sym, attrs);
 
         let attrs = self.tcx.hir().attrs(hir_id);
-        for (attr, parse_attr_result) in parse_attrs(attrs) {
-            // Make sure to mark the whole `#[spirv(...)]` attribute as used,
-            // to avoid warnings about unused attributes.
-            self.tcx.sess.mark_attr_used(attr);
-
+        for parse_attr_result in parse_attrs(attrs) {
             let (span, parsed_attr) = match parse_attr_result {
                 Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
@@ -312,7 +308,7 @@ impl CheckSpirvAttrVisitor<'_> {
                         let parent_hir_id = self.tcx.hir().get_parent_node(hir_id);
                         let parent_is_entry_point =
                             parse_attrs(self.tcx.hir().attrs(parent_hir_id))
-                                .filter_map(|(_, r)| r.ok())
+                                .filter_map(|r| r.ok())
                                 .any(|(_, attr)| matches!(attr, SpirvAttribute::Entry(_)));
                         if !parent_is_entry_point {
                             self.tcx.sess.span_err(
@@ -494,7 +490,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
 
 fn check_invalid_macro_level_spirv_attr(tcx: TyCtxt<'_>, sym: &Symbols, attrs: &[Attribute]) {
     for attr in attrs {
-        if tcx.sess.check_name(attr, sym.spirv) {
+        if attr.has_name(sym.spirv) {
             tcx.sess
                 .span_err(attr.span, "#[spirv(..)] cannot be applied to a macro");
         }

@@ -341,14 +341,17 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
 }
 
 impl<'tcx> CodegenCx<'tcx> {
-    // This function comes from https://doc.rust-lang.org/nightly/nightly-rustc/src/rustc_middle/ty/layout.rs.html,
-    // and is a lambda in the `layout_raw_uncached` function in Version 1.50.0-nightly (eb4fc71dc 2020-12-17)
+    // This function comes from `ty::layout`'s `layout_of_uncached`,
+    // where it's named `scalar_unit`.
     pub fn primitive_to_scalar(&self, value: Primitive) -> abi::Scalar {
         let bits = value.size(self.data_layout()).bits();
         assert!(bits <= 128);
         abi::Scalar {
             value,
-            valid_range: 0..=(!0 >> (128 - bits)),
+            valid_range: abi::WrappingRange {
+                start: 0,
+                end: (!0 >> (128 - bits)),
+            },
         }
     }
 
