@@ -174,7 +174,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                 TypeKind::Struct
             }
             SpirvType::Vector { .. } => TypeKind::Vector,
-            SpirvType::Array { .. } | SpirvType::RuntimeArray { .. } => TypeKind::Array,
+            SpirvType::Array { .. } | SpirvType::RuntimeArray { .. } | SpirvType::Matrix { .. } => TypeKind::Array,
             SpirvType::Pointer { .. } => TypeKind::Pointer,
             SpirvType::Function { .. } => TypeKind::Function,
             // HACK(eddyb) this is probably the closest `TypeKind` (which is still

@@ -99,6 +99,7 @@ pub mod arch;
 pub mod float;
 pub mod image;
 pub mod integer;
+pub mod matrix;
 pub mod memory;
 pub mod ray_tracing;
 mod runtime_array;

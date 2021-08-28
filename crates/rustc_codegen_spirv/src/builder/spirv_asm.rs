@@ -303,6 +303,11 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
                 count: inst.operands[1].unwrap_literal_int32(),
             }
             .def(self.span(), self),
+            Op::TypeMatrix => SpirvType::Matrix {
+                element: inst.operands[0].unwrap_id_ref(),
+                count: inst.operands[1].unwrap_literal_int32(),
+            }
+            .def(self.span(), self),
             Op::TypeArray => {
                 self.err("OpTypeArray in asm! is not supported yet");
                 return;

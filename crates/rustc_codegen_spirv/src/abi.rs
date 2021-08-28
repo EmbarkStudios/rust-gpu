@@ -12,7 +12,8 @@ use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
 use rustc_middle::ty::subst::SubstsRef;
 use rustc_middle::ty::{
-    Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyKind, TypeAndMut, UintTy,
+    Const, ConstKind, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyKind, TypeAndMut,
+    UintTy,
 };
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
@@ -335,6 +336,57 @@ fn trans_type_impl<'tcx>(
                 return spirv_type;
             }
         }
+    }
+
+    if let Some(trait_ref) = cx.matrix_types.get(&ty.ty) {
+        fn const_usize(c: &Const<'_>) -> usize {
+            if let ConstKind::Value(rustc_mir::interpret::ConstValue::Scalar(
+                rustc_mir::interpret::Scalar::Int(scalar_int),
+            )) = c.val
+            {
+                scalar_int.assert_bits(scalar_int.size()) as usize
+            } else {
+                bug!("A const parameter of Matrix must be usize")
+            }
+        }
+
+        let element = trait_ref.substs.type_at(1);
+        let m = const_usize(trait_ref.substs.const_at(2));
+        let n = const_usize(trait_ref.substs.const_at(3));
+
+        let elem_spirv = match element.kind() {
+            TyKind::Float(float_ty) => SpirvType::Float(float_ty.bit_width() as u32).def(span, cx),
+            TyKind::Uint(uint_ty) => SpirvType::Integer(
+                uint_ty
+                    .bit_width()
+                    .unwrap_or(cx.tcx.data_layout.pointer_size.bits()) as u32,
+                false,
+            )
+            .def(span, cx),
+            TyKind::Int(int_ty) => SpirvType::Integer(
+                int_ty
+                    .bit_width()
+                    .unwrap_or(cx.tcx.data_layout.pointer_size.bits()) as u32,
+                false,
+            )
+            .def(span, cx),
+            TyKind::Bool => SpirvType::Bool.def(span, cx),
+            _ => {
+                bug!("The element type of the vector of a matrix must be scalar")
+            }
+        };
+
+        let vector = SpirvType::Vector {
+            element: elem_spirv,
+            count: n as u32,
+        }
+        .def(span, cx);
+
+        return SpirvType::Matrix {
+            element: vector,
+            count: m as u32,
+        }
+        .def(span, cx);
     }
 
     // Note: ty.layout is orthogonal to ty.ty, e.g. `ManuallyDrop<Result<isize, isize>>` has abi
