@@ -18,6 +18,7 @@ pub struct Symbols {
 
     pub spirv: Symbol,
     pub spirv_std: Symbol,
+    pub matrix: Symbol,
     pub libm: Symbol,
     pub num_traits: Symbol,
     pub entry_point_name: Symbol,
@@ -366,6 +367,7 @@ impl Symbols {
 
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
+            matrix: Symbol::intern("Matrix"),
             libm: Symbol::intern("libm"),
             num_traits: Symbol::intern("num_traits"),
             entry_point_name: Symbol::intern("entry_point_name"),

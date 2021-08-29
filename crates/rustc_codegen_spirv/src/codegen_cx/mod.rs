@@ -109,19 +109,16 @@ impl<'tcx> CodegenCx<'tcx> {
         let codegen_args = CodegenArgs::from_session(tcx.sess);
         let target = tcx.sess.target.llvm_target.parse().unwrap();
 
-        let crate_spirv_std = Symbol::intern("spirv_std");
-        let trait_matrix = Symbol::intern("Matrix");
-
         let trait_matrix_def_id: Option<DefId> = tcx
             .crates(())
             .iter()
-            .find(|&&crate_num| tcx.crate_name(crate_num) == crate_spirv_std)
+            .find(|&&crate_num| tcx.crate_name(crate_num) == sym.spirv_std)
             .and_then(|&spirv_std| {
                 tcx.all_trait_implementations(spirv_std)
                     .iter()
                     .filter_map(|(trait_impl_def, _ty)| tcx.impl_trait_ref(*trait_impl_def))
                     .map(|trait_ref| trait_ref.def_id)
-                    .find(|&def_id| tcx.item_name(def_id) == trait_matrix)
+                    .find(|&def_id| tcx.item_name(def_id) == sym.matrix)
             });
 
         let matrix_types: FxHashMap<Ty<'tcx>, TraitRef<'tcx>> = trait_matrix_def_id
