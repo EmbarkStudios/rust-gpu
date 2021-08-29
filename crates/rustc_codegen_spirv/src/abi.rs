@@ -359,14 +359,16 @@ fn trans_type_impl<'tcx>(
             TyKind::Uint(uint_ty) => SpirvType::Integer(
                 uint_ty
                     .bit_width()
-                    .unwrap_or(cx.tcx.data_layout.pointer_size.bits()) as u32,
+                    .expect("The element type of the vector of a matrix must be scalar")
+                    as u32,
                 false,
             )
             .def(span, cx),
             TyKind::Int(int_ty) => SpirvType::Integer(
                 int_ty
                     .bit_width()
-                    .unwrap_or(cx.tcx.data_layout.pointer_size.bits()) as u32,
+                    .expect("The element type of the vector of a matrix must be scalar")
+                    as u32,
                 false,
             )
             .def(span, cx),

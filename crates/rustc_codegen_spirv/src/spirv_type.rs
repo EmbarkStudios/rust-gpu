@@ -625,11 +625,7 @@ impl SpirvTypePrinter<'_, '_> {
                 }
                 f.write_str(" }")
             }
-            SpirvType::Vector { element, count } => {
-                ty(self.cx, stack, f, element)?;
-                write!(f, "x{}", count)
-            }
-            SpirvType::Matrix { element, count } => {
+            SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => {
                 ty(self.cx, stack, f, element)?;
                 write!(f, "x{}", count)
             }
