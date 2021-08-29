@@ -4,6 +4,7 @@
 use spirv_std as _;
 
 #[derive(Clone, Copy)]
+#[spirv(matrix(f32, 4, 3))]
 pub struct Affine3 {
     pub x: glam::Vec3,
     pub y: glam::Vec3,
@@ -33,8 +34,6 @@ impl Default for Affine3 {
         Self::IDENTITY
     }
 }
-
-unsafe impl spirv_std::matrix::Matrix<f32, 4, 3> for Affine3 {}
 
 #[spirv(closest_hit)]
 pub fn main(

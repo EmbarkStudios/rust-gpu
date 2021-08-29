@@ -24,7 +24,7 @@ use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
-use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, TraitRef, Ty, TyCtxt, TyS};
+use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt, TyS};
 use rustc_session::Session;
 use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
@@ -48,8 +48,6 @@ pub struct CodegenCx<'tcx> {
     /// Map from function ID to parameter list
     pub function_parameter_values: RefCell<FxHashMap<Word, Vec<SpirvValue>>>,
     pub type_cache: TypeCache<'tcx>,
-    /// All types implements spirv_std::matrix::Matrix
-    pub matrix_types: FxHashMap<Ty<'tcx>, TraitRef<'tcx>>,
     /// Cache generated vtables
     pub vtables: RefCell<FxHashMap<(Ty<'tcx>, Option<PolyExistentialTraitRef<'tcx>>), SpirvValue>>,
     pub ext_inst: RefCell<ExtInst>,
@@ -109,27 +107,6 @@ impl<'tcx> CodegenCx<'tcx> {
         let codegen_args = CodegenArgs::from_session(tcx.sess);
         let target = tcx.sess.target.llvm_target.parse().unwrap();
 
-        let trait_matrix_def_id: Option<DefId> = tcx
-            .crates(())
-            .iter()
-            .find(|&&crate_num| tcx.crate_name(crate_num) == sym.spirv_std)
-            .and_then(|&spirv_std| {
-                tcx.all_trait_implementations(spirv_std)
-                    .iter()
-                    .filter_map(|(trait_impl_def, _ty)| tcx.impl_trait_ref(*trait_impl_def))
-                    .map(|trait_ref| trait_ref.def_id)
-                    .find(|&def_id| tcx.item_name(def_id) == sym.matrix)
-            });
-
-        let matrix_types: FxHashMap<Ty<'tcx>, TraitRef<'tcx>> = trait_matrix_def_id
-            .map(|trait_matrix_def_id| {
-                tcx.all_impls(trait_matrix_def_id)
-                    .filter_map(|impl_def_id| tcx.impl_trait_ref(impl_def_id))
-                    .map(|trait_ref| (trait_ref.self_ty(), trait_ref))
-                    .collect()
-            })
-            .unwrap_or_default();
-
         Self {
             tcx,
             codegen_unit,
@@ -137,7 +114,6 @@ impl<'tcx> CodegenCx<'tcx> {
             instances: Default::default(),
             function_parameter_values: Default::default(),
             type_cache: Default::default(),
-            matrix_types,
             vtables: Default::default(),
             ext_inst: Default::default(),
             zombie_decorations: Default::default(),
