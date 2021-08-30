@@ -844,20 +844,25 @@ fn trans_intrinsic_type<'tcx>(
             }
         }
         IntrinsicType::Matrix => {
+            let span = def_id_for_spirv_type_adt(ty)
+                .map(|did| cx.tcx.def_span(did))
+                .expect("#[spirv(matrix)] must be added to a type which has DefId");
+
             let field_types = (0..ty.fields.count())
                 .map(|i| trans_type_impl(cx, span, ty.field(cx, i), false))
                 .collect::<Vec<_>>();
             if field_types.len() < 2 {
                 cx.tcx
                     .sess
-                    .err("#[spirv(matrix)] type must have at least two fields");
+                    .span_err(span, "#[spirv(matrix)] type must have at least two fields");
                 return Err(ErrorReported);
             }
             let elem_type = field_types[0];
             if !field_types.iter().all(|&ty| ty == elem_type) {
-                cx.tcx
-                    .sess
-                    .err("#[spirv(matrix)] type fields must all be the same type");
+                cx.tcx.sess.span_err(
+                    span,
+                    "#[spirv(matrix)] type fields must all be the same type",
+                );
                 return Err(ErrorReported);
             }
             match cx.lookup_type(elem_type) {
@@ -865,7 +870,7 @@ fn trans_intrinsic_type<'tcx>(
                 ty => {
                     cx.tcx
                         .sess
-                        .struct_err("#[spirv(matrix)] type fields must all be vectors")
+                        .struct_span_err(span, "#[spirv(matrix)] type fields must all be vectors")
                         .note(&format!("field type is {}", ty.debug(elem_type, cx)))
                         .emit();
                     return Err(ErrorReported);
