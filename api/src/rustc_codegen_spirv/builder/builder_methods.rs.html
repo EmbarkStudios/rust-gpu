@@ -2213,6 +2213,11 @@
 <span id="2213">2213</span>
 <span id="2214">2214</span>
 <span id="2215">2215</span>
+<span id="2216">2216</span>
+<span id="2217">2217</span>
+<span id="2218">2218</span>
+<span id="2219">2219</span>
+<span id="2220">2220</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
@@ -2426,7 +2431,7 @@
                 )),
             },
             <span class="ident">SpirvType::Adt</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="string">&quot;memset on structs not implemented yet&quot;</span>),
-            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">elem_pat</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">memset_const_pattern</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>), <span class="ident">fill_byte</span>);
                 <span class="self">self</span>.<span class="ident">constant_composite</span>(
                     <span class="ident">ty</span>.<span class="ident">clone</span>().<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>),
@@ -2493,7 +2498,7 @@
                     )
                     .<span class="ident">unwrap</span>()
             }
-            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">elem_pat</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">memset_dynamic_pattern</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>), <span class="ident">fill_var</span>);
                 <span class="self">self</span>.<span class="ident">emit</span>()
                     .<span class="ident">composite_construct</span>(
@@ -2642,7 +2647,8 @@
                 }
                 <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. }
                 <span class="op">|</span> <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. }
-                <span class="op">|</span> <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="op">|</span> <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span> }
+                <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">ty</span> <span class="op">=</span> <span class="ident">element</span>;
                     <span class="ident">ty_kind</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">ty</span>);
 
@@ -3296,7 +3302,8 @@
             } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">field_types</span>[<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>],
             <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. }
             <span class="op">|</span> <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span>, .. }
-            <span class="op">|</span> <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">element</span>,
+            <span class="op">|</span> <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. }
+            <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">element</span>,
             <span class="ident">SpirvType::InterfaceBlock</span> { <span class="ident">inner_type</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">assert_eq!</span>(<span class="ident">idx</span>, <span class="number">0</span>);
                 <span class="ident">inner_type</span>
@@ -3323,7 +3330,8 @@
                 <span class="ident">SpirvType::Adt</span> { <span class="ident">field_offsets</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">field_offsets</span>[<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>],
                 <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. }
                 <span class="op">|</span> <span class="ident">SpirvType::RuntimeArray</span> { <span class="ident">element</span>, .. }
-                <span class="op">|</span> <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="op">|</span> <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. }
+                <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">element</span>).<span class="ident">sizeof</span>(<span class="self">self</span>).<span class="ident">unwrap</span>() <span class="op">*</span> <span class="ident">idx</span>
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
@@ -4059,7 +4067,9 @@
     <span class="kw">fn</span> <span class="ident">extract_value</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">agg_val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">idx</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_type</span>(<span class="ident">agg_val</span>.<span class="ident">ty</span>) {
             <span class="ident">SpirvType::Adt</span> { <span class="ident">field_types</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">field_types</span>[<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>],
-            <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. } <span class="op">|</span> <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">element</span>,
+            <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, .. }
+            <span class="op">|</span> <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. }
+            <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">element</span>,
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;extract_value not implemented on type {:?}&quot;</span>,
                 <span class="ident">other</span>
