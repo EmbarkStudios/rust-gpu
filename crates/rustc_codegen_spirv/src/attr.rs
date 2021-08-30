@@ -57,6 +57,14 @@ impl From<ExecutionModel> for Entry {
     }
 }
 
+#[derive(Debug, Clone)]
+pub enum MatrixIntrinsicType {
+    TypeMN(SpirvType, u32, u32),
+    TypeM(SpirvType, u32),
+    Type(SpirvType),
+    InferAll,
+}
+
 /// `struct` types that are used to represent special SPIR-V types.
 #[derive(Debug, Clone)]
 pub enum IntrinsicType {
@@ -66,7 +74,7 @@ pub enum IntrinsicType {
     SampledImage,
     RayQueryKhr,
     RuntimeArray,
-    Matrix(SpirvType, u32, u32),
+    Matrix(MatrixIntrinsicType),
 }
 
 // NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside

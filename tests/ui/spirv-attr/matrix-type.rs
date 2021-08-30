@@ -4,7 +4,7 @@
 use spirv_std as _;
 
 #[derive(Clone, Copy)]
-#[spirv(matrix(f32, 4, 3))]
+#[spirv(matrix)]
 pub struct Affine3 {
     pub x: glam::Vec3,
     pub y: glam::Vec3,
