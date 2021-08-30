@@ -844,40 +844,37 @@ fn trans_intrinsic_type<'tcx>(
             }
         }
         IntrinsicType::Matrix => {
-            let (elem_type, n) =
-                if let Abi::Vector { ref element, count } = ty.field(cx, 0).layout.abi {
-                    match &element.value {
-                        Primitive::F32 => Some(SpirvType::Float(32)),
-                        Primitive::F64 => Some(SpirvType::Float(64)),
-                        Primitive::Int(integer, signed) => {
-                            Some(SpirvType::Integer(integer.size().bits() as u32, *signed))
-                        }
-                        Primitive::Pointer => None,
-                    }
-                    .map(|elem_type| (elem_type, count as u32))
-                } else {
-                    None
-                }
-                .ok_or_else(|| {
+            let field_types = (0..ty.fields.count())
+                .map(|i| trans_type_impl(cx, span, ty.field(cx, i), false))
+                .collect::<Vec<_>>();
+            if field_types.len() < 2 {
+                cx.tcx
+                    .sess
+                    .err("#[spirv(matrix)] type must have at least two fields");
+                return Err(ErrorReported);
+            }
+            let elem_type = field_types[0];
+            if !field_types.iter().all(|&ty| ty == elem_type) {
+                cx.tcx
+                    .sess
+                    .err("#[spirv(matrix)] type fields must all be the same type");
+                return Err(ErrorReported);
+            }
+            match cx.lookup_type(elem_type) {
+                SpirvType::Vector { .. } => (),
+                ty => {
                     cx.tcx
                         .sess
-                        .err("#[spirv(matrix)] type must have a vector with scalar element type");
-                    ErrorReported
-                })?;
-
-            let m = ty.fields.count() as u32;
-
-            let elem_spirv = elem_type.def(span, cx);
-
-            let vector = SpirvType::Vector {
-                element: elem_spirv,
-                count: n as u32,
+                        .struct_err("#[spirv(matrix)] type fields must all be vectors")
+                        .note(&format!("field type is {}", ty.debug(elem_type, cx)))
+                        .emit();
+                    return Err(ErrorReported);
+                }
             }
-            .def(span, cx);
 
             Ok(SpirvType::Matrix {
-                element: vector,
-                count: m as u32,
+                element: elem_type,
+                count: field_types.len() as u32,
             }
             .def(span, cx))
         }
