@@ -1,7 +1,7 @@
 //! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It's
 //! surprisingly difficult.
 
-use crate::attr::{AggregatedSpirvAttributes, IntrinsicType, MatrixIntrinsicType};
+use crate::attr::{AggregatedSpirvAttributes, IntrinsicType};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
 use rspirv::spirv::{StorageClass, Word};
@@ -19,7 +19,7 @@ use rustc_span::Span;
 use rustc_span::DUMMY_SP;
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{
-    Abi, Align, FieldsShape, Layout, LayoutOf, Primitive, Scalar, Size, VariantIdx, Variants,
+    Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, VariantIdx, Variants,
 };
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
@@ -843,16 +843,9 @@ fn trans_intrinsic_type<'tcx>(
                 Err(ErrorReported)
             }
         }
-        IntrinsicType::Matrix(matrix_intrinsic_type) => {
-            fn vector_length(layout: &Layout) -> Option<u64> {
-                if let Abi::Vector { count, .. } = layout.abi {
-                    Some(count)
-                } else {
-                    None
-                }
-            }
-            fn vector_element(layout: &Layout) -> Option<SpirvType> {
-                if let Abi::Vector { element, .. } = &layout.abi {
+        IntrinsicType::Matrix => {
+            let (elem_type, n) =
+                if let Abi::Vector { ref element, count } = ty.field(cx, 0).layout.abi {
                     match &element.value {
                         Primitive::F32 => Some(SpirvType::Float(32)),
                         Primitive::F64 => Some(SpirvType::Float(64)),
@@ -861,55 +854,19 @@ fn trans_intrinsic_type<'tcx>(
                         }
                         Primitive::Pointer => None,
                     }
+                    .map(|elem_type| (elem_type, count as u32))
                 } else {
                     None
                 }
-            }
+                .ok_or_else(|| {
+                    cx.tcx
+                        .sess
+                        .err("#[spirv(matrix)] type must have a vector with scalar element type");
+                    ErrorReported
+                })?;
 
-            let (elem_type, m, n) = match matrix_intrinsic_type {
-                MatrixIntrinsicType::TypeMN(elem_type, m, n) => (elem_type, m, n),
-                MatrixIntrinsicType::TypeM(elem_type, m) => {
-                    let n = vector_length(ty.field(cx, 0).layout).ok_or_else(|| {
-                        cx.tcx
-                            .sess
-                            .err("#[spirv(matrix(ty, m))] type must have a vector element type");
-                        ErrorReported
-                    })? as u32;
+            let m = ty.fields.count() as u32;
 
-                    (elem_type, m, n)
-                }
-                MatrixIntrinsicType::Type(elem_type) => {
-                    let m = ty.fields.count() as u32;
-
-                    let n = vector_length(ty.field(cx, 0).layout).ok_or_else(|| {
-                        cx.tcx
-                            .sess
-                            .err("#[spirv(matrix(ty, m))] type must have a vector element type");
-                        ErrorReported
-                    })? as u32;
-
-                    (elem_type, m, n)
-                }
-                MatrixIntrinsicType::InferAll => {
-                    let elem_type = vector_element(ty.field(cx, 0).layout).ok_or_else(|| {
-                        cx.tcx.sess.err(
-                            "#[spirv(matrix)] type must have a vector with scalar element type",
-                        );
-                        ErrorReported
-                    })?;
-
-                    let m = ty.fields.count() as u32;
-
-                    let n = vector_length(ty.field(cx, 0).layout).ok_or_else(|| {
-                        cx.tcx
-                            .sess
-                            .err("#[spirv(matrix)] type must have a vector element type");
-                        ErrorReported
-                    })? as u32;
-
-                    (elem_type, m, n)
-                }
-            };
             let elem_spirv = elem_type.def(span, cx);
 
             let vector = SpirvType::Vector {

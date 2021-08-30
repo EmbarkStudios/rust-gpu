@@ -3,7 +3,6 @@
 //! The attribute-checking parts of this try to follow `rustc_passes::check_attr`.
 
 use crate::codegen_cx::CodegenCx;
-use crate::spirv_type::SpirvType;
 use crate::symbols::Symbols;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::Attribute;
@@ -57,14 +56,6 @@ impl From<ExecutionModel> for Entry {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum MatrixIntrinsicType {
-    TypeMN(SpirvType, u32, u32),
-    TypeM(SpirvType, u32),
-    Type(SpirvType),
-    InferAll,
-}
-
 /// `struct` types that are used to represent special SPIR-V types.
 #[derive(Debug, Clone)]
 pub enum IntrinsicType {
@@ -74,7 +65,7 @@ pub enum IntrinsicType {
     SampledImage,
     RayQueryKhr,
     RuntimeArray,
-    Matrix(MatrixIntrinsicType),
+    Matrix,
 }
 
 // NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside

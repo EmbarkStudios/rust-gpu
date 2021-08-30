@@ -1,6 +1,5 @@
-use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, MatrixIntrinsicType, SpirvAttribute};
+use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
-use crate::spirv_type::SpirvType;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
 use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_data_structures::fx::FxHashMap;
@@ -19,7 +18,6 @@ pub struct Symbols {
 
     pub spirv: Symbol,
     pub spirv_std: Symbol,
-    pub matrix: Symbol,
     pub libm: Symbol,
     pub num_traits: Symbol,
     pub entry_point_name: Symbol,
@@ -336,6 +334,10 @@ impl Symbols {
                 "runtime_array",
                 SpirvAttribute::IntrinsicType(IntrinsicType::RuntimeArray),
             ),
+            (
+                "matrix",
+                SpirvAttribute::IntrinsicType(IntrinsicType::Matrix),
+            ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
         ]
         .iter()
@@ -368,7 +370,6 @@ impl Symbols {
 
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
-            matrix: Symbol::intern("matrix"),
             libm: Symbol::intern("libm"),
             num_traits: Symbol::intern("num_traits"),
             entry_point_name: Symbol::intern("entry_point_name"),
@@ -442,8 +443,6 @@ pub(crate) fn parse_attrs_for_checking<'a>(
                     SpirvAttribute::Binding(parse_attr_int_value(arg)?)
                 } else if arg.has_name(sym.input_attachment_index) {
                     SpirvAttribute::InputAttachmentIndex(parse_attr_int_value(arg)?)
-                } else if arg.has_name(sym.matrix) {
-                    SpirvAttribute::IntrinsicType(IntrinsicType::Matrix(parse_matrix_attr(arg)?))
                 } else {
                     let name = match arg.ident() {
                         Some(i) => i,
@@ -681,116 +680,4 @@ fn parse_entry_attrs(
         _ => {}
     }
     Ok(entry)
-}
-
-fn parse_matrix_attr(arg: &NestedMetaItem) -> Result<MatrixIntrinsicType, ParseAttrError> {
-    fn convert_ty(ty_ident: &Ident) -> Option<SpirvType> {
-        match &*ty_ident.as_str() {
-            "f32" => Some(SpirvType::Float(32)),
-            "f64" => Some(SpirvType::Float(64)),
-            "u8" => Some(SpirvType::Integer(8, false)),
-            "u16" => Some(SpirvType::Integer(16, false)),
-            "u32" => Some(SpirvType::Integer(32, false)),
-            "u64" => Some(SpirvType::Integer(64, false)),
-            "i8" => Some(SpirvType::Integer(8, true)),
-            "i16" => Some(SpirvType::Integer(16, true)),
-            "i32" => Some(SpirvType::Integer(32, true)),
-            "i64" => Some(SpirvType::Integer(64, true)),
-            "bool" => Some(SpirvType::Bool),
-            _ => None,
-        }
-    }
-
-    let arg = match arg.meta_item() {
-        Some(arg) => arg,
-        None => return Err((arg.span(), "attribute must have value".to_string())),
-    };
-
-    match arg.meta_item_list() {
-        Some(tuple) if tuple.len() == 3 => {
-            let ty_ident = tuple[0].ident().ok_or_else(|| {
-                (
-                    tuple[0].span(),
-                    "#[spirv(matrix(ty, m, n))] ty must be f32, f64, u8, u16, u32, u64, i8, i16, i32, i64 or bool".to_string(),
-                )
-            })?;
-            let ty =convert_ty(&ty_ident).ok_or_else(|| {
-                    (
-                        ty_ident.span,
-                        "#[spirv(matrix(ty, m, n))] ty must be f32, f64, u8, u16, u32, u64, i8, i16, i32, i64 or bool".to_string(),
-                    )
-            })?;
-
-            let m = match tuple[1].literal() {
-                Some(&Lit {
-                    kind: LitKind::Int(x, LitIntType::Unsuffixed),
-                    ..
-                }) if x <= u32::MAX as u128 => Ok(x as u32),
-                _ => Err((
-                    tuple[1].span(),
-                    "#[spirv(matrix(ty, m, n))] m must be integer".to_string(),
-                )),
-            }?;
-            let n = match tuple[2].literal() {
-                Some(&Lit {
-                    kind: LitKind::Int(x, LitIntType::Unsuffixed),
-                    ..
-                }) if x <= u32::MAX as u128 => Ok(x as u32),
-                _ => Err((
-                    tuple[2].span(),
-                    "#[spirv(matrix(ty, m, n))] n must be integer".to_string(),
-                )),
-            }?;
-
-            Ok(MatrixIntrinsicType::TypeMN(ty, m, n))
-        }
-        Some(tuple) if tuple.len() == 2 => {
-            let ty_ident = tuple[0].ident().ok_or_else(|| {
-                (
-                    tuple[0].span(),
-                    "#[spirv(matrix(ty, m))] ty must be f32, f64, u8, u16, u32, u64, i8, i16, i32, i64 or bool".to_string(),
-                )
-            })?;
-            let ty =convert_ty(&ty_ident).ok_or_else(|| {
-                    (
-                        ty_ident.span,
-                        "#[spirv(matrix(ty, m))] ty must be f32, f64, u8, u16, u32, u64, i8, i16, i32, i64 or bool".to_string(),
-                    )
-            })?;
-
-            let m = match tuple[1].literal() {
-                Some(&Lit {
-                    kind: LitKind::Int(x, LitIntType::Unsuffixed),
-                    ..
-                }) if x <= u32::MAX as u128 => Ok(x as u32),
-                _ => Err((
-                    tuple[1].span(),
-                    "#[spirv(matrix(ty, m))] m must be integer".to_string(),
-                )),
-            }?;
-
-            Ok(MatrixIntrinsicType::TypeM(ty, m))
-        }
-        Some(tuple) if tuple.len() == 1 => {
-            let ty_ident = tuple[0].ident().ok_or_else(|| {
-                (
-                    tuple[0].span(),
-                    "#[spirv(matrix(ty))] ty must be f32, f64, u8, u16, u32, u64, i8, i16, i32, i64 or bool".to_string(),
-                )
-            })?;
-            let ty =convert_ty(&ty_ident).ok_or_else(|| {
-                    (
-                        ty_ident.span,
-                        "#[spirv(matrix(ty))] ty must be f32, f64, u8, u16, u32, u64, i8, i16, i32, i64 or bool".to_string(),
-                    )
-            })?;
-
-            Ok(MatrixIntrinsicType::Type(ty))
-        }
-        None => Ok(MatrixIntrinsicType::InferAll),
-        _ => Err((
-            arg.span,
-            "#[spirv(matrix(..))] must have between 0 and 3 parameters".to_string(),
-        )),
-    }
 }
