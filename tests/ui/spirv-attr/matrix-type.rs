@@ -36,8 +36,29 @@ impl Default for Affine3 {
 }
 
 #[spirv(closest_hit)]
-pub fn main(
+pub fn main_attrs(
     #[spirv(object_to_world)] _object_to_world: Affine3,
     #[spirv(world_to_object)] _world_to_object: Affine3,
 ) {
+}
+
+#[spirv(closest_hit)]
+pub fn main_default(out: &mut Affine3) {
+    *out = Affine3::default();
+}
+
+#[spirv(closest_hit)]
+pub fn main_add(
+    #[spirv(object_to_world)] object_to_world: Affine3,
+    #[spirv(world_to_object)] world_to_object: Affine3,
+    out: &mut glam::Vec3,
+) {
+    *out = object_to_world.x
+        + object_to_world.y
+        + object_to_world.z
+        + object_to_world.w
+        + world_to_object.x
+        + world_to_object.y
+        + world_to_object.z
+        + world_to_object.w;
 }
