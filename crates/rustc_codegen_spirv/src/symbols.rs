@@ -334,6 +334,10 @@ impl Symbols {
                 "runtime_array",
                 SpirvAttribute::IntrinsicType(IntrinsicType::RuntimeArray),
             ),
+            (
+                "matrix",
+                SpirvAttribute::IntrinsicType(IntrinsicType::Matrix),
+            ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
         ]
         .iter()

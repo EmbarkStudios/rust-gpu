@@ -482,6 +482,21 @@ impl<'tcx> CodegenCx<'tcx> {
                 *offset = final_offset;
                 result
             }
+            SpirvType::Matrix { element, count } => {
+                let total_size = ty_concrete
+                    .sizeof(self)
+                    .expect("create_const_alloc: Matrices must be sized");
+                let final_offset = *offset + total_size;
+                let values = (0..count).map(|_| {
+                    self.create_const_alloc2(alloc, offset, element)
+                        .def_cx(self)
+                });
+                let result = self.constant_composite(ty, values);
+                assert!(*offset <= final_offset);
+                // Matrices sometimes have padding at the end (e.g. Mat4x3), skip over it.
+                *offset = final_offset;
+                result
+            }
             SpirvType::RuntimeArray { element } => {
                 let mut values = Vec::new();
                 while offset.bytes_usize() != alloc.len() {

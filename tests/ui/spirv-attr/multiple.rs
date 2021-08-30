@@ -8,8 +8,20 @@ use spirv_std as _;
 #[spirv(sampler, sampler)]
 struct _SameIntrinsicType {}
 
+#[spirv(matrix, matrix)]
+struct _SameIntrinsicMatrixType {
+    x: glam::Vec3,
+    y: glam::Vec3,
+}
+
 #[spirv(sampler, generic_image_type)]
 struct _DiffIntrinsicType {}
+
+#[spirv(sampler, matrix)]
+struct _SamplerAndMatrix {
+    x: glam::Vec3,
+    y: glam::Vec3,
+}
 
 #[spirv(block, block)]
 struct _Block {}

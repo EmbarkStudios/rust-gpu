@@ -210,7 +210,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 )),
             },
             SpirvType::Adt { .. } => self.fatal("memset on structs not implemented yet"),
-            SpirvType::Vector { element, count } => {
+            SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 self.constant_composite(
                     ty.clone().def(self.span(), self),
@@ -277,7 +277,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                     )
                     .unwrap()
             }
-            SpirvType::Vector { element, count } => {
+            SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => {
                 let elem_pat = self.memset_dynamic_pattern(&self.lookup_type(element), fill_var);
                 self.emit()
                     .composite_construct(
@@ -426,7 +426,8 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 }
                 SpirvType::Vector { element, .. }
                 | SpirvType::Array { element, .. }
-                | SpirvType::RuntimeArray { element } => {
+                | SpirvType::RuntimeArray { element }
+                | SpirvType::Matrix { element, .. } => {
                     ty = element;
                     ty_kind = self.lookup_type(ty);
 
@@ -1080,7 +1081,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             } => field_types[idx as usize],
             SpirvType::Array { element, .. }
             | SpirvType::RuntimeArray { element, .. }
-            | SpirvType::Vector { element, .. } => element,
+            | SpirvType::Vector { element, .. }
+            | SpirvType::Matrix { element, .. } => element,
             SpirvType::InterfaceBlock { inner_type } => {
                 assert_eq!(idx, 0);
                 inner_type
@@ -1107,7 +1109,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 SpirvType::Adt { field_offsets, .. } => field_offsets[idx as usize],
                 SpirvType::Array { element, .. }
                 | SpirvType::RuntimeArray { element, .. }
-                | SpirvType::Vector { element, .. } => {
+                | SpirvType::Vector { element, .. }
+                | SpirvType::Matrix { element, .. } => {
                     self.lookup_type(element).sizeof(self).unwrap() * idx
                 }
                 _ => unreachable!(),
@@ -1843,7 +1846,9 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn extract_value(&mut self, agg_val: Self::Value, idx: u64) -> Self::Value {
         let result_type = match self.lookup_type(agg_val.ty) {
             SpirvType::Adt { field_types, .. } => field_types[idx as usize],
-            SpirvType::Array { element, .. } | SpirvType::Vector { element, .. } => element,
+            SpirvType::Array { element, .. }
+            | SpirvType::Vector { element, .. }
+            | SpirvType::Matrix { element, .. } => element,
             other => self.fatal(&format!(
                 "extract_value not implemented on type {:?}",
                 other
