@@ -125,13 +125,7 @@ impl fmt::Display for SpirvBuilderError {
 
 impl Error for SpirvBuilderError {}
 
-pub enum MemoryModel {
-    Simple,
-    Vulkan,
-    GLSL450,
-}
-
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum MetadataPrintout {
     /// Print no cargo metadata.
     None,
@@ -143,6 +137,17 @@ pub enum MetadataPrintout {
     Full,
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum SpirvMetadata {
+    /// Strip all names and other debug information from SPIR-V output.
+    None,
+    /// Only include OpNames for public interface variables (uniforms and the like), to allow
+    /// shader reflection.
+    NameVariables,
+    /// Include all OpNames for everything, and OpLines. Significantly increases binary size.
+    Full,
+}
+
 pub struct SpirvBuilder {
     path_to_crate: PathBuf,
     print_metadata: MetadataPrintout,
@@ -150,7 +155,7 @@ pub struct SpirvBuilder {
     target: String,
     deny_warnings: bool,
     multimodule: bool,
-    name_variables: bool,
+    spirv_metadata: SpirvMetadata,
     capabilities: Vec<Capability>,
     extensions: Vec<String>,
 
@@ -172,7 +177,7 @@ impl SpirvBuilder {
             target: target.into(),
             deny_warnings: false,
             multimodule: false,
-            name_variables: false,
+            spirv_metadata: SpirvMetadata::None,
             capabilities: Vec::new(),
             extensions: Vec::new(),
 
@@ -210,12 +215,10 @@ impl SpirvBuilder {
         self
     }
 
-    /// Keep `OpName` reflection information for global `OpVariable`s (which means things like
-    /// uniforms and shader input/outputs) but strip `OpName`s for everything else (functions,
-    /// types, and so on). This is useful if you want a small binary size without debugging
-    /// information, but need variable name reflection to work.
-    pub fn name_variables(mut self, v: bool) -> Self {
-        self.name_variables = v;
+    /// Sets the level of metadata (primarily OpName and OpLine) included in the SPIR-V binary.
+    /// Including metadata significantly increases binary size.
+    pub fn spirv_metadata(mut self, v: SpirvMetadata) -> Self {
+        self.spirv_metadata = v;
         self
     }
 
@@ -399,8 +402,12 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     if builder.multimodule {
         llvm_args.push("--module-output=multiple");
     }
-    if builder.name_variables {
-        llvm_args.push("--name-variables");
+    if builder.spirv_metadata != SpirvMetadata::None {
+        if builder.spirv_metadata == SpirvMetadata::Full {
+            llvm_args.push("--spirv-metadata=full");
+        } else {
+            llvm_args.push("--spirv-metadata=name-variables");
+        }
     }
     if builder.relax_struct_store {
         llvm_args.push("--relax-struct-store");

@@ -228,6 +228,13 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum SpirvMetadata {
+    None,
+    NameVariables,
+    Full,
+}
+
 pub struct CodegenArgs {
     pub module_output_type: ModuleOutputType,
     pub disassemble: bool,
@@ -235,7 +242,7 @@ pub struct CodegenArgs {
     pub disassemble_entry: Option<String>,
     pub disassemble_globals: bool,
 
-    pub name_variables: bool,
+    pub spirv_metadata: SpirvMetadata,
 
     // spirv-val flags
     pub relax_struct_store: bool,
@@ -273,12 +280,7 @@ impl CodegenArgs {
         );
         opts.optflagopt("", "disassemble-globals", "print globals to stderr", "");
 
-        opts.optflagopt(
-            "",
-            "name-variables",
-            "Keep OpName for OpVariables, strip all others.",
-            "",
-        );
+        opts.optopt("", "spirv-metadata", "how much metadata to include", "");
 
         opts.optflagopt("", "relax-struct-store", "Allow store from one struct type to a different type with compatible layout and members.", "");
         opts.optflagopt("", "relax-logical-pointer", "Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode", "");
@@ -295,7 +297,7 @@ impl CodegenArgs {
         let disassemble_entry = matches.opt_str("disassemble-entry");
         let disassemble_globals = matches.opt_present("disassemble-globals");
 
-        let name_variables = matches.opt_present("name-variables");
+        let spirv_metadata = matches.opt_str("spirv-metadata");
 
         let relax_struct_store = matches.opt_present("relax-struct-store");
         let relax_logical_pointer = matches.opt_present("relax-logical-pointer");
@@ -306,6 +308,17 @@ impl CodegenArgs {
 
         let relax_block_layout = if relax_block_layout { Some(true) } else { None };
 
+        let spirv_metadata = match spirv_metadata.as_deref() {
+            None => SpirvMetadata::None,
+            Some("full") => SpirvMetadata::Full,
+            Some("name-variables") => SpirvMetadata::NameVariables,
+            Some(v) => {
+                return Err(rustc_session::getopts::Fail::UnrecognizedOption(
+                    v.to_string(),
+                ))
+            }
+        };
+
         Ok(Self {
             module_output_type,
             disassemble,
@@ -313,7 +326,7 @@ impl CodegenArgs {
             disassemble_entry,
             disassemble_globals,
 
-            name_variables,
+            spirv_metadata,
 
             relax_struct_store,
             relax_logical_pointer,
