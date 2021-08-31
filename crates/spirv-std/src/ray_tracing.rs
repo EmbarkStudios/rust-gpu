@@ -219,11 +219,12 @@ impl RayQuery {
         ray_tmax: f32,
     ) {
         asm! {
+            "%acceleration_structure = OpLoad _ {acceleration_structure}",
             "%origin = OpLoad _ {ray_origin}",
             "%direction = OpLoad _ {ray_direction}",
             "OpRayQueryInitializeKHR \
                 {ray_query} \
-                {acceleration_structure} \
+                %acceleration_structure \
                 {ray_flags} \
                 {cull_mask} \
                 %origin \
@@ -256,7 +257,7 @@ impl RayQuery {
             "%u32_0 = OpConstant %u32 0",
             "%u32_1 = OpConstant %u32 1",
             "%result = OpRayQueryProceedKHR %bool {ray_query}",
-            "{result} = OpSelect %u32 %result %u32_0 %u32_1",
+            "{result} = OpSelect %u32 %result %u32_1 %u32_0",
             ray_query = in(reg) self,
             result = out(reg) result,
         }
