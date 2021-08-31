@@ -1850,8 +1850,8 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             | SpirvType::Vector { element, .. }
             | SpirvType::Matrix { element, .. } => element,
             other => self.fatal(&format!(
-                "extract_value not implemented on type {:?}",
-                other
+                "extract_value not implemented on type {}",
+                other.debug(agg_val.ty, self)
             )),
         };
         self.emit()
@@ -2201,6 +2201,24 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             // needing to materialize `&core::panic::Location` or `format_args!`.
             self.abort();
             self.undef(result_type)
+        } else if self
+            .buffer_load_intrinsic_fn_id
+            .borrow()
+            .contains(&callee_val)
+        {
+            self.codegen_buffer_load_intrinsic(result_type, args)
+        } else if self
+            .buffer_store_intrinsic_fn_id
+            .borrow()
+            .contains(&callee_val)
+        {
+            self.codegen_buffer_store_intrinsic(args);
+
+            let void_ty = SpirvType::Void.def(rustc_span::DUMMY_SP, self);
+            SpirvValue {
+                kind: SpirvValueKind::IllegalTypeUsed(void_ty),
+                ty: void_ty,
+            }
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()

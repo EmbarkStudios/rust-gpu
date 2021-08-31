@@ -339,6 +339,11 @@ impl Symbols {
                 SpirvAttribute::IntrinsicType(IntrinsicType::Matrix),
             ),
             ("unroll_loops", SpirvAttribute::UnrollLoops),
+            ("buffer_load_intrinsic", SpirvAttribute::BufferLoadIntrinsic),
+            (
+                "buffer_store_intrinsic",
+                SpirvAttribute::BufferStoreIntrinsic,
+            ),
         ]
         .iter()
         .cloned();
