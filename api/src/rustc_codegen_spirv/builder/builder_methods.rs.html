@@ -2218,6 +2218,24 @@
 <span id="2218">2218</span>
 <span id="2219">2219</span>
 <span id="2220">2220</span>
+<span id="2221">2221</span>
+<span id="2222">2222</span>
+<span id="2223">2223</span>
+<span id="2224">2224</span>
+<span id="2225">2225</span>
+<span id="2226">2226</span>
+<span id="2227">2227</span>
+<span id="2228">2228</span>
+<span id="2229">2229</span>
+<span id="2230">2230</span>
+<span id="2231">2231</span>
+<span id="2232">2232</span>
+<span id="2233">2233</span>
+<span id="2234">2234</span>
+<span id="2235">2235</span>
+<span id="2236">2236</span>
+<span id="2237">2237</span>
+<span id="2238">2238</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
@@ -4071,8 +4089,8 @@
             <span class="op">|</span> <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, .. }
             <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">element</span>,
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fatal</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                <span class="string">&quot;extract_value not implemented on type {:?}&quot;</span>,
-                <span class="ident">other</span>
+                <span class="string">&quot;extract_value not implemented on type {}&quot;</span>,
+                <span class="ident">other</span>.<span class="ident">debug</span>(<span class="ident">agg_val</span>.<span class="ident">ty</span>, <span class="self">self</span>)
             )),
         };
         <span class="self">self</span>.<span class="ident">emit</span>()
@@ -4422,6 +4440,24 @@
             <span class="comment">// needing to materialize `&amp;core::panic::Location` or `format_args!`.</span>
             <span class="self">self</span>.<span class="ident">abort</span>();
             <span class="self">self</span>.<span class="ident">undef</span>(<span class="ident">result_type</span>)
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>
+            .<span class="ident">buffer_load_intrinsic_fn_id</span>
+            .<span class="ident">borrow</span>()
+            .<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">callee_val</span>)
+        {
+            <span class="self">self</span>.<span class="ident">codegen_buffer_load_intrinsic</span>(<span class="ident">result_type</span>, <span class="ident">args</span>)
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>
+            .<span class="ident">buffer_store_intrinsic_fn_id</span>
+            .<span class="ident">borrow</span>()
+            .<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">callee_val</span>)
+        {
+            <span class="self">self</span>.<span class="ident">codegen_buffer_store_intrinsic</span>(<span class="ident">args</span>);
+
+            <span class="kw">let</span> <span class="ident">void_ty</span> <span class="op">=</span> <span class="ident">SpirvType::Void</span>.<span class="ident">def</span>(<span class="ident">rustc_span::DUMMY_SP</span>, <span class="self">self</span>);
+            <span class="ident">SpirvValue</span> {
+                <span class="ident">kind</span>: <span class="ident">SpirvValueKind::IllegalTypeUsed</span>(<span class="ident">void_ty</span>),
+                <span class="ident">ty</span>: <span class="ident">void_ty</span>,
+            }
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">arg</span><span class="op">|</span> <span class="ident">arg</span>.<span class="ident">def</span>(<span class="self">self</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
             <span class="self">self</span>.<span class="ident">emit</span>()

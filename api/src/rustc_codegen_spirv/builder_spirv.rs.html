@@ -681,6 +681,23 @@
 <span id="681">681</span>
 <span id="682">682</span>
 <span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx::CodegenCx</span>;
@@ -708,6 +725,13 @@
     <span class="doccomment">/// pass validation. Used to error (or attach zombie spans), at the usesites</span>
     <span class="doccomment">/// of such constants, instead of where they&#39;re generated (and cached).</span>
     <span class="ident">IllegalConst</span>(<span class="ident">Word</span>),
+
+    <span class="doccomment">/// This can only happen in one specific case - which is as a result of</span>
+    <span class="doccomment">/// `codegen_buffer_store_intrinsic`, that function is supposed to return</span>
+    <span class="doccomment">/// OpTypeVoid, however because it gets inline by the compiler it can&#39;t.</span>
+    <span class="doccomment">/// Instead we return this, and trigger an error if we ever end up using the</span>
+    <span class="doccomment">/// result of this function call (which we can&#39;t).</span>
+    <span class="ident">IllegalTypeUsed</span>(<span class="ident">Word</span>),
 
     <span class="comment">// FIXME(eddyb) this shouldn&#39;t be needed, but `rustc_codegen_ssa` still relies</span>
     <span class="comment">// on converting `Function`s to `Value`s even for direct calls, the `Builder`</span>
@@ -812,6 +836,16 @@
                 <span class="comment">// HACK(eddyb) we don&#39;t know whether this constant originated</span>
                 <span class="comment">// in a system crate, so it&#39;s better to always zombie.</span>
                 <span class="ident">cx</span>.<span class="ident">zombie_even_in_user_code</span>(<span class="ident">id</span>, <span class="ident">span</span>, <span class="ident">msg</span>);
+
+                <span class="ident">id</span>
+            }
+
+            <span class="ident">SpirvValueKind::IllegalTypeUsed</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">cx</span>.<span class="ident">tcx</span>
+                    .<span class="ident">sess</span>
+                    .<span class="ident">struct_span_err</span>(<span class="ident">span</span>, <span class="string">&quot;Can&#39;t use type as a value&quot;</span>)
+                    .<span class="ident">note</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Type: *{}&quot;</span>, <span class="ident">cx</span>.<span class="ident">debug_type</span>(<span class="ident">id</span>)))
+                    .<span class="ident">emit</span>();
 
                 <span class="ident">id</span>
             }

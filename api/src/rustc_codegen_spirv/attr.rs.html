@@ -511,6 +511,28 @@
 <span id="511">511</span>
 <span id="512">512</span>
 <span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
 </pre><pre class="rust">
 <span class="doccomment">//! `#[spirv(...)]` attribute support.</span>
 <span class="doccomment">//!</span>
@@ -604,6 +626,8 @@
 
     <span class="comment">// `fn`/closure attributes:</span>
     <span class="ident">UnrollLoops</span>,
+    <span class="ident">BufferLoadIntrinsic</span>,
+    <span class="ident">BufferStoreIntrinsic</span>,
 }
 
 <span class="comment">// HACK(eddyb) this is similar to `rustc_span::Spanned` but with `value` as the</span>
@@ -637,6 +661,8 @@
 
     <span class="comment">// `fn`/closure attributes:</span>
     <span class="kw">pub</span> <span class="ident">unroll_loops</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">buffer_load_intrinsic</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">buffer_store_intrinsic</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">struct</span> <span class="ident">MultipleAttrs</span> {
@@ -724,6 +750,18 @@
                 <span class="string">&quot;#[spirv(attachment_index)]&quot;</span>,
             ),
             <span class="ident">UnrollLoops</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">unroll_loops</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(unroll_loops)]&quot;</span>),
+            <span class="ident">BufferLoadIntrinsic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">buffer_load_intrinsic</span>,
+                (),
+                <span class="ident">span</span>,
+                <span class="string">&quot;#[spirv(buffer_load_intrinsic)]&quot;</span>,
+            ),
+            <span class="ident">BufferStoreIntrinsic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">buffer_store_intrinsic</span>,
+                (),
+                <span class="ident">span</span>,
+                <span class="string">&quot;#[spirv(buffer_store_intrinsic)]&quot;</span>,
+            ),
         }
     }
 }
@@ -857,6 +895,12 @@
 
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Expected</span>(<span class="string">&quot;function or closure&quot;</span>)),
                 },
+                <span class="ident">SpirvAttribute::BufferLoadIntrinsic</span> <span class="op">|</span> <span class="ident">SpirvAttribute::BufferStoreIntrinsic</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">match</span> <span class="ident">target</span> {
+                        <span class="ident">Target::Fn</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Expected</span>(<span class="string">&quot;function&quot;</span>)),
+                    }
+                }
             };
             <span class="kw">match</span> <span class="ident">valid_target</span> {
                 <span class="prelude-val">Err</span>(<span class="ident">Expected</span>(<span class="ident">expected_target</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">sess</span>.<span class="ident">span_err</span>(
