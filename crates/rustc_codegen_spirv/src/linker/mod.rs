@@ -107,6 +107,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         let mut output = loader.module();
         let mut header = ModuleHeader::new(bound + 1);
         header.set_version(version.0, version.1);
+        header.generator = 0x001B_0000;
         output.header = Some(header);
         output
     };

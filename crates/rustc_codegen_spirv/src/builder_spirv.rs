@@ -338,6 +338,7 @@ impl BuilderSpirv {
 
         let mut builder = Builder::new();
         builder.set_version(version.0, version.1);
+        builder.module_mut().header.as_mut().unwrap().generator = 0x001B_0000;
 
         let mut enabled_capabilities = FxHashSet::default();
         let mut enabled_extensions = FxHashSet::default();
