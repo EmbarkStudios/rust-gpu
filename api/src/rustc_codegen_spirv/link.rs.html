@@ -593,7 +593,7 @@
 <span id="593">593</span>
 <span id="594">594</span>
 </pre><pre class="rust">
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx</span>::{<span class="ident">CodegenArgs</span>, <span class="ident">ModuleOutputType</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::codegen_cx</span>::{<span class="ident">CodegenArgs</span>, <span class="ident">ModuleOutputType</span>, <span class="ident">SpirvMetadata</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">linker</span>, <span class="ident">CompileResult</span>, <span class="ident">ModuleResult</span>, <span class="ident">SpirvCodegenBackend</span>, <span class="ident">SpirvModuleBuffer</span>, <span class="ident">SpirvThinBuffer</span>,
 };
@@ -805,7 +805,7 @@
     };
 
     <span class="kw">let</span> <span class="ident">spv_binary</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">optimize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">OptLevel::No</span>
-        <span class="op">|</span><span class="op">|</span> (<span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">cg_args</span>.<span class="ident">name_variables</span>)
+        <span class="op">|</span><span class="op">|</span> (<span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="ident">cg_args</span>.<span class="ident">spirv_metadata</span> <span class="op">=</span><span class="op">=</span> <span class="ident">SpirvMetadata::None</span>)
     {
         <span class="kw">if</span> <span class="ident">env::var</span>(<span class="string">&quot;NO_SPIRV_OPT&quot;</span>).<span class="ident">is_err</span>() {
             <span class="kw">let</span> <span class="ident">_timer</span> <span class="op">=</span> <span class="ident">sess</span>.<span class="ident">timer</span>(<span class="string">&quot;link_spirv_opt&quot;</span>);
@@ -868,7 +868,7 @@
         }
     }
 
-    <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">cg_args</span>.<span class="ident">name_variables</span> {
+    <span class="kw">if</span> <span class="ident">sess</span>.<span class="ident">opts</span>.<span class="ident">debuginfo</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DebugInfo::None</span> <span class="op">&amp;&amp;</span> <span class="ident">cg_args</span>.<span class="ident">spirv_metadata</span> <span class="op">=</span><span class="op">=</span> <span class="ident">SpirvMetadata::None</span> {
         <span class="ident">optimizer</span>
             .<span class="ident">register_pass</span>(<span class="ident">opt::Passes::EliminateDeadConstant</span>)
             .<span class="ident">register_pass</span>(<span class="ident">opt::Passes::StripDebugInfo</span>);
@@ -1123,7 +1123,7 @@
         <span class="ident">compact_ids</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_COMPACT_IDS&quot;</span>).<span class="ident">is_err</span>(),
         <span class="ident">structurize</span>: <span class="ident">env::var</span>(<span class="string">&quot;NO_STRUCTURIZE&quot;</span>).<span class="ident">is_err</span>(),
         <span class="ident">emit_multiple_modules</span>: <span class="ident">cg_args</span>.<span class="ident">module_output_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ModuleOutputType::Multiple</span>,
-        <span class="ident">name_variables</span>: <span class="ident">cg_args</span>.<span class="ident">name_variables</span>,
+        <span class="ident">spirv_metadata</span>: <span class="ident">cg_args</span>.<span class="ident">spirv_metadata</span>,
     };
 
     <span class="kw">let</span> <span class="ident">link_result</span> <span class="op">=</span> <span class="ident">linker::link</span>(<span class="ident">sess</span>, <span class="ident">modules</span>, <span class="kw-2">&amp;</span><span class="ident">options</span>);

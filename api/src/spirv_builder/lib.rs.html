@@ -550,6 +550,11 @@
 <span id="550">550</span>
 <span id="551">551</span>
 <span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
 </pre><pre class="rust">
 <span class="comment">// BEGIN - Embark standard lints v0.4</span>
 <span class="comment">// do not change or add/remove here, but one can add exceptions after this section</span>
@@ -678,13 +683,7 @@
 
 <span class="kw">impl</span> <span class="ident">Error</span> <span class="kw">for</span> <span class="ident">SpirvBuilderError</span> {}
 
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MemoryModel</span> {
-    <span class="ident">Simple</span>,
-    <span class="ident">Vulkan</span>,
-    <span class="ident">GLSL450</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MetadataPrintout</span> {
     <span class="doccomment">/// Print no cargo metadata.</span>
     <span class="prelude-val">None</span>,
@@ -696,6 +695,17 @@
     <span class="ident">Full</span>,
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpirvMetadata</span> {
+    <span class="doccomment">/// Strip all names and other debug information from SPIR-V output.</span>
+    <span class="prelude-val">None</span>,
+    <span class="doccomment">/// Only include OpNames for public interface variables (uniforms and the like), to allow</span>
+    <span class="doccomment">/// shader reflection.</span>
+    <span class="ident">NameVariables</span>,
+    <span class="doccomment">/// Include all OpNames for everything, and OpLines. Significantly increases binary size.</span>
+    <span class="ident">Full</span>,
+}
+
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpirvBuilder</span> {
     <span class="ident">path_to_crate</span>: <span class="ident">PathBuf</span>,
     <span class="ident">print_metadata</span>: <span class="ident">MetadataPrintout</span>,
@@ -703,7 +713,7 @@
     <span class="ident">target</span>: <span class="ident">String</span>,
     <span class="ident">deny_warnings</span>: <span class="ident">bool</span>,
     <span class="ident">multimodule</span>: <span class="ident">bool</span>,
-    <span class="ident">name_variables</span>: <span class="ident">bool</span>,
+    <span class="ident">spirv_metadata</span>: <span class="ident">SpirvMetadata</span>,
     <span class="ident">capabilities</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Capability</span><span class="op">&gt;</span>,
     <span class="ident">extensions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
 
@@ -725,7 +735,7 @@
             <span class="ident">target</span>: <span class="ident">target</span>.<span class="ident">into</span>(),
             <span class="ident">deny_warnings</span>: <span class="bool-val">false</span>,
             <span class="ident">multimodule</span>: <span class="bool-val">false</span>,
-            <span class="ident">name_variables</span>: <span class="bool-val">false</span>,
+            <span class="ident">spirv_metadata</span>: <span class="ident">SpirvMetadata::None</span>,
             <span class="ident">capabilities</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">extensions</span>: <span class="ident">Vec::new</span>(),
 
@@ -763,12 +773,10 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Keep `OpName` reflection information for global `OpVariable`s (which means things like</span>
-    <span class="doccomment">/// uniforms and shader input/outputs) but strip `OpName`s for everything else (functions,</span>
-    <span class="doccomment">/// types, and so on). This is useful if you want a small binary size without debugging</span>
-    <span class="doccomment">/// information, but need variable name reflection to work.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">name_variables</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">name_variables</span> <span class="op">=</span> <span class="ident">v</span>;
+    <span class="doccomment">/// Sets the level of metadata (primarily `OpName` and `OpLine`) included in the SPIR-V binary.</span>
+    <span class="doccomment">/// Including metadata significantly increases binary size.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spirv_metadata</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">v</span>: <span class="ident">SpirvMetadata</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">spirv_metadata</span> <span class="op">=</span> <span class="ident">v</span>;
         <span class="self">self</span>
     }
 
@@ -952,8 +960,10 @@
     <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">multimodule</span> {
         <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--module-output=multiple&quot;</span>);
     }
-    <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">name_variables</span> {
-        <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--name-variables&quot;</span>);
+    <span class="kw">match</span> <span class="ident">builder</span>.<span class="ident">spirv_metadata</span> {
+        <span class="ident">SpirvMetadata::None</span> <span class="op">=</span><span class="op">&gt;</span> (),
+        <span class="ident">SpirvMetadata::NameVariables</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--spirv-metadata=name-variables&quot;</span>),
+        <span class="ident">SpirvMetadata::Full</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--spirv-metadata=full&quot;</span>),
     }
     <span class="kw">if</span> <span class="ident">builder</span>.<span class="ident">relax_struct_store</span> {
         <span class="ident">llvm_args</span>.<span class="ident">push</span>(<span class="string">&quot;--relax-struct-store&quot;</span>);

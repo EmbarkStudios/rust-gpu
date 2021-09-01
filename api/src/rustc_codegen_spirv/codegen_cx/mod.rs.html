@@ -642,6 +642,19 @@
 <span id="642">642</span>
 <span id="643">643</span>
 <span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">mod</span> <span class="ident">declare</span>;
@@ -873,6 +886,13 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpirvMetadata</span> {
+    <span class="prelude-val">None</span>,
+    <span class="ident">NameVariables</span>,
+    <span class="ident">Full</span>,
+}
+
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CodegenArgs</span> {
     <span class="kw">pub</span> <span class="ident">module_output_type</span>: <span class="ident">ModuleOutputType</span>,
     <span class="kw">pub</span> <span class="ident">disassemble</span>: <span class="ident">bool</span>,
@@ -880,7 +900,7 @@
     <span class="kw">pub</span> <span class="ident">disassemble_entry</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">disassemble_globals</span>: <span class="ident">bool</span>,
 
-    <span class="kw">pub</span> <span class="ident">name_variables</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">spirv_metadata</span>: <span class="ident">SpirvMetadata</span>,
 
     <span class="comment">// spirv-val flags</span>
     <span class="kw">pub</span> <span class="ident">relax_struct_store</span>: <span class="ident">bool</span>,
@@ -918,12 +938,7 @@
         );
         <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;disassemble-globals&quot;</span>, <span class="string">&quot;print globals to stderr&quot;</span>, <span class="string">&quot;&quot;</span>);
 
-        <span class="ident">opts</span>.<span class="ident">optflagopt</span>(
-            <span class="string">&quot;&quot;</span>,
-            <span class="string">&quot;name-variables&quot;</span>,
-            <span class="string">&quot;Keep OpName for OpVariables, strip all others.&quot;</span>,
-            <span class="string">&quot;&quot;</span>,
-        );
+        <span class="ident">opts</span>.<span class="ident">optopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;spirv-metadata&quot;</span>, <span class="string">&quot;how much metadata to include&quot;</span>, <span class="string">&quot;&quot;</span>);
 
         <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;relax-struct-store&quot;</span>, <span class="string">&quot;Allow store from one struct type to a different type with compatible layout and members.&quot;</span>, <span class="string">&quot;&quot;</span>);
         <span class="ident">opts</span>.<span class="ident">optflagopt</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;relax-logical-pointer&quot;</span>, <span class="string">&quot;Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode&quot;</span>, <span class="string">&quot;&quot;</span>);
@@ -940,7 +955,7 @@
         <span class="kw">let</span> <span class="ident">disassemble_entry</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_str</span>(<span class="string">&quot;disassemble-entry&quot;</span>);
         <span class="kw">let</span> <span class="ident">disassemble_globals</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;disassemble-globals&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">name_variables</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;name-variables&quot;</span>);
+        <span class="kw">let</span> <span class="ident">spirv_metadata</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_str</span>(<span class="string">&quot;spirv-metadata&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">relax_struct_store</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;relax-struct-store&quot;</span>);
         <span class="kw">let</span> <span class="ident">relax_logical_pointer</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">opt_present</span>(<span class="string">&quot;relax-logical-pointer&quot;</span>);
@@ -951,6 +966,17 @@
 
         <span class="kw">let</span> <span class="ident">relax_block_layout</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">relax_block_layout</span> { <span class="prelude-val">Some</span>(<span class="bool-val">true</span>) } <span class="kw">else</span> { <span class="prelude-val">None</span> };
 
+        <span class="kw">let</span> <span class="ident">spirv_metadata</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">spirv_metadata</span>.<span class="ident">as_deref</span>() {
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvMetadata::None</span>,
+            <span class="prelude-val">Some</span>(<span class="string">&quot;full&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvMetadata::Full</span>,
+            <span class="prelude-val">Some</span>(<span class="string">&quot;name-variables&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvMetadata::NameVariables</span>,
+            <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">rustc_session::getopts::Fail::UnrecognizedOption</span>(
+                    <span class="ident">v</span>.<span class="ident">to_string</span>(),
+                ))
+            }
+        };
+
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">module_output_type</span>,
             <span class="ident">disassemble</span>,
@@ -958,7 +984,7 @@
             <span class="ident">disassemble_entry</span>,
             <span class="ident">disassemble_globals</span>,
 
-            <span class="ident">name_variables</span>,
+            <span class="ident">spirv_metadata</span>,
 
             <span class="ident">relax_struct_store</span>,
             <span class="ident">relax_logical_pointer</span>,
