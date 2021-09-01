@@ -1,4 +1,4 @@
-use crate::codegen_cx::{CodegenArgs, ModuleOutputType};
+use crate::codegen_cx::{CodegenArgs, ModuleOutputType, SpirvMetadata};
 use crate::{
     linker, CompileResult, ModuleResult, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer,
 };
@@ -210,7 +210,7 @@ fn post_link_single_module(
     };
 
     let spv_binary = if sess.opts.optimize != OptLevel::No
-        || (sess.opts.debuginfo == DebugInfo::None && !cg_args.name_variables)
+        || (sess.opts.debuginfo == DebugInfo::None && cg_args.spirv_metadata == SpirvMetadata::None)
     {
         if env::var("NO_SPIRV_OPT").is_err() {
             let _timer = sess.timer("link_spirv_opt");
@@ -273,7 +273,7 @@ fn do_spirv_opt(
         }
     }
 
-    if sess.opts.debuginfo == DebugInfo::None && !cg_args.name_variables {
+    if sess.opts.debuginfo == DebugInfo::None && cg_args.spirv_metadata == SpirvMetadata::None {
         optimizer
             .register_pass(opt::Passes::EliminateDeadConstant)
             .register_pass(opt::Passes::StripDebugInfo);
@@ -528,7 +528,7 @@ fn do_link(
         compact_ids: env::var("NO_COMPACT_IDS").is_err(),
         structurize: env::var("NO_STRUCTURIZE").is_err(),
         emit_multiple_modules: cg_args.module_output_type == ModuleOutputType::Multiple,
-        name_variables: cg_args.name_variables,
+        spirv_metadata: cg_args.spirv_metadata,
     };
 
     let link_result = linker::link(sess, modules, &options);

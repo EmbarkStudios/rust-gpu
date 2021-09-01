@@ -15,6 +15,7 @@ mod specializer;
 mod structurizer;
 mod zombies;
 
+use crate::codegen_cx::SpirvMetadata;
 use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
 use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
@@ -30,7 +31,7 @@ pub struct Options {
     pub dce: bool,
     pub structurize: bool,
     pub emit_multiple_modules: bool,
-    pub name_variables: bool,
+    pub spirv_metadata: SpirvMetadata,
 }
 
 pub enum LinkResult {
@@ -246,7 +247,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         }
     }
 
-    if opts.name_variables {
+    if opts.spirv_metadata == SpirvMetadata::NameVariables {
         let _timer = sess.timer("link_name_variables");
         simple_passes::name_variables_pass(&mut output);
     }

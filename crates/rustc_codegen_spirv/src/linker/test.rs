@@ -1,4 +1,5 @@
 use super::{link, LinkResult, Options};
+use crate::codegen_cx::SpirvMetadata;
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
 use rustc_driver::handle_options;
@@ -93,7 +94,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
                 dce: false,
                 structurize: false,
                 emit_multiple_modules: false,
-                name_variables: false,
+                spirv_metadata: SpirvMetadata::None,
             },
         );
         assert_eq!(compiler.session().has_errors(), res.is_err());
