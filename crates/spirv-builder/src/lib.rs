@@ -402,12 +402,10 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     if builder.multimodule {
         llvm_args.push("--module-output=multiple");
     }
-    if builder.spirv_metadata != SpirvMetadata::None {
-        if builder.spirv_metadata == SpirvMetadata::Full {
-            llvm_args.push("--spirv-metadata=full");
-        } else {
-            llvm_args.push("--spirv-metadata=name-variables");
-        }
+    match builder.spirv_metadata {
+        SpirvMetadata::None => (),
+        SpirvMetadata::NameVariables => llvm_args.push("--spirv-metadata=name-variables"),
+        SpirvMetadata::Full => llvm_args.push("--spirv-metadata=full"),
     }
     if builder.relax_struct_store {
         llvm_args.push("--relax-struct-store");
