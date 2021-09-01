@@ -215,7 +215,7 @@ impl SpirvBuilder {
         self
     }
 
-    /// Sets the level of metadata (primarily OpName and OpLine) included in the SPIR-V binary.
+    /// Sets the level of metadata (primarily `OpName` and `OpLine`) included in the SPIR-V binary.
     /// Including metadata significantly increases binary size.
     pub fn spirv_metadata(mut self, v: SpirvMetadata) -> Self {
         self.spirv_metadata = v;
