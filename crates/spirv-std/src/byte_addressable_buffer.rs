@@ -50,6 +50,18 @@ impl<'a> ByteAddressableBuffer<'a> {
         buffer_load_intrinsic(self.data, byte_index)
     }
 
+    /// Loads an arbitrary type from the buffer. `byte_index` must be a multiple of 4, otherwise,
+    /// it will get silently rounded down to the nearest multiple of 4. Bounds checking is not
+    /// performed.
+    ///
+    /// # Safety
+    /// This function allows writing a type to an untyped buffer, then reading a different type
+    /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+    /// transmute). Additionally, bounds checking is not performed.
+    pub unsafe fn load_unchecked<T>(self, byte_index: u32) -> T {
+        buffer_load_intrinsic(self.data, byte_index)
+    }
+
     /// Stores an arbitrary type int the buffer. `byte_index` must be a multiple of 4, otherwise,
     /// it will get silently rounded down to the nearest multiple of 4.
     ///
@@ -61,6 +73,18 @@ impl<'a> ByteAddressableBuffer<'a> {
         if byte_index + mem::size_of::<T>() as u32 > self.data.len() as u32 {
             panic!("Index out of range")
         }
+        buffer_store_intrinsic(self.data, byte_index, value);
+    }
+
+    /// Stores an arbitrary type int the buffer. `byte_index` must be a multiple of 4, otherwise,
+    /// it will get silently rounded down to the nearest multiple of 4. Bounds checking is not
+    /// performed.
+    ///
+    /// # Safety
+    /// This function allows writing a type to an untyped buffer, then reading a different type
+    /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
+    /// transmute). Additionally, bounds checking is not performed.
+    pub unsafe fn store_unchecked<T>(self, byte_index: u32, value: T) {
         buffer_store_intrinsic(self.data, byte_index, value);
     }
 }
