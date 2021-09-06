@@ -345,6 +345,8 @@
 <span id="345">345</span>
 <span id="346">346</span>
 <span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>};
@@ -399,7 +401,7 @@
     }
 
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">load_vec_or_arr</span>(
+    <span class="kw">fn</span> <span class="ident">load_vec_mat_arr</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">original_type</span>: <span class="ident">Word</span>,
         <span class="ident">result_type</span>: <span class="ident">Word</span>,
@@ -452,21 +454,22 @@
                 <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">load_u32</span>(<span class="ident">array</span>, <span class="ident">dynamic_word_index</span>, <span class="ident">constant_word_offset</span>);
                 <span class="self">self</span>.<span class="ident">bitcast</span>(<span class="ident">val</span>, <span class="ident">result_type</span>)
             }
-            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">load_vec_or_arr</span>(
-                <span class="ident">original_type</span>,
-                <span class="ident">result_type</span>,
-                <span class="ident">array</span>,
-                <span class="ident">dynamic_word_index</span>,
-                <span class="ident">constant_word_offset</span>,
-                <span class="ident">element</span>,
-                <span class="ident">count</span>,
-            ),
+            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+                .<span class="ident">load_vec_mat_arr</span>(
+                    <span class="ident">original_type</span>,
+                    <span class="ident">result_type</span>,
+                    <span class="ident">array</span>,
+                    <span class="ident">dynamic_word_index</span>,
+                    <span class="ident">constant_word_offset</span>,
+                    <span class="ident">element</span>,
+                    <span class="ident">count</span>,
+                ),
             <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>) {
                     <span class="prelude-val">Some</span>(<span class="ident">count</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>,
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="self">self</span>.<span class="ident">load_err</span>(<span class="ident">original_type</span>, <span class="ident">result_type</span>),
                 };
-                <span class="self">self</span>.<span class="ident">load_vec_or_arr</span>(
+                <span class="self">self</span>.<span class="ident">load_vec_mat_arr</span>(
                     <span class="ident">original_type</span>,
                     <span class="ident">result_type</span>,
                     <span class="ident">array</span>,
@@ -577,7 +580,7 @@
     }
 
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">store_vec_or_arr</span>(
+    <span class="kw">fn</span> <span class="ident">store_vec_mat_arr</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">original_type</span>: <span class="ident">Word</span>,
         <span class="ident">value</span>: <span class="ident">SpirvValue</span>,
@@ -626,21 +629,22 @@
                 <span class="kw">let</span> <span class="ident">value_u32</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bitcast</span>(<span class="ident">value</span>, <span class="ident">u32_ty</span>);
                 <span class="self">self</span>.<span class="ident">store_u32</span>(<span class="ident">array</span>, <span class="ident">dynamic_word_index</span>, <span class="ident">constant_word_offset</span>, <span class="ident">value_u32</span>);
             }
-            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">store_vec_or_arr</span>(
-                <span class="ident">original_type</span>,
-                <span class="ident">value</span>,
-                <span class="ident">array</span>,
-                <span class="ident">dynamic_word_index</span>,
-                <span class="ident">constant_word_offset</span>,
-                <span class="ident">element</span>,
-                <span class="ident">count</span>,
-            ),
+            <span class="ident">SpirvType::Vector</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">|</span> <span class="ident">SpirvType::Matrix</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+                .<span class="ident">store_vec_mat_arr</span>(
+                    <span class="ident">original_type</span>,
+                    <span class="ident">value</span>,
+                    <span class="ident">array</span>,
+                    <span class="ident">dynamic_word_index</span>,
+                    <span class="ident">constant_word_offset</span>,
+                    <span class="ident">element</span>,
+                    <span class="ident">count</span>,
+                ),
             <span class="ident">SpirvType::Array</span> { <span class="ident">element</span>, <span class="ident">count</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">lookup_const_u64</span>(<span class="ident">count</span>) {
                     <span class="prelude-val">Some</span>(<span class="ident">count</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>,
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="self">self</span>.<span class="ident">store_err</span>(<span class="ident">original_type</span>, <span class="ident">value</span>),
                 };
-                <span class="self">self</span>.<span class="ident">store_vec_or_arr</span>(
+                <span class="self">self</span>.<span class="ident">store_vec_mat_arr</span>(
                     <span class="ident">original_type</span>,
                     <span class="ident">value</span>,
                     <span class="ident">array</span>,

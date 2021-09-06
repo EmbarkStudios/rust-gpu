@@ -134,7 +134,7 @@
     <span class="doccomment">/// This function allows writing a type to an untyped buffer, then reading a different type</span>
     <span class="doccomment">/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a</span>
     <span class="doccomment">/// transmute)</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
         <span class="kw">if</span> <span class="ident">byte_index</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> {
             <span class="macro">panic!</span>(<span class="string">&quot;Index out of range&quot;</span>)
         }
@@ -149,7 +149,7 @@
     <span class="doccomment">/// This function allows writing a type to an untyped buffer, then reading a different type</span>
     <span class="doccomment">/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a</span>
     <span class="doccomment">/// transmute). Additionally, bounds checking is not performed.</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load_unchecked</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load_unchecked</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
         <span class="ident">buffer_load_intrinsic</span>(<span class="self">self</span>.<span class="ident">data</span>, <span class="ident">byte_index</span>)
     }
 
@@ -160,7 +160,7 @@
     <span class="doccomment">/// This function allows writing a type to an untyped buffer, then reading a different type</span>
     <span class="doccomment">/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a</span>
     <span class="doccomment">/// transmute)</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">store</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">store</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
         <span class="kw">if</span> <span class="ident">byte_index</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> {
             <span class="macro">panic!</span>(<span class="string">&quot;Index out of range&quot;</span>)
         }
@@ -175,7 +175,7 @@
     <span class="doccomment">/// This function allows writing a type to an untyped buffer, then reading a different type</span>
     <span class="doccomment">/// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a</span>
     <span class="doccomment">/// transmute). Additionally, bounds checking is not performed.</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">store_unchecked</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">store_unchecked</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">byte_index</span>: <span class="ident">u32</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
         <span class="ident">buffer_store_intrinsic</span>(<span class="self">self</span>.<span class="ident">data</span>, <span class="ident">byte_index</span>, <span class="ident">value</span>);
     }
 }
