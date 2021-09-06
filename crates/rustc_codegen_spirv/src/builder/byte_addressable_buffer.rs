@@ -51,7 +51,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn load_vec_or_arr(
+    fn load_vec_mat_arr(
         &mut self,
         original_type: Word,
         result_type: Word,
@@ -104,21 +104,22 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let val = self.load_u32(array, dynamic_word_index, constant_word_offset);
                 self.bitcast(val, result_type)
             }
-            SpirvType::Vector { element, count } => self.load_vec_or_arr(
-                original_type,
-                result_type,
-                array,
-                dynamic_word_index,
-                constant_word_offset,
-                element,
-                count,
-            ),
+            SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => self
+                .load_vec_mat_arr(
+                    original_type,
+                    result_type,
+                    array,
+                    dynamic_word_index,
+                    constant_word_offset,
+                    element,
+                    count,
+                ),
             SpirvType::Array { element, count } => {
                 let count = match self.builder.lookup_const_u64(count) {
                     Some(count) => count as u32,
                     None => return self.load_err(original_type, result_type),
                 };
-                self.load_vec_or_arr(
+                self.load_vec_mat_arr(
                     original_type,
                     result_type,
                     array,
@@ -229,7 +230,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn store_vec_or_arr(
+    fn store_vec_mat_arr(
         &mut self,
         original_type: Word,
         value: SpirvValue,
@@ -278,21 +279,22 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let value_u32 = self.bitcast(value, u32_ty);
                 self.store_u32(array, dynamic_word_index, constant_word_offset, value_u32);
             }
-            SpirvType::Vector { element, count } => self.store_vec_or_arr(
-                original_type,
-                value,
-                array,
-                dynamic_word_index,
-                constant_word_offset,
-                element,
-                count,
-            ),
+            SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => self
+                .store_vec_mat_arr(
+                    original_type,
+                    value,
+                    array,
+                    dynamic_word_index,
+                    constant_word_offset,
+                    element,
+                    count,
+                ),
             SpirvType::Array { element, count } => {
                 let count = match self.builder.lookup_const_u64(count) {
                     Some(count) => count as u32,
                     None => return self.store_err(original_type, value),
                 };
-                self.store_vec_or_arr(
+                self.store_vec_mat_arr(
                     original_type,
                     value,
                     array,

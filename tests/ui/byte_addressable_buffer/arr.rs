@@ -19,7 +19,7 @@ pub fn store(
     val: [i32; 4],
 ) {
     unsafe {
-        let buf = ByteAddressableBuffer::new(buf);
+        let mut buf = ByteAddressableBuffer::new(buf);
         buf.store(5, val);
     }
 }

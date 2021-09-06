@@ -16,7 +16,7 @@ pub fn load(
 #[spirv(fragment)]
 pub fn store(#[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32], val: f32) {
     unsafe {
-        let buf = ByteAddressableBuffer::new(buf);
+        let mut buf = ByteAddressableBuffer::new(buf);
         buf.store(5, val);
     }
 }
