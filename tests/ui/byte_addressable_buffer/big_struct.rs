@@ -28,7 +28,7 @@ pub fn store(
     val: BigStruct,
 ) {
     unsafe {
-        let buf = ByteAddressableBuffer::new(buf);
+        let mut buf = ByteAddressableBuffer::new(buf);
         buf.store(5, val);
     }
 }

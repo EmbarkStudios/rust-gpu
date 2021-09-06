@@ -34,7 +34,7 @@ pub fn store(
     val: Nesty,
 ) {
     unsafe {
-        let buf = ByteAddressableBuffer::new(buf);
+        let mut buf = ByteAddressableBuffer::new(buf);
         buf.store(5, val);
     }
 }

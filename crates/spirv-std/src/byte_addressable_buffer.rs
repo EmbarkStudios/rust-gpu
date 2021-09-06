@@ -43,7 +43,7 @@ impl<'a> ByteAddressableBuffer<'a> {
     /// This function allows writing a type to an untyped buffer, then reading a different type
     /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
     /// transmute)
-    pub unsafe fn load<T>(self, byte_index: u32) -> T {
+    pub unsafe fn load<T>(&self, byte_index: u32) -> T {
         if byte_index + mem::size_of::<T>() as u32 > self.data.len() as u32 {
             panic!("Index out of range")
         }
@@ -58,7 +58,7 @@ impl<'a> ByteAddressableBuffer<'a> {
     /// This function allows writing a type to an untyped buffer, then reading a different type
     /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
     /// transmute). Additionally, bounds checking is not performed.
-    pub unsafe fn load_unchecked<T>(self, byte_index: u32) -> T {
+    pub unsafe fn load_unchecked<T>(&self, byte_index: u32) -> T {
         buffer_load_intrinsic(self.data, byte_index)
     }
 
@@ -69,7 +69,7 @@ impl<'a> ByteAddressableBuffer<'a> {
     /// This function allows writing a type to an untyped buffer, then reading a different type
     /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
     /// transmute)
-    pub unsafe fn store<T>(self, byte_index: u32, value: T) {
+    pub unsafe fn store<T>(&mut self, byte_index: u32, value: T) {
         if byte_index + mem::size_of::<T>() as u32 > self.data.len() as u32 {
             panic!("Index out of range")
         }
@@ -84,7 +84,7 @@ impl<'a> ByteAddressableBuffer<'a> {
     /// This function allows writing a type to an untyped buffer, then reading a different type
     /// from the same buffer, allowing all sorts of safety guarantees to be bypassed (effectively a
     /// transmute). Additionally, bounds checking is not performed.
-    pub unsafe fn store_unchecked<T>(self, byte_index: u32, value: T) {
+    pub unsafe fn store_unchecked<T>(&mut self, byte_index: u32, value: T) {
         buffer_store_intrinsic(self.data, byte_index, value);
     }
 }
