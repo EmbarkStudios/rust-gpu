@@ -401,7 +401,7 @@ impl RayQuery {
     /// There must be a current committed intersection.
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionTKHR")]
     #[inline]
@@ -446,7 +446,7 @@ impl RayQuery {
     /// There must be a current committed intersection.
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionInstanceCustomIndexKHR")]
     #[inline]
@@ -491,7 +491,7 @@ impl RayQuery {
     /// There must be a current committed intersection.
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionInstanceIdKHR")]
     #[inline]
@@ -536,7 +536,7 @@ impl RayQuery {
     /// There must be a current committed intersection.
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR")]
     #[inline]
@@ -581,7 +581,7 @@ impl RayQuery {
     /// There must be a current committed intersection.
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionGeometryIndexKHR")]
     #[inline]
@@ -626,7 +626,7 @@ impl RayQuery {
     /// There must be a current committed intersection.
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionPrimitiveIndexKHR")]
     #[inline]
@@ -675,7 +675,7 @@ impl RayQuery {
     /// [`Self::get_committed_intersection_type()`] must be [`CommittedIntersection::Triangle`].
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionBarycentricsKHR")]
     #[inline]
@@ -724,7 +724,7 @@ impl RayQuery {
     /// [`Self::get_committed_intersection_type()`] must be [`CommittedIntersection::Triangle`].
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionFrontFaceKHR")]
     #[inline]
@@ -788,7 +788,7 @@ impl RayQuery {
     /// There must be a current committed intersection.
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionObjectRayDirectionKHR")]
     #[inline]
@@ -835,7 +835,7 @@ impl RayQuery {
     /// There must be a current committed intersection.
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionObjectRayOriginKHR")]
     #[inline]
@@ -926,7 +926,7 @@ impl RayQuery {
     /// There must be a current committed intersection.
     ///
     /// TODO: Improve docs. Can't right now due to
-    /// https://github.com/KhronosGroup/SPIRV-Registry/issues/128
+    /// <https://github.com/KhronosGroup/SPIRV-Registry/issues/128>
     #[spirv_std_macros::gpu_only]
     #[doc(alias = "OpRayQueryGetIntersectionObjectToWorldKHR")]
     #[inline]
