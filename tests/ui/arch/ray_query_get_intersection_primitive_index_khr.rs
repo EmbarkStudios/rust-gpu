@@ -9,6 +9,7 @@ pub fn main(#[spirv(descriptor_set = 0, binding = 0)] accel: &AccelerationStruct
     unsafe {
         spirv_std::ray_query!(let mut handle);
         handle.initialize(accel, RayFlags::NONE, 0, Vec3::ZERO, 0.0, Vec3::ZERO, 0.0);
-        handle.get_intersection_primitive_index::<5>();
+        handle.get_candidate_intersection_primitive_index();
+        handle.get_committed_intersection_primitive_index();
     }
 }
