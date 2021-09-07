@@ -9,6 +9,7 @@ pub fn main(#[spirv(descriptor_set = 0, binding = 0)] accel: &AccelerationStruct
     unsafe {
         spirv_std::ray_query!(let mut handle);
         handle.initialize(accel, RayFlags::NONE, 0, Vec3::ZERO, 0.0, Vec3::ZERO, 0.0);
-        let barycentric_coords: glam::Vec2 = handle.get_intersection_barycentrics::<_, 5>();
+        let barycentric_coords: glam::Vec2 = handle.get_candidate_intersection_barycentrics();
+        let barycentric_coords: glam::Vec2 = handle.get_committed_intersection_barycentrics();
     }
 }

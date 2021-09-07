@@ -9,6 +9,7 @@ pub fn main(#[spirv(descriptor_set = 0, binding = 0)] accel: &AccelerationStruct
     unsafe {
         spirv_std::ray_query!(let mut handle);
         handle.initialize(accel, RayFlags::NONE, 0, Vec3::ZERO, 0.0, Vec3::ZERO, 0.0);
-        let offset = handle.get_intersection_shader_binding_table_record_offset::<5>();
+        let offset = handle.get_candidate_intersection_shader_binding_table_record_offset();
+        let offset = handle.get_committed_intersection_shader_binding_table_record_offset();
     }
 }
