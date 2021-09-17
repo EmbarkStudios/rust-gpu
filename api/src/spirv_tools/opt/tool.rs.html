@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;Users&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;spirv-tools-0.6.1&#x2F;src&#x2F;opt&#x2F;tool.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tool.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../spirv_tools/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;Users&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;spirv-tools-0.7.0&#x2F;src&#x2F;opt&#x2F;tool.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tool.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../spirv_tools/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -183,6 +183,8 @@
 <span id="183">183</span>
 <span id="184">184</span>
 <span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
@@ -312,60 +314,62 @@
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Passes</span>::<span class="kw-2">*</span>;
 
     <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">pass</span> {
-        <span class="ident">Null</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
-        <span class="ident">StripDebugInfo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;strip-debug&quot;</span>,
-        <span class="ident">StripReflectInfo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;strip-reflect&quot;</span>,
+        <span class="ident">AggressiveDCE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-code-aggressive&quot;</span>,
+        <span class="ident">AmdExtToKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;amd-ext-to-khr&quot;</span>,
+        <span class="ident">BlockMerge</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;merge-blocks&quot;</span>,
+        <span class="ident">CFGCleanup</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;cfg-cleanup&quot;</span>,
+        <span class="ident">CodeSinking</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;code-sink&quot;</span>,
+        <span class="ident">CombineAccessChains</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;combine-access-chains&quot;</span>,
+        <span class="ident">CompactIds</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;compact-ids&quot;</span>,
+        <span class="ident">ConditionalConstantPropagation</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;ccp&quot;</span>,
+        <span class="ident">ConvertRelaxedToHalf</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;convert-relaxed-to-half&quot;</span>,
+        <span class="ident">CopyPropagateArrays</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;copy-propagate-arrays&quot;</span>,
+        <span class="ident">DeadBranchElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-branches&quot;</span>,
+        <span class="ident">DeadInsertElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-inserts&quot;</span>,
+        <span class="ident">DeadVariableElimination</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-variables&quot;</span>,
+        <span class="ident">DescriptorScalarReplacement</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;descriptor-scalar-replacement&quot;</span>,
+        <span class="ident">EliminateDeadConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-const&quot;</span>,
         <span class="ident">EliminateDeadFunctions</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-functions&quot;</span>,
         <span class="ident">EliminateDeadMembers</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-members&quot;</span>,
+        <span class="ident">FixStorageClass</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;fix-storage-class&quot;</span>,
         <span class="ident">FlattenDecoration</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;flatten-decorations&quot;</span>,
-        <span class="ident">FreezeSpecConstantValue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;freeze-spec-const&quot;</span>,
         <span class="ident">FoldSpecConstantOpAndComposite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;fold-spec-const-op-composite&quot;</span>,
-        <span class="ident">UnifyConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;unify-const&quot;</span>,
-        <span class="ident">EliminateDeadConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-const&quot;</span>,
-        <span class="ident">StrengthReduction</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;strength-reduction&quot;</span>,
-        <span class="ident">BlockMerge</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;merge-blocks&quot;</span>,
+        <span class="ident">FreezeSpecConstantValue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;freeze-spec-const&quot;</span>,
+        <span class="ident">GraphicsRobustAccess</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;graphics-robust-access&quot;</span>,
+        <span class="ident">IfConversion</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;if-conversion&quot;</span>,
         <span class="ident">InlineExhaustive</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;inline-entry-points-exhaustive&quot;</span>,
         <span class="ident">InlineOpaque</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;inline-entry-points-opaque&quot;</span>,
-        <span class="ident">LocalSingleBlockLoadStoreElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-local-single-block&quot;</span>,
-        <span class="ident">DeadBranchElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-branches&quot;</span>,
-        <span class="ident">LocalMultiStoreElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-local-multi-store&quot;</span>,
-        <span class="ident">LocalAccessChainConvert</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;convert-local-access-chains&quot;</span>,
-        <span class="ident">LocalSingleStoreElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-local-single-store&quot;</span>,
         <span class="ident">InsertExtractElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-insert-extract&quot;</span>,
-        <span class="ident">DeadInsertElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-inserts&quot;</span>,
-        <span class="ident">AggressiveDCE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-code-aggressive&quot;</span>,
-        <span class="ident">PropagateLineInfo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;propagate-line-info&quot;</span>,
-        <span class="ident">RedundantLineInfoElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-redundant-line-info&quot;</span>,
-        <span class="ident">CompactIds</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;compact-ids&quot;</span>,
-        <span class="ident">RemoveDuplicates</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;remove-duplicates&quot;</span>,
-        <span class="ident">CFGCleanup</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;cfg-cleanup&quot;</span>,
-        <span class="ident">DeadVariableElimination</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-dead-variables&quot;</span>,
-        <span class="ident">MergeReturn</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;merge-return&quot;</span>,
+        <span class="comment">// This is only part of the --legalize-hlsl meta pass</span>
+        <span class="ident">InterpolateFixup</span> <span class="op">|</span> <span class="ident">Null</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
+        <span class="ident">LocalAccessChainConvert</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;convert-local-access-chains&quot;</span>,
+        <span class="ident">LocalMultiStoreElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-local-multi-store&quot;</span>,
         <span class="ident">LocalRedundancyElimination</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;local-redundancy-elimination&quot;</span>,
+        <span class="ident">LocalSingleBlockLoadStoreElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-local-single-block&quot;</span>,
+        <span class="ident">LocalSingleStoreElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-local-single-store&quot;</span>,
         <span class="ident">LoopInvariantCodeMotion</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;loop-invariant-code-motion&quot;</span>,
         <span class="ident">LoopPeeling</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;loop-peeling&quot;</span>,
         <span class="ident">LoopUnswitch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;loop-unswitch&quot;</span>,
-        <span class="ident">RedundancyElimination</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;redundancy-elimination&quot;</span>,
+        <span class="ident">MergeReturn</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;merge-return&quot;</span>,
         <span class="ident">PrivateToLocal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;private-to-local&quot;</span>,
-        <span class="ident">ConditionalConstantPropagation</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;ccp&quot;</span>,
-        <span class="ident">Workaround1209</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;workaround-1209&quot;</span>,
-        <span class="ident">IfConversion</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;if-conversion&quot;</span>,
+        <span class="ident">PropagateLineInfo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;propagate-line-info&quot;</span>,
+        <span class="ident">ReduceLoadSize</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;reduce-load-size&quot;</span>,
+        <span class="ident">RedundancyElimination</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;redundancy-elimination&quot;</span>,
+        <span class="ident">RedundantLineInfoElim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;eliminate-redundant-line-info&quot;</span>,
+        <span class="ident">RemoveUnusedInterfaceVariables</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;remove-unused-interface-variables&quot;</span>,
+        <span class="ident">RelaxFloatOps</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;relax-float-ops&quot;</span>,
+        <span class="ident">RemoveDuplicates</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;remove-duplicates&quot;</span>,
         <span class="ident">ReplaceInvalidOpcode</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;replace-invalid-opcode&quot;</span>,
         <span class="ident">Simplification</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;simplify-instructions&quot;</span>,
         <span class="ident">SSARewrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;ssa-rewrite&quot;</span>,
-        <span class="ident">ConvertRelaxedToHalf</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;convert-relaxed-to-half&quot;</span>,
-        <span class="ident">RelaxFloatOps</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;relax-float-ops&quot;</span>,
-        <span class="ident">CopyPropagateArrays</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;copy-propagate-arrays&quot;</span>,
-        <span class="ident">VectorDCE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;vector-dce&quot;</span>,
-        <span class="ident">ReduceLoadSize</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;reduce-load-size&quot;</span>,
-        <span class="ident">CombineAccessChains</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;combine-access-chains&quot;</span>,
+        <span class="ident">StrengthReduction</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;strength-reduction&quot;</span>,
+        <span class="ident">StripDebugInfo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;strip-debug&quot;</span>,
+        <span class="ident">StripReflectInfo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;strip-reflect&quot;</span>,
+        <span class="ident">UnifyConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;unify-const&quot;</span>,
         <span class="ident">UpgradeMemoryModel</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;upgrade-memory-model&quot;</span>,
-        <span class="ident">CodeSinking</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;code-sink&quot;</span>,
-        <span class="ident">FixStorageClass</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;fix-storage-class&quot;</span>,
-        <span class="ident">GraphicsRobustAccess</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;graphics-robust-access&quot;</span>,
-        <span class="ident">DescriptorScalarReplacement</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;descriptor-scalar-replacement&quot;</span>,
+        <span class="ident">VectorDCE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;vector-dce&quot;</span>,
+        <span class="ident">Workaround1209</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;workaround-1209&quot;</span>,
         <span class="ident">WrapOpKill</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;wrap-opkill&quot;</span>,
-        <span class="ident">AmdExtToKhr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;amd-ext-to-khr&quot;</span>,
     })
 }
 </code></pre></div>
