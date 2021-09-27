@@ -150,3 +150,25 @@ pub unsafe fn vector_insert_dynamic<T: Scalar, V: Vector<T, N>, const N: usize>(
 pub fn kill() -> ! {
     unsafe { asm!("OpKill", options(noreturn)) }
 }
+
+/// Read from the shader clock.
+///
+/// Requires the `SPV_KHR_shader_clock` extension and the `ShaderClockKHR` capability.
+///
+/// See:
+/// <https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_shader_clock.html>
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "OpReadClockKHR")]
+pub unsafe fn read_clock_khr() -> u64 {
+    let mut result: u64 = 0;
+
+    asm! {
+        "%uint = OpTypeInt 32 0",
+        "%uint_3 = OpConstant %uint 3",
+        "%result = OpReadClockKHR typeof*{result} %uint_3",
+        "OpStore {result} %result",
+        result = in(reg) &mut result,
+    };
+
+    result
+}
