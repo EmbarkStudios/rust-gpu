@@ -168,7 +168,7 @@ pub unsafe fn read_clock_khr() -> u64 {
         "%result = OpReadClockKHR typeof*{result} %scope",
         "OpStore {result} %result",
         result = in(reg) &mut result,
-        scope = const Scope::Subgroup as _,
+        scope = const crate::memory::Scope::Subgroup as _,
     };
 
     result
