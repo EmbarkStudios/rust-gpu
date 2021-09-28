@@ -164,10 +164,11 @@ pub unsafe fn read_clock_khr() -> u64 {
 
     asm! {
         "%uint = OpTypeInt 32 0",
-        "%uint_3 = OpConstant %uint 3",
-        "%result = OpReadClockKHR typeof*{result} %uint_3",
+        "%scope = OpConstant %uint {scope}",
+        "%result = OpReadClockKHR typeof*{result} %scope",
         "OpStore {result} %result",
         result = in(reg) &mut result,
+        scope = const Scope::Subgroup as _,
     };
 
     result
