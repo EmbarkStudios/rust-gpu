@@ -6,12 +6,13 @@ use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
-use rustc_middle::mir::interpret::{alloc_range, Allocation, GlobalAlloc, ScalarMaybeUninit};
-use rustc_middle::ty::layout::TyAndLayout;
-use rustc_mir::interpret::Scalar;
+use rustc_middle::mir::interpret::{
+    alloc_range, Allocation, GlobalAlloc, Scalar, ScalarMaybeUninit,
+};
+use rustc_middle::ty::layout::{LayoutOf, TyAndLayout};
 use rustc_span::symbol::Symbol;
 use rustc_span::{Span, DUMMY_SP};
-use rustc_target::abi::{self, AddressSpace, HasDataLayout, Integer, LayoutOf, Primitive, Size};
+use rustc_target::abi::{self, AddressSpace, HasDataLayout, Integer, Primitive, Size};
 
 impl<'tcx> CodegenCx<'tcx> {
     pub fn constant_u8(&self, span: Span, val: u8) -> SpirvValue {
@@ -207,7 +208,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     fn scalar_to_backend(
         &self,
         scalar: Scalar,
-        layout: &abi::Scalar,
+        layout: abi::Scalar,
         ty: Self::Type,
     ) -> Self::Value {
         match scalar {
@@ -426,7 +427,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 // tldr, the pointer here is only needed for the offset
                 let value = match alloc.read_scalar(self, alloc_range(*offset, size)).unwrap() {
                     ScalarMaybeUninit::Scalar(scalar) => {
-                        self.scalar_to_backend(scalar, &self.primitive_to_scalar(primitive), ty)
+                        self.scalar_to_backend(scalar, self.primitive_to_scalar(primitive), ty)
                     }
                     ScalarMaybeUninit::Uninit => self.undef(ty),
                 };

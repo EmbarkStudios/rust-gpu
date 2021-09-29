@@ -4,31 +4,65 @@ use crate::spirv_type::SpirvType;
 use rspirv::spirv::Word;
 use rustc_codegen_ssa::common::TypeKind;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, LayoutTypeMethods};
-use rustc_middle::bug;
-use rustc_middle::ty::layout::{LayoutError, TyAndLayout};
-use rustc_middle::ty::{ParamEnv, Ty};
+use rustc_middle::ty::layout::{
+    FnAbiError, FnAbiOfHelpers, FnAbiRequest, LayoutError, LayoutOfHelpers, TyAndLayout,
+};
+use rustc_middle::ty::Ty;
+use rustc_middle::{bug, span_bug};
 use rustc_span::source_map::{Span, DUMMY_SP};
 use rustc_target::abi::call::{CastTarget, FnAbi, Reg};
-use rustc_target::abi::{Abi, AddressSpace, FieldsShape, LayoutOf};
+use rustc_target::abi::{Abi, AddressSpace, FieldsShape};
 
-impl<'tcx> LayoutOf for CodegenCx<'tcx> {
-    type Ty = Ty<'tcx>;
-    type TyAndLayout = TyAndLayout<'tcx>;
+impl<'tcx> LayoutOfHelpers<'tcx> for CodegenCx<'tcx> {
+    type LayoutOfResult = TyAndLayout<'tcx>;
 
-    fn layout_of(&self, ty: Ty<'tcx>) -> Self::TyAndLayout {
-        self.spanned_layout_of(ty, DUMMY_SP)
+    #[inline]
+    fn handle_layout_err(&self, err: LayoutError<'tcx>, span: Span, ty: Ty<'tcx>) -> ! {
+        if let LayoutError::SizeOverflow(_) = err {
+            self.tcx.sess.span_fatal(span, &err.to_string())
+        } else {
+            span_bug!(span, "failed to get layout for `{}`: {}", ty, err)
+        }
     }
+}
 
-    fn spanned_layout_of(&self, ty: Ty<'tcx>, span: Span) -> Self::TyAndLayout {
-        self.tcx
-            .layout_of(ParamEnv::reveal_all().and(ty))
-            .unwrap_or_else(|e| {
-                if let LayoutError::SizeOverflow(_) = e {
-                    self.tcx.sess.span_fatal(span, &e.to_string())
-                } else {
-                    bug!("failed to get layout for `{}`: {}", ty, e)
+impl<'tcx> FnAbiOfHelpers<'tcx> for CodegenCx<'tcx> {
+    type FnAbiOfResult = &'tcx FnAbi<'tcx, Ty<'tcx>>;
+
+    #[inline]
+    fn handle_fn_abi_err(
+        &self,
+        err: FnAbiError<'tcx>,
+        span: Span,
+        fn_abi_request: FnAbiRequest<'tcx>,
+    ) -> ! {
+        if let FnAbiError::Layout(LayoutError::SizeOverflow(_)) = err {
+            self.tcx.sess.span_fatal(span, &err.to_string())
+        } else {
+            match fn_abi_request {
+                FnAbiRequest::OfFnPtr { sig, extra_args } => {
+                    span_bug!(
+                        span,
+                        "`fn_abi_of_fn_ptr({}, {:?})` failed: {}",
+                        sig,
+                        extra_args,
+                        err
+                    );
                 }
-            })
+                FnAbiRequest::OfInstance {
+                    instance,
+                    extra_args,
+                } => {
+                    span_bug!(
+                        span,
+                        "`fn_abi_of_instance({}, {:?})` failed: {}",
+                        instance,
+                        extra_args,
+                        err
+                    );
+                }
+            }
+        }
     }
 }
 

@@ -6,7 +6,7 @@
 // normalize-stderr-test "OpExtension .SPV_KHR_vulkan_memory_model.\n" -> ""
 // normalize-stderr-test "OpMemoryModel Logical Vulkan" -> "OpMemoryModel Logical Simple"
 
-#![feature(const_generics)]
+#![feature(adt_const_params)]
 #![allow(incomplete_features)]
 
 use spirv_std::image::Dimensionality;

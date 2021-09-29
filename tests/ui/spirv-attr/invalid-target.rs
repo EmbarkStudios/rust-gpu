@@ -17,10 +17,10 @@
 // * builtin: `position`
 
 // NOTE(eddyb) accounting for the number of errors this test actually produces:
-// * 461 "attribute is only valid on" errors (see `invalid-target.stderr`)
-// * 40 `#[spirv(...)]` (excluding `macro_rules!`, which doesn't get the above error)
-// * at most 12 attributes per `#[spirv(...)]`, so an upper bound of `40*12 = 480`
-// * the difference between 480 and 461 is 19, i.e. valid attributes, made up of:
+// * 473 errors, all "attribute is only valid on" (see `invalid-target.stderr`)
+// * 41 uses of `#[spirv(...)]` in this test
+// * at most 12 attributes per `#[spirv(...)]`, so an upper bound of `41*12 = 492`
+// * the difference between 492 and 473 is 19, i.e. valid attributes, made up of:
 //   * 4 on `_Struct`
 //   * 8 on functions, i.e. 2 on each of:
 //     * `_inherent_method`

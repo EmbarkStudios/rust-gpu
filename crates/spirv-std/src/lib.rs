@@ -11,7 +11,7 @@
     ),
     register_attr(spirv)
 )]
-#![feature(const_generics)]
+#![feature(adt_const_params)]
 // BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
@@ -88,7 +88,7 @@
     // We deblierately provide an unimplemented version of our API on CPU
     // platforms so that code completion still works.
     clippy::unimplemented,
-    // The part of `const-generics` we're using (C-like enums) is not incomplete.
+    // The part of `adt_const_params` we're using (C-like enums) is not incomplete.
     incomplete_features,
 )]
 
