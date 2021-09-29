@@ -16,10 +16,9 @@ use rustc_codegen_ssa::MemFlags;
 use rustc_middle::bug;
 use rustc_middle::ty::Ty;
 use rustc_span::Span;
-use rustc_target::abi::{Abi, Align, Scalar, Size};
+use rustc_target::abi::{Abi, Align, Scalar, Size, WrappingRange};
 use std::convert::TryInto;
 use std::iter::{self, empty};
-use std::ops::Range;
 
 macro_rules! simple_op {
     (
@@ -794,7 +793,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     // silly clippy, we can't rename this!
     #[allow(clippy::wrong_self_convention)]
-    fn to_immediate_scalar(&mut self, val: Self::Value, scalar: &Scalar) -> Self::Value {
+    fn to_immediate_scalar(&mut self, val: Self::Value, scalar: Scalar) -> Self::Value {
         if scalar.is_bool() {
             let bool = SpirvType::Bool.def(self.span(), self);
             return self.trunc(val, bool);
@@ -982,7 +981,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         self
     }
 
-    fn range_metadata(&mut self, _load: Self::Value, _range: Range<u128>) {
+    fn range_metadata(&mut self, _load: Self::Value, _range: WrappingRange) {
         // ignore
     }
 

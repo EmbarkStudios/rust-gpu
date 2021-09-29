@@ -9,18 +9,17 @@ use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
 use rustc_index::vec::Idx;
 use rustc_middle::bug;
-use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
+use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
 use rustc_middle::ty::subst::SubstsRef;
 use rustc_middle::ty::{
-    Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyKind, TypeAndMut, UintTy,
+    self, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyKind, TypeAndMut,
+    UintTy,
 };
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_span::DUMMY_SP;
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
-use rustc_target::abi::{
-    Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, VariantIdx, Variants,
-};
+use rustc_target::abi::{Abi, Align, FieldsShape, Primitive, Scalar, Size, VariantIdx, Variants};
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::fmt;
@@ -150,13 +149,17 @@ impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
     fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
         match *self {
             PointeeTy::Ty(ty) => ty.spirv_type(span, cx),
-            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type(span, cx),
+            PointeeTy::Fn(ty) => cx
+                .fn_abi_of_fn_ptr(ty, ty::List::empty())
+                .spirv_type(span, cx),
         }
     }
     fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
         match *self {
             PointeeTy::Ty(ty) => ty.spirv_type_immediate(span, cx),
-            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type_immediate(span, cx),
+            PointeeTy::Fn(ty) => cx
+                .fn_abi_of_fn_ptr(ty, ty::List::empty())
+                .spirv_type_immediate(span, cx),
         }
     }
 }

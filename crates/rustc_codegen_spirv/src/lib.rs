@@ -118,7 +118,6 @@ extern crate rustc_hir;
 extern crate rustc_index;
 extern crate rustc_interface;
 extern crate rustc_middle;
-extern crate rustc_mir;
 extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
@@ -171,9 +170,9 @@ use rustc_errors::{ErrorReported, FatalError, Handler};
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
 use rustc_middle::middle::cstore::EncodedMetadata;
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
+use rustc_middle::mir::pretty::write_mir_pretty;
 use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::{self, query, DefIdTree, Instance, InstanceDef, TyCtxt};
-use rustc_mir::util::write_mir_pretty;
 use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
@@ -500,6 +499,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         &self,
         _: TyCtxt<'tcx>,
         _: &mut Self::Module,
+        _: &str,
         _: AllocatorKind,
         _: bool,
     ) {

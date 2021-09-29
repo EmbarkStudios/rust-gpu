@@ -9,12 +9,11 @@ use rustc_codegen_ssa::traits::{BaseTypeMethods, PreDefineMethods, StaticMethods
 use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
-use rustc_middle::ty::layout::FnAbiExt;
+use rustc_middle::ty::layout::{FnAbiOf, LayoutOf};
 use rustc_middle::ty::{self, Instance, ParamEnv, TypeFoldable};
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
-use rustc_target::abi::call::FnAbi;
-use rustc_target::abi::{Align, LayoutOf};
+use rustc_target::abi::Align;
 
 fn attrs_to_spirv(attrs: &CodegenFnAttrs) -> FunctionControl {
     let mut control = FunctionControl::NONE;
@@ -58,7 +57,7 @@ impl<'tcx> CodegenCx<'tcx> {
     // PreDefineMethods::predefine_fn -> declare_fn_ext
     fn declare_fn_ext(&self, instance: Instance<'tcx>, linkage: Option<LinkageType>) -> SpirvValue {
         let control = attrs_to_spirv(self.tcx.codegen_fn_attrs(instance.def_id()));
-        let fn_abi = FnAbi::of_instance(self, instance, &[]);
+        let fn_abi = self.fn_abi_of_instance(instance, ty::List::empty());
         let span = self.tcx.def_span(instance.def_id());
         let function_type = fn_abi.spirv_type(span, self);
         let (return_type, argument_types) = match self.lookup_type(function_type) {
@@ -116,7 +115,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 .as_ref()
                 .map(ToString::to_string)
                 .unwrap_or_else(|| instance.to_string());
-            self.entry_stub(&instance, &fn_abi, declared, entry_name, entry);
+            self.entry_stub(&instance, fn_abi, declared, entry_name, entry);
         }
         if attrs.unroll_loops.is_some() {
             self.unroll_loops_decorations.borrow_mut().insert(fn_id);

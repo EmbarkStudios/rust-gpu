@@ -8,11 +8,11 @@ use rustc_codegen_ssa::mir::operand::OperandRef;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BuilderMethods, IntrinsicCallMethods};
 use rustc_middle::bug;
+use rustc_middle::ty::layout::LayoutOf;
 use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyKind};
 use rustc_span::source_map::Span;
 use rustc_span::sym;
 use rustc_target::abi::call::{FnAbi, PassMode};
-use rustc_target::abi::LayoutOf;
 
 fn int_type_width_signed(ty: Ty<'_>, cx: &CodegenCx<'_>) -> Option<(u64, bool)> {
     match ty.kind() {
