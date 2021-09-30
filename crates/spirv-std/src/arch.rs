@@ -155,7 +155,11 @@ pub fn kill() -> ! {
 ///
 /// See:
 /// <https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_shader_clock.html>
-#[cfg(all(target_feature = "Int64", target_feature = "ShaderClockKHR", target_feature = "ext:SPV_KHR_shader_clock"))]
+#[cfg(all(
+    target_feature = "Int64",
+    target_feature = "ShaderClockKHR",
+    target_feature = "ext:SPV_KHR_shader_clock"
+))]
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpReadClockKHR")]
 pub unsafe fn read_clock_khr<const SCOPE: u32>() -> u64 {
@@ -176,7 +180,10 @@ pub unsafe fn read_clock_khr<const SCOPE: u32>() -> u64 {
 /// capability. It returns a 'vector of two-components of 32-bit unsigned
 /// integer type with the first component containing the 32 least significant
 /// bits and the second component containing the 32 most significant bits.'
-#[cfg(all(target_feature = "ShaderClockKHR", target_feature = "ext:SPV_KHR_shader_clock"))]
+#[cfg(all(
+    target_feature = "ShaderClockKHR",
+    target_feature = "ext:SPV_KHR_shader_clock"
+))]
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpReadClockKHR")]
 pub unsafe fn read_clock_uvec2_khr<V: Vector<u32, 2>, const SCOPE: u32>() -> V {
