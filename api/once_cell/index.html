@@ -195,16 +195,17 @@ runtime:</p>
     <span class="ident">b</span>.<span class="ident">a</span>.<span class="ident">init</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>);
     <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">a</span>.<span class="ident">b</span>.<span class="ident">a</span>.<span class="ident">b</span>.<span class="ident">a</span>);
 }</code></pre></div>
-<h1 id="comparison-with-std" class="section-header"><a href="#comparison-with-std">Comparison with std</a></h1><table><thead><tr><th><code>!Sync</code> types</th><th>Access Mode</th><th>Drawbacks</th></tr></thead><tbody>
+<h1 id="comparison-with-std" class="section-header"><a href="#comparison-with-std">Comparison with std</a></h1><div><table><thead><tr><th><code>!Sync</code> types</th><th>Access Mode</th><th>Drawbacks</th></tr></thead><tbody>
 <tr><td><code>Cell&lt;T&gt;</code></td><td><code>T</code></td><td>requires <code>T: Copy</code> for <code>get</code></td></tr>
 <tr><td><code>RefCell&lt;T&gt;</code></td><td><code>RefMut&lt;T&gt;</code> / <code>Ref&lt;T&gt;</code></td><td>may panic at runtime</td></tr>
 <tr><td><code>unsync::OnceCell&lt;T&gt;</code></td><td><code>&amp;T</code></td><td>assignable only once</td></tr>
 </tbody></table>
-<table><thead><tr><th><code>Sync</code> types</th><th>Access Mode</th><th>Drawbacks</th></tr></thead><tbody>
+</div><div><table><thead><tr><th><code>Sync</code> types</th><th>Access Mode</th><th>Drawbacks</th></tr></thead><tbody>
 <tr><td><code>AtomicT</code></td><td><code>T</code></td><td>works only with certain <code>Copy</code> types</td></tr>
 <tr><td><code>Mutex&lt;T&gt;</code></td><td><code>MutexGuard&lt;T&gt;</code></td><td>may deadlock at runtime, may block the thread</td></tr>
 <tr><td><code>sync::OnceCell&lt;T&gt;</code></td><td><code>&amp;T</code></td><td>assignable only once, may block the thread</td></tr>
 </tbody></table>
+</div>
 <p>Technically, calling <code>get_or_init</code> will also cause a panic or a deadlock if it recursively calls
 itself. However, because the assignment can happen only once, such cases should be more rare than
 equivalents with <code>RefCell</code> and <code>Mutex</code>.</p>

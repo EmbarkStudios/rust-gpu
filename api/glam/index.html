@@ -51,12 +51,13 @@ other SIMD architectures once they appear in stable Rust.</p>
 <p><code>Vec3A</code> is a SIMD optimized version of the <code>Vec3</code> type, which due to 16 byte alignment results
 in <code>Vec3A</code> containing 4 bytes of padding making it 16 bytes in size in total. <code>Mat3A</code> is composed
 of three <code>Vec3A</code> columns.</p>
-<table><thead><tr><th align="left">Type</th><th align="right"><code>f32</code> bytes</th><th align="right">Align bytes</th><th align="right">Size bytes</th><th align="right">Padding</th></tr></thead><tbody>
+<div><table><thead><tr><th align="left">Type</th><th align="right"><code>f32</code> bytes</th><th align="right">Align bytes</th><th align="right">Size bytes</th><th align="right">Padding</th></tr></thead><tbody>
 <tr><td align="left"><a href="f32/struct.Vec3.html" title="Vec3"><code>Vec3</code></a></td><td align="right">12</td><td align="right">4</td><td align="right">12</td><td align="right">0</td></tr>
 <tr><td align="left"><a href="f32/struct.Vec3A.html" title="Vec3A"><code>Vec3A</code></a></td><td align="right">12</td><td align="right">16</td><td align="right">16</td><td align="right">4</td></tr>
 <tr><td align="left"><a href="f32/struct.Mat3.html" title="Mat3"><code>Mat3</code></a></td><td align="right">36</td><td align="right">4</td><td align="right">36</td><td align="right">0</td></tr>
 <tr><td align="left"><a href="f32/struct.Mat3A.html" title="Mat3A"><code>Mat3A</code></a></td><td align="right">36</td><td align="right">16</td><td align="right">48</td><td align="right">12</td></tr>
 </tbody></table>
+</div>
 <p>Despite this wasted space the SIMD implementations tend to outperform <code>f32</code> implementations in
 <a href="https://github.com/bitshifter/mathbench-rs"><strong>mathbench</strong></a> benchmarks.</p>
 <p><code>glam</code> treats <a href="f32/struct.Vec3.html" title="Vec3"><code>Vec3</code></a> as the default 3D vector type and <a href="f32/struct.Vec3A.html" title="Vec3A"><code>Vec3A</code></a> a special case for optimization.
@@ -83,15 +84,16 @@ When methods need to return a 3D vector they will generally return <a href="f32/
 <p><code>Affine2</code> and <code>Affine3A</code> are composed of a linear transform matrix and a vector translation. The
 represent 2D and 3D affine transformations which are commonly used in games.</p>
 <p>The table below shows the performance advantage of <code>Affine2</code> over <code>Mat3A</code> and <code>Mat3A</code> over <code>Mat3</code>.</p>
-<table><thead><tr><th>operation</th><th><code>Mat3</code></th><th><code>Mat3A</code></th><th><code>Affine2</code></th></tr></thead><tbody>
+<div><table><thead><tr><th>operation</th><th><code>Mat3</code></th><th><code>Mat3A</code></th><th><code>Affine2</code></th></tr></thead><tbody>
 <tr><td>inverse</td><td>11.4±0.09ns</td><td>7.1±0.09ns</td><td>5.4±0.06ns</td></tr>
 <tr><td>mul self</td><td>10.5±0.04ns</td><td>5.2±0.05ns</td><td>4.0±0.05ns</td></tr>
 <tr><td>transform point2</td><td>2.7±0.02ns</td><td>2.7±0.03ns</td><td>2.8±0.04ns</td></tr>
 <tr><td>transform vector2</td><td>2.6±0.01ns</td><td>2.6±0.03ns</td><td>2.3±0.02ns</td></tr>
 </tbody></table>
+</div>
 <p>Performance is much closer between <code>Mat4</code> and <code>Affine3A</code> with the affine type being faster to
 invert.</p>
-<table><thead><tr><th>operation</th><th><code>Mat4</code></th><th><code>Affine3A</code></th></tr></thead><tbody>
+<div><table><thead><tr><th>operation</th><th><code>Mat4</code></th><th><code>Affine3A</code></th></tr></thead><tbody>
 <tr><td>inverse</td><td>15.9±0.11ns</td><td>10.8±0.06ns</td></tr>
 <tr><td>mul self</td><td>7.3±0.05ns</td><td>7.0±0.06ns</td></tr>
 <tr><td>transform point3</td><td>3.6±0.02ns</td><td>4.3±0.04ns</td></tr>
@@ -99,6 +101,7 @@ invert.</p>
 <tr><td>transform vector3</td><td>4.1±0.02ns</td><td>3.9±0.04ns</td></tr>
 <tr><td>transform vector3a</td><td>2.8±0.02ns</td><td>2.8±0.02ns</td></tr>
 </tbody></table>
+</div>
 <p>Benchmarks were taken on an Intel Core i7-4710HQ.</p>
 <h2 id="linear-algebra-conventions" class="section-header"><a href="#linear-algebra-conventions">Linear algebra conventions</a></h2>
 <p><code>glam</code> interprets vectors as column matrices (also known as column vectors) meaning when

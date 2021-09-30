@@ -885,6 +885,9 @@
 <span id="885">885</span>
 <span id="886">886</span>
 <span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s</span>
 <span class="doccomment">//! surprisingly difficult.</span>
 
@@ -896,18 +899,17 @@
 <span class="kw">use</span> <span class="ident">rustc_errors::ErrorReported</span>;
 <span class="kw">use</span> <span class="ident">rustc_index::vec::Idx</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle::ty::layout</span>::{<span class="ident">FnAbiExt</span>, <span class="ident">TyAndLayout</span>};
+<span class="kw">use</span> <span class="ident">rustc_middle::ty::layout</span>::{<span class="ident">FnAbiOf</span>, <span class="ident">LayoutOf</span>, <span class="ident">TyAndLayout</span>};
 <span class="kw">use</span> <span class="ident">rustc_middle::ty::subst::SubstsRef</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::ty</span>::{
-    <span class="ident">Const</span>, <span class="ident">FloatTy</span>, <span class="ident">GeneratorSubsts</span>, <span class="ident">IntTy</span>, <span class="ident">ParamEnv</span>, <span class="ident">PolyFnSig</span>, <span class="ident">Ty</span>, <span class="ident">TyKind</span>, <span class="ident">TypeAndMut</span>, <span class="ident">UintTy</span>,
+    <span class="self">self</span>, <span class="ident">Const</span>, <span class="ident">FloatTy</span>, <span class="ident">GeneratorSubsts</span>, <span class="ident">IntTy</span>, <span class="ident">ParamEnv</span>, <span class="ident">PolyFnSig</span>, <span class="ident">Ty</span>, <span class="ident">TyKind</span>, <span class="ident">TypeAndMut</span>,
+    <span class="ident">UintTy</span>,
 };
 <span class="kw">use</span> <span class="ident">rustc_span::def_id::DefId</span>;
 <span class="kw">use</span> <span class="ident">rustc_span::Span</span>;
 <span class="kw">use</span> <span class="ident">rustc_span::DUMMY_SP</span>;
 <span class="kw">use</span> <span class="ident">rustc_target::abi::call</span>::{<span class="ident">CastTarget</span>, <span class="ident">FnAbi</span>, <span class="ident">PassMode</span>, <span class="ident">Reg</span>, <span class="ident">RegKind</span>};
-<span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{
-    <span class="ident">Abi</span>, <span class="ident">Align</span>, <span class="ident">FieldsShape</span>, <span class="ident">LayoutOf</span>, <span class="ident">Primitive</span>, <span class="ident">Scalar</span>, <span class="ident">Size</span>, <span class="ident">VariantIdx</span>, <span class="ident">Variants</span>,
-};
+<span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{<span class="ident">Abi</span>, <span class="ident">Align</span>, <span class="ident">FieldsShape</span>, <span class="ident">Primitive</span>, <span class="ident">Scalar</span>, <span class="ident">Size</span>, <span class="ident">VariantIdx</span>, <span class="ident">Variants</span>};
 <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
 <span class="kw">use</span> <span class="ident">std::collections::hash_map::Entry</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
@@ -1037,13 +1039,17 @@
     <span class="kw">fn</span> <span class="ident">spirv_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="ident">PointeeTy::Ty</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty</span>.<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
-            <span class="ident">PointeeTy::Fn</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FnAbi::of_fn_ptr</span>(<span class="ident">cx</span>, <span class="ident">ty</span>, <span class="kw-2">&amp;</span>[]).<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
+            <span class="ident">PointeeTy::Fn</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
+                .<span class="ident">fn_abi_of_fn_ptr</span>(<span class="ident">ty</span>, <span class="ident">ty::List::empty</span>())
+                .<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
         }
     }
     <span class="kw">fn</span> <span class="ident">spirv_type_immediate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="ident">PointeeTy::Ty</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty</span>.<span class="ident">spirv_type_immediate</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
-            <span class="ident">PointeeTy::Fn</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FnAbi::of_fn_ptr</span>(<span class="ident">cx</span>, <span class="ident">ty</span>, <span class="kw-2">&amp;</span>[]).<span class="ident">spirv_type_immediate</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
+            <span class="ident">PointeeTy::Fn</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cx</span>
+                .<span class="ident">fn_abi_of_fn_ptr</span>(<span class="ident">ty</span>, <span class="ident">ty::List::empty</span>())
+                .<span class="ident">spirv_type_immediate</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
         }
     }
 }

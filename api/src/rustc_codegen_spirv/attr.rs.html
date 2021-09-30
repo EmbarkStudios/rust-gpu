@@ -508,27 +508,6 @@
 <span id="508">508</span>
 <span id="509">509</span>
 <span id="510">510</span>
-<span id="511">511</span>
-<span id="512">512</span>
-<span id="513">513</span>
-<span id="514">514</span>
-<span id="515">515</span>
-<span id="516">516</span>
-<span id="517">517</span>
-<span id="518">518</span>
-<span id="519">519</span>
-<span id="520">520</span>
-<span id="521">521</span>
-<span id="522">522</span>
-<span id="523">523</span>
-<span id="524">524</span>
-<span id="525">525</span>
-<span id="526">526</span>
-<span id="527">527</span>
-<span id="528">528</span>
-<span id="529">529</span>
-<span id="530">530</span>
-<span id="531">531</span>
 </pre><pre class="rust"><code><span class="doccomment">//! `#[spirv(...)]` attribute support.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The attribute-checking parts of this try to follow `rustc_passes::check_attr`.</span>
@@ -1007,24 +986,10 @@
         <span class="ident">intravisit::walk_variant</span>(<span class="self">self</span>, <span class="ident">variant</span>, <span class="ident">generics</span>, <span class="ident">item_id</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">visit_macro_def</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">macro_def</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::MacroDef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">macro_def</span>.<span class="ident">hir_id</span>(), <span class="ident">Target::MacroDef</span>);
-        <span class="ident">intravisit::walk_macro_def</span>(<span class="self">self</span>, <span class="ident">macro_def</span>);
-    }
-
     <span class="kw">fn</span> <span class="ident">visit_param</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">param</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::Param</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">param</span>.<span class="ident">hir_id</span>, <span class="ident">Target::Param</span>);
 
         <span class="ident">intravisit::walk_param</span>(<span class="self">self</span>, <span class="ident">param</span>);
-    }
-}
-
-<span class="kw">fn</span> <span class="ident">check_invalid_macro_level_spirv_attr</span>(<span class="ident">tcx</span>: <span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">sym</span>: <span class="kw-2">&amp;</span><span class="ident">Symbols</span>, <span class="ident">attrs</span>: <span class="kw-2">&amp;</span>[<span class="ident">Attribute</span>]) {
-    <span class="kw">for</span> <span class="ident">attr</span> <span class="kw">in</span> <span class="ident">attrs</span> {
-        <span class="kw">if</span> <span class="ident">attr</span>.<span class="ident">has_name</span>(<span class="ident">sym</span>.<span class="ident">spirv</span>) {
-            <span class="ident">tcx</span>.<span class="ident">sess</span>
-                .<span class="ident">span_err</span>(<span class="ident">attr</span>.<span class="ident">span</span>, <span class="string">&quot;#[spirv(..)] cannot be applied to a macro&quot;</span>);
-        }
     }
 }
 
@@ -1037,13 +1002,6 @@
     <span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">visit_item_likes_in_module</span>(
         <span class="ident">module_def_id</span>,
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">check_spirv_attr_visitor</span>.<span class="ident">as_deep_visitor</span>(),
-    );
-    <span class="ident">tcx</span>.<span class="ident">hir</span>()
-        .<span class="ident">visit_exported_macros_in_krate</span>(<span class="ident">check_spirv_attr_visitor</span>);
-    <span class="ident">check_invalid_macro_level_spirv_attr</span>(
-        <span class="ident">tcx</span>,
-        <span class="kw-2">&amp;</span><span class="ident">check_spirv_attr_visitor</span>.<span class="ident">sym</span>,
-        <span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">krate</span>().<span class="ident">non_exported_macro_attrs</span>,
     );
     <span class="kw">if</span> <span class="ident">module_def_id</span>.<span class="ident">is_top_level_module</span>() {
         <span class="ident">check_spirv_attr_visitor</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">CRATE_HIR_ID</span>, <span class="ident">Target::Mod</span>);

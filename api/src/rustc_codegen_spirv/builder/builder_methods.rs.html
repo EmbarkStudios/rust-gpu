@@ -2235,7 +2235,6 @@
 <span id="2235">2235</span>
 <span id="2236">2236</span>
 <span id="2237">2237</span>
-<span id="2238">2238</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Builder</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::abi::ConvSpirvType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder_spirv</span>::{<span class="ident">BuilderCursor</span>, <span class="ident">SpirvConst</span>, <span class="ident">SpirvValue</span>, <span class="ident">SpirvValueExt</span>, <span class="ident">SpirvValueKind</span>};
@@ -2254,10 +2253,9 @@
 <span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::ty::Ty</span>;
 <span class="kw">use</span> <span class="ident">rustc_span::Span</span>;
-<span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{<span class="ident">Abi</span>, <span class="ident">Align</span>, <span class="ident">Scalar</span>, <span class="ident">Size</span>};
+<span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{<span class="ident">Abi</span>, <span class="ident">Align</span>, <span class="ident">Scalar</span>, <span class="ident">Size</span>, <span class="ident">WrappingRange</span>};
 <span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
 <span class="kw">use</span> <span class="ident">std::iter</span>::{<span class="self">self</span>, <span class="ident">empty</span>};
-<span class="kw">use</span> <span class="ident">std::ops::Range</span>;
 
 <span class="macro">macro_rules!</span> <span class="ident">simple_op</span> {
     (
@@ -3032,7 +3030,7 @@
 
     <span class="comment">// silly clippy, we can&#39;t rename this!</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::wrong_self_convention</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">to_immediate_scalar</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">scalar</span>: <span class="kw-2">&amp;</span><span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Value</span> {
+    <span class="kw">fn</span> <span class="ident">to_immediate_scalar</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">scalar</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Value</span> {
         <span class="kw">if</span> <span class="ident">scalar</span>.<span class="ident">is_bool</span>() {
             <span class="kw">let</span> <span class="ident">bool</span> <span class="op">=</span> <span class="ident">SpirvType::Bool</span>.<span class="ident">def</span>(<span class="self">self</span>.<span class="ident">span</span>(), <span class="self">self</span>);
             <span class="kw">return</span> <span class="self">self</span>.<span class="ident">trunc</span>(<span class="ident">val</span>, <span class="ident">bool</span>);
@@ -3220,7 +3218,7 @@
         <span class="self">self</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">range_metadata</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_load</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u128</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">range_metadata</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_load</span>: <span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">_range</span>: <span class="ident">WrappingRange</span>) {
         <span class="comment">// ignore</span>
     }
 
