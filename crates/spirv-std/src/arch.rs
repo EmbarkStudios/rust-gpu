@@ -151,16 +151,37 @@ pub fn kill() -> ! {
     unsafe { asm!("OpKill", options(noreturn)) }
 }
 
-/// Read from the shader clock.
+/// Read from the subgroup shader clock.
 ///
-/// Requires the `SPV_KHR_shader_clock` extension and the `ShaderClockKHR` capability.
+/// Requires the `SPV_KHR_shader_clock` extension and both the `Int64` and `ShaderClockKHR` capabilities.
 ///
 /// See:
 /// <https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_shader_clock.html>
+#[cfg(target_feature = "Int64")]
 #[spirv_std_macros::gpu_only]
 #[doc(alias = "OpReadClockKHR")]
 pub unsafe fn read_clock_khr() -> u64 {
-    let mut result: u64 = 0;
+    let mut result: u64;
+
+    asm! {
+        "%uint = OpTypeInt 32 0",
+        "%scope = OpConstant %uint {scope}",
+        "{result} = OpReadClockKHR typeof*{result} %scope",
+        result = out(reg) result,
+        scope = const crate::memory::Scope::Subgroup as _,
+    };
+
+    result
+}
+
+/// Like `read_clock_khr` but returns a vector to avoid requiring the `Int64`
+/// capability. It returns a 'vector of two-components of 32-bit unsigned
+/// integer type with the first component containing the 32 least significant
+/// bits and the second component containing the 32 most significant bits.'
+#[spirv_std_macros::gpu_only]
+#[doc(alias = "OpReadClockKHR")]
+pub unsafe fn read_clock_uvec2_khr<V: Vector<u32, 2>>() -> V {
+    let mut result = V::default();
 
     asm! {
         "%uint = OpTypeInt 32 0",
