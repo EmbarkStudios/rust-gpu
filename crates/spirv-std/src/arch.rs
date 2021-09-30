@@ -151,7 +151,7 @@ pub fn kill() -> ! {
     unsafe { asm!("OpKill", options(noreturn)) }
 }
 
-/// Read from the subgroup shader clock.
+/// Read from the shader clock with either the `Subgroup` or `Device` scope.
 ///
 /// See:
 /// <https://htmlpreview.github.io/?https://github.com/KhronosGroup/SPIRV-Registry/blob/master/extensions/KHR/SPV_KHR_shader_clock.html>
