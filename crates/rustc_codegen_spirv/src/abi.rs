@@ -767,18 +767,6 @@ fn trans_intrinsic_type<'tcx>(
             // let image_format: spirv::ImageFormat =
             //     type_from_variant_discriminant(cx, substs.const_at(6));
 
-            // let access_qualifier = {
-            //     let option = cx
-            //         .tcx
-            //         .destructure_const(ParamEnv::reveal_all().and(substs.const_at(7)));
-
-            //     match option.variant.map(|i| i.as_u32()).unwrap_or(0) {
-            //         0 => None,
-            //         1 => Some(type_from_variant_discriminant(cx, option.fields[0])),
-            //         _ => unreachable!(),
-            //     }
-            // };
-
             fn const_int_value<'tcx, P: FromPrimitive>(
                 cx: &CodegenCx<'tcx>,
                 const_: &'tcx Const<'tcx>,
@@ -802,21 +790,6 @@ fn trans_intrinsic_type<'tcx>(
             let multisampled = const_int_value(cx, substs.const_at(4))?;
             let sampled = const_int_value(cx, substs.const_at(5))?;
             let image_format = const_int_value(cx, substs.const_at(6))?;
-            let access_qualifier: i32 = const_int_value(cx, substs.const_at(6))?;
-            let access_qualifier = if access_qualifier == -1 {
-                None
-            } else {
-                match AccessQualifier::from_u32(access_qualifier as u32) {
-                    Some(v) => Some(v),
-                    None => {
-                        cx.tcx.sess.err(&format!(
-                            "Invalid value for Image const generic access qualifier: {}",
-                            access_qualifier
-                        ));
-                        return Err(ErrorReported);
-                    }
-                }
-            };
 
             let ty = SpirvType::Image {
                 sampled_type,
@@ -826,7 +799,6 @@ fn trans_intrinsic_type<'tcx>(
                 multisampled,
                 sampled,
                 image_format,
-                access_qualifier,
             };
             Ok(ty.def(span, cx))
         }
