@@ -11,7 +11,6 @@
     ),
     register_attr(spirv)
 )]
-#![feature(adt_const_params)]
 // BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
 // for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>

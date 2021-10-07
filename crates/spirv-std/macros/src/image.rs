@@ -25,7 +25,6 @@ type, or use `format` to set the image to a specific image format.";
 
 /// Creates an `Image` type using the following syntax.
 pub struct ImageType {
-    access_qualifier: Option<AccessQualifier>,
     arrayed: Arrayed,
     crate_root: Option<syn::Path>,
     depth: ImageDepth,
@@ -38,7 +37,6 @@ pub struct ImageType {
 
 impl Parse for ImageType {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
-        let mut access_qualifier = None;
         let mut sampled_type = None;
         let mut dimensionality = None;
         let mut arrayed = None;
@@ -86,20 +84,7 @@ impl Parse for ImageType {
             } else if input.peek(syn::Ident) {
                 let ident = input.parse::<Ident>().unwrap();
 
-                if ident == "access" {
-                    let value = peek_and_eat_value!(syn::Ident)
-                        .as_ref()
-                        .map(|i| params::access_qualifier_from_str(&i.to_string()));
-
-                    if value.is_none() {
-                        return Err(syn::Error::new(
-                            ident.span(),
-                            "Expected argument for `access`.",
-                        ));
-                    }
-
-                    access_qualifier = value.unwrap().ok();
-                } else if ident == "buffer" {
+                if ident == "buffer" {
                     set_unique!(dimensionality = Dimensionality::Buffer);
                 } else if ident == "cube" {
                     set_unique!(dimensionality = Dimensionality::Cube);
@@ -302,7 +287,6 @@ impl Parse for ImageType {
         let sampled = sampled.unwrap_or(Sampled::Unknown);
 
         Ok(Self {
-            access_qualifier,
             arrayed,
             crate_root,
             depth,
@@ -326,13 +310,6 @@ impl quote::ToTokens for ImageType {
                 punct
             },
         });
-        let access_qualifier = match self.access_qualifier {
-            Some(aq) => {
-                let aq = params::access_qualifier_to_tokens(&aq);
-                quote!(Some(#crate_root::image::#aq))
-            }
-            None => quote!(None),
-        };
         let dimensionality = params::dimensionality_to_tokens(&self.dimensionality);
         let arrayed = params::arrayed_to_tokens(&self.arrayed);
         let depth = params::image_depth_to_tokens(&self.depth);
@@ -344,13 +321,12 @@ impl quote::ToTokens for ImageType {
         tokens.append_all(quote::quote! {
             #crate_root::image::Image<
                 #crate_root::image::__private::#sampled_type,
-                { #crate_root::image::#dimensionality },
-                { #crate_root::image::#depth },
-                { #crate_root::image::#arrayed },
-                { #crate_root::image::#multisampled },
-                { #crate_root::image::#sampled },
-                { #crate_root::image::#format },
-                { #access_qualifier },
+                { #crate_root::image::#dimensionality as u32 },
+                { #crate_root::image::#depth as u32 },
+                { #crate_root::image::#arrayed as u32 },
+                { #crate_root::image::#multisampled as u32 },
+                { #crate_root::image::#sampled as u32 },
+                { #crate_root::image::#format as u32 },
             >
         });
     }
@@ -359,15 +335,6 @@ impl quote::ToTokens for ImageType {
 mod params {
     use super::*;
     use proc_macro2::TokenStream;
-
-    pub fn access_qualifier_from_str(s: &str) -> Result<AccessQualifier, &'static str> {
-        match s {
-            "read" => Ok(AccessQualifier::ReadOnly),
-            "write" => Ok(AccessQualifier::WriteOnly),
-            "read_write" => Ok(AccessQualifier::ReadWrite),
-            _ => Err("Invalid access qualifier."),
-        }
-    }
 
     pub fn image_format_from_str(s: &str) -> Result<ImageFormat, &'static str> {
         Ok(match s {
@@ -446,14 +413,6 @@ mod params {
                 Self::F32 => quote!(f32),
                 Self::F64 => quote!(f64),
             });
-        }
-    }
-
-    pub fn access_qualifier_to_tokens(aq: &AccessQualifier) -> TokenStream {
-        match aq {
-            AccessQualifier::ReadOnly => quote!(AccessQualifier::ReadOnly),
-            AccessQualifier::WriteOnly => quote!(AccessQualifier::WriteOnly),
-            AccessQualifier::ReadWrite => quote!(AccessQualifier::ReadWrite),
         }
     }
 

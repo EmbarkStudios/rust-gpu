@@ -25,7 +25,6 @@ use std::collections::hash_map::Entry;
 use std::fmt;
 
 use num_traits::cast::FromPrimitive;
-use rspirv::spirv;
 
 /// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk
 /// of the fields will result in an infinite loop. Because pointers are the only thing that are
@@ -715,17 +714,17 @@ fn trans_intrinsic_type<'tcx>(
                 return Err(ErrorReported);
             }
 
-            fn type_from_variant_discriminant<'tcx, P: FromPrimitive>(
-                cx: &CodegenCx<'tcx>,
-                const_: &'tcx Const<'tcx>,
-            ) -> P {
-                let adt_def = const_.ty.ty_adt_def().unwrap();
-                assert!(adt_def.is_enum());
-                let destructured = cx.tcx.destructure_const(ParamEnv::reveal_all().and(const_));
-                let idx = destructured.variant.unwrap();
-                let value = const_.ty.discriminant_for_variant(cx.tcx, idx).unwrap().val as u64;
-                <_>::from_u64(value).unwrap()
-            }
+            // fn type_from_variant_discriminant<'tcx, P: FromPrimitive>(
+            //     cx: &CodegenCx<'tcx>,
+            //     const_: &'tcx Const<'tcx>,
+            // ) -> P {
+            //     let adt_def = const_.ty.ty_adt_def().unwrap();
+            //     assert!(adt_def.is_enum());
+            //     let destructured = cx.tcx.destructure_const(ParamEnv::reveal_all().and(const_));
+            //     let idx = destructured.variant.unwrap();
+            //     let value = const_.ty.discriminant_for_variant(cx.tcx, idx).unwrap().val as u64;
+            //     <_>::from_u64(value).unwrap()
+            // }
 
             let sampled_type = match substs.type_at(0).kind() {
                 TyKind::Int(int) => match int {
@@ -760,25 +759,37 @@ fn trans_intrinsic_type<'tcx>(
                 }
             };
 
-            let dim: spirv::Dim = type_from_variant_discriminant(cx, substs.const_at(1));
-            let depth: u32 = type_from_variant_discriminant(cx, substs.const_at(2));
-            let arrayed: u32 = type_from_variant_discriminant(cx, substs.const_at(3));
-            let multisampled: u32 = type_from_variant_discriminant(cx, substs.const_at(4));
-            let sampled: u32 = type_from_variant_discriminant(cx, substs.const_at(5));
-            let image_format: spirv::ImageFormat =
-                type_from_variant_discriminant(cx, substs.const_at(6));
+            // let dim: spirv::Dim = type_from_variant_discriminant(cx, substs.const_at(1));
+            // let depth: u32 = type_from_variant_discriminant(cx, substs.const_at(2));
+            // let arrayed: u32 = type_from_variant_discriminant(cx, substs.const_at(3));
+            // let multisampled: u32 = type_from_variant_discriminant(cx, substs.const_at(4));
+            // let sampled: u32 = type_from_variant_discriminant(cx, substs.const_at(5));
+            // let image_format: spirv::ImageFormat =
+            //     type_from_variant_discriminant(cx, substs.const_at(6));
 
-            let access_qualifier = {
-                let option = cx
-                    .tcx
-                    .destructure_const(ParamEnv::reveal_all().and(substs.const_at(7)));
-
-                match option.variant.map(|i| i.as_u32()).unwrap_or(0) {
-                    0 => None,
-                    1 => Some(type_from_variant_discriminant(cx, option.fields[0])),
-                    _ => unreachable!(),
+            fn const_int_value<'tcx, P: FromPrimitive>(
+                cx: &CodegenCx<'tcx>,
+                const_: &'tcx Const<'tcx>,
+            ) -> Result<P, ErrorReported> {
+                assert!(const_.ty.is_integral());
+                let value = const_.eval_bits(cx.tcx, ParamEnv::reveal_all(), const_.ty);
+                match P::from_u128(value) {
+                    Some(v) => Ok(v),
+                    None => {
+                        cx.tcx
+                            .sess
+                            .err(&format!("Invalid value for Image const generic: {}", value));
+                        Err(ErrorReported)
+                    }
                 }
-            };
+            }
+
+            let dim = const_int_value(cx, substs.const_at(1))?;
+            let depth = const_int_value(cx, substs.const_at(2))?;
+            let arrayed = const_int_value(cx, substs.const_at(3))?;
+            let multisampled = const_int_value(cx, substs.const_at(4))?;
+            let sampled = const_int_value(cx, substs.const_at(5))?;
+            let image_format = const_int_value(cx, substs.const_at(6))?;
 
             let ty = SpirvType::Image {
                 sampled_type,
@@ -788,7 +799,6 @@ fn trans_intrinsic_type<'tcx>(
                 multisampled,
                 sampled,
                 image_format,
-                access_qualifier,
             };
             Ok(ty.def(span, cx))
         }
