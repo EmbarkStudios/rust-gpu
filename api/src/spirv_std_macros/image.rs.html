@@ -513,47 +513,6 @@
 <span id="513">513</span>
 <span id="514">514</span>
 <span id="515">515</span>
-<span id="516">516</span>
-<span id="517">517</span>
-<span id="518">518</span>
-<span id="519">519</span>
-<span id="520">520</span>
-<span id="521">521</span>
-<span id="522">522</span>
-<span id="523">523</span>
-<span id="524">524</span>
-<span id="525">525</span>
-<span id="526">526</span>
-<span id="527">527</span>
-<span id="528">528</span>
-<span id="529">529</span>
-<span id="530">530</span>
-<span id="531">531</span>
-<span id="532">532</span>
-<span id="533">533</span>
-<span id="534">534</span>
-<span id="535">535</span>
-<span id="536">536</span>
-<span id="537">537</span>
-<span id="538">538</span>
-<span id="539">539</span>
-<span id="540">540</span>
-<span id="541">541</span>
-<span id="542">542</span>
-<span id="543">543</span>
-<span id="544">544</span>
-<span id="545">545</span>
-<span id="546">546</span>
-<span id="547">547</span>
-<span id="548">548</span>
-<span id="549">549</span>
-<span id="550">550</span>
-<span id="551">551</span>
-<span id="552">552</span>
-<span id="553">553</span>
-<span id="554">554</span>
-<span id="555">555</span>
-<span id="556">556</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">proc_macro2::Ident</span>;
 
 <span class="kw">use</span> <span class="ident">quote</span>::{<span class="ident">quote</span>, <span class="ident">TokenStreamExt</span>};
@@ -581,7 +540,6 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
 
 <span class="doccomment">/// Creates an `Image` type using the following syntax.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ImageType</span> {
-    <span class="ident">access_qualifier</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AccessQualifier</span><span class="op">&gt;</span>,
     <span class="ident">arrayed</span>: <span class="ident">Arrayed</span>,
     <span class="ident">crate_root</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::Path</span><span class="op">&gt;</span>,
     <span class="ident">depth</span>: <span class="ident">ImageDepth</span>,
@@ -594,7 +552,6 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
 
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ImageType</span> {
     <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">syn::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">access_qualifier</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sampled_type</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dimensionality</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">arrayed</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -642,20 +599,7 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">syn::Ident</span>) {
                 <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">Ident</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
 
-                <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;access&quot;</span> {
-                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="macro">peek_and_eat_value!</span>(<span class="ident">syn::Ident</span>)
-                        .<span class="ident">as_ref</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">params::access_qualifier_from_str</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">to_string</span>()));
-
-                    <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">is_none</span>() {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">syn::Error::new</span>(
-                            <span class="ident">ident</span>.<span class="ident">span</span>(),
-                            <span class="string">&quot;Expected argument for `access`.&quot;</span>,
-                        ));
-                    }
-
-                    <span class="ident">access_qualifier</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">unwrap</span>().<span class="ident">ok</span>();
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;buffer&quot;</span> {
+                <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;buffer&quot;</span> {
                     <span class="macro">set_unique!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality::Buffer</span>);
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ident</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;cube&quot;</span> {
                     <span class="macro">set_unique!</span>(<span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">Dimensionality::Cube</span>);
@@ -858,7 +802,6 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
         <span class="kw">let</span> <span class="ident">sampled</span> <span class="op">=</span> <span class="ident">sampled</span>.<span class="ident">unwrap_or</span>(<span class="ident">Sampled::Unknown</span>);
 
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">access_qualifier</span>,
             <span class="ident">arrayed</span>,
             <span class="ident">crate_root</span>,
             <span class="ident">depth</span>,
@@ -882,13 +825,6 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
                 <span class="ident">punct</span>
             },
         });
-        <span class="kw">let</span> <span class="ident">access_qualifier</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">access_qualifier</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">aq</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">aq</span> <span class="op">=</span> <span class="ident">params::access_qualifier_to_tokens</span>(<span class="kw-2">&amp;</span><span class="ident">aq</span>);
-                <span class="macro">quote!</span>(<span class="prelude-val">Some</span>(#<span class="ident">crate_root::image</span>::#<span class="ident">aq</span>))
-            }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="prelude-val">None</span>),
-        };
         <span class="kw">let</span> <span class="ident">dimensionality</span> <span class="op">=</span> <span class="ident">params::dimensionality_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dimensionality</span>);
         <span class="kw">let</span> <span class="ident">arrayed</span> <span class="op">=</span> <span class="ident">params::arrayed_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">arrayed</span>);
         <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="ident">params::image_depth_to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">depth</span>);
@@ -900,13 +836,12 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
         <span class="ident">tokens</span>.<span class="ident">append_all</span>(<span class="macro">quote::quote!</span> {
             #<span class="ident">crate_root::image::Image</span><span class="op">&lt;</span>
                 #<span class="ident">crate_root::image::__private</span>::#<span class="ident">sampled_type</span>,
-                { #<span class="ident">crate_root::image</span>::#<span class="ident">dimensionality</span> },
-                { #<span class="ident">crate_root::image</span>::#<span class="ident">depth</span> },
-                { #<span class="ident">crate_root::image</span>::#<span class="ident">arrayed</span> },
-                { #<span class="ident">crate_root::image</span>::#<span class="ident">multisampled</span> },
-                { #<span class="ident">crate_root::image</span>::#<span class="ident">sampled</span> },
-                { #<span class="ident">crate_root::image</span>::#<span class="ident">format</span> },
-                { #<span class="ident">access_qualifier</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">dimensionality</span> <span class="kw">as</span> <span class="ident">u32</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">depth</span> <span class="kw">as</span> <span class="ident">u32</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">arrayed</span> <span class="kw">as</span> <span class="ident">u32</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">multisampled</span> <span class="kw">as</span> <span class="ident">u32</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">sampled</span> <span class="kw">as</span> <span class="ident">u32</span> },
+                { #<span class="ident">crate_root::image</span>::#<span class="ident">format</span> <span class="kw">as</span> <span class="ident">u32</span> },
             <span class="op">&gt;</span>
         });
     }
@@ -915,15 +850,6 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
 <span class="kw">mod</span> <span class="ident">params</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">proc_macro2::TokenStream</span>;
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">access_qualifier_from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AccessQualifier</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">s</span> {
-            <span class="string">&quot;read&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">AccessQualifier::ReadOnly</span>),
-            <span class="string">&quot;write&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">AccessQualifier::WriteOnly</span>),
-            <span class="string">&quot;read_write&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">AccessQualifier::ReadWrite</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Invalid access qualifier.&quot;</span>),
-        }
-    }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">image_format_from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ImageFormat</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">s</span> {
@@ -1002,14 +928,6 @@ type, or use `format` to set the image to a specific image format.&quot;</span>;
                 <span class="ident"><span class="self">Self</span>::F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">f32</span>),
                 <span class="ident"><span class="self">Self</span>::F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">f64</span>),
             });
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">access_qualifier_to_tokens</span>(<span class="ident">aq</span>: <span class="kw-2">&amp;</span><span class="ident">AccessQualifier</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
-        <span class="kw">match</span> <span class="ident">aq</span> {
-            <span class="ident">AccessQualifier::ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">AccessQualifier::ReadOnly</span>),
-            <span class="ident">AccessQualifier::WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">AccessQualifier::WriteOnly</span>),
-            <span class="ident">AccessQualifier::ReadWrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote!</span>(<span class="ident">AccessQualifier::ReadWrite</span>),
         }
     }
 
