@@ -52,21 +52,27 @@ pub type StorageImage3dI = crate::Image!(3D, type=i32, sampled=false, __crate_ro
 
 pub type Cubemap = crate::Image!(cube, type=f32, sampled, __crate_root=crate);
 
+// TODO: Migrate Image parameters back to their enum values once #![feature(adt_const_params)] is
+// stabilized.
+
 /// An opaque image type. Corresponds to `OpTypeImage`.
 ///
 /// You likely want to write this type using the [`crate::Image!`] macro helper, as the generic
 /// arguments here can get extremely verbose.
+///
+/// See SPIR-V OpTypeImage specification for the meaning of integer parameters. Note that
+/// ACCESS_QUALIFIER==-1 means the parameter is missing.
 #[spirv(generic_image_type)]
 #[derive(Copy, Clone)]
 pub struct Image<
     SampledType: SampleType<FORMAT>,
-    const DIM: Dimensionality,
-    const DEPTH: ImageDepth,
-    const ARRAYED: Arrayed,
-    const MULTISAMPLED: Multisampled,
-    const SAMPLED: Sampled,
-    const FORMAT: ImageFormat,
-    const ACCESS_QUALIFIER: Option<AccessQualifier>,
+    const DIM: u32,              // Dimensionality,
+    const DEPTH: u32,            // ImageDepth,
+    const ARRAYED: u32,          // Arrayed,
+    const MULTISAMPLED: u32,     // Multisampled,
+    const SAMPLED: u32,          // Sampled,
+    const FORMAT: u32,           // ImageFormat,
+    const ACCESS_QUALIFIER: i32, // Option<AccessQualifier>,
 > {
     _x: u32,
     _marker: core::marker::PhantomData<SampledType>,
@@ -74,12 +80,12 @@ pub struct Image<
 
 impl<
         SampledType: SampleType<FORMAT>,
-        const DIM: Dimensionality,
-        const DEPTH: ImageDepth,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const FORMAT: ImageFormat,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DIM: u32,
+        const DEPTH: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const FORMAT: u32,
+        const ACCESS_QUALIFIER: i32,
     >
     Image<
         SampledType,
@@ -87,7 +93,7 @@ impl<
         DEPTH,
         ARRAYED,
         MULTISAMPLED,
-        { Sampled::Yes },
+        { Sampled::Yes as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -118,19 +124,19 @@ impl<
 
 impl<
         SampledType: SampleType<FORMAT>,
-        const DIM: Dimensionality,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DIM: u32,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     >
     Image<
         SampledType,
         DIM,
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -272,8 +278,8 @@ impl<
         &self,
         sampler: Sampler,
         coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
-        gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False }>,
-        gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False }>,
+        gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
+        gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
     ) -> V
     where
         F: Float,
@@ -377,8 +383,8 @@ impl<
         sampler: Sampler,
         coordinate: impl ImageCoordinate<F, DIM, ARRAYED>,
         depth_reference: f32,
-        gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False }>,
-        gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False }>,
+        gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
+        gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
     ) -> SampledType
     where
         F: Float,
@@ -410,18 +416,18 @@ impl<
 
 impl<
         SampledType: SampleType<FORMAT>,
-        const DIM: Dimensionality,
-        const DEPTH: ImageDepth,
-        const SAMPLED: Sampled,
-        const FORMAT: ImageFormat,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DIM: u32,
+        const DEPTH: u32,
+        const SAMPLED: u32,
+        const FORMAT: u32,
+        const ACCESS_QUALIFIER: i32,
     >
     Image<
         SampledType,
         DIM,
         DEPTH,
-        { Arrayed::False },
-        { Multisampled::False },
+        { Arrayed::False as u32 },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -433,7 +439,7 @@ impl<
     pub fn sample_with_project_coordinate<F, V>(
         &self,
         sampler: Sampler,
-        project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True }>,
+        project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
     ) -> V
     where
         F: Float,
@@ -463,7 +469,7 @@ impl<
     pub fn sample_with_project_coordinate_by_lod<F, V>(
         &self,
         sampler: Sampler,
-        project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True }>,
+        project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
         lod: f32,
     ) -> V
     where
@@ -496,9 +502,9 @@ impl<
     pub fn sample_with_project_coordinate_by_gradient<F, V>(
         &self,
         sampler: Sampler,
-        project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True }>,
-        gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False }>,
-        gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False }>,
+        project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
+        gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
+        gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
     ) -> V
     where
         F: Float,
@@ -532,7 +538,7 @@ impl<
     pub fn sample_depth_reference_with_project_coordinate<F>(
         &self,
         sampler: Sampler,
-        project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True }>,
+        project_coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
         depth_reference: f32,
     ) -> SampledType
     where
@@ -564,7 +570,7 @@ impl<
     pub fn sample_depth_reference_with_project_coordinate_by_lod<F>(
         &self,
         sampler: Sampler,
-        coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True }>,
+        coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
         depth_reference: f32,
         lod: f32,
     ) -> SampledType
@@ -600,10 +606,10 @@ impl<
     pub fn sample_depth_reference_with_project_coordinate_by_gradient<F>(
         &self,
         sampler: Sampler,
-        coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True }>,
+        coordinate: impl ImageCoordinate<F, DIM, { Arrayed::True as u32 }>,
         depth_reference: f32,
-        gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False }>,
-        gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False }>,
+        gradient_dx: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
+        gradient_dy: impl ImageCoordinate<F, DIM, { Arrayed::False as u32 }>,
     ) -> SampledType
     where
         F: Float,
@@ -635,70 +641,12 @@ impl<
 
 impl<
         SampledType: SampleType<FORMAT>,
-        const DIM: Dimensionality,
-        const DEPTH: ImageDepth,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const FORMAT: ImageFormat,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
-    >
-    Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, { Sampled::No }, FORMAT, ACCESS_QUALIFIER>
-{
-    /// Read a texel from an image without a sampler.
-    #[crate::macros::gpu_only]
-    #[doc(alias = "OpImageRead")]
-    pub fn read<I, V, const N: usize>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> V
-    where
-        I: Integer,
-        V: Vector<SampledType, N>,
-    {
-        let mut result = V::default();
-
-        unsafe {
-            asm! {
-                "%image = OpLoad _ {this}",
-                "%coordinate = OpLoad _ {coordinate}",
-                "%result = OpImageRead typeof*{result} %image %coordinate",
-                "OpStore {result} %result",
-                this = in(reg) self,
-                coordinate = in(reg) &coordinate,
-                result = in(reg) &mut result,
-            }
-        }
-
-        result
-    }
-
-    /// Write a texel to an image without a sampler.
-    #[crate::macros::gpu_only]
-    #[doc(alias = "OpImageWrite")]
-    pub unsafe fn write<I, const N: usize>(
-        &self,
-        coordinate: impl ImageCoordinate<I, DIM, ARRAYED>,
-        texels: impl Vector<SampledType, N>,
-    ) where
-        I: Integer,
-    {
-        asm! {
-            "%image = OpLoad _ {this}",
-            "%coordinate = OpLoad _ {coordinate}",
-            "%texels = OpLoad _ {texels}",
-            "OpImageWrite %image %coordinate %texels",
-            this = in(reg) self,
-            coordinate = in(reg) &coordinate,
-            texels = in(reg) &texels,
-        }
-    }
-}
-
-impl<
-        SampledType: SampleType<FORMAT>,
-        const DIM: Dimensionality,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DIM: u32,
+        const DEPTH: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const FORMAT: u32,
+        const ACCESS_QUALIFIER: i32,
     >
     Image<
         SampledType,
@@ -706,7 +654,7 @@ impl<
         DEPTH,
         ARRAYED,
         MULTISAMPLED,
-        { Sampled::Unknown },
+        { Sampled::No as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -760,19 +708,86 @@ impl<
 
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const FORMAT: ImageFormat,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DIM: u32,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     >
     Image<
         SampledType,
-        { Dimensionality::SubpassData },
+        DIM,
         DEPTH,
         ARRAYED,
         MULTISAMPLED,
-        { Sampled::No },
+        { Sampled::Unknown as u32 },
+        FORMAT,
+        ACCESS_QUALIFIER,
+    >
+{
+    /// Read a texel from an image without a sampler.
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageRead")]
+    pub fn read<I, V, const N: usize>(&self, coordinate: impl ImageCoordinate<I, DIM, ARRAYED>) -> V
+    where
+        I: Integer,
+        V: Vector<SampledType, N>,
+    {
+        let mut result = V::default();
+
+        unsafe {
+            asm! {
+                "%image = OpLoad _ {this}",
+                "%coordinate = OpLoad _ {coordinate}",
+                "%result = OpImageRead typeof*{result} %image %coordinate",
+                "OpStore {result} %result",
+                this = in(reg) self,
+                coordinate = in(reg) &coordinate,
+                result = in(reg) &mut result,
+            }
+        }
+
+        result
+    }
+
+    /// Write a texel to an image without a sampler.
+    #[crate::macros::gpu_only]
+    #[doc(alias = "OpImageWrite")]
+    pub unsafe fn write<I, const N: usize>(
+        &self,
+        coordinate: impl ImageCoordinate<I, DIM, ARRAYED>,
+        texels: impl Vector<SampledType, N>,
+    ) where
+        I: Integer,
+    {
+        asm! {
+            "%image = OpLoad _ {this}",
+            "%coordinate = OpLoad _ {coordinate}",
+            "%texels = OpLoad _ {texels}",
+            "OpImageWrite %image %coordinate %texels",
+            this = in(reg) self,
+            coordinate = in(reg) &coordinate,
+            texels = in(reg) &texels,
+        }
+    }
+}
+
+impl<
+        SampledType: SampleType<FORMAT>,
+        const DEPTH: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const FORMAT: u32,
+        const ACCESS_QUALIFIER: i32,
+    >
+    Image<
+        SampledType,
+        { Dimensionality::SubpassData as u32 },
+        DEPTH,
+        ARRAYED,
+        MULTISAMPLED,
+        { Sampled::No as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -809,13 +824,13 @@ impl<
 
 impl<
         SampledType: SampleType<FORMAT>,
-        const DIM: Dimensionality,
-        const DEPTH: ImageDepth,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const SAMPLED: Sampled,
-        const FORMAT: ImageFormat,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DIM: u32,
+        const DEPTH: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const SAMPLED: u32,
+        const FORMAT: u32,
+        const ACCESS_QUALIFIER: i32,
     > Image<SampledType, DIM, DEPTH, ARRAYED, MULTISAMPLED, SAMPLED, FORMAT, ACCESS_QUALIFIER>
 {
     /// Query the number of mipmap levels.
@@ -846,7 +861,7 @@ impl<
     pub fn query_lod<V: Vector<f32, 2>>(
         &self,
         sampler: Sampler,
-        coord: impl ImageCoordinate<f32, DIM, { Arrayed::False }>,
+        coord: impl ImageCoordinate<f32, DIM, { Arrayed::False as u32 }>,
     ) -> V
     where
         Self: HasQueryLevels,
@@ -898,19 +913,19 @@ impl<
 
 impl<
         SampledType: SampleType<FORMAT>,
-        const DIM: Dimensionality,
-        const DEPTH: ImageDepth,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const FORMAT: ImageFormat,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DIM: u32,
+        const DEPTH: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const FORMAT: u32,
+        const ACCESS_QUALIFIER: i32,
     >
     Image<
         SampledType,
         DIM,
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -943,18 +958,18 @@ impl<
 
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const FORMAT: ImageFormat,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const FORMAT: u32,
+        const ACCESS_QUALIFIER: i32,
     >
     Image<
         SampledType,
-        { Dimensionality::TwoD },
+        { Dimensionality::TwoD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::True },
+        { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -990,12 +1005,12 @@ pub struct SampledImage<I> {
 
 impl<
         SampledType: SampleType<FORMAT>,
-        const DIM: Dimensionality,
-        const DEPTH: ImageDepth,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const FORMAT: ImageFormat,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DIM: u32,
+        const DEPTH: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const FORMAT: u32,
+        const ACCESS_QUALIFIER: i32,
     >
     SampledImage<
         Image<
@@ -1003,7 +1018,7 @@ impl<
             DIM,
             DEPTH,
             ARRAYED,
-            { Multisampled::False },
+            { Multisampled::False as u32 },
             SAMPLED,
             FORMAT,
             ACCESS_QUALIFIER,
@@ -1043,18 +1058,18 @@ impl<
 pub trait HasGather {}
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasGather
     for Image<
         SampledType,
-        { Dimensionality::TwoD },
+        { Dimensionality::TwoD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1063,18 +1078,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasGather
     for Image<
         SampledType,
-        { Dimensionality::Rect },
+        { Dimensionality::Rect as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1083,18 +1098,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasGather
     for Image<
         SampledType,
-        { Dimensionality::Cube },
+        { Dimensionality::Cube as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1109,16 +1124,16 @@ impl<
 pub trait HasQueryLevels {}
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQueryLevels
     for Image<
         SampledType,
-        { Dimensionality::OneD },
+        { Dimensionality::OneD as u32 },
         DEPTH,
         ARRAYED,
         MULTISAMPLED,
@@ -1130,16 +1145,16 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQueryLevels
     for Image<
         SampledType,
-        { Dimensionality::TwoD },
+        { Dimensionality::TwoD as u32 },
         DEPTH,
         ARRAYED,
         MULTISAMPLED,
@@ -1151,16 +1166,16 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQueryLevels
     for Image<
         SampledType,
-        { Dimensionality::ThreeD },
+        { Dimensionality::ThreeD as u32 },
         DEPTH,
         ARRAYED,
         MULTISAMPLED,
@@ -1172,16 +1187,16 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQueryLevels
     for Image<
         SampledType,
-        { Dimensionality::Cube },
+        { Dimensionality::Cube as u32 },
         DEPTH,
         ARRAYED,
         MULTISAMPLED,
@@ -1200,18 +1215,18 @@ impl<
 pub trait HasQuerySize {}
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::OneD },
+        { Dimensionality::OneD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::True },
+        { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1220,18 +1235,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::OneD },
+        { Dimensionality::OneD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
-        { Sampled::Unknown },
+        { Multisampled::False as u32 },
+        { Sampled::Unknown as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -1239,18 +1254,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::OneD },
+        { Dimensionality::OneD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
-        { Sampled::No },
+        { Multisampled::False as u32 },
+        { Sampled::No as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -1258,18 +1273,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::TwoD },
+        { Dimensionality::TwoD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::True },
+        { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1278,18 +1293,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::TwoD },
+        { Dimensionality::TwoD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
-        { Sampled::Unknown },
+        { Multisampled::False as u32 },
+        { Sampled::Unknown as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -1297,18 +1312,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::TwoD },
+        { Dimensionality::TwoD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
-        { Sampled::No },
+        { Multisampled::False as u32 },
+        { Sampled::No as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -1316,18 +1331,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::ThreeD },
+        { Dimensionality::ThreeD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::True },
+        { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1336,18 +1351,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::ThreeD },
+        { Dimensionality::ThreeD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
-        { Sampled::Unknown },
+        { Multisampled::False as u32 },
+        { Sampled::Unknown as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -1355,18 +1370,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::ThreeD },
+        { Dimensionality::ThreeD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
-        { Sampled::No },
+        { Multisampled::False as u32 },
+        { Sampled::No as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -1374,18 +1389,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::Cube },
+        { Dimensionality::Cube as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::True },
+        { Multisampled::True as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1394,18 +1409,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::Cube },
+        { Dimensionality::Cube as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
-        { Sampled::Unknown },
+        { Multisampled::False as u32 },
+        { Sampled::Unknown as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -1413,18 +1428,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::Cube },
+        { Dimensionality::Cube as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
-        { Sampled::No },
+        { Multisampled::False as u32 },
+        { Sampled::No as u32 },
         FORMAT,
         ACCESS_QUALIFIER,
     >
@@ -1432,16 +1447,16 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::Rect },
+        { Dimensionality::Rect as u32 },
         DEPTH,
         ARRAYED,
         MULTISAMPLED,
@@ -1453,16 +1468,16 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const MULTISAMPLED: Multisampled,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const MULTISAMPLED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySize
     for Image<
         SampledType,
-        { Dimensionality::Buffer },
+        { Dimensionality::Buffer as u32 },
         DEPTH,
         ARRAYED,
         MULTISAMPLED,
@@ -1480,18 +1495,18 @@ impl<
 pub trait HasQuerySizeLod {}
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySizeLod
     for Image<
         SampledType,
-        { Dimensionality::OneD },
+        { Dimensionality::OneD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1500,18 +1515,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySizeLod
     for Image<
         SampledType,
-        { Dimensionality::TwoD },
+        { Dimensionality::TwoD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1520,18 +1535,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySizeLod
     for Image<
         SampledType,
-        { Dimensionality::ThreeD },
+        { Dimensionality::ThreeD as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,
@@ -1540,18 +1555,18 @@ impl<
 }
 impl<
         SampledType: SampleType<FORMAT>,
-        const DEPTH: ImageDepth,
-        const FORMAT: ImageFormat,
-        const ARRAYED: Arrayed,
-        const SAMPLED: Sampled,
-        const ACCESS_QUALIFIER: Option<AccessQualifier>,
+        const DEPTH: u32,
+        const FORMAT: u32,
+        const ARRAYED: u32,
+        const SAMPLED: u32,
+        const ACCESS_QUALIFIER: i32,
     > HasQuerySizeLod
     for Image<
         SampledType,
-        { Dimensionality::Cube },
+        { Dimensionality::Cube as u32 },
         DEPTH,
         ARRAYED,
-        { Multisampled::False },
+        { Multisampled::False as u32 },
         SAMPLED,
         FORMAT,
         ACCESS_QUALIFIER,

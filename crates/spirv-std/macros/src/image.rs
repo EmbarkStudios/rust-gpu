@@ -329,9 +329,10 @@ impl quote::ToTokens for ImageType {
         let access_qualifier = match self.access_qualifier {
             Some(aq) => {
                 let aq = params::access_qualifier_to_tokens(&aq);
-                quote!(Some(#crate_root::image::#aq))
+                // quote!(Some(#crate_root::image::#aq))
+                quote!(#crate_root::image::#aq as i32)
             }
-            None => quote!(None),
+            None => quote!(-1),
         };
         let dimensionality = params::dimensionality_to_tokens(&self.dimensionality);
         let arrayed = params::arrayed_to_tokens(&self.arrayed);
@@ -344,12 +345,12 @@ impl quote::ToTokens for ImageType {
         tokens.append_all(quote::quote! {
             #crate_root::image::Image<
                 #crate_root::image::__private::#sampled_type,
-                { #crate_root::image::#dimensionality },
-                { #crate_root::image::#depth },
-                { #crate_root::image::#arrayed },
-                { #crate_root::image::#multisampled },
-                { #crate_root::image::#sampled },
-                { #crate_root::image::#format },
+                { #crate_root::image::#dimensionality as u32 },
+                { #crate_root::image::#depth as u32 },
+                { #crate_root::image::#arrayed as u32 },
+                { #crate_root::image::#multisampled as u32 },
+                { #crate_root::image::#sampled as u32 },
+                { #crate_root::image::#format as u32 },
                 { #access_qualifier },
             >
         });
