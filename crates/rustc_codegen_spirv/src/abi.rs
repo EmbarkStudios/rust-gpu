@@ -4,7 +4,7 @@
 use crate::attr::{AggregatedSpirvAttributes, IntrinsicType};
 use crate::codegen_cx::CodegenCx;
 use crate::spirv_type::SpirvType;
-use rspirv::spirv::{AccessQualifier, StorageClass, Word};
+use rspirv::spirv::{StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
 use rustc_index::vec::Idx;

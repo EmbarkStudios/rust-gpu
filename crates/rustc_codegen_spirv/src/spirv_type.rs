@@ -4,9 +4,7 @@ use crate::codegen_cx::CodegenCx;
 use bimap::BiHashMap;
 use indexmap::IndexSet;
 use rspirv::dr::Operand;
-use rspirv::spirv::{
-    AccessQualifier, Capability, Decoration, Dim, ImageFormat, StorageClass, Word,
-};
+use rspirv::spirv::{Capability, Decoration, Dim, ImageFormat, StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
