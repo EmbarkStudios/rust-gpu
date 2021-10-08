@@ -1417,6 +1417,36 @@
 <span id="1417">1417</span>
 <span id="1418">1418</span>
 <span id="1419">1419</span>
+<span id="1420">1420</span>
+<span id="1421">1421</span>
+<span id="1422">1422</span>
+<span id="1423">1423</span>
+<span id="1424">1424</span>
+<span id="1425">1425</span>
+<span id="1426">1426</span>
+<span id="1427">1427</span>
+<span id="1428">1428</span>
+<span id="1429">1429</span>
+<span id="1430">1430</span>
+<span id="1431">1431</span>
+<span id="1432">1432</span>
+<span id="1433">1433</span>
+<span id="1434">1434</span>
+<span id="1435">1435</span>
+<span id="1436">1436</span>
+<span id="1437">1437</span>
+<span id="1438">1438</span>
+<span id="1439">1439</span>
+<span id="1440">1440</span>
+<span id="1441">1441</span>
+<span id="1442">1442</span>
+<span id="1443">1443</span>
+<span id="1444">1444</span>
+<span id="1445">1445</span>
+<span id="1446">1446</span>
+<span id="1447">1447</span>
+<span id="1448">1448</span>
+<span id="1449">1449</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Image types</span>
 
 <span class="comment">// Rustfmt formats long marker trait impls over multiple lines which makes them</span>
@@ -2370,7 +2400,7 @@
         <span class="ident">Image</span><span class="op">&lt;</span><span class="ident">SampledType</span>, <span class="ident">DIM</span>, <span class="ident">DEPTH</span>, <span class="ident">ARRAYED</span>, { <span class="ident">Multisampled::False</span> <span class="kw">as</span> <span class="ident">u32</span> }, <span class="ident">SAMPLED</span>, <span class="ident">FORMAT</span><span class="op">&gt;</span>,
     <span class="op">&gt;</span>
 {
-    <span class="doccomment">/// Sample texels at `coord` from the sampled image.</span>
+    <span class="doccomment">/// Sample texels at `coord` from the sampled image with an implicit lod.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// Sampling with a type (`S`) that doesn&#39;t match the image&#39;s image format</span>
@@ -2390,6 +2420,36 @@
             <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result</span>,
             <span class="kw">in</span>(<span class="ident">reg</span>) <span class="self">self</span>,
             <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">coord</span>
+        );
+        <span class="ident">result</span>
+    }
+
+    <span class="doccomment">/// Sample texels at `coord` from the sampled image with an explicit lod.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Safety</span>
+    <span class="doccomment">/// Sampling with a type (`S`) that doesn&#39;t match the image&#39;s image format</span>
+    <span class="doccomment">/// will result in undefined behaviour.</span>
+    <span class="attribute">#[<span class="ident"><span class="kw">crate</span>::macros::gpu_only</span>]</span>
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">sample_by_lod</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">V</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">coord</span>: <span class="kw">impl</span> <span class="ident">ImageCoordinate</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">DIM</span>, <span class="ident">ARRAYED</span><span class="op">&gt;</span>,
+        <span class="ident">lod</span>: <span class="ident">f32</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span>
+    <span class="kw">where</span>
+        <span class="ident">F</span>: <span class="ident">Float</span>,
+        <span class="ident">V</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">SampledType</span>, <span class="number">4</span><span class="op">&gt;</span>,
+    {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+        <span class="macro">asm!</span>(
+            <span class="string">&quot;%sampledImage = OpLoad typeof*{1} {1}&quot;</span>,
+            <span class="string">&quot;%coord = OpLoad typeof*{2} {2}&quot;</span>,
+            <span class="string">&quot;%lod = OpLoad typeof*{3} {3}&quot;</span>,
+            <span class="string">&quot;%result = OpImageSampleExplicitLod typeof*{0} %sampledImage %coord Lod %lod&quot;</span>,
+            <span class="string">&quot;OpStore {0} %result&quot;</span>,
+            <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result</span>,
+            <span class="kw">in</span>(<span class="ident">reg</span>) <span class="self">self</span>,
+            <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">coord</span>,
+            <span class="kw">in</span>(<span class="ident">reg</span>) <span class="kw-2">&amp;</span><span class="ident">lod</span>,
         );
         <span class="ident">result</span>
     }
