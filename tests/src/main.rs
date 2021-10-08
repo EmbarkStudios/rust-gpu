@@ -294,13 +294,23 @@ struct TestDeps {
 /// The RUSTFLAGS passed to all SPIR-V builds.
 // FIXME(eddyb) expose most of these from `spirv-builder`.
 fn rust_flags(codegen_backend_path: &Path) -> String {
+    let target_features = [
+        "Int8",
+        "Int16",
+        "Int64",
+        "Float64",
+        // Only needed for `ui/arch/read_clock_khr.rs`.
+        "ShaderClockKHR",
+        "ext:SPV_KHR_shader_clock",
+    ];
+
     [
         &*format!("-Zcodegen-backend={}", codegen_backend_path.display()),
         "-Coverflow-checks=off",
         "-Cdebug-assertions=off",
         "-Cdebuginfo=2",
         "-Cembed-bitcode=no",
-        "-Ctarget-feature=+Int8,+Int16,+Int64,+Float64",
+        &format!("-Ctarget-feature=+{}", target_features.join(",+")),
         "-Zsymbol-mangling-version=v0",
     ]
     .join(" ")
