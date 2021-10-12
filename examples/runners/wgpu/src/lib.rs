@@ -70,7 +70,7 @@
 // crate-specific exceptions:
 #![allow()]
 
-use clap::Clap;
+use structopt::StructOpt;
 use strum::{Display, EnumString};
 
 mod compute;
@@ -86,8 +86,8 @@ pub enum RustGPUShader {
 
 fn maybe_watch(
     shader: RustGPUShader,
-    on_watch: Option<Box<dyn FnMut(wgpu::ShaderModuleDescriptor<'static>) + Send + 'static>>,
-) -> wgpu::ShaderModuleDescriptor<'static> {
+    on_watch: Option<Box<dyn FnMut(wgpu::ShaderModuleDescriptorSpirV<'static>) + Send + 'static>>,
+) -> wgpu::ShaderModuleDescriptorSpirV<'static> {
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
         use spirv_builder::{Capability, CompileResult, MetadataPrintout, SpirvBuilder};
@@ -126,22 +126,13 @@ fn maybe_watch(
         };
         fn handle_compile_result(
             compile_result: CompileResult,
-        ) -> wgpu::ShaderModuleDescriptor<'static> {
+        ) -> wgpu::ShaderModuleDescriptorSpirV<'static> {
             let module_path = compile_result.module.unwrap_single();
             let data = std::fs::read(module_path).unwrap();
-            let spirv = wgpu::util::make_spirv(&data);
-            let spirv = match spirv {
-                wgpu::ShaderSource::Wgsl(cow) => {
-                    wgpu::ShaderSource::Wgsl(Cow::Owned(cow.into_owned()))
-                }
-                wgpu::ShaderSource::SpirV(cow) => {
-                    wgpu::ShaderSource::SpirV(Cow::Owned(cow.into_owned()))
-                }
-            };
-            wgpu::ShaderModuleDescriptor {
+            let spirv = Cow::Owned(wgpu::util::make_spirv_raw(&data).into_owned());
+            wgpu::ShaderModuleDescriptorSpirV {
                 label: None,
                 source: spirv,
-                flags: wgpu::ShaderFlags::default(),
             }
         }
         handle_compile_result(initial_result)
@@ -161,16 +152,17 @@ fn is_compute_shader(shader: RustGPUShader) -> bool {
     shader == RustGPUShader::Compute
 }
 
-#[derive(Clap)]
+#[derive(StructOpt)]
+#[structopt(name = "example-runner-wgpu")]
 pub struct Options {
-    #[clap(short, long, default_value = "Sky")]
+    #[structopt(short, long, default_value = "Sky")]
     shader: RustGPUShader,
 }
 
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
 pub fn main() {
     env_logger::init();
-    let options: Options = Options::parse();
+    let options: Options = Options::from_args();
 
     if is_compute_shader(options.shader) {
         compute::start(&options);
