@@ -37,14 +37,14 @@ pub(crate) fn provide(providers: &mut Providers) {
     // This theoretically then should be fine to leave as C, but, there's no backend hook for
     // FnAbi::adjust_for_cabi, causing it to panic:
     // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/compiler/rustc_target/src/abi/call/mod.rs#L603
-    // So, treat any extern "C" functions as actually being Rust ABI, to be able to compile libcore with arch=spirv.
+    // So, treat any `extern "C"` functions as `extern "unadjusted"`, to be able to compile libcore with arch=spirv.
     providers.fn_sig = |tcx, def_id| {
         // We can't capture the old fn_sig and just call that, because fn_sig is a `fn`, not a `Fn`, i.e. it can't
         // capture variables. Fortunately, the defaults are exposed (thanks rustdoc), so use that instead.
         let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
         result.map_bound(|mut inner| {
             if let SpecAbi::C { .. } = inner.abi {
-                inner.abi = SpecAbi::Rust;
+                inner.abi = SpecAbi::Unadjusted;
             }
             inner
         })
