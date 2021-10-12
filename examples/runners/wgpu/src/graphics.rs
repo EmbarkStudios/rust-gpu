@@ -35,7 +35,6 @@ fn mouse_button_index(button: MouseButton) -> usize {
 async fn run(
     event_loop: EventLoop<wgpu::ShaderModuleDescriptorSpirV<'static>>,
     window: Window,
-    swapchain_format: wgpu::TextureFormat,
     shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
 ) {
     let instance = wgpu::Instance::new(wgpu::Backends::VULKAN | wgpu::Backends::METAL);
@@ -88,18 +87,21 @@ async fn run(
         }],
     });
 
+    let preferred_format = if let Some(surface) = &surface {
+        surface.get_preferred_format(&adapter).unwrap()
+    } else {
+        // if Surface is none, we're guaranteed to be on android
+        wgpu::TextureFormat::Rgba8UnormSrgb
+    };
+
     let mut render_pipeline =
-        create_pipeline(&device, &pipeline_layout, swapchain_format, shader_binary);
+        create_pipeline(&device, &pipeline_layout, preferred_format, shader_binary);
 
     let size = window.inner_size();
 
     let mut surface_config = wgpu::SurfaceConfiguration {
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-        format: if let Some(surface) = &surface {
-            surface.get_preferred_format(&adapter).unwrap()
-        } else {
-            wgpu::TextureFormat::Rgba8UnormSrgb
-        },
+        format: preferred_format,
         width: size.width,
         height: size.height,
         present_mode: wgpu::PresentMode::Mailbox,
@@ -269,7 +271,7 @@ async fn run(
             }
             Event::UserEvent(new_module) => {
                 *render_pipeline =
-                    create_pipeline(&device, &pipeline_layout, swapchain_format, new_module);
+                    create_pipeline(&device, &pipeline_layout, surface_config.format, new_module);
                 window.request_redraw();
                 *control_flow = ControlFlow::Poll;
             }
@@ -281,7 +283,7 @@ async fn run(
 fn create_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &wgpu::PipelineLayout,
-    swapchain_format: wgpu::TextureFormat,
+    surface_format: wgpu::TextureFormat,
     shader_binary: wgpu::ShaderModuleDescriptorSpirV<'_>,
 ) -> wgpu::RenderPipeline {
     let module = unsafe { device.create_shader_module_spirv(&shader_binary) };
@@ -312,7 +314,7 @@ fn create_pipeline(
             module: &module,
             entry_point: shaders::main_fs,
             targets: &[wgpu::ColorTargetState {
-                format: swapchain_format,
+                format: surface_format,
                 blend: None,
                 write_mask: wgpu::ColorWrites::ALL,
             }],
@@ -353,22 +355,15 @@ pub fn start(options: &Options) {
                         .ok()
                 })
                 .expect("couldn't append canvas to document body");
-            // Temporarily avoid srgb formats for the swapchain on the web
             wasm_bindgen_futures::spawn_local(run(
                 event_loop,
                 window,
-                wgpu::TextureFormat::Bgra8Unorm,
                 initial_shader,
             ));
         } else {
             futures::executor::block_on(run(
                 event_loop,
                 window,
-                if cfg!(target_os = "android") {
-                    wgpu::TextureFormat::Rgba8UnormSrgb
-                } else {
-                    wgpu::TextureFormat::Bgra8UnormSrgb
-                },
                 initial_shader,
 
             ));
