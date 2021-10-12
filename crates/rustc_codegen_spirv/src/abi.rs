@@ -13,13 +13,13 @@ use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::subst::SubstsRef;
 use rustc_middle::ty::{
-    self, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyKind, TypeAndMut,
-    UintTy,
+    self, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
+    TypeAndMut, UintTy,
 };
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_span::DUMMY_SP;
-use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
+use rustc_target::abi::call::{ArgAbi, ArgAttributes, CastTarget, FnAbi, PassMode, Reg, RegKind};
 use rustc_target::abi::{Abi, Align, FieldsShape, Primitive, Scalar, Size, VariantIdx, Variants};
 use rustc_target::spec::abi::Abi as SpecAbi;
 use std::cell::RefCell;
@@ -35,7 +35,7 @@ pub(crate) fn provide(providers: &mut Providers) {
     // However, those functions will be implemented by compiler-builtins:
     // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/lib.rs#L23-L27
     // This theoretically then should be fine to leave as C, but, there's no backend hook for
-    // FnAbi::adjust_for_cabi, causing it to panic:
+    // `FnAbi::adjust_for_cabi`, causing it to panic:
     // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/compiler/rustc_target/src/abi/call/mod.rs#L603
     // So, treat any `extern "C"` functions as `extern "unadjusted"`, to be able to compile libcore with arch=spirv.
     providers.fn_sig = |tcx, def_id| {
@@ -48,6 +48,46 @@ pub(crate) fn provide(providers: &mut Providers) {
             }
             inner
         })
+    };
+
+    // For the Rust ABI, `FnAbi` adjustments are backend-agnostic, but they will
+    // use features like `PassMode::Cast`, that are incompatible with SPIR-V.
+    // By hooking the queries computing `FnAbi`s, we can recompute the `FnAbi`
+    // from the return/args layouts, to e.g. prefer using `PassMode::Direct`.
+    fn readjust_fn_abi<'tcx>(
+        tcx: TyCtxt<'tcx>,
+        fn_abi: &'tcx FnAbi<'tcx, Ty<'tcx>>,
+    ) -> &'tcx FnAbi<'tcx, Ty<'tcx>> {
+        let readjust_arg_abi = |arg: &ArgAbi<'tcx, Ty<'tcx>>| {
+            let mut arg = ArgAbi::new(&tcx, arg.layout, |_, _, _| ArgAttributes::new());
+
+            // Avoid pointlessly passing ZSTs, just like the official Rust ABI.
+            if arg.layout.is_zst() {
+                arg.mode = PassMode::Ignore;
+            }
+
+            arg
+        };
+        tcx.arena.alloc(FnAbi {
+            args: fn_abi.args.iter().map(readjust_arg_abi).collect(),
+            ret: readjust_arg_abi(&fn_abi.ret),
+
+            // FIXME(eddyb) validate some of these, and report errors - however,
+            // we can't just emit errors from here, since we have no `Span`, so
+            // we should have instead a check on MIR for e.g. C variadic calls.
+            c_variadic: fn_abi.c_variadic,
+            fixed_count: fn_abi.fixed_count,
+            conv: fn_abi.conv,
+            can_unwind: fn_abi.can_unwind,
+        })
+    }
+    providers.fn_abi_of_fn_ptr = |tcx, key| {
+        let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_abi_of_fn_ptr)(tcx, key);
+        Ok(readjust_fn_abi(tcx, result?))
+    };
+    providers.fn_abi_of_instance = |tcx, key| {
+        let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_abi_of_instance)(tcx, key);
+        Ok(readjust_fn_abi(tcx, result?))
     };
 }
 
