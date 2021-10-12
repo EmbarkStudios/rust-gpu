@@ -13,6 +13,7 @@ use rustc_middle::ty::{FnDef, Instance, ParamEnv, Ty, TyKind};
 use rustc_span::source_map::Span;
 use rustc_span::sym;
 use rustc_target::abi::call::{FnAbi, PassMode};
+use std::assert_matches::assert_matches;
 
 fn int_type_width_signed(ty: Ty<'_>, cx: &CodegenCx<'_>) -> Option<(u64, bool)> {
     match ty.kind() {
@@ -100,16 +101,9 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
 
             sym::volatile_load | sym::unaligned_volatile_load => {
                 let ptr = args[0].immediate();
-                if let PassMode::Cast(ty) = fn_abi.ret.mode {
-                    let pointee = ty.spirv_type(self.span(), self);
-                    let pointer = SpirvType::Pointer { pointee }.def(self.span(), self);
-                    let ptr = self.pointercast(ptr, pointer);
-                    self.volatile_load(pointee, ptr)
-                } else {
-                    let layout = self.layout_of(substs.type_at(0));
-                    let load = self.volatile_load(layout.spirv_type(self.span(), self), ptr);
-                    self.to_immediate(load, layout)
-                }
+                let layout = self.layout_of(substs.type_at(0));
+                let load = self.volatile_load(layout.spirv_type(self.span(), self), ptr);
+                self.to_immediate(load, layout)
             }
 
             sym::prefetch_read_data
@@ -330,13 +324,10 @@ impl<'a, 'tcx> IntrinsicCallMethods<'tcx> for Builder<'a, 'tcx> {
         };
 
         if !fn_abi.ret.is_ignore() {
-            if let PassMode::Cast(_ty) = fn_abi.ret.mode {
-                self.fatal("TODO: PassMode::Cast not implemented yet in intrinsics");
-            } else {
-                OperandRef::from_immediate_or_packed_pair(self, value, result.layout)
-                    .val
-                    .store(self, result);
-            }
+            assert_matches!(fn_abi.ret.mode, PassMode::Direct(_) | PassMode::Pair(..));
+            OperandRef::from_immediate_or_packed_pair(self, value, result.layout)
+                .val
+                .store(self, result);
         }
     }
 

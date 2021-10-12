@@ -19,7 +19,7 @@ use rustc_middle::{bug, span_bug};
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_span::DUMMY_SP;
-use rustc_target::abi::call::{ArgAbi, ArgAttributes, CastTarget, FnAbi, PassMode, Reg, RegKind};
+use rustc_target::abi::call::{ArgAbi, ArgAttributes, FnAbi, PassMode};
 use rustc_target::abi::{Abi, Align, FieldsShape, Primitive, Scalar, Size, VariantIdx, Variants};
 use rustc_target::spec::abi::Abi as SpecAbi;
 use std::cell::RefCell;
@@ -236,87 +236,6 @@ impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
     }
 }
 
-impl<'tcx> ConvSpirvType<'tcx> for Reg {
-    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        match self.kind {
-            RegKind::Integer => SpirvType::Integer(self.size.bits() as u32, false).def(span, cx),
-            RegKind::Float => SpirvType::Float(self.size.bits() as u32).def(span, cx),
-            RegKind::Vector => SpirvType::Vector {
-                element: SpirvType::Integer(8, false).def(span, cx),
-                count: self.size.bytes() as u32,
-            }
-            .def(span, cx),
-        }
-    }
-}
-
-impl<'tcx> ConvSpirvType<'tcx> for CastTarget {
-    fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
-        let rest_ll_unit = self.rest.unit.spirv_type(span, cx);
-        let (rest_count, rem_bytes) = if self.rest.unit.size.bytes() == 0 {
-            (0, 0)
-        } else {
-            (
-                self.rest.total.bytes() / self.rest.unit.size.bytes(),
-                self.rest.total.bytes() % self.rest.unit.size.bytes(),
-            )
-        };
-
-        if self.prefix.iter().all(|x| x.is_none()) {
-            // Simplify to a single unit when there is no prefix and size <= unit size
-            if self.rest.total <= self.rest.unit.size {
-                return rest_ll_unit;
-            }
-
-            // Simplify to array when all chunks are the same size and type
-            if rem_bytes == 0 {
-                return SpirvType::Array {
-                    element: rest_ll_unit,
-                    count: cx.constant_u32(span, rest_count as u32),
-                }
-                .def(span, cx);
-            }
-        }
-
-        // Create list of fields in the main structure
-        let mut args: Vec<_> = self
-            .prefix
-            .iter()
-            .flatten()
-            .map(|&kind| {
-                Reg {
-                    kind,
-                    size: self.prefix_chunk_size,
-                }
-                .spirv_type(span, cx)
-            })
-            .chain((0..rest_count).map(|_| rest_ll_unit))
-            .collect();
-
-        // Append final integer
-        if rem_bytes != 0 {
-            // Only integers can be really split further.
-            assert_eq!(self.rest.unit.kind, RegKind::Integer);
-            args.push(SpirvType::Integer(rem_bytes as u32 * 8, false).def(span, cx));
-        }
-
-        let size = Some(self.size(cx));
-        let align = self.align(cx);
-        let (field_offsets, computed_size, computed_align) = auto_struct_layout(cx, &args);
-        assert_eq!(size, computed_size, "{:#?}", self);
-        assert_eq!(align, computed_align, "{:#?}", self);
-        SpirvType::Adt {
-            def_id: None,
-            size,
-            align,
-            field_types: args,
-            field_offsets,
-            field_names: None,
-        }
-        .def(span, cx)
-    }
-}
-
 impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
     fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
         let mut argument_types = Vec::new();
@@ -326,14 +245,11 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
             PassMode::Direct(_) | PassMode::Pair(..) => {
                 self.ret.layout.spirv_type_immediate(span, cx)
             }
-            PassMode::Cast(cast_target) => cast_target.spirv_type(span, cx),
-            PassMode::Indirect { .. } => {
-                let pointee = self.ret.layout.spirv_type(span, cx);
-                let pointer = SpirvType::Pointer { pointee }.def(span, cx);
-                // Important: the return pointer comes *first*, not last.
-                argument_types.push(pointer);
-                SpirvType::Void.def(span, cx)
-            }
+            PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
+                span,
+                "query hooks should've made this `PassMode` impossible: {:#?}",
+                self.ret
+            ),
         };
 
         for arg in &self.args {
@@ -349,27 +265,11 @@ impl<'tcx> ConvSpirvType<'tcx> for FnAbi<'tcx, Ty<'tcx>> {
                     ));
                     continue;
                 }
-                PassMode::Cast(cast_target) => cast_target.spirv_type(span, cx),
-                PassMode::Indirect {
-                    extra_attrs: Some(_),
-                    ..
-                } => {
-                    let ptr_ty = cx.tcx.mk_mut_ptr(arg.layout.ty);
-                    let ptr_layout = cx.layout_of(ptr_ty);
-                    argument_types.push(scalar_pair_element_backend_type(
-                        cx, span, ptr_layout, 0, true,
-                    ));
-                    argument_types.push(scalar_pair_element_backend_type(
-                        cx, span, ptr_layout, 1, true,
-                    ));
-                    continue;
-                }
-                PassMode::Indirect {
-                    extra_attrs: None, ..
-                } => {
-                    let pointee = arg.layout.spirv_type(span, cx);
-                    SpirvType::Pointer { pointee }.def(span, cx)
-                }
+                PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
+                    span,
+                    "query hooks should've made this `PassMode` impossible: {:#?}",
+                    arg
+                ),
             };
             argument_types.push(arg_type);
         }
