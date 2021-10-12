@@ -52,16 +52,9 @@ pub(crate) fn provide(providers: &mut Providers) {
 }
 
 pub(crate) fn provide_extern(providers: &mut Providers) {
-    // See comments in provide(), only this time we use the default *extern* provider.
-    providers.fn_sig = |tcx, def_id| {
-        let result = (rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
-        result.map_bound(|mut inner| {
-            if let SpecAbi::C { .. } = inner.abi {
-                inner.abi = SpecAbi::Rust;
-            }
-            inner
-        })
-    };
+    // Reset providers overriden in `provide`, that need to still go through the
+    // `rustc_metadata::rmeta` decoding, as opposed to being locally computed.
+    providers.fn_sig = rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig;
 }
 
 /// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk
