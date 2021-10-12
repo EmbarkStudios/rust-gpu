@@ -3,7 +3,11 @@
 //! This module is intended as a low level abstraction over SPIR-V instructions.
 //! These functions will typically map to a single instruction, and will perform
 //! no additional safety checks beyond type-checking.
-use crate::{scalar::Scalar, vector::Vector};
+use crate::{
+    integer::{Integer, SignedInteger, UnsignedInteger},
+    scalar::Scalar,
+    vector::Vector,
+};
 
 mod barrier;
 mod demote_to_helper_invocation_ext;
@@ -199,4 +203,45 @@ pub unsafe fn read_clock_uvec2_khr<V: Vector<u32, 2>, const SCOPE: u32>() -> V {
     };
 
     result
+}
+
+#[spirv_std_macros::gpu_only]
+unsafe fn call_glsl_op_with_ints<T: Integer, const OP: u32>(a: T, b: T) -> T {
+    let mut result = T::default();
+    asm!(
+        "%glsl = OpExtInstImport \"GLSL.std.450\"",
+        "%a = OpLoad _ {a}",
+        "%b = OpLoad _ {b}",
+        "%result = OpExtInst typeof*{result} %glsl {op} %a %b",
+        "OpStore {result} %result",
+        a = in(reg) &a,
+        b = in(reg) &b,
+        result = in(reg) &mut result,
+        op = const OP
+    );
+    result
+}
+
+/// Compute the minimum of two unsigned integers via a GLSL extended instruction.
+#[spirv_std_macros::gpu_only]
+pub fn unsigned_min<T: UnsignedInteger>(a: T, b: T) -> T {
+    unsafe { call_glsl_op_with_ints::<_, 38>(a, b) }
+}
+
+/// Compute the maximum of two unsigned integers via a GLSL extended instruction.
+#[spirv_std_macros::gpu_only]
+pub fn unsigned_max<T: UnsignedInteger>(a: T, b: T) -> T {
+    unsafe { call_glsl_op_with_ints::<_, 41>(a, b) }
+}
+
+/// Compute the minimum of two signed integers via a GLSL extended instruction.
+#[spirv_std_macros::gpu_only]
+pub fn signed_min<T: SignedInteger>(a: T, b: T) -> T {
+    unsafe { call_glsl_op_with_ints::<_, 39>(a, b) }
+}
+
+/// Compute the maximum of two signed integers via a GLSL extended instruction.
+#[spirv_std_macros::gpu_only]
+pub fn signed_max<T: SignedInteger>(a: T, b: T) -> T {
+    unsafe { call_glsl_op_with_ints::<_, 42>(a, b) }
 }
