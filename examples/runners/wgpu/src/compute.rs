@@ -38,7 +38,8 @@ pub async fn start_internal(
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features: wgpu::Features::TIMESTAMP_QUERY | wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
+                features: wgpu::Features::TIMESTAMP_QUERY
+                    | wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
                 limits: wgpu::Limits::default(),
             },
             None,

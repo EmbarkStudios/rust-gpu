@@ -159,10 +159,10 @@ async fn run(
                             eprintln!("get_current_texture error: {:?}", err);
                             match err {
                                 wgpu::SurfaceError::Lost => {
-                                    surface.configure(&device, &surface_config)
+                                    surface.configure(&device, &surface_config);
                                 }
                                 wgpu::SurfaceError::OutOfMemory => {
-                                    *control_flow = ControlFlow::Exit
+                                    *control_flow = ControlFlow::Exit;
                                 }
                                 _ => (),
                             }
