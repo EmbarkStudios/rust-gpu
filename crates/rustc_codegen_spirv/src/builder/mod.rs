@@ -24,6 +24,7 @@ use rustc_errors::DiagnosticBuilder;
 use rustc_middle::mir::coverage::{
     CodeRegion, CounterValueReference, ExpressionOperandId, InjectedExpressionId, Op,
 };
+use rustc_middle::span_bug;
 use rustc_middle::ty::layout::{
     FnAbiError, FnAbiOfHelpers, FnAbiRequest, HasParamEnv, HasTyCtxt, LayoutError, LayoutOfHelpers,
     TyAndLayout,
@@ -286,27 +287,18 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
             val
         }
         match arg_abi.mode {
-            PassMode::Ignore => (),
+            PassMode::Ignore => {}
+            PassMode::Direct(_) => {
+                OperandValue::Immediate(next(self, idx)).store(self, dst);
+            }
             PassMode::Pair(..) => {
                 OperandValue::Pair(next(self, idx), next(self, idx)).store(self, dst);
             }
-            PassMode::Indirect {
-                extra_attrs: Some(_),
-                ..
-            } => OperandValue::Ref(
-                next(self, idx),
-                Some(next(self, idx)),
-                arg_abi.layout.align.abi,
-            )
-            .store(self, dst),
-            PassMode::Direct(_)
-            | PassMode::Indirect {
-                extra_attrs: None, ..
-            }
-            | PassMode::Cast(_) => {
-                let next_arg = next(self, idx);
-                self.store_arg(arg_abi, next_arg, dst);
-            }
+            PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
+                self.span(),
+                "query hooks should've made this `PassMode` impossible: {:#?}",
+                arg_abi
+            ),
         }
     }
 
@@ -316,20 +308,16 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
         val: Self::Value,
         dst: PlaceRef<'tcx, Self::Value>,
     ) {
-        if arg_abi.is_ignore() {
-            return;
-        }
-        if arg_abi.is_sized_indirect() {
-            OperandValue::Ref(val, None, arg_abi.layout.align.abi).store(self, dst);
-        } else if arg_abi.is_unsized_indirect() {
-            self.fatal("unsized `ArgAbi` must be handled through `store_fn_arg`");
-        } else if let PassMode::Cast(cast) = arg_abi.mode {
-            let cast_ty = cast.spirv_type(self.span(), self);
-            let cast_ptr_ty = SpirvType::Pointer { pointee: cast_ty }.def(self.span(), self);
-            let cast_dst = self.pointercast(dst.llval, cast_ptr_ty);
-            self.store(val, cast_dst, arg_abi.layout.align.abi);
-        } else {
-            OperandValue::Immediate(val).store(self, dst);
+        match arg_abi.mode {
+            PassMode::Ignore => {}
+            PassMode::Direct(_) | PassMode::Pair(..) => {
+                OperandValue::Immediate(val).store(self, dst);
+            }
+            PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
+                self.span(),
+                "query hooks should've made this `PassMode` impossible: {:#?}",
+                arg_abi
+            ),
         }
     }
 

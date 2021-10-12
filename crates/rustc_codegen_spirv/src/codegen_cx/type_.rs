@@ -72,7 +72,10 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn cast_backend_type(&self, ty: &CastTarget) -> Self::Type {
-        ty.spirv_type(DUMMY_SP, self)
+        bug!(
+            "cast_backend_type({:?}): query hooks should've made `PassMode::Cast` impossible",
+            ty
+        )
     }
 
     fn fn_decl_backend_type(&self, fn_abi: &FnAbi<'tcx, Ty<'tcx>>) -> Self::Type {
@@ -84,7 +87,10 @@ impl<'tcx> LayoutTypeMethods<'tcx> for CodegenCx<'tcx> {
     }
 
     fn reg_backend_type(&self, ty: &Reg) -> Self::Type {
-        ty.spirv_type(DUMMY_SP, self)
+        bug!(
+            "reg_backend_type({:?}): query hooks should've made `PassMode::Cast` impossible",
+            ty
+        )
     }
 
     fn immediate_backend_type(&self, layout: TyAndLayout<'tcx>) -> Self::Type {

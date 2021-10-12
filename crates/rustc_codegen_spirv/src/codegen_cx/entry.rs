@@ -11,13 +11,12 @@ use rspirv::spirv::{
 use rustc_codegen_ssa::traits::{BaseTypeMethods, BuilderMethods};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_hir as hir;
+use rustc_middle::span_bug;
 use rustc_middle::ty::layout::{LayoutOf, TyAndLayout};
-use rustc_middle::ty::{Instance, Ty, TyKind};
+use rustc_middle::ty::{self, Instance, Ty};
 use rustc_span::Span;
-use rustc_target::abi::{
-    call::{ArgAbi, ArgAttribute, ArgAttributes, FnAbi, PassMode},
-    Size,
-};
+use rustc_target::abi::call::{ArgAbi, FnAbi, PassMode};
+use std::assert_matches::assert_matches;
 
 impl<'tcx> CodegenCx<'tcx> {
     // Entry points declare their "interface" (all uniforms, inputs, outputs, etc.) as parameters.
@@ -47,43 +46,53 @@ impl<'tcx> CodegenCx<'tcx> {
             let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
             body.params
         };
-        const EMPTY: ArgAttribute = ArgAttribute::empty();
-        for (abi, hir_param) in fn_abi.args.iter().zip(hir_params) {
-            match abi.mode {
-                PassMode::Direct(_)
-                | PassMode::Indirect { .. }
-                // plain DST/RTA/VLA
-                | PassMode::Pair(
-                    ArgAttributes {
-                        pointee_size: Size::ZERO,
-                        ..
-                    },
-                    ArgAttributes { regular: EMPTY, .. },
-                )
-                // DST struct with fields before the DST member
-                | PassMode::Pair(
-                    ArgAttributes { .. },
-                    ArgAttributes {
-                        pointee_size: Size::ZERO,
-                        ..
-                    },
-                ) => {}
-                _ => self.tcx.sess.span_err(
+        for (arg_abi, hir_param) in fn_abi.args.iter().zip(hir_params) {
+            match arg_abi.mode {
+                PassMode::Direct(_) => {}
+                PassMode::Pair(..) => {
+                    // FIXME(eddyb) implement `ScalarPair` `Input`s, or change
+                    // the `FnAbi` readjustment to only use `PassMode::Pair` for
+                    // pointers to `!Sized` types, but not other `ScalarPair`s.
+                    if !matches!(arg_abi.layout.ty.kind(), ty::Ref(..)) {
+                        self.tcx.sess.span_err(
+                            hir_param.ty_span,
+                            &format!(
+                                "entry point parameter type not yet supported \
+                                 (`{}` has `ScalarPair` ABI but is not a `&T`)",
+                                arg_abi.layout.ty
+                            ),
+                        );
+                    }
+                }
+                // FIXME(eddyb) support these (by just ignoring them) - if there
+                // is any validation concern, it should be done on the types.
+                PassMode::Ignore => self.tcx.sess.span_err(
                     hir_param.ty_span,
-                    &format!("PassMode {:?} invalid for entry point parameter", abi.mode),
+                    &format!(
+                        "entry point parameter type not yet supported \
+                        (`{}` has size `0`)",
+                        arg_abi.layout.ty
+                    ),
+                ),
+                _ => span_bug!(
+                    hir_param.ty_span,
+                    "query hooks should've made this `PassMode` impossible: {:#?}",
+                    arg_abi
                 ),
             }
         }
-        if let PassMode::Ignore = fn_abi.ret.mode {
+        if fn_abi.ret.layout.ty.is_unit() {
+            assert_matches!(fn_abi.ret.mode, PassMode::Ignore);
         } else {
             self.tcx.sess.span_err(
                 span,
                 &format!(
-                    "PassMode {:?} invalid for entry point return type",
-                    fn_abi.ret.mode
+                    "entry point should return `()`, not `{}`",
+                    fn_abi.ret.layout.ty
                 ),
             );
         }
+
         // let execution_model = entry.execution_model;
         let fn_id = self.shader_entry_stub(
             span,
@@ -168,7 +177,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // FIXME(eddyb) also check the type for compatibility with being
         // part of the interface, including potentially `Sync`ness etc.
         let (value_ty, mutbl, is_ref) = match *layout.ty.kind() {
-            TyKind::Ref(_, pointee_ty, mutbl) => (pointee_ty, mutbl, true),
+            ty::Ref(_, pointee_ty, mutbl) => (pointee_ty, mutbl, true),
             _ => (layout.ty, hir::Mutability::Not, false),
         };
         let spirv_ty = self.layout_of(value_ty).spirv_type(hir_param.ty_span, self);
@@ -396,7 +405,7 @@ impl<'tcx> CodegenCx<'tcx> {
         // Compute call argument(s) to match what the Rust entry `fn` expects,
         // starting from the `value_ptr` pointing to a `value_spirv_type`
         // (e.g. `Input` doesn't use indirection, so we have to load from it).
-        if let TyKind::Ref(..) = entry_arg_abi.layout.ty.kind() {
+        if let ty::Ref(..) = entry_arg_abi.layout.ty.kind() {
             call_args.push(value_ptr);
             match entry_arg_abi.mode {
                 PassMode::Direct(_) => assert_eq!(value_len, None),
@@ -405,16 +414,14 @@ impl<'tcx> CodegenCx<'tcx> {
             }
         } else {
             assert_eq!(storage_class, StorageClass::Input);
+            assert_matches!(entry_arg_abi.mode, PassMode::Direct(_));
 
-            call_args.push(match entry_arg_abi.mode {
-                PassMode::Indirect { .. } => value_ptr,
-                PassMode::Direct(_) => bx.load(
-                    entry_arg_abi.layout.spirv_type(hir_param.ty_span, bx),
-                    value_ptr,
-                    entry_arg_abi.layout.align.abi,
-                ),
-                _ => unreachable!(),
-            });
+            let value = bx.load(
+                entry_arg_abi.layout.spirv_type(hir_param.ty_span, bx),
+                value_ptr,
+                entry_arg_abi.layout.align.abi,
+            );
+            call_args.push(value);
             assert_eq!(value_len, None);
         }
 
