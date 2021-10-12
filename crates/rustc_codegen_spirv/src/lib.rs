@@ -176,7 +176,6 @@ use rustc_middle::ty::{self, query, DefIdTree, Instance, InstanceDef, TyCtxt};
 use rustc_session::config::{self, OptLevel, OutputFilenames, OutputType};
 use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
-use rustc_target::spec::abi::Abi;
 use rustc_target::spec::{Target, TargetTriple};
 use std::any::Any;
 use std::env;
@@ -286,42 +285,12 @@ impl CodegenBackend for SpirvCodegenBackend {
     }
 
     fn provide(&self, providers: &mut query::Providers) {
-        // This is a lil weird: so, we obviously don't support C ABIs at all. However, libcore does declare some extern
-        // C functions:
-        // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/slice/cmp.rs#L119
-        // However, those functions will be implemented by compiler-builtins:
-        // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/lib.rs#L23-L27
-        // This theoretically then should be fine to leave as C, but, there's no backend hook for
-        // FnAbi::adjust_for_cabi, causing it to panic:
-        // https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/compiler/rustc_target/src/abi/call/mod.rs#L603
-        // So, treat any extern "C" functions as actually being Rust ABI, to be able to compile libcore with arch=spirv.
-        providers.fn_sig = |tcx, def_id| {
-            // We can't capture the old fn_sig and just call that, because fn_sig is a `fn`, not a `Fn`, i.e. it can't
-            // capture variables. Fortunately, the defaults are exposed (thanks rustdoc), so use that instead.
-            let result = (rustc_interface::DEFAULT_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
-            result.map_bound(|mut inner| {
-                if let Abi::C { .. } = inner.abi {
-                    inner.abi = Abi::Rust;
-                }
-                inner
-            })
-        };
-
-        // Extra hooks provided by other parts of `rustc_codegen_spirv`.
+        crate::abi::provide(providers);
         crate::attr::provide(providers);
     }
 
     fn provide_extern(&self, providers: &mut query::Providers) {
-        // See comments in provide(), only this time we use the default *extern* provider.
-        providers.fn_sig = |tcx, def_id| {
-            let result = (rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS.fn_sig)(tcx, def_id);
-            result.map_bound(|mut inner| {
-                if let Abi::C { .. } = inner.abi {
-                    inner.abi = Abi::Rust;
-                }
-                inner
-            })
-        };
+        crate::abi::provide_extern(providers);
     }
 
     fn codegen_crate(
