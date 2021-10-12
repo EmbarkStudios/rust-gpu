@@ -8,7 +8,6 @@ use rspirv::spirv::{StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
 use rustc_index::vec::Idx;
-use rustc_middle::bug;
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
 use rustc_middle::ty::query::Providers;
 use rustc_middle::ty::subst::SubstsRef;
@@ -16,6 +15,7 @@ use rustc_middle::ty::{
     self, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyCtxt, TyKind,
     TypeAndMut, UintTy,
 };
+use rustc_middle::{bug, span_bug};
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_span::DUMMY_SP;
@@ -152,7 +152,9 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
     ) -> Word {
         match self.map.borrow_mut().entry(pointee) {
             // We should have hit begin() on this type already, which always inserts an entry.
-            Entry::Vacant(_) => bug!("RecursivePointeeCache::end should always have entry"),
+            Entry::Vacant(_) => {
+                span_bug!(span, "RecursivePointeeCache::end should always have entry")
+            }
             Entry::Occupied(mut entry) => match *entry.get() {
                 // State: There have been no recursive references to this type while defining it, and so no
                 // OpTypeForwardPointer has been emitted. This is the most common case.
@@ -174,7 +176,7 @@ impl<'tcx> RecursivePointeeCache<'tcx> {
                     .def_with_id(cx, span, id)
                 }
                 PointeeDefState::Defined(_) => {
-                    bug!("RecursivePointeeCache::end defined pointer twice")
+                    span_bug!(span, "RecursivePointeeCache::end defined pointer twice")
                 }
             },
         }
@@ -466,7 +468,11 @@ pub fn scalar_pair_element_backend_type<'tcx>(
 ) -> Word {
     let [a, b] = match &ty.layout.abi {
         Abi::ScalarPair(a, b) => [a, b],
-        other => bug!("scalar_pair_element_backend_type invalid abi: {:?}", other),
+        other => span_bug!(
+            span,
+            "scalar_pair_element_backend_type invalid abi: {:?}",
+            other
+        ),
     };
     let offset = match index {
         0 => Size::ZERO,
@@ -595,7 +601,8 @@ fn dig_scalar_pointee<'tcx>(
 
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -> Word {
     match ty.fields {
-        FieldsShape::Primitive => bug!(
+        FieldsShape::Primitive => span_bug!(
+            span,
             "trans_aggregate called for FieldsShape::Primitive layout {:#?}",
             ty
         ),
@@ -700,7 +707,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, span: Span, ty: TyAndLayout<'tcx>) -
         } else {
             if let TyKind::Adt(_, _) = ty.ty.kind() {
             } else {
-                bug!("Variants::Multiple not TyKind::Adt");
+                span_bug!(span, "Variants::Multiple not TyKind::Adt");
             }
             if i == 0 {
                 field_names.push("discriminant".to_string());
