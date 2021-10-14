@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;Users&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;glam-0.18.0&#x2F;src&#x2F;core&#x2F;sse2&#x2F;matrix.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>matrix.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../glam/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;Users&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;glam-0.19.0&#x2F;src&#x2F;core&#x2F;sse2&#x2F;matrix.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>matrix.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../glam/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -526,6 +526,24 @@
 <span id="526">526</span>
 <span id="527">527</span>
 <span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">core::arch::x86</span>::<span class="kw-2">*</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
@@ -541,6 +559,7 @@
             <span class="ident">Matrix4x4</span>, <span class="ident">MatrixConst</span>,
         },
         <span class="ident">projection::ProjectionMatrix</span>,
+        <span class="ident">scalar::NanConstEx</span>,
         <span class="ident">vector</span>::{<span class="ident">FloatVector4</span>, <span class="ident">Vector</span>, <span class="ident">Vector4</span>, <span class="ident">Vector4Const</span>},
     },
 };
@@ -674,6 +693,14 @@
     };
 }
 
+<span class="kw">impl</span> <span class="ident">NanConstEx</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
+    <span class="kw">const</span> <span class="ident">NAN</span>: <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Columns3</span> {
+        <span class="ident">x_axis</span>: <span class="ident">__m128::NAN</span>,
+        <span class="ident">y_axis</span>: <span class="ident">__m128::NAN</span>,
+        <span class="ident">z_axis</span>: <span class="ident">__m128::NAN</span>,
+    };
+}
+
 <span class="kw">impl</span> <span class="ident">Matrix</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {}
 
 <span class="kw">impl</span> <span class="ident">Matrix3x3</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">__m128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Columns3</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
@@ -745,6 +772,15 @@
         <span class="ident">y_axis</span>: <span class="ident">__m128::Y</span>,
         <span class="ident">z_axis</span>: <span class="ident">__m128::Z</span>,
         <span class="ident">w_axis</span>: <span class="ident">__m128::W</span>,
+    };
+}
+
+<span class="kw">impl</span> <span class="ident">NanConstEx</span> <span class="kw">for</span> <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> {
+    <span class="kw">const</span> <span class="ident">NAN</span>: <span class="ident">Columns4</span><span class="op">&lt;</span><span class="ident">__m128</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Columns4</span> {
+        <span class="ident">x_axis</span>: <span class="ident">__m128::NAN</span>,
+        <span class="ident">y_axis</span>: <span class="ident">__m128::NAN</span>,
+        <span class="ident">z_axis</span>: <span class="ident">__m128::NAN</span>,
+        <span class="ident">w_axis</span>: <span class="ident">__m128::NAN</span>,
     };
 }
 

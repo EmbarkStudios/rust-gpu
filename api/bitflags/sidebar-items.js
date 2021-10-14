@@ -1,1 +1,1 @@
-initSidebarItems({"macro":[["bitflags","The macro used to generate the flag structures."]]});
+initSidebarItems({"macro":[["bitflags","The macro used to generate the flag structure."]]});
