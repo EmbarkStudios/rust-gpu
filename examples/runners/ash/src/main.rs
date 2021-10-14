@@ -246,7 +246,7 @@ impl RenderBase {
     pub fn new(window: winit::window::Window, options: &Options) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(target_os = "macos")] {
-                let entry = ash_molten::MoltenEntry::load().unwrap();
+                let entry = ash_molten::MoltenEntry::load();
             } else {
                 let entry = unsafe { ash::Entry::new().unwrap() };
             }
