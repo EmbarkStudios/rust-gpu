@@ -73,7 +73,6 @@
 use ash::{
     extensions::{ext, khr},
     util::read_spv,
-    version::{DeviceV1_0, EntryV1_0, InstanceV1_0},
     vk,
 };
 
@@ -247,7 +246,7 @@ impl RenderBase {
     pub fn new(window: winit::window::Window, options: &Options) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(target_os = "macos")] {
-                let entry = ash_molten::MoltenEntry::load().unwrap();
+                let entry = ash_molten::MoltenEntry::load();
             } else {
                 let entry = unsafe { ash::Entry::new().unwrap() };
             }
@@ -280,7 +279,7 @@ impl RenderBase {
                 .application_version(0)
                 .engine_name(&app_name)
                 .engine_version(0)
-                .api_version(vk::make_version(1, 2, 0));
+                .api_version(vk::make_api_version(1, 2, 0, 0));
 
             let instance_create_info = vk::InstanceCreateInfo::builder()
                 .application_info(&appinfo)

@@ -33,13 +33,11 @@ fn mouse_button_index(button: MouseButton) -> usize {
 }
 
 async fn run(
-    event_loop: EventLoop<wgpu::ShaderModuleDescriptor<'static>>,
+    event_loop: EventLoop<wgpu::ShaderModuleDescriptorSpirV<'static>>,
     window: Window,
-    swapchain_format: wgpu::TextureFormat,
-    shader_binary: wgpu::ShaderModuleDescriptor<'static>,
+    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
 ) {
-    let size = window.inner_size();
-    let instance = wgpu::Instance::new(wgpu::BackendBit::VULKAN | wgpu::BackendBit::METAL);
+    let instance = wgpu::Instance::new(wgpu::Backends::VULKAN | wgpu::Backends::METAL);
 
     // Wait for Resumed event on Android; the surface is only needed early to
     // find an adapter that can render to this surface.
@@ -52,13 +50,14 @@ async fn run(
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),
+            force_fallback_adapter: false,
             // Request an adapter which can render to our surface
             compatible_surface: surface.as_ref(),
         })
         .await
         .expect("Failed to find an appropriate adapter");
 
-    let features = wgpu::Features::PUSH_CONSTANTS;
+    let features = wgpu::Features::PUSH_CONSTANTS | wgpu::Features::SPIRV_SHADER_PASSTHROUGH;
     let limits = wgpu::Limits {
         max_push_constant_size: 256,
         ..Default::default()
@@ -83,25 +82,33 @@ async fn run(
         label: None,
         bind_group_layouts: &[],
         push_constant_ranges: &[wgpu::PushConstantRange {
-            stages: wgpu::ShaderStage::all(),
+            stages: wgpu::ShaderStages::all(),
             range: 0..std::mem::size_of::<ShaderConstants>() as u32,
         }],
     });
 
-    let mut render_pipeline =
-        create_pipeline(&device, &pipeline_layout, swapchain_format, shader_binary);
+    let preferred_format = if let Some(surface) = &surface {
+        surface.get_preferred_format(&adapter).unwrap()
+    } else {
+        // if Surface is none, we're guaranteed to be on android
+        wgpu::TextureFormat::Rgba8UnormSrgb
+    };
 
-    let mut sc_desc = wgpu::SwapChainDescriptor {
-        usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
-        format: swapchain_format,
+    let mut render_pipeline =
+        create_pipeline(&device, &pipeline_layout, preferred_format, shader_binary);
+
+    let size = window.inner_size();
+
+    let mut surface_config = wgpu::SurfaceConfiguration {
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+        format: preferred_format,
         width: size.width,
         height: size.height,
         present_mode: wgpu::PresentMode::Mailbox,
     };
-
-    let mut swap_chain = surface
-        .as_ref()
-        .map(|surface| device.create_swap_chain(surface, &sc_desc));
+    if let Some(surface) = &mut surface {
+        surface.configure(&device, &surface_config);
+    }
 
     let start = std::time::Instant::now();
 
@@ -126,12 +133,12 @@ async fn run(
             }
             Event::Resumed => {
                 let s = unsafe { instance.create_surface(&window) };
-                swap_chain = Some(device.create_swap_chain(&s, &sc_desc));
+                surface_config.format = s.get_preferred_format(&adapter).unwrap();
+                s.configure(&device, &surface_config);
                 surface = Some(s);
             }
             Event::Suspended => {
                 surface = None;
-                swap_chain = None;
             }
             Event::WindowEvent {
                 event: WindowEvent::Resized(size),
@@ -139,29 +146,41 @@ async fn run(
             } => {
                 if size.width != 0 && size.height != 0 {
                     // Recreate the swap chain with the new size
-                    sc_desc.width = size.width;
-                    sc_desc.height = size.height;
+                    surface_config.width = size.width;
+                    surface_config.height = size.height;
                     if let Some(surface) = &surface {
-                        swap_chain = Some(device.create_swap_chain(surface, &sc_desc));
+                        surface.configure(&device, &surface_config);
                     }
-                } else {
-                    // Swap chains must have non-zero dimensions
-                    swap_chain = None;
                 }
             }
             Event::RedrawRequested(_) => {
-                if let Some(swap_chain) = &mut swap_chain {
-                    let frame = swap_chain
-                        .get_current_frame()
-                        .expect("Failed to acquire next swap chain texture")
-                        .output;
+                if let Some(surface) = &mut surface {
+                    let output = match surface.get_current_texture() {
+                        Ok(surface) => surface,
+                        Err(err) => {
+                            eprintln!("get_current_texture error: {:?}", err);
+                            match err {
+                                wgpu::SurfaceError::Lost => {
+                                    surface.configure(&device, &surface_config);
+                                }
+                                wgpu::SurfaceError::OutOfMemory => {
+                                    *control_flow = ControlFlow::Exit;
+                                }
+                                _ => (),
+                            }
+                            return;
+                        }
+                    };
+                    let output_view = output
+                        .texture
+                        .create_view(&wgpu::TextureViewDescriptor::default());
                     let mut encoder = device
                         .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
                     {
                         let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                             label: None,
                             color_attachments: &[wgpu::RenderPassColorAttachment {
-                                view: &frame.view,
+                                view: &output_view,
                                 resolve_target: None,
                                 ops: wgpu::Operations {
                                     load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
@@ -195,7 +214,7 @@ async fn run(
 
                         rpass.set_pipeline(render_pipeline);
                         rpass.set_push_constants(
-                            wgpu::ShaderStage::all(),
+                            wgpu::ShaderStages::all(),
                             0,
                             bytemuck::bytes_of(&push_constants),
                         );
@@ -203,6 +222,7 @@ async fn run(
                     }
 
                     queue.submit(Some(encoder.finish()));
+                    output.present();
                 }
             }
             Event::WindowEvent {
@@ -251,7 +271,7 @@ async fn run(
             }
             Event::UserEvent(new_module) => {
                 *render_pipeline =
-                    create_pipeline(&device, &pipeline_layout, swapchain_format, new_module);
+                    create_pipeline(&device, &pipeline_layout, surface_config.format, new_module);
                 window.request_redraw();
                 *control_flow = ControlFlow::Poll;
             }
@@ -263,10 +283,10 @@ async fn run(
 fn create_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &wgpu::PipelineLayout,
-    swapchain_format: wgpu::TextureFormat,
-    shader_binary: wgpu::ShaderModuleDescriptor<'_>,
+    surface_format: wgpu::TextureFormat,
+    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'_>,
 ) -> wgpu::RenderPipeline {
-    let module = device.create_shader_module(&shader_binary);
+    let module = unsafe { device.create_shader_module_spirv(&shader_binary) };
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(pipeline_layout),
@@ -294,9 +314,9 @@ fn create_pipeline(
             module: &module,
             entry_point: shaders::main_fs,
             targets: &[wgpu::ColorTargetState {
-                format: swapchain_format,
+                format: surface_format,
                 blend: None,
-                write_mask: wgpu::ColorWrite::ALL,
+                write_mask: wgpu::ColorWrites::ALL,
             }],
         }),
     })
@@ -335,22 +355,15 @@ pub fn start(options: &Options) {
                         .ok()
                 })
                 .expect("couldn't append canvas to document body");
-            // Temporarily avoid srgb formats for the swapchain on the web
             wasm_bindgen_futures::spawn_local(run(
                 event_loop,
                 window,
-                wgpu::TextureFormat::Bgra8Unorm,
                 initial_shader,
             ));
         } else {
             futures::executor::block_on(run(
                 event_loop,
                 window,
-                if cfg!(target_os = "android") {
-                    wgpu::TextureFormat::Rgba8UnormSrgb
-                } else {
-                    wgpu::TextureFormat::Bgra8UnormSrgb
-                },
                 initial_shader,
 
             ));

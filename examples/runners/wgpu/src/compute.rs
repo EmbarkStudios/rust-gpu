@@ -22,12 +22,13 @@ pub fn start(options: &Options) {
 
 pub async fn start_internal(
     _options: &Options,
-    shader_binary: wgpu::ShaderModuleDescriptor<'static>,
+    shader_binary: wgpu::ShaderModuleDescriptorSpirV<'static>,
 ) {
-    let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),
+            force_fallback_adapter: false,
             compatible_surface: None,
         })
         .await
@@ -37,7 +38,8 @@ pub async fn start_internal(
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features: wgpu::Features::TIMESTAMP_QUERY,
+                features: wgpu::Features::TIMESTAMP_QUERY
+                    | wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
                 limits: wgpu::Limits::default(),
             },
             None,
@@ -50,7 +52,7 @@ pub async fn start_internal(
     let timestamp_period = queue.get_timestamp_period();
 
     // Load the shaders from disk
-    let module = device.create_shader_module(&shader_binary);
+    let module = unsafe { device.create_shader_module_spirv(&shader_binary) };
 
     let top = 2u32.pow(20);
     let src_range = 1..top;
@@ -70,7 +72,7 @@ pub async fn start_internal(
             wgpu::BindGroupLayoutEntry {
                 binding: 0,
                 count: None,
-                visibility: wgpu::ShaderStage::COMPUTE,
+                visibility: wgpu::ShaderStages::COMPUTE,
                 ty: wgpu::BindingType::Buffer {
                     has_dynamic_offset: false,
                     min_binding_size: Some(NonZeroU64::new(1).unwrap()),
@@ -97,22 +99,22 @@ pub async fn start_internal(
         label: None,
         size: src.len() as wgpu::BufferAddress,
         // Can be read to the CPU, and can be copied from the shader's storage buffer
-        usage: wgpu::BufferUsage::MAP_READ | wgpu::BufferUsage::COPY_DST,
+        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
 
     let storage_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("Collatz Conjecture Input"),
         contents: &src,
-        usage: wgpu::BufferUsage::STORAGE
-            | wgpu::BufferUsage::COPY_DST
-            | wgpu::BufferUsage::COPY_SRC,
+        usage: wgpu::BufferUsages::STORAGE
+            | wgpu::BufferUsages::COPY_DST
+            | wgpu::BufferUsages::COPY_SRC,
     });
 
     let timestamp_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("Timestamps buffer"),
         size: 16,
-        usage: wgpu::BufferUsage::MAP_READ | wgpu::BufferUsage::COPY_DST,
+        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: true,
     });
     timestamp_buffer.unmap();
@@ -127,6 +129,7 @@ pub async fn start_internal(
     });
 
     let queries = device.create_query_set(&wgpu::QuerySetDescriptor {
+        label: None,
         count: 2,
         ty: wgpu::QueryType::Timestamp,
     });
