@@ -363,31 +363,15 @@ fn path_from_ident(ident: Ident) -> syn::Type {
 /// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
 #[proc_macro]
 pub fn printf(input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as PrintfInput);
-
-    let PrintfInput {
-        format_string,
-        variables,
-        span,
-    } = input;
-
-    printf_inner(format_string, variables, span)
+    printf_inner(syn::parse_macro_input!(input as PrintfInput))
 }
 
 /// Similar to `printf` but appends a newline to the format string.
 #[proc_macro]
 pub fn printfln(input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as PrintfInput);
-
-    let PrintfInput {
-        mut format_string,
-        variables,
-        span,
-    } = input;
-
-    format_string.push_str("\\n");
-
-    printf_inner(format_string, variables, span)
+    let mut input = syn::parse_macro_input!(input as PrintfInput);
+    input.format_string.push_str("\\n");
+    printf_inner(input)
 }
 
 struct PrintfInput {
@@ -423,11 +407,13 @@ impl syn::parse::Parse for PrintfInput {
     }
 }
 
-fn printf_inner(
-    format_string: String,
-    variables: Vec<syn::Expr>,
-    span: proc_macro2::Span,
-) -> TokenStream {
+fn printf_inner(input: PrintfInput) -> TokenStream {
+    let PrintfInput {
+        format_string,
+        variables,
+        span,
+    } = input;
+
     let number_of_arguments =
         format_string.matches('%').count() - format_string.matches("%%").count() * 2;
 
