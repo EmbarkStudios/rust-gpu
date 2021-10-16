@@ -351,19 +351,26 @@ fn path_from_ident(ident: Ident) -> syn::Type {
     })
 }
 
-#[derive(Default)]
 struct PrintfInput {
+    span: proc_macro2::Span,
     string: String,
     expressions: Vec<syn::Expr>,
 }
 
 impl syn::parse::Parse for PrintfInput {
     fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
+        let span = input.span();
+
         if input.is_empty() {
-            return Ok(Self::default());
+            return Ok(Self {
+                span,
+                string: Default::default(),
+                expressions: Default::default(),
+            });
         }
 
         Ok(Self {
+            span,
             string: input.parse::<syn::LitStr>()?.value(),
             expressions: {
                 let mut expressions = Vec::new();
@@ -384,7 +391,23 @@ pub fn printfln(input: TokenStream) -> TokenStream {
     let PrintfInput {
         string,
         expressions,
+        span,
     } = input;
+
+    let number_of_arguments = string.matches('%').count() - string.matches("%%").count() * 2;
+
+    if number_of_arguments != expressions.len() {
+        return syn::Error::new(
+            span,
+            &format!(
+                "{} % arguments were found, but {} expressions were given",
+                number_of_arguments,
+                expressions.len()
+            ),
+        )
+        .to_compile_error()
+        .into();
+    }
 
     let mut input_string = String::new();
     let mut registers = Vec::new();
