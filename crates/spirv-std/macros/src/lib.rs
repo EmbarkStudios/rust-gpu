@@ -384,6 +384,16 @@ impl syn::parse::Parse for PrintfInput {
     }
 }
 
+/// Print a formatted string with a newline using the debug printf extension.
+///
+/// Examples:
+///
+/// ```rust,ignore
+/// printfln!("uv: %v2f", uv);
+/// printfln!("pos.x: %f, pos.z: %f, int: %i", pos.x, pos.z, int);
+/// ```
+///
+/// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
 #[proc_macro]
 pub fn printfln(input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as PrintfInput);
@@ -411,24 +421,35 @@ pub fn printfln(input: TokenStream) -> TokenStream {
 
     let mut input_string = String::new();
     let mut registers = Vec::new();
+    let mut op_loads = Vec::new();
 
     for (i, expression) in expressions.into_iter().enumerate() {
         let ident = quote::format_ident!("_{}", i);
 
-        input_string.push_str(&format!(" {{{}}}", ident));
+        input_string.push_str(&format!(" %{}", ident));
 
         registers.push(quote::quote! {
-            #ident = in(reg) #expression,
+            #ident = in(reg) &#expression,
+        });
+
+        let op_load = format!("%{ident} = OpLoad _ {{{ident}}}", ident = ident);
+
+        op_loads.push(quote::quote! {
+            #op_load,
         });
     }
 
     let registers = registers.into_iter().collect::<proc_macro2::TokenStream>();
+    let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
+
+    let op_string = format!("%string = OpString \"{}\\n\"", string);
 
     let output = quote::quote! {
         asm!(
             "%void = OpTypeVoid",
-            concat!("%string = OpString \"", #string, "\\n\""),
+            #op_string,
             "%debug_printf = OpExtInstImport \"NonSemantic.DebugPrintf\"",
+            #op_loads
             concat!("%result = OpExtInst %void %debug_printf 1 %string", #input_string),
             #registers
         )
