@@ -376,7 +376,17 @@ impl syn::parse::Parse for PrintfInput {
                 let mut expressions = Vec::new();
                 while !input.is_empty() {
                     input.parse::<syn::Token![,]>()?;
-                    expressions.push(input.parse()?);
+
+                    let expr = input.parse()?;
+
+                    if let syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(lit_str), ..}) = expr {
+                        return Err(syn::Error::new(
+                            lit_str.span(),
+                            "String literals should be part of the format string.",
+                        ))
+                    }
+
+                    expressions.push(expr);
                 }
                 expressions
             },
