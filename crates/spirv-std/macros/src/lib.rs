@@ -351,39 +351,6 @@ fn path_from_ident(ident: Ident) -> syn::Type {
     })
 }
 
-struct PrintfInput {
-    span: proc_macro2::Span,
-    string: String,
-    expressions: Vec<syn::Expr>,
-}
-
-impl syn::parse::Parse for PrintfInput {
-    fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
-        let span = input.span();
-
-        if input.is_empty() {
-            return Ok(Self {
-                span,
-                string: Default::default(),
-                expressions: Default::default(),
-            });
-        }
-
-        Ok(Self {
-            span,
-            string: input.parse::<syn::LitStr>()?.value(),
-            expressions: {
-                let mut expressions = Vec::new();
-                while !input.is_empty() {
-                    input.parse::<syn::Token![,]>()?;
-                    expressions.push(input.parse()?);
-                }
-                expressions
-            },
-        })
-    }
-}
-
 /// Print a formatted string with a newline using the debug printf extension.
 ///
 /// Examples:
@@ -395,41 +362,99 @@ impl syn::parse::Parse for PrintfInput {
 ///
 /// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
 #[proc_macro]
+pub fn printf(input: TokenStream) -> TokenStream {
+    let input = syn::parse_macro_input!(input as PrintfInput);
+
+    let PrintfInput {
+        format_string,
+        variables,
+        span,
+    } = input;
+
+    printf_inner(format_string, variables, span)
+}
+
+/// Similar to `printf` but appends a newline to the format string.
+#[proc_macro]
 pub fn printfln(input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as PrintfInput);
 
     let PrintfInput {
-        string,
-        expressions,
+        mut format_string,
+        variables,
         span,
     } = input;
 
-    let number_of_arguments = string.matches('%').count() - string.matches("%%").count() * 2;
+    format_string.push_str("\\n");
 
-    if number_of_arguments != expressions.len() {
+    printf_inner(format_string, variables, span)
+}
+
+struct PrintfInput {
+    span: proc_macro2::Span,
+    format_string: String,
+    variables: Vec<syn::Expr>,
+}
+
+impl syn::parse::Parse for PrintfInput {
+    fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
+        let span = input.span();
+
+        if input.is_empty() {
+            return Ok(Self {
+                span,
+                format_string: Default::default(),
+                variables: Default::default(),
+            });
+        }
+
+        Ok(Self {
+            span,
+            format_string: input.parse::<syn::LitStr>()?.value(),
+            variables: {
+                let mut variables = Vec::new();
+                while !input.is_empty() {
+                    input.parse::<syn::Token![,]>()?;
+                    variables.push(input.parse()?);
+                }
+                variables
+            },
+        })
+    }
+}
+
+fn printf_inner(
+    format_string: String,
+    variables: Vec<syn::Expr>,
+    span: proc_macro2::Span,
+) -> TokenStream {
+    let number_of_arguments =
+        format_string.matches('%').count() - format_string.matches("%%").count() * 2;
+
+    if number_of_arguments != variables.len() {
         return syn::Error::new(
             span,
             &format!(
-                "{} % arguments were found, but {} expressions were given",
+                "{} % arguments were found, but {} variables were given",
                 number_of_arguments,
-                expressions.len()
+                variables.len()
             ),
         )
         .to_compile_error()
         .into();
     }
 
-    let mut input_string = String::new();
-    let mut registers = Vec::new();
+    let mut variable_idents = String::new();
+    let mut input_registers = Vec::new();
     let mut op_loads = Vec::new();
 
-    for (i, expression) in expressions.into_iter().enumerate() {
+    for (i, variable) in variables.into_iter().enumerate() {
         let ident = quote::format_ident!("_{}", i);
 
-        input_string.push_str(&format!(" %{}", ident));
+        variable_idents.push_str(&format!("%{} ", ident));
 
-        registers.push(quote::quote! {
-            #ident = in(reg) &#expression,
+        input_registers.push(quote::quote! {
+            #ident = in(reg) &{#variable},
         });
 
         let op_load = format!("%{ident} = OpLoad _ {{{ident}}}", ident = ident);
@@ -439,10 +464,12 @@ pub fn printfln(input: TokenStream) -> TokenStream {
         });
     }
 
-    let registers = registers.into_iter().collect::<proc_macro2::TokenStream>();
+    let input_registers = input_registers
+        .into_iter()
+        .collect::<proc_macro2::TokenStream>();
     let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
 
-    let op_string = format!("%string = OpString \"{}\\n\"", string);
+    let op_string = format!("%string = OpString \"{}\"", format_string);
 
     let output = quote::quote! {
         asm!(
@@ -450,8 +477,8 @@ pub fn printfln(input: TokenStream) -> TokenStream {
             #op_string,
             "%debug_printf = OpExtInstImport \"NonSemantic.DebugPrintf\"",
             #op_loads
-            concat!("%result = OpExtInst %void %debug_printf 1 %string", #input_string),
-            #registers
+            concat!("%result = OpExtInst %void %debug_printf 1 %string ", #variable_idents),
+            #input_registers
         )
     };
 
