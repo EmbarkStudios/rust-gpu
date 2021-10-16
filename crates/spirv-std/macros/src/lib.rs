@@ -390,9 +390,9 @@ pub fn printfln(input: TokenStream) -> TokenStream {
     let mut registers = Vec::new();
 
     for (i, expression) in expressions.into_iter().enumerate() {
-        input_string.push_str(&format!(" {{n{}}}", i));
+        let ident = quote::format_ident!("_{}", i);
 
-        let ident = quote::format_ident!("n{}", i);
+        input_string.push_str(&format!(" {{{}}}", ident));
 
         registers.push(quote::quote! {
             #ident = in(reg) #expression,
