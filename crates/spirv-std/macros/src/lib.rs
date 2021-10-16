@@ -350,3 +350,66 @@ fn path_from_ident(ident: Ident) -> syn::Type {
         path: syn::Path::from(ident),
     })
 }
+
+#[derive(Default)]
+struct PrintfInput {
+    string: String,
+    expressions: Vec<syn::Expr>,
+}
+
+impl syn::parse::Parse for PrintfInput {
+    fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
+        if input.is_empty() {
+            return Ok(Self::default());
+        }
+
+        Ok(Self {
+            string: input.parse::<syn::LitStr>()?.value(),
+            expressions: {
+                let mut expressions = Vec::new();
+                while !input.is_empty() {
+                    input.parse::<syn::Token![,]>()?;
+                    expressions.push(input.parse()?);
+                }
+                expressions
+            },
+        })
+    }
+}
+
+#[proc_macro]
+pub fn printfln(input: TokenStream) -> TokenStream {
+    let input = syn::parse_macro_input!(input as PrintfInput);
+
+    let PrintfInput {
+        string,
+        expressions,
+    } = input;
+
+    let mut input_string = String::new();
+    let mut registers = Vec::new();
+
+    for (i, expression) in expressions.into_iter().enumerate() {
+        input_string.push_str(&format!(" {{n{}}}", i));
+
+        let ident = quote::format_ident!("n{}", i);
+
+        registers.push(quote::quote! {
+            #ident = in(reg) #expression,
+        });
+    }
+
+    let registers = registers.into_iter().collect::<proc_macro2::TokenStream>();
+
+    let output = quote::quote! {
+        asm!(
+            "%void = OpTypeVoid",
+            concat!("%string = OpString \"", #string, "\\n\""),
+            "%debug_printf = OpExtInstImport \"NonSemantic.DebugPrintf\"",
+            concat!("%result = OpExtInst %void %debug_printf 1 %string", #input_string),
+            #registers
+        )
+    };
+
+    output.into()
+}
