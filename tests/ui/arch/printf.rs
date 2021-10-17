@@ -1,7 +1,10 @@
 // build-pass
 // compile-flags: -Ctarget-feature=+ext:SPV_KHR_non_semantic_info
 
-use spirv_std::{macros::{printf, printfln}, glam::Vec2};
+use spirv_std::{
+    glam::Vec2,
+    macros::{printf, printfln},
+};
 
 #[spirv(fragment)]
 pub fn main() {
