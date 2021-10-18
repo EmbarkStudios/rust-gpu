@@ -356,31 +356,31 @@ fn path_from_ident(ident: Ident) -> syn::Type {
 /// Examples:
 ///
 /// ```rust,ignore
-/// printfln!("uv: %v2f", uv);
-/// printfln!("pos.x: %f, pos.z: %f, int: %i", pos.x, pos.z, int);
+/// debug_printfln!("uv: %v2f", uv);
+/// debug_printfln!("pos.x: %f, pos.z: %f, int: %i", pos.x, pos.z, int);
 /// ```
 ///
 /// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
 #[proc_macro]
-pub fn printf(input: TokenStream) -> TokenStream {
-    printf_inner(syn::parse_macro_input!(input as PrintfInput))
+pub fn debug_printf(input: TokenStream) -> TokenStream {
+    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput))
 }
 
-/// Similar to `printf` but appends a newline to the format string.
+/// Similar to `debug_printf` but appends a newline to the format string.
 #[proc_macro]
-pub fn printfln(input: TokenStream) -> TokenStream {
-    let mut input = syn::parse_macro_input!(input as PrintfInput);
+pub fn debug_printfln(input: TokenStream) -> TokenStream {
+    let mut input = syn::parse_macro_input!(input as DebugPrintfInput);
     input.format_string.push_str("\\n");
-    printf_inner(input)
+    debug_printf_inner(input)
 }
 
-struct PrintfInput {
+struct DebugPrintfInput {
     span: proc_macro2::Span,
     format_string: String,
     variables: Vec<syn::Expr>,
 }
 
-impl syn::parse::Parse for PrintfInput {
+impl syn::parse::Parse for DebugPrintfInput {
     fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
         let span = input.span();
 
@@ -407,8 +407,8 @@ impl syn::parse::Parse for PrintfInput {
     }
 }
 
-fn printf_inner(input: PrintfInput) -> TokenStream {
-    let PrintfInput {
+fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
+    let DebugPrintfInput {
         format_string,
         variables,
         span,
