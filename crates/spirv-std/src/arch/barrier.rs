@@ -1,3 +1,5 @@
+use crate::memory::{Scope, Semantics};
+
 /// Wait for other invocations of this module to reach the current point
 /// of execution.
 ///
@@ -77,4 +79,73 @@ pub unsafe fn memory_barrier<
         memory = const MEMORY,
         semantics = const SEMANTICS,
     }
+}
+
+pub unsafe fn workgroup_memory_barrier() {
+    // Exact implementation of GroupMemoryBarrier();
+    memory_barrier::<
+        { Scope::Workgroup as u32 },
+        { Semantics::WORKGROUP_MEMORY.bits() | Semantics::ACQUIRE_RELEASE.bits() },
+    >();
+}
+
+pub unsafe fn workgroup_memory_barrier_with_group_sync() {
+    // Exact implementation of GroupMemoryBarrierWithGroupSync();
+    control_barrier::<
+        { Scope::Workgroup as u32 },
+        { Scope::Workgroup as u32 },
+        { Semantics::WORKGROUP_MEMORY.bits() | Semantics::ACQUIRE_RELEASE.bits() },
+    >();
+}
+
+pub unsafe fn device_memory_barrier() {
+    // Exact implementation of DeviceMemoryBarrier()
+    memory_barrier::<
+        { Scope::Device as u32 },
+        {
+            Semantics::IMAGE_MEMORY.bits()
+                | Semantics::UNIFORM_MEMORY.bits()
+                | Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
+}
+
+pub unsafe fn device_memory_barrier_with_group_sync() {
+    // Exact implementation of DeviceMemoryBarrierWithGroupSync()
+    control_barrier::<
+        { Scope::Workgroup as u32 },
+        { Scope::Device as u32 },
+        {
+            Semantics::IMAGE_MEMORY.bits()
+                | Semantics::UNIFORM_MEMORY.bits()
+                | Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
+}
+
+pub unsafe fn all_memory_barrier() {
+    // Exact implementation of AllMemoryBarrier()
+    memory_barrier::<
+        { Scope::Device as u32 },
+        {
+            Semantics::WORKGROUP_MEMORY.bits()
+                | Semantics::IMAGE_MEMORY.bits()
+                | Semantics::UNIFORM_MEMORY.bits()
+                | Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
+}
+
+pub unsafe fn all_memory_barrier_with_group_sync() {
+    // Exact implementation of AllMemoryBarrierWithGroupSync()
+    control_barrier::<
+        { Scope::Workgroup as u32 },
+        { Scope::Device as u32 },
+        {
+            Semantics::WORKGROUP_MEMORY.bits()
+                | Semantics::IMAGE_MEMORY.bits()
+                | Semantics::UNIFORM_MEMORY.bits()
+                | Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
 }
