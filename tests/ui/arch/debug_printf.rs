@@ -6,13 +6,12 @@ use spirv_std::{
     macros::{debug_printf, debug_printfln},
 };
 
-
 fn func(a: f32, b: f32) -> f32 {
     a * b + 1.0
 }
 
 struct Struct {
-    a: f32
+    a: f32,
 }
 
 impl Struct {

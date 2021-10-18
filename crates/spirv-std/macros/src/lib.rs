@@ -396,7 +396,8 @@ impl syn::parse::Parse for DebugPrintfInput {
         if !input.is_empty() {
             input.parse::<syn::token::Comma>()?;
         }
-        let variables = syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::parse_terminated(input)?;
+        let variables =
+            syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::parse_terminated(input)?;
 
         Ok(Self {
             span,
