@@ -81,16 +81,22 @@ pub unsafe fn memory_barrier<
     }
 }
 
+/// An exact implementation of GroupMemoryBarrier().
+/// This blocks execution of all threads in a group until all group shared accesses have been completed.
+///
+/// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrier
 pub unsafe fn workgroup_memory_barrier() {
-    // Exact implementation of GroupMemoryBarrier();
     memory_barrier::<
         { Scope::Workgroup as u32 },
         { Semantics::WORKGROUP_MEMORY.bits() | Semantics::ACQUIRE_RELEASE.bits() },
     >();
 }
 
+/// An exact implementation of GroupMemoryBarrierWithGroupSync().
+/// This blocks execution of all threads in a group until all group shared accesses have been completed and all threads in the group have reached this call.
+///
+/// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrierwithgroupsync
 pub unsafe fn workgroup_memory_barrier_with_group_sync() {
-    // Exact implementation of GroupMemoryBarrierWithGroupSync();
     control_barrier::<
         { Scope::Workgroup as u32 },
         { Scope::Workgroup as u32 },
@@ -98,8 +104,11 @@ pub unsafe fn workgroup_memory_barrier_with_group_sync() {
     >();
 }
 
+/// An exact implementation of DeviceMemoryBarrier().
+/// This blocks execution of all threads in a group until all device memory accesses have been completed.
+///
+/// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrier
 pub unsafe fn device_memory_barrier() {
-    // Exact implementation of DeviceMemoryBarrier()
     memory_barrier::<
         { Scope::Device as u32 },
         {
@@ -110,8 +119,11 @@ pub unsafe fn device_memory_barrier() {
     >();
 }
 
+/// An exact implementation of DeviceMemoryBarrierWithGroupSync().
+/// This blocks execution of all threads in a group until all device memory accesses have been completed and all threads in the group have reached this call.
+///
+/// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrierwithgroupsync
 pub unsafe fn device_memory_barrier_with_group_sync() {
-    // Exact implementation of DeviceMemoryBarrierWithGroupSync()
     control_barrier::<
         { Scope::Workgroup as u32 },
         { Scope::Device as u32 },
@@ -123,8 +135,11 @@ pub unsafe fn device_memory_barrier_with_group_sync() {
     >();
 }
 
+/// An exact implementation of AllMemoryBarrier().
+/// This blocks execution of all threads in a group until all memory accesses have been completed.
+///
+/// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrier
 pub unsafe fn all_memory_barrier() {
-    // Exact implementation of AllMemoryBarrier()
     memory_barrier::<
         { Scope::Device as u32 },
         {
@@ -136,8 +151,11 @@ pub unsafe fn all_memory_barrier() {
     >();
 }
 
+/// An exact implementation of AllMemoryBarrierWithGroupSync().
+/// This blocks execution of all threads in a group until all memory accesses have been completed and all threads in the group have reached this call.
+///
+/// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrierwithgroupsync
 pub unsafe fn all_memory_barrier_with_group_sync() {
-    // Exact implementation of AllMemoryBarrierWithGroupSync()
     control_barrier::<
         { Scope::Workgroup as u32 },
         { Scope::Device as u32 },
