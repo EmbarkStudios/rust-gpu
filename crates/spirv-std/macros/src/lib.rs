@@ -454,7 +454,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         .collect::<proc_macro2::TokenStream>();
     let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
 
-    let op_string = format!("%string = OpString \"{}\"", format_string);
+    let op_string = format!("%string = OpString {:?}", format_string);
 
     let output = quote::quote! {
         asm!(

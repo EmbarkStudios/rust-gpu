@@ -12,6 +12,8 @@ pub fn main() {
         debug_printf!();
         debug_printfln!();
         debug_printfln!("Hello World");
+        debug_printfln!("Hello World",);
+        debug_printfln!(r#"Hello "World""#);
     }
 
     let vec = Vec2::new(1.52, 25.1);
