@@ -392,17 +392,16 @@ impl syn::parse::Parse for DebugPrintfInput {
             });
         }
 
+        let format_string = input.parse::<syn::LitStr>()?;
+        if !input.is_empty() {
+            input.parse::<syn::token::Comma>()?;
+        }
+        let variables = syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::parse_terminated(input)?;
+
         Ok(Self {
             span,
-            format_string: input.parse::<syn::LitStr>()?.value(),
-            variables: {
-                let mut variables = Vec::new();
-                while !input.is_empty() {
-                    input.parse::<syn::Token![,]>()?;
-                    variables.push(input.parse()?);
-                }
-                variables
-            },
+            format_string: format_string.value(),
+            variables: variables.into_iter().collect(),
         })
     }
 }
