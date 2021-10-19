@@ -430,17 +430,57 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         .into();
     }
 
+    let specifiers = "d|i|o|u|x|X|a|A|e|E|f|F|g|G|ul|lu|lx";
+
+    let regex = regex::Regex::new(&format!(r"%\d*\.?\d*(v(2|3|4)({specifiers})|{specifiers})", specifiers=specifiers)).unwrap();
+
+    fn map_specifier_to_type(specifier: &str) -> proc_macro2::TokenStream {
+        match specifier {
+            "d" => quote::quote! { i32 },
+            "i" => quote::quote! { i32 },
+            "o" => quote::quote! { u32 },
+            "u" => quote::quote! { u32 },
+            "x" => quote::quote! { u32 },
+            "X" => quote::quote! { u32 },
+            "a" => quote::quote! { f32 },
+            "A" => quote::quote! { f32 },
+            "e" => quote::quote! { f32 },
+            "E" => quote::quote! { f32 },
+            "f" => quote::quote! { f32 },
+            "F" => quote::quote! { f32 },
+            "g" => quote::quote! { f32 },
+            "G" => quote::quote! { f32 },
+            "ul" => quote::quote! { u64 },
+            "lu" => quote::quote! { u64 },
+            "lx" => quote::quote! { u64 },
+            _ => unreachable!()
+        }
+    }
+
+    let assert_fns = regex.captures_iter(&format_string).map(|captures| {
+        let specifier = &captures[1][0..1];
+
+        if specifier == "v" {
+            let count = &captures[2].parse::<usize>().unwrap();
+            let ty = map_specifier_to_type(&captures[3][0..1]);
+            quote::quote! { spirv_std::debug_printf_assert_is_vector::<#ty, _, #count> }
+        } else {
+            let ty = map_specifier_to_type(specifier);
+            quote::quote! { spirv_std::debug_printf_assert_is_type::<#ty> }
+        }
+    });
+
     let mut variable_idents = String::new();
     let mut input_registers = Vec::new();
     let mut op_loads = Vec::new();
 
-    for (i, variable) in variables.into_iter().enumerate() {
+    for (i, (variable, assert_fn)) in variables.into_iter().zip(assert_fns).enumerate() {
         let ident = quote::format_ident!("_{}", i);
 
         variable_idents.push_str(&format!("%{} ", ident));
 
         input_registers.push(quote::quote! {
-            #ident = in(reg) &{#variable},
+            #ident = in(reg) &#assert_fn(#variable),
         });
 
         let op_load = format!("%{ident} = OpLoad _ {{{ident}}}", ident = ident);

@@ -2,7 +2,7 @@
 // compile-flags: -Ctarget-feature=+ext:SPV_KHR_non_semantic_info
 
 use spirv_std::{
-    glam::Vec2,
+    glam::{Vec2, Vec3, Vec4, UVec2, IVec2},
     macros::{debug_printf, debug_printfln},
 };
 
@@ -34,11 +34,13 @@ pub fn main() {
 
     unsafe {
         debug_printfln!("%v2f", vec);
-        debug_printfln!("%v2f", { vec * 2.0 });
-        debug_printfln!("%v2f", vec * 3.0);
+        debug_printfln!("%1v2f", { vec * 2.0 });
+        debug_printfln!("%1.2v2f", vec * 3.0);
         debug_printfln!("%% %v2f %%", vec * 4.0);
         debug_printfln!("%u %i %f 🐉", 11_u32, -11_i32, 11.0_f32);
         debug_printfln!("%f", func(33.0, 44.0));
         debug_printfln!("%f", Struct { a: 33.0 }.method(44.0, 55.0));
+        debug_printfln!("%v3f %v4f", Vec3::new(1.0, 1.0, 1.0), Vec4::splat(5.0));
+        debug_printfln!("%v2u %v2i", UVec2::new(1, 1), IVec2::splat(-5));
     }
 }
