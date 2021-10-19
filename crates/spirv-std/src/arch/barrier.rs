@@ -85,6 +85,7 @@ pub unsafe fn memory_barrier<
 /// This blocks execution of all threads in a group until all group shared accesses have been completed.
 ///
 /// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrier
+#[inline]
 pub unsafe fn workgroup_memory_barrier() {
     memory_barrier::<
         { Scope::Workgroup as u32 },
@@ -96,6 +97,7 @@ pub unsafe fn workgroup_memory_barrier() {
 /// This blocks execution of all threads in a group until all group shared accesses have been completed and all threads in the group have reached this call.
 ///
 /// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrierwithgroupsync
+#[inline]
 pub unsafe fn workgroup_memory_barrier_with_group_sync() {
     control_barrier::<
         { Scope::Workgroup as u32 },
@@ -108,6 +110,7 @@ pub unsafe fn workgroup_memory_barrier_with_group_sync() {
 /// This blocks execution of all threads in a group until all device memory accesses have been completed.
 ///
 /// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrier
+#[inline]
 pub unsafe fn device_memory_barrier() {
     memory_barrier::<
         { Scope::Device as u32 },
@@ -123,6 +126,7 @@ pub unsafe fn device_memory_barrier() {
 /// This blocks execution of all threads in a group until all device memory accesses have been completed and all threads in the group have reached this call.
 ///
 /// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrierwithgroupsync
+#[inline]
 pub unsafe fn device_memory_barrier_with_group_sync() {
     control_barrier::<
         { Scope::Workgroup as u32 },
@@ -139,6 +143,7 @@ pub unsafe fn device_memory_barrier_with_group_sync() {
 /// This blocks execution of all threads in a group until all memory accesses have been completed.
 ///
 /// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrier
+#[inline]
 pub unsafe fn all_memory_barrier() {
     memory_barrier::<
         { Scope::Device as u32 },
@@ -155,6 +160,7 @@ pub unsafe fn all_memory_barrier() {
 /// This blocks execution of all threads in a group until all memory accesses have been completed and all threads in the group have reached this call.
 ///
 /// From https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrierwithgroupsync
+#[inline]
 pub unsafe fn all_memory_barrier_with_group_sync() {
     control_barrier::<
         { Scope::Workgroup as u32 },
