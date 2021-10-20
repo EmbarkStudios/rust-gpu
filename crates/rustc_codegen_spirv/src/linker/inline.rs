@@ -15,10 +15,10 @@ use std::mem::take;
 
 type FunctionMap = FxHashMap<Word, Function>;
 
-pub fn inline(sess: &Session, module: &mut Module) {
+pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
     // This algorithm gets real sad if there's recursion - but, good news, SPIR-V bans recursion
     if module_has_recursion(sess, module) {
-        return;
+        return Err(rustc_errors::ErrorReported);
     }
     let functions = module
         .functions
@@ -64,6 +64,7 @@ pub fn inline(sess: &Session, module: &mut Module) {
         inliner.inline_fn(function);
         fuse_trivial_branches(function);
     }
+    Ok(())
 }
 
 // https://stackoverflow.com/a/53995651

@@ -201,7 +201,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
 
     {
         let _timer = sess.timer("link_inline");
-        inline::inline(sess, &mut output);
+        inline::inline(sess, &mut output)?;
     }
 
     if opts.dce {
