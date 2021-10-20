@@ -363,15 +363,13 @@ fn path_from_ident(ident: Ident) -> syn::Type {
 /// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
 #[proc_macro]
 pub fn debug_printf(input: TokenStream) -> TokenStream {
-    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput))
+    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput), false)
 }
 
 /// Similar to `debug_printf` but appends a newline to the format string.
 #[proc_macro]
 pub fn debug_printfln(input: TokenStream) -> TokenStream {
-    let mut input = syn::parse_macro_input!(input as DebugPrintfInput);
-    input.format_string.push_str("\\n");
-    debug_printf_inner(input)
+    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput), true)
 }
 
 struct DebugPrintfInput {
@@ -407,9 +405,9 @@ impl syn::parse::Parse for DebugPrintfInput {
     }
 }
 
-fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
+fn debug_printf_inner(input: DebugPrintfInput, append_newline: bool) -> TokenStream {
     let DebugPrintfInput {
-        mut format_string,
+        format_string,
         variables,
         span,
     } = input;
@@ -455,11 +453,11 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         .collect::<proc_macro2::TokenStream>();
     let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
 
-    // Escape any inner quote marks. We can't use something like `String::escape_debug`
-    // as this escapes the newlines too.
-    format_string = format_string.replace('"', r#"\""#);
-
-    let op_string = format!("%string = OpString \"{}\"", format_string);
+    let op_string = format!(
+        "%string = OpString \"{}{}\"",
+        format_string.escape_debug(),
+        if append_newline { "\\n" } else { "" }
+    );
 
     let output = quote::quote! {
         asm!(
