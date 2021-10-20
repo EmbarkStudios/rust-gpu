@@ -363,13 +363,15 @@ fn path_from_ident(ident: Ident) -> syn::Type {
 /// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
 #[proc_macro]
 pub fn debug_printf(input: TokenStream) -> TokenStream {
-    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput), false)
+    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput))
 }
 
 /// Similar to `debug_printf` but appends a newline to the format string.
 #[proc_macro]
 pub fn debug_printfln(input: TokenStream) -> TokenStream {
-    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput), true)
+    let mut input = syn::parse_macro_input!(input as DebugPrintfInput);
+    input.format_string.push_str("\n");
+    debug_printf_inner(input)
 }
 
 struct DebugPrintfInput {
@@ -405,7 +407,7 @@ impl syn::parse::Parse for DebugPrintfInput {
     }
 }
 
-fn debug_printf_inner(input: DebugPrintfInput, append_newline: bool) -> TokenStream {
+fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     let DebugPrintfInput {
         format_string,
         variables,
@@ -453,11 +455,7 @@ fn debug_printf_inner(input: DebugPrintfInput, append_newline: bool) -> TokenStr
         .collect::<proc_macro2::TokenStream>();
     let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
 
-    let op_string = format!(
-        "%string = OpString \"{}{}\"",
-        format_string.escape_debug(),
-        if append_newline { "\\n" } else { "" }
-    );
+    let op_string = format!("%string = OpString {:?}", format_string);
 
     let output = quote::quote! {
         asm!(
