@@ -634,37 +634,6 @@
 <span id="634">634</span>
 <span id="635">635</span>
 <span id="636">636</span>
-<span id="637">637</span>
-<span id="638">638</span>
-<span id="639">639</span>
-<span id="640">640</span>
-<span id="641">641</span>
-<span id="642">642</span>
-<span id="643">643</span>
-<span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
-<span id="657">657</span>
-<span id="658">658</span>
-<span id="659">659</span>
-<span id="660">660</span>
-<span id="661">661</span>
-<span id="662">662</span>
-<span id="663">663</span>
-<span id="664">664</span>
-<span id="665">665</span>
-<span id="666">666</span>
-<span id="667">667</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Welcome to the API documentation for the `rust-gpu` project, this API is</span>
 <span class="doccomment">//! unstable and mainly intended for developing on the project itself. This is</span>
 <span class="doccomment">//! the API documentation for `rustc_codegen_spirv` which is not that useful on</span>
@@ -843,7 +812,6 @@
 <span class="kw">use</span> <span class="ident">rustc_session::config</span>::{<span class="self">self</span>, <span class="ident">OptLevel</span>, <span class="ident">OutputFilenames</span>, <span class="ident">OutputType</span>};
 <span class="kw">use</span> <span class="ident">rustc_session::Session</span>;
 <span class="kw">use</span> <span class="ident">rustc_span::symbol</span>::{<span class="ident">sym</span>, <span class="ident">Symbol</span>};
-<span class="kw">use</span> <span class="ident">rustc_target::spec::abi::Abi</span>;
 <span class="kw">use</span> <span class="ident">rustc_target::spec</span>::{<span class="ident">Target</span>, <span class="ident">TargetTriple</span>};
 <span class="kw">use</span> <span class="ident">std::any::Any</span>;
 <span class="kw">use</span> <span class="ident">std::env</span>;
@@ -953,42 +921,12 @@
     }
 
     <span class="kw">fn</span> <span class="ident">provide</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">providers</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">query::Providers</span>) {
-        <span class="comment">// This is a lil weird: so, we obviously don&#39;t support C ABIs at all. However, libcore does declare some extern</span>
-        <span class="comment">// C functions:</span>
-        <span class="comment">// https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/slice/cmp.rs#L119</span>
-        <span class="comment">// However, those functions will be implemented by compiler-builtins:</span>
-        <span class="comment">// https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/lib.rs#L23-L27</span>
-        <span class="comment">// This theoretically then should be fine to leave as C, but, there&#39;s no backend hook for</span>
-        <span class="comment">// FnAbi::adjust_for_cabi, causing it to panic:</span>
-        <span class="comment">// https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/compiler/rustc_target/src/abi/call/mod.rs#L603</span>
-        <span class="comment">// So, treat any extern &quot;C&quot; functions as actually being Rust ABI, to be able to compile libcore with arch=spirv.</span>
-        <span class="ident">providers</span>.<span class="ident">fn_sig</span> <span class="op">=</span> <span class="op">|</span><span class="ident">tcx</span>, <span class="ident">def_id</span><span class="op">|</span> {
-            <span class="comment">// We can&#39;t capture the old fn_sig and just call that, because fn_sig is a `fn`, not a `Fn`, i.e. it can&#39;t</span>
-            <span class="comment">// capture variables. Fortunately, the defaults are exposed (thanks rustdoc), so use that instead.</span>
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> (<span class="ident">rustc_interface::DEFAULT_QUERY_PROVIDERS</span>.<span class="ident">fn_sig</span>)(<span class="ident">tcx</span>, <span class="ident">def_id</span>);
-            <span class="ident">result</span>.<span class="ident">map_bound</span>(<span class="op">|</span><span class="kw-2">mut</span> <span class="ident">inner</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Abi::C</span> { .. } <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">abi</span> {
-                    <span class="ident">inner</span>.<span class="ident">abi</span> <span class="op">=</span> <span class="ident">Abi::Rust</span>;
-                }
-                <span class="ident">inner</span>
-            })
-        };
-
-        <span class="comment">// Extra hooks provided by other parts of `rustc_codegen_spirv`.</span>
+        <span class="ident"><span class="kw">crate</span>::abi::provide</span>(<span class="ident">providers</span>);
         <span class="ident"><span class="kw">crate</span>::attr::provide</span>(<span class="ident">providers</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">provide_extern</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">providers</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">query::Providers</span>) {
-        <span class="comment">// See comments in provide(), only this time we use the default *extern* provider.</span>
-        <span class="ident">providers</span>.<span class="ident">fn_sig</span> <span class="op">=</span> <span class="op">|</span><span class="ident">tcx</span>, <span class="ident">def_id</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> (<span class="ident">rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS</span>.<span class="ident">fn_sig</span>)(<span class="ident">tcx</span>, <span class="ident">def_id</span>);
-            <span class="ident">result</span>.<span class="ident">map_bound</span>(<span class="op">|</span><span class="kw-2">mut</span> <span class="ident">inner</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Abi::C</span> { .. } <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">abi</span> {
-                    <span class="ident">inner</span>.<span class="ident">abi</span> <span class="op">=</span> <span class="ident">Abi::Rust</span>;
-                }
-                <span class="ident">inner</span>
-            })
-        };
+        <span class="ident"><span class="kw">crate</span>::abi::provide_extern</span>(<span class="ident">providers</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">codegen_crate</span>(

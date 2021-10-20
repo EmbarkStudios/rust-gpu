@@ -876,28 +876,6 @@
 <span id="876">876</span>
 <span id="877">877</span>
 <span id="878">878</span>
-<span id="879">879</span>
-<span id="880">880</span>
-<span id="881">881</span>
-<span id="882">882</span>
-<span id="883">883</span>
-<span id="884">884</span>
-<span id="885">885</span>
-<span id="886">886</span>
-<span id="887">887</span>
-<span id="888">888</span>
-<span id="889">889</span>
-<span id="890">890</span>
-<span id="891">891</span>
-<span id="892">892</span>
-<span id="893">893</span>
-<span id="894">894</span>
-<span id="895">895</span>
-<span id="896">896</span>
-<span id="897">897</span>
-<span id="898">898</span>
-<span id="899">899</span>
-<span id="900">900</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This file is responsible for translation from rustc tys (`TyAndLayout`) to spir-v types. It&#39;s</span>
 <span class="doccomment">//! surprisingly difficult.</span>
 
@@ -908,23 +886,94 @@
 <span class="kw">use</span> <span class="ident">rustc_data_structures::fx::FxHashMap</span>;
 <span class="kw">use</span> <span class="ident">rustc_errors::ErrorReported</span>;
 <span class="kw">use</span> <span class="ident">rustc_index::vec::Idx</span>;
-<span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::ty::layout</span>::{<span class="ident">FnAbiOf</span>, <span class="ident">LayoutOf</span>, <span class="ident">TyAndLayout</span>};
+<span class="kw">use</span> <span class="ident">rustc_middle::ty::query::Providers</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::ty::subst::SubstsRef</span>;
 <span class="kw">use</span> <span class="ident">rustc_middle::ty</span>::{
-    <span class="self">self</span>, <span class="ident">Const</span>, <span class="ident">FloatTy</span>, <span class="ident">GeneratorSubsts</span>, <span class="ident">IntTy</span>, <span class="ident">ParamEnv</span>, <span class="ident">PolyFnSig</span>, <span class="ident">Ty</span>, <span class="ident">TyKind</span>, <span class="ident">TypeAndMut</span>,
-    <span class="ident">UintTy</span>,
+    <span class="self">self</span>, <span class="ident">Const</span>, <span class="ident">FloatTy</span>, <span class="ident">GeneratorSubsts</span>, <span class="ident">IntTy</span>, <span class="ident">ParamEnv</span>, <span class="ident">PolyFnSig</span>, <span class="ident">Ty</span>, <span class="ident">TyCtxt</span>, <span class="ident">TyKind</span>,
+    <span class="ident">TypeAndMut</span>, <span class="ident">UintTy</span>,
 };
+<span class="kw">use</span> <span class="ident">rustc_middle</span>::{<span class="ident">bug</span>, <span class="ident">span_bug</span>};
 <span class="kw">use</span> <span class="ident">rustc_span::def_id::DefId</span>;
 <span class="kw">use</span> <span class="ident">rustc_span::Span</span>;
 <span class="kw">use</span> <span class="ident">rustc_span::DUMMY_SP</span>;
-<span class="kw">use</span> <span class="ident">rustc_target::abi::call</span>::{<span class="ident">CastTarget</span>, <span class="ident">FnAbi</span>, <span class="ident">PassMode</span>, <span class="ident">Reg</span>, <span class="ident">RegKind</span>};
+<span class="kw">use</span> <span class="ident">rustc_target::abi::call</span>::{<span class="ident">ArgAbi</span>, <span class="ident">ArgAttributes</span>, <span class="ident">FnAbi</span>, <span class="ident">PassMode</span>};
 <span class="kw">use</span> <span class="ident">rustc_target::abi</span>::{<span class="ident">Abi</span>, <span class="ident">Align</span>, <span class="ident">FieldsShape</span>, <span class="ident">Primitive</span>, <span class="ident">Scalar</span>, <span class="ident">Size</span>, <span class="ident">VariantIdx</span>, <span class="ident">Variants</span>};
+<span class="kw">use</span> <span class="ident">rustc_target::spec::abi::Abi</span> <span class="kw">as</span> <span class="ident">SpecAbi</span>;
 <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
 <span class="kw">use</span> <span class="ident">std::collections::hash_map::Entry</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="kw">use</span> <span class="ident">num_traits::cast::FromPrimitive</span>;
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">provide</span>(<span class="ident">providers</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Providers</span>) {
+    <span class="comment">// This is a lil weird: so, we obviously don&#39;t support C ABIs at all. However, libcore does declare some extern</span>
+    <span class="comment">// C functions:</span>
+    <span class="comment">// https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/slice/cmp.rs#L119</span>
+    <span class="comment">// However, those functions will be implemented by compiler-builtins:</span>
+    <span class="comment">// https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/library/core/src/lib.rs#L23-L27</span>
+    <span class="comment">// This theoretically then should be fine to leave as C, but, there&#39;s no backend hook for</span>
+    <span class="comment">// `FnAbi::adjust_for_cabi`, causing it to panic:</span>
+    <span class="comment">// https://github.com/rust-lang/rust/blob/5fae56971d8487088c0099c82c0a5ce1638b5f62/compiler/rustc_target/src/abi/call/mod.rs#L603</span>
+    <span class="comment">// So, treat any `extern &quot;C&quot;` functions as `extern &quot;unadjusted&quot;`, to be able to compile libcore with arch=spirv.</span>
+    <span class="ident">providers</span>.<span class="ident">fn_sig</span> <span class="op">=</span> <span class="op">|</span><span class="ident">tcx</span>, <span class="ident">def_id</span><span class="op">|</span> {
+        <span class="comment">// We can&#39;t capture the old fn_sig and just call that, because fn_sig is a `fn`, not a `Fn`, i.e. it can&#39;t</span>
+        <span class="comment">// capture variables. Fortunately, the defaults are exposed (thanks rustdoc), so use that instead.</span>
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> (<span class="ident">rustc_interface::DEFAULT_QUERY_PROVIDERS</span>.<span class="ident">fn_sig</span>)(<span class="ident">tcx</span>, <span class="ident">def_id</span>);
+        <span class="ident">result</span>.<span class="ident">map_bound</span>(<span class="op">|</span><span class="kw-2">mut</span> <span class="ident">inner</span><span class="op">|</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">SpecAbi::C</span> { .. } <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">abi</span> {
+                <span class="ident">inner</span>.<span class="ident">abi</span> <span class="op">=</span> <span class="ident">SpecAbi::Unadjusted</span>;
+            }
+            <span class="ident">inner</span>
+        })
+    };
+
+    <span class="comment">// For the Rust ABI, `FnAbi` adjustments are backend-agnostic, but they will</span>
+    <span class="comment">// use features like `PassMode::Cast`, that are incompatible with SPIR-V.</span>
+    <span class="comment">// By hooking the queries computing `FnAbi`s, we can recompute the `FnAbi`</span>
+    <span class="comment">// from the return/args layouts, to e.g. prefer using `PassMode::Direct`.</span>
+    <span class="kw">fn</span> <span class="ident">readjust_fn_abi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(
+        <span class="ident">tcx</span>: <span class="ident">TyCtxt</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
+        <span class="ident">fn_abi</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">readjust_arg_abi</span> <span class="op">=</span> <span class="op">|</span><span class="ident">arg</span>: <span class="kw-2">&amp;</span><span class="ident">ArgAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">arg</span> <span class="op">=</span> <span class="ident">ArgAbi::new</span>(<span class="kw-2">&amp;</span><span class="ident">tcx</span>, <span class="ident">arg</span>.<span class="ident">layout</span>, <span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> <span class="ident">ArgAttributes::new</span>());
+
+            <span class="comment">// Avoid pointlessly passing ZSTs, just like the official Rust ABI.</span>
+            <span class="kw">if</span> <span class="ident">arg</span>.<span class="ident">layout</span>.<span class="ident">is_zst</span>() {
+                <span class="ident">arg</span>.<span class="ident">mode</span> <span class="op">=</span> <span class="ident">PassMode::Ignore</span>;
+            }
+
+            <span class="ident">arg</span>
+        };
+        <span class="ident">tcx</span>.<span class="ident">arena</span>.<span class="ident">alloc</span>(<span class="ident">FnAbi</span> {
+            <span class="ident">args</span>: <span class="ident">fn_abi</span>.<span class="ident">args</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="ident">readjust_arg_abi</span>).<span class="ident">collect</span>(),
+            <span class="ident">ret</span>: <span class="ident">readjust_arg_abi</span>(<span class="kw-2">&amp;</span><span class="ident">fn_abi</span>.<span class="ident">ret</span>),
+
+            <span class="comment">// FIXME(eddyb) validate some of these, and report errors - however,</span>
+            <span class="comment">// we can&#39;t just emit errors from here, since we have no `Span`, so</span>
+            <span class="comment">// we should have instead a check on MIR for e.g. C variadic calls.</span>
+            <span class="ident">c_variadic</span>: <span class="ident">fn_abi</span>.<span class="ident">c_variadic</span>,
+            <span class="ident">fixed_count</span>: <span class="ident">fn_abi</span>.<span class="ident">fixed_count</span>,
+            <span class="ident">conv</span>: <span class="ident">fn_abi</span>.<span class="ident">conv</span>,
+            <span class="ident">can_unwind</span>: <span class="ident">fn_abi</span>.<span class="ident">can_unwind</span>,
+        })
+    }
+    <span class="ident">providers</span>.<span class="ident">fn_abi_of_fn_ptr</span> <span class="op">=</span> <span class="op">|</span><span class="ident">tcx</span>, <span class="ident">key</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> (<span class="ident">rustc_interface::DEFAULT_QUERY_PROVIDERS</span>.<span class="ident">fn_abi_of_fn_ptr</span>)(<span class="ident">tcx</span>, <span class="ident">key</span>);
+        <span class="prelude-val">Ok</span>(<span class="ident">readjust_fn_abi</span>(<span class="ident">tcx</span>, <span class="ident">result</span><span class="question-mark">?</span>))
+    };
+    <span class="ident">providers</span>.<span class="ident">fn_abi_of_instance</span> <span class="op">=</span> <span class="op">|</span><span class="ident">tcx</span>, <span class="ident">key</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> (<span class="ident">rustc_interface::DEFAULT_QUERY_PROVIDERS</span>.<span class="ident">fn_abi_of_instance</span>)(<span class="ident">tcx</span>, <span class="ident">key</span>);
+        <span class="prelude-val">Ok</span>(<span class="ident">readjust_fn_abi</span>(<span class="ident">tcx</span>, <span class="ident">result</span><span class="question-mark">?</span>))
+    };
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">provide_extern</span>(<span class="ident">providers</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Providers</span>) {
+    <span class="comment">// Reset providers overriden in `provide`, that need to still go through the</span>
+    <span class="comment">// `rustc_metadata::rmeta` decoding, as opposed to being locally computed.</span>
+    <span class="ident">providers</span>.<span class="ident">fn_sig</span> <span class="op">=</span> <span class="ident">rustc_interface::DEFAULT_EXTERN_QUERY_PROVIDERS</span>.<span class="ident">fn_sig</span>;
+}
 
 <span class="doccomment">/// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk</span>
 <span class="doccomment">/// of the fields will result in an infinite loop. Because pointers are the only thing that are</span>
@@ -981,7 +1030,9 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">borrow_mut</span>().<span class="ident">entry</span>(<span class="ident">pointee</span>) {
             <span class="comment">// We should have hit begin() on this type already, which always inserts an entry.</span>
-            <span class="ident">Entry::Vacant</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug!</span>(<span class="string">&quot;RecursivePointeeCache::end should always have entry&quot;</span>),
+            <span class="ident">Entry::Vacant</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">span_bug!</span>(<span class="ident">span</span>, <span class="string">&quot;RecursivePointeeCache::end should always have entry&quot;</span>)
+            }
             <span class="ident">Entry::Occupied</span>(<span class="kw-2">mut</span> <span class="ident">entry</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">entry</span>.<span class="ident">get</span>() {
                 <span class="comment">// State: There have been no recursive references to this type while defining it, and so no</span>
                 <span class="comment">// OpTypeForwardPointer has been emitted. This is the most common case.</span>
@@ -1003,7 +1054,7 @@
                     .<span class="ident">def_with_id</span>(<span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">id</span>)
                 }
                 <span class="ident">PointeeDefState::Defined</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">bug!</span>(<span class="string">&quot;RecursivePointeeCache::end defined pointer twice&quot;</span>)
+                    <span class="macro">span_bug!</span>(<span class="ident">span</span>, <span class="string">&quot;RecursivePointeeCache::end defined pointer twice&quot;</span>)
                 }
             },
         }
@@ -1063,87 +1114,6 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">ConvSpirvType</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Reg</span> {
-    <span class="kw">fn</span> <span class="ident">spirv_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">kind</span> {
-            <span class="ident">RegKind::Integer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType::Integer</span>(<span class="self">self</span>.<span class="ident">size</span>.<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">u32</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
-            <span class="ident">RegKind::Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType::Float</span>(<span class="self">self</span>.<span class="ident">size</span>.<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
-            <span class="ident">RegKind::Vector</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SpirvType::Vector</span> {
-                <span class="ident">element</span>: <span class="ident">SpirvType::Integer</span>(<span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
-                <span class="ident">count</span>: <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">bytes</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-            }
-            .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
-        }
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">ConvSpirvType</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CastTarget</span> {
-    <span class="kw">fn</span> <span class="ident">spirv_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-        <span class="kw">let</span> <span class="ident">rest_ll_unit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">unit</span>.<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
-        <span class="kw">let</span> (<span class="ident">rest_count</span>, <span class="ident">rem_bytes</span>) <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">unit</span>.<span class="ident">size</span>.<span class="ident">bytes</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-            (<span class="number">0</span>, <span class="number">0</span>)
-        } <span class="kw">else</span> {
-            (
-                <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">total</span>.<span class="ident">bytes</span>() <span class="op">/</span> <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">unit</span>.<span class="ident">size</span>.<span class="ident">bytes</span>(),
-                <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">total</span>.<span class="ident">bytes</span>() <span class="op">%</span> <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">unit</span>.<span class="ident">size</span>.<span class="ident">bytes</span>(),
-            )
-        };
-
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">prefix</span>.<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">is_none</span>()) {
-            <span class="comment">// Simplify to a single unit when there is no prefix and size &lt;= unit size</span>
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">total</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">unit</span>.<span class="ident">size</span> {
-                <span class="kw">return</span> <span class="ident">rest_ll_unit</span>;
-            }
-
-            <span class="comment">// Simplify to array when all chunks are the same size and type</span>
-            <span class="kw">if</span> <span class="ident">rem_bytes</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="ident">SpirvType::Array</span> {
-                    <span class="ident">element</span>: <span class="ident">rest_ll_unit</span>,
-                    <span class="ident">count</span>: <span class="ident">cx</span>.<span class="ident">constant_u32</span>(<span class="ident">span</span>, <span class="ident">rest_count</span> <span class="kw">as</span> <span class="ident">u32</span>),
-                }
-                .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
-            }
-        }
-
-        <span class="comment">// Create list of fields in the main structure</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">prefix</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">flatten</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">kind</span><span class="op">|</span> {
-                <span class="ident">Reg</span> {
-                    <span class="ident">kind</span>,
-                    <span class="ident">size</span>: <span class="self">self</span>.<span class="ident">prefix_chunk_size</span>,
-                }
-                .<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
-            })
-            .<span class="ident">chain</span>((<span class="number">0</span>..<span class="ident">rest_count</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">rest_ll_unit</span>))
-            .<span class="ident">collect</span>();
-
-        <span class="comment">// Append final integer</span>
-        <span class="kw">if</span> <span class="ident">rem_bytes</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="comment">// Only integers can be really split further.</span>
-            <span class="macro">assert_eq!</span>(<span class="self">self</span>.<span class="ident">rest</span>.<span class="ident">unit</span>.<span class="ident">kind</span>, <span class="ident">RegKind::Integer</span>);
-            <span class="ident">args</span>.<span class="ident">push</span>(<span class="ident">SpirvType::Integer</span>(<span class="ident">rem_bytes</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="number">8</span>, <span class="bool-val">false</span>).<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>));
-        }
-
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">size</span>(<span class="ident">cx</span>));
-        <span class="kw">let</span> <span class="ident">align</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">align</span>(<span class="ident">cx</span>);
-        <span class="kw">let</span> (<span class="ident">field_offsets</span>, <span class="ident">computed_size</span>, <span class="ident">computed_align</span>) <span class="op">=</span> <span class="ident">auto_struct_layout</span>(<span class="ident">cx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">size</span>, <span class="ident">computed_size</span>, <span class="string">&quot;{:#?}&quot;</span>, <span class="self">self</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">align</span>, <span class="ident">computed_align</span>, <span class="string">&quot;{:#?}&quot;</span>, <span class="self">self</span>);
-        <span class="ident">SpirvType::Adt</span> {
-            <span class="ident">def_id</span>: <span class="prelude-val">None</span>,
-            <span class="ident">size</span>,
-            <span class="ident">align</span>,
-            <span class="ident">field_types</span>: <span class="ident">args</span>,
-            <span class="ident">field_offsets</span>,
-            <span class="ident">field_names</span>: <span class="prelude-val">None</span>,
-        }
-        .<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
-    }
-}
-
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">ConvSpirvType</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FnAbi</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span>, <span class="ident">Ty</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">spirv_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">argument_types</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -1153,14 +1123,11 @@
             <span class="ident">PassMode::Direct</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode::Pair</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">ret</span>.<span class="ident">layout</span>.<span class="ident">spirv_type_immediate</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
             }
-            <span class="ident">PassMode::Cast</span>(<span class="ident">cast_target</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cast_target</span>.<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
-            <span class="ident">PassMode::Indirect</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">pointee</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ret</span>.<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
-                <span class="kw">let</span> <span class="ident">pointer</span> <span class="op">=</span> <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> }.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
-                <span class="comment">// Important: the return pointer comes *first*, not last.</span>
-                <span class="ident">argument_types</span>.<span class="ident">push</span>(<span class="ident">pointer</span>);
-                <span class="ident">SpirvType::Void</span>.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
-            }
+            <span class="ident">PassMode::Cast</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode::Indirect</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">span_bug!</span>(
+                <span class="ident">span</span>,
+                <span class="string">&quot;query hooks should&#39;ve made this `PassMode` impossible: {:#?}&quot;</span>,
+                <span class="self">self</span>.<span class="ident">ret</span>
+            ),
         };
 
         <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">args</span> {
@@ -1176,27 +1143,11 @@
                     ));
                     <span class="kw">continue</span>;
                 }
-                <span class="ident">PassMode::Cast</span>(<span class="ident">cast_target</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cast_target</span>.<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>),
-                <span class="ident">PassMode::Indirect</span> {
-                    <span class="ident">extra_attrs</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
-                    ..
-                } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">ptr_ty</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">tcx</span>.<span class="ident">mk_mut_ptr</span>(<span class="ident">arg</span>.<span class="ident">layout</span>.<span class="ident">ty</span>);
-                    <span class="kw">let</span> <span class="ident">ptr_layout</span> <span class="op">=</span> <span class="ident">cx</span>.<span class="ident">layout_of</span>(<span class="ident">ptr_ty</span>);
-                    <span class="ident">argument_types</span>.<span class="ident">push</span>(<span class="ident">scalar_pair_element_backend_type</span>(
-                        <span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ptr_layout</span>, <span class="number">0</span>, <span class="bool-val">true</span>,
-                    ));
-                    <span class="ident">argument_types</span>.<span class="ident">push</span>(<span class="ident">scalar_pair_element_backend_type</span>(
-                        <span class="ident">cx</span>, <span class="ident">span</span>, <span class="ident">ptr_layout</span>, <span class="number">1</span>, <span class="bool-val">true</span>,
-                    ));
-                    <span class="kw">continue</span>;
-                }
-                <span class="ident">PassMode::Indirect</span> {
-                    <span class="ident">extra_attrs</span>: <span class="prelude-val">None</span>, ..
-                } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">pointee</span> <span class="op">=</span> <span class="ident">arg</span>.<span class="ident">layout</span>.<span class="ident">spirv_type</span>(<span class="ident">span</span>, <span class="ident">cx</span>);
-                    <span class="ident">SpirvType::Pointer</span> { <span class="ident">pointee</span> }.<span class="ident">def</span>(<span class="ident">span</span>, <span class="ident">cx</span>)
-                }
+                <span class="ident">PassMode::Cast</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">PassMode::Indirect</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">span_bug!</span>(
+                    <span class="ident">span</span>,
+                    <span class="string">&quot;query hooks should&#39;ve made this `PassMode` impossible: {:#?}&quot;</span>,
+                    <span class="ident">arg</span>
+                ),
             };
             <span class="ident">argument_types</span>.<span class="ident">push</span>(<span class="ident">arg_type</span>);
         }
@@ -1295,7 +1246,11 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
     <span class="kw">let</span> [<span class="ident">a</span>, <span class="ident">b</span>] <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">ty</span>.<span class="ident">layout</span>.<span class="ident">abi</span> {
         <span class="ident">Abi::ScalarPair</span>(<span class="ident">a</span>, <span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> [<span class="ident">a</span>, <span class="ident">b</span>],
-        <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug!</span>(<span class="string">&quot;scalar_pair_element_backend_type invalid abi: {:?}&quot;</span>, <span class="ident">other</span>),
+        <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">span_bug!</span>(
+            <span class="ident">span</span>,
+            <span class="string">&quot;scalar_pair_element_backend_type invalid abi: {:?}&quot;</span>,
+            <span class="ident">other</span>
+        ),
     };
     <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">index</span> {
         <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Size::ZERO</span>,
@@ -1424,7 +1379,8 @@
 
 <span class="kw">fn</span> <span class="ident">trans_aggregate</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">CodegenCx</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>, <span class="ident">span</span>: <span class="ident">Span</span>, <span class="ident">ty</span>: <span class="ident">TyAndLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
     <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">fields</span> {
-        <span class="ident">FieldsShape::Primitive</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">bug!</span>(
+        <span class="ident">FieldsShape::Primitive</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">span_bug!</span>(
+            <span class="ident">span</span>,
             <span class="string">&quot;trans_aggregate called for FieldsShape::Primitive layout {:#?}&quot;</span>,
             <span class="ident">ty</span>
         ),
@@ -1529,7 +1485,7 @@
         } <span class="kw">else</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TyKind::Adt</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">ty</span>.<span class="ident">kind</span>() {
             } <span class="kw">else</span> {
-                <span class="macro">bug!</span>(<span class="string">&quot;Variants::Multiple not TyKind::Adt&quot;</span>);
+                <span class="macro">span_bug!</span>(<span class="ident">span</span>, <span class="string">&quot;Variants::Multiple not TyKind::Adt&quot;</span>);
             }
             <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="ident">field_names</span>.<span class="ident">push</span>(<span class="string">&quot;discriminant&quot;</span>.<span class="ident">to_string</span>());
