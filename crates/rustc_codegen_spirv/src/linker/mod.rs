@@ -15,6 +15,8 @@ mod specializer;
 mod structurizer;
 mod zombies;
 
+use std::borrow::Cow;
+
 use crate::codegen_cx::SpirvMetadata;
 use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
 use rspirv::binary::{Assemble, Consumer};
@@ -75,6 +77,27 @@ fn apply_rewrite_rules(rewrite_rules: &FxHashMap<Word, Word>, blocks: &mut [Bloc
             apply(inst);
         }
     }
+}
+
+fn get_names(module: &Module) -> FxHashMap<Word, &str> {
+    module
+        .debug_names
+        .iter()
+        .filter(|i| i.class.opcode == Op::Name)
+        .map(|i| {
+            (
+                i.operands[0].unwrap_id_ref(),
+                i.operands[1].unwrap_literal_string(),
+            )
+        })
+        .collect()
+}
+
+fn get_name<'a>(names: &FxHashMap<Word, &'a str>, id: Word) -> Cow<'a, str> {
+    names
+        .get(&id)
+        .map(|&s| Cow::Borrowed(s))
+        .unwrap_or_else(|| Cow::Owned(format!("Unnamed function ID %{}", id)))
 }
 
 pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<LinkResult> {
@@ -178,7 +201,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
 
     {
         let _timer = sess.timer("link_inline");
-        inline::inline(&mut output);
+        inline::inline(sess, &mut output);
     }
 
     if opts.dce {
