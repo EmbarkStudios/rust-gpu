@@ -440,23 +440,10 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
 
     fn map_specifier_to_type(specifier: &str) -> proc_macro2::TokenStream {
         match specifier {
-            "d" => quote::quote! { i32 },
-            "i" => quote::quote! { i32 },
-            "o" => quote::quote! { u32 },
-            "u" => quote::quote! { u32 },
-            "x" => quote::quote! { u32 },
-            "X" => quote::quote! { u32 },
-            "a" => quote::quote! { f32 },
-            "A" => quote::quote! { f32 },
-            "e" => quote::quote! { f32 },
-            "E" => quote::quote! { f32 },
-            "f" => quote::quote! { f32 },
-            "F" => quote::quote! { f32 },
-            "g" => quote::quote! { f32 },
-            "G" => quote::quote! { f32 },
-            "ul" => quote::quote! { u64 },
-            "lu" => quote::quote! { u64 },
-            "lx" => quote::quote! { u64 },
+            "d" | "i" => quote::quote! { i32 },
+            "o" | "u" | "x" | "X" => quote::quote! { u32 },
+            "a" | "A" | "e" | "E" | "f" | "F" | "g" | "G" => quote::quote! { f32 },
+            "ul" | "lu" | "lx" => quote::quote! { u64 },
             _ => unreachable!(),
         }
     }
