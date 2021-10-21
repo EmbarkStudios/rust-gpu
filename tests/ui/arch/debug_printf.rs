@@ -33,6 +33,7 @@ pub fn main() {
 "#
         );
         debug_printfln!("Hello \"World\"\n\n");
+        debug_printfln!("%%r %%f %%%%f %%%%%u", 77);
     }
 
     let vec = Vec2::new(1.52, 25.1);

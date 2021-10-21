@@ -417,12 +417,16 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     let specifiers = "d|i|o|u|x|X|a|A|e|E|f|F|g|G|ul|lu|lx";
 
     let regex = regex::Regex::new(&format!(
-        r"%\d*\.?\d*(v(2|3|4)({specifiers})|{specifiers})",
+        r"(%+)\d*\.?\d*(v(2|3|4)({specifiers})|{specifiers})",
         specifiers = specifiers
     ))
     .unwrap();
 
-    let number_of_arguments = regex.captures_iter(&format_string).count();
+    let number_of_arguments = regex
+        .captures_iter(&format_string)
+        // Filter out captures with an even number of `%`s, as pairs of them are escaped.
+        .filter(|captures| captures[1].len() % 2 == 1)
+        .count();
 
     if number_of_arguments != variables.len() {
         return syn::Error::new(
@@ -447,18 +451,21 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         }
     }
 
-    let assert_fns = regex.captures_iter(&format_string).map(|captures| {
-        let specifier = &captures[1][0..1];
+    let assert_fns = regex
+        .captures_iter(&format_string)
+        .filter(|captures| captures[1].len() % 2 == 1)
+        .map(|captures| {
+            let specifier = &captures[2][0..1];
 
-        if specifier == "v" {
-            let count = &captures[2].parse::<usize>().unwrap();
-            let ty = map_specifier_to_type(&captures[3][0..1]);
-            quote::quote! { spirv_std::debug_printf_assert_is_vector::<#ty, _, #count> }
-        } else {
-            let ty = map_specifier_to_type(specifier);
-            quote::quote! { spirv_std::debug_printf_assert_is_type::<#ty> }
-        }
-    });
+            if specifier == "v" {
+                let count = &captures[3].parse::<usize>().unwrap();
+                let ty = map_specifier_to_type(&captures[4][0..1]);
+                quote::quote! { spirv_std::debug_printf_assert_is_vector::<#ty, _, #count> }
+            } else {
+                let ty = map_specifier_to_type(specifier);
+                quote::quote! { spirv_std::debug_printf_assert_is_type::<#ty> }
+            }
+        });
 
     let mut variable_idents = String::new();
     let mut input_registers = Vec::new();
