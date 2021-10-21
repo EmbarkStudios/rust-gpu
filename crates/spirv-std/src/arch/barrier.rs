@@ -79,8 +79,9 @@ pub unsafe fn memory_barrier<
     }
 }
 
-/// An exact implementation of `GroupMemoryBarrier()`.
-/// This blocks execution of all threads in a group until all group shared accesses have been completed.
+/// Blocks execution of all threads in a group until all group shared accesses have been completed.
+///
+/// This is an exact implementation of `GroupMemoryBarrier()`.
 ///
 /// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrier>
 #[spirv_std_macros::gpu_only]
@@ -95,8 +96,9 @@ pub unsafe fn workgroup_memory_barrier() {
     >();
 }
 
-/// An exact implementation of `GroupMemoryBarrierWithGroupSync()`.
-/// This blocks execution of all threads in a group until all group shared accesses have been completed and all threads in the group have reached this call.
+/// Blocks execution of all threads in a group until all group shared accesses have been completed and all threads in the group have reached this call.
+///
+/// This is an exact implementation of `GroupMemoryBarrierWithGroupSync()`.
 ///
 /// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrierwithgroupsync>
 #[spirv_std_macros::gpu_only]
@@ -112,8 +114,9 @@ pub unsafe fn workgroup_memory_barrier_with_group_sync() {
     >();
 }
 
-/// An exact implementation of `DeviceMemoryBarrier()`.
-/// This blocks execution of all threads in a group until all device memory accesses have been completed.
+/// Blocks execution of all threads in a group until all device memory accesses have been completed.
+///
+/// This is an exact implementation of `DeviceMemoryBarrier()`.
 ///
 /// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrier>
 #[spirv_std_macros::gpu_only]
@@ -129,8 +132,9 @@ pub unsafe fn device_memory_barrier() {
     >();
 }
 
-/// An exact implementation of `DeviceMemoryBarrierWithGroupSync()`.
-/// This blocks execution of all threads in a group until all device memory accesses have been completed and all threads in the group have reached this call.
+/// Blocks execution of all threads in a group until all device memory accesses have been completed and all threads in the group have reached this call.
+///
+/// This is an exact implementation of `DeviceMemoryBarrierWithGroupSync()`.
 ///
 /// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrierwithgroupsync>
 #[spirv_std_macros::gpu_only]
@@ -147,8 +151,9 @@ pub unsafe fn device_memory_barrier_with_group_sync() {
     >();
 }
 
-/// An exact implementation of `AllMemoryBarrier()`.
-/// This blocks execution of all threads in a group until all memory accesses have been completed.
+/// Blocks execution of all threads in a group until all memory accesses have been completed.
+///
+/// This is an exact implementation of `AllMemoryBarrier()`.
 ///
 /// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrier>
 #[spirv_std_macros::gpu_only]
@@ -165,8 +170,9 @@ pub unsafe fn all_memory_barrier() {
     >();
 }
 
-/// An exact implementation of `AllMemoryBarrierWithGroupSync()`.
-/// This blocks execution of all threads in a group until all memory accesses have been completed and all threads in the group have reached this call.
+/// Blocks execution of all threads in a group until all memory accesses have been completed and all threads in the group have reached this call.
+///
+/// This is an exact implementation of `AllMemoryBarrierWithGroupSync()`.
 ///
 /// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrierwithgroupsync>
 #[spirv_std_macros::gpu_only]
