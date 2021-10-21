@@ -370,7 +370,7 @@ pub fn debug_printf(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn debug_printfln(input: TokenStream) -> TokenStream {
     let mut input = syn::parse_macro_input!(input as DebugPrintfInput);
-    input.format_string.push_str("\n");
+    input.format_string.push('\n');
     debug_printf_inner(input)
 }
 
