@@ -1,0 +1,59 @@
+error: 0 valid % arguments were found, but 1 variables were given
+  --> $DIR/debug_printf_type_checking.rs:12:23
+   |
+12 |         debug_printf!("%r", 11_i32);
+   |                       ^^^^
+
+error[E0308]: mismatched types
+  --> $DIR/debug_printf_type_checking.rs:13:29
+   |
+13 |         debug_printf!("%f", 11_u32);
+   |                             ^^^^^^ expected `f32`, found `u32`
+   |
+help: change the type of the numeric literal from `u32` to `f32`
+   |
+13 |         debug_printf!("%f", 11_f32);
+   |                                ~~~
+
+error[E0308]: mismatched types
+  --> $DIR/debug_printf_type_checking.rs:14:29
+   |
+14 |         debug_printf!("%u", 11.0_f32);
+   |                             ^^^^^^^^ expected `u32`, found `f32`
+   |
+help: change the type of the numeric literal from `f32` to `u32`
+   |
+14 |         debug_printf!("%u", 11u32);
+   |                               ~~~
+
+error[E0277]: the trait bound `{float}: Vector<f32, 2_usize>` is not satisfied
+   --> $DIR/debug_printf_type_checking.rs:15:31
+    |
+15  |         debug_printf!("%v2f", 11.0);
+    |         ----------------------^^^^--
+    |         |                     |
+    |         |                     the trait `Vector<f32, 2_usize>` is not implemented for `{float}`
+    |         required by a bound introduced by this call
+    |
+    = help: the following implementations were found:
+              <BVec2 as Vector<bool, 2_usize>>
+              <BVec3 as Vector<bool, 3_usize>>
+              <BVec4 as Vector<bool, 4_usize>>
+              <DVec2 as Vector<f64, 2_usize>>
+            and 13 others
+note: required by a bound in `debug_printf_assert_is_vector`
+   --> C:/Users/Ashley/Desktop/rust-gpu/crates/spirv-std/src/lib.rs:142:8
+    |
+142 |     V: crate::vector::Vector<TY, SIZE>,
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `debug_printf_assert_is_vector`
+
+error[E0308]: mismatched types
+  --> $DIR/debug_printf_type_checking.rs:16:29
+   |
+16 |         debug_printf!("%f", Vec2::splat(33.3));
+   |                             ^^^^^^^^^^^^^^^^^ expected `f32`, found struct `Vec2`
+
+error: aborting due to 5 previous errors
+
+Some errors have detailed explanations: E0277, E0308.
+For more information about an error, try `rustc --explain E0277`.

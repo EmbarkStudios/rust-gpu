@@ -414,22 +414,6 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         span,
     } = input;
 
-    let number_of_arguments =
-        format_string.matches('%').count() - format_string.matches("%%").count() * 2;
-
-    if number_of_arguments != variables.len() {
-        return syn::Error::new(
-            span,
-            &format!(
-                "{} % arguments were found, but {} variables were given",
-                number_of_arguments,
-                variables.len()
-            ),
-        )
-        .to_compile_error()
-        .into();
-    }
-
     let specifiers = "d|i|o|u|x|X|a|A|e|E|f|F|g|G|ul|lu|lx";
 
     let regex = regex::Regex::new(&format!(
@@ -437,6 +421,21 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         specifiers = specifiers
     ))
     .unwrap();
+
+    let number_of_arguments = regex.captures_iter(&format_string).count();
+
+    if number_of_arguments != variables.len() {
+        return syn::Error::new(
+            span,
+            &format!(
+                "{} valid % arguments were found, but {} variables were given",
+                number_of_arguments,
+                variables.len()
+            ),
+        )
+        .to_compile_error()
+        .into();
+    }
 
     fn map_specifier_to_type(specifier: &str) -> proc_macro2::TokenStream {
         match specifier {
