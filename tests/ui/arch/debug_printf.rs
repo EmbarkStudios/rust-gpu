@@ -2,7 +2,7 @@
 // compile-flags: -Ctarget-feature=+ext:SPV_KHR_non_semantic_info
 
 use spirv_std::{
-    glam::{Vec2, Vec3, Vec4, UVec2, IVec2},
+    glam::{IVec2, UVec2, Vec2, Vec3, Vec4},
     macros::{debug_printf, debug_printfln},
 };
 
