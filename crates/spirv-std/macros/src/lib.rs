@@ -407,6 +407,20 @@ impl syn::parse::Parse for DebugPrintfInput {
     }
 }
 
+fn parsing_error(message: &str, span: proc_macro2::Span) -> TokenStream {
+    syn::Error::new(span, message).to_compile_error().into()
+}
+
+enum FormatType {
+    Scalar {
+        ty: proc_macro2::TokenStream,
+    },
+    Vector {
+        ty: proc_macro2::TokenStream,
+        width: usize,
+    },
+}
+
 fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     let DebugPrintfInput {
         format_string,
@@ -414,26 +428,135 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         span,
     } = input;
 
-    let specifiers = "d|i|o|u|x|X|a|A|e|E|f|F|g|G|ul|lu|lx";
+    fn map_specifier_to_type(
+        specifier: char,
+        chars: &mut std::iter::Peekable<impl Iterator<Item = char>>,
+    ) -> Option<proc_macro2::TokenStream> {
+        Some(match specifier {
+            'd' | 'i' => quote::quote! { i32 },
+            'o' | 'x' | 'X' => quote::quote! { u32 },
+            'a' | 'A' | 'e' | 'E' | 'f' | 'F' | 'g' | 'G' => quote::quote! { f32 },
+            'u' => {
+                if matches!(chars.peek(), Some('l')) {
+                    chars.next();
+                    quote::quote! { u64 }
+                } else {
+                    quote::quote! { u32 }
+                }
+            }
+            'l' => {
+                if matches!(chars.peek(), Some('u' | 'x')) {
+                    chars.next();
+                    quote::quote! { u64 }
+                } else {
+                    return None;
+                }
+            }
+            _ => return None,
+        })
+    }
 
-    let regex = regex::Regex::new(&format!(
-        r"(%+)\d*\.?\d*(v(2|3|4)({specifiers})|{specifiers})",
-        specifiers = specifiers
-    ))
-    .unwrap();
+    let mut chars = format_string.chars().peekable();
+    let mut format_arguments = Vec::new();
 
-    let number_of_arguments = regex
-        .captures_iter(&format_string)
-        // Filter out captures with an even number of `%`s, as pairs of them are escaped.
-        .filter(|captures| captures[1].len() % 2 == 1)
-        .count();
+    while let Some(ch) = chars.next() {
+        if ch == '%' {
+            match chars.next() {
+                None => return parsing_error("Unterminated format specifier", span),
+                Some('%') => {}
+                Some(mut ch) => {
+                    let mut has_precision = false;
 
-    if number_of_arguments != variables.len() {
+                    while matches!(ch, '0'..='9') {
+                        ch =
+                            match chars.next() {
+                                Some(ch) => ch,
+                                None => return parsing_error(
+                                    "Unterminated format specifier: missing type after precision",
+                                    span,
+                                ),
+                            };
+
+                        has_precision = true;
+                    }
+
+                    if has_precision && ch == '.' {
+                        ch = match chars.next() {
+                            Some(ch) => ch,
+                            None => {
+                                return parsing_error(
+                                    "Unterminated format specifier: missing type after decimal point",
+                                    span,
+                                )
+                            }
+                        };
+
+                        while matches!(ch, '0'..='9') {
+                            ch = match chars.next() {
+                                Some(ch) => ch,
+                                None => {
+                                    return parsing_error("Unterminated format specifier: missing type after fraction precision", span)
+                                }
+                            };
+                        }
+                    }
+
+                    if ch == 'v' {
+                        let width = match chars.next() {
+                            Some('2') => 2,
+                            Some('3') => 3,
+                            Some('4') => 4,
+                            Some(ch) => {
+                                return parsing_error(
+                                    &format!("Invalid width for vector: {}", ch),
+                                    span,
+                                )
+                            }
+                            None => {
+                                return parsing_error("Missing vector dimensions specifier", span)
+                            }
+                        };
+
+                        ch = match chars.next() {
+                            Some(ch) => ch,
+                            None => return parsing_error("Missing vector type specifier", span),
+                        };
+
+                        let ty = match map_specifier_to_type(ch, &mut chars) {
+                            Some(ty) => ty,
+                            _ => {
+                                return parsing_error(
+                                    &format!("Unrecognised vector type specifier: '{}'", ch),
+                                    span,
+                                )
+                            }
+                        };
+
+                        format_arguments.push(FormatType::Vector { ty, width });
+                    } else {
+                        let ty = match map_specifier_to_type(ch, &mut chars) {
+                            Some(ty) => ty,
+                            _ => {
+                                return parsing_error(
+                                    &format!("Unrecognised format specifier: '{}'", ch),
+                                    span,
+                                )
+                            }
+                        };
+
+                        format_arguments.push(FormatType::Scalar { ty });
+                    }
+                }
+            }
+        }
+    }
+
+    if format_arguments.len() != variables.len() {
         return syn::Error::new(
             span,
             &format!(
-                "{} valid % arguments were found, but {} variables were given",
-                number_of_arguments,
+                "{} % arguments were found, but {} variables were given",
+                format_arguments.len(),
                 variables.len()
             ),
         )
@@ -441,31 +564,14 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         .into();
     }
 
-    fn map_specifier_to_type(specifier: &str) -> proc_macro2::TokenStream {
-        match specifier {
-            "d" | "i" => quote::quote! { i32 },
-            "o" | "u" | "x" | "X" => quote::quote! { u32 },
-            "a" | "A" | "e" | "E" | "f" | "F" | "g" | "G" => quote::quote! { f32 },
-            "ul" | "lu" | "lx" => quote::quote! { u64 },
-            _ => unreachable!(),
+    let assert_fns = format_arguments.iter().map(|ty| match ty {
+        FormatType::Scalar { ty } => {
+            quote::quote! { spirv_std::debug_printf_assert_is_type::<#ty> }
         }
-    }
-
-    let assert_fns = regex
-        .captures_iter(&format_string)
-        .filter(|captures| captures[1].len() % 2 == 1)
-        .map(|captures| {
-            let specifier = &captures[2][0..1];
-
-            if specifier == "v" {
-                let count = &captures[3].parse::<usize>().unwrap();
-                let ty = map_specifier_to_type(&captures[4][0..1]);
-                quote::quote! { spirv_std::debug_printf_assert_is_vector::<#ty, _, #count> }
-            } else {
-                let ty = map_specifier_to_type(specifier);
-                quote::quote! { spirv_std::debug_printf_assert_is_type::<#ty> }
-            }
-        });
+        FormatType::Vector { ty, width } => {
+            quote::quote! { spirv_std::debug_printf_assert_is_vector::<#ty, _, #width> }
+        }
+    });
 
     let mut variable_idents = String::new();
     let mut input_registers = Vec::new();
