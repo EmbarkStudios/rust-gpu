@@ -137,6 +137,12 @@ pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
 }
 
 #[doc(hidden)]
-pub fn debug_printf_assert_is_vector<TY: crate::scalar::Scalar, V: crate::vector::Vector<TY, SIZE>, const SIZE: usize>(vec: V) -> V {
+pub fn debug_printf_assert_is_vector<
+    TY: crate::scalar::Scalar,
+    V: crate::vector::Vector<TY, SIZE>,
+    const SIZE: usize,
+>(
+    vec: V,
+) -> V {
     vec
 }

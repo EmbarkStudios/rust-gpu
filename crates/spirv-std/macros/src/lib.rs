@@ -432,7 +432,11 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
 
     let specifiers = "d|i|o|u|x|X|a|A|e|E|f|F|g|G|ul|lu|lx";
 
-    let regex = regex::Regex::new(&format!(r"%\d*\.?\d*(v(2|3|4)({specifiers})|{specifiers})", specifiers=specifiers)).unwrap();
+    let regex = regex::Regex::new(&format!(
+        r"%\d*\.?\d*(v(2|3|4)({specifiers})|{specifiers})",
+        specifiers = specifiers
+    ))
+    .unwrap();
 
     fn map_specifier_to_type(specifier: &str) -> proc_macro2::TokenStream {
         match specifier {
@@ -453,7 +457,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
             "ul" => quote::quote! { u64 },
             "lu" => quote::quote! { u64 },
             "lx" => quote::quote! { u64 },
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
