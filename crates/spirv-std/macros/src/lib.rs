@@ -459,94 +459,91 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     let mut chars = format_string.chars().peekable();
     let mut format_arguments = Vec::new();
 
-    while let Some(ch) = chars.next() {
+    while let Some(mut ch) = chars.next() {
         if ch == '%' {
-            match chars.next() {
+            ch = match chars.next() {
+                Some('%') => continue,
                 None => return parsing_error("Unterminated format specifier", span),
-                Some('%') => {}
-                Some(mut ch) => {
-                    let mut has_precision = false;
+                Some(ch) => ch,
+            };
 
-                    while matches!(ch, '0'..='9') {
-                        ch =
-                            match chars.next() {
-                                Some(ch) => ch,
-                                None => return parsing_error(
-                                    "Unterminated format specifier: missing type after precision",
-                                    span,
-                                ),
-                            };
+            let mut has_precision = false;
 
-                        has_precision = true;
+            while matches!(ch, '0'..='9') {
+                ch = match chars.next() {
+                    Some(ch) => ch,
+                    None => {
+                        return parsing_error(
+                            "Unterminated format specifier: missing type after precision",
+                            span,
+                        )
                     }
+                };
 
-                    if has_precision && ch == '.' {
-                        ch = match chars.next() {
-                            Some(ch) => ch,
-                            None => {
-                                return parsing_error(
-                                    "Unterminated format specifier: missing type after decimal point",
-                                    span,
-                                )
-                            }
-                        };
+                has_precision = true;
+            }
 
-                        while matches!(ch, '0'..='9') {
-                            ch = match chars.next() {
-                                Some(ch) => ch,
-                                None => {
-                                    return parsing_error("Unterminated format specifier: missing type after fraction precision", span)
-                                }
-                            };
-                        }
+            if has_precision && ch == '.' {
+                ch = match chars.next() {
+                    Some(ch) => ch,
+                    None => {
+                        return parsing_error(
+                            "Unterminated format specifier: missing type after decimal point",
+                            span,
+                        )
                     }
+                };
 
-                    if ch == 'v' {
-                        let width = match chars.next() {
-                            Some('2') => 2,
-                            Some('3') => 3,
-                            Some('4') => 4,
-                            Some(ch) => {
-                                return parsing_error(
-                                    &format!("Invalid width for vector: {}", ch),
-                                    span,
-                                )
-                            }
-                            None => {
-                                return parsing_error("Missing vector dimensions specifier", span)
-                            }
-                        };
-
-                        ch = match chars.next() {
-                            Some(ch) => ch,
-                            None => return parsing_error("Missing vector type specifier", span),
-                        };
-
-                        let ty = match map_specifier_to_type(ch, &mut chars) {
-                            Some(ty) => ty,
-                            _ => {
-                                return parsing_error(
-                                    &format!("Unrecognised vector type specifier: '{}'", ch),
-                                    span,
-                                )
-                            }
-                        };
-
-                        format_arguments.push(FormatType::Vector { ty, width });
-                    } else {
-                        let ty = match map_specifier_to_type(ch, &mut chars) {
-                            Some(ty) => ty,
-                            _ => {
-                                return parsing_error(
-                                    &format!("Unrecognised format specifier: '{}'", ch),
-                                    span,
-                                )
-                            }
-                        };
-
-                        format_arguments.push(FormatType::Scalar { ty });
-                    }
+                while matches!(ch, '0'..='9') {
+                    ch = match chars.next() {
+                        Some(ch) => ch,
+                        None => return parsing_error(
+                            "Unterminated format specifier: missing type after fraction precision",
+                            span,
+                        ),
+                    };
                 }
+            }
+
+            if ch == 'v' {
+                let width = match chars.next() {
+                    Some('2') => 2,
+                    Some('3') => 3,
+                    Some('4') => 4,
+                    Some(ch) => {
+                        return parsing_error(&format!("Invalid width for vector: {}", ch), span)
+                    }
+                    None => return parsing_error("Missing vector dimensions specifier", span),
+                };
+
+                ch = match chars.next() {
+                    Some(ch) => ch,
+                    None => return parsing_error("Missing vector type specifier", span),
+                };
+
+                let ty = match map_specifier_to_type(ch, &mut chars) {
+                    Some(ty) => ty,
+                    _ => {
+                        return parsing_error(
+                            &format!("Unrecognised vector type specifier: '{}'", ch),
+                            span,
+                        )
+                    }
+                };
+
+                format_arguments.push(FormatType::Vector { ty, width });
+            } else {
+                let ty = match map_specifier_to_type(ch, &mut chars) {
+                    Some(ty) => ty,
+                    _ => {
+                        return parsing_error(
+                            &format!("Unrecognised format specifier: '{}'", ch),
+                            span,
+                        )
+                    }
+                };
+
+                format_arguments.push(FormatType::Scalar { ty });
             }
         }
     }
