@@ -1,4 +1,5 @@
 // build-fail
+// normalize-stderr-test "\S*/crates/spirv-std/src/" -> "$$SPIRV_STD_SRC/"
 // compile-flags: -Ctarget-feature=+ext:SPV_KHR_non_semantic_info
 
 use spirv_std::{

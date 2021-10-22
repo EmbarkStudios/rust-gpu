@@ -430,14 +430,16 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
 
     fn map_specifier_to_type(
         specifier: char,
-        chars: &mut std::iter::Peekable<impl Iterator<Item = char>>,
+        chars: &mut impl Iterator<Item = char>,
     ) -> Option<proc_macro2::TokenStream> {
+        let mut peekable = chars.peekable();
+
         Some(match specifier {
             'd' | 'i' => quote::quote! { i32 },
             'o' | 'x' | 'X' => quote::quote! { u32 },
             'a' | 'A' | 'e' | 'E' | 'f' | 'F' | 'g' | 'G' => quote::quote! { f32 },
             'u' => {
-                if matches!(chars.peek(), Some('l')) {
+                if matches!(peekable.peek(), Some('l')) {
                     chars.next();
                     quote::quote! { u64 }
                 } else {
@@ -445,7 +447,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
                 }
             }
             'l' => {
-                if matches!(chars.peek(), Some('u' | 'x')) {
+                if matches!(peekable.peek(), Some('u' | 'x')) {
                     chars.next();
                     quote::quote! { u64 }
                 } else {
@@ -456,7 +458,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         })
     }
 
-    let mut chars = format_string.chars().peekable();
+    let mut chars = format_string.chars();
     let mut format_arguments = Vec::new();
 
     while let Some(mut ch) = chars.next() {
@@ -561,23 +563,24 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         .into();
     }
 
-    let assert_fns = format_arguments.iter().map(|ty| match ty {
-        FormatType::Scalar { ty } => {
-            quote::quote! { spirv_std::debug_printf_assert_is_type::<#ty> }
-        }
-        FormatType::Vector { ty, width } => {
-            quote::quote! { spirv_std::debug_printf_assert_is_vector::<#ty, _, #width> }
-        }
-    });
-
     let mut variable_idents = String::new();
     let mut input_registers = Vec::new();
     let mut op_loads = Vec::new();
 
-    for (i, (variable, assert_fn)) in variables.into_iter().zip(assert_fns).enumerate() {
+    for (i, (variable, format_argument)) in variables.into_iter().zip(format_arguments).enumerate()
+    {
         let ident = quote::format_ident!("_{}", i);
 
         variable_idents.push_str(&format!("%{} ", ident));
+
+        let assert_fn = match format_argument {
+            FormatType::Scalar { ty } => {
+                quote::quote! { spirv_std::debug_printf_assert_is_type::<#ty> }
+            }
+            FormatType::Vector { ty, width } => {
+                quote::quote! { spirv_std::debug_printf_assert_is_vector::<#ty, _, #width> }
+            }
+        };
 
         input_registers.push(quote::quote! {
             #ident = in(reg) &#assert_fn(#variable),
