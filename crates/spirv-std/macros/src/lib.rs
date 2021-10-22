@@ -430,7 +430,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
 
     fn map_specifier_to_type(
         specifier: char,
-        chars: &mut impl Iterator<Item = char>,
+        chars: &mut std::str::Chars<'_>,
     ) -> Option<proc_macro2::TokenStream> {
         let mut peekable = chars.peekable();
 
