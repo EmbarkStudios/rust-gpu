@@ -350,3 +350,266 @@ fn path_from_ident(ident: Ident) -> syn::Type {
         path: syn::Path::from(ident),
     })
 }
+
+/// Print a formatted string with a newline using the debug printf extension.
+///
+/// Examples:
+///
+/// ```rust,ignore
+/// debug_printfln!("uv: %v2f", uv);
+/// debug_printfln!("pos.x: %f, pos.z: %f, int: %i", pos.x, pos.z, int);
+/// ```
+///
+/// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
+#[proc_macro]
+pub fn debug_printf(input: TokenStream) -> TokenStream {
+    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput))
+}
+
+/// Similar to `debug_printf` but appends a newline to the format string.
+#[proc_macro]
+pub fn debug_printfln(input: TokenStream) -> TokenStream {
+    let mut input = syn::parse_macro_input!(input as DebugPrintfInput);
+    input.format_string.push('\n');
+    debug_printf_inner(input)
+}
+
+struct DebugPrintfInput {
+    span: proc_macro2::Span,
+    format_string: String,
+    variables: Vec<syn::Expr>,
+}
+
+impl syn::parse::Parse for DebugPrintfInput {
+    fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
+        let span = input.span();
+
+        if input.is_empty() {
+            return Ok(Self {
+                span,
+                format_string: Default::default(),
+                variables: Default::default(),
+            });
+        }
+
+        let format_string = input.parse::<syn::LitStr>()?;
+        if !input.is_empty() {
+            input.parse::<syn::token::Comma>()?;
+        }
+        let variables =
+            syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::parse_terminated(input)?;
+
+        Ok(Self {
+            span,
+            format_string: format_string.value(),
+            variables: variables.into_iter().collect(),
+        })
+    }
+}
+
+fn parsing_error(message: &str, span: proc_macro2::Span) -> TokenStream {
+    syn::Error::new(span, message).to_compile_error().into()
+}
+
+enum FormatType {
+    Scalar {
+        ty: proc_macro2::TokenStream,
+    },
+    Vector {
+        ty: proc_macro2::TokenStream,
+        width: usize,
+    },
+}
+
+fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
+    let DebugPrintfInput {
+        format_string,
+        variables,
+        span,
+    } = input;
+
+    fn map_specifier_to_type(
+        specifier: char,
+        chars: &mut std::str::Chars<'_>,
+    ) -> Option<proc_macro2::TokenStream> {
+        let mut peekable = chars.peekable();
+
+        Some(match specifier {
+            'd' | 'i' => quote::quote! { i32 },
+            'o' | 'x' | 'X' => quote::quote! { u32 },
+            'a' | 'A' | 'e' | 'E' | 'f' | 'F' | 'g' | 'G' => quote::quote! { f32 },
+            'u' => {
+                if matches!(peekable.peek(), Some('l')) {
+                    chars.next();
+                    quote::quote! { u64 }
+                } else {
+                    quote::quote! { u32 }
+                }
+            }
+            'l' => {
+                if matches!(peekable.peek(), Some('u' | 'x')) {
+                    chars.next();
+                    quote::quote! { u64 }
+                } else {
+                    return None;
+                }
+            }
+            _ => return None,
+        })
+    }
+
+    let mut chars = format_string.chars();
+    let mut format_arguments = Vec::new();
+
+    while let Some(mut ch) = chars.next() {
+        if ch == '%' {
+            ch = match chars.next() {
+                Some('%') => continue,
+                None => return parsing_error("Unterminated format specifier", span),
+                Some(ch) => ch,
+            };
+
+            let mut has_precision = false;
+
+            while matches!(ch, '0'..='9') {
+                ch = match chars.next() {
+                    Some(ch) => ch,
+                    None => {
+                        return parsing_error(
+                            "Unterminated format specifier: missing type after precision",
+                            span,
+                        )
+                    }
+                };
+
+                has_precision = true;
+            }
+
+            if has_precision && ch == '.' {
+                ch = match chars.next() {
+                    Some(ch) => ch,
+                    None => {
+                        return parsing_error(
+                            "Unterminated format specifier: missing type after decimal point",
+                            span,
+                        )
+                    }
+                };
+
+                while matches!(ch, '0'..='9') {
+                    ch = match chars.next() {
+                        Some(ch) => ch,
+                        None => return parsing_error(
+                            "Unterminated format specifier: missing type after fraction precision",
+                            span,
+                        ),
+                    };
+                }
+            }
+
+            if ch == 'v' {
+                let width = match chars.next() {
+                    Some('2') => 2,
+                    Some('3') => 3,
+                    Some('4') => 4,
+                    Some(ch) => {
+                        return parsing_error(&format!("Invalid width for vector: {}", ch), span)
+                    }
+                    None => return parsing_error("Missing vector dimensions specifier", span),
+                };
+
+                ch = match chars.next() {
+                    Some(ch) => ch,
+                    None => return parsing_error("Missing vector type specifier", span),
+                };
+
+                let ty = match map_specifier_to_type(ch, &mut chars) {
+                    Some(ty) => ty,
+                    _ => {
+                        return parsing_error(
+                            &format!("Unrecognised vector type specifier: '{}'", ch),
+                            span,
+                        )
+                    }
+                };
+
+                format_arguments.push(FormatType::Vector { ty, width });
+            } else {
+                let ty = match map_specifier_to_type(ch, &mut chars) {
+                    Some(ty) => ty,
+                    _ => {
+                        return parsing_error(
+                            &format!("Unrecognised format specifier: '{}'", ch),
+                            span,
+                        )
+                    }
+                };
+
+                format_arguments.push(FormatType::Scalar { ty });
+            }
+        }
+    }
+
+    if format_arguments.len() != variables.len() {
+        return syn::Error::new(
+            span,
+            &format!(
+                "{} % arguments were found, but {} variables were given",
+                format_arguments.len(),
+                variables.len()
+            ),
+        )
+        .to_compile_error()
+        .into();
+    }
+
+    let mut variable_idents = String::new();
+    let mut input_registers = Vec::new();
+    let mut op_loads = Vec::new();
+
+    for (i, (variable, format_argument)) in variables.into_iter().zip(format_arguments).enumerate()
+    {
+        let ident = quote::format_ident!("_{}", i);
+
+        variable_idents.push_str(&format!("%{} ", ident));
+
+        let assert_fn = match format_argument {
+            FormatType::Scalar { ty } => {
+                quote::quote! { spirv_std::debug_printf_assert_is_type::<#ty> }
+            }
+            FormatType::Vector { ty, width } => {
+                quote::quote! { spirv_std::debug_printf_assert_is_vector::<#ty, _, #width> }
+            }
+        };
+
+        input_registers.push(quote::quote! {
+            #ident = in(reg) &#assert_fn(#variable),
+        });
+
+        let op_load = format!("%{ident} = OpLoad _ {{{ident}}}", ident = ident);
+
+        op_loads.push(quote::quote! {
+            #op_load,
+        });
+    }
+
+    let input_registers = input_registers
+        .into_iter()
+        .collect::<proc_macro2::TokenStream>();
+    let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
+
+    let op_string = format!("%string = OpString {:?}", format_string);
+
+    let output = quote::quote! {
+        asm!(
+            "%void = OpTypeVoid",
+            #op_string,
+            "%debug_printf = OpExtInstImport \"NonSemantic.DebugPrintf\"",
+            #op_loads
+            concat!("%result = OpExtInst %void %debug_printf 1 %string ", #variable_idents),
+            #input_registers
+        )
+    };
+
+    output.into()
+}
