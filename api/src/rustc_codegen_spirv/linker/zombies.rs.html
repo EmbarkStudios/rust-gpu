@@ -209,34 +209,12 @@
 <span id="209">209</span>
 <span id="210">210</span>
 <span id="211">211</span>
-<span id="212">212</span>
-<span id="213">213</span>
-<span id="214">214</span>
-<span id="215">215</span>
-<span id="216">216</span>
-<span id="217">217</span>
-<span id="218">218</span>
-<span id="219">219</span>
-<span id="220">220</span>
-<span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
 </pre><pre class="rust"><code><span class="doccomment">//! See documentation on `CodegenCx::zombie` for a description of the zombie system.</span>
 
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">get_name</span>, <span class="ident">get_names</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::decorations</span>::{<span class="ident">CustomDecoration</span>, <span class="ident">ZombieDecoration</span>};
 <span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Instruction</span>, <span class="ident">Module</span>};
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">Op</span>, <span class="ident">Word</span>};
+<span class="kw">use</span> <span class="ident">rspirv::spirv::Word</span>;
 <span class="kw">use</span> <span class="ident">rustc_data_structures::fx::FxHashMap</span>;
 <span class="kw">use</span> <span class="ident">rustc_session::Session</span>;
 <span class="kw">use</span> <span class="ident">rustc_span</span>::{<span class="ident">Span</span>, <span class="ident">DUMMY_SP</span>};
@@ -337,20 +315,6 @@
     <span class="ident">any</span>
 }
 
-<span class="kw">fn</span> <span class="ident">get_names</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-    <span class="ident">module</span>
-        .<span class="ident">debug_names</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::Name</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> {
-            (
-                <span class="ident">i</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>(),
-                <span class="ident">i</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_string</span>(),
-            )
-        })
-        .<span class="ident">collect</span>()
-}
-
 <span class="comment">// If an entry point references a zombie&#39;d value, then the entry point would normally get removed.</span>
 <span class="comment">// That&#39;s an absolutely horrible experience to debug, though, so instead, create a nice error</span>
 <span class="comment">// message containing the stack trace of how the entry point got to the zombie value.</span>
@@ -359,12 +323,10 @@
     <span class="kw">for</span> <span class="ident">root</span> <span class="kw">in</span> <span class="ident"><span class="kw">super</span>::dce::collect_roots</span>(<span class="ident">module</span>) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>) <span class="op">=</span> <span class="ident">zombie</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>) {
             <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="ident">names</span>.<span class="ident">get_or_insert_with</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">get_names</span>(<span class="ident">module</span>));
-            <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">reason</span>.<span class="ident">stack</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> {
-                <span class="ident">names</span>
-                    .<span class="ident">get</span>(<span class="ident">s</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">n</span><span class="op">|</span> <span class="ident">n</span>.<span class="ident">to_string</span>())
-                    .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Unnamed function ID %{}&quot;</span>, <span class="ident">s</span>))
-            });
+            <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">reason</span>
+                .<span class="ident">stack</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> <span class="ident">get_name</span>(<span class="ident">names</span>, <span class="ident">s</span>).<span class="ident">into_owned</span>());
             <span class="kw">let</span> <span class="ident">stack_note</span> <span class="op">=</span> <span class="ident">once</span>(<span class="string">&quot;Stack:&quot;</span>.<span class="ident">to_string</span>())
                 .<span class="ident">chain</span>(<span class="ident">stack</span>)
                 .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
@@ -408,18 +370,10 @@
     }
 
     <span class="kw">if</span> <span class="ident">env::var</span>(<span class="string">&quot;PRINT_ZOMBIE&quot;</span>).<span class="ident">is_ok</span>() {
+        <span class="kw">let</span> <span class="ident">names</span> <span class="op">=</span> <span class="ident">get_names</span>(<span class="ident">module</span>);
         <span class="kw">for</span> <span class="ident">f</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">functions</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reason</span>) <span class="op">=</span> <span class="ident">is_zombie</span>(<span class="ident">f</span>.<span class="ident">def</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="ident">zombies</span>) {
-                <span class="kw">let</span> <span class="ident">name_id</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">module</span>.<span class="ident">debug_names</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> {
-                    <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::Name</span> <span class="op">&amp;&amp;</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">unwrap_id_ref</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">name_id</span>
-                });
-                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">name</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">Instruction</span> { <span class="kw-2">ref</span> <span class="ident">operands</span>, .. }) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">unwrap_literal_string</span>().<span class="ident">to_string</span>()
-                    }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">name_id</span>),
-                };
+                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">get_name</span>(<span class="kw-2">&amp;</span><span class="ident">names</span>, <span class="ident">f</span>.<span class="ident">def_id</span>().<span class="ident">unwrap</span>());
                 <span class="macro">println!</span>(<span class="string">&quot;Function removed {:?} because {:?}&quot;</span>, <span class="ident">name</span>, <span class="ident">reason</span>.<span class="ident">reason</span>);
             }
         }
