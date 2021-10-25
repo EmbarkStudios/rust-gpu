@@ -518,6 +518,90 @@
 <span id="518">518</span>
 <span id="519">519</span>
 <span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This algorithm is not intended to be an optimization, it is rather for legalization.</span>
 <span class="doccomment">//! Specifically, spir-v disallows things like a `StorageClass::Function` pointer to a</span>
 <span class="doccomment">//! `StorageClass::Input` pointer. Our frontend definitely allows it, though, this is like taking a</span>
@@ -534,6 +618,7 @@
 <span class="kw">use</span> <span class="ident">rspirv::dr</span>::{<span class="ident">Block</span>, <span class="ident">Function</span>, <span class="ident">Instruction</span>, <span class="ident">ModuleHeader</span>, <span class="ident">Operand</span>};
 <span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">Op</span>, <span class="ident">Word</span>};
 <span class="kw">use</span> <span class="ident">rustc_data_structures::fx</span>::{<span class="ident">FxHashMap</span>, <span class="ident">FxHashSet</span>};
+<span class="kw">use</span> <span class="ident">rustc_middle::bug</span>;
 <span class="kw">use</span> <span class="ident">std::collections::hash_map</span>;
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mem2reg</span>(
@@ -547,14 +632,21 @@
     <span class="kw">let</span> <span class="ident">preds</span> <span class="op">=</span> <span class="ident">compute_preds</span>(<span class="kw-2">&amp;</span><span class="ident">func</span>.<span class="ident">blocks</span>, <span class="kw-2">&amp;</span><span class="ident">reachable</span>);
     <span class="kw">let</span> <span class="ident">idom</span> <span class="op">=</span> <span class="ident">compute_idom</span>(<span class="kw-2">&amp;</span><span class="ident">preds</span>, <span class="kw-2">&amp;</span><span class="ident">reachable</span>);
     <span class="kw">let</span> <span class="ident">dominance_frontier</span> <span class="op">=</span> <span class="ident">compute_dominance_frontier</span>(<span class="kw-2">&amp;</span><span class="ident">preds</span>, <span class="kw-2">&amp;</span><span class="ident">idom</span>);
-    <span class="kw">while</span> <span class="ident">insert_phis_all</span>(
-        <span class="ident">header</span>,
-        <span class="ident">types_global_values</span>,
-        <span class="ident">pointer_to_pointee</span>,
-        <span class="ident">constants</span>,
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func</span>.<span class="ident">blocks</span>,
-        <span class="kw-2">&amp;</span><span class="ident">dominance_frontier</span>,
-    ) {}
+    <span class="kw">loop</span> {
+        <span class="kw">let</span> <span class="ident">changed</span> <span class="op">=</span> <span class="ident">insert_phis_all</span>(
+            <span class="ident">header</span>,
+            <span class="ident">types_global_values</span>,
+            <span class="ident">pointer_to_pointee</span>,
+            <span class="ident">constants</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func</span>.<span class="ident">blocks</span>,
+            <span class="kw-2">&amp;</span><span class="ident">dominance_frontier</span>,
+        );
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">changed</span> {
+            <span class="kw">break</span>;
+        }
+        <span class="comment">// mem2reg produces minimal SSA form, not pruned, so DCE the dead ones</span>
+        <span class="ident"><span class="kw">super</span>::dce::dce_phi</span>(<span class="ident">func</span>);
+    }
 }
 
 <span class="kw">fn</span> <span class="ident">label_to_index</span>(<span class="ident">blocks</span>: <span class="kw-2">&amp;</span>[<span class="ident">Block</span>], <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
@@ -691,6 +783,9 @@
     <span class="kw">if</span> <span class="ident">var_maps_and_types</span>.<span class="ident">is_empty</span>() {
         <span class="kw">return</span> <span class="bool-val">false</span>;
     }
+    <span class="kw">for</span> (<span class="ident">var_map</span>, <span class="kw">_</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">var_maps_and_types</span> {
+        <span class="ident">split_copy_memory</span>(<span class="ident">header</span>, <span class="ident">blocks</span>, <span class="ident">var_map</span>);
+    }
     <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">var_map</span>, <span class="ident">base_var_type</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">var_maps_and_types</span> {
         <span class="kw">let</span> <span class="ident">blocks_with_phi</span> <span class="op">=</span> <span class="ident">insert_phis</span>(<span class="ident">blocks</span>, <span class="ident">dominance_frontier</span>, <span class="ident">var_map</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">renamer</span> <span class="op">=</span> <span class="ident">Renamer</span> {
@@ -764,7 +859,10 @@
                         <span class="kw">match</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> {
                             <span class="comment">// Only allow store if pointer is the lhs, not rhs</span>
                             <span class="ident">Op::Store</span> <span class="kw">if</span> <span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="ident">Op::Load</span> <span class="op">|</span> <span class="ident">Op::AccessChain</span> <span class="op">|</span> <span class="ident">Op::InBoundsAccessChain</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                            <span class="ident">Op::Load</span>
+                            <span class="op">|</span> <span class="ident">Op::AccessChain</span>
+                            <span class="op">|</span> <span class="ident">Op::InBoundsAccessChain</span>
+                            <span class="op">|</span> <span class="ident">Op::CopyMemory</span> <span class="op">=</span><span class="op">&gt;</span> {}
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
                         }
                     }
@@ -789,6 +887,76 @@
         }
     }
     <span class="prelude-val">Some</span>(<span class="ident">variables</span>)
+}
+
+<span class="comment">// Splits an OpCopyMemory into an OpLoad followed by an OpStore. This is because we want to be able</span>
+<span class="comment">// to mem2reg variables used in OpCopyMemory, but analysis becomes very difficult: we only analyze</span>
+<span class="comment">// one variable at a time, but OpCopyMemory can copy between two local variables (both of which are</span>
+<span class="comment">// getting mem2reg&#39;d), requiring cross-analysis shenanigans. So, if we know at least one side of</span>
+<span class="comment">// the OpCopyMemory is getting mem2reg&#39;d, we can safely split it into a load/store pair: at least</span>
+<span class="comment">// one side of the pair is going to evaporate in the subsequent rewrite. Then, we can only deal</span>
+<span class="comment">// with one side of a pair at a time, treating the other side as opaque (but possibly rewriting</span>
+<span class="comment">// both sides).</span>
+<span class="comment">//</span>
+<span class="comment">// This means that an OpCopyMemory between two local variables will completely disappear, while an</span>
+<span class="comment">// OpCopyMemory from a global to a local will turn into an OpLoad, and local to global will turn</span>
+<span class="comment">// into an OpStore.</span>
+<span class="comment">//</span>
+<span class="comment">// Note that while we only look at a single var map in this function, if an OpCopyMemory contains</span>
+<span class="comment">// variables from two var maps, the second pass won&#39;t do anything since the first pass will already</span>
+<span class="comment">// have split it (but that&#39;s fine, it would have done the same thing anyway).</span>
+<span class="comment">//</span>
+<span class="comment">// Finally, an edge case to keep in mind is that an OpCopyMemory can happen between two vars in the</span>
+<span class="comment">// same var map (e.g. `s.x = s.y;`).</span>
+<span class="kw">fn</span> <span class="ident">split_copy_memory</span>(
+    <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleHeader</span>,
+    <span class="ident">blocks</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Block</span>],
+    <span class="ident">var_map</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>,
+) {
+    <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst_index</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">while</span> <span class="ident">inst_index</span> <span class="op">&lt;</span> <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">len</span>() {
+            <span class="kw">let</span> <span class="ident">inst</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">instructions</span>[<span class="ident">inst_index</span>];
+            <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">class</span>.<span class="ident">opcode</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Op::CopyMemory</span> {
+                <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">0</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">inst</span>.<span class="ident">operands</span>[<span class="number">1</span>].<span class="ident">id_ref_any</span>().<span class="ident">unwrap</span>();
+                <span class="kw">if</span> <span class="ident">inst</span>.<span class="ident">operands</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">2</span> {
+                    <span class="comment">// TODO: Copy the memory operands to the load/store</span>
+                    <span class="macro">bug!</span>(<span class="string">&quot;mem2reg OpCopyMemory doesn&#39;t support memory operands yet&quot;</span>);
+                }
+                <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">var_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>), <span class="ident">var_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>)) {
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">inst_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                        <span class="kw">continue</span>;
+                    }
+                    (<span class="prelude-val">Some</span>(<span class="ident">target</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">target</span>.<span class="ident">ty</span>,
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">source</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">source</span>.<span class="ident">ty</span>,
+                    (<span class="prelude-val">Some</span>(<span class="ident">target</span>), <span class="prelude-val">Some</span>(<span class="ident">source</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="macro">assert_eq!</span>(<span class="ident">target</span>.<span class="ident">ty</span>, <span class="ident">source</span>.<span class="ident">ty</span>);
+                        <span class="ident">target</span>.<span class="ident">ty</span>
+                    }
+                };
+                <span class="kw">let</span> <span class="ident">temp_id</span> <span class="op">=</span> <span class="ident">id</span>(<span class="ident">header</span>);
+                <span class="ident">block</span>.<span class="ident">instructions</span>[<span class="ident">inst_index</span>] <span class="op">=</span> <span class="ident">Instruction::new</span>(
+                    <span class="ident">Op::Load</span>,
+                    <span class="prelude-val">Some</span>(<span class="ident">ty</span>),
+                    <span class="prelude-val">Some</span>(<span class="ident">temp_id</span>),
+                    <span class="macro">vec!</span>[<span class="ident">Operand::IdRef</span>(<span class="ident">source</span>)],
+                );
+                <span class="ident">inst_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="ident">block</span>.<span class="ident">instructions</span>.<span class="ident">insert</span>(
+                    <span class="ident">inst_index</span>,
+                    <span class="ident">Instruction::new</span>(
+                        <span class="ident">Op::Store</span>,
+                        <span class="prelude-val">None</span>,
+                        <span class="prelude-val">None</span>,
+                        <span class="macro">vec!</span>[<span class="ident">Operand::IdRef</span>(<span class="ident">target</span>), <span class="ident">Operand::IdRef</span>(<span class="ident">temp_id</span>)],
+                    ),
+                );
+            }
+            <span class="ident">inst_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        }
+    }
 }
 
 <span class="kw">fn</span> <span class="ident">has_store</span>(<span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">Block</span>, <span class="ident">var_map</span>: <span class="kw-2">&amp;</span><span class="ident">FxHashMap</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">VarInfo</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
