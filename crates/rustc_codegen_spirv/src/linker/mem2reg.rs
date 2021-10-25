@@ -14,6 +14,7 @@ use super::{apply_rewrite_rules, id};
 use rspirv::dr::{Block, Function, Instruction, ModuleHeader, Operand};
 use rspirv::spirv::{Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_middle::bug;
 use std::collections::hash_map;
 
 pub fn mem2reg(
@@ -27,14 +28,21 @@ pub fn mem2reg(
     let preds = compute_preds(&func.blocks, &reachable);
     let idom = compute_idom(&preds, &reachable);
     let dominance_frontier = compute_dominance_frontier(&preds, &idom);
-    while insert_phis_all(
-        header,
-        types_global_values,
-        pointer_to_pointee,
-        constants,
-        &mut func.blocks,
-        &dominance_frontier,
-    ) {}
+    loop {
+        let changed = insert_phis_all(
+            header,
+            types_global_values,
+            pointer_to_pointee,
+            constants,
+            &mut func.blocks,
+            &dominance_frontier,
+        );
+        if !changed {
+            break;
+        }
+        // mem2reg produces minimal SSA form, not pruned, so DCE the dead ones
+        super::dce::dce_phi(func);
+    }
 }
 
 fn label_to_index(blocks: &[Block], id: Word) -> usize {
@@ -171,6 +179,9 @@ fn insert_phis_all(
     if var_maps_and_types.is_empty() {
         return false;
     }
+    for (var_map, _) in &var_maps_and_types {
+        split_copy_memory(header, blocks, var_map);
+    }
     for &(ref var_map, base_var_type) in &var_maps_and_types {
         let blocks_with_phi = insert_phis(blocks, dominance_frontier, var_map);
         let mut renamer = Renamer {
@@ -244,7 +255,10 @@ fn collect_access_chains(
                         match inst.class.opcode {
                             // Only allow store if pointer is the lhs, not rhs
                             Op::Store if index == 0 => {}
-                            Op::Load | Op::AccessChain | Op::InBoundsAccessChain => {}
+                            Op::Load
+                            | Op::AccessChain
+                            | Op::InBoundsAccessChain
+                            | Op::CopyMemory => {}
                             _ => return None,
                         }
                     }
@@ -269,6 +283,76 @@ fn collect_access_chains(
         }
     }
     Some(variables)
+}
+
+// Splits an OpCopyMemory into an OpLoad followed by an OpStore. This is because we want to be able
+// to mem2reg variables used in OpCopyMemory, but analysis becomes very difficult: we only analyze
+// one variable at a time, but OpCopyMemory can copy between two local variables (both of which are
+// getting mem2reg'd), requiring cross-analysis shenanigans. So, if we know at least one side of
+// the OpCopyMemory is getting mem2reg'd, we can safely split it into a load/store pair: at least
+// one side of the pair is going to evaporate in the subsequent rewrite. Then, we can only deal
+// with one side of a pair at a time, treating the other side as opaque (but possibly rewriting
+// both sides).
+//
+// This means that an OpCopyMemory between two local variables will completely disappear, while an
+// OpCopyMemory from a global to a local will turn into an OpLoad, and local to global will turn
+// into an OpStore.
+//
+// Note that while we only look at a single var map in this function, if an OpCopyMemory contains
+// variables from two var maps, the second pass won't do anything since the first pass will already
+// have split it (but that's fine, it would have done the same thing anyway).
+//
+// Finally, an edge case to keep in mind is that an OpCopyMemory can happen between two vars in the
+// same var map (e.g. `s.x = s.y;`).
+fn split_copy_memory(
+    header: &mut ModuleHeader,
+    blocks: &mut [Block],
+    var_map: &FxHashMap<Word, VarInfo>,
+) {
+    for block in blocks {
+        let mut inst_index = 0;
+        while inst_index < block.instructions.len() {
+            let inst = &block.instructions[inst_index];
+            if inst.class.opcode == Op::CopyMemory {
+                let target = inst.operands[0].id_ref_any().unwrap();
+                let source = inst.operands[1].id_ref_any().unwrap();
+                if inst.operands.len() > 2 {
+                    // TODO: Copy the memory operands to the load/store
+                    bug!("mem2reg OpCopyMemory doesn't support memory operands yet");
+                }
+                let ty = match (var_map.get(&target), var_map.get(&source)) {
+                    (None, None) => {
+                        inst_index += 1;
+                        continue;
+                    }
+                    (Some(target), None) => target.ty,
+                    (None, Some(source)) => source.ty,
+                    (Some(target), Some(source)) => {
+                        assert_eq!(target.ty, source.ty);
+                        target.ty
+                    }
+                };
+                let temp_id = id(header);
+                block.instructions[inst_index] = Instruction::new(
+                    Op::Load,
+                    Some(ty),
+                    Some(temp_id),
+                    vec![Operand::IdRef(source)],
+                );
+                inst_index += 1;
+                block.instructions.insert(
+                    inst_index,
+                    Instruction::new(
+                        Op::Store,
+                        None,
+                        None,
+                        vec![Operand::IdRef(target), Operand::IdRef(temp_id)],
+                    ),
+                );
+            }
+            inst_index += 1;
+        }
+    }
 }
 
 fn has_store(block: &Block, var_map: &FxHashMap<Word, VarInfo>) -> bool {

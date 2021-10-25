@@ -2,10 +2,7 @@
 // in `core` (see https://github.com/rust-lang/rust/pull/87723), cannot
 // cause a fatal error, but at most a zombie or SPIR-V validation error.
 
-// build-fail
-
-// HACK(eddyb) this allows CI (older?) `spirv-val` output to also work.
-// normalize-stderr-test "  %\d+ = OpVariable %\w+ Function\n\n" -> ""
+// build-pass
 
 use spirv_std as _;
 
