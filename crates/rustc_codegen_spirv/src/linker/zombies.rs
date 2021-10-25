@@ -1,8 +1,9 @@
 //! See documentation on `CodegenCx::zombie` for a description of the zombie system.
 
+use super::{get_name, get_names};
 use crate::decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::dr::{Instruction, Module};
-use rspirv::spirv::{Op, Word};
+use rspirv::spirv::Word;
 use rustc_data_structures::fx::FxHashMap;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
@@ -103,20 +104,6 @@ fn spread_zombie(module: &mut Module, zombie: &mut FxHashMap<Word, ZombieInfo<'_
     any
 }
 
-fn get_names(module: &Module) -> FxHashMap<Word, &str> {
-    module
-        .debug_names
-        .iter()
-        .filter(|i| i.class.opcode == Op::Name)
-        .map(|i| {
-            (
-                i.operands[0].unwrap_id_ref(),
-                i.operands[1].unwrap_literal_string(),
-            )
-        })
-        .collect()
-}
-
 // If an entry point references a zombie'd value, then the entry point would normally get removed.
 // That's an absolutely horrible experience to debug, though, so instead, create a nice error
 // message containing the stack trace of how the entry point got to the zombie value.
@@ -125,12 +112,10 @@ fn report_error_zombies(sess: &Session, module: &Module, zombie: &FxHashMap<Word
     for root in super::dce::collect_roots(module) {
         if let Some(reason) = zombie.get(&root) {
             let names = names.get_or_insert_with(|| get_names(module));
-            let stack = reason.stack.iter().map(|s| {
-                names
-                    .get(s)
-                    .map(|&n| n.to_string())
-                    .unwrap_or_else(|| format!("Unnamed function ID %{}", s))
-            });
+            let stack = reason
+                .stack
+                .iter()
+                .map(|&s| get_name(names, s).into_owned());
             let stack_note = once("Stack:".to_string())
                 .chain(stack)
                 .collect::<Vec<_>>()
@@ -174,18 +159,10 @@ pub fn remove_zombies(sess: &Session, module: &mut Module) {
     }
 
     if env::var("PRINT_ZOMBIE").is_ok() {
+        let names = get_names(module);
         for f in &module.functions {
             if let Some(reason) = is_zombie(f.def.as_ref().unwrap(), &zombies) {
-                let name_id = f.def_id().unwrap();
-                let name = module.debug_names.iter().find(|inst| {
-                    inst.class.opcode == Op::Name && inst.operands[0].unwrap_id_ref() == name_id
-                });
-                let name = match name {
-                    Some(Instruction { ref operands, .. }) => {
-                        operands[1].unwrap_literal_string().to_string()
-                    }
-                    _ => format!("{}", name_id),
-                };
+                let name = get_name(&names, f.def_id().unwrap());
                 println!("Function removed {:?} because {:?}", name, reason.reason);
             }
         }

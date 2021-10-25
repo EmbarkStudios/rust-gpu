@@ -6,14 +6,20 @@
 
 use super::apply_rewrite_rules;
 use super::simple_passes::outgoing_edges;
+use super::{get_name, get_names};
 use rspirv::dr::{Block, Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{FunctionControl, Op, StorageClass, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_session::Session;
 use std::mem::take;
 
 type FunctionMap = FxHashMap<Word, Function>;
 
-pub fn inline(module: &mut Module) {
+pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
+    // This algorithm gets real sad if there's recursion - but, good news, SPIR-V bans recursion
+    if module_has_recursion(sess, module) {
+        return Err(rustc_errors::ErrorReported);
+    }
     let functions = module
         .functions
         .iter()
@@ -58,6 +64,89 @@ pub fn inline(module: &mut Module) {
         inliner.inline_fn(function);
         fuse_trivial_branches(function);
     }
+    Ok(())
+}
+
+// https://stackoverflow.com/a/53995651
+fn module_has_recursion(sess: &Session, module: &Module) -> bool {
+    let func_to_index: FxHashMap<Word, usize> = module
+        .functions
+        .iter()
+        .enumerate()
+        .map(|(index, func)| (func.def_id().unwrap(), index))
+        .collect();
+    let mut discovered = vec![false; module.functions.len()];
+    let mut finished = vec![false; module.functions.len()];
+    let mut has_recursion = false;
+    for index in 0..module.functions.len() {
+        if !discovered[index] && !finished[index] {
+            visit(
+                sess,
+                module,
+                index,
+                &mut discovered,
+                &mut finished,
+                &mut has_recursion,
+                &func_to_index,
+            );
+        }
+    }
+
+    fn visit(
+        sess: &Session,
+        module: &Module,
+        current: usize,
+        discovered: &mut Vec<bool>,
+        finished: &mut Vec<bool>,
+        has_recursion: &mut bool,
+        func_to_index: &FxHashMap<Word, usize>,
+    ) {
+        discovered[current] = true;
+
+        for next in calls(&module.functions[current], func_to_index) {
+            if discovered[next] {
+                let names = get_names(module);
+                let current_name = get_name(&names, module.functions[current].def_id().unwrap());
+                let next_name = get_name(&names, module.functions[next].def_id().unwrap());
+                sess.err(&format!(
+                    "module has recursion, which is not allowed: `{}` calls `{}`",
+                    current_name, next_name
+                ));
+                *has_recursion = true;
+                break;
+            }
+
+            if !finished[next] {
+                visit(
+                    sess,
+                    module,
+                    next,
+                    discovered,
+                    finished,
+                    has_recursion,
+                    func_to_index,
+                );
+            }
+        }
+
+        discovered[current] = false;
+        finished[current] = true;
+    }
+
+    fn calls<'a>(
+        func: &'a Function,
+        func_to_index: &'a FxHashMap<Word, usize>,
+    ) -> impl Iterator<Item = usize> + 'a {
+        func.all_inst_iter()
+            .filter(|inst| inst.class.opcode == Op::FunctionCall)
+            .map(move |inst| {
+                *func_to_index
+                    .get(&inst.operands[0].id_ref_any().unwrap())
+                    .unwrap()
+            })
+    }
+
+    has_recursion
 }
 
 fn compute_disallowed_argument_and_return_types(
