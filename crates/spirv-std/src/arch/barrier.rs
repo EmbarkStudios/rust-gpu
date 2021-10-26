@@ -78,3 +78,114 @@ pub unsafe fn memory_barrier<
         semantics = const SEMANTICS,
     }
 }
+
+/// Blocks execution of all threads in a group until all group shared accesses have been completed.
+///
+/// This is an exact implementation of `GroupMemoryBarrier()`.
+///
+/// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrier>
+#[spirv_std_macros::gpu_only]
+#[inline]
+pub unsafe fn workgroup_memory_barrier() {
+    memory_barrier::<
+        { crate::memory::Scope::Workgroup as u32 },
+        {
+            crate::memory::Semantics::WORKGROUP_MEMORY.bits()
+                | crate::memory::Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
+}
+
+/// Blocks execution of all threads in a group until all group shared accesses have been completed and all threads in the group have reached this call.
+///
+/// This is an exact implementation of `GroupMemoryBarrierWithGroupSync()`.
+///
+/// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/groupmemorybarrierwithgroupsync>
+#[spirv_std_macros::gpu_only]
+#[inline]
+pub unsafe fn workgroup_memory_barrier_with_group_sync() {
+    control_barrier::<
+        { crate::memory::Scope::Workgroup as u32 },
+        { crate::memory::Scope::Workgroup as u32 },
+        {
+            crate::memory::Semantics::WORKGROUP_MEMORY.bits()
+                | crate::memory::Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
+}
+
+/// Blocks execution of all threads in a group until all device memory accesses have been completed.
+///
+/// This is an exact implementation of `DeviceMemoryBarrier()`.
+///
+/// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrier>
+#[spirv_std_macros::gpu_only]
+#[inline]
+pub unsafe fn device_memory_barrier() {
+    memory_barrier::<
+        { crate::memory::Scope::Device as u32 },
+        {
+            crate::memory::Semantics::IMAGE_MEMORY.bits()
+                | crate::memory::Semantics::UNIFORM_MEMORY.bits()
+                | crate::memory::Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
+}
+
+/// Blocks execution of all threads in a group until all device memory accesses have been completed and all threads in the group have reached this call.
+///
+/// This is an exact implementation of `DeviceMemoryBarrierWithGroupSync()`.
+///
+/// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/devicememorybarrierwithgroupsync>
+#[spirv_std_macros::gpu_only]
+#[inline]
+pub unsafe fn device_memory_barrier_with_group_sync() {
+    control_barrier::<
+        { crate::memory::Scope::Workgroup as u32 },
+        { crate::memory::Scope::Device as u32 },
+        {
+            crate::memory::Semantics::IMAGE_MEMORY.bits()
+                | crate::memory::Semantics::UNIFORM_MEMORY.bits()
+                | crate::memory::Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
+}
+
+/// Blocks execution of all threads in a group until all memory accesses have been completed.
+///
+/// This is an exact implementation of `AllMemoryBarrier()`.
+///
+/// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrier>
+#[spirv_std_macros::gpu_only]
+#[inline]
+pub unsafe fn all_memory_barrier() {
+    memory_barrier::<
+        { crate::memory::Scope::Device as u32 },
+        {
+            crate::memory::Semantics::WORKGROUP_MEMORY.bits()
+                | crate::memory::Semantics::IMAGE_MEMORY.bits()
+                | crate::memory::Semantics::UNIFORM_MEMORY.bits()
+                | crate::memory::Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
+}
+
+/// Blocks execution of all threads in a group until all memory accesses have been completed and all threads in the group have reached this call.
+///
+/// This is an exact implementation of `AllMemoryBarrierWithGroupSync()`.
+///
+/// From <https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/allmemorybarrierwithgroupsync>
+#[spirv_std_macros::gpu_only]
+#[inline]
+pub unsafe fn all_memory_barrier_with_group_sync() {
+    control_barrier::<
+        { crate::memory::Scope::Workgroup as u32 },
+        { crate::memory::Scope::Device as u32 },
+        {
+            crate::memory::Semantics::WORKGROUP_MEMORY.bits()
+                | crate::memory::Semantics::IMAGE_MEMORY.bits()
+                | crate::memory::Semantics::UNIFORM_MEMORY.bits()
+                | crate::memory::Semantics::ACQUIRE_RELEASE.bits()
+        },
+    >();
+}
