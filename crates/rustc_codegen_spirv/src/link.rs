@@ -102,7 +102,11 @@ fn link_rlib(sess: &Session, codegen_results: &CodegenResults, out_filename: &Pa
         }
     }
 
-    create_archive(&file_list, &codegen_results.metadata.raw_data, out_filename);
+    create_archive(
+        &file_list,
+        &codegen_results.metadata.raw_data(),
+        out_filename,
+    );
 }
 
 fn link_exe(
