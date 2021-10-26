@@ -1,4 +1,8 @@
 /// Abstract trait representing a SPIR-V vector type.
+///
+/// # Safety
+/// Implementing this trait on non-simd-vector types breaks assumptions of other unsafe code, and
+/// should not be done.
 pub unsafe trait Vector<T: crate::scalar::Scalar, const N: usize>: Default {}
 
 #[cfg(feature = "glam")]

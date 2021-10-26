@@ -1,6 +1,10 @@
 use crate::vector::Vector;
 
 /// Abstract trait representing a SPIR-V floating point type.
+///
+/// # Safety
+/// Implementing this trait on non-primitive-float types breaks assumptions of other unsafe code,
+/// and should not be done.
 pub unsafe trait Float: num_traits::Float + crate::scalar::Scalar + Default {
     const WIDTH: usize;
 }

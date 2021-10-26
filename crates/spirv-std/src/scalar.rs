@@ -1,4 +1,8 @@
 /// Abstract trait representing a SPIR-V scalar type.
+///
+/// # Safety
+/// Implementing this trait on non-scalar types breaks assumptions of other unsafe code, and should
+/// not be done.
 pub unsafe trait Scalar: Copy + Default + crate::sealed::Sealed {}
 
 unsafe impl Scalar for bool {}

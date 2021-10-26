@@ -99,7 +99,7 @@ fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
         );
         assert_eq!(compiler.session().has_errors(), res.is_err());
         res.map(|res| match res {
-            LinkResult::SingleModule(m) => m,
+            LinkResult::SingleModule(m) => *m,
             LinkResult::MultipleModules(_) => unreachable!(),
         })
     })

@@ -588,7 +588,12 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
 }
 
 impl<'tcx> DebugInfoMethods<'tcx> for CodegenCx<'tcx> {
-    fn create_vtable_metadata(&self, _ty: Ty<'tcx>, _vtable: Self::Value) {
+    fn create_vtable_metadata(
+        &self,
+        _ty: Ty<'tcx>,
+        _trait_ref: Option<PolyExistentialTraitRef<'tcx>>,
+        _vtable: Self::Value,
+    ) {
         // Ignore.
     }
 

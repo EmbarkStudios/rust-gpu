@@ -36,7 +36,7 @@ pub fn read_deps_file_from(
 
     loop {
         line.clear();
-        if file.read_until(b'\n', &mut line.as_mut_bytes())? == 0 {
+        if file.read_until(b'\n', line.as_mut_bytes())? == 0 {
             break;
         }
 

@@ -117,6 +117,7 @@ extern crate rustc_errors;
 extern crate rustc_hir;
 extern crate rustc_index;
 extern crate rustc_interface;
+extern crate rustc_metadata;
 extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
@@ -167,8 +168,8 @@ use rustc_codegen_ssa::traits::{
 use rustc_codegen_ssa::{CodegenResults, CompiledModule, ModuleCodegen, ModuleKind};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::{ErrorReported, FatalError, Handler};
+use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
-use rustc_middle::middle::cstore::EncodedMetadata;
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::mir::pretty::write_mir_pretty;
 use rustc_middle::ty::print::with_no_trimmed_paths;
@@ -211,7 +212,7 @@ fn is_blocklisted_fn<'tcx>(
 ) -> bool {
     // TODO: These sometimes have a constant value of an enum variant with a hole
     if let InstanceDef::Item(def) = instance.def {
-        if let Some(debug_trait_def_id) = tcx.get_diagnostic_item(sym::debug_trait) {
+        if let Some(debug_trait_def_id) = tcx.get_diagnostic_item(sym::Debug) {
             // Helper for detecting `<_ as core::fmt::Debug>::fmt` (in impls).
             let is_debug_fmt_method = |def_id| match tcx.opt_associated_item(def_id) {
                 Some(assoc) if assoc.ident.name == sym::fmt => match assoc.container {
