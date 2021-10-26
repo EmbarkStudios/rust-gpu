@@ -12,7 +12,7 @@ pub fn main(
     output: &mut glam::Vec4,
 ) {
     let v3 = glam::Vec3::new(0.0, 1.0, 0.5);
-    let r1: glam::Vec4 = image1d.gather(*sampler, 0.0, 0);
+    let r1: glam::Vec4 = image1d.gather(*sampler, 0.0f32, 0);
     let r2: glam::Vec4 = image3d.gather(*sampler, v3, 0);
     *output = r1 + r2;
 }
