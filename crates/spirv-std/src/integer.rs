@@ -1,4 +1,8 @@
 /// Abstract trait representing any SPIR-V integer type.
+///
+/// # Safety
+/// Implementing this trait on non-primitive-integer types breaks assumptions of other unsafe code,
+/// and should not be done.
 pub unsafe trait Integer: num_traits::PrimInt + crate::scalar::Scalar {
     const WIDTH: usize;
     const SIGNED: bool;

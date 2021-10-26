@@ -37,7 +37,7 @@ pub struct Options {
 }
 
 pub enum LinkResult {
-    SingleModule(Module),
+    SingleModule(Box<Module>),
     MultipleModules(FxHashMap<String, Module>),
 }
 
@@ -107,8 +107,8 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         let mut bound = inputs[0].header.as_ref().unwrap().bound - 1;
         let version = inputs[0].header.as_ref().unwrap().version();
 
-        for mut module in inputs.iter_mut().skip(1) {
-            simple_passes::shift_ids(&mut module, bound);
+        for module in inputs.iter_mut().skip(1) {
+            simple_passes::shift_ids(module, bound);
             bound += module.header.as_ref().unwrap().bound - 1;
             let this_version = module.header.as_ref().unwrap().version();
             if version != this_version {
@@ -293,11 +293,11 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             .collect();
         LinkResult::MultipleModules(modules)
     } else {
-        LinkResult::SingleModule(output)
+        LinkResult::SingleModule(Box::new(output))
     };
 
     let output_module_iter: Box<dyn Iterator<Item = &mut Module>> = match output {
-        LinkResult::SingleModule(ref mut m) => Box::new(std::iter::once(m)),
+        LinkResult::SingleModule(ref mut m) => Box::new(std::iter::once(&mut *m as &mut Module)),
         LinkResult::MultipleModules(ref mut m) => Box::new(m.values_mut()),
     };
     for (i, output) in output_module_iter.enumerate() {

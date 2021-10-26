@@ -53,7 +53,7 @@ pub fn inline(sess: &Session, module: &mut Module) -> super::Result<()> {
         })
     });
     let mut inliner = Inliner {
-        header: &mut module.header.as_mut().unwrap(),
+        header: module.header.as_mut().unwrap(),
         types_global_values: &mut module.types_global_values,
         void,
         functions: &functions,
